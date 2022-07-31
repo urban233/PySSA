@@ -1,0 +1,30 @@
+CLUSTAL
+
+pymol_6omn   SSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKI
+bmp2_4       MQAKHKQRKRAKHKQRKRLK-------------------------------------------
+                                                                            
+
+pymol_6omn   PKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRRLKSSCKRHPLYVDFSDVGWNDW
+bmp2_4       ---------------------------------------------------------------
+                                                                            
+
+pymol_6omn   IVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDE
+bmp2_4       ---------------------------------------------------------------
+                                                                            
+
+pymol_6omn   NEKVVLKNYQDMVVEGCGCRRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPF
+bmp2_4       -------------------------SSCKRHPLYVDYSDVGWNDWIVAPPGYHNFYCHGECPF
+                                      ***********.****************.*********
+
+pymol_6omn   PLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCG
+bmp2_4       PLADHLNSTNHAITQTLVNSVNSKIPKACCTPTELSASSQLYLDENEKVVLKNYQDMVVEGCG
+             *************.****************.******.*.**       **************
+
+pymol_6omn   CRK-------------------SSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLA
+bmp2_4       CRMQAKHKQRKRAKHKQRKRLKSSCKRHPLYVDYSDVGWNDWIVAPPGYHNFYCHGECPFPLA
+             **                    ***********.****************.************
+
+pymol_6omn   DHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR 
+bmp2_4       DHLNSTNHAITQTLVNSVNSKIPKACCTPTELSASSQLYLDENEKVVLKNYQDMVVEGCGCR 
+             **********.****************.******.*.************************* 
+
