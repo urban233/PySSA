@@ -21,6 +21,7 @@
 #
 
 import os
+from pathlib import Path
 
 # important PATHs
 # settings path for linux local testing
@@ -28,7 +29,11 @@ import os
 # settings path for mac testing
 # SETTINGS_DIR = "/Users/matt/Documents/settings.xml"
 # settings path for windows
-SETTINGS_DIR = f"{os.path.expanduser('~')}/.pyssa/settings.xml"
+SETTINGS_DI = f"{os.path.expanduser('~')}/.pyssa/settings.xml"
+SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
+SETTINGS_FILE = "settings.xml"
+SETTINGS = SETTINGS_DIR / SETTINGS_FILE
+
 # settings path for pymol testing
 # SETTINGS_DIR = f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/pymol_plugin/settings/settings.xml"
 

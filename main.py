@@ -53,7 +53,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
     """
     target_dir = f"{os.path.expanduser('~')}/Documents/data"
     renderer = ""
-    SETTINGS_DIR = constants.SETTINGS_DIR
+    SETTINGS = constants.SETTINGS
 
     def __init__(self, *args, **kwargs):
         """Constructor
@@ -69,10 +69,10 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.ui.setupUi(self)
 
         # sets up settings.xml
-        if not os.path.exists(self.SETTINGS_DIR):
-            settings = tools.SettingsXml(self.SETTINGS_DIR)
+        if not os.path.exists(self.SETTINGS):
+            settings = tools.SettingsXml(self.SETTINGS)
             settings.create_settings_xml_file()
-        settings = tools.SettingsXml(self.SETTINGS_DIR)
+        settings = tools.SettingsXml(self.SETTINGS)
         self.tmpSettings = settings.load_xml_in_memory()
 
         # sets up the status bar

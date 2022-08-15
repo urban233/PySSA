@@ -26,6 +26,8 @@ import os
 import shutil
 from xml.dom import minidom
 from datetime import date
+from utils import constants
+from pathlib import Path
 
 
 def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir):
@@ -127,11 +129,12 @@ class SettingsXml:
             <cutoffValue DEFAULT_ATTRIBUTE=DEFAULT_CUTOFF_VALUE/>
         </root>
         """
-        DEFAULT_WORKSPACE_PATH = "/home/$USER/Documents"
-        DEFAULT_PDB_PATH = "/home/$USER/Documents"
-        DEFAULT_ZIP_PATH = "/home/$USER/Downloads"
+        DEFAULT_WORKSPACE_PATH = str(Path(f"{os.path.expanduser('~')}/Documents"))
+        DEFAULT_PDB_PATH = str(Path(f"{os.path.expanduser('~')}/Documents"))
+        DEFAULT_ZIP_PATH = str(Path(f"{os.path.expanduser('~')}/Downloads"))
         DEFAULT_CYCLES_VALUE = "1"
         DEFAULT_CUTOFF_VALUE = "1.0"
+
         DEFAULT_ATTRIBUTE = "value"
 
         root_node = self.root.createElement("root")
@@ -163,8 +166,10 @@ class SettingsXml:
         cutoff_value_node.setAttribute(DEFAULT_ATTRIBUTE, DEFAULT_CUTOFF_VALUE)
         root_node.appendChild(cutoff_value_node)
 
-        if os.path.exists(f"{self.pathToXml}"):
-            os.remove(self.pathToXml)
+        #if os.path.exists(f"{self.pathToXml}"):
+        #    os.remove(self.pathToXml)
+        if not os.path.exists(constants.SETTINGS_DIR):
+            os.mkdir(constants.SETTINGS_DIR)
         # save xml file to filesystem
         with open(self.pathToXml, "w") as f:
             f.write(self.root.toprettyxml())
@@ -177,7 +182,8 @@ class SettingsXml:
             This function should be used once to load the xml file into the
             memory.
         """
-        return minidom.parse(self.pathToXml)
+        path_as_string = str(self.pathToXml)
+        return minidom.parse(path_as_string)
 
     @staticmethod
     def get_path(xml_file, Tag, attribute):
