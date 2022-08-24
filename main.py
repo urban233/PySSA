@@ -21,7 +21,8 @@
 #
 
 from PyQt5 import QtSvg
-from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QHBoxLayout, QMessageBox
+from PyQt5.QtWidgets import QErrorMessage
 from pymol import Qt
 
 import sys
@@ -29,6 +30,7 @@ import os
 import shutil
 import webbrowser
 import time
+import logging
 from dialogs import dialog_image
 from dialogs import dialog_settings_global
 from dialogs import dialog_about
@@ -44,6 +46,9 @@ from pymolproteintools import core
 from pymolproteintools import graphics
 import matplotlib.pyplot as plt
 from pymol import cmd
+
+# setup logger
+logging.basicConfig(level=logging.DEBUG)
 
 
 class MainWindow(Qt.QtWidgets.QMainWindow):
@@ -67,6 +72,9 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         # build ui object
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        # sets up the status bar
+        self.statusBar = Qt.QtWidgets.QStatusBar()
+        self.setStatusBar(self.statusBar)
 
         # sets up settings.xml
         if not os.path.exists(self.SETTINGS):
@@ -75,14 +83,26 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         settings = tools.SettingsXml(self.SETTINGS)
         self.tmpSettings = settings.load_xml_in_memory()
 
-        # sets up the status bar
-        self.statusBar = Qt.QtWidgets.QStatusBar()
-        self.setStatusBar(self.statusBar)
-        self.workspacePath = tools.SettingsXml.get_path(self.tmpSettings,
-                                                        "workspacePath",
-                                                        "value")
-        self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspacePath}")
-        # self.statusBar.addPermanentWidget(self.workspace)
+        # safeguard workspace path
+        sg_1 = tools.safeguard_filepath_xml(self.tmpSettings, 'workspacePath', 'value')
+        # safeguard pdb path
+        sg_2 = tools.safeguard_filepath_xml(self.tmpSettings, 'pdbPath', 'value')
+        # safeguard zip path
+        sg_3 = tools.safeguard_filepath_xml(self.tmpSettings, 'zipPath', 'value')
+        # safeguard cycles value
+        sg_4 = tools.safeguard_numerical_value_xml(self.tmpSettings, 'cyclesValue', 'value', 'int')
+        # safeguard cutoff value
+        sg_5 = tools.safeguard_numerical_value_xml(self.tmpSettings, 'cutoffValue', 'value', 'float')
+
+        if sg_1 is False or sg_2 is False or sg_3 is False or sg_4 is False or sg_5 is False:
+            self.statusBar.showMessage("The settings.xml is corrupted! Please fix this issue first!")
+            gui_utils.error_dialog("The settings.xml is corrupted! Please fix this issue first!",
+                                   "Check the log for more info.")
+        else:
+            self.workspacePath = tools.SettingsXml.get_path(self.tmpSettings,
+                                                            "workspacePath",
+                                                            "value")
+            self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspacePath}")
 
         # sets up defaults
         # Prediction + Analysis
@@ -280,7 +300,6 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
 
         # Shortcuts menubar
 
-
         # setting additional parameters
         self.setWindowTitle("PySSA v0.1.0")
 
@@ -334,7 +353,8 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             i += 1
         if len(str(self.ui.txt_analysis_load_model.toPlainText())) > 0:
             i += 1
-        if self.ui.cb_analysis_chain_info.isChecked() and len(self.ui.txt_analysis_chain_ref.text()) > 0 and len(self.ui.txt_analysis_chain_model.text()) > 0:
+        if self.ui.cb_analysis_chain_info.isChecked() and len(self.ui.txt_analysis_chain_ref.text()) > 0 and len(
+                self.ui.txt_analysis_chain_model.text()) > 0:
             i += 1
         if self.ui.cb_analysis_chain_info.isChecked():
             j = 4
@@ -358,7 +378,8 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             i += 1
         if len(str(self.ui.txt_batch_load_model.toPlainText())) > 0:
             i += 1
-        if self.ui.cb_batch_chain_info.isChecked() and len(self.ui.txt_batch_chain_ref.text()) > 0 and len(self.ui.txt_batch_chain_model.text()) > 0:
+        if self.ui.cb_batch_chain_info.isChecked() and len(self.ui.txt_batch_chain_ref.text()) > 0 and len(
+                self.ui.txt_batch_chain_model.text()) > 0:
             i += 1
         if self.ui.cb_batch_chain_info.isChecked():
             j = 4
@@ -380,7 +401,8 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             i += 1
         if len(str(self.ui.txt_prediction_load_reference.text())) > 0:
             i += 1
-        if self.ui.cb_prediction_chain_info.isChecked() and len(self.ui.txt_prediction_chain_ref.text()) > 0 and len(self.ui.txt_prediction_chain_model.text()) > 0:
+        if self.ui.cb_prediction_chain_info.isChecked() and len(self.ui.txt_prediction_chain_ref.text()) > 0 and len(
+                self.ui.txt_prediction_chain_model.text()) > 0:
             i += 1
         if self.ui.cb_prediction_chain_info.isChecked():
             j = 3
@@ -397,54 +419,56 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         ATTRIBUTE = "value"
         # open file dialog
         try:
-            fileName = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
-                                                                "Open project file",
-                                                                Qt.QtCore.QDir.homePath(),
-                                                                "Plugin Project File (project.xml)")
-            if fileName == ("",""):
-                raise ValueError("No file has been selected.")
+            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
+                                                                 "Open project file",
+                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 "Plugin Project File (project.xml)")
+            if file_name == ("", ""):
+                # TODO: add status bar and logger message
+                print("No file has been selected.")
+                return
 
-            projectFile = tools.ProjectXml(fileName[0])
-            tmpProjectFile = projectFile.load_xml_in_memory()
+            project_file = tools.ProjectXml(file_name[0])
+            tmp_project_file = project_file.load_xml_in_memory()
 
-            if projectFile.get_path(tmpProjectFile, "predictionDone", ATTRIBUTE) == "False":
+            if project_file.get_path(tmp_project_file, "predictionDone", ATTRIBUTE) == "False":
                 self.ui.txt_analysis_project_name.setText(
-                    projectFile.get_path(tmpProjectFile,
-                                         "projectName",
-                                         ATTRIBUTE))
+                    project_file.get_path(tmp_project_file,
+                                          "projectName",
+                                          ATTRIBUTE))
                 self.ui.txt_analysis_load_reference.setText(
-                    projectFile.get_path(tmpProjectFile,
-                                         "reference",
-                                         ATTRIBUTE))
-                if len(projectFile.get_path(tmpProjectFile, "referenceChains",
-                                            ATTRIBUTE)) > 0:
+                    project_file.get_path(tmp_project_file,
+                                          "reference",
+                                          ATTRIBUTE))
+                if len(project_file.get_path(tmp_project_file, "referenceChains",
+                                             ATTRIBUTE)) > 0:
                     self.ui.cb_analysis_chain_info.setChecked(True)
-                    self.ui.txt_analysis_chain_ref.setText(projectFile.get_path(
-                        tmpProjectFile, "referenceChains", ATTRIBUTE))
-                    self.ui.txt_analysis_chain_model.setText(projectFile.get_path(
-                        tmpProjectFile, "modelChains", ATTRIBUTE))
-                resultsPath = projectFile.get_path(tmpProjectFile, "results",
-                                                   ATTRIBUTE)
+                    self.ui.txt_analysis_chain_ref.setText(project_file.get_path(
+                        tmp_project_file, "referenceChains", ATTRIBUTE))
+                    self.ui.txt_analysis_chain_model.setText(project_file.get_path(
+                        tmp_project_file, "modelChains", ATTRIBUTE))
+                resultsPath = project_file.get_path(tmp_project_file, "results",
+                                                    ATTRIBUTE)
                 sessionFileName = ""
                 for file in os.listdir(f"{resultsPath}/sessions"):
                     sessionFileName = file
                 cmd.load(f"{resultsPath}/sessions/{sessionFileName}")
             else:
-                self.ui.txt_prediction_project_name.setText(projectFile.get_path(tmpProjectFile,
-                                                                    "projectName",
-                                                                                 ATTRIBUTE))
-                self.ui.txt_prediction_load_reference.setText(projectFile.get_path(tmpProjectFile,
-                                                                  "reference",
-                                                                                   ATTRIBUTE))
-                if len(projectFile.get_path(tmpProjectFile, "referenceChains",
-                                            ATTRIBUTE)) > 0:
+                self.ui.txt_prediction_project_name.setText(project_file.get_path(tmp_project_file,
+                                                                                  "projectName",
+                                                                                  ATTRIBUTE))
+                self.ui.txt_prediction_load_reference.setText(project_file.get_path(tmp_project_file,
+                                                                                    "reference",
+                                                                                    ATTRIBUTE))
+                if len(project_file.get_path(tmp_project_file, "referenceChains",
+                                             ATTRIBUTE)) > 0:
                     self.ui.cb_prediction_chain_info.setChecked(True)
-                    self.ui.txt_prediction_chain_ref.setText(projectFile.get_path(
-                        tmpProjectFile, "referenceChains", ATTRIBUTE))
-                    self.ui.txt_prediction_chain_model.setText(projectFile.get_path(
-                        tmpProjectFile, "modelChains", ATTRIBUTE))
-                resultsPath = projectFile.get_path(tmpProjectFile, "results",
-                                                   ATTRIBUTE)
+                    self.ui.txt_prediction_chain_ref.setText(project_file.get_path(
+                        tmp_project_file, "referenceChains", ATTRIBUTE))
+                    self.ui.txt_prediction_chain_model.setText(project_file.get_path(
+                        tmp_project_file, "modelChains", ATTRIBUTE))
+                resultsPath = project_file.get_path(tmp_project_file, "results",
+                                                    ATTRIBUTE)
                 sessionFileName = ""
                 for file in os.listdir(f"{resultsPath}/sessions"):
                     sessionFileName = file

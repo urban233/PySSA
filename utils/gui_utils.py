@@ -21,6 +21,7 @@
 #
 
 import os
+from PyQt5.QtWidgets import QMessageBox
 from utils import tools
 
 
@@ -109,3 +110,22 @@ def set_values_in_project_xml(projectPath, projectName, REFERENCE_DIR,
                               resultsPath)
     except FileNotFoundError:
         print("Project file could not be loaded!")
+
+
+def error_dialog(message, message_detail):
+    """This function creates an error dialog, which can be customized.
+
+    Args:
+        message:
+            text which should get displayed in the dialog
+        message_detail:
+            additional information
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText("Error")
+    msg.setInformativeText(message)
+    msg.setDetailedText(message_detail)
+    msg.setWindowTitle("Error")
+    msg.setStandardButtons(QMessageBox.Abort)
+    msg.exec_()

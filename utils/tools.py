@@ -24,6 +24,7 @@ from pymol import Qt
 
 import os
 import shutil
+import logging
 from xml.dom import minidom
 from datetime import date
 from utils import constants
@@ -109,6 +110,64 @@ def get_file_path_and_name(text):
     OBJ_NAME = file_info.baseName()
     DIR = file_info.canonicalPath()
     return OBJ_NAME, DIR
+
+
+def safeguard_filepath_xml(settings_file, xml_tag, xml_attribute):
+    """This function is a safeguard for a filepath from a xml file.
+    IMPORTANT: the parameters needs to be in singe quotes!
+
+    Args:
+        settings_file:
+            actual settings.xml file
+        xml_tag (str):
+            the tag used in the xml file
+        xml_attribute (str):
+            the attribute used in the xml file
+    Returns (bool):
+        Returns a boolean value which tells if the safeguard test failed
+        or succeeded
+    """
+    if not os.path.exists(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)):
+        logging.critical(f"The {xml_tag} does NOT exist!")
+        logging.debug(f"{xml_tag}: {SettingsXml.get_path(settings_file, xml_tag, xml_attribute)}")
+        return False
+    elif os.path.exists(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)):
+        logging.info(
+            f"This is the {xml_tag}: {SettingsXml.get_path(settings_file, xml_tag, xml_attribute)}")
+        return True
+
+
+def safeguard_numerical_value_xml(settings_file, xml_tag, xml_attribute, data_type):
+    """This function is a safeguard for a numerical value from a xml file.
+    IMPORTANT: the parameters needs to be in singe quotes!
+
+    Args:
+        settings_file:
+            actual settings.xml file
+        xml_tag (str):
+            the tag used in the xml file
+        xml_attribute (str):
+            the attribute used in the xml file
+    Returns (bool):
+        Returns a boolean value which tells if the safeguard test failed
+        or succeeded
+    """
+    if data_type == "int":
+        if int(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)) < 0:
+            logging.critical(f"The {xml_tag} is negative!")
+            logging.debug(f"{xml_tag}: {SettingsXml.get_path(settings_file, xml_tag, xml_attribute)}")
+            return False
+        elif int(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)) >= 0:
+            logging.info(f"This is the {xml_tag}: {SettingsXml.get_path(settings_file, xml_tag, xml_attribute)}")
+            return True
+    elif data_type == "float":
+        if float(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)) < 0:
+            logging.critical(f"The {xml_tag} is negative!")
+            logging.debug(f"{xml_tag}: {SettingsXml.get_path(settings_file, xml_tag, xml_attribute)}")
+            return False
+        elif float(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)) >= 0:
+            logging.info(f"This is the {xml_tag}: {SettingsXml.get_path(settings_file, xml_tag, xml_attribute)}")
+            return True
 
 
 class SettingsXml:
