@@ -21,8 +21,7 @@
 #
 
 from PyQt5 import QtSvg
-from PyQt5.QtWidgets import QHBoxLayout, QMessageBox
-from PyQt5.QtWidgets import QErrorMessage
+from PyQt5.QtWidgets import QHBoxLayout
 from pymol import Qt
 
 import sys
@@ -32,7 +31,6 @@ import webbrowser
 import time
 import logging
 from dialogs import dialog_image
-from dialogs import dialog_settings_global
 from dialogs import dialog_about
 from dialogs import dialog_finished
 from dialogs import DialogSettingsPdbPreparation
@@ -96,8 +94,8 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
 
         if sg_1 is False or sg_2 is False or sg_3 is False or sg_4 is False or sg_5 is False:
             self.statusBar.showMessage("The settings.xml is corrupted! Please fix this issue first!")
-            gui_utils.error_dialog("The settings.xml is corrupted! Please fix this issue first!",
-                                   "Check the log for more info.")
+            gui_utils.error_dialog_settings("The settings.xml is corrupted! Please fix this issue first!",
+                                            "Check the log for more info.")
         else:
             self.workspacePath = tools.SettingsXml.get_path(self.tmpSettings,
                                                             "workspacePath",
@@ -479,36 +477,22 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             print("No file has been selected.")
 
     def save_as(self):
-        ATTRIBUTE = "value"
-        try:
-            fileName = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
-                                                                "Open project file",
-                                                                Qt.QtCore.QDir.homePath(),
-                                                                "Plugin Project File (project.xml)")
-            if fileName == ("", ""):
-                raise ValueError
-
-            projectFile = tools.ProjectXml(fileName[0])
-            tmpProjectFile = projectFile.load_xml_in_memory()
-            resultsPath = projectFile.get_path(tmpProjectFile, "results", ATTRIBUTE)
-            sessionFileName = ""
-            for file in os.listdir(f"{resultsPath}/sessions"):
-                sessionFileName = file
-            cmd.save(f"{resultsPath}/sessions/{sessionFileName}")
-        except ValueError:
-            print("No file has been selected.")
-        except FileNotFoundError:
-            print("File not found!")
+        # TODO: fix saving process
+        gui_utils.save_project_xml(self, self.statusBar)
 
     def restore_settings(self):
         """This function deletes the old settings.xml and creates a new one,
         with the default values.
 
-        TODO:
-            * change fixed path to variable path
         """
-        default_settings = tools.SettingsXml("/home/matt/Documents/settings.xml")
-        default_settings.create_settings_xml_file()
+        out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?", "")
+        if out:
+            tools.restore_default_settings()
+            self.statusBar.showMessage("Settings were successfully restored.")
+            logging.info("Settings were successfully restored.")
+        else:
+            self.statusBar.showMessage("Settings were not modified.")
+            logging.info("Settings were not modified.")
 
     def quit_app(self):
         """This function closes the entire plugin.
@@ -548,8 +532,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """This function open the dialog for the global settings.
 
         """
-        dialog = dialog_settings_global.DialogSettingsGlobal()
-        dialog.exec_()
+        tools.open_global_settings()
 
     def open_settings_pdb_preparation(self):
         """This function opens the dialog for the pdb Preparation settings.
@@ -1094,7 +1077,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
 
             fullProjectFileName = f"{projectPath}/project.xml"
             projectFile = tools.ProjectXml(fullProjectFileName)
-            projectFile.create_settings_xml_file()
+            projectFile.create_project_xml_file()
 
             tmpProjectFile = projectFile.load_xml_in_memory()
             projectFile.set_value(tmpProjectFile, "projectName", "value",

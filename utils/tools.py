@@ -19,12 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from typing import Any
 
 from pymol import Qt
 
 import os
 import shutil
 import logging
+from utils import tools
+from dialogs import dialog_settings_global
 from xml.dom import minidom
 from datetime import date
 from utils import constants
@@ -62,7 +65,7 @@ def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir):
     # creates new and unique file name for the .pdb file
     new_filename = f"{tmp_dir}/{FOLDER_NAME}/{PREDICTION_NAME}_{index}.pdb"
     # renaming of the old file
-    os.rename(f"{tmp_dir}/{FOLDER_NAME}/{PREDICTION_NAME}.pdb",new_filename)
+    os.rename(f"{tmp_dir}/{FOLDER_NAME}/{PREDICTION_NAME}.pdb", new_filename)
     # move the .pdb file to the new target directory
     shutil.move(new_filename, target_dir)
     shutil.rmtree(f"{tmp_dir}/{FOLDER_NAME}")
@@ -148,6 +151,8 @@ def safeguard_numerical_value_xml(settings_file, xml_tag, xml_attribute, data_ty
             the tag used in the xml file
         xml_attribute (str):
             the attribute used in the xml file
+        data_type (str):
+            defines the used data type for the element like int or float
     Returns (bool):
         Returns a boolean value which tells if the safeguard test failed
         or succeeded
@@ -168,6 +173,26 @@ def safeguard_numerical_value_xml(settings_file, xml_tag, xml_attribute, data_ty
         elif float(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)) >= 0:
             logging.info(f"This is the {xml_tag}: {SettingsXml.get_path(settings_file, xml_tag, xml_attribute)}")
             return True
+
+
+def restore_default_settings():
+    """This function creates a settings.xml file which is filled with the
+    pre-defined values.
+
+    """
+    default_settings = tools.SettingsXml(constants.SETTINGS)
+    default_settings.create_settings_xml_file()
+
+
+def open_global_settings():
+    """This function opens the global settings dialog
+
+    """
+    dialog = dialog_settings_global.DialogSettingsGlobal()
+    if not dialog.ERROR:
+        dialog.exec_()
+    else:
+        logging.error("Settings dialog cannot be opened due to an error.")
 
 
 class SettingsXml:
@@ -225,14 +250,13 @@ class SettingsXml:
         cutoff_value_node.setAttribute(DEFAULT_ATTRIBUTE, DEFAULT_CUTOFF_VALUE)
         root_node.appendChild(cutoff_value_node)
 
-        #if os.path.exists(f"{self.pathToXml}"):
+        # if os.path.exists(f"{self.pathToXml}"):
         #    os.remove(self.pathToXml)
         if not os.path.exists(constants.SETTINGS_DIR):
             os.mkdir(constants.SETTINGS_DIR)
         # save xml file to filesystem
         with open(self.pathToXml, "w") as f:
             f.write(self.root.toprettyxml())
-
 
     def load_xml_in_memory(self):
         """This function loads a xml file into the memory.
@@ -295,7 +319,7 @@ class ProjectXml:
     def __init__(self, pathToXml):
         self.pathToXml = pathToXml
 
-    def create_settings_xml_file(self):
+    def create_project_xml_file(self):
         """This function create the settings xml with the format:
 
         <?xml version="1.0" ?>
@@ -326,7 +350,7 @@ class ProjectXml:
         date_node = self.root.createElement("date")
         # init node/attribute with default values
         date_node.setAttribute(DEFAULT_ATTRIBUTE,
-                                         DATE)
+                               DATE)
         root_node.appendChild(date_node)
 
         project_name_node = self.root.createElement("projectName")
@@ -422,3 +446,145 @@ class ProjectXml:
         """
         with open(self.pathToXml, "w") as f:
             f.write(xml_file.toxml())
+
+
+# TODO: class needs to be tested
+class XmlFile:
+    pass
+
+    @staticmethod
+    def create_xml_file(tag_list, element_list, save_path_of_xml, attribute="value"):
+        """This function create the settings xml with the format:
+
+        Args:
+            tag_list (list):
+                list which contains the xml file tags
+            element_list (list):
+                list which contains the elements
+            save_path_of_xml (str):
+                the complete filepath where the xml file should be created
+            attribute (str):
+                defines the attribute to access the elements
+
+
+        <?xml version="1.0" ?>
+        <root>
+            <workspacePath DEFAULT_ATTRIBUTE=DEFAULT_WORKSPACE_PATH/>
+            <pdbpath DEFAULT_ATTRIBUTE=DEFAULT_PDB_PATH>
+            <zippath DEFAULT_ATTRIBUTE=DEFAULT_ZIP_PATH/>
+            <cyclesValue DEFAULT_ATTRIBUTE=DEFAULT_CYCLES_VALUE/>
+            <cutoffValue DEFAULT_ATTRIBUTE=DEFAULT_CUTOFF_VALUE/>
+        </root>
+        """
+        if len(tag_list) == 0:
+            raise ValueError("The tag_list is empty!")
+        if len(element_list) == 0:
+            raise ValueError("The element_list is empty!")
+        if len(tag_list) != len(element_list):
+            raise ValueError("The tag_list and element_list have not the same"
+                             "number of elements!")
+
+        root = minidom.Document()
+        root_node = root.createElement("root")
+        root.appendChild(root_node)
+
+        index = 0
+        for tag in tag_list:
+            xml_tag = root.createElement(tag)
+            xml_tag.setAttribute(attribute, element_list[index])
+            root_node.appendChild(xml_tag)
+            index += 1
+
+        if not os.path.exists(save_path_of_xml):
+            os.mkdir(save_path_of_xml)
+        # save xml file to filesystem
+        with open(save_path_of_xml, "w") as f:
+            f.write(root.toprettyxml())
+
+    @staticmethod
+    def load_xml_in_memory(save_path_of_xml):
+        """This function loads a xml file into the memory.
+
+        Args:
+            save_path_of_xml (str):
+                the complete filepath where the xml file should be created
+        Note:
+            This function should be used once to load the xml file into the
+            memory.
+        """
+        path_as_string = str(save_path_of_xml)
+        return minidom.parse(path_as_string)
+
+    @staticmethod
+    def get_path(xml_file, tag, attribute):
+        """This functions returns the value of the path node.
+
+        Args:
+            xml_file:
+                the xml file which comes from the function load_xml_in_memory
+            tag (str):
+                e.g. pdbpath or zippath node
+            attribute (str):
+                e.g. name
+        """
+        path_name = xml_file.getElementsByTagName(tag)
+        path = path_name[0].getAttribute(attribute)
+        return path
+
+    @staticmethod
+    def set_value(xml_file, tag, attribute, value):
+        """This function changes a specific value in the xml file
+
+        Args:
+            xml_file:
+                the xml file which comes from the function load_xml_in_memory
+            tag (str):
+                 e.g. pdbpath or zippath node
+            attribute (str):
+                 e.g. name
+            value (str):
+                 new value which should be set to the attribute
+        """
+        path_name = xml_file.getElementsByTagName(tag)
+        path_name[0].setAttribute(attribute, value)
+
+    @staticmethod
+    def save_xml_file(xml_file, save_path_of_xml):
+        """This function saves the opened xml file.
+
+        Args:
+            xml_file:
+                the xml file which comes from the function load_xml_in_memory
+            save_path_of_xml (str):
+                the complete filepath where the xml file should be created
+        """
+        with open(save_path_of_xml, "w") as f:
+            f.write(xml_file.toxml())
+
+
+class Project:
+    """This class is for the projects used in the plugin
+    Args:
+        project_name:
+            name of the project
+        pdb_file:
+            path of the loaded pdb file
+        pdb_id:
+            name of the PDB ID
+        ref_chains:
+            chains which are used for the reference protein
+        model_chains:
+            chains which are used for the model protein
+        """
+    project_name = ""
+    pdb_file = ""  # either file or id!
+    pdb_id = ""
+    ref_chains = ""
+    model_chains = ""
+
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        super().__setattr__(name, value)
+
+    def __getattribute__(self, name: str) -> Any:
+        return super().__getattribute__(name)

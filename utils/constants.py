@@ -29,7 +29,6 @@ from pathlib import Path
 # settings path for mac testing
 # SETTINGS_DIR = "/Users/matt/Documents/settings.xml"
 # settings path for windows
-SETTINGS_DI = f"{os.path.expanduser('~')}/.pyssa/settings.xml"
 SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
 SETTINGS_FILE = "settings.xml"
 SETTINGS = SETTINGS_DIR / SETTINGS_FILE
@@ -37,12 +36,12 @@ SETTINGS = SETTINGS_DIR / SETTINGS_FILE
 # settings path for pymol testing
 # SETTINGS_DIR = f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/pymol_plugin/settings/settings.xml"
 
-# XML nodes & attributes
-WORKSPACE_PATH_NODE = "workspacePath"
-PDB_STORAGE_PATH_NODE = "pdbPath"
-ZIP_STORAGE_PATH_NODE = "zipPath"
-CYCLES_VALUE_NODE = "cyclesValue"
-CUTOFF_VALUE_NODE = "cutoffValue"
+# XML tags & attributes
+WORKSPACE_PATH_TAG = "workspacePath"
+PDB_STORAGE_PATH_TAG = "pdbPath"
+ZIP_STORAGE_PATH_TAG = "zipPath"
+CYCLES_VALUE_TAG = "cyclesValue"
+CUTOFF_VALUE_TAG = "cutoffValue"
 ATTRIBUTE = "value"
 
 # Constants for the structure prediction

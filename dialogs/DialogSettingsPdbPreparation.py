@@ -28,8 +28,8 @@ from uiForms.auto.auto_DialogSettingsPdbPreparation import Ui_Dialog
 
 class DialogSettingsPdbPreparation(Qt.QtWidgets.QDialog):
     SETTINGS_FULL_FILENAME = constants.SETTINGS_DIR
-    PDB_STORAGE_PATH_NODE = constants.PDB_STORAGE_PATH_NODE
-    ZIP_STORAGE_PATH_NODE = constants.ZIP_STORAGE_PATH_NODE
+    PDB_STORAGE_PATH_NODE = constants.PDB_STORAGE_PATH_TAG
+    ZIP_STORAGE_PATH_NODE = constants.ZIP_STORAGE_PATH_TAG
     ATTRIBUTE = constants.ATTRIBUTE
 
     def __init__(self, parent=None):
