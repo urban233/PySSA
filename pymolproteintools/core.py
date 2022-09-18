@@ -113,7 +113,11 @@ class protein:
         return selection
 
 
-class proteinpair:
+class ProteinPair:
+    """This class consists of two protein objects. It is used to have a better workflow for
+    the analysis.
+
+    """
 
     def __init__(self, reference_obj: protein, model_obj: protein,
                  results_dir: str):
@@ -214,7 +218,7 @@ class proteinpair:
          -> tuple[float, int]
         Note:
             Before this function can be used, the load_protein_pair
-            needs to be executed. Moreover two selections are needed
+            needs to be executed. Moreover, two selections are needed
             which have to be set through the set_selection function,
             for each protein.
 
@@ -748,13 +752,13 @@ class proteinpair:
         cmd.png(f'{self.results_dir}/images/{filename}.png', dpi=300)
 
 
-class analysis:
-
-    def __init__(self, protein_pair: proteinpair, results_dir: str, align_opts,
-                 figure_size, distance_lbl):
-        self.protein_pair = protein_pair
-        self.results_dir = results_dir
-        self.cycles = align_opts[0]
-        self.cutoff = align_opts[1]
-        self.figure_size = figure_size
-        self.distance_lbl = distance_lbl
+# class analysis:
+#
+#     def __init__(self, protein_pair: ProteinPair, results_dir: str, align_opts,
+#                  figure_size, distance_lbl):
+#         self.protein_pair = protein_pair
+#         self.results_dir = results_dir
+#         self.cycles = align_opts[0]
+#         self.cutoff = align_opts[1]
+#         self.figure_size = figure_size
+#         self.distance_lbl = distance_lbl

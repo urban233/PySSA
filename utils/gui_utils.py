@@ -3,44 +3,57 @@
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
-# 
+#
 # Source code is available at <https://github.com/urban233/PySSA>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import logging
 import os
-import webbrowser
+import shutil
+from pathlib import Path
 
 from pymol import cmd
 from pymol import Qt
-from PyQt5.QtWidgets import QMessageBox, QPushButton, QAbstractButton
-from utils import tools, constants
+from PyQt5.QtWidgets import QMessageBox
+from utils import tools, project_constants
 
 
-def create_directory(parentPath, dirName):
+def fill_combo_box(combo_box, item_list):
+    """This function fills a pyqt combobox
+
+    Args:
+        combo_box (QtWidgets.QComboBox):
+             pyqt combo box which should be filled
+        item_list (list):
+            list of items which should be placed in the combo box
+    """
+    for item in item_list:
+        combo_box.addItem(item)
+
+def create_directory(parent_path, dir_name):
     """This function creates a directory with a given path and directory name
 
     Args:
-        parentPath:
+        parent_path:
             parent path where the new directory should be created
-        dirName:
+        dir_name:
             name of the new directory
     """
-    newDir = f"{parentPath}/{dirName}"
-    if not os.path.exists(newDir):
-        os.mkdir(newDir)
+    new_dir = f"{parent_path}/{dir_name}"
+    if not os.path.exists(new_dir):
+        os.mkdir(new_dir)
 
 
 def choose_directory(self, txt_box_dir):
@@ -122,7 +135,7 @@ def set_values_in_project_xml(projectPath, projectName, REFERENCE_DIR,
     projectFile = tools.ProjectXml(fullProjectFileName)
     projectFile.create_project_xml_file()
     try:
-        tmpProjectFile = projectFile.load_xml_in_memory()
+        tmpProjectFile = projectFile.load_project()
         projectFile.set_value(tmpProjectFile, "projectName", "value",
                               projectName)
         projectFile.set_value(tmpProjectFile, "predictionDone", "value",
@@ -139,6 +152,25 @@ def set_values_in_project_xml(projectPath, projectName, REFERENCE_DIR,
         print("Project file could not be loaded!")
 
 
+def critical_message(message, message_detail):
+    """This function creates a basic critical message box, which can be customized.
+
+    Args:
+        message:
+            text which should get displayed in the dialog
+        message_detail:
+            additional information
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText("Critical")
+    msg.setInformativeText(message)
+    msg.setDetailedText(message_detail)
+    msg.setWindowTitle("Critical")
+    msg.setStandardButtons(QMessageBox.Abort)
+    msg.exec_()
+
+
 def error_dialog(message, message_detail):
     """This function creates an error dialog, which can be customized.
 
@@ -149,7 +181,7 @@ def error_dialog(message, message_detail):
             additional information
     """
     msg = QMessageBox()
-    msg.setIcon(QMessageBox.Critical)
+    msg.setIcon(QMessageBox.Error)
     msg.setText("Error")
     msg.setInformativeText(message)
     msg.setDetailedText(message_detail)
@@ -176,7 +208,7 @@ def error_dialog_settings(message, message_detail):
 
     open_global_settings_button = msg.addButton("Open Settings", QMessageBox.ActionRole)
     restore_settings_button = msg.addButton("Restore Settings", QMessageBox.ActionRole)
-    # TODO: Should a help function be implemented?
+    # TODO: * Should a help function be implemented?
     # help_button = msg.addButton("Help", QMessageBox.ActionRole)
     msg.exec_()
 
@@ -216,6 +248,59 @@ def warning_dialog_restore_settings(message, message_detail):
         return False
 
 
+def warning_message_prediction_exists(message_detail, path):
+    """This function creates a warning message, which can be customized.
+
+    Args:
+        message_detail:
+            additional information
+        path:
+            path where the prediction is stored
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Warning)
+    msg.setText("Warning")
+    msg.setInformativeText("A prediction already exists! Please delete it or "
+                           "move it to another location.")
+    msg.setDetailedText(message_detail)
+    msg.setWindowTitle("Warning")
+    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    delete_button = msg.addButton("Delete", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == cancel_button:
+        return False
+    if msg.clickedButton() == delete_button:
+        os.remove(Path(path))
+        return True
+
+def warning_message_project_exists(project_name, message_detail, path):
+    """This function creates a warning message, which can be customized.
+
+    Args:
+        message_detail:
+            additional information
+        path:
+            path where the prediction is stored
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Warning)
+    msg.setText("Warning")
+    msg.setInformativeText(f"A project with the name {project_name} already exists! "
+                           f"Please delete it or move it to another location.")
+    msg.setDetailedText(message_detail)
+    msg.setWindowTitle("Warning")
+    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    delete_button = msg.addButton("Delete", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == cancel_button:
+        return False
+    if msg.clickedButton() == delete_button:
+        shutil.rmtree(Path(path))
+        return True
+
+
 def save_project_xml(self, statusbar):
     """This function opens a qt save dialog and saves the project.xml
 
@@ -236,7 +321,7 @@ def save_project_xml(self, statusbar):
 
         project_file = tools.ProjectXml(file_name[0])
         project_file.create_project_xml_file()
-        tmp_project_file = project_file.load_xml_in_memory()
+        tmp_project_file = project_file.load_project()
         results_path = project_file.get_path(tmp_project_file, "results", constants.ATTRIBUTE)
         session_file_name = ""
         for file in os.listdir(f"{results_path}/sessions"):

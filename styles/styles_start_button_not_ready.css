@@ -1,4 +1,4 @@
-#
+/*
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
@@ -18,10 +18,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import utils.project_utils
-from utils import tools
+*/
 
-if __name__ == '__main__':
-    test_project = utils.project_utils.Project()
-    test_project.__setattr__("project_name", "bmp2")
-    print(test_project.__getattribute__("project_name"))
+QPushButton {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    min-width: 6em;
+    padding: 2px;
+}

@@ -1,0 +1,118 @@
+/*
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2022
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+QTabWidget {
+    background: #f4f4f4;
+}
+
+QTabBar::tab {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 white, stop: 0.4 whitesmoke,
+                                stop: 0.5 whitesmoke, stop: 1.0 white);
+    border: 2px solid whitesmoke;
+    border-bottom-color: whitesmoke; /* same as the pane color */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-style: outset;
+    min-width: 8ex;
+    padding: 3px;
+}
+
+QTabBar::tab:selected, QTabBar::tab:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px; /* make non-selected tabs look smaller */
+}
+
+QPushButton {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+QStatusBar {
+    background: white;
+}
+
+QMainWindow {
+    background: #f8f8f7;
+}
+
+QLineEdit {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #f4f4f4;
+    min-width: 6em;
+    padding: 1px;
+}
+
+QToolButton {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #f4f4f4;
+    min-width: 1.5em;
+    padding: 1px;
+}
+
+QToolButton::hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QToolButton:pressed {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}

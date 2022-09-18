@@ -7,14 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>560</width>
-    <height>802</height>
+    <height>747</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_6">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
      <widget class="QTabWidget" name="tabWidget_2">
       <property name="focusPolicy">
@@ -141,7 +141,7 @@
         <item>
          <widget class="QTabWidget" name="tabWidget_3">
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_3">
            <attribute name="title">
@@ -464,96 +464,83 @@
        <attribute name="title">
         <string>Results</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
+       <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
-            <item>
-             <widget class="QPushButton" name="btn_view_distance_plot">
-              <property name="text">
-               <string>View distance plot</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btn_view_struct_alignment">
-              <property name="text">
-               <string>View structure alignment</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_11">
-            <item>
-             <widget class="QPushButton" name="btn_view_distance_histogram">
-              <property name="text">
-               <string>View distance histogram</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="btn_view_interesting_regions">
-              <property name="text">
-               <string>View interesting regions</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_12">
-            <item>
-             <widget class="QPushButton" name="btn_view_distance_table">
-              <property name="text">
-               <string>View distance table</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QTabWidget" name="tabWidget">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+           <widget class="QPushButton" name="btn_view_distance_plot">
+            <property name="text">
+             <string>View distance plot</string>
             </property>
-            <property name="currentIndex">
-             <number>0</number>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_view_struct_alignment">
+            <property name="text">
+             <string>View structure alignment</string>
             </property>
-            <widget class="QWidget" name="tab">
-             <attribute name="title">
-              <string>Tab 1</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_7">
-              <item>
-               <widget class="QLabel" name="label_9">
-                <property name="autoFillBackground">
-                 <bool>false</bool>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::Box</enum>
-                </property>
-                <property name="text">
-                 <string>TextLabel</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tab_2">
-             <attribute name="title">
-              <string>Tab 2</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_5"/>
-            </widget>
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <item>
+           <widget class="QPushButton" name="btn_view_distance_histogram">
+            <property name="text">
+             <string>View distance histogram</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_view_distance_table">
+            <property name="text">
+             <string>View distance table</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QComboBox" name="cb_interesting_regions"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_view_interesting_region">
+            <property name="text">
+             <string>View interesting region</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Project List:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="project_list"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>240</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
@@ -725,7 +712,7 @@
      <x>0</x>
      <y>0</y>
      <width>560</width>
-     <height>29</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -745,7 +732,6 @@
      <string>&amp;Settings</string>
     </property>
     <addaction name="action_settings_edit_all"/>
-    <addaction name="action_settings_change_workspace"/>
     <addaction name="action_settings_model_w_off_colab_notebook"/>
    </widget>
    <widget class="QMenu" name="menuWizard">

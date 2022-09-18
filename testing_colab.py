@@ -62,7 +62,7 @@ if __name__ == "__main__":
     model_protein.set_selection(f"/{model_protein.molecule_object}//A//CA, "
                                 f"/{model_protein.molecule_object}//B//CA")
     # create protein pair object
-    bmp2_pair: core.proteinpair = core.proteinpair(reference_protein,
+    bmp2_pair: core.ProteinPair = core.ProteinPair(reference_protein,
                                                    model_protein,
                                                    EXPORT_SUBDIR)
     # reinitialize pymol session

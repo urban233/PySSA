@@ -3,26 +3,22 @@
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
-# 
+#
 # Source code is available at <https://github.com/urban233/PySSA>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-from PyQt5 import QtSvg
-from PyQt5.QtWidgets import QHBoxLayout
-from pymol import Qt
 
 import sys
 import os
@@ -30,23 +26,27 @@ import shutil
 import webbrowser
 import time
 import logging
-from dialogs import dialog_image
+import PyQt5.QtCore
+
+import utils.project_utils
+import utils.settings_utils
+from pathlib import Path
+from PyQt5 import QtSvg
+from PyQt5.QtWidgets import QHBoxLayout
+from pymol import Qt
+from pymol import cmd
+from utils import structure_analysis_utils
 from dialogs import dialog_about
-from dialogs import dialog_finished
 from dialogs import DialogSettingsPdbPreparation
-from dialogs import DialogWarningPredictionProject
-from dialogs import DialogWarningPredictionZip
-from utils import constants
+from utils import project_constants
 from utils import tools
 from utils import gui_utils
 from uiForms.auto.auto_main_window import Ui_MainWindow
 from pymolproteintools import core
-from pymolproteintools import graphics
-import matplotlib.pyplot as plt
-from pymol import cmd
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
+global_var_project_dict = {0: utils.project_utils.Project()}
 
 
 class MainWindow(Qt.QtWidgets.QMainWindow):
@@ -56,7 +56,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
     """
     target_dir = f"{os.path.expanduser('~')}/Documents/data"
     renderer = ""
-    SETTINGS = constants.SETTINGS
+    SETTINGS = project_constants.SETTINGS
 
     def __init__(self, *args, **kwargs):
         """Constructor
@@ -71,36 +71,36 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         # sets up the status bar
-        self.statusBar = Qt.QtWidgets.QStatusBar()
-        self.setStatusBar(self.statusBar)
+        self.status_bar = Qt.QtWidgets.QStatusBar()
+        self.setStatusBar(self.status_bar)
 
         # sets up settings.xml
         if not os.path.exists(self.SETTINGS):
-            settings = tools.SettingsXml(self.SETTINGS)
+            settings = utils.settings_utils.SettingsXml(self.SETTINGS)
             settings.create_settings_xml_file()
-        settings = tools.SettingsXml(self.SETTINGS)
-        self.tmpSettings = settings.load_xml_in_memory()
+        settings = utils.settings_utils.SettingsXml(self.SETTINGS)
+        self.tmp_settings = settings.load_xml_in_memory()
 
         # safeguard workspace path
-        sg_1 = tools.safeguard_filepath_xml(self.tmpSettings, 'workspacePath', 'value')
+        sg_1 = tools.safeguard_filepath_xml(self.tmp_settings, 'workspacePath', 'value')
         # safeguard pdb path
-        sg_2 = tools.safeguard_filepath_xml(self.tmpSettings, 'pdbPath', 'value')
+        sg_2 = tools.safeguard_filepath_xml(self.tmp_settings, 'pdbPath', 'value')
         # safeguard zip path
-        sg_3 = tools.safeguard_filepath_xml(self.tmpSettings, 'zipPath', 'value')
+        sg_3 = tools.safeguard_filepath_xml(self.tmp_settings, 'zipPath', 'value')
         # safeguard cycles value
-        sg_4 = tools.safeguard_numerical_value_xml(self.tmpSettings, 'cyclesValue', 'value', 'int')
+        sg_4 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cyclesValue', 'value', 'int')
         # safeguard cutoff value
-        sg_5 = tools.safeguard_numerical_value_xml(self.tmpSettings, 'cutoffValue', 'value', 'float')
+        sg_5 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cutoffValue', 'value', 'float')
 
         if sg_1 is False or sg_2 is False or sg_3 is False or sg_4 is False or sg_5 is False:
-            self.statusBar.showMessage("The settings.xml is corrupted! Please fix this issue first!")
+            self.status_bar.showMessage("The settings.xml is corrupted! Please fix this issue first!")
             gui_utils.error_dialog_settings("The settings.xml is corrupted! Please fix this issue first!",
                                             "Check the log for more info.")
         else:
-            self.workspacePath = tools.SettingsXml.get_path(self.tmpSettings,
-                                                            "workspacePath",
-                                                            "value")
-            self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspacePath}")
+            self.workspace_path = utils.settings_utils.SettingsXml.get_path(self.tmp_settings,
+                                                                            "workspacePath",
+                                                                            "value")
+            self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
 
         # sets up defaults
         # Prediction + Analysis
@@ -122,34 +122,46 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.ui.progress_bar_batch.setProperty("value", 0)
 
         # fills combo boxes
-        COMBO_BOX_DEFAULT = ""
         # combo box Representation
-        self.ui.box_representation.addItem(COMBO_BOX_DEFAULT)
-        self.ui.box_representation.addItem("cartoon")
-        self.ui.box_representation.addItem("ribbon")
+        item_list_representation = [
+            "",
+            "cartoon",
+            "ribbon",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_representation, item_list_representation)
         # combo box BgColor
-        self.ui.box_bg_color.addItem(COMBO_BOX_DEFAULT)
-        self.ui.box_bg_color.addItem("black")
-        self.ui.box_bg_color.addItem("white")
+        item_list_bg_color = [
+            "",
+            "black",
+            "white",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_bg_color, item_list_bg_color)
         # combo box Renderer
-        self.ui.box_renderer.addItem(COMBO_BOX_DEFAULT)
-        self.ui.box_renderer.addItem("default renderer")
-        self.ui.box_renderer.addItem("PyMOL internal renderer")
+        item_list_renderer = [
+            "",
+            "default renderer",
+            "PyMOL internal renderer",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_renderer, item_list_renderer)
         # combo box RayTraceMode
-        self.ui.box_ray_trace_mode.addItem(COMBO_BOX_DEFAULT)
-        self.ui.box_ray_trace_mode.addItem("normal color")
-        self.ui.box_ray_trace_mode.addItem("normal color + black outline")
-        self.ui.box_ray_trace_mode.addItem("black outline only")
-        self.ui.box_ray_trace_mode.addItem("quantized color + black outline")
-
+        item_list_ray_trace_mode = [
+            "",
+            "normal color",
+            "normal color + black outline",
+            "black outline only",
+            "quantized color + black outline",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_ray_trace_mode, item_list_ray_trace_mode)
         # combo box Ray Texture
-        self.ui.box_ray_texture.addItem(COMBO_BOX_DEFAULT)
-        self.ui.box_ray_texture.addItem("None")
-        self.ui.box_ray_texture.addItem("Matte 1")
-        self.ui.box_ray_texture.addItem("Matte 2")
-        self.ui.box_ray_texture.addItem("Swirl 1")
-        self.ui.box_ray_texture.addItem("Swirl 2")
-        self.ui.box_ray_texture.addItem("Fiber")
+        item_list_ray_texture = [
+            "",
+            "None",
+            "Matte 1",
+            "Matte 2",
+            "Swirl 1",
+            "Fiber",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
 
         # connect elements with function
         # menu connections
@@ -227,6 +239,9 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         # buttons connections
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
         self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
+        self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
+        self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
+        self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
 
         # Image
         # buttons connections
@@ -260,7 +275,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.ui.cb_analysis_chain_info.setToolTip("Enable input of chains")
 
         # for statusbar
-        self.statusBar.setToolTip("Status information: Current process")
+        self.status_bar.setToolTip("Status information: Current process")
 
         # Home/Batch tab
         # for buttons
@@ -278,7 +293,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.ui.cb_batch_chain_info.setToolTip("Enable input of chains")
 
         # for statusbar
-        self.statusBar.setToolTip("Status information: Current process")
+        self.status_bar.setToolTip("Status information: Current process")
 
         # Image tab
         # for buttons
@@ -300,43 +315,6 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
 
         # setting additional parameters
         self.setWindowTitle("PySSA v0.1.0")
-
-    # private functions
-    def __create_directory(self, parentPath, dirName):
-        """This function creates a directory with a given path and directory name
-
-        Args:
-            parentPath:
-                parent path where the new directory should be created
-            dirName:
-                name of the new directory
-        """
-        newDir = f"{parentPath}/{dirName}"
-        if not os.path.exists(newDir):
-            os.mkdir(newDir)
-
-    def __create_project_folder(self, DialogWarningPredictionProject):
-        """This function creates a project folder.
-
-        Args:
-            DialogWarningPredictionProject:
-                entire dialog which warns the user that the project folder
-                has been already created
-        """
-        projectName = self.ui.txt_prediction_project_name.text()
-        projectPath = f"{self.workspacePath}/{projectName}"
-        # check if the project folder already exists
-        if os.path.exists(projectPath):
-            self.statusBar.showMessage(
-                f"Warning! | Current Workspace: {self.workspacePath}")
-            dialog = DialogWarningPredictionProject
-            dialog.exec_()
-            # breaks out of function
-            self.statusBar.clearMessage()
-            return None
-        else:
-            os.mkdir(projectPath)
-            return projectName, projectPath
 
     def __check_start_possibility(self):
         """This function is used to determine if the Start button can be
@@ -360,8 +338,18 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             j = 3
         if i == j:
             self.ui.btn_analysis_start.setEnabled(True)
+            with open('styles/styles_start_button_ready.css', 'r') as file:
+                button_style = file.read()
+
+                # Set the stylesheet of the application
+                self.ui.btn_analysis_start.setStyleSheet(button_style)
         else:
             self.ui.btn_analysis_start.setEnabled(False)
+            with open('styles/styles_start_button_not_ready.css', 'r') as file:
+                button_style = file.read()
+
+                # Set the stylesheet of the application
+                self.ui.btn_analysis_start.setStyleSheet(button_style)
 
     def __check_start_possibility_batch(self):
         """This function is used to determine if the Start button can be
@@ -385,8 +373,18 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             j = 3
         if i == j:
             self.ui.btn_batch_start.setEnabled(True)
+            with open('styles/styles_start_button_ready.css', 'r') as file:
+                button_style = file.read()
+
+                # Set the stylesheet of the application
+                self.ui.btn_batch_start.setStyleSheet(button_style)
         else:
             self.ui.btn_batch_start.setEnabled(False)
+            with open('styles/styles_start_button_not_ready.css', 'r') as file:
+                button_style = file.read()
+
+                # Set the stylesheet of the application
+                self.ui.btn_batch_start.setStyleSheet(button_style)
 
     def __check_start_possibility_prediction(self):
         """This function is used to determine if the Start button can be
@@ -408,77 +406,103 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             j = 2
         if i == j:
             self.ui.btn_prediction_start.setEnabled(True)
+            with open('styles/styles_start_button_ready.css', 'r') as file:
+                button_style = file.read()
+
+                # Set the stylesheet of the application
+                self.ui.btn_prediction_start.setStyleSheet(button_style)
         else:
             self.ui.btn_prediction_start.setEnabled(False)
+            with open('styles/styles_start_button_not_ready.css', 'r') as file:
+                button_style = file.read()
+
+                # Set the stylesheet of the application
+                self.ui.btn_prediction_start.setStyleSheet(button_style)
 
     # @SLOT
     # Menu
     def open(self):
-        ATTRIBUTE = "value"
+        """This function opens a project.xml file and fills the input boxes with the right values
+
+        """
+        # TODO: * it's broken and needs to be fixed
+        attribute = "value"
         # open file dialog
         try:
             file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
                                                                  "Open project file",
                                                                  Qt.QtCore.QDir.homePath(),
-                                                                 "Plugin Project File (project.xml)")
+                                                                 "Plugin Project File (*.xml)")
             if file_name == ("", ""):
                 # TODO: add status bar and logger message
                 print("No file has been selected.")
                 return
+            global global_var_project_dict
+            global_var_project_dict[0].load_project(file_name[0])
+            # add filename to project list (results tab)
+            self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
+            self.ui.project_list.setCurrentRow(0)
+            # fill combo box of interesting regions
+            results_path = global_var_project_dict[0].get_results_path()
+            dir_content = os.listdir(f"{results_path}/images/interesting_regions")
+            for tmp_file in dir_content:
+                self.ui.cb_interesting_regions.addItem(tmp_file)
 
-            project_file = tools.ProjectXml(file_name[0])
-            tmp_project_file = project_file.load_xml_in_memory()
-
-            if project_file.get_path(tmp_project_file, "predictionDone", ATTRIBUTE) == "False":
-                self.ui.txt_analysis_project_name.setText(
-                    project_file.get_path(tmp_project_file,
-                                          "projectName",
-                                          ATTRIBUTE))
-                self.ui.txt_analysis_load_reference.setText(
-                    project_file.get_path(tmp_project_file,
-                                          "reference",
-                                          ATTRIBUTE))
-                if len(project_file.get_path(tmp_project_file, "referenceChains",
-                                             ATTRIBUTE)) > 0:
-                    self.ui.cb_analysis_chain_info.setChecked(True)
-                    self.ui.txt_analysis_chain_ref.setText(project_file.get_path(
-                        tmp_project_file, "referenceChains", ATTRIBUTE))
-                    self.ui.txt_analysis_chain_model.setText(project_file.get_path(
-                        tmp_project_file, "modelChains", ATTRIBUTE))
-                resultsPath = project_file.get_path(tmp_project_file, "results",
-                                                    ATTRIBUTE)
-                sessionFileName = ""
-                for file in os.listdir(f"{resultsPath}/sessions"):
-                    sessionFileName = file
-                cmd.load(f"{resultsPath}/sessions/{sessionFileName}")
-            else:
-                self.ui.txt_prediction_project_name.setText(project_file.get_path(tmp_project_file,
-                                                                                  "projectName",
-                                                                                  ATTRIBUTE))
-                self.ui.txt_prediction_load_reference.setText(project_file.get_path(tmp_project_file,
-                                                                                    "reference",
-                                                                                    ATTRIBUTE))
-                if len(project_file.get_path(tmp_project_file, "referenceChains",
-                                             ATTRIBUTE)) > 0:
-                    self.ui.cb_prediction_chain_info.setChecked(True)
-                    self.ui.txt_prediction_chain_ref.setText(project_file.get_path(
-                        tmp_project_file, "referenceChains", ATTRIBUTE))
-                    self.ui.txt_prediction_chain_model.setText(project_file.get_path(
-                        tmp_project_file, "modelChains", ATTRIBUTE))
-                resultsPath = project_file.get_path(tmp_project_file, "results",
-                                                    ATTRIBUTE)
-                sessionFileName = ""
-                for file in os.listdir(f"{resultsPath}/sessions"):
-                    sessionFileName = file
-                cmd.load(f"{resultsPath}/sessions/{sessionFileName}")
+            #
+            # project_file = tools.ProjectXml(file_name[0])
+            # tmp_project_file = project_file.load_xml_in_memory()
+            #
+            # if project_file.get_path(tmp_project_file, "predictionDone", attribute) == "False":
+            #     self.ui.txt_analysis_project_name.setText(
+            #         project_file.get_path(tmp_project_file,
+            #                               "projectName",
+            #                               attribute))
+            #     self.ui.txt_analysis_load_reference.setText(
+            #         project_file.get_path(tmp_project_file,
+            #                               "reference",
+            #                               attribute))
+            #     if len(project_file.get_path(tmp_project_file, "referenceChains",
+            #                                  attribute)) > 0:
+            #         self.ui.cb_analysis_chain_info.setChecked(True)
+            #         self.ui.txt_analysis_chain_ref.setText(project_file.get_path(
+            #             tmp_project_file, "referenceChains", attribute))
+            #         self.ui.txt_analysis_chain_model.setText(project_file.get_path(
+            #             tmp_project_file, "modelChains", attribute))
+            #     results_path = project_file.get_path(tmp_project_file, "results", attribute)
+            #     session_file_name = ""
+            #     for file in os.listdir(f"{results_path}/sessions"):
+            #         session_file_name = file
+            #     cmd.load(f"{results_path}/sessions/{session_file_name}")
+            # else:
+            #     self.ui.txt_prediction_project_name.setText(project_file.get_path(tmp_project_file,
+            #                                                                       "projectName",
+            #                                                                       attribute))
+            #     self.ui.txt_prediction_load_reference.setText(project_file.get_path(tmp_project_file,
+            #                                                                         "reference",
+            #                                                                         attribute))
+            #     if len(project_file.get_path(tmp_project_file, "referenceChains",
+            #                                  attribute)) > 0:
+            #         self.ui.cb_prediction_chain_info.setChecked(True)
+            #         self.ui.txt_prediction_chain_ref.setText(project_file.get_path(
+            #             tmp_project_file, "referenceChains", attribute))
+            #         self.ui.txt_prediction_chain_model.setText(project_file.get_path(
+            #             tmp_project_file, "modelChains", attribute))
+            #     results_path = project_file.get_path(tmp_project_file, "results", attribute)
+            #     session_file_name = ""
+            #     for file in os.listdir(f"{results_path}/sessions"):
+            #         session_file_name = file
+            #     cmd.load(f"{results_path}/sessions/{session_file_name}")
         except FileNotFoundError:
             print("File could not be opened.")
         except ValueError:
             print("No file has been selected.")
 
     def save_as(self):
+        """This function saves all information in the current tab
+
+        """
         # TODO: fix saving process
-        gui_utils.save_project_xml(self, self.statusBar)
+        gui_utils.save_project_xml(self, self.status_bar)
 
     def restore_settings(self):
         """This function deletes the old settings.xml and creates a new one,
@@ -488,10 +512,10 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?", "")
         if out:
             tools.restore_default_settings()
-            self.statusBar.showMessage("Settings were successfully restored.")
+            self.status_bar.showMessage("Settings were successfully restored.")
             logging.info("Settings were successfully restored.")
         else:
-            self.statusBar.showMessage("Settings were not modified.")
+            self.status_bar.showMessage("Settings were not modified.")
             logging.info("Settings were not modified.")
 
     def quit_app(self):
@@ -507,34 +531,36 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         try:
             # path to download directory
-            tmpPath = f"{os.path.expanduser('~')}/Downloads"
-            os.chdir(tmpPath)
+            tmp_path = f"{os.path.expanduser('~')}/Downloads"
+            os.chdir(tmp_path)
             # path to store all pdb files (should be defined in the Settings tab!)
             target_dir = f"{os.path.expanduser('~')}/Documents/data"
 
-            # tmpList contains a list with all zips starting with prediction
-            tmpList = tools.filter_prediction_zips(tmpPath)
+            # tmp_list contains a list with all zips starting with prediction
+            tmp_list = tools.filter_prediction_zips(tmp_path)
 
             # create temporary dir to handle unzipping
-            tmpDir = f"{tmpPath}/tmp"
-            if not os.path.exists(tmpDir):
-                os.mkdir(tmpDir)
+            tmp_dir = f"{tmp_path}/tmp"
+            if not os.path.exists(tmp_dir):
+                os.mkdir(tmp_dir)
 
-            for file in tmpList:
-                tools.extract_and_move_model_pdb(tmpPath, tmpDir, file, target_dir)
+            for file in tmp_list:
+                tools.extract_and_move_model_pdb(tmp_path, tmp_dir, file, target_dir)
 
-            shutil.rmtree(tmpDir)
-            self.statusBar.showMessage("Preparing the .pdb files was successful.")
+            shutil.rmtree(tmp_dir)
+            self.status_bar.showMessage("Preparing the .pdb files was successful.")
         except Exception:
-            self.statusBar.showMessage("Preparing the .pdb files failed!")
+            self.status_bar.showMessage("Preparing the .pdb files failed!")
 
-    def open_settings_global(self):
+    @staticmethod
+    def open_settings_global():
         """This function open the dialog for the global settings.
 
         """
         tools.open_global_settings()
 
-    def open_settings_pdb_preparation(self):
+    @staticmethod
+    def open_settings_pdb_preparation():
         """This function opens the dialog for the pdb Preparation settings.
 
         """
@@ -542,44 +568,66 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         dialog.exec_()
 
     def display_workspace_path(self):
-        self.statusBar.showMessage(f"Current Workspace: {self.workspacePath}")
+        """This function displays the current workspace path in the statusbar of the main window.
+
+        """
+        self.status_bar.showMessage(f"Current Workspace: {self.workspace_path}")
 
     def display_project_path(self):
-        """
-
-        TODO:
-            * implement displaying project path function
-        """
-        self.statusBar.showMessage(f"Current Project Path: ... ")
-
-    def open_documentation(self):
-        """This function opens the official plugin documentation.
+        """This function displays the current project path in the statusbar of the main window.
 
         """
-        webbrowser.open_new("docs/pymol_plugin/build/html/index.html")
+        try:
+            global global_var_project_dict
+            if global_var_project_dict[0].get_project_path() == "":
+                raise ValueError
+            project_path = global_var_project_dict[0].get_project_path()
+            self.status_bar.showMessage(f"Current Project Path: {project_path}")
+        except ValueError:
+            tools.quick_log_and_display("info", "No project loaded yet.", self.status_bar,
+                                        "No project loaded yet.")
 
-    def open_documentation_pdf(self):
-        webbrowser.open_new("docs/pymol_plugin/build/latex/pymol-plugin.pdf")
+    @staticmethod
+    def open_documentation():
+        """This function opens the official plugin documentation as HTML page.
 
-    def open_about(self):
+        """
+        webbrowser.open_new(f"file://{os.getcwd()}/docs/pymol_plugin/build/html/index.html")
+
+    @staticmethod
+    def open_documentation_pdf():
+        """This function opens the official plugin documentation as PDF.
+
+        """
+        webbrowser.open_new(
+            f"file://{os.getcwd()}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+
+    @staticmethod
+    def open_about():
+        """This function opens the about dialog.
+
+        """
         dialog = dialog_about.DialogAbout()
         dialog.exec_()
 
     # Prediction + Analysis
     def load_reference_for_prediction(self):
+        """This function loads a reference for the analysis part
+
+        """
         try:
             # open file dialog
-            fileName = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                Qt.QtCore.QDir.homePath(),
-                                                                "PDB Files (*.pdb)")
-            if fileName == ("", ""):
+            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
+                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 "PDB Files (*.pdb)")
+            if file_name == ("", ""):
                 raise ValueError("No file has been selected.")
             # display path in text box
-            self.ui.txt_prediction_load_reference.setText(str(fileName[0]))
-            self.statusBar.showMessage("Loading the reference was successful.")
+            self.ui.txt_prediction_load_reference.setText(str(file_name[0]))
+            self.status_bar.showMessage("Loading the reference was successful.")
             self.__check_start_possibility_prediction()
         except FileNotFoundError:
-            self.statusBar.showMessage("Loading the reference failed!")
+            self.status_bar.showMessage("Loading the reference failed!")
         except ValueError:
             print("No file has been selected.")
 
@@ -591,10 +639,10 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         try:
             self.ui.txt_prediction_chain_ref.setEnabled(self.ui.cb_prediction_chain_info.checkState())
             self.ui.txt_prediction_chain_model.setEnabled(self.ui.cb_prediction_chain_info.checkState())
-            self.statusBar.showMessage("Enter the chain information.")
+            self.status_bar.showMessage("Enter the chain information.")
             self.__check_start_possibility_prediction()
         except Exception:
-            self.statusBar.showMessage("Unexpected Error.")
+            self.status_bar.showMessage("Unexpected Error.")
 
     def check_prediction_if_txt_prediction_chain_ref_is_filled(self):
         """This function checks if any chains are in the text field for the
@@ -611,336 +659,151 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.__check_start_possibility_prediction()
 
     def check_prediction_if_txt_prediction_project_name_is_filled(self):
+        """This function checks if the project name text field is filled.
+
+        """
         self.__check_start_possibility_prediction()
 
     def check_prediction_if_txt_prediction_load_reference_is_filled(self):
+        """This function checks if a reference pdb file is selected.
+
+        """
         self.__check_start_possibility_prediction()
 
     def predict(self):
         """This function opens a webbrowser with a colab notebook, to run the
-        prediction. In addition it runs the entire analysis after the
+        prediction. In addition, it runs the entire analysis after the
         prediction.
 
         """
-        self.statusBar.removeWidget(self.workspace)
-        self.statusBar.showMessage("Checking user input ...")
+        self.status_bar.removeWidget(self.workspace)
+        self.status_bar.showMessage("Checking user input ...")
 
         # check if a prediction is already finished
-        FILE_NAME = constants.FULL_FILENAME_PREDICTION_ZIP
-        if os.path.isfile(FILE_NAME) == True:
-            self.statusBar.showMessage(
-                f"Warning! | Current Workspace: {self.workspacePath}")
-            dialog = DialogWarningPredictionZip.DialogWarningPredictionZip()
-            dialog.exec_()
+        if os.path.isfile(project_constants.FULL_FILENAME_PREDICTION_ZIP):
+            self.status_bar.showMessage(
+                f"Warning! | Current Workspace: {self.workspace_path}")
+            check = gui_utils.warning_message_prediction_exists(
+                f"The prediction is here: {project_constants.FULL_FILENAME_PREDICTION_ZIP} ",
+                project_constants.FULL_FILENAME_PREDICTION_ZIP)
+            if not check:
+                return
 
-        projectName, projectPath = gui_utils.create_project_folder(
-            self.ui.txt_prediction_project_name, self.workspacePath, self.statusBar,
-            DialogWarningPredictionProject.DialogWarningPredictionProject())
+        # project = utils.project_utils.Project()
+        # project_name = self.ui.txt_prediction_project_name.text()
+        # project_name_with_underscores = project_name.replace(" ", "_")
+        # project_folder_path = Path(f"{self.workspace_path}/{project_name_with_underscores}")
+        # self.__create_project_folder(project_folder_path)
+        #
+        # # setting values for the project xml file
+        # project.set_project_name(project_name_with_underscores)
+        # # TODO: * implement input check with QValidator and Regex
+        # if len(self.ui.txt_prediction_load_reference.text()) == 4:
+        #     project.set_pdb_id(self.ui.txt_prediction_load_reference.text())
+        # project.set_pdb_file(self.ui.txt_prediction_load_reference.text())
+        # if self.ui.txt_prediction_chain_ref.text() != "":
+        #     project.set_ref_chains(self.ui.txt_prediction_chain_ref.text())
+        # if self.ui.txt_prediction_chain_model.text() != "":
+        #     project.set_model_chains(self.ui.txt_prediction_chain_model.text())
+        # project.set_results_path(f"{project_folder_path}/results")
+        #
+        # # creates a pdb folder
+        # self.__create_directory(Path(f"{project_folder_path}"), "pdb")
+        # project_pdb_path = f"{project_folder_path}/pdb"
+        # # creates a tmp folder to unzip the prediction
+        # self.__create_directory(Path(f"{project_folder_path}"), "tmp")
+        # project_tmp_path = f"{project_folder_path}/tmp"
+        # # creates results folder
+        # self.__create_directory(Path(f"{project_folder_path}"), "results")
+        # project_results_path = f"{project_folder_path}/results"
 
-        # TODO:
-        #   * the code block below can be subbed by the function
-        #   createProjectFolder
-
-        # creates a project folder
-        # projectName = self.ui.txt_prediction_project_name.text()
-        # projectPath = f"{self.workspacePath}/{projectName}"
-        # # check if the project folder already exists
-        # if os.path.exists(projectPath):
-        #     self.statusBar.showMessage(
-        #         f"Warning! | Current Workspace: {self.workspacePath}")
-        #     dialog = DialogWarningPredictionProject.DialogWarningPredictionProject()
-        #     dialog.exec_()
-        #     # breaks out of function
-        #     self.statusBar.clearMessage()
-        #     self.statusBar.addPermanentWidget(self.workspace)
-        #     return None
-        # else:
-        #     os.mkdir(projectPath)
-
-        # TODO:
-        #   * the two code blocks below can be subbed by the function
-        #   createDirectory
-        # creates a pdb folder
-        projectPdbDir = f"{projectPath}/pdb"
-        if not os.path.exists(projectPdbDir):
-            os.mkdir(projectPdbDir)
-        # creates a tmp folder to unzip the prediction
-        tmpProjectDir = f"{projectPath}/tmp"
-        if not os.path.exists(tmpProjectDir):
-            os.mkdir(tmpProjectDir)
-
-        # check if input is valid
         # gets reference filename and filepath
         if len(self.ui.txt_prediction_load_reference.text()) == 4:
-            tmpREFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
-            tmpProtein = core.protein(tmpREFERENCE_OBJ_NAME,
-                                      export_data_dir=projectPdbDir)
-            tmpProtein.clean_pdb_file()
-            REFERENCE_OBJ_NAME = tmpREFERENCE_OBJ_NAME
-            REFERENCE_DIR = projectPdbDir
+            tmp_protein = core.protein(self.ui.txt_prediction_load_reference.text(),
+                                       export_data_dir=project_pdb_path)
+            tmp_protein.clean_pdb_file()
+            REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
+            REFERENCE_DIR = project_pdb_path
         else:
-            refFileInfo = Qt.QtCore.QFileInfo(
-                self.ui.txt_prediction_load_reference.text())
-            REFERENCE_OBJ_NAME = refFileInfo.baseName()
-            REFERENCE_DIR = refFileInfo.canonicalPath()
-
-        # creates results folder
-        resultsPath = f"{projectPath}/Results"
-        os.mkdir(resultsPath)
-
-        # TODO:
-        #   * the code block below can be subbed by the function
-        #   setValuesInProjectXml
-        # see function setValuesInProjectXml!!
-        # fullProjectFileName = f"{projectPath}/project.xml"
-        # projectFile = tools.ProjectXml(fullProjectFileName)
-        # projectFile.create_settings_xml_file()
-        # try:
-        #     tmpProjectFile = projectFile.load_xml_in_memory()
-        #     projectFile.set_value(tmpProjectFile, "projectName", "value",
-        #                           projectName)
-        #     projectFile.set_value(tmpProjectFile, "predictionDone", "value",
-        #                           "True")
-        #     projectFile.set_value(tmpProjectFile, "reference", "value",
-        #                           f"{REFERENCE_DIR}/{REFERENCE_OBJ_NAME}")
-        #     projectFile.set_value(tmpProjectFile, "referenceChains", "value",
-        #                           self.ui.txt_prediction_chain_ref.text())
-        #     projectFile.set_value(tmpProjectFile, "modelChains", "value",
-        #                           self.ui.txt_prediction_chain_model.text())
-        #     projectFile.set_value(tmpProjectFile, "results", "value",
-        #                           resultsPath)
-        # except FileNotFoundError:
-        #     print("Project file could not be loaded!")
+            ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
+            REFERENCE_OBJ_NAME = ref_file_info.baseName()
+            REFERENCE_DIR = ref_file_info.canonicalPath()
 
         # starting the default web browser to display the colab notebook
-        self.statusBar.showMessage("Opening Google colab notebook ...")
+        self.status_bar.showMessage("Opening Google colab notebook ...")
         if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
-            webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
+            webbrowser.open_new(project_constants.OFFICIAL_NOTEBOOK_URL)
         else:
-            webbrowser.open_new(constants.NOTEBOOK_URL)
+            webbrowser.open_new(project_constants.NOTEBOOK_URL)
 
         # waiting for the colab notebook to finish
         # TODO:
         #   * implement cancel button for "Abort Prediction"
         self.ui.btn_prediction_cancel.setEnabled(True)
-        flag = False
-        while flag == False:
-            print("AlphaFold is still running ...")
-            time.sleep(5)
-            # time.sleep(120)
-        # while os.path.isfile(FILE_NAME) == False:
+        archive = "prediction.zip"
+        source_path = Path(f"{os.path.expanduser('~')}/Downloads")
+        FILE_NAME = source_path / archive
+        # flag = False
+        # while flag == False:
         #     print("AlphaFold is still running ...")
         #     time.sleep(5)
         #     # time.sleep(120)
+        while os.path.isfile(FILE_NAME) is False:
+            print("AlphaFold is still running ...")
+            # time.sleep(5)
+            time.sleep(20)
+            # time.sleep(120)
 
+        # ----------------------------------------------------------------- #
         # start of the analysis algorithm
-        self.statusBar.showMessage("Protein structure analysis started ...")
+        self.status_bar.showMessage("Protein structure analysis started ...")
 
-        archive = "prediction.zip"
-        sourcePath = f"{os.path.expanduser('~')}/Downloads"
         # extracts and moves the prediction.pdb to the workspace/pdb folder
         tools.extract_and_move_model_pdb(
-            sourcePath, tmpProjectDir, archive, projectPdbDir)
+            str(source_path), project_tmp_path, archive, project_pdb_path)
 
         # removes tmp dir
-        os.remove(tmpProjectDir)
+        # os.remove(project_tmp_path)
 
         # gets model filename and filepath
-        PREDICTION_NAME = tools.get_prediction_file_name(projectPdbDir)
-        fullModelFilePath = f"{projectPdbDir}/{PREDICTION_NAME[0]}"
-        modelFileInfo = Qt.QtCore.QFileInfo(fullModelFilePath)
-        MODEL_OBJ_NAME = modelFileInfo.baseName()
-        MODEL_DIR = modelFileInfo.canonicalPath()
+        PREDICTION_NAME = tools.get_prediction_file_name(project_pdb_path)
+        full_model_file_path = f"{project_pdb_path}/{PREDICTION_NAME[0]}"
+        model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
+        MODEL_OBJ_NAME = model_file_info.baseName()
+        MODEL_DIR = model_file_info.canonicalPath()
 
-        projectFile.set_value(tmpProjectFile, "model", "value",
-                              fullModelFilePath)
-        projectFile.save_xml_file(tmpProjectFile)
-
+        project = utils.project_utils.Project()
         try:
-            # gets chain information for the reference
-            refChains = self.ui.txt_prediction_chain_ref.text().split(",")
+            project_pdb_path, project_results_path = project.create_project(self.workspace_path, full_model_file_path,
+                                                                            MODEL_OBJ_NAME,
+                                                                            self.ui.txt_prediction_project_name,
+                                                                            self.ui.txt_prediction_load_reference,
+                                                                            self.ui.txt_prediction_chain_ref,
+                                                                            self.ui.txt_prediction_chain_model,
+                                                                            "")
+        except IsADirectoryError:
+            return
+        except TypeError:
+            return
+        # create the protein object for the reference
+        reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
 
-            # gets chain information for the model
-            modelChains = self.ui.txt_prediction_chain_model.text().split(",")
-
-            # define a parent directory where all results will be saved
-            # EXPORT_SUBDIR: str = f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/pymol_plugin/data/results"
-            EXPORT_SUBDIR = resultsPath
-
-            # define parameters for the align command
-            CYCLES: int = 1
-            CUTOFF: float = 1.0
-            # define a filename for the rmsd and aligned amino acids CSV file
-            FILE_NAME: str = "rmsd_and_aligned_AA_form_alignment"
-
-            # constant variables for plotting
-            FIGURE_SIZE = (11.0, 6.0)
-            # defines the atoms of which the distance gets computed
-            DISTANCE_LABEL: str = "$\\alpha$-C"
-
-            # define variable filenames for the different results
-            ALIGNMENT_FILE_NAME: str = f"alignment_file_{MODEL_OBJ_NAME}"
-            DISTANCE_FILE_NAME: str = f"distance_file_{MODEL_OBJ_NAME}"
-            SESSION_FILE_NAME: str = f"session_file_{MODEL_OBJ_NAME}"
-
-            # comment the below code in, if you wish to have a fixed y-axis for ALL plots
-            # LIMIT_Y: tuple[float, float] = (0, 7)
-
-            # create the protein object for the reference
-            reference_protein: core.protein = core.protein(REFERENCE_OBJ_NAME,
-                                                           REFERENCE_DIR)
-            # sets selection for any chain combination of reference
-            refSelection = ""
-            seperator = ", "
-            tmpList = []
-
-            for chain in refChains:
-                tmpSelection = f"/{reference_protein.molecule_object}//{chain}//CA"
-                tmpList.append(tmpSelection)
-                refSelection = seperator.join(tmpList)
-
-            reference_protein.set_selection(refSelection)
-            self.ui.progress_bar_prediction.setProperty("value", 5)
-            # sets selection for any chain combination of model
-            # create model protein object
-            model_protein: core.protein = core.protein(MODEL_OBJ_NAME,
-                                                       MODEL_DIR)
-            modelSelection = ""
-            tmpList = []
-            for chain in modelChains:
-                tmpSelection = f"/{model_protein.molecule_object}//{chain}//CA"
-                tmpList.append(tmpSelection)
-                modelSelection = seperator.join(tmpList)
-
-            model_protein.set_selection(modelSelection)
-            self.ui.progress_bar_prediction.setProperty("value", 10)
-            # create protein pair object
-            protein_pair = core.proteinpair(reference_protein, model_protein,
-                                            EXPORT_SUBDIR)
-
-            # --- Begin of PyMOL session --- #
-            # reinitialize pymol session
-            self.statusBar.showMessage("Reinitialize pymol session ...")
-
-            cmd.reinitialize()
-            self.statusBar.showMessage(
-                "Finished reinitializing pymol session. | Load proteins ...")
-
-            # load both proteins in the pymol session
-            protein_pair.load_protein_pair()
-            self.ui.progress_bar_prediction.setProperty("value", 15)
-            self.statusBar.showMessage(
-                "Finished loading proteins. | Color proteins ...")
-            print(f"Finished loading proteins.")
-
-            # color protein with default colors; ref: green, model: blue
-            protein_pair.color_protein_pair()
-            self.ui.progress_bar_prediction.setProperty("value", 20)
-            self.statusBar.showMessage(
-                "Finished coloring proteins. | Align proteins ...")
-            print(f"Finished coloring proteins.")
-
-            # do the structure alignment
-            align_results = protein_pair.align_protein_pair(CYCLES, CUTOFF,
-                                                            ALIGNMENT_FILE_NAME)
-            self.ui.progress_bar_prediction.setProperty("value", 25)
-            self.statusBar.showMessage(
-                "Finished aligning proteins. | Calculate distances ...")
-            print(f"Finished aligning proteins.")
-
-            # do the distance calculation
-            distance_results = protein_pair.calculate_distance_between_ca_atoms(
-                ALIGNMENT_FILE_NAME)
-            protein_pair.export_distance_between_ca_atoms(distance_results)
-            self.ui.progress_bar_prediction.setProperty("value", 40)
-            self.statusBar.showMessage(
-                "Finished calculating distances. | Create distance plot ...")
-            print(f"Finished distance calculations.")
-
-            # create an instance of the graphics class
-            graphics_instance: graphics.graphics = graphics.graphics(
-                protein_pair,
-                distance_results,
-                FIGURE_SIZE)
-            # create distance plot
-            fig = graphics_instance.create_distance_plot(DISTANCE_LABEL, CUTOFF)
-            self.ui.progress_bar_prediction.setProperty("value", 45)
-            self.statusBar.showMessage(
-                "Finished creating distance plot. | Create distance histogram ...")
-            print(f"Finished creation of distance plot.")
-
-            # save distance plot
-            if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                os.mkdir(f"{protein_pair.results_dir}/plots")
-            if not os.path.exists(
-                    f"{protein_pair.results_dir}/plots/distance_plot"):
-                os.mkdir(f"{protein_pair.results_dir}/plots/distance_plot")
-            plt.savefig(f"{protein_pair.results_dir}/plots/distance_plot/"
-                        f"distance_plot_{MODEL_OBJ_NAME}.svg")
-            plt.close(fig)
-
-            # create distance histogram
-            graphics_instance.create_distance_histogram()
-            self.ui.progress_bar_prediction.setProperty("value", 50)
-            self.statusBar.showMessage(
-                "Finished creating distance histogram. | "
-                "Take image of structure alignment ...")
-            print(f"Finished creation of distance histogram.")
-
-            # save distance histogram
-            if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                os.mkdir(f"{protein_pair.results_dir}/plots")
-            if not os.path.exists(
-                    f"{protein_pair.results_dir}/plots/distance_histogram"):
-                os.mkdir(f"{protein_pair.results_dir}/plots/distance_histogram")
-            plt.savefig(f"{protein_pair.results_dir}/plots/distance_histogram"
-                        f"/distance_histogram_{MODEL_OBJ_NAME}.svg")
-
-            # take image of whole structure alignment
-            graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME,
-                                                         "cartoon",
-                                                         "test")
-            self.ui.progress_bar_prediction.setProperty("value", 70)
-            self.statusBar.showMessage(
-                f"Finished taking image of structure alignment. | Take images "
-                f"of interesting regions (within {CUTOFF} angstrom)")
-            print(f"Finished creation of image which shows the whole structure "
-                  f"alignment.")
-
-            # take image of interesting regions
-            graphics_instance.take_image_of_interesting_regions(3.0,
-                                                                "interesting_region",
-                                                                opaque_background=1)
-            self.ui.progress_bar_prediction.setProperty("value", 90)
-            self.statusBar.showMessage(
-                f"Finished taking images of interesting regions. | "
-                f"Save PyMOL session")
-            print(
-                f"Finished creation of images which show interesting regions with"
-                f"a distance greater than {CUTOFF} angstrom.")
-
-            # color residues by distance
-            # graphics_instance.color_by_distance(ALIGNMENT_FILE_NAME)
-            # print(f"Finished coloring of prediction with color_by_distance.")
-            # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
-            #                                              "coloredByRMSD")
-            # graphics_instance.create_gif()
-            # print(f"Finished creation of gif which shows the whole predicted "
-            #       f"structure colored by distance.")
-
-            # save pymol session
-            protein_pair.save_session_of_protein_pair(SESSION_FILE_NAME)
-            self.statusBar.showMessage(
-                f"Finished saving PyMOL session. | "
-                f"Protein structure analysis has successfully finished.")
-            print(f"Finished saving of pymol session file.")
-            self.statusBar.showMessage("")
-            self.ui.progress_bar_prediction.setProperty("value", 100)
-            dialog = dialog_finished.DialogFinished()
-            dialog.exec_()
-            self.ui.btn_prediction_start.setEnabled(True)
-        except Exception:
-            self.statusBar.showMessage("Protein structure analysis has failed!")
+        # create model protein object
+        model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
+        # sets the filepath of the model in the project xml file
+        project.set_pdb_models([full_model_file_path])
+        project.create_xml_file(f"{str(project_folder_path)}/{project_name_with_underscores}.xml")
+        export_dir = project_results_path
+        structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
+                                                                        project.get_ref_chains().split(","),
+                                                                        project.get_model_chains().split(","),
+                                                                        export_dir)
+        structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
+                                                         structure_analysis.reference_protein)
+        structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
+                                                         structure_analysis.model_proteins)
+        structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
+                                                self.status_bar, self.ui.progress_bar_prediction)
 
     # Single Analysis
     def load_reference_for_analysis(self):
@@ -958,15 +821,15 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
                 raise ValueError("No file has been selected.")
             # display path in text box
             self.ui.txt_analysis_load_reference.setText(str(fileName[0]))
-            self.statusBar.showMessage("Loading the reference was successful.")
+            self.status_bar.showMessage("Loading the reference was successful.")
             self.__check_start_possibility_prediction()
         except FileNotFoundError:
-            self.statusBar.showMessage("Loading the reference failed!")
+            self.status_bar.showMessage("Loading the reference failed!")
         except ValueError:
             print("No file has been selected.")
             self.__check_start_possibility()
         except Exception:
-            self.statusBar.showMessage("Loading the reference failed!")
+            self.status_bar.showMessage("Loading the reference failed!")
 
     def load_model_for_analysis(self):
         """This function opens a file dialog to choose a .pdb file as
@@ -980,10 +843,10 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
                                                                 "PDB Files (*.pdb)")
             # display path in text box
             self.ui.txt_analysis_load_model.setText(str(fileName[0]))
-            self.statusBar.showMessage("Loading the model was successful.")
+            self.status_bar.showMessage("Loading the model was successful.")
             self.__check_start_possibility()
         except Exception:
-            self.statusBar.showMessage("Loading the model failed!")
+            self.status_bar.showMessage("Loading the model failed!")
 
     def enable_chain_information_input_for_analysis(self):
         """This function enables the text boxes to enter the chains for the
@@ -993,12 +856,15 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         try:
             self.ui.txt_analysis_chain_ref.setEnabled(self.ui.cb_analysis_chain_info.checkState())
             self.ui.txt_analysis_chain_model.setEnabled(self.ui.cb_analysis_chain_info.checkState())
-            self.statusBar.showMessage("Enter the chain information.")
+            self.status_bar.showMessage("Enter the chain information.")
             self.__check_start_possibility()
         except Exception:
-            self.statusBar.showMessage("Unexpected Error.")
+            self.status_bar.showMessage("Unexpected Error.")
 
     def check_analysis_if_txt_analysis_project_name_is_filled(self):
+        """This function checks if a project name is entered into the text field
+
+        """
         self.__check_start_possibility()
 
     def check_analysis_if_txt_analysis_chain_ref_is_filled(self):
@@ -1020,261 +886,53 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         protein structure comparison.
 
         """
-        self.statusBar.removeWidget(self.workspace)
+        self.status_bar.removeWidget(self.workspace)
         self.ui.btn_analysis_start.setEnabled(False)
-        self.statusBar.showMessage("Protein structure analysis started ...")
+        self.status_bar.showMessage("Protein structure analysis started ...")
 
-        # creates a project folder
-        projectName = self.ui.txt_analysis_project_name.text()
-        projectPath = f"{self.workspacePath}/{projectName}"
-        # check if the project folder already exists
-        if os.path.exists(projectPath):
-            self.statusBar.showMessage(
-                f"Warning! | Current Workspace: {self.workspacePath}")
-            dialog = DialogWarningPredictionProject.DialogWarningPredictionProject()
-            dialog.exec_()
-            # breaks out of function
-            self.statusBar.clearMessage()
-            self.statusBar.addPermanentWidget(self.workspace)
-            return None
-        else:
-            os.mkdir(projectPath)
+        model_full_filepath = self.ui.txt_analysis_load_model.toPlainText()
+        model_file_info = Qt.QtCore.QFileInfo(model_full_filepath)
+        MODEL_OBJ_NAME = model_file_info.baseName()
+        MODEL_DIR = model_file_info.canonicalPath()
 
-        # creates a pdb folder
-        projectPdbDir = f"{projectPath}/pdb"
-        if not os.path.exists(projectPdbDir):
-            os.mkdir(projectPdbDir)
-
-        # creates results folder
-        resultsPath = f"{projectPath}/Results"
-        os.mkdir(resultsPath)
-
+        project = utils.project_utils.Project()
         try:
-            # gets reference filename and filepath
-            # refFileInfo = Qt.QtCore.QFileInfo(self.ui.txt_analysis_load_reference.text())
-            # REFERENCE_OBJ_NAME = refFileInfo.baseName()
-            # REFERENCE_DIR = refFileInfo.canonicalPath()
+            project_pdb_path, project_results_path = project.create_project(self.workspace_path, model_full_filepath,
+                                                                            MODEL_OBJ_NAME,
+                                                                            self.ui.txt_analysis_project_name,
+                                                                            self.ui.txt_analysis_load_reference,
+                                                                            self.ui.txt_analysis_chain_ref,
+                                                                            self.ui.txt_analysis_chain_model,
+                                                                            "")
+        except IsADirectoryError:
+            return
+        except TypeError:
+            return
+        # gets reference filename and filepath
+        if len(self.ui.txt_analysis_load_reference.text()) == 4:
+            tmp_protein = core.protein(self.ui.txt_analysis_load_reference.text(),
+                                       export_data_dir=project_pdb_path)
+            tmp_protein.clean_pdb_file()
+            REFERENCE_OBJ_NAME = self.ui.txt_analysis_load_reference.text()
+            REFERENCE_DIR = project_pdb_path
+        else:
+            ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_analysis_load_reference.text())
+            REFERENCE_OBJ_NAME = ref_file_info.baseName()
+            REFERENCE_DIR = ref_file_info.canonicalPath()
 
-            # check if input is valid
-            # gets reference filename and filepath
-            if len(self.ui.txt_analysis_load_reference.text()) == 4:
-                tmpREFERENCE_OBJ_NAME = self.ui.txt_analysis_load_reference.text()
-                tmpProtein = core.protein(tmpREFERENCE_OBJ_NAME,
-                                          export_data_dir=projectPdbDir)
-                tmpProtein.clean_pdb_file()
-                REFERENCE_OBJ_NAME = tmpREFERENCE_OBJ_NAME
-                REFERENCE_DIR = projectPdbDir
-            else:
-                refFileInfo = Qt.QtCore.QFileInfo(
-                    self.ui.txt_analysis_load_reference.text())
-                REFERENCE_OBJ_NAME = refFileInfo.baseName()
-                REFERENCE_DIR = refFileInfo.canonicalPath()
-
-            # gets model filename and filepath
-            modelFileInfo = Qt.QtCore.QFileInfo(self.ui.txt_analysis_load_model.toPlainText())
-            MODEL_OBJ_NAME = modelFileInfo.baseName()
-            MODEL_DIR = modelFileInfo.canonicalPath()
-
-            fullProjectFileName = f"{projectPath}/project.xml"
-            projectFile = tools.ProjectXml(fullProjectFileName)
-            projectFile.create_project_xml_file()
-
-            tmpProjectFile = projectFile.load_xml_in_memory()
-            projectFile.set_value(tmpProjectFile, "projectName", "value",
-                                  projectName)
-            projectFile.set_value(tmpProjectFile, "predictionDone", "value",
-                                  "False")
-            projectFile.set_value(tmpProjectFile, "reference", "value",
-                                  f"{REFERENCE_DIR}/{REFERENCE_OBJ_NAME}")
-            projectFile.set_value(tmpProjectFile, "referenceChains",
-                                  "value",
-                                  self.ui.txt_analysis_chain_ref.text())
-            projectFile.set_value(tmpProjectFile, "modelChains", "value",
-                                  self.ui.txt_analysis_chain_model.text())
-            projectFile.set_value(tmpProjectFile, "results", "value",
-                                  resultsPath)
-
-            # gets chain information for the reference
-            refChains = self.ui.txt_analysis_chain_ref.text().split(",")
-
-            # gets chain information for the model
-            modelChains = self.ui.txt_analysis_chain_model.text().split(",")
-
-            # define a parent directory where all results will be saved
-            # EXPORT_SUBDIR: str = f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/pymol_plugin/data/results"
-            EXPORT_SUBDIR: str = resultsPath
-
-            # define parameters for the align command
-            CYCLES: int = 1
-            CUTOFF: float = 1.0
-            # define a filename for the rmsd and aligned amino acids CSV file
-            FILE_NAME: str = "rmsd_and_aligned_AA_form_alignment"
-
-            # constant variables for plotting
-            FIGURE_SIZE = (11.0, 6.0)
-            # defines the atoms of which the distance gets computed
-            DISTANCE_LABEL: str = "$\\alpha$-C"
-
-            # define variable filenames for the different results
-            ALIGNMENT_FILE_NAME: str = f"alignment_file_{MODEL_OBJ_NAME}"
-            DISTANCE_FILE_NAME: str = f"distance_file_{MODEL_OBJ_NAME}"
-            SESSION_FILE_NAME: str = f"session_file_{MODEL_OBJ_NAME}"
-
-            # comment the below code in, if you wish to have a fixed y-axis for ALL plots
-            # LIMIT_Y: tuple[float, float] = (0, 7)
-
-            # create the protein object for the reference
-            reference_protein: core.protein = core.protein(REFERENCE_OBJ_NAME,
-                                                           REFERENCE_DIR)
-            # sets selection for any chain combination of reference
-            refSelection = ""
-            seperator = ", "
-            tmpList = []
-
-            for chain in refChains:
-                tmpSelection = f"/{reference_protein.molecule_object}//{chain}//CA"
-                tmpList.append(tmpSelection)
-                refSelection = seperator.join(tmpList)
-
-            reference_protein.set_selection(refSelection)
-            self.ui.progress_bar_analysis.setProperty("value", 5)
-            # sets selection for any chain combination of model
-            # create model protein object
-            model_protein: core.protein = core.protein(MODEL_OBJ_NAME,
-                                                       MODEL_DIR)
-            modelSelection = ""
-            tmpList = []
-            for chain in modelChains:
-                tmpSelection = f"/{model_protein.molecule_object}//{chain}//CA"
-                tmpList.append(tmpSelection)
-                modelSelection = seperator.join(tmpList)
-
-            model_protein.set_selection(modelSelection)
-            self.ui.progress_bar_analysis.setProperty("value", 10)
-            # create protein pair object
-            protein_pair = core.proteinpair(reference_protein, model_protein,
-                                            EXPORT_SUBDIR)
-
-            # --- Begin of PyMOL session --- #
-            # reinitialize pymol session
-            self.statusBar.showMessage("Reinitialize pymol session ...")
-
-            cmd.reinitialize()
-            self.statusBar.showMessage(
-                "Finished reinitializing pymol session. | Load proteins ...")
-
-            # load both proteins in the pymol session
-            protein_pair.load_protein_pair()
-            self.ui.progress_bar_analysis.setProperty("value", 15)
-            self.statusBar.showMessage(
-                "Finished loading proteins. | Color proteins ...")
-            print(f"Finished loading proteins.")
-
-            # color protein with default colors; ref: green, model: blue
-            protein_pair.color_protein_pair()
-            self.ui.progress_bar_analysis.setProperty("value", 20)
-            self.statusBar.showMessage(
-                "Finished coloring proteins. | Align proteins ...")
-            print(f"Finished coloring proteins.")
-
-            # do the structure alignment
-            align_results = protein_pair.align_protein_pair(CYCLES, CUTOFF,
-                                                            ALIGNMENT_FILE_NAME)
-            self.ui.progress_bar_analysis.setProperty("value", 25)
-            self.statusBar.showMessage(
-                "Finished aligning proteins. | Calculate distances ...")
-            print(f"Finished aligning proteins.")
-
-            # do the distance calculation
-            distance_results = protein_pair.calculate_distance_between_ca_atoms(
-                ALIGNMENT_FILE_NAME)
-            protein_pair.export_distance_between_ca_atoms(distance_results)
-            self.ui.progress_bar_analysis.setProperty("value", 40)
-            self.statusBar.showMessage(
-                "Finished calculating distances. | Create distance plot ...")
-            print(f"Finished distance calculations.")
-
-            # create an instance of the graphics class
-            graphics_instance: graphics.graphics = graphics.graphics(protein_pair,
-                                                                     distance_results,
-                                                                     FIGURE_SIZE)
-            # create distance plot
-            fig = graphics_instance.create_distance_plot(DISTANCE_LABEL, CUTOFF)
-            self.ui.progress_bar_analysis.setProperty("value", 45)
-            self.statusBar.showMessage(
-                "Finished creating distance plot. | Create distance histogram ...")
-            print(f"Finished creation of distance plot.")
-
-            # save distance plot
-            if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                os.mkdir(f"{protein_pair.results_dir}/plots")
-            if not os.path.exists(f"{protein_pair.results_dir}/plots/distance_plot"):
-                os.mkdir(f"{protein_pair.results_dir}/plots/distance_plot")
-            plt.savefig(f"{protein_pair.results_dir}/plots/distance_plot/"
-                        f"distance_plot_{MODEL_OBJ_NAME}.svg")
-            plt.close(fig)
-
-            # create distance histogram
-            graphics_instance.create_distance_histogram()
-            self.ui.progress_bar_analysis.setProperty("value", 50)
-            self.statusBar.showMessage(
-                "Finished creating distance histogram. | "
-                "Take image of structure alignment ...")
-            print(f"Finished creation of distance histogram.")
-
-            # save distance histogram
-            if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                os.mkdir(f"{protein_pair.results_dir}/plots")
-            if not os.path.exists(
-                    f"{protein_pair.results_dir}/plots/distance_histogram"):
-                os.mkdir(f"{protein_pair.results_dir}/plots/distance_histogram")
-            plt.savefig(f"{protein_pair.results_dir}/plots/distance_histogram"
-                        f"/distance_histogram_{MODEL_OBJ_NAME}.svg")
-
-            # take image of whole structure alignment
-            graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME,
-                                                         "cartoon",
-                                                         "test")
-            self.ui.progress_bar_analysis.setProperty("value", 70)
-            self.statusBar.showMessage(
-                f"Finished taking image of structure alignment. | Take images "
-                f"of interesting regions (within {CUTOFF} angstrom)")
-            print(f"Finished creation of image which shows the whole structure "
-                  f"alignment.")
-
-            # take image of interesting regions
-            graphics_instance.take_image_of_interesting_regions(3.0,
-                                                                "interesting_region",
-                                                                opaque_background=1)
-            self.ui.progress_bar_analysis.setProperty("value", 90)
-            self.statusBar.showMessage(
-                f"Finished taking images of interesting regions. | "
-                f"Save PyMOL session")
-            print(f"Finished creation of images which show interesting regions with"
-                  f"a distance greater than {CUTOFF} angstrom.")
-
-            # color residues by distance
-            # graphics_instance.color_by_distance(ALIGNMENT_FILE_NAME)
-            # print(f"Finished coloring of prediction with color_by_distance.")
-            # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
-            #                                              "coloredByRMSD")
-            # graphics_instance.create_gif()
-            # print(f"Finished creation of gif which shows the whole predicted "
-            #       f"structure colored by distance.")
-
-            # save pymol session
-            protein_pair.save_session_of_protein_pair(SESSION_FILE_NAME)
-            self.statusBar.showMessage(
-                f"Finished saving PyMOL session. | "
-                f"Protein structure analysis has successfully finished.")
-            print(f"Finished saving of pymol session file.")
-            self.statusBar.showMessage("")
-            self.ui.progress_bar_analysis.setProperty("value", 100)
-            dialog = dialog_finished.DialogFinished()
-            dialog.exec_()
-            self.ui.btn_analysis_start.setEnabled(True)
-        except Exception:
-            self.statusBar.showMessage("Protein structure analysis has failed!")
+        reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+        model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
+        export_dir = project_results_path
+        structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
+                                                                        project.get_ref_chains().split(","),
+                                                                        project.get_model_chains().split(","),
+                                                                        export_dir)
+        structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
+                                                         structure_analysis.reference_protein)
+        structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
+                                                         structure_analysis.model_proteins)
+        structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
+                                                self.status_bar, self.ui.progress_bar_analysis)
 
     # Batch
     def load_reference_for_batch(self):
@@ -1292,10 +950,10 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
                 raise ValueError("No file has been selected.")
             # display path in text box
             self.ui.txt_batch_load_reference.setText(str(fileName[0]))
-            self.statusBar.showMessage("Loading the reference was successful.")
+            self.status_bar.showMessage("Loading the reference was successful.")
             self.__check_start_possibility_batch()
         except Exception:
-            self.statusBar.showMessage("Loading the reference failed!")
+            self.status_bar.showMessage("Loading the reference failed!")
 
     def load_model_for_batch(self):
         """This function loads multiple files as models.
@@ -1303,16 +961,15 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         try:
             # open file dialog
-            fileNames = Qt.QtWidgets.QFileDialog.getOpenFileNames(self, "Open Models",
-                                                                  self.target_dir,
-                                                                  "PDB Files (*.pdb)")
+            file_names = Qt.QtWidgets.QFileDialog.getOpenFileNames(self, "Open Models", self.target_dir,
+                                                                   "PDB Files (*.pdb)")
             # display path in text box
-            for file in fileNames[0]:
+            for file in file_names[0]:
                 self.ui.txt_batch_load_model.append(str(file))
-            self.statusBar.showMessage("Loading the models was successful.")
+            self.status_bar.showMessage("Loading the models was successful.")
             self.__check_start_possibility_batch()
         except Exception:
-            self.statusBar.showMessage("Loading the models failed!")
+            self.status_bar.showMessage("Loading the models failed!")
 
     def enable_chain_information_input_for_batch(self):
         """This function enables the text boxes to enter the chains for the
@@ -1324,12 +981,15 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
                 self.ui.cb_batch_chain_info.checkState())
             self.ui.txt_batch_chain_model.setEnabled(
                 self.ui.cb_batch_chain_info.checkState())
-            self.statusBar.showMessage("Enter the chain information.")
+            self.status_bar.showMessage("Enter the chain information.")
             self.__check_start_possibility_batch()
         except Exception:
-            self.statusBar.showMessage("Unexpected Error.")
+            self.status_bar.showMessage("Unexpected Error.")
 
     def check_batch_if_txt_batch_job_name_is_filled(self):
+        """This function checks if a job name was entered in the text field.
+
+        """
         self.__check_start_possibility_batch()
 
     def check_batch_if_txt_batch_chain_ref_is_filled(self):
@@ -1351,239 +1011,157 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         protein structure comparison.
 
         """
-        self.statusBar.removeWidget(self.workspace)
+        self.status_bar.removeWidget(self.workspace)
+        self.status_bar.showMessage("Checking user input ...")
 
-        # creates a project folder
-        projectName = self.ui.txt_prediction_project_name.text()
-        projectPath = f"{self.workspacePath}/{projectName}"
-        # check if the project folder already exists
-        if os.path.exists(projectPath):
-            self.statusBar.showMessage(
-                f"Warning! | Current Workspace: {self.workspacePath}")
-            dialog = DialogWarningPredictionProject.DialogWarningPredictionProject()
-            dialog.exec_()
-            # breaks out of function
-            self.statusBar.clearMessage()
-            self.statusBar.addPermanentWidget(self.workspace)
-            return None
-        else:
-            os.mkdir(projectPath)
+        # creates job folder
+        job = utils.project_utils.Project()
+        job_name = self.ui.txt_batch_job_name.text()
+        job_name_with_underscores = job_name.replace(" ", "_")
+        job_folder_path = Path(f"{self.workspace_path}/{job_name_with_underscores}")
+        self.__create_project_folder(job_folder_path)
 
-        # creates results folder
-        resultsPath = f"{projectPath}/Results"
-        os.mkdir(resultsPath)
+        job.set_job_name(job_name_with_underscores)
+        raw_models_input = self.ui.txt_batch_load_model.toPlainText()
+        models = raw_models_input.split("\n")
+        job.set_pdb_models(models)
+        job.create_xml_file(f"{str(job_folder_path)}/{job_name_with_underscores}.xml")
 
-        # gets names of all selected models
-        modelFileName = self.ui.txt_batch_load_model.toPlainText()
-        # creates a list with the full filename
-        modelsFullName = modelFileName.split(sep="\n")
-        models = []
-        modelsDir = []
-        # creates a list with the filename only, without the file extension
-        for model in modelsFullName:
-            tmpModel, tmpModelDir = tools.get_file_path_and_name(model)
-            models.append(tmpModel)
-            modelsDir.append(tmpModelDir)
+        for model in models:
+            model_file_info = Qt.QtCore.QFileInfo(model)
+            MODEL_OBJ_NAME = model_file_info.baseName()
+            MODEL_DIR = model_file_info.canonicalPath()
 
-        self.ui.btn_analysis_start.setEnabled(False)
-        self.statusBar.showMessage("Protein structure analysis started ...")
-        try:
+            project = utils.project_utils.Project()
+            try:
+                project_pdb_path, project_results_path = project.create_project(self.workspace_path, model, MODEL_OBJ_NAME,
+                                                                                "", self.ui.txt_batch_load_reference,
+                                                                                self.ui.txt_batch_chain_ref,
+                                                                                self.ui.txt_batch_chain_model,
+                                                                                job_name_with_underscores)
+            except IsADirectoryError:
+                return
+            except TypeError:
+                return
             # gets reference filename and filepath
-            REFERENCE_OBJ_NAME, REFERENCE_DIR = tools.get_file_path_and_name(
-                self.ui.txtRefPath_batch.toPlainText())
-
-            # gets chain information for the reference & model
-            refChains = self.ui.txt_batch_chain_ref.text().split(",")
-            modelChains = self.ui.txt_batch_chain_model.text().split(",")
-
-            # define a parent directory where all results will be saved
-            EXPORT_SUBDIR: str = resultsPath
-
-            # define parameters for the align command
-            CYCLES: int = 1
-            CUTOFF: float = 1.0
-
-            # constant variables for plotting
-            FIGURE_SIZE = (11.0, 6.0)
-            # defines the atoms of which the distance gets computed
-            DISTANCE_LABEL: str = "$\\alpha$-C"
-
-            # comment the below code in, if you wish to have a fixed y-axis for ALL plots
-            # LIMIT_Y: tuple[float, float] = (0, 7)
-
-            # create the protein object for the reference
-            reference_protein: core.protein = core.protein(REFERENCE_OBJ_NAME,
-                                                           REFERENCE_DIR)
-            # sets selection for any chain combination of reference
-            refSelection = reference_protein.create_selection_from_chains(refChains)
-
-            reference_protein.set_selection(refSelection)
-            self.ui.progress_bar_analysis.setProperty("value", 5)
-
-            i = 0
-            for MODEL_OBJ_NAME in models:
-                # define variable filenames for the different results
-                ALIGNMENT_FILE_NAME: str = f"alignment_file_{MODEL_OBJ_NAME}"
-                DISTANCE_FILE_NAME: str = f"distance_file_{MODEL_OBJ_NAME}"
-                SESSION_FILE_NAME: str = f"session_file_{MODEL_OBJ_NAME}"
-                MODEL_DIR = modelsDir[i]
-
-                # sets selection for any chain combination of model
-                # create model protein object
-                model_protein: core.protein = core.protein(MODEL_OBJ_NAME,
-                                                           MODEL_DIR)
-                modelSelection = ""
-                tmpList = []
-                for chain in modelChains:
-                    tmpSelection = f"/{model_protein.molecule_object}//{chain}//CA"
-                    tmpList.append(tmpSelection)
-                    modelSelection = seperator.join(tmpList)
-
-                model_protein.set_selection(modelSelection)
-                self.ui.progress_bar_analysis.setProperty("value", 10)
-                # create protein pair object
-                protein_pair = core.proteinpair(reference_protein, model_protein,
-                                                EXPORT_SUBDIR)
-
-                # --- Begin of PyMOL session --- #
-                # reinitialize pymol session
-                self.statusBar.showMessage("Reinitialize pymol session ...")
-
-                cmd.reinitialize()
-                self.statusBar.showMessage(
-                    "Finished reinitializing pymol session. | Load proteins ...")
-
-                # load both proteins in the pymol session
-                protein_pair.load_protein_pair()
-                self.ui.progress_bar_analysis.setProperty("value", 15)
-                self.statusBar.showMessage(
-                    "Finished loading proteins. | Color proteins ...")
-                print(f"Finished loading proteins.")
-
-                # color protein with default colors; ref: green, model: blue
-                protein_pair.color_protein_pair()
-                self.ui.progress_bar_analysis.setProperty("value", 20)
-                self.statusBar.showMessage(
-                    "Finished coloring proteins. | Align proteins ...")
-                print(f"Finished coloring proteins.")
-
-                # do the structure alignment
-                align_results = protein_pair.align_protein_pair(CYCLES, CUTOFF,
-                                                                ALIGNMENT_FILE_NAME)
-                self.ui.progress_bar_analysis.setProperty("value", 25)
-                self.statusBar.showMessage(
-                    "Finished aligning proteins. | Calculate distances ...")
-                print(f"Finished aligning proteins.")
-
-                # do the distance calculation
-                distance_results = protein_pair.calculate_distance_between_ca_atoms(
-                    ALIGNMENT_FILE_NAME)
-                protein_pair.export_distance_between_ca_atoms(distance_results)
-                self.ui.progress_bar_analysis.setProperty("value", 40)
-                self.statusBar.showMessage(
-                    "Finished calculating distances. | Create distance plot ...")
-                print(f"Finished distance calculations.")
-
-                # create an instance of the graphics class
-                graphics_instance: graphics.graphics = graphics.graphics(protein_pair,
-                                                                         distance_results,
-                                                                         FIGURE_SIZE)
-                # create distance plot
-                fig = graphics_instance.create_distance_plot(DISTANCE_LABEL, CUTOFF)
-                self.ui.progress_bar_analysis.setProperty("value", 45)
-                self.statusBar.showMessage(
-                    "Finished creating distance plot. | Create distance histogram ...")
-                print(f"Finished creation of distance plot.")
-
-                # save distance plot
-                if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                    os.mkdir(f"{protein_pair.results_dir}/plots")
-                if not os.path.exists(f"{protein_pair.results_dir}/plots/distance_plot"):
-                    os.mkdir(f"{protein_pair.results_dir}/plots/distance_plot")
-                plt.savefig(f"{protein_pair.results_dir}/plots/distance_plot/"
-                            f"distance_plot_{MODEL_OBJ_NAME}.svg")
-                plt.close(fig)
-
-                # create distance histogram
-                graphics_instance.create_distance_histogram()
-                self.ui.progress_bar_analysis.setProperty("value", 50)
-                self.statusBar.showMessage(
-                    "Finished creating distance histogram. | "
-                    "Take image of structure alignment ...")
-                print(f"Finished creation of distance histogram.")
-
-                # save distance histogram
-                if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                    os.mkdir(f"{protein_pair.results_dir}/plots")
-                if not os.path.exists(
-                        f"{protein_pair.results_dir}/plots/distance_histogram"):
-                    os.mkdir(f"{protein_pair.results_dir}/plots/distance_histogram")
-                plt.savefig(f"{protein_pair.results_dir}/plots/distance_histogram"
-                            f"/distance_histogram_{MODEL_OBJ_NAME}.svg")
-
-                # take image of whole structure alignment
-                graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME,
-                                                             "cartoon",
-                                                             "test")
-                self.ui.progress_bar_analysis.setProperty("value", 70)
-                self.statusBar.showMessage(
-                    f"Finished taking image of structure alignment. | Take images "
-                    f"of interesting regions (within {CUTOFF} angstrom)")
-                print(f"Finished creation of image which shows the whole structure "
-                      f"alignment.")
-
-                # take image of interesting regions
-                graphics_instance.take_image_of_interesting_regions(3.0,
-                                                                    "interesting_region",
-                                                                    opaque_background=1)
-                self.ui.progress_bar_analysis.setProperty("value", 90)
-                self.statusBar.showMessage(
-                    f"Finished taking images of interesting regions. | "
-                    f"Save PyMOL session")
-                print(f"Finished creation of images which show interesting regions with"
-                      f"a distance greater than {CUTOFF} angstrom.")
-
-                # color residues by distance
-                # graphics_instance.color_by_distance(ALIGNMENT_FILE_NAME)
-                # print(f"Finished coloring of prediction with color_by_distance.")
-                # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
-                #                                              "coloredByRMSD")
-                # graphics_instance.create_gif()
-                # print(f"Finished creation of gif which shows the whole predicted "
-                #       f"structure colored by distance.")
-
-                # save pymol session
-                protein_pair.save_session_of_protein_pair(SESSION_FILE_NAME)
-                self.statusBar.showMessage(
-                    f"Finished saving PyMOL session. | "
-                    f"Protein structure analysis has successfully finished.")
-                print(f"Finished saving of pymol session file.")
-                self.statusBar.showMessage("")
-                self.ui.progress_bar_analysis.setProperty("value", 100)
-                dialog = dialog_finished.DialogFinished()
-                dialog.exec_()
-                self.ui.btn_analysis_start.setEnabled(True)
-
-                i += 1
-        except Exception:
-            self.statusBar.showMessage("Protein structure analysis has failed!")
+            if len(self.ui.txt_batch_load_reference.text()) == 4:
+                tmp_protein = core.protein(self.ui.txt_batch_load_reference.text(),
+                                           export_data_dir=project_pdb_path)
+                tmp_protein.clean_pdb_file()
+                REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
+                REFERENCE_DIR = project_pdb_path
+            else:
+                ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
+                REFERENCE_OBJ_NAME = ref_file_info.baseName()
+                REFERENCE_DIR = ref_file_info.canonicalPath()
+            reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+            model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
+            export_dir = project_results_path
+            structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
+                                                                            project.get_ref_chains().split(","),
+                                                                            project.get_model_chains().split(","),
+                                                                            export_dir)
+            structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
+                                                             structure_analysis.reference_protein)
+            structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
+                                                             structure_analysis.model_proteins)
+            # TODO: * fix analysis with chains (hint: error selection (<pymolproteintools object>))
+            structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
+                                                    self.status_bar, self.ui.progress_bar_batch)
 
     # Results
     def display_structure_alignment(self):
-        dialog = dialog_image.DialogImage()
-        dialog.exec_()
+        """This function opens a window which displays the image of the structure alignment.
+
+        """
+        png_dialog = Qt.QtWidgets.QDialog(self)
+        label = Qt.QtWidgets.QLabel(self)
+        global global_var_project_dict
+        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/structure_alignment.png")
+        # TODO: Create setting for min. image size
+        pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
+        label.setPixmap(pixmap)
+        label.setScaledContents(True)
+        png_dialog_layout = QHBoxLayout()
+        png_dialog_layout.addWidget(label)
+        png_dialog.setLayout(png_dialog_layout)
+        png_dialog.setWindowTitle("Image of: structure alignment")
+        png_dialog.show()
 
     def display_distance_plot(self):
-        app2 = Qt.QtWidgets.QDialog(self)
-        appLayout = QHBoxLayout()
+        """This function opens a window which displays the distance plot.
+
+        """
+        item = self.ui.project_list.selectedItems()
+        if item is None:
+            raise ValueError
+
+        svg_dialog = Qt.QtWidgets.QDialog(self)
+        svg_dialog_layout = QHBoxLayout()
         viewer = QtSvg.QSvgWidget()
-        viewer.load(
-            "/home/matt/Documents/test_pymol/Results/plots/distance_plot/distance_plot_selected_prediction_1.svg")
-        viewer.setWindowTitle("Distance Plot")
+        global global_var_project_dict
+        model_file_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
+        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        viewer.load(f"{file_path}/plots/distance_plot/distance_plot_{model_file_name}.svg")
         viewer.show()
-        appLayout.addWidget(viewer)
-        app2.setLayout(appLayout)
-        app2.exec()
+        svg_dialog.setWindowTitle(f"Distance Plot of {model_file_name}")
+        svg_dialog_layout.addWidget(viewer)
+        svg_dialog.setLayout(svg_dialog_layout)
+        svg_dialog.show()
+
+    def display_distance_histogram(self):
+        """This function opens a window which displays the distance histogram.
+
+        """
+        item = self.ui.project_list.selectedItems()
+        if item is None:
+            raise ValueError
+
+        svg_dialog = Qt.QtWidgets.QDialog(self)
+        svg_dialog_layout = QHBoxLayout()
+        viewer = QtSvg.QSvgWidget()
+        global global_var_project_dict
+        model_file_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
+        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        viewer.load(f"{file_path}/plots/distance_histogram/distance_histogram_{model_file_name}.svg")
+        viewer.show()
+        svg_dialog.setWindowTitle(f"Distance Histogram of {model_file_name}")
+        svg_dialog_layout.addWidget(viewer)
+        svg_dialog.setLayout(svg_dialog_layout)
+        svg_dialog.show()
+
+    def display_interesting_region(self):
+        """This function displays an image of an interesting region.
+
+        """
+        png_dialog = Qt.QtWidgets.QDialog(self)
+        label = Qt.QtWidgets.QLabel(self)
+        global global_var_project_dict
+        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        file_name = self.ui.cb_interesting_regions.currentText()
+        pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/interesting_regions/{file_name}")
+        # TODO: Create setting for min. image size
+        pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
+        label.setPixmap(pixmap)
+        label.setScaledContents(True)
+        png_dialog_layout = QHBoxLayout()
+        png_dialog_layout.addWidget(label)
+        png_dialog.setLayout(png_dialog_layout)
+        png_dialog.setWindowTitle(f"Image of: {file_name}")
+        png_dialog.show()
+
+    def display_distance_table(self):
+        """This function displays the distances in a table.
+
+        """
+        table_dialog = Qt.QtWidgets.QDialog(self)
+        table_view = Qt.QtWidgets.QTableView()
+
+        table_dialog_layout = QHBoxLayout()
+        table_dialog_layout.addWidget(table_view)
+        table_dialog.setLayout(table_dialog_layout)
+        table_dialog.show()
 
     # Image
     def show_representation(self):
@@ -1592,7 +1170,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         if self.ui.box_representation.currentIndex() == 0:
             print("Please select a representation.")
-            self.statusBar.showMessage("Please select a representation.")
+            self.status_bar.showMessage("Please select a representation.")
         elif self.ui.box_representation.currentIndex() == 1:
             cmd.show("cartoon", "all")
             cmd.hide("ribbon", "all")
@@ -1608,7 +1186,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         if self.ui.box_bg_color.currentIndex() == 0:
             print("Please select a background color.")
-            self.statusBar.showMessage("Please select a background color.")
+            self.status_bar.showMessage("Please select a background color.")
         elif self.ui.box_bg_color.currentIndex() == 1:
             cmd.bg_color("black")
         elif self.ui.box_bg_color.currentIndex() == 2:
@@ -1622,7 +1200,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         if self.ui.box_renderer.currentIndex() == 0:
             print("Please select a renderer.")
-            self.statusBar.showMessage("Please select a renderer.")
+            self.status_bar.showMessage("Please select a renderer.")
         elif self.ui.box_renderer.currentIndex() == 1:
             self.renderer = "-1"
         elif self.ui.box_renderer.currentIndex() == 2:
@@ -1636,7 +1214,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         if self.ui.box_ray_trace_mode.currentIndex() == 0:
             print("Please select a Ray-Trace-Mode.")
-            self.statusBar.showMessage("Please select a Ray-Trace-Mode.")
+            self.status_bar.showMessage("Please select a Ray-Trace-Mode.")
         elif self.ui.box_ray_trace_mode.currentIndex() == 1:
             cmd.set("ray_trace_mode", 0)
         elif self.ui.box_ray_trace_mode.currentIndex() == 2:
@@ -1654,7 +1232,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         if self.ui.box_ray_texture.currentIndex() == 0:
             print("Please select a Ray Texture.")
-            self.statusBar.showMessage("Please select a Ray Texture.")
+            self.status_bar.showMessage("Please select a Ray Texture.")
         elif self.ui.box_ray_texture.currentIndex() == 1:
             cmd.set("ray_texture", 0)
         elif self.ui.box_ray_texture.currentIndex() == 2:
@@ -1679,45 +1257,65 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         else:
             cmd.set("ray_opaque_background", "on")
 
+    def update_scene(self):
+        """This function updates the current selected PyMOL scene.
+
+        TODO: create function
+        """
+        return
+
+    def save_scene(self):
+        """This function saves the current view as a new PyMOL scene.
+
+        TODO: create function
+        """
+        return
+
     def preview_image(self):
         """This function previews the image
 
         """
         if self.ui.cb_ray_tracing.isChecked():
-            self.statusBar.showMessage("Preview ray-traced image ...")
+            self.status_bar.showMessage("Preview ray-traced image ...")
             cmd.ray(2400, 2400, renderer=int(self.renderer))
-            self.statusBar.showMessage("Finished preview of ray-traced image.")
+            self.status_bar.showMessage("Finished preview of ray-traced image.")
         else:
-            self.statusBar.showMessage("Preview draw image ...")
+            self.status_bar.showMessage("Preview draw image ...")
             cmd.draw(2400, 2400)
-            self.statusBar.showMessage("Finished preview of drawn image.")
+            self.status_bar.showMessage("Finished preview of drawn image.")
 
     def save_image(self):
         """This function saves the image as a png file.
 
         """
         if self.ui.cb_ray_tracing.isChecked():
-            saveDialog = Qt.QtWidgets.QFileDialog()
-            fullFileName = saveDialog.getSaveFileName(caption="Save Image",
-                                                      filter="Image (*.png)")
-            self.statusBar.showMessage("Creating ray-traced image ...")
+            save_dialog = Qt.QtWidgets.QFileDialog()
+            full_file_name = save_dialog.getSaveFileName(caption="Save Image",
+                                                         filter="Image (*.png)")
+            self.status_bar.showMessage("Creating ray-traced image ...")
             cmd.ray(2400, 2400, renderer=int(self.renderer))
-            cmd.png(fullFileName[0], dpi=300)
-            self.statusBar.showMessage("Finished image creation.")
+            cmd.png(full_file_name[0], dpi=300)
+            self.status_bar.showMessage("Finished image creation.")
         else:
-            saveDialog = Qt.QtWidgets.QFileDialog()
-            fullFileName = saveDialog.getSaveFileName(caption="Save Image",
-                                                      filter="Image (*.png)")
-            self.statusBar.showMessage("Creating draw image ...")
+            save_dialog = Qt.QtWidgets.QFileDialog()
+            full_file_name = save_dialog.getSaveFileName(caption="Save Image",
+                                                         filter="Image (*.png)")
+            self.status_bar.showMessage("Creating draw image ...")
             cmd.draw(2400, 2400)
-            cmd.png(fullFileName[0], dpi=300)
-            self.statusBar.showMessage("Finished image creation.")
+            cmd.png(full_file_name[0], dpi=300)
+            self.status_bar.showMessage("Finished image creation.")
 
 
 # comment out if run within pymol
 if __name__ == '__main__':
     # Start point of the application
     app = Qt.QtWidgets.QApplication(sys.argv)
+    # Open the qss styles file and read in the css-alike styling code
+    with open('styles/styles.css', 'r', encoding="utf-8") as file:
+        style = file.read()
+
+        # Set the stylesheet of the application
+        app.setStyleSheet(style)
     mainWindow = MainWindow()
     mainWindow.show()
     app.exec_()

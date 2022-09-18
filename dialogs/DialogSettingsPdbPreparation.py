@@ -22,15 +22,16 @@
 
 from pymol import Qt
 
-from utils import constants, tools
+import utils.settings_utils
+from utils import project_constants, tools
 from uiForms.auto.auto_DialogSettingsPdbPreparation import Ui_Dialog
 
 
 class DialogSettingsPdbPreparation(Qt.QtWidgets.QDialog):
-    SETTINGS_FULL_FILENAME = constants.SETTINGS_DIR
-    PDB_STORAGE_PATH_NODE = constants.PDB_STORAGE_PATH_TAG
-    ZIP_STORAGE_PATH_NODE = constants.ZIP_STORAGE_PATH_TAG
-    ATTRIBUTE = constants.ATTRIBUTE
+    SETTINGS_FULL_FILENAME = project_constants.SETTINGS_DIR
+    PDB_STORAGE_PATH_NODE = project_constants.PDB_STORAGE_PATH_TAG
+    ZIP_STORAGE_PATH_NODE = project_constants.ZIP_STORAGE_PATH_TAG
+    ATTRIBUTE = project_constants.ATTRIBUTE
 
     def __init__(self, parent=None):
         """Constructor
@@ -48,7 +49,7 @@ class DialogSettingsPdbPreparation(Qt.QtWidgets.QDialog):
         self.ui.txtZipStorageDir.setEnabled(False)
         # sets default values
 
-        self.xmlObj = tools.SettingsXml(self.SETTINGS_FULL_FILENAME)
+        self.xmlObj = utils.settings_utils.SettingsXml(self.SETTINGS_FULL_FILENAME)
         self.xmlFile = self.xmlObj.load_xml_in_memory()
         self.ui.txtPdbStorageDir.setText(self.xmlObj.get_path(self.xmlFile,
                                                               self.PDB_STORAGE_PATH_NODE,

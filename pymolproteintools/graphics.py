@@ -31,13 +31,13 @@ import numpy as np
 
 class graphics:
 
-    def __init__(self, protein_pair: core.proteinpair,
+    def __init__(self, protein_pair: core.ProteinPair,
                  results_hashtable: Dict[str, np.ndarray],
                  figure_size: Tuple[float, float]):
         """Constructor
 
         Args:
-             protein_pair (core.proteinpair):
+             protein_pair (core.ProteinPair):
                 protein pair object
              results_hashtable (dict[str, np.ndarray]):
                 hash table which contains the results of the distance
@@ -45,7 +45,7 @@ class graphics:
              figure_size (tuple[float, float]):
                 figure size of the distance plot and distance histogram
         """
-        self.protein_pair: core.proteinpair = protein_pair
+        self.protein_pair: core.ProteinPair = protein_pair
         self.results_hashtable: Dict[str, np.ndarray] = results_hashtable
         self.figure_size: Tuple[float, float] = figure_size
 
@@ -87,7 +87,7 @@ class graphics:
         #         "ValueError: The value for opaque_background MUST be 0 or 1!")
 
         # determine the option for ray_shadows
-        if ray_shadows == False:
+        if not ray_shadows:
             opt_ray_shadows: str = "off"
         else:
             opt_ray_shadows: str = "on"
@@ -207,13 +207,13 @@ class graphics:
 
                 # save image as 300 dpi png image
                 cmd.png(
-                    f'{self.protein_pair.results_dir}/images/{filename}_{ref_pos}.png',
+                    f'{self.protein_pair.results_dir}/images/interesting_regions/{filename}_{ref_pos}.png',
                     dpi=300)
                 # hide created labels
                 cmd.hide("labels", atom1)
                 cmd.hide("labels", atom2)
-                cmd.hide("labels",measurement_obj)
-                cmd.hide("dashes",measurement_obj)
+                cmd.hide("labels", measurement_obj)
+                cmd.hide("dashes", measurement_obj)
                 i += 1
                 j += 1
             else:

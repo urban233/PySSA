@@ -21,7 +21,9 @@
 #
 import logging
 from pymol import Qt
-from utils import constants, tools, gui_utils
+
+import utils.settings_utils
+from utils import project_constants, tools, gui_utils
 from uiForms.auto.auto_dialog_settings_global import Ui_Dialog
 
 # setup logger
@@ -51,7 +53,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.txt_pdb_storage_dir.setEnabled(False)
         self.ui.txt_zip_storage_dir.setEnabled(False)
 
-        self.xmlObj = tools.SettingsXml(constants.SETTINGS)
+        self.xmlObj = utils.settings_utils.SettingsXml(project_constants.SETTINGS)
         try:
             self.xmlFile = self.xmlObj.load_xml_in_memory()
         except IsADirectoryError:
@@ -68,20 +70,20 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         logging.info("Settings dialog was opened.")
         # loading information from the settings.xml
         self.ui.txt_workspace_dir.setText(self.xmlObj.get_path(self.xmlFile,
-                                                               constants.WORKSPACE_PATH_TAG,
-                                                               constants.ATTRIBUTE))
+                                                               project_constants.WORKSPACE_PATH_TAG,
+                                                               project_constants.ATTRIBUTE))
         self.ui.txt_pdb_storage_dir.setText(self.xmlObj.get_path(self.xmlFile,
-                                                                 constants.PDB_STORAGE_PATH_TAG,
-                                                                 constants.ATTRIBUTE))
+                                                                 project_constants.PDB_STORAGE_PATH_TAG,
+                                                                 project_constants.ATTRIBUTE))
         self.ui.txt_zip_storage_dir.setText(self.xmlObj.get_path(self.xmlFile,
-                                                                 constants.ZIP_STORAGE_PATH_TAG,
-                                                                 constants.ATTRIBUTE))
+                                                                 project_constants.ZIP_STORAGE_PATH_TAG,
+                                                                 project_constants.ATTRIBUTE))
         self.ui.spb_cycles.setValue(int(self.xmlObj.get_path(self.xmlFile,
-                                                             constants.CYCLES_VALUE_TAG,
-                                                             constants.ATTRIBUTE)))
+                                                             project_constants.CYCLES_VALUE_TAG,
+                                                             project_constants.ATTRIBUTE)))
         self.ui.dspb_cutoff.setValue(float(self.xmlObj.get_path(self.xmlFile,
-                                                                constants.CUTOFF_VALUE_TAG,
-                                                                constants.ATTRIBUTE)))
+                                                                project_constants.CUTOFF_VALUE_TAG,
+                                                                project_constants.ATTRIBUTE)))
         logging.info("Loading values from settings.xml was successful.")
         # customize spin boxes
         self.ui.spb_cycles.setMinimum(0)
@@ -114,20 +116,20 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def okDialog(self):
-        self.xmlObj.set_value(self.xmlFile, constants.WORKSPACE_PATH_TAG,
-                              constants.ATTRIBUTE,
+        self.xmlObj.set_value(self.xmlFile, project_constants.WORKSPACE_PATH_TAG,
+                              project_constants.ATTRIBUTE,
                               self.ui.txt_workspace_dir.text())
-        self.xmlObj.set_value(self.xmlFile, constants.PDB_STORAGE_PATH_TAG,
-                              constants.ATTRIBUTE,
+        self.xmlObj.set_value(self.xmlFile, project_constants.PDB_STORAGE_PATH_TAG,
+                              project_constants.ATTRIBUTE,
                               self.ui.txt_pdb_storage_dir.text())
-        self.xmlObj.set_value(self.xmlFile, constants.ZIP_STORAGE_PATH_TAG,
-                              constants.ATTRIBUTE,
+        self.xmlObj.set_value(self.xmlFile, project_constants.ZIP_STORAGE_PATH_TAG,
+                              project_constants.ATTRIBUTE,
                               self.ui.txt_zip_storage_dir.text())
-        self.xmlObj.set_value(self.xmlFile, constants.CYCLES_VALUE_TAG,
-                              constants.ATTRIBUTE,
+        self.xmlObj.set_value(self.xmlFile, project_constants.CYCLES_VALUE_TAG,
+                              project_constants.ATTRIBUTE,
                               str(self.ui.spb_cycles.value()))
-        self.xmlObj.set_value(self.xmlFile, constants.CUTOFF_VALUE_TAG,
-                              constants.ATTRIBUTE,
+        self.xmlObj.set_value(self.xmlFile, project_constants.CUTOFF_VALUE_TAG,
+                              project_constants.ATTRIBUTE,
                               str(self.ui.dspb_cutoff.value()))
         self.xmlObj.save_xml_file(self.xmlFile)
         self.close()

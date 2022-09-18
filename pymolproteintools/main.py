@@ -83,7 +83,7 @@ if __name__ == "__main__":
     model_selection = "/%s//A//CA, /%s//B//CA" % (model_protein.molecule_object, model_protein.molecule_object)
     model_protein.set_selection(model_selection)
     # create protein pair object
-    bmp2_pair = core.proteinpair(reference_protein, model_protein, EXPORT_SUBDIR)
+    bmp2_pair = core.ProteinPair(reference_protein, model_protein, EXPORT_SUBDIR)
     # reinitialize pymol session
     cmd.reinitialize()
     # load both proteins in the pymol session
