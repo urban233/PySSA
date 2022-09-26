@@ -416,7 +416,7 @@ class ProteinPair:
                             f"{chain_ref}/{pos_ref}/CA"
                     atom2 = f"{self.model_obj.molecule_object}//" \
                             f"{chain_model}/{pos_model}/CA"
-                    distance: float = cmd.get_distance(atom1, atom2)
+                    distance: float = round(cmd.get_distance(atom1, atom2), 2)
 
                     # gets executed if the distance is greater than the
                     # pre-defined cutoff

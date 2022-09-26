@@ -23,12 +23,53 @@
 import os
 import shutil
 import logging
+
+import numpy as np
+from matplotlib import pyplot as plt
+
 import utils.settings_utils
 from pymol import Qt
 from dialogs import dialog_settings_global
 from xml.dom import minidom
 from utils import project_constants
 from utils.settings_utils import SettingsXml
+
+
+def create_histogram(results_hashtable):
+    y: np.ndarray = results_hashtable.get("distance")
+
+    # max distance value
+    max_distance = np.amax(y)
+
+    # calculate figure size for y direction
+    y_size: float = len(np.arange(0, max_distance, 0.25)) / 1.2
+    FIGURE_SIZE: (float, float) = (11.0, y_size)
+    # create an empty figure with no Axes
+    fig = plt.figure()
+    # create a figure with a single Axes
+    fig, ax = plt.subplots(figsize=FIGURE_SIZE)
+    # creates a basic histogram
+    counts, bins, patches = ax.hist(y, bins=np.arange(0, max_distance, 0.25), orientation="horizontal")
+    # sets the label for the x-axis
+    ax.set_xlabel("Frequency of $\\alpha$-C atoms distance")
+    # sets the label for the y-axis
+    ax.set_ylabel("Distance [$\mathring{A}$ngstrom]")
+    # set coordinates for y-axis label
+    ax.yaxis.set_label_coords(-0.12, 0.5)
+    # hide y-ticks through empty list
+    ax.set_yticks([])
+    # create label bin position
+    bins_centers = 0.15 * np.diff(bins) + bins[:-1]
+
+    i: int = 0
+    for count, y in zip(counts, bins_centers):
+        # define bin label
+        bin_name: str = f"{round(bins[i], 2)} - {round(bins[i + 1], 2)}"
+        # set bin label through annotation
+        ax.annotate(bin_name, xy=(0, y), xytext=(-70, y), textcoords="offset points")
+        i += 1
+    # sets grid
+    ax.grid(True, axis="both")
 
 
 def create_directory(parent_path, dir_name):

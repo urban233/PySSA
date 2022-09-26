@@ -22,9 +22,9 @@
 import os
 from pathlib import Path
 from xml.dom import minidom
+from pymol import Qt
 from utils import gui_utils
 from utils import tools
-from pymol import Qt
 
 
 class Project:
@@ -51,10 +51,44 @@ class Project:
     _project_name = ""
     _pdb_file = ""  # either file or id!
     _pdb_id = ""
-    _pdb_models = []
+    _pdb_model = ""
     _ref_chains = ""
     _model_chains = ""
-    _results_path = ""
+    _folder_paths = []
+    _session_file_name = "session_file_model_s.pse"
+
+    def __init__(self, project_name, workspace_path):
+        self._project_name = project_name
+        project_name_with_underscores = self._project_name.replace(" ", "_")
+        project_folder_path = Path(f"{workspace_path}/{project_name_with_underscores}")
+
+        self._folder_paths = [
+            Path(f"{workspace_path}/{project_name_with_underscores}"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/pdb"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/alignment_files"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/distance_csv"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/images"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/images/interesting_regions"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/plots"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/plots/distance_histogram"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/plots/distance_plot"),
+            Path(f"{workspace_path}/{project_name_with_underscores}/results/sessions/"),
+        ]
+
+    def create_project_tree(self):
+        # check if the project folder already exists
+        if os.path.exists(self.get_project_path()):
+            detailed_message = f"The project is located under: {self.get_project_path()}."
+            gui_utils.warning_message_project_exists(self._project_name, detailed_message,
+                                                     self.get_project_path())
+            return
+
+        for folder in self._folder_paths:
+            os.mkdir(folder)
+
+    def get_session_file(self):
+        return f"{self._folder_paths[10]}/{self._session_file_name}"
 
     def get_job_name(self) -> str:
         """This function gets the value of the project_name variable
@@ -88,13 +122,13 @@ class Project:
         """
         return self._pdb_id
 
-    def get_pdb_models(self) -> list[str]:
+    def get_pdb_models(self) -> str:
         """This function gets the value of the pdb_models variable
 
         Returns (str):
             project_name
         """
-        return self._pdb_models
+        return self._pdb_model
 
     def get_ref_chains(self) -> str:
         """This function gets the value of the ref_chains variable
@@ -118,7 +152,7 @@ class Project:
         Returns (str):
             project_name
         """
-        return self._results_path
+        return str(self._folder_paths[2])
 
     def get_all_properties(self) -> list:
         """This functions gets the value of all properties in this class
@@ -131,7 +165,7 @@ class Project:
             self._project_name,
             self._pdb_file,
             self._pdb_id,
-            self._pdb_models,
+            self._pdb_model,
             self._ref_chains,
             self._model_chains,
             self._results_path,
@@ -144,7 +178,7 @@ class Project:
         Returns:
             model filename
         """
-        return Qt.QtCore.QFileInfo(self._pdb_models[0]).baseName()
+        return Qt.QtCore.QFileInfo(self._pdb_model).baseName()
 
     def get_project_path(self) -> str:
         """This function returns the project path of the project
@@ -152,8 +186,15 @@ class Project:
         Returns:
             the project path
         """
-        index = self._results_path.find("/results")
-        return self._results_path[0:index]
+        return str(self._folder_paths[0])
+
+    def get_pdb_path(self) -> str:
+        """This function returns the pdb path of the project
+
+        Returns:
+            the pdb path
+        """
+        return str(self._folder_paths[1])
 
     def set_job_name(self, value: str) -> None:
         """This function gets the value of the job_name variable
@@ -179,11 +220,11 @@ class Project:
         """
         self._pdb_id = value
 
-    def set_pdb_models(self, value: list[str]) -> None:
+    def set_pdb_models(self, value: str) -> None:
         """This function gets the value of the pdb_models variable
 
         """
-        self._pdb_models = value
+        self._pdb_model = value
 
     def set_ref_chains(self, value: str) -> None:
         """This function gets the value of the ref_chains variable
@@ -220,12 +261,12 @@ class Project:
         self._project_name = value_list[1]
         self._pdb_file = value_list[2]
         self._pdb_id = value_list[3]
-        self._pdb_models = value_list[4]
+        self._pdb_model = value_list[4]
         self._ref_chains = value_list[5]
         self._model_chains = value_list[6]
         self._results_path = value_list[7]
 
-    def create_xml_file(self, save_path_of_xml: str, attribute="value") -> None:
+    def create_xml_file(self, attribute="value") -> None:
         """This function create the settings xml with the format:
 
         Args:
@@ -263,7 +304,7 @@ class Project:
         #     self._project_name,
         #     self._pdb_file,
         #     self._pdb_id,
-        #     self._pdb_models,
+        #     self._pdb_model,
         #     self._ref_chains,
         #     self._model_chains,
         #     self._results_path,
@@ -289,12 +330,9 @@ class Project:
         pdb_id_path_node.setAttribute(attribute, self._pdb_id)
         root_node.appendChild(pdb_id_path_node)
 
-        i = 1
-        for model in self._pdb_models:
-            pdb_models_path_node = root.createElement(f"pdb_model_{i}")
-            pdb_models_path_node.setAttribute(attribute, str(model))
-            root_node.appendChild(pdb_models_path_node)
-            i += 1
+        pdb_models_path_node = root.createElement("pdb_model")
+        pdb_models_path_node.setAttribute(attribute, self.get_pdb_models())
+        root_node.appendChild(pdb_models_path_node)
 
         ref_chains_path_node = root.createElement("ref_chains")
         ref_chains_path_node.setAttribute(attribute, self._ref_chains)
@@ -305,7 +343,7 @@ class Project:
         root_node.appendChild(model_chains_path_node)
 
         results_path_path_node = root.createElement("results_path")
-        results_path_path_node.setAttribute(attribute, self._results_path)
+        results_path_path_node.setAttribute(attribute, self.get_results_path())
         root_node.appendChild(results_path_path_node)
 
         # TODO: * ist it possible to use a for-loop?
@@ -319,38 +357,38 @@ class Project:
         # if not os.path.exists(save_path_of_xml):
         #     os.mkdir(save_path_of_xml)
         # save xml file to filesystem
-        with open(save_path_of_xml, "w") as file:
+        with open(f"{self.get_project_path()}/{self.get_project_name()}.xml", "w", encoding="utf-8") as file:
             file.write(root.toprettyxml())
 
-    def load_project(self, save_path_of_xml: str) -> None:
-        """This function loads a xml file into the memory.
-
-        Args:
-            save_path_of_xml (str):
-                the complete filepath where the xml file should be created
-        Note:
-            This function should be used once to load the xml file into the
-            memory.
-        """
-        attribute = "value"
-        path_as_string = str(save_path_of_xml)
-        xml_file = minidom.parse(path_as_string)
-        # set job name in project object
-        self._job_name = xml_file.getElementsByTagName("job_name")[0].getAttribute(attribute)
-        # set project_name in project object
-        self._project_name = xml_file.getElementsByTagName("project_name")[0].getAttribute(attribute)
-        # set pdb_file in project object
-        self._pdb_file = xml_file.getElementsByTagName("pdb_file")[0].getAttribute(attribute)
-        # set pdb_id in project object
-        self._pdb_id = xml_file.getElementsByTagName("pdb_id")[0].getAttribute(attribute)
-        # set pdb_model_1 in project object
-        self._pdb_models.append(xml_file.getElementsByTagName("pdb_model_1")[0].getAttribute(attribute))
-        # set ref_chains in project object
-        self._ref_chains = xml_file.getElementsByTagName("ref_chains")[0].getAttribute(attribute)
-        # set model_chains in project object
-        self._model_chains = xml_file.getElementsByTagName("model_chains")[0].getAttribute(attribute)
-        # set results_path in project object
-        self._results_path = xml_file.getElementsByTagName("results_path")[0].getAttribute(attribute)
+    # def load_project(self, save_path_of_xml: str) -> None:
+    #     """This function loads a xml file into the memory.
+    #
+    #     Args:
+    #         save_path_of_xml (str):
+    #             the complete filepath where the xml file should be created
+    #     Note:
+    #         This function should be used once to load the xml file into the
+    #         memory.
+    #     """
+    #     attribute = "value"
+    #     path_as_string = str(save_path_of_xml)
+    #     xml_file = minidom.parse(path_as_string)
+    #     # set job name in project object
+    #     self._job_name = xml_file.getElementsByTagName("job_name")[0].getAttribute(attribute)
+    #     # set project_name in project object
+    #     self._project_name = xml_file.getElementsByTagName("project_name")[0].getAttribute(attribute)
+    #     # set pdb_file in project object
+    #     self._pdb_file = xml_file.getElementsByTagName("pdb_file")[0].getAttribute(attribute)
+    #     # set pdb_id in project object
+    #     self._pdb_id = xml_file.getElementsByTagName("pdb_id")[0].getAttribute(attribute)
+    #     # set pdb_model_1 in project object
+    #     self._pdb_model = xml_file.getElementsByTagName("pdb_model")[0].getAttribute(attribute)
+    #     # set ref_chains in project object
+    #     self._ref_chains = xml_file.getElementsByTagName("ref_chains")[0].getAttribute(attribute)
+    #     # set model_chains in project object
+    #     self._model_chains = xml_file.getElementsByTagName("model_chains")[0].getAttribute(attribute)
+    #     # set results_path in project object
+    #     self._results_path = xml_file.getElementsByTagName("results_path")[0].getAttribute(attribute)
 
     def create_project(self, workspace_path, model, MODEL_OBJ_NAME, txt_box_project_name,
                        txt_box_load_reference, txt_box_chain_ref, txt_box_chain_model, job=""):
@@ -418,7 +456,7 @@ class Project:
             self._model_chains = txt_box_chain_model.text()
         self._results_path = f"{project_folder_path}/results"
         # sets the filepath of the model in the project xml file
-        self._pdb_models = [model]
+        self._pdb_model = [model]
         self.create_xml_file(f"{str(project_folder_path)}/{project_name_with_underscores}.xml")
 
         # creates a pdb folder

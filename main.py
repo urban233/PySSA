@@ -26,27 +26,31 @@ import shutil
 import webbrowser
 import time
 import logging
-import PyQt5.QtCore
+from xml.dom import minidom
 
+import PyQt5.QtCore
+import pymol
+import pyqtgraph as pg
+import numpy as np
 import utils.project_utils
 import utils.settings_utils
 from pathlib import Path
-from PyQt5 import QtSvg
 from PyQt5.QtWidgets import QHBoxLayout
 from pymol import Qt
 from pymol import cmd
 from utils import structure_analysis_utils
 from dialogs import dialog_about
-from dialogs import DialogSettingsPdbPreparation
 from utils import project_constants
 from utils import tools
 from utils import gui_utils
+from utils import job_utils
 from uiForms.auto.auto_main_window import Ui_MainWindow
 from pymolproteintools import core
 
+
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
-global_var_project_dict = {0: utils.project_utils.Project()}
+global_var_project_dict = {0: utils.project_utils.Project("", "")}
 
 
 class MainWindow(Qt.QtWidgets.QMainWindow):
@@ -167,12 +171,11 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         # menu connections
         self.ui.action_file_open.triggered.connect(self.open)
         self.ui.action_file_save_as.triggered.connect(self.save_as)
+        self.ui.action_file_save.triggered.connect(self.save)
         self.ui.action_file_quit.triggered.connect(self.quit_app)
         self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
         self.ui.action_wizard_prepare_model_pdbs.triggered.connect(
             self.prepare_model_pdbs)
-        self.ui.actSettingsPdbPreparation.triggered.connect(
-            self.open_settings_pdb_preparation)
         self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
         self.ui.action_display_current_workspace.triggered.connect(self.display_workspace_path)
         self.ui.action_display_project_path.triggered.connect(self.display_project_path)
@@ -242,6 +245,9 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
         self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
         self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
+
+        # list view
+        self.ui.project_list.currentRowChanged.connect(self.change_interesting_regions)
 
         # Image
         # buttons connections
@@ -429,6 +435,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         attribute = "value"
         # open file dialog
         try:
+            global global_var_project_dict
             file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
                                                                  "Open project file",
                                                                  Qt.QtCore.QDir.homePath(),
@@ -437,16 +444,44 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
                 # TODO: add status bar and logger message
                 print("No file has been selected.")
                 return
-            global global_var_project_dict
-            global_var_project_dict[0].load_project(file_name[0])
-            # add filename to project list (results tab)
-            self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
-            self.ui.project_list.setCurrentRow(0)
+            # clear current project list and interesting regions
+            self.ui.project_list.clear()
+            self.ui.cb_interesting_regions.clear()
+
+            xml_file = minidom.parse(file_name[0])
+            element = xml_file.getElementsByTagName('project_name')
+            job_file_info = Qt.QtCore.QFileInfo(file_name[0])
+            job_name = job_file_info.baseName()
+
+            if len(element) == 0:
+                # job
+                i = 0
+                loop_element = ["", ""]
+                while loop_element != []:
+                    loop_element = xml_file.getElementsByTagName(f'project_{i}')
+                    if loop_element != []:
+                        path = loop_element[0].getAttribute('value')
+                        path_split = path.split("/")
+                        project_name = path_split[(len(path_split) - 1)]
+                        global_var_project_dict[i] = utils.project_utils.Project(project_name,
+                                                                                 f"{self.workspace_path}/{job_name}")
+                        self.ui.project_list.addItem(global_var_project_dict[i].get_project_name())
+                    i += 1
+
+            else:
+                # project
+                file_name_file_info = Qt.QtCore.QFileInfo(file_name[0])
+                global_var_project_dict[0] = utils.project_utils.Project(file_name_file_info.baseName(),
+                                                                         self.workspace_path)
+                # add filename to project list (results tab)
+                self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
+
             # fill combo box of interesting regions
             results_path = global_var_project_dict[0].get_results_path()
             dir_content = os.listdir(f"{results_path}/images/interesting_regions")
             for tmp_file in dir_content:
                 self.ui.cb_interesting_regions.addItem(tmp_file)
+            self.ui.project_list.setCurrentRow(0)
 
             #
             # project_file = tools.ProjectXml(file_name[0])
@@ -498,11 +533,47 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             print("No file has been selected.")
 
     def save_as(self):
-        """This function saves all information in the current tab
+        """This function saves the current pymol session.
 
+        TODO: fix saving process for multiple projects
         """
-        # TODO: fix saving process
-        gui_utils.save_project_xml(self, self.status_bar)
+        try:
+            file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self,
+                                                                 "Save PyMOL session",
+                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 "PyMOL session file (.pse)")
+            if file_path == ("", ""):
+                tools.quick_log_and_display("info", "No file has been created.", self.status_bar,
+                                            "No file has been created.")
+            cmd.save(f"{file_path[0]}.pse")
+            tools.quick_log_and_display("info", "Saving the pymol session was successful.",
+                                        self.status_bar, "Saving was successful.")
+        except FileExistsError:
+            tools.quick_log_and_display("warning", "File already exists!", self.status_bar,
+                                        "File already exists!")
+        except pymol.CmdException:
+            tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
+                                                 "current pymol session", self.status_bar,
+                                        "Unexpected Error from PyMOL")
+
+    def save(self):
+        """This function saves the current pymol session.
+
+        TODO: fix saving process for multiple projects
+        """
+        global global_var_project_dict
+        try:
+            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+            cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
+            tools.quick_log_and_display("info", "Saving the pymol session was successful.",
+                                        self.status_bar, "Saving was successful.")
+        except KeyError:
+            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+                                        "No project has been opened.")
+        except pymol.CmdException:
+            tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
+                                                 "current pymol session", self.status_bar,
+                                        "Unexpected Error from PyMOL")
 
     def restore_settings(self):
         """This function deletes the old settings.xml and creates a new one,
@@ -558,14 +629,6 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
 
         """
         tools.open_global_settings()
-
-    @staticmethod
-    def open_settings_pdb_preparation():
-        """This function opens the dialog for the pdb Preparation settings.
-
-        """
-        dialog = DialogSettingsPdbPreparation.DialogSettingsPdbPreparation()
-        dialog.exec_()
 
     def display_workspace_path(self):
         """This function displays the current workspace path in the statusbar of the main window.
@@ -676,9 +739,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         prediction.
 
         """
-        self.status_bar.removeWidget(self.workspace)
         self.status_bar.showMessage("Checking user input ...")
-
         # check if a prediction is already finished
         if os.path.isfile(project_constants.FULL_FILENAME_PREDICTION_ZIP):
             self.status_bar.showMessage(
@@ -688,47 +749,25 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
                 project_constants.FULL_FILENAME_PREDICTION_ZIP)
             if not check:
                 return
-
-        # project = utils.project_utils.Project()
-        # project_name = self.ui.txt_prediction_project_name.text()
-        # project_name_with_underscores = project_name.replace(" ", "_")
-        # project_folder_path = Path(f"{self.workspace_path}/{project_name_with_underscores}")
-        # self.__create_project_folder(project_folder_path)
-        #
-        # # setting values for the project xml file
-        # project.set_project_name(project_name_with_underscores)
-        # # TODO: * implement input check with QValidator and Regex
-        # if len(self.ui.txt_prediction_load_reference.text()) == 4:
-        #     project.set_pdb_id(self.ui.txt_prediction_load_reference.text())
-        # project.set_pdb_file(self.ui.txt_prediction_load_reference.text())
-        # if self.ui.txt_prediction_chain_ref.text() != "":
-        #     project.set_ref_chains(self.ui.txt_prediction_chain_ref.text())
-        # if self.ui.txt_prediction_chain_model.text() != "":
-        #     project.set_model_chains(self.ui.txt_prediction_chain_model.text())
-        # project.set_results_path(f"{project_folder_path}/results")
-        #
-        # # creates a pdb folder
-        # self.__create_directory(Path(f"{project_folder_path}"), "pdb")
-        # project_pdb_path = f"{project_folder_path}/pdb"
-        # # creates a tmp folder to unzip the prediction
-        # self.__create_directory(Path(f"{project_folder_path}"), "tmp")
-        # project_tmp_path = f"{project_folder_path}/tmp"
-        # # creates results folder
-        # self.__create_directory(Path(f"{project_folder_path}"), "results")
-        # project_results_path = f"{project_folder_path}/results"
-
+        # creates project without xml creation and model adding these come after the prediction
+        project = utils.project_utils.Project(self.ui.txt_prediction_project_name.text(),
+                                              self.workspace_path)
+        project.create_project_tree()
+        project.set_pdb_file(self.ui.txt_prediction_load_reference.text())
+        project.set_pdb_id(self.ui.txt_prediction_load_reference.text())
+        project.set_ref_chains(self.ui.txt_prediction_chain_ref.text())
+        project.set_model_chains((self.ui.txt_prediction_chain_model.text()))
         # gets reference filename and filepath
         if len(self.ui.txt_prediction_load_reference.text()) == 4:
             tmp_protein = core.protein(self.ui.txt_prediction_load_reference.text(),
-                                       export_data_dir=project_pdb_path)
+                                       export_data_dir=project.get_pdb_path())
             tmp_protein.clean_pdb_file()
             REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
-            REFERENCE_DIR = project_pdb_path
+            REFERENCE_DIR = project.get_pdb_path()
         else:
             ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
             REFERENCE_OBJ_NAME = ref_file_info.baseName()
             REFERENCE_DIR = ref_file_info.canonicalPath()
-
         # starting the default web browser to display the colab notebook
         self.status_bar.showMessage("Opening Google colab notebook ...")
         if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
@@ -760,40 +799,26 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
 
         # extracts and moves the prediction.pdb to the workspace/pdb folder
         tools.extract_and_move_model_pdb(
-            str(source_path), project_tmp_path, archive, project_pdb_path)
-
-        # removes tmp dir
-        # os.remove(project_tmp_path)
+            str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
 
         # gets model filename and filepath
-        PREDICTION_NAME = tools.get_prediction_file_name(project_pdb_path)
-        full_model_file_path = f"{project_pdb_path}/{PREDICTION_NAME[0]}"
+        PREDICTION_NAME = tools.get_prediction_file_name(project.get_pdb_path())
+        full_model_file_path = f"{project.get_pdb_path()}/{PREDICTION_NAME[0]}"
         model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
         MODEL_OBJ_NAME = model_file_info.baseName()
         MODEL_DIR = model_file_info.canonicalPath()
 
-        project = utils.project_utils.Project()
-        try:
-            project_pdb_path, project_results_path = project.create_project(self.workspace_path, full_model_file_path,
-                                                                            MODEL_OBJ_NAME,
-                                                                            self.ui.txt_prediction_project_name,
-                                                                            self.ui.txt_prediction_load_reference,
-                                                                            self.ui.txt_prediction_chain_ref,
-                                                                            self.ui.txt_prediction_chain_model,
-                                                                            "")
-        except IsADirectoryError:
-            return
-        except TypeError:
-            return
+        # set model in project object
+        project.set_pdb_models(full_model_file_path)
+        project.create_xml_file()
+
         # create the protein object for the reference
         reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
 
         # create model protein object
         model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
         # sets the filepath of the model in the project xml file
-        project.set_pdb_models([full_model_file_path])
-        project.create_xml_file(f"{str(project_folder_path)}/{project_name_with_underscores}.xml")
-        export_dir = project_results_path
+        export_dir = project.get_results_path()
         structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
                                                                         project.get_ref_chains().split(","),
                                                                         project.get_model_chains().split(","),
@@ -886,7 +911,6 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         protein structure comparison.
 
         """
-        self.status_bar.removeWidget(self.workspace)
         self.ui.btn_analysis_start.setEnabled(False)
         self.status_bar.showMessage("Protein structure analysis started ...")
 
@@ -895,26 +919,23 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         MODEL_OBJ_NAME = model_file_info.baseName()
         MODEL_DIR = model_file_info.canonicalPath()
 
-        project = utils.project_utils.Project()
-        try:
-            project_pdb_path, project_results_path = project.create_project(self.workspace_path, model_full_filepath,
-                                                                            MODEL_OBJ_NAME,
-                                                                            self.ui.txt_analysis_project_name,
-                                                                            self.ui.txt_analysis_load_reference,
-                                                                            self.ui.txt_analysis_chain_ref,
-                                                                            self.ui.txt_analysis_chain_model,
-                                                                            "")
-        except IsADirectoryError:
-            return
-        except TypeError:
-            return
+        project = utils.project_utils.Project(self.ui.txt_analysis_project_name.text(),
+                                              self.workspace_path)
+        project.create_project_tree()
+        project.set_pdb_file(self.ui.txt_analysis_load_reference.text())
+        project.set_pdb_id(self.ui.txt_analysis_load_reference.text())
+        project.set_pdb_models(self.ui.txt_analysis_load_model.toPlainText())
+        project.set_ref_chains(self.ui.txt_analysis_chain_ref.text())
+        project.set_model_chains((self.ui.txt_analysis_chain_model.text()))
+        project.create_xml_file()
+
         # gets reference filename and filepath
         if len(self.ui.txt_analysis_load_reference.text()) == 4:
             tmp_protein = core.protein(self.ui.txt_analysis_load_reference.text(),
-                                       export_data_dir=project_pdb_path)
+                                       export_data_dir=project.get_pdb_path())
             tmp_protein.clean_pdb_file()
             REFERENCE_OBJ_NAME = self.ui.txt_analysis_load_reference.text()
-            REFERENCE_DIR = project_pdb_path
+            REFERENCE_DIR = project.get_pdb_path()
         else:
             ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_analysis_load_reference.text())
             REFERENCE_OBJ_NAME = ref_file_info.baseName()
@@ -922,7 +943,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
 
         reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
         model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
-        export_dir = project_results_path
+        export_dir = project.get_results_path()
         structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
                                                                         project.get_ref_chains().split(","),
                                                                         project.get_model_chains().split(","),
@@ -942,14 +963,14 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         try:
             # open file dialog
-            fileName = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                Qt.QtCore.QDir.homePath(),
-                                                                "PDB Files (*.pdb)")
+            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
+                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 "PDB Files (*.pdb)")
             # display path in text box
-            if fileName == ("", ""):
+            if file_name == ("", ""):
                 raise ValueError("No file has been selected.")
             # display path in text box
-            self.ui.txt_batch_load_reference.setText(str(fileName[0]))
+            self.ui.txt_batch_load_reference.setText(str(file_name[0]))
             self.status_bar.showMessage("Loading the reference was successful.")
             self.__check_start_possibility_batch()
         except Exception:
@@ -961,7 +982,8 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         try:
             # open file dialog
-            file_names = Qt.QtWidgets.QFileDialog.getOpenFileNames(self, "Open Models", self.target_dir,
+            file_names = Qt.QtWidgets.QFileDialog.getOpenFileNames(self, "Open Models",
+                                                                   Qt.QtCore.QDir.homePath(),
                                                                    "PDB Files (*.pdb)")
             # display path in text box
             for file in file_names[0]:
@@ -1011,52 +1033,43 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         protein structure comparison.
 
         """
-        self.status_bar.removeWidget(self.workspace)
         self.status_bar.showMessage("Checking user input ...")
-
-        # creates job folder
-        job = utils.project_utils.Project()
-        job_name = self.ui.txt_batch_job_name.text()
-        job_name_with_underscores = job_name.replace(" ", "_")
-        job_folder_path = Path(f"{self.workspace_path}/{job_name_with_underscores}")
-        self.__create_project_folder(job_folder_path)
-
-        job.set_job_name(job_name_with_underscores)
+        job = job_utils.Job(self.ui.txt_batch_job_name.text(), self.workspace_path)
         raw_models_input = self.ui.txt_batch_load_model.toPlainText()
         models = raw_models_input.split("\n")
-        job.set_pdb_models(models)
-        job.create_xml_file(f"{str(job_folder_path)}/{job_name_with_underscores}.xml")
 
+        # runs analysis with project creation
         for model in models:
             model_file_info = Qt.QtCore.QFileInfo(model)
             MODEL_OBJ_NAME = model_file_info.baseName()
             MODEL_DIR = model_file_info.canonicalPath()
 
-            project = utils.project_utils.Project()
-            try:
-                project_pdb_path, project_results_path = project.create_project(self.workspace_path, model, MODEL_OBJ_NAME,
-                                                                                "", self.ui.txt_batch_load_reference,
-                                                                                self.ui.txt_batch_chain_ref,
-                                                                                self.ui.txt_batch_chain_model,
-                                                                                job_name_with_underscores)
-            except IsADirectoryError:
-                return
-            except TypeError:
-                return
+            project = utils.project_utils.Project(f"project_of_{MODEL_OBJ_NAME}",
+                                                  f"{self.workspace_path}/{job.get_job_name()}")
+            project.create_project_tree()
+            project.set_job_name(job.get_job_name())
+            project.set_pdb_file(self.ui.txt_batch_load_reference.text())
+            project.set_pdb_id(self.ui.txt_batch_load_reference.text())
+            project.set_pdb_models(MODEL_OBJ_NAME)
+            project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
+            project.set_model_chains((self.ui.txt_batch_chain_model.text()))
+            project.create_xml_file()
+            job.add_project_to_job(project)
+
             # gets reference filename and filepath
             if len(self.ui.txt_batch_load_reference.text()) == 4:
                 tmp_protein = core.protein(self.ui.txt_batch_load_reference.text(),
-                                           export_data_dir=project_pdb_path)
+                                           export_data_dir=project.get_pdb_path())
                 tmp_protein.clean_pdb_file()
                 REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
-                REFERENCE_DIR = project_pdb_path
+                REFERENCE_DIR = project.get_pdb_path()
             else:
                 ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
                 REFERENCE_OBJ_NAME = ref_file_info.baseName()
                 REFERENCE_DIR = ref_file_info.canonicalPath()
             reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
             model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
-            export_dir = project_results_path
+            export_dir = project.get_pdb_path()
             structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
                                                                             project.get_ref_chains().split(","),
                                                                             project.get_model_chains().split(","),
@@ -1068,8 +1081,19 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             # TODO: * fix analysis with chains (hint: error selection (<pymolproteintools object>))
             structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
                                                     self.status_bar, self.ui.progress_bar_batch)
+        job.create_xml_file()
 
     # Results
+    def change_interesting_regions(self):
+        global global_var_project_dict
+        current_row = self.ui.project_list.currentRow()
+        results_path = global_var_project_dict[current_row].get_results_path()
+        dir_content = os.listdir(f"{results_path}/images/interesting_regions")
+        self.ui.cb_interesting_regions.clear()
+        for tmp_file in dir_content:
+            self.ui.cb_interesting_regions.addItem(tmp_file)
+        cmd.load(global_var_project_dict[current_row].get_session_file())
+
     def display_structure_alignment(self):
         """This function opens a window which displays the image of the structure alignment.
 
@@ -1077,7 +1101,12 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         png_dialog = Qt.QtWidgets.QDialog(self)
         label = Qt.QtWidgets.QLabel(self)
         global global_var_project_dict
-        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        try:
+            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        except KeyError:
+            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+                                        "No project has been opened.")
+            return
         pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/structure_alignment.png")
         # TODO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
@@ -1097,18 +1126,45 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         if item is None:
             raise ValueError
 
-        svg_dialog = Qt.QtWidgets.QDialog(self)
-        svg_dialog_layout = QHBoxLayout()
-        viewer = QtSvg.QSvgWidget()
+        plot_dialog = Qt.QtWidgets.QDialog(self)
+        plot_dialog_layout = QHBoxLayout()
+        graph_widget = pg.PlotWidget()
+
+        # read csv file
         global global_var_project_dict
-        model_file_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
-        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-        viewer.load(f"{file_path}/plots/distance_plot/distance_plot_{model_file_name}.svg")
-        viewer.show()
-        svg_dialog.setWindowTitle(f"Distance Plot of {model_file_name}")
-        svg_dialog_layout.addWidget(viewer)
-        svg_dialog.setLayout(svg_dialog_layout)
-        svg_dialog.show()
+        try:
+            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+            model_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
+        except KeyError:
+            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+                                        "No project has been opened.")
+            return
+        path = f"{file_path}/distance_csv/distances.csv"
+        distance_list = []
+        cutoff_line = []
+        with open(path, 'r', encoding="utf-8") as file:
+            for line in file:
+                cleaned_line = line.replace("\n", "")
+                if cleaned_line.split(",")[7] != 'distance':
+                    distance_list.append(float(cleaned_line.split(",")[7]))
+                    cutoff_line.append(1)  # TODO: cutoff needs to be variable
+        # creates acutal distance plot line
+        graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
+                                   symbol="o", symbolSize=10, symbolBrush=('b'))
+        # creates cutoff line
+        graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
+        # styling the plot
+        graph_widget.setBackground('w')
+        graph_widget.setTitle(f"Distance Plot of {model_name}", size="23pt")
+        styles = {'font-size': '14px'}
+        ax_label_y = "Distance in angstrom"
+        graph_widget.setLabel('left', ax_label_y, **styles)
+        graph_widget.setLabel('bottom', "Residue No.", **styles)
+        graph_widget.plotItem.showGrid(x=True, y=True)
+        plot_dialog_layout.addWidget(graph_widget)
+        plot_dialog.setLayout(plot_dialog_layout)
+        plot_dialog.setWindowTitle("Distance Plot")
+        plot_dialog.show()
 
     def display_distance_histogram(self):
         """This function opens a window which displays the distance histogram.
@@ -1118,18 +1174,68 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         if item is None:
             raise ValueError
 
-        svg_dialog = Qt.QtWidgets.QDialog(self)
-        svg_dialog_layout = QHBoxLayout()
-        viewer = QtSvg.QSvgWidget()
+        plot_dialog = Qt.QtWidgets.QDialog(self)
+        plot_dialog_layout = QHBoxLayout()
+        graph_widget = pg.PlotWidget()
+
+        # read csv file
         global global_var_project_dict
-        model_file_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
-        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-        viewer.load(f"{file_path}/plots/distance_histogram/distance_histogram_{model_file_name}.svg")
-        viewer.show()
-        svg_dialog.setWindowTitle(f"Distance Histogram of {model_file_name}")
-        svg_dialog_layout.addWidget(viewer)
-        svg_dialog.setLayout(svg_dialog_layout)
-        svg_dialog.show()
+        try:
+            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+            model_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
+        except KeyError:
+            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+                                        "No project has been opened.")
+            return
+        path = f"{file_path}/distance_csv/distances.csv"
+        distance_list = []
+        with open(path, 'r', encoding="utf-8") as file:
+            i = 0
+            for line in file:
+                cleaned_line = line.replace("\n", "")
+                if cleaned_line.split(",")[7] != 'distance':
+                    distance_list.append(float(cleaned_line.split(",")[7]))
+        distance_list.sort()
+        length = len(distance_list)
+        max_distance = distance_list[length-1]
+        x, y = np.histogram(distance_list, bins=np.arange(0, max_distance, 0.25))
+
+        if x.size != y.size:
+            x = np.resize(x, (1, y.size))
+        # this conversion is needed for the pyqtgraph library!
+        x = x.tolist()
+        x = x[0]
+        y = y.tolist()
+
+        color = Qt.QtGui.QColor.fromRgb(255, 128, 128)
+        # creates bar chart item
+        graph_bar_item = pg.BarGraphItem(x0=0, y=y, height=0.2, width=x,
+                                         pen=pg.mkPen(color="#4B91F7"), brush=pg.mkBrush(color="#4B91F7"))
+        # creates y-labels for bar chart
+        y_labels = []
+        for i in range((len(y)-1)):
+            label = f"{y[i]} - {y[i+1]}"
+            y_labels.append(label)
+        y_values = y
+        ticks = []
+        for i, item in enumerate(y_labels):
+            ticks.append((y_values[i], item))
+        ticks = [ticks]
+
+        # styling the plot
+        graph_widget.setBackground('w')
+        graph_widget.setTitle(f"Distance Histogram of {model_name}", size="23pt")
+        styles = {'font-size': '14px'}
+        ax_label_x = "Distance in angstrom"
+        graph_widget.setLabel('left', ax_label_x, **styles)
+        graph_widget.setLabel('bottom', "Frequency of α-C atoms distance", **styles)
+        graph_widget.addItem(graph_bar_item)
+        bar_ax = graph_widget.getAxis('left')
+        bar_ax.setTicks(ticks)
+        plot_dialog_layout.addWidget(graph_widget)
+        plot_dialog.setLayout(plot_dialog_layout)
+        plot_dialog.setWindowTitle("Distance Histogram")
+        plot_dialog.show()
 
     def display_interesting_region(self):
         """This function displays an image of an interesting region.
@@ -1138,7 +1244,12 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         png_dialog = Qt.QtWidgets.QDialog(self)
         label = Qt.QtWidgets.QLabel(self)
         global global_var_project_dict
-        file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        try:
+            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        except KeyError:
+            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+                                        "No project has been opened.")
+            return
         file_name = self.ui.cb_interesting_regions.currentText()
         pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/interesting_regions/{file_name}")
         # TODO: Create setting for min. image size
@@ -1155,12 +1266,43 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """This function displays the distances in a table.
 
         """
+        csv_model = Qt.QtGui.QStandardItemModel()
+        csv_model.setColumnCount(7)
+        labels = ["Reference Chain", "Reference Position", "Reference Residue",
+                  "Model Chain", "Model Pos", "Model Residue", "Distance"]
+        csv_model.setHorizontalHeaderLabels(labels)
         table_dialog = Qt.QtWidgets.QDialog(self)
         table_view = Qt.QtWidgets.QTableView()
+        table_view.setModel(csv_model)
+
+        global global_var_project_dict
+        try:
+            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+        except KeyError:
+            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+                                        "No project has been opened.")
+            return
+        path = f"{file_path}/distance_csv/distances.csv"
+        with open(path, 'r', encoding="utf-8") as file:
+            i = 0
+            for line in file:
+                tmp_list = line.split(",")
+                tmp_list.pop(0)
+                standard_item_list = []
+                for tmp in tmp_list:
+                    tmp_item = Qt.QtGui.QStandardItem(tmp)
+                    standard_item_list.append(tmp_item)
+                csv_model.insertRow(i, standard_item_list)
+                i += 1
+            file.close()
+        csv_model.removeRow(0)
+        table_view.setAlternatingRowColors(True)
+        table_view.resizeColumnsToContents()
 
         table_dialog_layout = QHBoxLayout()
         table_dialog_layout.addWidget(table_view)
         table_dialog.setLayout(table_dialog_layout)
+        table_dialog.setWindowTitle("Distances of Structure Alignment")
         table_dialog.show()
 
     # Image
@@ -1290,32 +1432,55 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         """
         if self.ui.cb_ray_tracing.isChecked():
             save_dialog = Qt.QtWidgets.QFileDialog()
-            full_file_name = save_dialog.getSaveFileName(caption="Save Image",
-                                                         filter="Image (*.png)")
-            self.status_bar.showMessage("Creating ray-traced image ...")
-            cmd.ray(2400, 2400, renderer=int(self.renderer))
-            cmd.png(full_file_name[0], dpi=300)
-            self.status_bar.showMessage("Finished image creation.")
+            try:
+                full_file_name = save_dialog.getSaveFileName(caption="Save Image",
+                                                             filter="Image (*.png)")
+                if full_file_name == ("", ""):
+                    tools.quick_log_and_display("info", "No file has been selected.",
+                                                self.status_bar, "No file has been selected.")
+                    return
+                self.status_bar.showMessage("Creating ray-traced image ...")
+                cmd.ray(2400, 2400, renderer=int(self.renderer))
+                cmd.png(full_file_name[0], dpi=300)
+                self.status_bar.showMessage("Finished image creation.")
+            except FileExistsError:
+                tools.quick_log_and_display("error", "File exists already.",
+                                            self.status_bar, "File exists already.")
+            except pymol.CmdException:
+                tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
+                                                     "an image", self.status_bar,
+                                            "Unexpected Error from PyMOL")
         else:
             save_dialog = Qt.QtWidgets.QFileDialog()
-            full_file_name = save_dialog.getSaveFileName(caption="Save Image",
-                                                         filter="Image (*.png)")
-            self.status_bar.showMessage("Creating draw image ...")
-            cmd.draw(2400, 2400)
-            cmd.png(full_file_name[0], dpi=300)
-            self.status_bar.showMessage("Finished image creation.")
+            try:
+                full_file_name = save_dialog.getSaveFileName(caption="Save Image",
+                                                             filter="Image (*.png)")
+                if full_file_name == ("", ""):
+                    tools.quick_log_and_display("info", "No file has been selected.",
+                                                self.status_bar, "No file has been selected.")
+                    return
+                self.status_bar.showMessage("Creating draw image ...")
+                cmd.draw(2400, 2400)
+                cmd.png(full_file_name[0], dpi=300)
+                self.status_bar.showMessage("Finished image creation.")
+            except FileExistsError:
+                tools.quick_log_and_display("error", "File exists already.",
+                                            self.status_bar, "File exists already.")
+            except pymol.CmdException:
+                tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
+                                                     "an image", self.status_bar,
+                                            "Unexpected Error from PyMOL")
 
 
 # comment out if run within pymol
 if __name__ == '__main__':
     # Start point of the application
     app = Qt.QtWidgets.QApplication(sys.argv)
+    mainWindow = MainWindow()
     # Open the qss styles file and read in the css-alike styling code
     with open('styles/styles.css', 'r', encoding="utf-8") as file:
         style = file.read()
-
         # Set the stylesheet of the application
-        app.setStyleSheet(style)
-    mainWindow = MainWindow()
+        mainWindow.setStyleSheet(style)
     mainWindow.show()
     app.exec_()

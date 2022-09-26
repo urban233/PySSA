@@ -25,11 +25,12 @@ import logging
 
 import pymol
 from pymol import cmd, Qt
+from matplotlib import pyplot as plt
 from pymolproteintools import core
 from pymolproteintools import graphics
 from utils import tools
 from utils import gui_utils
-from matplotlib import pyplot as plt
+
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
