@@ -272,8 +272,8 @@ class ProteinPair:
         if self.ref_obj.selection is None and self.model_obj.selection is None:
             raise ValueError("Both, the reference and the model "
                              "have an empty selection.")
-        if cycle_number <= 0:
-            raise ValueError("Number of cycles must be greater than zero.")
+        if cycle_number < 0:
+            raise ValueError("Number of cycles must be greater or equal than zero.")
         if cutoff_value <= 0:
             raise ValueError("The cutoff needs to be greater than zero.")
 
@@ -353,12 +353,12 @@ class ProteinPair:
                     f"aln_results_Bmp2_0_CA.aln"
         """
         # argument test
-        try:
-            file = open(f"{self.results_dir}/alignment_files/"
-                        f"{alignment_filename}.aln", "r")
-            file.close()
-        except FileNotFoundError:
-            print(f"File not found, in {self.results_dir}.")
+        #try:
+        file = open(f"{self.results_dir}/alignment_files/"
+                    f"{alignment_filename}.aln", "r")
+        file.close()
+        # except FileNotFoundError:
+        #     print(f"File not found, in {self.results_dir}.")
 
         cmd.create(f"{self.ref_obj.molecule_object}_CA",
                    f"/{self.ref_obj.molecule_object}////CA")
@@ -385,96 +385,95 @@ class ProteinPair:
         j = 0  # j for reference
         k = 0  # k for model
         index = 0
-        try:
-            while i < int(align.get_alignment_length()):
-                # gets executed if the reference contains a "-" in the alignment
-                if align[0, i] == "-":
-                    i += 1
-                    k += 1
-                    j = j
-                # gets executed if the model contains a "-" in the alignment
-                elif align[1, i] == "-":
+        #try:
+        while i < int(align.get_alignment_length()):
+            # gets executed if the reference contains a "-" in the alignment
+            if align[0, i] == "-":
+                i += 1
+                k += 1
+                j = j
+            # gets executed if the model contains a "-" in the alignment
+            elif align[1, i] == "-":
+                i += 1
+                j += 1
+                k = k
+            # gets executed if no "-" is found in the alignment
+            else:
+                # create var for chain, position and residue name for
+                # the reference
+                chain_ref: str = ref_ca_obj.atom[j].chain
+                pos_ref: str = ref_ca_obj.atom[j].resi
+                resi_ref: str = ref_ca_obj.atom[j].resn
+
+                # create var for chain, position and residue name for
+                # the model
+                chain_model: str = model_ca_obj.atom[k].chain
+                pos_model: str = model_ca_obj.atom[k].resi
+                resi_model: str = model_ca_obj.atom[k].resn
+
+                # calculate the distance between the alpha-C atoms
+                atom1 = f"/{self.ref_obj.molecule_object}_CA//{chain_ref}/{pos_ref}/"
+                atom2 = f"/{self.model_obj.molecule_object}_CA//{chain_model}/{pos_model}/"
+                distance = round(cmd.get_distance(atom1, atom2), 2)
+
+                # gets executed if the distance is greater than the
+                # pre-defined cutoff
+                if distance > cutoff:
                     i += 1
                     j += 1
-                    k = k
-                # gets executed if no "-" is found in the alignment
+                    k += 1
                 else:
-                    # create var for chain, position and residue name for
-                    # the reference
-                    chain_ref: str = ref_ca_obj.atom[j].chain
-                    pos_ref: str = ref_ca_obj.atom[j].resi
-                    resi_ref: str = ref_ca_obj.atom[j].resn
+                    # append calculated data to each separate list
+                    index_list.append(index)
+                    ref_chain_list.append(chain_ref)
+                    ref_pos_list.append(pos_ref)
+                    ref_resi_list.append(resi_ref)
+                    model_chain_list.append(chain_model)
+                    model_pos_list.append(pos_model)
+                    model_resi_list.append(resi_model)
+                    distance_list.append(distance)
+                    # increment all indices
+                    i += 1
+                    j += 1
+                    k += 1
+                    index += 1
 
-                    # create var for chain, position and residue name for
-                    # the model
-                    chain_model: str = model_ca_obj.atom[k].chain
-                    pos_model: str = model_ca_obj.atom[k].resi
-                    resi_model: str = model_ca_obj.atom[k].resn
+        index_array: np.ndarray = np.array(index_list)
+        ref_chain_array: np.ndarray = np.array(ref_chain_list)
+        ref_pos_array: np.ndarray = np.array(ref_pos_list)
+        ref_resi_array: np.ndarray = np.array(ref_resi_list)
+        model_chain_array: np.ndarray = np.array(model_chain_list)
+        model_pos_array: np.ndarray = np.array(model_pos_list)
+        model_resi_array: np.ndarray = np.array(model_resi_list)
+        distance_array: np.ndarray = np.array(distance_list)
 
-                    # calculate the distance between the alpha-C atoms
-                    atom1 = f"{self.ref_obj.molecule_object}//" \
-                            f"{chain_ref}/{pos_ref}/CA"
-                    atom2 = f"{self.model_obj.molecule_object}//" \
-                            f"{chain_model}/{pos_model}/CA"
-                    distance: float = round(cmd.get_distance(atom1, atom2), 2)
+        result_hashtable: Dict[str, np.ndarray] = {'index': index_array,
+                                                   'ref_chain':
+                                                       ref_chain_array,
+                                                   'ref_pos':
+                                                       ref_pos_array,
+                                                   'ref_resi':
+                                                       ref_resi_array,
+                                                   'model_chain':
+                                                       model_chain_array,
+                                                   'model_pos':
+                                                       model_pos_array,
+                                                   'model_resi':
+                                                       model_resi_array,
+                                                   'distance':
+                                                       distance_array}
 
-                    # gets executed if the distance is greater than the
-                    # pre-defined cutoff
-                    if distance > cutoff:
-                        i += 1
-                        j += 1
-                        k += 1
-                    else:
-                        # append calculated data to each separate list
-                        index_list.append(index)
-                        ref_chain_list.append(chain_ref)
-                        ref_pos_list.append(pos_ref)
-                        ref_resi_list.append(resi_ref)
-                        model_chain_list.append(chain_model)
-                        model_pos_list.append(pos_model)
-                        model_resi_list.append(resi_model)
-                        distance_list.append(distance)
-                        # increment all indices
-                        i += 1
-                        j += 1
-                        k += 1
-                        index += 1
-
-            index_array: np.ndarray = np.array(index_list)
-            ref_chain_array: np.ndarray = np.array(ref_chain_list)
-            ref_pos_array: np.ndarray = np.array(ref_pos_list)
-            ref_resi_array: np.ndarray = np.array(ref_resi_list)
-            model_chain_array: np.ndarray = np.array(model_chain_list)
-            model_pos_array: np.ndarray = np.array(model_pos_list)
-            model_resi_array: np.ndarray = np.array(model_resi_list)
-            distance_array: np.ndarray = np.array(distance_list)
-
-            result_hashtable: Dict[str, np.ndarray] = {'index': index_array,
-                                                       'ref_chain':
-                                                           ref_chain_array,
-                                                       'ref_pos':
-                                                           ref_pos_array,
-                                                       'ref_resi':
-                                                           ref_resi_array,
-                                                       'model_chain':
-                                                           model_chain_array,
-                                                       'model_pos':
-                                                           model_pos_array,
-                                                       'model_resi':
-                                                           model_resi_array,
-                                                       'distance':
-                                                           distance_array}
-
-            # return the hast table with all results
-            return result_hashtable
+        # return the hast table with all results
+        return result_hashtable
 
         # general exception if something goes wrong
-        except:
-            print(f"Error. The index i is {i}, j is {j} and k is {k}.")
-            print(f"The length of the alignment is "
-                  f"{int(align.get_alignment_length())}.")
-            print(f"{align[0, i]},{align[1, i]}")
-            print(result_hashtable)
+        # TODO: check which exception gets raised in batch process
+        # except:
+        #     print(f"Error. The index i is {i}, j is {j} and k is {k}.")
+        #     print(f"The length of the alignment is "
+        #           f"{int(align.get_alignment_length())}.")
+        #     print(f"{align[0, i]},{align[1, i]}")
+        #     print(result_hashtable)
 
     def export_distance_between_ca_atoms(
             self, distance_results: Dict[str, np.ndarray]) -> None:

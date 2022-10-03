@@ -344,14 +344,14 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             j = 3
         if i == j:
             self.ui.btn_analysis_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as file:
+            with open('../styles/styles_start_button_ready.css', 'r') as file:
                 button_style = file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_analysis_start.setStyleSheet(button_style)
         else:
             self.ui.btn_analysis_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as file:
+            with open('../styles/styles_start_button_not_ready.css', 'r') as file:
                 button_style = file.read()
 
                 # Set the stylesheet of the application
@@ -379,14 +379,14 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             j = 3
         if i == j:
             self.ui.btn_batch_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as file:
+            with open('../styles/styles_start_button_ready.css', 'r') as file:
                 button_style = file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_batch_start.setStyleSheet(button_style)
         else:
             self.ui.btn_batch_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as file:
+            with open('../styles/styles_start_button_not_ready.css', 'r') as file:
                 button_style = file.read()
 
                 # Set the stylesheet of the application
@@ -412,14 +412,14 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             j = 2
         if i == j:
             self.ui.btn_prediction_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as file:
+            with open('../styles/styles_start_button_ready.css', 'r') as file:
                 button_style = file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_prediction_start.setStyleSheet(button_style)
         else:
             self.ui.btn_prediction_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as file:
+            with open('../styles/styles_start_button_not_ready.css', 'r') as file:
                 button_style = file.read()
 
                 # Set the stylesheet of the application
@@ -610,7 +610,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             # tmp_list contains a list with all zips starting with prediction
             tmp_list = tools.filter_prediction_zips(tmp_path)
 
-            # create temporary dir to handle unzipping
+            # create temporary dir_settings to handle unzipping
             tmp_dir = f"{tmp_path}/tmp"
             if not os.path.exists(tmp_dir):
                 os.mkdir(tmp_dir)

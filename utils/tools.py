@@ -32,8 +32,8 @@ from pymol import Qt
 from dialogs import dialog_settings_global
 from xml.dom import minidom
 from utils import project_constants
-from utils.settings_utils import SettingsXml
-
+#from utils.settings_utils import SettingsXml
+from utils import global_utils
 
 def create_histogram(results_hashtable):
     y: np.ndarray = results_hashtable.get("distance")
@@ -108,9 +108,9 @@ def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir):
     shutil.unpack_archive(f"{source_dir}/{archive}", tmp_dir)
 
     # creates a list which contains all files from the target directory
-    tmpList = os.listdir(target_dir)
+    tmp_list = os.listdir(target_dir)
     # gets the length of the list from above
-    index = len(tmpList)
+    index = len(tmp_list)
     # splits the zip archive to get name and extension
     archive_name, extension = os.path.splitext(archive)
 
@@ -240,8 +240,8 @@ def restore_default_settings():
     pre-defined values.
 
     """
-    default_settings = utils.settings_utils.SettingsXml(project_constants.SETTINGS)
-    default_settings.create_settings_xml_file()
+    global_utils.global_var_settings_obj.restore_settings()
+    global_utils.global_var_settings_obj.save_settings_to_xml()
 
 
 def open_global_settings():

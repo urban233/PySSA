@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import re
 from pathlib import Path
 from xml.dom import minidom
 from pymol import Qt
@@ -80,9 +81,10 @@ class Project:
         # check if the project folder already exists
         if os.path.exists(self.get_project_path()):
             detailed_message = f"The project is located under: {self.get_project_path()}."
-            gui_utils.warning_message_project_exists(self._project_name, detailed_message,
-                                                     self.get_project_path())
-            return
+            ret = gui_utils.warning_message_project_exists(self._project_name, detailed_message,
+                                                           self.get_project_path())
+            if ret is False:
+                return False
 
         for folder in self._folder_paths:
             os.mkdir(folder)
@@ -346,7 +348,7 @@ class Project:
         results_path_path_node.setAttribute(attribute, self.get_results_path())
         root_node.appendChild(results_path_path_node)
 
-        # TODO: * ist it possible to use a for-loop?
+        # TODO: * is it possible to use a for-loop?
         # index = 0
         # for tag in tag_list:
         #     xml_tag = root.createElement(tag)
@@ -446,17 +448,17 @@ class Project:
         if job != "":
             self._job_name = job
         self._project_name = project_name_with_underscores
-        # TODO: * implement input check with QValidator and Regex
         if len(txt_box_load_reference.text()) == 4:
             self._pdb_id = txt_box_load_reference.text()
         self._pdb_file = txt_box_load_reference.text()
         if txt_box_chain_ref.text() != "":
+            # TODO: * implement input check with QValidator and Regex
             self._ref_chains = txt_box_chain_ref.text()
         if txt_box_chain_model.text() != "":
             self._model_chains = txt_box_chain_model.text()
         self._results_path = f"{project_folder_path}/results"
         # sets the filepath of the model in the project xml file
-        self._pdb_model = [model]
+        self._pdb_model = model
         self.create_xml_file(f"{str(project_folder_path)}/{project_name_with_underscores}.xml")
 
         # creates a pdb folder

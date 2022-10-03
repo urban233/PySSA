@@ -27,18 +27,18 @@ from pathlib import Path
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
 SETTINGS_FILE = "settings.xml"
-SETTINGS = SETTINGS_DIR / SETTINGS_FILE
-
-# XML tags & attributes
-WORKSPACE_PATH_TAG = "workspacePath"
-PDB_STORAGE_PATH_TAG = "pdbPath"
-ZIP_STORAGE_PATH_TAG = "zipPath"
-CYCLES_VALUE_TAG = "cyclesValue"
-CUTOFF_VALUE_TAG = "cutoffValue"
-ATTRIBUTE = "value"
+# SETTINGS = SETTINGS_DIR / SETTINGS_FILE
+#
+# # XML tags & attributes
+# WORKSPACE_PATH_TAG = "workspacePath"
+# PDB_STORAGE_PATH_TAG = "pdbPath"
+# ZIP_STORAGE_PATH_TAG = "zipPath"
+# CYCLES_VALUE_TAG = "cyclesValue"
+# CUTOFF_VALUE_TAG = "cutoffValue"
+# ATTRIBUTE = "value"
 
 # Constants for the structure prediction
-FULL_FILENAME_PREDICTION_ZIP = Path(f"{os.path.expanduser('~')}/Downloads/prediction.zip")
+#FULL_FILENAME_PREDICTION_ZIP = Path(f"{os.path.expanduser('~')}/Downloads/prediction.zip")
 OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
 NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
 # Constants for the structure analysis

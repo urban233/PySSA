@@ -21,10 +21,10 @@
 #
 import logging
 from pymol import Qt
-
-import utils.settings_utils
-from utils import project_constants, tools, gui_utils
+from utils import gui_utils
 from uiForms.auto.auto_dialog_settings_global import Ui_Dialog
+#from main_alt import global_var_settings_obj
+from utils.global_utils import global_var_settings_obj
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -53,37 +53,26 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.txt_pdb_storage_dir.setEnabled(False)
         self.ui.txt_zip_storage_dir.setEnabled(False)
 
-        self.xmlObj = utils.settings_utils.SettingsXml(project_constants.SETTINGS)
-        try:
-            self.xmlFile = self.xmlObj.load_xml_in_memory()
-        except IsADirectoryError:
-            logging.error("There is only a directory and not a file.")
-            gui_utils.error_dialog("There is only a directory.", "More information in the log.")
-            # is used to stop opening this dialog
-            self.ERROR = True
-        except FileNotFoundError:
-            logging.error("The settings.xml file was not found and could therefore not be opened.")
-            gui_utils.error_dialog("The settings.xml file was not found and could therefore not be opened.", "")
-            # is used to stop opening this dialog
-            self.ERROR = True
+        # try:
+        #     self.xmlFile = self.xmlObj.load_xml_in_memory()
+        # except IsADirectoryError:
+        #     logging.error("There is only a directory and not a file.")
+        #     gui_utils.error_dialog("There is only a directory.", "More information in the log.")
+        #     # is used to stop opening this dialog
+        #     self.ERROR = True
+        # except FileNotFoundError:
+        #     logging.error("The settings.xml file was not found and could therefore not be opened.")
+        #     gui_utils.error_dialog("The settings.xml file was not found and could therefore not be opened.", "")
+        #     # is used to stop opening this dialog
+        #     self.ERROR = True
 
         logging.info("Settings dialog was opened.")
         # loading information from the settings.xml
-        self.ui.txt_workspace_dir.setText(self.xmlObj.get_path(self.xmlFile,
-                                                               project_constants.WORKSPACE_PATH_TAG,
-                                                               project_constants.ATTRIBUTE))
-        self.ui.txt_pdb_storage_dir.setText(self.xmlObj.get_path(self.xmlFile,
-                                                                 project_constants.PDB_STORAGE_PATH_TAG,
-                                                                 project_constants.ATTRIBUTE))
-        self.ui.txt_zip_storage_dir.setText(self.xmlObj.get_path(self.xmlFile,
-                                                                 project_constants.ZIP_STORAGE_PATH_TAG,
-                                                                 project_constants.ATTRIBUTE))
-        self.ui.spb_cycles.setValue(int(self.xmlObj.get_path(self.xmlFile,
-                                                             project_constants.CYCLES_VALUE_TAG,
-                                                             project_constants.ATTRIBUTE)))
-        self.ui.dspb_cutoff.setValue(float(self.xmlObj.get_path(self.xmlFile,
-                                                                project_constants.CUTOFF_VALUE_TAG,
-                                                                project_constants.ATTRIBUTE)))
+        self.ui.txt_workspace_dir.setText(global_var_settings_obj.get_workspace_path())
+        self.ui.txt_pdb_storage_dir.setText(global_var_settings_obj.get_model_path())
+        self.ui.txt_zip_storage_dir.setText(global_var_settings_obj.get_prediction_path())
+        self.ui.spb_cycles.setValue(int(global_var_settings_obj.get_cycles()))
+        self.ui.dspb_cutoff.setValue(float(global_var_settings_obj.get_cutoff()))
         logging.info("Loading values from settings.xml was successful.")
         # customize spin boxes
         self.ui.spb_cycles.setMinimum(0)
@@ -116,20 +105,10 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def okDialog(self):
-        self.xmlObj.set_value(self.xmlFile, project_constants.WORKSPACE_PATH_TAG,
-                              project_constants.ATTRIBUTE,
-                              self.ui.txt_workspace_dir.text())
-        self.xmlObj.set_value(self.xmlFile, project_constants.PDB_STORAGE_PATH_TAG,
-                              project_constants.ATTRIBUTE,
-                              self.ui.txt_pdb_storage_dir.text())
-        self.xmlObj.set_value(self.xmlFile, project_constants.ZIP_STORAGE_PATH_TAG,
-                              project_constants.ATTRIBUTE,
-                              self.ui.txt_zip_storage_dir.text())
-        self.xmlObj.set_value(self.xmlFile, project_constants.CYCLES_VALUE_TAG,
-                              project_constants.ATTRIBUTE,
-                              str(self.ui.spb_cycles.value()))
-        self.xmlObj.set_value(self.xmlFile, project_constants.CUTOFF_VALUE_TAG,
-                              project_constants.ATTRIBUTE,
-                              str(self.ui.dspb_cutoff.value()))
-        self.xmlObj.save_xml_file(self.xmlFile)
+        global_var_settings_obj.set_workspace_path(self.ui.txt_workspace_dir.text())
+        global_var_settings_obj.set_model_path(self.ui.txt_pdb_storage_dir.text())
+        global_var_settings_obj.set_prediction_path(self.ui.txt_zip_storage_dir.text())
+        global_var_settings_obj.set_cycles(str(self.ui.spb_cycles.value()))
+        global_var_settings_obj.set_cutoff(str(self.ui.dspb_cutoff.value()))
+        global_var_settings_obj.save_settings_to_xml()
         self.close()

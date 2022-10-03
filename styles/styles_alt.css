@@ -1,0 +1,446 @@
+/*
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2022
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+QFrame#content {
+    background: #eaeaea;
+}
+
+QStackedWidget#stackedWidget {
+    background: #eaeaea;
+}
+
+/* Top Navigation Bar styles */
+QFrame#top_navigation_bar_container {
+    background: #f0f0f0;
+}
+
+QLabel#lbl_page_title {
+    background: #f0f0f0;
+    font-size: 13px;
+    font: bold;
+}
+
+QLabel#lbl_navigation {
+    background: #F7F5F8;
+    font-size: 11px;
+}
+
+QPushButton#btn_back {
+    min-width: 2em;
+    background: #F7F5F8;
+    border-style: none;
+    color: black;
+}
+
+QPushButton::hover#btn_back {
+    background: #efefef;
+}
+
+QPushButton#btn_forward {
+    min-width: 2em;
+    background: #F7F5F8;
+    border-style: none;
+    color: black;
+}
+
+QPushButton::hover#btn_forward {
+    background: #efefef;
+}
+
+
+/* Sidebar styles */
+QFrame#side_menu {
+    background: #efefef;
+}
+
+QLabel#lbl_prediction {
+    background: #efefef;
+    color: #bcbcbc;
+    font: bold;
+}
+
+QLabel#lbl_analysis {
+    background: #efefef;
+    color: #bcbcbc;
+    font: bold;
+}
+
+QLabel#lbl_handle_pymol_session {
+    background: #efefef;
+    color: #bcbcbc;
+    font: bold;
+}
+
+
+/* Button for "Prediction" */
+/*QPushButton#btn_prediction_only_page {
+    background: #efefef;
+    max-width: 8.9em;
+    border-color: #efefef;
+    border-style: solid;
+}
+
+QPushButton::hover#btn_prediction_only_page {
+    background: #d8d8d8;
+    border-color: #d8d8d8;
+    color: black;
+}
+
+QPushButton::focus#btn_prediction_only_page {
+    background: #d8d8d8;
+    border-color: #d8d8d8;
+    color: black;
+}*/
+
+QPushButton#btn_prediction_only_page {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_prediction_only_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::focus#btn_prediction_only_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_prediction_only_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+/* Button for "Prediction + Analysis" */
+QPushButton#btn_prediction_page {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_prediction_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::focus#btn_prediction_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_prediction_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+
+/* Button for "Single Analysis" */
+QPushButton#btn_single_analysis_page {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_single_analysis_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::focus#btn_single_analysis_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_single_analysis_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+
+/* Button for "Job Analysis" */
+QPushButton#btn_job_analysis_page {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_job_analysis_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::focus#btn_job_analysis_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_job_analysis_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+
+/* Button for "Results" */
+QPushButton#btn_results_page {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_results_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::focus#btn_results_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_results_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+
+/* Button for "Image" */
+QPushButton#btn_image_page {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_image_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::focus#btn_image_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_image_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+/* Button for "Hotspots" */
+QPushButton#btn_hotspots_page {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_hotspots_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::focus#btn_hotspots_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_hotspots_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+/* Button for side menu */
+QPushButton#btn_side_menu {
+    min-width: 2em;
+}
+
+
+
+QPushButton {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #f7f7f7;
+    min-width: 6em;
+    padding: 2px;
+}
+
+QPushButton::hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+
+
+QStatusBar {
+    background: white;
+}
+
+
+
+QLineEdit {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #f4f4f4;
+    min-width: 6em;
+    padding: 1px;
+}
+
+QToolButton {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #f4f4f4;
+    min-width: 1.5em;
+    padding: 1px;
+}
+
+QToolButton::hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+    border: 2px solid #4B91F7;
+}
+
+QToolButton:pressed {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    border-color: #276cea;
+}
+
+/* Settings for transparent background */
+
+QMainWindow {
+    background: transparent;
+}
+
+QFrame {
+    background: transparent;
+}

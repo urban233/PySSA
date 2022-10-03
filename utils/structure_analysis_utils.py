@@ -54,12 +54,15 @@ class StructureAnalysis:
     _session_file_name: str = "session_file_model_s"  # little Tesla easter egg ;)
 
     def __init__(self, reference_protein: list[core.protein], model_proteins: list[core.protein],
-                 ref_chains, model_chains, export_dir):
+                 ref_chains, model_chains, export_dir, cycles=1, cutoff=1.0):
         self.reference_protein = reference_protein
         self.model_proteins = model_proteins
         self.ref_chains = ref_chains
         self.model_chains = model_chains
         self.export_dir = export_dir
+        self._cycles = cycles
+        self._cutoff = cutoff
+
 
     def get_export_dir(self):
         """This function returns the value for export_dir
@@ -264,7 +267,6 @@ class StructureAnalysis:
             # reinitialize pymol session
             msg = "Reinitialize pymol session ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            cmd.reinitialize()
             progress_bar_obj.setProperty("value", 10)
 
             # load both proteins in the pymol session
@@ -333,17 +335,17 @@ class StructureAnalysis:
             progress_bar_obj.setProperty("value", 50)
 
             # take image of whole structure alignment
-            msg = "Finished creating distance histogram. | Take image of structure alignment ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon", "structure_alignment")
-            progress_bar_obj.setProperty("value", 70)
+            # msg = "Finished creating distance histogram. | Take image of structure alignment ..."
+            # tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            # graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon", "structure_alignment")
+            # progress_bar_obj.setProperty("value", 70)
 
             # take image of interesting regions
-            msg = f"Finished taking image of structure alignment. | Take images "\
-                  f"of interesting regions (within {self._cutoff} angstrom)"
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1)
-            progress_bar_obj.setProperty("value", 75)
+            # msg = f"Finished taking image of structure alignment. | Take images "\
+            #       f"of interesting regions (within {self._cutoff} angstrom)"
+            # tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            # graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1)
+            # progress_bar_obj.setProperty("value", 75)
 
             # color residues by distance
             # graphics_instance.color_by_distance(ALIGNMENT_FILE_NAME)
