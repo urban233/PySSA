@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module which creates graphics"""
 
 import os
 from pymol import cmd
@@ -29,7 +30,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-class graphics:
+class Graphics:
 
     def __init__(self, protein_pair: core.ProteinPair,
                  results_hashtable: Dict[str, np.ndarray],
@@ -38,7 +39,7 @@ class graphics:
 
         Args:
              protein_pair (core.ProteinPair):
-                protein pair object
+                Protein pair object
              results_hashtable (dict[str, np.ndarray]):
                 hash table which contains the results of the distance
                 calculations
@@ -56,7 +57,7 @@ class graphics:
                                    selection: str = "",
                                    ray_shadows: bool = False,
                                    opaque_background: int = 0) -> None:
-        """This function takes an image of the whole protein/protein pair.
+        """This function takes an image of the whole Protein/Protein pair.
 
         Note:
             The png file will be saved under the relative path
@@ -316,8 +317,16 @@ class graphics:
         # sets grid
         ax.grid(True, axis="both")
 
-    def color_by_distance(self, alignment_filename: str):
+    def color_by_distance(self, alignment_filename: str) -> None:
+        """This function colors the residues of the reference and the model protein in 5 colors
+        depending on their distance to the reference
 
+        Args:
+            alignment_filename:
+                filename of the alignment_file
+        Returns:
+
+        """
         cutoff_1 = 0.5
         cutoff_2 = 1.0
         cutoff_3 = 2
@@ -423,7 +432,7 @@ class graphics:
         cmd.hide("cgo", alignment_filename)
 
     def create_gif(self):
-        """This function creates a gif.
+        """This function creates a gif where the protein alignment rotates.
 
         """
         # create first scene
@@ -447,4 +456,4 @@ class graphics:
                 f"{self.protein_pair.results_dir}/gifs"):
             os.mkdir(f"{self.protein_pair.results_dir}/gifs")
         # save movie as gif
-        cmd.movie.produce("rotation.gif", quality=1.0)
+        cmd.movie.produce(f"{self.protein_pair.results_dir}/gifs/rotation.gif", quality=1.0)

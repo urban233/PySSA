@@ -52,7 +52,7 @@ class StructureAnalysis:
     _alignment_file_name: str = "alignment_file_model_s"
     _session_file_name: str = "session_file_model_s"  # little Tesla easter egg ;)
 
-    def __init__(self, reference_protein: list[core.protein], model_proteins: list[core.protein],
+    def __init__(self, reference_protein: list[core.Protein], model_proteins: list[core.Protein],
                  ref_chains, model_chains, export_dir, cycles=1, cutoff=1.0) -> None:
         self.reference_protein = reference_protein
         self.model_proteins = model_proteins
@@ -192,34 +192,34 @@ class StructureAnalysis:
         return txt_box_chain_ref.text().split(",")
 
     @staticmethod
-    def create_selection_for_proteins(chains: list, proteins: list[core.protein]) -> None:
+    def create_selection_for_proteins(chains: list, proteins: list[core.Protein]) -> None:
         """This function creates the selections for the proteins and sets these directly into
-        the protein objects
+        the Protein objects
 
         Args:
             chains:
                 list which contains the raw chain information from the input box
             proteins:
-                list which contains the protein objects
+                list which contains the Protein objects
         """
         # sets selection for any chain combination of reference
         selection = ""
         seperator = ", "
         tmp_list = []
-        # creates list containing all possible selections for the protein
+        # creates list containing all possible selections for the Protein
         for chain in chains:
             tmp_selection = f"/{proteins[0].molecule_object}//{chain}//CA"
             tmp_list.append(tmp_selection)
             selection = seperator.join(tmp_list)
-        # adds the selections into the protein object
+        # adds the selections into the Protein object
         for protein in proteins:
             protein.set_selection(selection)
 
     def create_protein_pairs(self) -> list[core.ProteinPair]:
-        """This function creates protein pairs based on the proteins in the object
+        """This function creates Protein pairs based on the proteins in the object
 
         Returns:
-            protein_pairs: list of protein pairs
+            protein_pairs: list of Protein pairs
         """
         protein_pairs = []
         for model in self.model_proteins:
@@ -231,11 +231,11 @@ class StructureAnalysis:
     def do_analysis_in_pymol(self, protein_pairs: list[core.ProteinPair],
                              status_bar_obj: Qt.QtWidgets.QStatusBar,
                              progress_bar_obj: Qt.QtWidgets.QProgressBar) -> None:
-        """This function does the actual structure analysis in pymol based on the protein pairs
+        """This function does the actual structure analysis in pymol based on the Protein pairs
 
         Args:
             protein_pairs:
-                list of protein pairs which were created with the function create_protein_pairs
+                list of Protein pairs which were created with the function create_protein_pairs
             status_bar_obj:
                 the statusbar object from the main window
             progress_bar_obj:
@@ -253,7 +253,7 @@ class StructureAnalysis:
             protein_pair.load_protein_pair()
             progress_bar_obj.setProperty("value", 15)
 
-            # color protein with default colors; ref: green, model: blue
+            # color Protein with default colors; ref: green, model: blue
             msg = "Finished loading proteins. | Color proteins ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             protein_pair.color_protein_pair()
@@ -281,10 +281,10 @@ class StructureAnalysis:
             protein_pair.export_distance_between_ca_atoms(distance_results)
             progress_bar_obj.setProperty("value", 40)
 
-            # create an instance of the graphics class
+            # create an instance of the Graphics class
             msg = "Finished calculating distances. | Create distance plot ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            graphics_instance: graphics.graphics = graphics.graphics(protein_pair, distance_results, self._figure_size)
+            graphics_instance: graphics.Graphics = graphics.Graphics(protein_pair, distance_results, self._figure_size)
 
             # create distance plot
             fig = graphics_instance.create_distance_plot(self._distance_label, self._cutoff)

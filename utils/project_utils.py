@@ -43,9 +43,9 @@ class Project:
         pdb_models:
             path of the models which are used for the analysis
         ref_chains:
-            chains which are used for the reference protein
+            chains which are used for the reference Protein
         model_chains:
-            chains which are used for the model protein
+            chains which are used for the model Protein
         results_path:
             path where all results are stored
     """

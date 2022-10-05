@@ -29,10 +29,10 @@ from pymol import cmd
 import matplotlib.pyplot as plt
 
 # if upload_pdb == True:
-#     # define reference protein if a .pdb was uploaded
+#     # define reference Protein if a .pdb was uploaded
 #     REFERENCE_OBJ_NAME: str = ref_name
 # else:
-#     # define reference protein if a pdb id was given
+#     # define reference Protein if a pdb id was given
 #     REFERENCE_OBJ_NAME: str = pdb_id
 #     cmd.set("fetch_type_default", "pdb")
 #     cmd.fetch(REFERENCE_OBJ_NAME)
@@ -42,7 +42,7 @@ import matplotlib.pyplot as plt
 #     shutil.move(src_path, dest_path)
 
 if __name__ == "__main__":
-    # import of reference protein name from command line option
+    # import of reference Protein name from command line option
     REFERENCE_OBJ_NAME = sys.argv[1]
 
     t0 = time.time()
@@ -72,24 +72,24 @@ if __name__ == "__main__":
     # comment the below code in, if you wish to have a fixed y-axis for ALL plots
     # LIMIT_Y: tuple[float, float] = (0, 7)
 
-    # create the protein object for the reference
-    reference_protein = core.protein(REFERENCE_OBJ_NAME, IMPORT_SUBDIR)
+    # create the Protein object for the reference
+    reference_protein = core.Protein(REFERENCE_OBJ_NAME, IMPORT_SUBDIR)
     reference_selection = "/%s//G//CA, /%s//H//CA" % (reference_protein.molecule_object, reference_protein.molecule_object)
     reference_protein.set_selection(reference_selection)
 
-    # create model protein object
-    model_protein = core.protein(MODEL_OBJ_NAME, IMPORT_SUBDIR)
+    # create model Protein object
+    model_protein = core.Protein(MODEL_OBJ_NAME, IMPORT_SUBDIR)
     # set selection for the model, for the align command
     model_selection = "/%s//A//CA, /%s//B//CA" % (model_protein.molecule_object, model_protein.molecule_object)
     model_protein.set_selection(model_selection)
-    # create protein pair object
+    # create Protein pair object
     bmp2_pair = core.ProteinPair(reference_protein, model_protein, EXPORT_SUBDIR)
     # reinitialize pymol session
     cmd.reinitialize()
     # load both proteins in the pymol session
     bmp2_pair.load_protein_pair()
     print("Finished loading proteins.")
-    # color protein with default colors; ref: green, model: blue
+    # color Protein with default colors; ref: green, model: blue
     bmp2_pair.color_protein_pair()
     print("Finished coloring proteins.")
     # do the structure alignment
@@ -100,8 +100,8 @@ if __name__ == "__main__":
     distance_results = bmp2_pair.calculate_distance_between_ca_atoms(ALIGNMENT_FILE_NAME)
     bmp2_pair.export_distance_between_ca_atoms(distance_results)
     print("Finished distance calculations.")
-    # create an instance of the graphics class
-    graphics_instance = graphics.graphics(bmp2_pair, distance_results, FIGURE_SIZE)
+    # create an instance of the Graphics class
+    graphics_instance = graphics.Graphics(bmp2_pair, distance_results, FIGURE_SIZE)
     # create distance plot
     fig = graphics_instance.create_distance_plot(DISTANCE_LABEL, CUTOFF)
     print("Finished creation of distance plot.")

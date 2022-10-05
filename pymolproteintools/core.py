@@ -19,8 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the main calculations"""
 
 import os
+
+import pymol
 from pymol import cmd
 from Bio import AlignIO
 import pandas as pd
@@ -28,7 +31,14 @@ import numpy as np
 from typing import Dict, Tuple
 
 
-class protein:
+class Protein:
+    """This class stores one protein in a PyMOL compatible form
+
+    Var:
+        selection:
+            a pymol selection string which needs to conform with the selection algebra
+            from pymol
+    """
     selection: str = None
 
     def __init__(self, molecule_object: str, import_data_dir: str = None,
@@ -37,12 +47,12 @@ class protein:
 
         Args:
             molecule_object (str):
-                name of the reference protein in the pymol session
+                name of the reference Protein in the pymol session
             import_data_dir (str):
                 directory where the pdb files of both model and
                 reference are stored
             export_data_dir (str, optional):
-                directory where all results related to the protein
+                directory where all results related to the Protein
                 will be stored.
                 All subdirectories like ``images``, ``alignment_files``
                 and ``distances`` will be created automatically.
@@ -70,8 +80,8 @@ class protein:
                 raise FileNotFoundError(f"The pdb file {molecule_object} was "
                                         f"not found under {import_data_dir}.")
 
-    def set_selection(self, selection) -> None:
-        """This function sets a selection for the protein object.
+    def set_selection(self, selection: str) -> None:
+        """This function sets a selection for the Protein object.
 
         Args:
             selection (str):
@@ -84,9 +94,11 @@ class protein:
         """
         self.selection = selection
 
-    def clean_pdb_file(self):
+    def clean_pdb_file(self) -> None:
         """This function cleans a pdb file from the PDB
 
+        Raises:
+            AttributeError: If no export directory is given
         """
         # argument test
         if self.export_data_dir == "":
@@ -102,32 +114,47 @@ class protein:
         # save the pdb file under the path (export_data_dir)
         cmd.save(f"{self.export_data_dir}/{self.molecule_object}.pdb")
 
-    def create_selection_from_chains(self, chains):
+    def create_selection_from_chains(self, chains: list[str]) -> str:
+        """This function creates a selection with given chains
+
+        Args:
+            chains:
+                chains of a protein subunit
+
+        Returns:
+            selection (str):
+                the selection string for pymol
+
+        Raises:
+            ValueError: If the selection remains empty.
+        """
         selection = ""
         seperator = ", "
-        tmpList = []
+        tmp_list = []
         for chain in chains:
-            tmpSelection = f"/{self.molecule_object}//{chain}//CA"
-            tmpList.append(tmpSelection)
-            selection = seperator.join(tmpList)
+            tmp_selection = f"/{self.molecule_object}//{chain}//CA"
+            tmp_list.append(tmp_selection)
+            selection = seperator.join(tmp_list)
+        if selection == "":
+            raise ValueError("The selection is still empty!")
         return selection
 
 
 class ProteinPair:
-    """This class consists of two protein objects. It is used to have a better workflow for
+    """This class consists of two Protein objects. It is used to have a better workflow for
     the analysis.
 
     """
 
-    def __init__(self, reference_obj: protein, model_obj: protein,
-                 results_dir: str):
+    def __init__(self, reference_obj: Protein, model_obj: Protein,
+                 results_dir: str) -> None:
         """Constructor.
 
         Args:
-            reference_obj (core.protein):
-                reference protein object
-            model_obj (core.protein):
-                model protein object
+            reference_obj (core.Protein):
+                reference Protein object
+            model_obj (core.Protein):
+                model Protein object
             results_dir (str):
                 directory where all results will be stored.
                 All subdirectories like ``images``, ``alignment_files``
@@ -137,8 +164,8 @@ class ProteinPair:
         Raises:
             NotADirectoryError: If directory not found.
         """
-        self.ref_obj: protein = reference_obj
-        self.model_obj: protein = model_obj
+        self.ref_obj: Protein = reference_obj
+        self.model_obj: Protein = model_obj
         self.results_dir: str = results_dir
 
         # argument test
@@ -151,7 +178,7 @@ class ProteinPair:
         The second one is the model. This text will be automatically synced.
 
         Raises:
-            Exception:
+            pymol.CmdException:
                 Exception is raised if load command fails.
 
         .. _load:
@@ -165,11 +192,11 @@ class ProteinPair:
             cmd.load(f"{self.model_obj.import_data_dir}/"
                      f"{self.model_obj.molecule_object}.pdb")
 
-        except Exception:
+        except pymol.CmdException:
             print(f"PyMOL internal error.")
 
     def color_protein_pair(self, color_ref="green", color_model="blue") -> None:
-        """This function colors both the reference and the model protein.
+        """This function colors both the reference and the model Protein.
 
         Note:
             Only the official colors from PyMOL are supported. These can
@@ -177,12 +204,12 @@ class ProteinPair:
 
         Args:
             color_ref (str, optional):
-                defines color for the reference protein
+                defines color for the reference Protein
             color_model (str, optional):
-                defines color for the model protein
+                defines color for the model Protein
 
         Raises:
-            Exception:
+            pymol.CmdException:
                 Exception is raised if one or both proteins
                 does not exist as pymol objects.
 
@@ -194,33 +221,28 @@ class ProteinPair:
         # in the memory
         if cmd.get_model(self.ref_obj.molecule_object) is None \
                 or cmd.get_model(self.model_obj.molecule_object) is None:
-            raise Exception(f"Either the reference or the model is "
-                            f"not in the pymol session as object.")
+            raise pymol.CmdException(f"Either the reference or the model is "
+                                     f"not in the pymol session as object.")
         # checks if both the reference and the model are actual objects
         # in the memory
         if cmd.get_model(self.ref_obj.molecule_object) is None \
                 and cmd.get_model(self.model_obj.molecule_object) is None:
-            raise Exception(f"Both, the reference and the model are "
-                            f"not in the pymol session as objects.")
-
-        try:
-            cmd.color(color_ref, self.ref_obj.molecule_object)
-            cmd.color(color_model, self.model_obj.molecule_object)
-
-        except Exception:
-            print(f"PyMOL internal error.")
+            raise pymol.CmdException(f"Both, the reference and the model are "
+                                     f"not in the pymol session as objects.")
+        # actual color cmd command
+        cmd.color(color_ref, self.ref_obj.molecule_object)
+        cmd.color(color_model, self.model_obj.molecule_object)
 
     def align_protein_pair(self, cycle_number: int, cutoff_value: float,
-                           alignment_filename: str = None):
-        """This function aligns the model to the reference protein, with the
+                           alignment_filename: str = None) -> tuple[float, int]:
+        """This function aligns the model to the reference Protein, with the
         `align`_ command from PyMOL.
 
-         -> tuple[float, int]
         Note:
             Before this function can be used, the load_protein_pair
             needs to be executed. Moreover, two selections are needed
             which have to be set through the set_selection function,
-            for each protein.
+            for each Protein.
 
             If an alignment file should be saved, it will be stored
             under the relative path (if export_data_dir =
@@ -238,15 +260,13 @@ class ProteinPair:
                 string which functions as filename for the align object
 
         Returns:
-            pd.DataFrame: dataframe which contains the RMSD and
-            aligned AA
+            tuple of the results
 
         Raises:
             ValueError:
                 Exception is raised if
                 the align_reference or align_model string is empty or
-                the cycle_number or cutoff_value are equal or
-                below zero.
+                the cycle_number or cutoff_value are equal or below zero.
 
         Example:
             The ``alignment_filename`` variable should be as follows::
@@ -286,8 +306,6 @@ class ProteinPair:
                                 cutoff=cutoff_value,
                                 quiet=0)
 
-            # check if path exists where the data will be exported,
-            # if not the directory will be created
             if not os.path.exists(f"{self.results_dir}/alignment_files"):
                 os.mkdir(f"{self.results_dir}/alignment_files")
 
@@ -295,10 +313,7 @@ class ProteinPair:
             cmd.save(f"{self.results_dir}/alignment_files/"
                      f"{alignment_filename}.aln")
 
-            # create tuple which stores the rmsd value and amount of
-            # aligned amino acids
-            tup_results: Tuple[float, int] = (results[0], results[1])
-            return tup_results
+            return results[0], results[1]
 
         # This block runs if no alignObject should be created.
         else:
@@ -308,10 +323,9 @@ class ProteinPair:
                                 cutoff=cutoff_value,
                                 quiet=1)
 
-            # create tuple which stores the rmsd value and amount of
-            # aligned amino acids
-            tup_results = (results[0], results[1])
-            return tup_results
+            return results[0], results[1]
+            # tup_results = (results[0], results[1])
+            # return tup_results
 
     def calculate_distance_between_ca_atoms(self, alignment_filename: str,
                                             cutoff: float = 20) -> Dict[str, np.ndarray]:
@@ -353,12 +367,12 @@ class ProteinPair:
                     f"aln_results_Bmp2_0_CA.aln"
         """
         # argument test
-        #try:
-        file = open(f"{self.results_dir}/alignment_files/"
-                    f"{alignment_filename}.aln", "r")
-        file.close()
-        # except FileNotFoundError:
-        #     print(f"File not found, in {self.results_dir}.")
+        try:
+            file = open(f"{self.results_dir}/alignment_files/"
+                        f"{alignment_filename}.aln", "r")
+            file.close()
+        except FileNotFoundError:
+            print(f"File not found, in {self.results_dir}.")
 
         cmd.create(f"{self.ref_obj.molecule_object}_CA",
                    f"/{self.ref_obj.molecule_object}////CA")
@@ -503,7 +517,7 @@ class ProteinPair:
         tmp_frame.to_csv(f"{self.results_dir}/distance_csv/distances.csv")
 
     def save_session_of_protein_pair(self, filename: str) -> None:
-        """This function saves the pymol session of the protein pair.
+        """This function saves the pymol session of the Protein pair.
 
         Note:
             The pse file will be saved under the relative path
@@ -530,16 +544,12 @@ class ProteinPair:
                     # the function
                     f"Bmp2_0_CA_session.pse"
         """
-        # check if path exists where the data will be exported,
-        # if not the directory will be created
         if not os.path.exists(f"{self.results_dir}/sessions"):
             os.mkdir(f"{self.results_dir}/sessions")
-        # save the session file under the path (export_data_dir)
-        # and file name (filename)
         cmd.save(f"{self.results_dir}/sessions/{filename}.pse")
 
     def get_rmsd_from_cealign(self) -> float:
-        """This function aligns the reference to the model protein and returns
+        """This function aligns the reference to the model Protein and returns
         the RMSD of the structure alignment.
 
         Returns:
@@ -551,8 +561,8 @@ class ProteinPair:
             target=self.ref_obj.molecule_object,
             mobile=self.model_obj.molecule_object,
             quiet=1)
-        valueRMSD: float = results.get('RMSD')
-        return valueRMSD
+        value_rmsd: float = results.get('RMSD')
+        return value_rmsd
 
     @staticmethod
     def print_results_of_align_protein_pair(result: Tuple[float, int],
@@ -574,7 +584,7 @@ class ProteinPair:
         """
         # argument test
         if result is None:
-            raise ValueError("The DataFrame is NULL.")
+            raise ValueError("The DataFrame is None.")
         if len(result) == 0:
             raise ValueError("The DataFrame has a size of zero.")
         if model_name == "":
@@ -674,7 +684,7 @@ class ProteinPair:
                                    selection: str = "",
                                    ray_shadows: bool = False,
                                    opaque_background: int = 0) -> None:
-        """This function takes an image of the whole protein/protein pair.
+        """This function takes an image of the whole Protein/Protein pair.
 
         Note:
             The png file will be saved under the relative path
@@ -683,9 +693,9 @@ class ProteinPair:
 
         Args:
             color_ref (str):
-                defines color for the reference protein
+                defines color for the reference Protein
             color_model (str):
-                defines color for the model protein
+                defines color for the model Protein
             representation (str):
                 defines the type of molecular representation
                 like cartoon or ribbon
@@ -714,7 +724,7 @@ class ProteinPair:
 
         # determine the option for ray_shadows
         opt_ray_shadows: str
-        if ray_shadows == False:
+        if not ray_shadows:
             opt_ray_shadows = "off"
         else:
             opt_ray_shadows = "on"
@@ -748,15 +758,3 @@ class ProteinPair:
 
         # save image as 300 dpi png image
         cmd.png(f'{self.results_dir}/images/{filename}.png', dpi=300)
-
-
-# class analysis:
-#
-#     def __init__(self, protein_pair: ProteinPair, results_dir: str, align_opts,
-#                  figure_size, distance_lbl):
-#         self.protein_pair = protein_pair
-#         self.results_dir = results_dir
-#         self.cycles = align_opts[0]
-#         self.cutoff = align_opts[1]
-#         self.figure_size = figure_size
-#         self.distance_lbl = distance_lbl

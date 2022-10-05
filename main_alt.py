@@ -862,7 +862,7 @@ class MainWindow(QMainWindow):
         project.set_model_chains((self.ui.txt_prediction_chain_model.text()))
         # gets reference filename and filepath
         if len(self.ui.txt_prediction_load_reference.text()) == 4:
-            tmp_protein = core.protein(self.ui.txt_prediction_load_reference.text(),
+            tmp_protein = core.Protein(self.ui.txt_prediction_load_reference.text(),
                                        export_data_dir=project.get_pdb_path())
             tmp_protein.clean_pdb_file()
             REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
@@ -915,11 +915,11 @@ class MainWindow(QMainWindow):
         project.set_pdb_model(full_model_file_path)
         project.create_xml_file()
 
-        # create the protein object for the reference
-        reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+        # create the Protein object for the reference
+        reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
 
-        # create model protein object
-        model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
+        # create model Protein object
+        model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
         # sets the filepath of the model in the project xml file
         export_dir = project.get_results_path()
         structure_analysis = structure_analysis_utils.StructureAnalysis(
@@ -1015,7 +1015,7 @@ class MainWindow(QMainWindow):
 
     def start_process(self):
         """This function contains the main analysis algorithm for the
-        protein structure comparison.
+        Protein structure comparison.
 
         """
         self.ui.btn_analysis_start.setEnabled(False)
@@ -1041,7 +1041,7 @@ class MainWindow(QMainWindow):
 
         # gets reference filename and filepath
         if len(self.ui.txt_analysis_load_reference.text()) == 4:
-            tmp_protein = core.protein(self.ui.txt_analysis_load_reference.text(),
+            tmp_protein = core.Protein(self.ui.txt_analysis_load_reference.text(),
                                        export_data_dir=project.get_pdb_path())
             tmp_protein.clean_pdb_file()
             REFERENCE_OBJ_NAME = self.ui.txt_analysis_load_reference.text()
@@ -1051,8 +1051,8 @@ class MainWindow(QMainWindow):
             REFERENCE_OBJ_NAME = ref_file_info.baseName()
             REFERENCE_DIR = ref_file_info.canonicalPath()
 
-        reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-        model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
+        reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+        model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
         export_dir = project.get_results_path()
         structure_analysis = structure_analysis_utils.StructureAnalysis(
             reference_protein, model_proteins,
@@ -1152,7 +1152,7 @@ class MainWindow(QMainWindow):
 
     def start_process_batch(self):
         """This function contains the main analysis algorithm for the
-        protein structure comparison.
+        Protein structure comparison.
 
         """
         self.status_bar.showMessage("Checking user input ...")
@@ -1181,7 +1181,7 @@ class MainWindow(QMainWindow):
 
             # gets reference filename and filepath
             if len(self.ui.txt_batch_load_reference.text()) == 4:
-                tmp_protein = core.protein(self.ui.txt_batch_load_reference.text(),
+                tmp_protein = core.Protein(self.ui.txt_batch_load_reference.text(),
                                            export_data_dir=project.get_pdb_path())
                 tmp_protein.clean_pdb_file()
                 REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
@@ -1190,8 +1190,8 @@ class MainWindow(QMainWindow):
                 ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
                 REFERENCE_OBJ_NAME = ref_file_info.baseName()
                 REFERENCE_DIR = ref_file_info.canonicalPath()
-            reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-            model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
+            reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+            model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
             export_dir = project.get_results_path()
             structure_analysis = structure_analysis_utils.StructureAnalysis(
                 reference_protein, model_proteins,

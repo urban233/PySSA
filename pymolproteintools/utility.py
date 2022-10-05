@@ -19,10 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module contains helpful functions for the other modules"""
 
-import pandas as pd
 from pymol import cmd
-import numpy as np
 
 
 def get_fasta_sequence(protein_object: str) -> str:
@@ -30,15 +29,13 @@ def get_fasta_sequence(protein_object: str) -> str:
 
     Args:
         protein_object (str):
-            name of the protein object in PyMOL
+            name of the Protein object in PyMOL
     Returns:
         str:
             FASTA sequence of the proteinObject
     """
 
     fasta_seq: str = cmd.get_fastastr(protein_object)
-    # indexOfEscapeChar: int = fasta_seq.find("\n")
-    # sequence = fasta_seq[indexOfEscapeChar + 1:len(fasta_seq)]
     sequence = fasta_seq.replace("\n", "")
     return sequence
 
