@@ -19,13 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import logging
+"""Module for functions which reduce code duplicates in the main module"""
+
 import os
 import shutil
 from pathlib import Path
-
-import pymol
-from pymol import cmd
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from utils import tools
@@ -79,79 +77,6 @@ def choose_directory(self, txt_box_dir):
         txt_box_dir.setText(current_file_path)
     else:
         txt_box_dir.setText(new_file_path)
-
-# TODO: is that code still necessary?
-# def create_project_folder(txtProjectNamePrediction, workspacePath, statusBar,
-#                           DialogWarningPredictionProject):
-#     """This function creates a project folder.
-#
-#     Args:
-#         txtProjectNamePrediction:
-#             textbox which contains the project name
-#         workspacePath:
-#             path of the workspace, where the project should be saved
-#         statusBar:
-#             status bar object (e.g. self.statusbar)
-#         DialogWarningPredictionProject:
-#             entire dialog which warns the user that the project folder
-#             has been already created
-#     """
-#     projectName = txtProjectNamePrediction.text()
-#     projectPath = f"{workspacePath}/{projectName}"
-#     # check if the project folder already exists
-#     if os.path.exists(projectPath):
-#         statusBar.showMessage(
-#             f"Warning! | Current Workspace: {workspacePath}")
-#         dialog = DialogWarningPredictionProject
-#         dialog.exec_()
-#         # breaks out of function
-#         statusBar.clearMessage()
-#         return None
-#     else:
-#         os.mkdir(projectPath)
-#         return projectName, projectPath
-
-# TODO: is that code still necessary?
-# def set_values_in_project_xml(projectPath, projectName, REFERENCE_DIR,
-#                               REFERENCE_OBJ_NAME, txtChainRefPrediction,
-#                               txtChainModelPrediction, resultsPath):
-#     """This function sets specific values in the project xml file
-#
-#     Args:
-#         projectPath:
-#             path where the project is stored
-#         projectName:
-#             name of the project
-#         REFERENCE_DIR:
-#             path where the reference pdb file is stored
-#         REFERENCE_OBJ_NAME:
-#             name of the reference
-#         txtChainRefPrediction:
-#             textbox which contains the chain information of the reference
-#         txtChainModelPrediction:
-#             textbox which contains the chain information of the model
-#         resultsPath:
-#             path where all results are stored
-#     """
-#     fullProjectFileName = f"{projectPath}/project.xml"
-#     projectFile = tools.ProjectXml(fullProjectFileName)
-#     projectFile.create_project_xml_file()
-#     try:
-#         tmpProjectFile = projectFile.load_project()
-#         projectFile.set_value(tmpProjectFile, "projectName", "value",
-#                               projectName)
-#         projectFile.set_value(tmpProjectFile, "predictionDone", "value",
-#                               "True")
-#         projectFile.set_value(tmpProjectFile, "reference", "value",
-#                               f"{REFERENCE_DIR}/{REFERENCE_OBJ_NAME}")
-#         projectFile.set_value(tmpProjectFile, "referenceChains", "value",
-#                               txtChainRefPrediction.text())
-#         projectFile.set_value(tmpProjectFile, "modelChains", "value",
-#                               txtChainModelPrediction.text())
-#         projectFile.set_value(tmpProjectFile, "results", "value",
-#                               resultsPath)
-#     except FileNotFoundError:
-#         print("Project file could not be loaded!")
 
 
 def critical_message(message, message_detail):
@@ -210,7 +135,8 @@ def error_dialog_settings(message, message_detail):
 
     open_global_settings_button = msg.addButton("Open Settings", QMessageBox.ActionRole)
     restore_settings_button = msg.addButton("Restore Settings", QMessageBox.ActionRole)
-    # TODO: * Should a help function be implemented?
+    # TODO:
+    #  * Should a help function be implemented?
     # help_button = msg.addButton("Help", QMessageBox.ActionRole)
     msg.exec_()
 
@@ -281,6 +207,8 @@ def warning_message_project_exists(project_name, message_detail, path):
     """This function creates a warning message, which can be customized.
 
     Args:
+        project_name:
+            name of the active project
         message_detail:
             additional information
         path:
@@ -310,10 +238,7 @@ def warning_switch_pymol_session(message_detail) -> bool:
 
     Args:
         message_detail:
-        current_row:
-
-    Returns:
-
+            detailed message string
     """
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Warning)
@@ -329,45 +254,3 @@ def warning_switch_pymol_session(message_detail) -> bool:
         return False
     if msg.clickedButton() == yes_button:
         return True
-        # try:
-        #     file_path = global_var_project_dict[current_row].get_results_path()
-        #     cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
-        #     tools.quick_log_and_display("info", "Saving the pymol session was successful.",
-        #                                 status_bar, "Saving was successful.")
-        # except KeyError:
-        #     tools.quick_log_and_display("error", "No project has been opened.", status_bar,
-        #                                 "No project has been opened.")
-        # except pymol.CmdException:
-        #     tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-        #                                          "current pymol session", status_bar,
-        #                                 "Unexpected Error from PyMOL")
-
-# TODO: is that code still necessary?
-# def save_project_xml(self, statusbar):
-#     """This function opens a qt save dialog and saves the project.xml
-#
-#     Args:
-#         self:
-#             main_window object
-#         statusbar:
-#             the statusbar object of the main window
-#     """
-#     try:
-#         file_name = Qt.QtWidgets.QFileDialog.getSaveFileName(self,
-#                                                             "Save project file",
-#                                                             Qt.QtCore.QDir.homePath(),
-#                                                             "Plugin Project File (project.xml)")
-#         if file_name == ("", ""):
-#             statusbar.showMessage("No file has been created.")
-#             logging.info("No file has been created.")
-#
-#         project_file = tools.ProjectXml(file_name[0])
-#         project_file.create_project_xml_file()
-#         tmp_project_file = project_file.load_project()
-#         results_path = project_file.get_path(tmp_project_file, "results", constants.ATTRIBUTE)
-#         session_file_name = ""
-#         for file in os.listdir(f"{results_path}/sessions"):
-#             session_file_name = file
-#         cmd.save(f"{results_path}/sessions/{session_file_name}")
-#     except FileNotFoundError:
-#         print("File not found!")

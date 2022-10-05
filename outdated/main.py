@@ -809,7 +809,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         MODEL_DIR = model_file_info.canonicalPath()
 
         # set model in project object
-        project.set_pdb_models(full_model_file_path)
+        project.set_pdb_model(full_model_file_path)
         project.create_xml_file()
 
         # create the protein object for the reference
@@ -924,7 +924,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         project.create_project_tree()
         project.set_pdb_file(self.ui.txt_analysis_load_reference.text())
         project.set_pdb_id(self.ui.txt_analysis_load_reference.text())
-        project.set_pdb_models(self.ui.txt_analysis_load_model.toPlainText())
+        project.set_pdb_model(self.ui.txt_analysis_load_model.toPlainText())
         project.set_ref_chains(self.ui.txt_analysis_chain_ref.text())
         project.set_model_chains((self.ui.txt_analysis_chain_model.text()))
         project.create_xml_file()
@@ -1050,7 +1050,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
             project.set_job_name(job.get_job_name())
             project.set_pdb_file(self.ui.txt_batch_load_reference.text())
             project.set_pdb_id(self.ui.txt_batch_load_reference.text())
-            project.set_pdb_models(MODEL_OBJ_NAME)
+            project.set_pdb_model(MODEL_OBJ_NAME)
             project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
             project.set_model_chains((self.ui.txt_batch_chain_model.text()))
             project.create_xml_file()

@@ -467,7 +467,6 @@ class ProteinPair:
         return result_hashtable
 
         # general exception if something goes wrong
-        # TODO: check which exception gets raised in batch process
         # except:
         #     print(f"Error. The index i is {i}, j is {j} and k is {k}.")
         #     print(f"The length of the alignment is "

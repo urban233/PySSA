@@ -19,60 +19,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for functions which can be used across the entire project"""
 
 import os
 import shutil
 import logging
-
-import numpy as np
-from matplotlib import pyplot as plt
-
-import utils.settings_utils
 from pymol import Qt
 from dialogs import dialog_settings_global
-from xml.dom import minidom
-from utils import project_constants
-#from utils.settings_utils import SettingsXml
 from utils import global_utils
 
-def create_histogram(results_hashtable):
-    y: np.ndarray = results_hashtable.get("distance")
 
-    # max distance value
-    max_distance = np.amax(y)
-
-    # calculate figure size for y direction
-    y_size: float = len(np.arange(0, max_distance, 0.25)) / 1.2
-    FIGURE_SIZE: (float, float) = (11.0, y_size)
-    # create an empty figure with no Axes
-    fig = plt.figure()
-    # create a figure with a single Axes
-    fig, ax = plt.subplots(figsize=FIGURE_SIZE)
-    # creates a basic histogram
-    counts, bins, patches = ax.hist(y, bins=np.arange(0, max_distance, 0.25), orientation="horizontal")
-    # sets the label for the x-axis
-    ax.set_xlabel("Frequency of $\\alpha$-C atoms distance")
-    # sets the label for the y-axis
-    ax.set_ylabel("Distance [$\mathring{A}$ngstrom]")
-    # set coordinates for y-axis label
-    ax.yaxis.set_label_coords(-0.12, 0.5)
-    # hide y-ticks through empty list
-    ax.set_yticks([])
-    # create label bin position
-    bins_centers = 0.15 * np.diff(bins) + bins[:-1]
-
-    i: int = 0
-    for count, y in zip(counts, bins_centers):
-        # define bin label
-        bin_name: str = f"{round(bins[i], 2)} - {round(bins[i + 1], 2)}"
-        # set bin label through annotation
-        ax.annotate(bin_name, xy=(0, y), xytext=(-70, y), textcoords="offset points")
-        i += 1
-    # sets grid
-    ax.grid(True, axis="both")
-
-
-def create_directory(parent_path, dir_name):
+def create_directory(parent_path, dir_name) -> None:
     """This function creates a directory with a given path and directory name
 
     Args:
@@ -86,7 +43,7 @@ def create_directory(parent_path, dir_name):
         os.mkdir(new_dir)
 
 
-def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir):
+def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir) -> None:
     """This function extracts the prediction.zip archive from the AlphaFold
     colab notebook and moves the selected_prediction.pdb to a different
     directory
@@ -123,7 +80,7 @@ def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir):
     shutil.rmtree(f"{tmp_dir}/{FOLDER_NAME}")
 
 
-def filter_prediction_zips(path):
+def filter_prediction_zips(path) -> list[str]:
     """This function filters a list of file names to a new list which contains
     only files starting with "prediction"
 
@@ -131,7 +88,7 @@ def filter_prediction_zips(path):
         path (str):
             directory path which should be filtered
     Returns:
-        list:
+        prediction_list:
             prediction_list which is a list of all filenames which starts with
             "prediction"
     """
@@ -144,14 +101,15 @@ def filter_prediction_zips(path):
     return prediction_list
 
 
-def get_prediction_file_name(path):
+def get_prediction_file_name(path) -> list[str]:
     """This function returns a list with all prediction names.
 
     Args:
         path:
             path where the predictions are
     Returns:
-
+        prediction_list:
+            a list of all filenames which starts with "prediction"
     """
     prediction_list = []
     # iterate through all file names in the given path
@@ -162,17 +120,23 @@ def get_prediction_file_name(path):
     return prediction_list
 
 
-def get_file_path_and_name(text):
+def get_file_path_and_name(text) -> tuple[str, str]:
     """This function gets the file name and path from a QFileDialog
 
     Args:
         text (str):
             string of the text box
+
+    Returns:
+        file_name:
+            name of the file with file extension
+        path:
+            absolute path where the file is stored
     """
     file_info = Qt.QtCore.QFileInfo(text)
-    OBJ_NAME = file_info.baseName()
-    DIR = file_info.canonicalPath()
-    return OBJ_NAME, DIR
+    file_name = file_info.baseName()
+    path = file_info.canonicalPath()
+    return file_name, path
 
 
 def safeguard_filepath_xml(settings_file, xml_tag, xml_attribute):
@@ -189,6 +153,8 @@ def safeguard_filepath_xml(settings_file, xml_tag, xml_attribute):
     Returns (bool):
         Returns a boolean value which tells if the safeguard test failed
         or succeeded
+
+    TODO: needs to be fixed for the new settings class
     """
     if not os.path.exists(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)):
         logging.critical(f"The {xml_tag} does NOT exist!")
@@ -216,6 +182,8 @@ def safeguard_numerical_value_xml(settings_file, xml_tag, xml_attribute, data_ty
     Returns (bool):
         Returns a boolean value which tells if the safeguard test failed
         or succeeded
+
+    TODO: needs to be fixed for the new settings class
     """
     if data_type == "int":
         if int(SettingsXml.get_path(settings_file, xml_tag, xml_attribute)) < 0:
@@ -235,7 +203,7 @@ def safeguard_numerical_value_xml(settings_file, xml_tag, xml_attribute, data_ty
             return True
 
 
-def restore_default_settings():
+def restore_default_settings() -> None:
     """This function creates a settings.xml file which is filled with the
     pre-defined values.
 
@@ -244,7 +212,7 @@ def restore_default_settings():
     global_utils.global_var_settings_obj.save_settings_to_xml()
 
 
-def open_global_settings():
+def open_global_settings() -> None:
     """This function opens the global settings dialog
 
     """
@@ -256,7 +224,7 @@ def open_global_settings():
 
 
 def quick_log_and_display(log_type: str, log_message: str,
-                          status_bar: Qt.QtWidgets.QStatusBar, status_bar_message: str):
+                          status_bar: Qt.QtWidgets.QStatusBar, status_bar_message: str) -> None:
     """This function is used to quickly log, print and display a message
 
     Args:
@@ -284,116 +252,38 @@ def quick_log_and_display(log_type: str, log_message: str,
     print(log_message)
     status_bar.showMessage(status_bar_message)
 
-
-# TODO: class needs to be tested
-class XmlFile:
-    pass
-
-    @staticmethod
-    def create_xml_file(tag_list, element_list, save_path_of_xml, attribute="value"):
-        """This function create the settings xml with the format:
-
-        Args:
-            tag_list (list):
-                list which contains the xml file tags
-            element_list (list):
-                list which contains the elements
-            save_path_of_xml (str):
-                the complete filepath where the xml file should be created
-            attribute (str):
-                defines the attribute to access the elements
-
-
-        <?xml version="1.0" ?>
-        <root>
-            <workspacePath DEFAULT_ATTRIBUTE=DEFAULT_WORKSPACE_PATH/>
-            <pdbpath DEFAULT_ATTRIBUTE=DEFAULT_PDB_PATH>
-            <zippath DEFAULT_ATTRIBUTE=DEFAULT_ZIP_PATH/>
-            <cyclesValue DEFAULT_ATTRIBUTE=DEFAULT_CYCLES_VALUE/>
-            <cutoffValue DEFAULT_ATTRIBUTE=DEFAULT_CUTOFF_VALUE/>
-        </root>
-        """
-        if len(tag_list) == 0:
-            raise ValueError("The tag_list is empty!")
-        if len(element_list) == 0:
-            raise ValueError("The element_list is empty!")
-        if len(tag_list) != len(element_list):
-            raise ValueError("The tag_list and element_list have not the same"
-                             "number of elements!")
-
-        root = minidom.Document()
-        root_node = root.createElement("root")
-        root.appendChild(root_node)
-
-        index = 0
-        for tag in tag_list:
-            xml_tag = root.createElement(tag)
-            xml_tag.setAttribute(attribute, element_list[index])
-            root_node.appendChild(xml_tag)
-            index += 1
-
-        if not os.path.exists(save_path_of_xml):
-            os.mkdir(save_path_of_xml)
-        # save xml file to filesystem
-        with open(save_path_of_xml, "w") as f:
-            f.write(root.toprettyxml())
-
-    @staticmethod
-    def load_xml_in_memory(save_path_of_xml):
-        """This function loads a xml file into the memory.
-
-        Args:
-            save_path_of_xml (str):
-                the complete filepath where the xml file should be created
-        Note:
-            This function should be used once to load the xml file into the
-            memory.
-        """
-        path_as_string = str(save_path_of_xml)
-        return minidom.parse(path_as_string)
-
-    @staticmethod
-    def get_path(xml_file, tag, attribute):
-        """This functions returns the value of the path node.
-
-        Args:
-            xml_file:
-                the xml file which comes from the function load_xml_in_memory
-            tag (str):
-                e.g. pdbpath or zippath node
-            attribute (str):
-                e.g. name
-        """
-        path_name = xml_file.getElementsByTagName(tag)
-        path = path_name[0].getAttribute(attribute)
-        return path
-
-    @staticmethod
-    def set_value(xml_file, tag, attribute, value):
-        """This function changes a specific value in the xml file
-
-        Args:
-            xml_file:
-                the xml file which comes from the function load_xml_in_memory
-            tag (str):
-                 e.g. pdbpath or zippath node
-            attribute (str):
-                 e.g. name
-            value (str):
-                 new value which should be set to the attribute
-        """
-        path_name = xml_file.getElementsByTagName(tag)
-        path_name[0].setAttribute(attribute, value)
-
-    @staticmethod
-    def save_xml_file(xml_file, save_path_of_xml):
-        """This function saves the opened xml file.
-
-        Args:
-            xml_file:
-                the xml file which comes from the function load_xml_in_memory
-            save_path_of_xml (str):
-                the complete filepath where the xml file should be created
-        """
-        with open(save_path_of_xml, "w") as f:
-            f.write(xml_file.toxml())
+# def create_histogram(results_hashtable):
+#     y: np.ndarray = results_hashtable.get("distance")
+#
+#     # max distance value
+#     max_distance = np.amax(y)
+#
+#     # calculate figure size for y direction
+#     y_size: float = len(np.arange(0, max_distance, 0.25)) / 1.2
+#     FIGURE_SIZE: (float, float) = (11.0, y_size)
+#     # create an empty figure with no Axes
+#     fig = plt.figure()
+#     # create a figure with a single Axes
+#     fig, ax = plt.subplots(figsize=FIGURE_SIZE)
+#     # creates a basic histogram
+#     counts, bins, patches = ax.hist(y, bins=np.arange(0, max_distance, 0.25), orientation="horizontal")
+#     # sets the label for the x-axis
+#     ax.set_xlabel("Frequency of $\\alpha$-C atoms distance")
+#     # sets the label for the y-axis
+#     ax.set_ylabel("Distance [$\mathring{A}$ngstrom]")
+#     # set coordinates for y-axis label
+#     ax.yaxis.set_label_coords(-0.12, 0.5)
+#     # hide y-ticks through empty list
+#     ax.set_yticks([])
+#     # create label bin position
+#     bins_centers = 0.15 * np.diff(bins) + bins[:-1]
+#
+#     i: int = 0
+#     for count, y in zip(counts, bins_centers):
+#         # define bin label
+#         bin_name: str = f"{round(bins[i], 2)} - {round(bins[i + 1], 2)}"
+#         # set bin label through annotation
+#         ax.annotate(bin_name, xy=(0, y), xytext=(-70, y), textcoords="offset points")
+#         i += 1
+#     # sets grid
+#     ax.grid(True, axis="both")

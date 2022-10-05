@@ -1,6 +1,28 @@
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2022
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Module for the main window of the pyssa plugin"""
+
 import logging
 import os
-import shutil
 import sys
 import time
 import webbrowser
@@ -29,6 +51,7 @@ from utils import global_utils
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
 global_var_project_dict = {0: utils.project_utils.Project("", "")}
+global_var_list_widget_row = 0
 
 
 class MainWindow(QMainWindow):
@@ -237,7 +260,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
         self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
 
-        # list view
+        # list widget
         self.ui.project_list.currentRowChanged.connect(self.change_interesting_regions)
 
         # Image
@@ -338,26 +361,44 @@ class MainWindow(QMainWindow):
         self.ui.side_menu_container.setFixedWidth(new_width)
 
     def display_prediction_only_page(self):
+        """This function displays the prediction only work area
+
+        """
         self.ui.stackedWidget.setCurrentIndex(1)
         self.ui.lbl_page_title.setText("Prediction")
 
     def display_prediction_and_analysis_page(self):
+        """This function displays the prediction + analysis work area
+
+        """
         self.ui.stackedWidget.setCurrentIndex(2)
         self.ui.lbl_page_title.setText("Prediction + Analysis")
 
     def display_single_analysis_page(self):
+        """This function displays the single analysis work area
+
+        """
         self.ui.stackedWidget.setCurrentIndex(3)
         self.ui.lbl_page_title.setText("Single Analysis")
 
     def display_job_analysis_page(self):
+        """This function displays the job analysis work area
+
+        """
         self.ui.stackedWidget.setCurrentIndex(4)
         self.ui.lbl_page_title.setText("Job Analysis")
 
     def display_results_page(self):
+        """This function displays the results work area
+
+        """
         self.ui.stackedWidget.setCurrentIndex(5)
         self.ui.lbl_page_title.setText("Results")
 
     def display_image_page(self):
+        """This function displays the image work area
+
+        """
         self.ui.stackedWidget.setCurrentIndex(6)
         self.ui.lbl_page_title.setText("Image")
 
@@ -383,15 +424,15 @@ class MainWindow(QMainWindow):
             j = 3
         if i == j:
             self.ui.btn_analysis_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_analysis_start.setStyleSheet(button_style)
         else:
             self.ui.btn_analysis_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_analysis_start.setStyleSheet(button_style)
@@ -418,15 +459,15 @@ class MainWindow(QMainWindow):
             j = 3
         if i == j:
             self.ui.btn_batch_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_batch_start.setStyleSheet(button_style)
         else:
             self.ui.btn_batch_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_batch_start.setStyleSheet(button_style)
@@ -451,15 +492,15 @@ class MainWindow(QMainWindow):
             j = 2
         if i == j:
             self.ui.btn_prediction_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_prediction_start.setStyleSheet(button_style)
         else:
             self.ui.btn_prediction_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_prediction_start.setStyleSheet(button_style)
@@ -471,15 +512,15 @@ class MainWindow(QMainWindow):
         """
         if len(str(self.ui.txt_prediction_only_notebook_url.text())) > 0:
             self.ui.btn_prediction_only_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_prediction_only_start.setStyleSheet(button_style)
         else:
             self.ui.btn_prediction_only_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as file:
-                button_style = file.read()
+            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+                button_style = style_sheet_file.read()
 
                 # Set the stylesheet of the application
                 self.ui.btn_prediction_only_start.setStyleSheet(button_style)
@@ -490,7 +531,6 @@ class MainWindow(QMainWindow):
         """This function opens a project.xml file and fills the input boxes with the right values
 
         """
-        attribute = "value"
         # open file dialog
         try:
             global global_var_project_dict
@@ -499,8 +539,8 @@ class MainWindow(QMainWindow):
                                                                  Qt.QtCore.QDir.homePath(),
                                                                  "Plugin Project File (*.xml)")
             if file_name == ("", ""):
-                # TODO: add status bar and logger message
-                print("No file has been selected.")
+                tools.quick_log_and_display("info", "No file has been selected.",
+                                            self.status_bar, "No file has been selected.")
                 return
             # clear current project list and interesting regions
             self.ui.project_list.clear()
@@ -523,6 +563,10 @@ class MainWindow(QMainWindow):
                         project_name = path_split[(len(path_split) - 1)]
                         global_var_project_dict[i] = utils.project_utils.Project(project_name,
                                                                                  f"{self.workspace_path}/{job_name}")
+                        index = len("project_of_")
+                        model_name = project_name[index:]
+                        # TODO: insert modelname
+                        global_var_project_dict[i].set_pdb_model(model_name)
                         self.ui.project_list.addItem(global_var_project_dict[i].get_project_name())
                     i += 1
 
@@ -531,6 +575,7 @@ class MainWindow(QMainWindow):
                 file_name_file_info = Qt.QtCore.QFileInfo(file_name[0])
                 global_var_project_dict[0] = utils.project_utils.Project(file_name_file_info.baseName(),
                                                                          self.workspace_path)
+                global_var_project_dict[0].set_pdb_model(xml_file.getElementsByTagName('pdb_model')[0].getAttribute('value'))
                 # add filename to project list (results tab)
                 self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
 
@@ -667,15 +712,36 @@ class MainWindow(QMainWindow):
         """This function opens the official plugin documentation as HTML page.
 
         """
-        webbrowser.open_new(f"file://{os.getcwd()}/docs/pymol_plugin/build/html/index.html")
+        #webbrowser.open_new(f"file://{os.getcwd()}/docs/pymol_plugin/build/html/index.html")
+        # opens the documentation of the os
+        if sys.platform.startswith("darwin"):
+            # macOS path
+            webbrowser.open_new(f"file://{project_constants.path_list[1]}/docs/pymol_plugin/build/html/index.html")
+        elif sys.platform.startswith("linux"):
+            # Linux path
+            webbrowser.open_new(f"file://{project_constants.path_list[0]}/docs/pymol_plugin/build/html/index.html")
+        elif sys.platform.startswith("win32"):
+            # Windows path
+            webbrowser.open_new(f"file://{project_constants.path_list[2]}/docs/pymol_plugin/build/html/index.html")
+
 
     @staticmethod
     def open_documentation_pdf():
         """This function opens the official plugin documentation as PDF.
 
         """
-        webbrowser.open_new(
-            f"file://{os.getcwd()}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+        # webbrowser.open_new(
+        #     f"file://{os.getcwd()}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+        # opens the documentation of the os
+        if sys.platform.startswith("darwin"):
+            # macOS path
+            webbrowser.open_new(f"file://{project_constants.path_list[1]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+        elif sys.platform.startswith("linux"):
+            # Linux path
+            webbrowser.open_new(f"file://{project_constants.path_list[0]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+        elif sys.platform.startswith("win32"):
+            # Windows path
+            webbrowser.open_new(f"file://{project_constants.path_list[2]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
 
     @staticmethod
     def open_about():
@@ -813,10 +879,8 @@ class MainWindow(QMainWindow):
             webbrowser.open_new(project_constants.NOTEBOOK_URL)
 
         # waiting for the colab notebook to finish
-        # TODO:
-        #   * implement cancel button for "Abort Prediction"
         archive = "prediction.zip"
-        source_path = global_utils.global_var_settings_obj.get_model_path()
+        source_path = global_utils.global_var_settings_obj.get_prediction_path()
         FILE_NAME = f"{source_path}/{archive}"
         # flag = False
         # while flag == False:
@@ -831,7 +895,6 @@ class MainWindow(QMainWindow):
             # global global_var_abort_prediction
             if global_var_abort_prediction:
                 return
-
 
         # ----------------------------------------------------------------- #
         # start of the analysis algorithm
@@ -849,7 +912,7 @@ class MainWindow(QMainWindow):
         MODEL_DIR = model_file_info.canonicalPath()
 
         # set model in project object
-        project.set_pdb_models(full_model_file_path)
+        project.set_pdb_model(full_model_file_path)
         project.create_xml_file()
 
         # create the protein object for the reference
@@ -859,13 +922,12 @@ class MainWindow(QMainWindow):
         model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
         # sets the filepath of the model in the project xml file
         export_dir = project.get_results_path()
-        structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
-                                                                        project.get_ref_chains().split(","),
-                                                                        project.get_model_chains().split(","),
-                                                                        export_dir,
-                                                                        cycles=global_utils.global_var_settings_obj.get_cycles(),
-                                                                        cutoff=global_utils.global_var_settings_obj.get_cutoff(),
-                                                                        )
+        structure_analysis = structure_analysis_utils.StructureAnalysis(
+            reference_protein, model_proteins,
+            project.get_ref_chains().split(","), project.get_model_chains().split(","),
+            export_dir, cycles=global_utils.global_var_settings_obj.get_cycles(),
+            cutoff=global_utils.global_var_settings_obj.get_cutoff(),
+        )
         structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
                                                          structure_analysis.reference_protein)
         structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
@@ -972,7 +1034,7 @@ class MainWindow(QMainWindow):
             return
         project.set_pdb_file(self.ui.txt_analysis_load_reference.text())
         project.set_pdb_id(self.ui.txt_analysis_load_reference.text())
-        project.set_pdb_models(self.ui.txt_analysis_load_model.toPlainText())
+        project.set_pdb_model(self.ui.txt_analysis_load_model.toPlainText())
         project.set_ref_chains(self.ui.txt_analysis_chain_ref.text())
         project.set_model_chains((self.ui.txt_analysis_chain_model.text()))
         project.create_xml_file()
@@ -992,13 +1054,12 @@ class MainWindow(QMainWindow):
         reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
         model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
         export_dir = project.get_results_path()
-        structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
-                                                                        project.get_ref_chains().split(","),
-                                                                        project.get_model_chains().split(","),
-                                                                        export_dir,
-                                                                        cycles=global_utils.global_var_settings_obj.get_cycles(),
-                                                                        cutoff=global_utils.global_var_settings_obj.get_cutoff(),
-                                                                        )
+        structure_analysis = structure_analysis_utils.StructureAnalysis(
+            reference_protein, model_proteins,
+            project.get_ref_chains().split(","), project.get_model_chains().split(","),
+            export_dir, cycles=global_utils.global_var_settings_obj.get_cycles(),
+            cutoff=global_utils.global_var_settings_obj.get_cutoff(),
+        )
         structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
                                                          structure_analysis.reference_protein)
         structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
@@ -1112,7 +1173,7 @@ class MainWindow(QMainWindow):
             project.set_job_name(job.get_job_name())
             project.set_pdb_file(self.ui.txt_batch_load_reference.text())
             project.set_pdb_id(self.ui.txt_batch_load_reference.text())
-            project.set_pdb_models(MODEL_OBJ_NAME)
+            project.set_pdb_model(MODEL_OBJ_NAME)
             project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
             project.set_model_chains((self.ui.txt_batch_chain_model.text()))
             project.create_xml_file()
@@ -1132,19 +1193,16 @@ class MainWindow(QMainWindow):
             reference_protein: list[core.protein] = [core.protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
             model_proteins: list[core.protein] = [core.protein(MODEL_OBJ_NAME, MODEL_DIR)]
             export_dir = project.get_results_path()
-            structure_analysis = structure_analysis_utils.StructureAnalysis(reference_protein, model_proteins,
-                                                                            project.get_ref_chains().split(","),
-                                                                            project.get_model_chains().split(","),
-                                                                            export_dir,
-                                                                            cycles=global_utils.global_var_settings_obj.get_cycles(),
-                                                                            cutoff=global_utils.global_var_settings_obj.get_cutoff(),
-                                                                            )
+            structure_analysis = structure_analysis_utils.StructureAnalysis(
+                reference_protein, model_proteins,
+                project.get_ref_chains().split(","), project.get_model_chains().split(","),
+                export_dir, cycles=global_utils.global_var_settings_obj.get_cycles(),
+                cutoff=global_utils.global_var_settings_obj.get_cutoff(),
+            )
             structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
                                                              structure_analysis.reference_protein)
             structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
                                                              structure_analysis.model_proteins)
-            # TODO: * fix analysis with chains (hint: error selection (<pymolproteintools object>))
-            # TODO: * fix the distance calculation for 2, or more protein pairs
             structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
                                                     self.status_bar, self.ui.progress_bar_batch)
         job.create_xml_file()
@@ -1154,15 +1212,30 @@ class MainWindow(QMainWindow):
         """This function is used to switch between projects within a job.
 
         """
+        global global_var_list_widget_row
         global global_var_project_dict
+
+        if gui_utils.warning_switch_pymol_session("") is True:
+            try:
+                file_path = global_var_project_dict[global_var_list_widget_row].get_results_path()
+                cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
+                tools.quick_log_and_display("info", "Saving the pymol session was successful.",
+                                            self.status_bar, "Saving was successful.")
+            except KeyError:
+                tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+                                            "No project has been opened.")
+            except pymol.CmdException:
+                tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
+                                                     "current pymol session", self.status_bar,
+                                            "Unexpected Error from PyMOL")
+
         current_row = self.ui.project_list.currentRow()
+        global_var_list_widget_row = current_row
         results_path = global_var_project_dict[current_row].get_results_path()
         dir_content = os.listdir(f"{results_path}/images/interesting_regions")
         self.ui.cb_interesting_regions.clear()
         for tmp_file in dir_content:
             self.ui.cb_interesting_regions.addItem(tmp_file)
-        if gui_utils.warning_switch_pymol_session("") is True:
-            self.save()
         cmd.load(global_var_project_dict[current_row].get_session_file())
 
     def display_structure_alignment(self):
@@ -1203,6 +1276,7 @@ class MainWindow(QMainWindow):
 
         # read csv file
         global global_var_project_dict
+
         try:
             file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
             model_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
@@ -1213,13 +1287,13 @@ class MainWindow(QMainWindow):
         path = f"{file_path}/distance_csv/distances.csv"
         distance_list = []
         cutoff_line = []
-        with open(path, 'r', encoding="utf-8") as file:
-            for line in file:
+        with open(path, 'r', encoding="utf-8") as csv_file:
+            for line in csv_file:
                 cleaned_line = line.replace("\n", "")
                 if cleaned_line.split(",")[7] != 'distance':
                     distance_list.append(float(cleaned_line.split(",")[7]))
-                    cutoff_line.append(1)  # TODO: cutoff needs to be variable
-        # creates acutal distance plot line
+                    cutoff_line.append(global_utils.global_var_settings_obj.get_cutoff())
+        # creates actual distance plot line
         graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
                                    symbol="o", symbolSize=10, symbolBrush=('b'))
         # creates cutoff line
@@ -1261,9 +1335,9 @@ class MainWindow(QMainWindow):
             return
         path = f"{file_path}/distance_csv/distances.csv"
         distance_list = []
-        with open(path, 'r', encoding="utf-8") as file:
+        with open(path, 'r', encoding="utf-8") as csv_file:
             i = 0
-            for line in file:
+            for line in csv_file:
                 cleaned_line = line.replace("\n", "")
                 if cleaned_line.split(",")[7] != 'distance':
                     distance_list.append(float(cleaned_line.split(",")[7]))
@@ -1276,9 +1350,16 @@ class MainWindow(QMainWindow):
             x = np.resize(x, (1, y.size))
         # this conversion is needed for the pyqtgraph library!
         x = x.tolist()
-        x = x[0]
-        y = y.tolist()
+        try:
+            x = x[0]
+        except IndexError:
+            # Error got raised where the distances where all 0
+            tools.quick_log_and_display("error", "The histogram could not be created.",
+                                        self.status_bar, "The histogram could not be created. "
+                                                         " Check the distance table!")
+            return
 
+        y = y.tolist()
         color = Qt.QtGui.QColor.fromRgb(255, 128, 128)
         # creates bar chart item
         graph_bar_item = pg.BarGraphItem(x0=0, y=y, height=0.2, width=x,
@@ -1356,9 +1437,9 @@ class MainWindow(QMainWindow):
                                         "No project has been opened.")
             return
         path = f"{file_path}/distance_csv/distances.csv"
-        with open(path, 'r', encoding="utf-8") as file:
+        with open(path, 'r', encoding="utf-8") as csv_file:
             i = 0
-            for line in file:
+            for line in csv_file:
                 tmp_list = line.split(",")
                 tmp_list.pop(0)
                 standard_item_list = []
@@ -1367,7 +1448,7 @@ class MainWindow(QMainWindow):
                     standard_item_list.append(tmp_item)
                 csv_model.insertRow(i, standard_item_list)
                 i += 1
-            file.close()
+            csv_file.close()
         csv_model.removeRow(0)
         table_view.setAlternatingRowColors(True)
         table_view.resizeColumnsToContents()

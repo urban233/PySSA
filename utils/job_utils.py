@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the job class"""
+
 import os
 from pathlib import Path
 from xml.dom import minidom
@@ -28,27 +30,64 @@ from utils import project_utils
 class Job:
     """This class is for the jobs used in the plugin
 
+    Var:
+        job_name:
+            name of the job
+        job_path:
+            path of the job
+        project_list:
+            list of Project objects
     """
-    _job_name = ""
-    _job_path = ""
+    _job_name: str = ""
+    _job_path: Path = ""
     _project_list: [project_utils.Project] = []
 
-    def __init__(self, job_name, workspace_path):
-        self._job_name = job_name
-        self._job_path = Path(f"{workspace_path}/{job_name}")
+    def __init__(self, job_name, workspace_path) -> None:
+        """Constructor
+
+        Args:
+            job_name:
+                name of the job
+            workspace_path:
+                path of the workspace
+        """
+        job_name_with_underscores = job_name.replace(" ", "_")
+        self._job_name = job_name_with_underscores
+        self._job_path = Path(f"{workspace_path}/{self._job_name}")
         os.mkdir(self._job_path)
 
-    def get_job_path(self):
+    def get_job_path(self) -> Path:
+        """This function gets the value of the job_path variable
+
+        Returns (pathlib.Path):
+            job_path
+        """
         return self._job_path
 
-    def get_job_name(self):
+    def get_job_name(self) -> str:
+        """This function gets the value of the job_name variable
+
+        Returns (str):
+            job_name
+        """
         return self._job_name
 
-    # add project function
-    def add_project_to_job(self, project: project_utils.Project):
+    def add_project_to_job(self, project: project_utils.Project) -> None:
+        """This function appends a Project object to the project_list
+
+        Args:
+            project:
+                single project as Project object
+        """
         self._project_list.append(project)
 
-    def create_xml_file(self, attribute="value"):
+    def create_xml_file(self, attribute="value") -> None:
+        """This function creates the job xml file
+
+        Args:
+            attribute (optional):
+                attribute in the xml file
+        """
         root = minidom.Document()
         root_node = root.createElement("root")
         root.appendChild(root_node)

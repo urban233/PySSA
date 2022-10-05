@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for storing project-wide constants"""
 
 import os
 from pathlib import Path
@@ -27,18 +28,14 @@ from pathlib import Path
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
 SETTINGS_FILE = "settings.xml"
-# SETTINGS = SETTINGS_DIR / SETTINGS_FILE
-#
-# # XML tags & attributes
-# WORKSPACE_PATH_TAG = "workspacePath"
-# PDB_STORAGE_PATH_TAG = "pdbPath"
-# ZIP_STORAGE_PATH_TAG = "zipPath"
-# CYCLES_VALUE_TAG = "cyclesValue"
-# CUTOFF_VALUE_TAG = "cutoffValue"
-# ATTRIBUTE = "value"
 
 # Constants for the structure prediction
-#FULL_FILENAME_PREDICTION_ZIP = Path(f"{os.path.expanduser('~')}/Downloads/prediction.zip")
 OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
 NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
-# Constants for the structure analysis
+
+# linux, macOS, Windows path
+path_list = [
+    f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
+    f"{os.path.expanduser('~')}/opt/anaconda3/envs/pyssa/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
+    f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\pyssa\\",
+]

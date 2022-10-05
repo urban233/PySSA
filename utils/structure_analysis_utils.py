@@ -19,18 +19,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for structure analysis class"""
 
 import os
 import logging
-
 import pymol
-from pymol import cmd, Qt
+from pymol import Qt
 from matplotlib import pyplot as plt
 from pymolproteintools import core
 from pymolproteintools import graphics
 from utils import tools
 from utils import gui_utils
-
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -45,7 +44,7 @@ class StructureAnalysis:
     model_proteins = []
     ref_chains = []
     model_chains = []
-    export_dir = ""
+    export_dir: str = ""
     _cycles: int = 1
     _cutoff: float = 1.0
     _figure_size: tuple[float, float] = (11.0, 6.0)
@@ -54,7 +53,7 @@ class StructureAnalysis:
     _session_file_name: str = "session_file_model_s"  # little Tesla easter egg ;)
 
     def __init__(self, reference_protein: list[core.protein], model_proteins: list[core.protein],
-                 ref_chains, model_chains, export_dir, cycles=1, cutoff=1.0):
+                 ref_chains, model_chains, export_dir, cycles=1, cutoff=1.0) -> None:
         self.reference_protein = reference_protein
         self.model_proteins = model_proteins
         self.ref_chains = ref_chains
@@ -63,8 +62,7 @@ class StructureAnalysis:
         self._cycles = cycles
         self._cutoff = cutoff
 
-
-    def get_export_dir(self):
+    def get_export_dir(self) -> str:
         """This function returns the value for export_dir
 
         Returns:
@@ -72,7 +70,16 @@ class StructureAnalysis:
         """
         return self.export_dir
 
-    def get_cycles(self):
+    def set_export_dir(self, value) -> None:
+        """This function sets the value for export_dir
+
+        Args:
+            value:
+                value which should get set
+        """
+        self.export_dir = value
+
+    def get_cycles(self) -> int:
         """This function returns the value for get_cycles
 
         Returns:
@@ -80,7 +87,16 @@ class StructureAnalysis:
         """
         return self._cycles
 
-    def get_cutoff(self):
+    def set_cycles(self, value) -> None:
+        """This function sets the value for get_cycles
+
+        Args:
+            value:
+                value which should get set
+        """
+        self._cycles = value
+
+    def get_cutoff(self) -> float:
         """This function returns the value for cutoff
 
         Returns:
@@ -88,7 +104,16 @@ class StructureAnalysis:
         """
         return self._cutoff
 
-    def get_figure_size(self):
+    def set_cutoff(self, value) -> None:
+        """This function sets the value for cutoff
+
+        Args:
+            value:
+                value which should get set
+        """
+        self._cutoff = value
+
+    def get_figure_size(self) -> tuple[float, float]:
         """This function returns the value for figure_size
 
         Returns:
@@ -96,7 +121,16 @@ class StructureAnalysis:
         """
         return self._figure_size
 
-    def get_distance_label(self):
+    def set_figure_size(self, value) -> None:
+        """This function sets the value for figure_size
+
+        Args:
+            value:
+                value which should get set
+        """
+        self._figure_size = value
+
+    def get_distance_label(self) -> str:
         """This function returns the value for distance_label
 
         Returns:
@@ -104,7 +138,16 @@ class StructureAnalysis:
         """
         return self._distance_label
 
-    def get_alignment_file_name(self):
+    def set_distance_label(self, value) -> None:
+        """This function sets the value for distance_label
+
+        Args:
+            value:
+                value which should get set
+        """
+        self._distance_label = value
+
+    def get_alignment_file_name(self) -> str:
         """This function returns the value for alignment_file_name
 
         Returns:
@@ -112,7 +155,16 @@ class StructureAnalysis:
         """
         return self._alignment_file_name
 
-    def get_session_file_name(self):
+    def set_alignment_file_name(self, value) -> None:
+        """This function sets the value for alignment_file_name
+
+        Args:
+            value:
+                value which should get set
+        """
+        self._alignment_file_name = value
+
+    def get_session_file_name(self) -> str:
         """This function returns the value for session_file_name
 
         Returns:
@@ -120,89 +172,14 @@ class StructureAnalysis:
         """
         return self._session_file_name
 
-    def set_export_dir(self, value):
-        """This function sets the value for export_dir
-
-        Args:
-            value:
-                value which should get set
-        Returns:
-            export_dir
-        """
-        self.export_dir = value
-        return self.export_dir
-
-    def set_cycles(self, value):
-        """This function sets the value for get_cycles
-
-        Args:
-            value:
-                value which should get set
-        Returns:
-            get_cycles
-        """
-        self._cycles = value
-        return self._cycles
-
-    def set_cutoff(self, value):
-        """This function sets the value for cutoff
-
-        Args:
-            value:
-                value which should get set
-        Returns:
-            cutoff
-        """
-        self._cutoff = value
-        return self._cutoff
-
-    def set_figure_size(self, value):
-        """This function sets the value for figure_size
-
-        Args:
-            value:
-                value which should get set
-        Returns:
-            figure_size
-        """
-        self._figure_size = value
-        return self._figure_size
-
-    def set_distance_label(self, value):
-        """This function sets the value for distance_label
-
-        Args:
-            value:
-                value which should get set
-        Returns:
-            distance_label
-        """
-        self._distance_label = value
-        return self._distance_label
-
-    def set_alignment_file_name(self, value):
-        """This function sets the value for alignment_file_name
-
-        Args:
-            value:
-                value which should get set
-        Returns:
-            alignment_file_name
-        """
-        self._alignment_file_name = value
-        return self._alignment_file_name
-
-    def set_session_file_name(self, value):
+    def set_session_file_name(self, value) -> None:
         """This function sets the value for session_file_name
 
         Args:
             value:
                 value which should get set
-        Returns:
-            session_file_name
         """
         self._session_file_name = value
-        return self._session_file_name
 
     @staticmethod
     def prepare_chains_for_selection(txt_box_chain_ref):
@@ -215,7 +192,7 @@ class StructureAnalysis:
         return txt_box_chain_ref.text().split(",")
 
     @staticmethod
-    def create_selection_for_proteins(chains: list, proteins: list[core.protein]):
+    def create_selection_for_proteins(chains: list, proteins: list[core.protein]) -> None:
         """This function creates the selections for the proteins and sets these directly into
         the protein objects
 
@@ -238,7 +215,7 @@ class StructureAnalysis:
         for protein in proteins:
             protein.set_selection(selection)
 
-    def create_protein_pairs(self):
+    def create_protein_pairs(self) -> list[core.ProteinPair]:
         """This function creates protein pairs based on the proteins in the object
 
         Returns:
@@ -252,7 +229,8 @@ class StructureAnalysis:
         return protein_pairs
 
     def do_analysis_in_pymol(self, protein_pairs: list[core.ProteinPair],
-                             status_bar_obj: Qt.QtWidgets.QStatusBar, progress_bar_obj: Qt.QtWidgets.QProgressBar):
+                             status_bar_obj: Qt.QtWidgets.QStatusBar,
+                             progress_bar_obj: Qt.QtWidgets.QProgressBar) -> None:
         """This function does the actual structure analysis in pymol based on the protein pairs
 
         Args:
