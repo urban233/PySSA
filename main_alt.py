@@ -50,8 +50,10 @@ from utils import global_utils
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
+# global variables
 global_var_project_dict = {0: utils.project_utils.Project("", "")}
 global_var_list_widget_row = 0
+global_var_work_area_history = []
 
 
 class MainWindow(QMainWindow):
@@ -163,6 +165,10 @@ class MainWindow(QMainWindow):
             "Fiber",
         ]
         gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
+
+        # button connections top bar
+        self.ui.btn_back.clicked.connect(self.switch_back)
+        self.ui.btn_forward.clicked.connect(self.switch_forward)
 
         # button connections side bar
         self.ui.btn_side_menu.clicked.connect(self.handle_side_menu)
@@ -281,6 +287,24 @@ class MainWindow(QMainWindow):
         self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
 
         # creates tooltips
+        # interface
+        self.ui.btn_forward.setToolTip("Go forward")
+        self.ui.btn_back.setToolTip("Go back")
+        self.ui.btn_side_menu.setToolTip("Collapse")
+
+        # Prediction + Analysis
+        # for buttons
+        self.ui.btn_prediction_load_reference.setToolTip("Open reference pdb file")
+        self.ui.btn_prediction_start.setToolTip("Start prediction + analysis process")
+
+        # for text fields
+        self.ui.txt_prediction_load_reference.setToolTip("Reference file path")
+        self.ui.txt_prediction_chain_ref.setToolTip("Enter chain(s) of reference")
+        self.ui.txt_prediction_chain_model.setToolTip("Enter chain(s) of model")
+
+        # for checkbox
+        self.ui.cb_prediction_chain_info.setToolTip("Enable input of chains")
+
         # Home/Single Analysis
         # for buttons
         self.ui.btn_analysis_load_reference.setToolTip("Open reference pdb file")
@@ -333,8 +357,6 @@ class MainWindow(QMainWindow):
         self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
         self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
 
-        # Shortcuts menubar
-
         # setting additional parameters
         self.setWindowTitle("PySSA v0.9.0")
 
@@ -349,7 +371,7 @@ class MainWindow(QMainWindow):
             new_width = 170
             self.setMinimumWidth(650)
             self.setMaximumWidth(12000)
-            self.ui.btn_side_menu.setText("_")
+            self.ui.btn_side_menu.setText("<-")
         else:
             # runs if sidebar will be closed (current status: open)
             new_width = 0
@@ -357,8 +379,49 @@ class MainWindow(QMainWindow):
             self.setMinimumWidth(650-170)
             self.setMaximumWidth(480)
             # self.ui.main_body.setMinimumWidth(650-170)
-            self.ui.btn_side_menu.setText("+")
+            self.ui.btn_side_menu.setText("->")
+            self.ui.btn_side_menu.setToolTip("Expand")
         self.ui.side_menu_container.setFixedWidth(new_width)
+
+    def switch_back(self):
+        """This function switches back one work area
+
+        """
+        global global_var_work_area_history
+        length = len(global_var_work_area_history)
+        self.ui.stackedWidget.setCurrentIndex(global_var_work_area_history[length-2])
+        if global_var_work_area_history[length - 2] == 1:
+            self.ui.lbl_page_title.setText("Prediction")
+        elif global_var_work_area_history[length - 2] == 2:
+            self.ui.lbl_page_title.setText("Prediction + Analysis")
+        elif global_var_work_area_history[length - 2] == 3:
+            self.ui.lbl_page_title.setText("Single Analysis")
+        elif global_var_work_area_history[length - 2] == 4:
+            self.ui.lbl_page_title.setText("Job Analysis")
+        elif global_var_work_area_history[length - 2] == 5:
+            self.ui.lbl_page_title.setText("Results")
+        elif global_var_work_area_history[length - 2] == 6:
+            self.ui.lbl_page_title.setText("Image")
+
+    def switch_forward(self):
+        """This function switches forward one work area
+
+        """
+        global global_var_work_area_history
+        length = len(global_var_work_area_history)
+        self.ui.stackedWidget.setCurrentIndex(global_var_work_area_history[length - 1])
+        if global_var_work_area_history[length - 1] == 1:
+            self.ui.lbl_page_title.setText("Prediction")
+        elif global_var_work_area_history[length - 1] == 2:
+            self.ui.lbl_page_title.setText("Prediction + Analysis")
+        elif global_var_work_area_history[length - 1] == 3:
+            self.ui.lbl_page_title.setText("Single Analysis")
+        elif global_var_work_area_history[length - 1] == 4:
+            self.ui.lbl_page_title.setText("Job Analysis")
+        elif global_var_work_area_history[length - 1] == 5:
+            self.ui.lbl_page_title.setText("Results")
+        elif global_var_work_area_history[length - 1] == 6:
+            self.ui.lbl_page_title.setText("Image")
 
     def display_prediction_only_page(self):
         """This function displays the prediction only work area
@@ -366,6 +429,8 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(1)
         self.ui.lbl_page_title.setText("Prediction")
+        global global_var_work_area_history
+        global_var_work_area_history.append(1)
 
     def display_prediction_and_analysis_page(self):
         """This function displays the prediction + analysis work area
@@ -373,6 +438,8 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(2)
         self.ui.lbl_page_title.setText("Prediction + Analysis")
+        global global_var_work_area_history
+        global_var_work_area_history.append(2)
 
     def display_single_analysis_page(self):
         """This function displays the single analysis work area
@@ -380,6 +447,8 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(3)
         self.ui.lbl_page_title.setText("Single Analysis")
+        global global_var_work_area_history
+        global_var_work_area_history.append(3)
 
     def display_job_analysis_page(self):
         """This function displays the job analysis work area
@@ -387,6 +456,8 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(4)
         self.ui.lbl_page_title.setText("Job Analysis")
+        global global_var_work_area_history
+        global_var_work_area_history.append(4)
 
     def display_results_page(self):
         """This function displays the results work area
@@ -394,6 +465,8 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(5)
         self.ui.lbl_page_title.setText("Results")
+        global global_var_work_area_history
+        global_var_work_area_history.append(5)
 
     def display_image_page(self):
         """This function displays the image work area
@@ -401,6 +474,8 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(6)
         self.ui.lbl_page_title.setText("Image")
+        global global_var_work_area_history
+        global_var_work_area_history.append(6)
 
     def __check_start_possibility(self):
         """This function is used to determine if the Start button can be
@@ -1300,7 +1375,6 @@ class MainWindow(QMainWindow):
         graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
         # styling the plot
         graph_widget.setBackground('w')
-        # TODO: fix plot title
         graph_widget.setTitle(f"Distance Plot of {model_name}", size="23pt")
         styles = {'font-size': '14px'}
         ax_label_y = "Distance in angstrom"
@@ -1377,7 +1451,6 @@ class MainWindow(QMainWindow):
 
         # styling the plot
         graph_widget.setBackground('w')
-        # TODO: fix plot title
         graph_widget.setTitle(f"Distance Histogram of {model_name}", size="23pt")
         styles = {'font-size': '14px'}
         ax_label_x = "Distance in angstrom"

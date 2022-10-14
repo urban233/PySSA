@@ -320,13 +320,39 @@
           <item>
            <widget class="QPushButton" name="btn_side_menu">
             <property name="text">
-             <string>_</string>
+             <string>&lt;-</string>
             </property>
             <property name="iconSize">
              <size>
               <width>13</width>
               <height>13</height>
              </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_back">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&lt;</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_forward">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&gt;</string>
             </property>
            </widget>
           </item>

@@ -60,7 +60,7 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
     """
     target_dir = f"{os.path.expanduser('~')}/Documents/data"
     renderer = ""
-    SETTINGS = project_constants.SETTINGS
+    #SETTINGS = project_constants.SETTINGS
 
     def __init__(self, *args, **kwargs):
         """Constructor
@@ -79,32 +79,32 @@ class MainWindow(Qt.QtWidgets.QMainWindow):
         self.setStatusBar(self.status_bar)
 
         # sets up settings.xml
-        if not os.path.exists(self.SETTINGS):
-            settings = utils.settings_utils.SettingsXml(self.SETTINGS)
-            settings.create_settings_xml_file()
-        settings = utils.settings_utils.SettingsXml(self.SETTINGS)
-        self.tmp_settings = settings.load_xml_in_memory()
+        # if not os.path.exists(self.SETTINGS):
+        #     settings = utils.settings_utils.SettingsXml(self.SETTINGS)
+        #     settings.create_settings_xml_file()
+        # settings = utils.settings_utils.SettingsXml(self.SETTINGS)
+        # self.tmp_settings = settings.load_xml_in_memory()
 
-        # safeguard workspace path
-        sg_1 = tools.safeguard_filepath_xml(self.tmp_settings, 'workspacePath', 'value')
-        # safeguard pdb path
-        sg_2 = tools.safeguard_filepath_xml(self.tmp_settings, 'pdbPath', 'value')
-        # safeguard zip path
-        sg_3 = tools.safeguard_filepath_xml(self.tmp_settings, 'zipPath', 'value')
-        # safeguard cycles value
-        sg_4 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cyclesValue', 'value', 'int')
-        # safeguard cutoff value
-        sg_5 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cutoffValue', 'value', 'float')
-
-        if sg_1 is False or sg_2 is False or sg_3 is False or sg_4 is False or sg_5 is False:
-            self.status_bar.showMessage("The settings.xml is corrupted! Please fix this issue first!")
-            gui_utils.error_dialog_settings("The settings.xml is corrupted! Please fix this issue first!",
-                                            "Check the log for more info.")
-        else:
-            self.workspace_path = utils.settings_utils.SettingsXml.get_path(self.tmp_settings,
-                                                                            "workspacePath",
-                                                                            "value")
-            self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
+        # # safeguard workspace path
+        # sg_1 = tools.safeguard_filepath_xml(self.tmp_settings, 'workspacePath', 'value')
+        # # safeguard pdb path
+        # sg_2 = tools.safeguard_filepath_xml(self.tmp_settings, 'pdbPath', 'value')
+        # # safeguard zip path
+        # sg_3 = tools.safeguard_filepath_xml(self.tmp_settings, 'zipPath', 'value')
+        # # safeguard cycles value
+        # sg_4 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cyclesValue', 'value', 'int')
+        # # safeguard cutoff value
+        # sg_5 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cutoffValue', 'value', 'float')
+        #
+        # if sg_1 is False or sg_2 is False or sg_3 is False or sg_4 is False or sg_5 is False:
+        #     self.status_bar.showMessage("The settings.xml is corrupted! Please fix this issue first!")
+        #     gui_utils.error_dialog_settings("The settings.xml is corrupted! Please fix this issue first!",
+        #                                     "Check the log for more info.")
+        # else:
+        #     self.workspace_path = utils.settings_utils.SettingsXml.get_path(self.tmp_settings,
+        #                                                                     "workspacePath",
+        #                                                                     "value")
+        #     self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
 
         # sets up defaults
         # Prediction + Analysis

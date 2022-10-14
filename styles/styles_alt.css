@@ -29,6 +29,13 @@ QStackedWidget#stackedWidget {
     background: #eaeaea;
 }
 
+QToolTip {
+    background: black;
+    color: white;
+    font: bold;
+    font-size: 14px;
+}
+
 /* Top Navigation Bar styles */
 QFrame#top_navigation_bar_container {
     background: #f0f0f0;
