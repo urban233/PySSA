@@ -32,6 +32,7 @@ import PyQt5.QtCore
 import numpy as np
 import pymol
 import pyqtgraph as pg
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from pymol import Qt
@@ -47,13 +48,13 @@ from utils import project_constants
 from utils import structure_analysis_utils
 from utils import tools
 from utils import global_utils
+from utils import styles_utils
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
 # global variables
 global_var_project_dict = {0: utils.project_utils.Project("", "")}
 global_var_list_widget_row = 0
-global_var_work_area_history = []
 
 
 class MainWindow(QMainWindow):
@@ -71,9 +72,7 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(650)
 
         # sets up the status bar
-        self.status_bar = Qt.QtWidgets.QStatusBar()
-        self.setStatusBar(self.status_bar)
-        self.workspace_path = global_utils.global_var_settings_obj.get_workspace_path()
+        self._setup_statusbar()
         # # sets up settings.xml
         # if not os.path.exists(self.SETTINGS):
         #     settings = utils.settings_utils.SettingsXml(self.SETTINGS)
@@ -100,32 +99,113 @@ class MainWindow(QMainWindow):
         #     self.workspace_path = utils.settings_utils.SettingsXml.get_path(self.tmp_settings,
         #                                                                     "workspacePath",
         #                                                                     "value")
+        self.scratch_path = f"{project_constants.SETTINGS_DIR}/scratch"
+        tools.create_directory(project_constants.SETTINGS_DIR, "scratch")
+
+        self.ui.lbl_current_project_name.setText("")
+        self.ui.btn_new_create_project.setEnabled(False)
+        self.ui.cb_new_add_reference.setCheckable(False)
+        self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
+        self.ui.txt_open_search.textChanged.connect(self.validate_open_search)
+        self.ui.lbl_open_status_search.setText("")
+        self.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
+        self.ui.lbl_delete_status_search.setText("")
+        self.ui.btn_open_open_project.setEnabled(False)
+        self.ui.txt_open_selected_project.textChanged.connect(self.activate_open_button)
+        self.ui.list_open_projects.currentItemChanged.connect(self.select_project_from_open_list)
+        self.ui.btn_delete_delete_project.setEnabled(False)
+        self.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
+        self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
+
+        self.ui.btn_new_create_project.clicked.connect(self.create_new_project)
+
+        # setup defaults for pages
+        self._init_hide_ui_elements()
+        self._init_fill_combo_boxes()
+        self._init_new_page()
+        self._init_new_sequence_page()
+        self._init_sequence_vs_pdb_page()
+        self._init_single_analysis_page()
+        self._init_batch_page()
+
+        # connections
+        self._connect_sidebar_buttons()
+        self._connect_menu_entries()
+        self._connect_new_buttons()
+        self._connect_new_sequence_buttons()
+        self._connect_sequence_vs_pdb_buttons()
+        self._connect_single_analysis_buttons()
+        self._connect_batch_buttons()
+        self._connect_results_buttons()
+        self._connect_image_buttons()
+
+        self._connect_new_text_input()
+        self._connect_new_sequence_text_inputs()
+        self._connect_single_analysis_text_fields()
+        self._connect_batch_text_fields()
+
+        self._connect_image_combo_boxes()
+
+        self._connect_new_checkbox()
+        self._connect_single_analysis_checkbox()
+        self._connect_batch_checkbox()
+        self._connect_image_checkbox()
+
+        self._connect_results_list_widget()
+
+        # create tooltips
+        self._create_tooltips_sequence_vs_pdb()
+        self._create_tooltips_single_analysis()
+        self._create_tooltips_batch()
+        self._create_tooltips_image()
+
+        # setting additional parameters
+        self.setWindowTitle("PySSA v0.9.0")
+
+    def _setup_statusbar(self):
+        """This function sets up the status bar and fills it with the current workspace
+
+        """
+        self.status_bar = Qt.QtWidgets.QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.workspace_path = global_utils.global_var_settings_obj.get_workspace_path()
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
+        self.status_bar.showMessage(self.workspace.text())
 
-        # sets up defaults
-        # Prediction
-        self.ui.btn_prediction_only_start.setEnabled(False)
-        self.ui.progress_bar_prediction_only.setProperty("value", 0)
+    def _init_hide_ui_elements(self):
+        """This function hides all UI elements which need to be hidden during the
+        plugin startup
 
-        # Prediction + Analysis
-        self.ui.txt_prediction_chain_ref.setEnabled(False)
-        self.ui.txt_prediction_chain_model.setEnabled(False)
-        self.ui.btn_prediction_start.setEnabled(False)
-        self.ui.progress_bar_prediction.setProperty("value", 0)
+        """
+        self.ui.lbl_new_choose_reference.hide()
+        self.ui.txt_new_choose_reference.hide()
+        self.ui.btn_new_choose_reference.hide()
+        self.ui.lbl_prediction_load_reference.hide()
+        self.ui.txt_prediction_load_reference.hide()
+        self.ui.btn_prediction_load_reference.hide()
+        self.ui.btn_prediction_next_2.hide()
+        self.ui.btn_prediction_back_2.hide()
+        self.ui.lbl_prediction_ref_chains.hide()
+        self.ui.lbl_prediction_model_chains.hide()
+        self.ui.txt_prediction_chain_model.hide()
+        self.ui.btn_prediction_back_3.hide()
+        self.ui.btn_prediction_start.hide()
+        self.ui.btn_hotspots_page.hide()
+        # sidebar elements
+        self.ui.lbl_prediction.hide()
+        self.ui.lbl_analysis.hide()
+        self.ui.lbl_handle_pymol_session.hide()
+        self.ui.btn_prediction_only_page.hide()
+        self.ui.btn_prediction_page.hide()
+        self.ui.btn_single_analysis_page.hide()
+        self.ui.btn_job_analysis_page.hide()
+        self.ui.btn_results_page.hide()
+        self.ui.btn_image_page.hide()
 
-        # Single Analysis
-        self.ui.txt_analysis_chain_ref.setEnabled(False)
-        self.ui.txt_analysis_chain_model.setEnabled(False)
-        self.ui.btn_analysis_start.setEnabled(False)
-        self.ui.progress_bar_analysis.setProperty("value", 0)
-        # Batch
-        self.ui.txt_batch_chain_ref.setEnabled(False)
-        self.ui.txt_batch_chain_model.setEnabled(False)
-        self.ui.btn_batch_start.setEnabled(False)
-        self.ui.progress_bar_batch.setProperty("value", 0)
+    def _init_fill_combo_boxes(self):
+        """This function fills all combo boxes of the plugin
 
-        # fills combo boxes
-        # combo box Representation
+        """
         item_list_representation = [
             "",
             "cartoon",
@@ -166,12 +246,44 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
 
-        # button connections top bar
-        self.ui.btn_back.clicked.connect(self.switch_back)
-        self.ui.btn_forward.clicked.connect(self.switch_forward)
+    def _init_new_page(self):
+        self.ui.lbl_new_status_project_name.setText("")
+        self.ui.lbl_new_status_choose_reference.setText("")
 
-        # button connections side bar
-        self.ui.btn_side_menu.clicked.connect(self.handle_side_menu)
+    def _init_new_sequence_page(self):
+        # sets up defaults: Prediction
+        self.ui.btn_prediction_only_start.setEnabled(False)
+        self.ui.progress_bar_prediction_only.setProperty("value", 0)
+
+    def _init_sequence_vs_pdb_page(self):
+        # sets up defaults: Prediction + Analysis
+        self.ui.btn_prediction_next_1.setEnabled(False)
+        self.ui.list_widget_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.lbl_prediction_status_project_name.setText("")
+        self.ui.lbl_prediction_status_load_reference.setText("")
+
+    def _init_single_analysis_page(self):
+        # sets up defaults: Single Analysis
+        self.ui.txt_analysis_chain_ref.setEnabled(False)
+        self.ui.txt_analysis_chain_model.setEnabled(False)
+        self.ui.btn_analysis_start.setEnabled(False)
+        self.ui.progress_bar_analysis.setProperty("value", 0)
+
+    def _init_batch_page(self):
+        # sets up defaults: Batch
+        self.ui.txt_batch_chain_ref.setEnabled(False)
+        self.ui.txt_batch_chain_model.setEnabled(False)
+        self.ui.btn_batch_start.setEnabled(False)
+        self.ui.progress_bar_batch.setProperty("value", 0)
+
+    def _connect_sidebar_buttons(self):
+        """This function connects all buttons on the sidebar
+        to their slots
+
+        """
+        self.ui.btn_new_page.clicked.connect(self.display_new_page)
+        self.ui.btn_open_page.clicked.connect(self.display_open_page)
+        self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
         self.ui.btn_prediction_only_page.clicked.connect(self.display_prediction_only_page)
         self.ui.btn_prediction_page.clicked.connect(self.display_prediction_and_analysis_page)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
@@ -179,78 +291,87 @@ class MainWindow(QMainWindow):
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
 
-        # connect elements with function
-        # menu connections
+    def _connect_menu_entries(self):
+        """This function connects all menu entries with their
+        slots
+
+        """
         self.ui.action_file_open.triggered.connect(self.open)
         self.ui.action_file_save_as.triggered.connect(self.save_as)
         self.ui.action_file_save.triggered.connect(self.save)
         self.ui.action_file_quit.triggered.connect(self.quit_app)
         self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
-        # self.ui.action_wizard_prepare_model_pdbs.triggered.connect(
-        #     self.prepare_model_pdbs)
         self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
-        self.ui.action_display_current_workspace.triggered.connect(self.display_workspace_path)
-        self.ui.action_display_project_path.triggered.connect(self.display_project_path)
         self.ui.action_help_docs.triggered.connect(self.open_documentation)
         self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation_pdf)
         self.ui.action_help_about.triggered.connect(self.open_about)
 
-        # Prediction
-        # button
+    def _connect_new_buttons(self):
+        self.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
+
+    def _connect_new_sequence_buttons(self):
+        """This function connects all buttons on the new
+        sequence page with their slots
+
+        """
         self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
 
-        # text fields
-        self.ui.txt_prediction_only_notebook_url.textChanged.connect(
-            self.check_prediction_only_if_txt_notebook_url_is_filled)
+    def _connect_sequence_vs_pdb_buttons(self):
+        """This function connects all buttons on the sequence
+         vs pdb page with their slots
 
-        # Prediction + Analysis
-        # buttons connections
+        """
+        self.ui.txt_prediction_project_name.textChanged.connect(self.validate_project_name)
+        self.ui.txt_prediction_project_name.returnPressed.connect(self.show_prediction_load_reference)
+        self.ui.btn_prediction_next_1.clicked.connect(self.show_prediction_load_reference)
+        self.ui.btn_prediction_back_2.clicked.connect(self.hide_prediction_load_reference)
         self.ui.btn_prediction_load_reference.clicked.connect(self.load_reference_for_prediction)
+        self.ui.txt_prediction_load_reference.textChanged.connect(self.validate_reference_for_prediction)
+        self.ui.txt_prediction_load_reference.returnPressed.connect(self.show_prediction_chain_info_reference)
+        self.ui.btn_prediction_next_2.clicked.connect(self.show_prediction_chain_info_reference)
+        self.ui.btn_prediction_back_3.clicked.connect(self.hide_prediction_chain_info_reference)
         self.ui.btn_prediction_start.clicked.connect(self.predict)
 
-        # checkbox
-        self.ui.cb_prediction_chain_info.stateChanged.connect(
-            self.enable_chain_information_input_for_prediction)
-
-        # text fields connections
-        self.ui.txt_prediction_project_name.textChanged.connect(
-            self.check_prediction_if_txt_prediction_project_name_is_filled)
-        self.ui.txt_prediction_load_reference.textChanged.connect(
-            self.check_prediction_if_txt_prediction_load_reference_is_filled)
-
-        # Home/Single Analysis
-        # buttons connections
+    def _connect_single_analysis_buttons(self):
         self.ui.btn_analysis_load_reference.clicked.connect(self.load_reference_for_analysis)
         self.ui.btn_analysis_load_model.clicked.connect(self.load_model_for_analysis)
         self.ui.btn_analysis_start.clicked.connect(self.start_process)
 
-        # checkbox connections
-        self.ui.cb_analysis_chain_info.stateChanged.connect(
-            self.enable_chain_information_input_for_analysis)
+    def _connect_batch_buttons(self):
+        self.ui.btn_batch_load_reference.clicked.connect(self.load_reference_for_batch)
+        self.ui.btn_batch_load_model.clicked.connect(self.load_model_for_batch)
+        self.ui.btn_batch_start.clicked.connect(self.start_process_batch)
 
-        # text fields connections
+    def _connect_results_buttons(self):
+        self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
+        self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
+        self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
+        self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
+        self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
+
+    def _connect_image_buttons(self):
+        self.ui.btn_update_scene.clicked.connect(self.update_scene)
+        self.ui.btn_save_scene.clicked.connect(self.save_scene)
+        self.ui.btn_save_image.clicked.connect(self.save_image)
+        self.ui.btn_preview_image.clicked.connect(self.preview_image)
+
+    def _connect_new_text_input(self):
+        self.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
+        self.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
+
+    def _connect_new_sequence_text_inputs(self):
+        self.ui.txt_prediction_only_notebook_url.textChanged.connect(
+            self.check_prediction_only_if_txt_notebook_url_is_filled)
+
+    def _connect_single_analysis_text_fields(self):
         self.ui.txt_analysis_project_name.textChanged.connect(
             self.check_analysis_if_txt_analysis_project_name_is_filled)
         self.ui.txt_analysis_chain_ref.textChanged.connect(
             self.check_analysis_if_txt_analysis_chain_ref_is_filled)
         self.ui.txt_analysis_chain_model.textChanged.connect(
             self.check_analysis_if_txt_analysis_chain_model_is_filled)
-        self.ui.txt_prediction_chain_ref.textChanged.connect(
-            self.check_prediction_if_txt_prediction_chain_ref_is_filled)
-        self.ui.txt_prediction_chain_model.textChanged.connect(
-            self.check_prediction_if_txt_prediction_chain_model_is_filled)
 
-        # Home/Batch
-        # buttons connections
-        self.ui.btn_batch_load_reference.clicked.connect(self.load_reference_for_batch)
-        self.ui.btn_batch_load_model.clicked.connect(self.load_model_for_batch)
-        self.ui.btn_batch_start.clicked.connect(self.start_process_batch)
-
-        # checkbox connections
-        self.ui.cb_batch_chain_info.stateChanged.connect(
-            self.enable_chain_information_input_for_batch)
-
-        # text fields connections
+    def _connect_batch_text_fields(self):
         self.ui.txt_batch_job_name.textChanged.connect(
             self.check_batch_if_txt_batch_job_name_is_filled)
         self.ui.txt_batch_chain_ref.textChanged.connect(
@@ -258,54 +379,41 @@ class MainWindow(QMainWindow):
         self.ui.txt_batch_chain_model.textChanged.connect(
             self.check_batch_if_txt_batch_chain_model_is_filled)
 
-        # Results
-        # buttons connections
-        self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
-        self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
-        self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
-        self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
-        self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
-
-        # list widget
-        self.ui.project_list.currentRowChanged.connect(self.change_interesting_regions)
-
-        # Image
-        # buttons connections
-        self.ui.btn_update_scene.clicked.connect(self.update_scene)
-        self.ui.btn_save_scene.clicked.connect(self.save_scene)
-        self.ui.btn_save_image.clicked.connect(self.save_image)
-        self.ui.btn_preview_image.clicked.connect(self.preview_image)
-
-        # combo box connections
+    def _connect_image_combo_boxes(self):
         self.ui.box_representation.activated.connect(self.show_representation)
         self.ui.box_bg_color.activated.connect(self.choose_bg_color)
         self.ui.box_renderer.activated.connect(self.choose_renderer)
         self.ui.box_ray_trace_mode.activated.connect(self.choose_ray_trace_mode)
         self.ui.box_ray_texture.activated.connect(self.choose_ray_texture)
 
-        # checkbox connections
+    def _connect_single_analysis_checkbox(self):
+        self.ui.cb_analysis_chain_info.stateChanged.connect(
+            self.enable_chain_information_input_for_analysis)
+
+    def _connect_new_checkbox(self):
+        self.ui.cb_new_add_reference.stateChanged.connect(self.show_add_reference)
+
+    def _connect_batch_checkbox(self):
+        self.ui.cb_batch_chain_info.stateChanged.connect(
+            self.enable_chain_information_input_for_batch)
+
+    def _connect_image_checkbox(self):
         self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
 
-        # creates tooltips
-        # interface
-        self.ui.btn_forward.setToolTip("Go forward")
-        self.ui.btn_back.setToolTip("Go back")
-        self.ui.btn_side_menu.setToolTip("Collapse")
+    def _connect_results_list_widget(self):
+        self.ui.project_list.currentRowChanged.connect(self.change_interesting_regions)
 
-        # Prediction + Analysis
+    def _create_tooltips_sequence_vs_pdb(self):
         # for buttons
         self.ui.btn_prediction_load_reference.setToolTip("Open reference pdb file")
-        self.ui.btn_prediction_start.setToolTip("Start prediction + analysis process")
+        self.ui.btn_prediction_start.setToolTip("Predict with Colab Notebook")
 
         # for text fields
         self.ui.txt_prediction_load_reference.setToolTip("Reference file path")
-        self.ui.txt_prediction_chain_ref.setToolTip("Enter chain(s) of reference")
+        # self.ui.txt_prediction_chain_ref.setToolTip("Enter chain(s) of reference")
         self.ui.txt_prediction_chain_model.setToolTip("Enter chain(s) of model")
 
-        # for checkbox
-        self.ui.cb_prediction_chain_info.setToolTip("Enable input of chains")
-
-        # Home/Single Analysis
+    def _create_tooltips_single_analysis(self):
         # for buttons
         self.ui.btn_analysis_load_reference.setToolTip("Open reference pdb file")
         self.ui.btn_analysis_load_model.setToolTip("Open model pdb file")
@@ -323,7 +431,7 @@ class MainWindow(QMainWindow):
         # for statusbar
         self.status_bar.setToolTip("Status information: Current process")
 
-        # Home/Batch tab
+    def _create_tooltips_batch(self):
         # for buttons
         self.ui.btn_batch_load_reference.setToolTip("Open reference pdb file")
         self.ui.btn_batch_load_model.setToolTip("Open model pdb files")
@@ -341,7 +449,7 @@ class MainWindow(QMainWindow):
         # for statusbar
         self.status_bar.setToolTip("Status information: Current process")
 
-        # Image tab
+    def _create_tooltips_image(self):
         # for buttons
         self.ui.btn_save_scene.setToolTip("Create new PyMOL scene")
         self.ui.btn_update_scene.setToolTip("Overwrite current scene")
@@ -357,89 +465,51 @@ class MainWindow(QMainWindow):
         self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
         self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
 
-        # setting additional parameters
-        self.setWindowTitle("PySSA v0.9.0")
-
     # Slots
-    def handle_side_menu(self):
-        """This function is used to hide and show the side menu
-
-        """
-        width = self.ui.side_menu_container.width()
-        if width == 0:
-            # runs if sidebar will be opened (current status: closed)
-            new_width = 170
-            self.setMinimumWidth(650)
-            self.setMaximumWidth(12000)
-            self.ui.btn_side_menu.setText("<-")
-        else:
-            # runs if sidebar will be closed (current status: open)
-            new_width = 0
-            # self.setFixedWidth(650 - 170)
-            self.setMinimumWidth(650-170)
-            self.setMaximumWidth(480)
-            # self.ui.main_body.setMinimumWidth(650-170)
-            self.ui.btn_side_menu.setText("->")
-            self.ui.btn_side_menu.setToolTip("Expand")
-        self.ui.side_menu_container.setFixedWidth(new_width)
-
-    def switch_back(self):
-        """This function switches back one work area
-
-        """
-        global global_var_work_area_history
-        length = len(global_var_work_area_history)
-        self.ui.stackedWidget.setCurrentIndex(global_var_work_area_history[length-2])
-        if global_var_work_area_history[length - 2] == 1:
-            self.ui.lbl_page_title.setText("Prediction")
-        elif global_var_work_area_history[length - 2] == 2:
-            self.ui.lbl_page_title.setText("Prediction + Analysis")
-        elif global_var_work_area_history[length - 2] == 3:
-            self.ui.lbl_page_title.setText("Single Analysis")
-        elif global_var_work_area_history[length - 2] == 4:
-            self.ui.lbl_page_title.setText("Job Analysis")
-        elif global_var_work_area_history[length - 2] == 5:
-            self.ui.lbl_page_title.setText("Results")
-        elif global_var_work_area_history[length - 2] == 6:
-            self.ui.lbl_page_title.setText("Image")
-
-    def switch_forward(self):
-        """This function switches forward one work area
-
-        """
-        global global_var_work_area_history
-        length = len(global_var_work_area_history)
-        self.ui.stackedWidget.setCurrentIndex(global_var_work_area_history[length - 1])
-        if global_var_work_area_history[length - 1] == 1:
-            self.ui.lbl_page_title.setText("Prediction")
-        elif global_var_work_area_history[length - 1] == 2:
-            self.ui.lbl_page_title.setText("Prediction + Analysis")
-        elif global_var_work_area_history[length - 1] == 3:
-            self.ui.lbl_page_title.setText("Single Analysis")
-        elif global_var_work_area_history[length - 1] == 4:
-            self.ui.lbl_page_title.setText("Job Analysis")
-        elif global_var_work_area_history[length - 1] == 5:
-            self.ui.lbl_page_title.setText("Results")
-        elif global_var_work_area_history[length - 1] == 6:
-            self.ui.lbl_page_title.setText("Image")
+    # def handle_side_menu(self):
+    #     """This function is used to hide and show the side menu
+    #
+    #     """
+    #     width = self.ui.side_menu_container.width()
+    #     if width == 0:
+    #         # runs if sidebar will be opened (current status: closed)
+    #         new_width = 170
+    #         self.setMinimumWidth(650)
+    #         self.setMaximumWidth(12000)
+    #         self.ui.btn_side_menu.setText("<-")
+    #     else:
+    #         # runs if sidebar will be closed (current status: open)
+    #         new_width = 0
+    #         # self.setFixedWidth(650 - 170)
+    #         self.setMinimumWidth(650-170)
+    #         self.setMaximumWidth(480)
+    #         # self.ui.main_body.setMinimumWidth(650-170)
+    #         self.ui.btn_side_menu.setText("->")
+    #         self.ui.btn_side_menu.setToolTip("Expand")
+    #     self.ui.side_menu_container.setFixedWidth(new_width)
 
     def display_prediction_only_page(self):
         """This function displays the prediction only work area
 
         """
         self.ui.stackedWidget.setCurrentIndex(1)
-        self.ui.lbl_page_title.setText("Prediction")
-        global global_var_work_area_history
-        global_var_work_area_history.append(1)
+        self.ui.lbl_page_title.setText("New Sequence")
 
     def display_prediction_and_analysis_page(self):
         """This function displays the prediction + analysis work area
 
         """
+        self.ui.list_widget_projects.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        workspace_projects: list[str] = os.listdir(self.workspace_path)
+        workspace_projects.sort()
+        for project in workspace_projects:
+            self.ui.list_widget_projects.addItem(project)
+
+        # regular opening of work area
         self.ui.stackedWidget.setCurrentIndex(2)
-        self.ui.lbl_page_title.setText("Prediction + Analysis")
-        global global_var_work_area_history
-        global_var_work_area_history.append(2)
+        self.ui.lbl_page_title.setText("Sequence vs .pdb")
 
     def display_single_analysis_page(self):
         """This function displays the single analysis work area
@@ -477,128 +547,187 @@ class MainWindow(QMainWindow):
         global global_var_work_area_history
         global_var_work_area_history.append(6)
 
-    def __check_start_possibility(self):
-        """This function is used to determine if the Start button can be
-        enabled for the single analysis.
+    def display_new_page(self):
+        """This function displays the new project work area
 
         """
-        i = 0
-        j = 0
-        if len(str(self.ui.txt_analysis_project_name.text())) > 0:
-            i += 1
-        if len(str(self.ui.txt_analysis_load_reference.text())) > 0:
-            i += 1
-        if len(str(self.ui.txt_analysis_load_model.toPlainText())) > 0:
-            i += 1
-        if self.ui.cb_analysis_chain_info.isChecked() and len(self.ui.txt_analysis_chain_ref.text()) > 0 and len(
-                self.ui.txt_analysis_chain_model.text()) > 0:
-            i += 1
-        if self.ui.cb_analysis_chain_info.isChecked():
-            j = 4
-        else:
-            j = 3
-        if i == j:
-            self.ui.btn_analysis_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
+        self.ui.list_new_projects.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        workspace_projects: list[str] = os.listdir(self.workspace_path)
+        workspace_projects.sort()
+        for project in workspace_projects:
+            self.ui.list_new_projects.addItem(project)
 
-                # Set the stylesheet of the application
-                self.ui.btn_analysis_start.setStyleSheet(button_style)
-        else:
-            self.ui.btn_analysis_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
+        self.ui.stackedWidget.setCurrentIndex(7)
+        self.ui.lbl_page_title.setText("Create new project")
 
-                # Set the stylesheet of the application
-                self.ui.btn_analysis_start.setStyleSheet(button_style)
-
-    def __check_start_possibility_batch(self):
-        """This function is used to determine if the Start button can be
-        enabled for the single analysis.
+    def display_open_page(self):
+        """This function displays the open project work area
 
         """
-        i = 0
-        j = 0
-        if len(str(self.ui.txt_batch_job_name.text())) > 0:
-            i += 1
-        if len(str(self.ui.txt_batch_load_reference.text())) > 0:
-            i += 1
-        if len(str(self.ui.txt_batch_load_model.toPlainText())) > 0:
-            i += 1
-        if self.ui.cb_batch_chain_info.isChecked() and len(self.ui.txt_batch_chain_ref.text()) > 0 and len(
-                self.ui.txt_batch_chain_model.text()) > 0:
-            i += 1
-        if self.ui.cb_batch_chain_info.isChecked():
-            j = 4
-        else:
-            j = 3
-        if i == j:
-            self.ui.btn_batch_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
+        self.ui.list_open_projects.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        workspace_projects: list[str] = os.listdir(self.workspace_path)
+        workspace_projects.sort()
+        for project in workspace_projects:
+            self.ui.list_open_projects.addItem(project)
 
-                # Set the stylesheet of the application
-                self.ui.btn_batch_start.setStyleSheet(button_style)
-        else:
-            self.ui.btn_batch_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
+        self.ui.stackedWidget.setCurrentIndex(8)
+        self.ui.lbl_page_title.setText("Open existing project")
 
-                # Set the stylesheet of the application
-                self.ui.btn_batch_start.setStyleSheet(button_style)
-
-    def __check_start_possibility_prediction(self):
-        """This function is used to determine if the Start button can be
-        enabled for the single analysis.
+    def display_delete_page(self):
+        """This function displays the "delete" project work area
 
         """
-        i = 0
-        j = 0
-        if len(str(self.ui.txt_prediction_project_name.text())) > 0:
-            i += 1
-        if len(str(self.ui.txt_prediction_load_reference.text())) > 0:
-            i += 1
-        if self.ui.cb_prediction_chain_info.isChecked() and len(self.ui.txt_prediction_chain_ref.text()) > 0 and len(
-                self.ui.txt_prediction_chain_model.text()) > 0:
-            i += 1
-        if self.ui.cb_prediction_chain_info.isChecked():
-            j = 3
-        else:
-            j = 2
-        if i == j:
-            self.ui.btn_prediction_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
+        self.ui.list_delete_projects.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        workspace_projects: list[str] = os.listdir(self.workspace_path)
+        workspace_projects.sort()
+        for project in workspace_projects:
+            self.ui.list_delete_projects.addItem(project)
 
-                # Set the stylesheet of the application
-                self.ui.btn_prediction_start.setStyleSheet(button_style)
-        else:
-            self.ui.btn_prediction_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
+        self.ui.stackedWidget.setCurrentIndex(9)
+        self.ui.lbl_page_title.setText("Delete existing project")
 
-                # Set the stylesheet of the application
-                self.ui.btn_prediction_start.setStyleSheet(button_style)
-
-    def __check_start_possibility_prediction_only(self):
-        """This function is used to determine if the Start button can be
-        enabled for the single analysis.
-
-        """
-        if len(str(self.ui.txt_prediction_only_notebook_url.text())) > 0:
-            self.ui.btn_prediction_only_start.setEnabled(True)
-            with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
-
-                # Set the stylesheet of the application
-                self.ui.btn_prediction_only_start.setStyleSheet(button_style)
-        else:
-            self.ui.btn_prediction_only_start.setEnabled(False)
-            with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
-                button_style = style_sheet_file.read()
-
-                # Set the stylesheet of the application
-                self.ui.btn_prediction_only_start.setStyleSheet(button_style)
+    # def __check_start_possibility(self):
+    #     """This function is used to determine if the Start button can be
+    #     enabled for the single analysis.
+    #
+    #     """
+    #     i = 0
+    #     j = 0
+    #     if len(str(self.ui.txt_analysis_project_name.text())) > 0:
+    #         i += 1
+    #     if len(str(self.ui.txt_analysis_load_reference.text())) > 0:
+    #         i += 1
+    #     if len(str(self.ui.txt_analysis_load_model.toPlainText())) > 0:
+    #         i += 1
+    #     if self.ui.cb_analysis_chain_info.isChecked() and len(self.ui.txt_analysis_chain_ref.text()) > 0 and len(
+    #             self.ui.txt_analysis_chain_model.text()) > 0:
+    #         i += 1
+    #     if self.ui.cb_analysis_chain_info.isChecked():
+    #         j = 4
+    #     else:
+    #         j = 3
+    #     if i == j:
+    #         self.ui.btn_analysis_start.setEnabled(True)
+    #         with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_analysis_start.setStyleSheet(button_style)
+    #     else:
+    #         self.ui.btn_analysis_start.setEnabled(False)
+    #         with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_analysis_start.setStyleSheet(button_style)
+    #
+    # def __check_start_possibility_batch(self):
+    #     """This function is used to determine if the Start button can be
+    #     enabled for the single analysis.
+    #
+    #     """
+    #     i = 0
+    #     j = 0
+    #     if len(str(self.ui.txt_batch_job_name.text())) > 0:
+    #         i += 1
+    #     if len(str(self.ui.txt_batch_load_reference.text())) > 0:
+    #         i += 1
+    #     if len(str(self.ui.txt_batch_load_model.toPlainText())) > 0:
+    #         i += 1
+    #     if self.ui.cb_batch_chain_info.isChecked() and len(self.ui.txt_batch_chain_ref.text()) > 0 and len(
+    #             self.ui.txt_batch_chain_model.text()) > 0:
+    #         i += 1
+    #     if self.ui.cb_batch_chain_info.isChecked():
+    #         j = 4
+    #     else:
+    #         j = 3
+    #     if i == j:
+    #         self.ui.btn_batch_start.setEnabled(True)
+    #         with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_batch_start.setStyleSheet(button_style)
+    #     else:
+    #         self.ui.btn_batch_start.setEnabled(False)
+    #         with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_batch_start.setStyleSheet(button_style)
+    #
+    # def __check_start_possibility_prediction(self):
+    #     """This function is used to determine if the Start button can be
+    #     enabled for the prediction + analysis.
+    #
+    #     """
+    #     # creates path for specific stylesheets
+    #     if sys.platform.startswith("darwin"):
+    #         # macOS path
+    #         styles_path_btn_ready = f"{project_constants.path_list[1]}/styles/styles_start_button_ready.css"
+    #         styles_path_btn_not_ready = f"{project_constants.path_list[1]}/styles/styles_start_button_not_ready.css"
+    #     elif sys.platform.startswith("linux"):
+    #         # Linux path
+    #         styles_path_btn_ready = f"{project_constants.path_list[0]}/styles/styles_start_button_ready.css"
+    #         styles_path_btn_not_ready = f"{project_constants.path_list[0]}/styles/styles_start_button_not_ready.css"
+    #     elif sys.platform.startswith("win32"):
+    #         # Windows path
+    #         styles_path_btn_ready = f"{project_constants.path_list[2]}/styles/styles_start_button_ready.css"
+    #         styles_path_btn_not_ready = f"{project_constants.path_list[2]}/styles/styles_start_button_not_ready.css"
+    #
+    #     i = 0
+    #     j = 0
+    #     if len(str(self.ui.txt_prediction_project_name.text())) > 0:
+    #         i += 1
+    #     if len(str(self.ui.txt_prediction_load_reference.text())) > 0:
+    #         i += 1
+    #     if self.ui.cb_prediction_chain_info.isChecked() and len(self.ui.txt_prediction_chain_ref.text()) > 0 and len(
+    #             self.ui.txt_prediction_chain_model.text()) > 0:
+    #         i += 1
+    #     if self.ui.cb_prediction_chain_info.isChecked():
+    #         j = 3
+    #     else:
+    #         j = 2
+    #     if i == j:
+    #         self.ui.btn_prediction_start.setEnabled(True)
+    #         with open(styles_path_btn_ready, 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_prediction_start.setStyleSheet(button_style)
+    #     else:
+    #         self.ui.btn_prediction_start.setEnabled(False)
+    #         with open(styles_path_btn_not_ready, 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_prediction_start.setStyleSheet(button_style)
+    #
+    # def __check_start_possibility_prediction_only(self):
+    #     """This function is used to determine if the Start button can be
+    #     enabled for the single analysis.
+    #
+    #     """
+    #     if len(str(self.ui.txt_prediction_only_notebook_url.text())) > 0:
+    #         self.ui.btn_prediction_only_start.setEnabled(True)
+    #         with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_prediction_only_start.setStyleSheet(button_style)
+    #     else:
+    #         self.ui.btn_prediction_only_start.setEnabled(False)
+    #         with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+    #             button_style = style_sheet_file.read()
+    #
+    #             # Set the stylesheet of the application
+    #             self.ui.btn_prediction_only_start.setStyleSheet(button_style)
 
     # @SLOT
     # Menu
@@ -762,26 +891,6 @@ class MainWindow(QMainWindow):
         """
         tools.open_global_settings()
 
-    def display_workspace_path(self):
-        """This function displays the current workspace path in the statusbar of the main window.
-
-        """
-        self.status_bar.showMessage(f"Current Workspace: {self.workspace_path}")
-
-    def display_project_path(self):
-        """This function displays the current project path in the statusbar of the main window.
-
-        """
-        try:
-            global global_var_project_dict
-            if global_var_project_dict[0].get_project_path() == "":
-                raise ValueError
-            project_path = global_var_project_dict[0].get_project_path()
-            self.status_bar.showMessage(f"Current Project Path: {project_path}")
-        except ValueError:
-            tools.quick_log_and_display("info", "No project loaded yet.", self.status_bar,
-                                        "No project loaded yet.")
-
     @staticmethod
     def open_documentation():
         """This function opens the official plugin documentation as HTML page.
@@ -798,7 +907,6 @@ class MainWindow(QMainWindow):
         elif sys.platform.startswith("win32"):
             # Windows path
             webbrowser.open_new(f"file://{project_constants.path_list[2]}/docs/pymol_plugin/build/html/index.html")
-
 
     @staticmethod
     def open_documentation_pdf():
@@ -826,6 +934,326 @@ class MainWindow(QMainWindow):
         dialog = dialog_about.DialogAbout()
         dialog.exec_()
 
+    # new project
+    def show_add_reference(self):
+        """This function shows the reference input section
+
+        """
+        # checkbox is checked
+        if self.ui.cb_new_add_reference.checkState() == 2:
+            self.ui.txt_new_choose_reference.clear()
+            self.ui.txt_new_choose_reference.setEnabled(True)
+            self.ui.txt_new_choose_reference.setStyleSheet("background-color: white")
+            self.ui.lbl_new_choose_reference.show()
+            self.ui.txt_new_choose_reference.show()
+            self.ui.btn_new_choose_reference.show()
+            self.ui.btn_new_create_project.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+        else:
+            self.ui.lbl_new_choose_reference.hide()
+            self.ui.txt_new_choose_reference.hide()
+            self.ui.btn_new_choose_reference.hide()
+            self.ui.lbl_new_status_choose_reference.setText("")
+            self.ui.btn_new_create_project.setEnabled(True)
+            styles_utils.color_button_ready(self.ui.btn_new_create_project)
+
+    def load_reference_in_project(self):
+        """This function loads a reference in a new project
+
+        """
+        try:
+            # open file dialog
+            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
+                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 "PDB Files (*.pdb)")
+            if file_name == ("", ""):
+                raise ValueError
+            # display path in text box
+            self.ui.txt_new_choose_reference.setText(str(file_name[0]))
+            self.ui.txt_new_choose_reference.setEnabled(False)
+            self.ui.txt_new_choose_reference.setStyleSheet("background-color: #33C065")
+            self.ui.btn_new_create_project.setEnabled(True)
+            styles_utils.color_button_ready(self.ui.btn_new_create_project)
+        except ValueError:
+            print("No file has been selected.")
+
+    def validate_reference_in_project(self):
+        """This function checks if the entered reference protein is
+        valid or not.
+
+        """
+        if len(self.ui.txt_new_choose_reference.text()) == 0:
+            self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+            self.ui.lbl_new_status_choose_reference.setText("")
+            self.ui.btn_new_create_project.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+        elif len(self.ui.txt_new_choose_reference.text()) < 4:
+            self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            self.ui.btn_new_create_project.setEnabled(False)
+        # checks if a pdb id was entered
+        elif len(self.ui.txt_new_choose_reference.text()) == 4:
+            pdb_id = self.ui.txt_new_choose_reference.text().upper()
+            try:
+                # the pdb file gets saved in a scratch directory where it gets deleted immediately
+                cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
+                os.remove(f"{self.scratch_path}/{pdb_id}.pdb")
+                cmd.reinitialize()
+                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #33C065")
+                self.ui.btn_new_create_project.setEnabled(True)
+                styles_utils.color_button_ready(self.ui.btn_new_create_project)
+            # if the id does not exist an exception gets raised
+            except pymol.CmdException:
+                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                return
+            except FileNotFoundError:
+                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
+                self.ui.btn_new_create_project.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                return
+        else:
+            if self.ui.txt_new_choose_reference.text().find("/") == -1:
+                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.btn_new_create_project.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+
+            elif self.ui.txt_new_choose_reference.text().find("\\") == -1:
+                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.btn_new_create_project.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+
+    def validate_project_name(self):
+        """This function validates the input of the project name in real-time
+
+        """
+
+        if self.ui.list_new_projects.currentItem() is not None:
+            self.ui.list_new_projects.currentItem().setSelected(False)
+        # set color for lineEdit
+        self.ui.txt_new_project_name.setStyleSheet("background-color: #FC5457")
+        if len(self.ui.txt_new_project_name.text()) == 0:
+            self.ui.lbl_new_status_project_name.setText("")
+            self.ui.cb_new_add_reference.setCheckable(False)
+            self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
+            self.ui.btn_new_create_project.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            return
+        elif len(self.ui.txt_new_project_name.text()) > 20:
+            self.ui.lbl_new_status_project_name.setText("Project name is too long (max. 20 characters).")
+            self.ui.btn_new_create_project.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            return
+        else:
+            regex = Qt.QtCore.QRegularExpression()
+            # TODO: has no dash in regex!
+            regex.setPattern("\\w{20}")
+            validator = QtGui.QRegularExpressionValidator(regex)
+            for i in range(len(self.ui.txt_new_project_name.text())):
+                result = validator.validate(self.ui.txt_new_project_name.text(), i)
+                if result[0] > 0:
+                    self.ui.txt_new_project_name.setStyleSheet("background-color: #33C065")
+                    self.ui.lbl_new_status_project_name.setText("")
+                    self.ui.cb_new_add_reference.setCheckable(True)
+                    self.ui.cb_new_add_reference.setStyleSheet("color: black;")
+                    self.ui.btn_new_create_project.setEnabled(True)
+                    styles_utils.color_button_ready(self.ui.btn_new_create_project)
+                else:
+                    self.ui.txt_new_project_name.setStyleSheet("background-color: #FC5457")
+                    self.ui.lbl_new_status_project_name.setText("Invalid character.")
+                    self.ui.cb_new_add_reference.setCheckable(False)
+                    self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
+                    self.ui.btn_new_create_project.setEnabled(False)
+                    styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                    return
+            item = self.ui.list_new_projects.findItems(self.ui.txt_new_project_name.text(),
+                                                          Qt.QtCore.Qt.MatchContains |
+                                                          Qt.QtCore.Qt.MatchExactly
+                                                          )
+            if len(item) != 0:
+                self.ui.list_new_projects.setCurrentItem(item[0])
+                self.ui.txt_new_project_name.setStyleSheet("background-color: #FC5457")
+                self.ui.lbl_new_status_project_name.setText("Project name already exists.")
+                self.ui.cb_new_add_reference.setCheckable(False)
+                self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
+                self.ui.btn_new_create_project.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            # else:
+            #     self.ui.list_widget_projects.currentItem().setSelected(False)
+            #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
+            #     self.ui.btn_prediction_next_1.setEnabled(True)
+            #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+            print("Check successful.")
+
+    def create_new_project(self):
+        """This function creates a new project based on the plugin New ... page
+
+        """
+        self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
+        self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
+        # TODO: write code for project directory and xml creation
+
+        # shows options which can be done with the data in the project folder
+        self.ui.lbl_prediction.show()
+        if self.ui.txt_new_choose_reference.text() == "":
+            # no reference pdb given
+            self.ui.btn_prediction_only_page.show()
+            self.ui.btn_prediction_page.hide()
+            # change to page with new sequence
+            self.ui.btn_prediction_only_page.click()
+            # clean up new project page
+            self.ui.txt_new_project_name.clear()
+            self.ui.cb_new_add_reference.setCheckState(0)
+        else:
+            self.ui.btn_prediction_page.show()
+            self.ui.btn_prediction_only_page.hide()
+            # change to page with sequence vs pdb
+            self.ui.btn_prediction_page.click()
+            # clean up new project page
+            self.ui.txt_new_project_name.clear()
+            self.ui.cb_new_add_reference.setCheckState(0)
+
+    # open
+    def validate_open_search(self):
+        """This function validates the input of the project name in real-time
+
+        """
+
+        if self.ui.list_open_projects.currentItem() is not None:
+            self.ui.list_open_projects.currentItem().setSelected(False)
+        # set color for lineEdit
+        self.ui.txt_open_search.setStyleSheet("background-color: white")
+        if len(self.ui.txt_open_search.text()) == 0:
+            self.ui.lbl_open_status_search.setText("")
+            self.ui.txt_open_selected_project.setText("")
+            return
+        else:
+            # regex = Qt.QtCore.QRegularExpression()
+            # # TODO: has no dash in regex!
+            # regex.setPattern("\\w{20}")
+            # validator = QtGui.QRegularExpressionValidator(regex)
+            # for i in range(len(self.ui.txt_open_search.text())):
+            #     result = validator.validate(self.ui.txt_open_search.text(), i)
+            #     if result[0] > 0:
+            #         self.ui.txt_open_search.setStyleSheet("background-color: #33C065")
+            #         self.ui.lbl_new_status_project_name.setText("")
+            #         self.ui.cb_new_add_reference.setCheckable(True)
+            #         self.ui.cb_new_add_reference.setStyleSheet("color: black;")
+            #         self.ui.btn_new_create_project.setEnabled(True)
+            #         styles_utils.color_button_ready(self.ui.btn_new_create_project)
+            #     else:
+            #         self.ui.txt_open_search.setStyleSheet("background-color: #FC5457")
+            #         self.ui.lbl_new_status_project_name.setText("Invalid character.")
+            #         self.ui.cb_new_add_reference.setCheckable(False)
+            #         self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
+            #         self.ui.btn_new_create_project.setEnabled(False)
+            #         styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            #         return
+            item = self.ui.list_open_projects.findItems(self.ui.txt_open_search.text(),
+                                                          Qt.QtCore.Qt.MatchContains |
+                                                          Qt.QtCore.Qt.MatchExactly
+                                                          )
+            if len(item) != 0:
+                self.ui.list_open_projects.setCurrentItem(item[0])
+                self.ui.txt_open_selected_project.setText(self.ui.list_open_projects.currentItem().text())
+                self.ui.lbl_open_status_search.setText("")
+            else:
+                self.ui.txt_open_selected_project.setText("")
+                self.ui.txt_open_search.setStyleSheet("background-color: #FC5457")
+                self.ui.lbl_open_status_search.setText("Project name does not exists.")
+
+            # else:
+            #     self.ui.list_widget_projects.currentItem().setSelected(False)
+            #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
+            #     self.ui.btn_prediction_next_1.setEnabled(True)
+            #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+            print("Check successful.")
+
+    def select_project_from_open_list(self):
+        self.ui.txt_open_selected_project.setText(self.ui.list_open_projects.currentItem().text())
+
+    def activate_open_button(self):
+        """This function is used to activate the open button
+
+        """
+        if self.ui.txt_open_selected_project.text() == "":
+            self.ui.btn_open_open_project.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_open_open_project)
+        else:
+            self.ui.btn_open_open_project.setEnabled(True)
+            styles_utils.color_button_ready(self.ui.btn_open_open_project)
+
+    # delete
+    def select_project_from_delete_list(self):
+        self.ui.txt_delete_selected_projects.setText(self.ui.list_delete_projects.currentItem().text())
+
+    def activate_delete_button(self):
+        """This function is used to activate the open button
+
+        """
+        if self.ui.txt_delete_selected_projects.text() == "":
+            self.ui.btn_delete_delete_project.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_delete_delete_project)
+        else:
+            self.ui.btn_delete_delete_project.setEnabled(True)
+            styles_utils.color_button_ready(self.ui.btn_delete_delete_project)
+
+    def validate_delete_search(self):
+        """This function validates the input of the project name in real-time
+
+        """
+
+        if self.ui.list_delete_projects.currentItem() is not None:
+            self.ui.list_delete_projects.currentItem().setSelected(False)
+        # set color for lineEdit
+        self.ui.txt_delete_search.setStyleSheet("background-color: white")
+        if len(self.ui.txt_delete_search.text()) == 0:
+            self.ui.lbl_delete_status_search.setText("")
+            self.ui.txt_delete_selected_projects.setText("")
+            return
+        else:
+            # regex = Qt.QtCore.QRegularExpression()
+            # # TODO: has no dash in regex!
+            # regex.setPattern("\\w{20}")
+            # validator = QtGui.QRegularExpressionValidator(regex)
+            # for i in range(len(self.ui.txt_delete_search.text())):
+            #     result = validator.validate(self.ui.txt_delete_search.text(), i)
+            #     if result[0] > 0:
+            #         self.ui.txt_delete_search.setStyleSheet("background-color: #33C065")
+            #         self.ui.lbl_new_status_project_name.setText("")
+            #         self.ui.cb_new_add_reference.setCheckable(True)
+            #         self.ui.cb_new_add_reference.setStyleSheet("color: black;")
+            #         self.ui.btn_new_create_project.setEnabled(True)
+            #         styles_utils.color_button_ready(self.ui.btn_new_create_project)
+            #     else:
+            #         self.ui.txt_delete_search.setStyleSheet("background-color: #FC5457")
+            #         self.ui.lbl_new_status_project_name.setText("Invalid character.")
+            #         self.ui.cb_new_add_reference.setCheckable(False)
+            #         self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
+            #         self.ui.btn_new_create_project.setEnabled(False)
+            #         styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            #         return
+            item = self.ui.list_delete_projects.findItems(self.ui.txt_delete_search.text(),
+                                                          Qt.QtCore.Qt.MatchContains |
+                                                          Qt.QtCore.Qt.MatchExactly
+                                                          )
+            if len(item) != 0:
+                self.ui.list_delete_projects.setCurrentItem(item[0])
+                self.ui.txt_delete_selected_projects.setText(self.ui.list_delete_projects.currentItem().text())
+                self.ui.lbl_delete_status_search.setText("")
+            else:
+                self.ui.txt_delete_selected_projects.setText("")
+                self.ui.txt_delete_search.setStyleSheet("background-color: #FC5457")
+                self.ui.lbl_delete_status_search.setText("Project name does not exists.")
+
+            # else:
+            #     self.ui.list_widget_projects.currentItem().setSelected(False)
+            #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
+            #     self.ui.btn_prediction_next_1.setEnabled(True)
+            #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+            print("Check successful.")
+
     # Prediction
     def check_prediction_only_if_txt_notebook_url_is_filled(self):
         """This function checks if a reference pdb file is selected.
@@ -850,6 +1278,89 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("Prediction running, you can use the PySSA.")
 
     # Prediction + Analysis
+    # def validate_project_name(self):
+    #     """This function validates the input of the project name in real-time
+    #
+    #     """
+    #     if self.ui.list_widget_projects.currentItem() is not None:
+    #         self.ui.list_widget_projects.currentItem().setSelected(False)
+    #     # set color for lineEdit
+    #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: #FC5457")
+    #     if len(self.ui.txt_prediction_project_name.text()) == 0:
+    #         self.ui.btn_prediction_next_1.setEnabled(False)
+    #         styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #         return
+    #     elif len(self.ui.txt_prediction_project_name.text()) > 20:
+    #         self.ui.btn_prediction_next_1.setEnabled(False)
+    #         styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #         self.ui.lbl_prediction_status_project_name.setText("Project name is too long (max. 20 characters).")
+    #         return
+    #     else:
+    #         regex = Qt.QtCore.QRegularExpression()
+    #         # TODO: has no dash in regex!
+    #         regex.setPattern("\\w{20}")
+    #         validator = QtGui.QRegularExpressionValidator(regex)
+    #         for i in range(len(self.ui.txt_prediction_project_name.text())):
+    #             result = validator.validate(self.ui.txt_prediction_project_name.text(), i)
+    #             if result[0] > 0:
+    #                 self.ui.txt_prediction_project_name.setStyleSheet("background-color: #33C065")
+    #                 self.ui.btn_prediction_next_1.setEnabled(True)
+    #                 styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+    #             else:
+    #                 self.ui.txt_prediction_project_name.setStyleSheet("background-color: #FC5457")
+    #                 self.ui.btn_prediction_next_1.setEnabled(False)
+    #                 styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #                 self.ui.lbl_prediction_status_project_name.setText("Invalid character.")
+    #                 return
+    #         item = self.ui.list_widget_projects.findItems(self.ui.txt_prediction_project_name.text(),
+    #                                                       Qt.QtCore.Qt.MatchContains |
+    #                                                       Qt.QtCore.Qt.MatchExactly
+    #                                                       )
+    #         if len(item) != 0:
+    #             self.ui.list_widget_projects.setCurrentItem(item[0])
+    #             self.ui.txt_prediction_project_name.setStyleSheet("background-color: #FC5457")
+    #             self.ui.btn_prediction_next_1.setEnabled(False)
+    #             styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #             self.ui.lbl_prediction_status_project_name.setText("Project name already exists.")
+    #         # else:
+    #         #     self.ui.list_widget_projects.currentItem().setSelected(False)
+    #         #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
+    #         #     self.ui.btn_prediction_next_1.setEnabled(True)
+    #         #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+    #         print("Check successful.")
+
+    def show_prediction_load_reference(self):
+        """Shows the text field and tool button for the load reference functionality
+
+        """
+        self.ui.lbl_prediction_load_reference.show()
+        self.ui.txt_prediction_load_reference.show()
+        self.ui.btn_prediction_load_reference.show()
+        self.ui.txt_prediction_project_name.setEnabled(False)
+        self.ui.list_widget_projects.setEnabled(False)
+        self.ui.btn_prediction_next_1.hide()
+        self.ui.btn_prediction_next_2.show()
+        self.ui.btn_prediction_next_2.setEnabled(False)
+        self.ui.btn_prediction_back_2.show()
+        self.ui.txt_prediction_load_reference.setEnabled(True)
+        self.ui.txt_prediction_project_name.setStyleSheet("background-color: white")
+
+    def hide_prediction_load_reference(self):
+        """Hides the text field and tool button for the load reference functionality
+
+        """
+        self.ui.lbl_prediction_load_reference.hide()
+        self.ui.txt_prediction_load_reference.hide()
+        self.ui.btn_prediction_load_reference.hide()
+        self.ui.txt_prediction_project_name.setEnabled(True)
+        self.ui.list_widget_projects.setEnabled(True)
+        self.ui.btn_prediction_next_1.show()
+        self.ui.btn_prediction_next_2.hide()
+        self.ui.btn_prediction_back_2.hide()
+        self.ui.txt_prediction_load_reference.clear()
+        # color green
+        self.ui.txt_prediction_project_name.setStyleSheet("background-color: #33C065")
+
     def load_reference_for_prediction(self):
         """This function loads a reference for the analysis part
 
@@ -863,12 +1374,61 @@ class MainWindow(QMainWindow):
                 raise ValueError
             # display path in text box
             self.ui.txt_prediction_load_reference.setText(str(file_name[0]))
-            self.status_bar.showMessage("Loading the reference was successful.")
-            self.__check_start_possibility_prediction()
+            self.ui.txt_prediction_load_reference.setEnabled(False)
+            self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
+            self.ui.btn_prediction_next_2.setEnabled(True)
+            styles_utils.color_button_ready(self.ui.btn_prediction_next_2)
         except FileNotFoundError:
             self.status_bar.showMessage("Loading the reference failed!")
         except ValueError:
             print("No file has been selected.")
+
+    def validate_reference_for_prediction(self):
+        """This function checks if the entered reference protein is
+        valid or not.
+
+        """
+        if len(self.ui.txt_prediction_load_reference.text()) == 0:
+            self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+            self.ui.btn_prediction_next_2.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+        elif len(self.ui.txt_prediction_load_reference.text()) < 4:
+            self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+            self.ui.btn_prediction_next_2.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+        # checks if a pdb id was entered
+        elif len(self.ui.txt_prediction_load_reference.text()) == 4:
+            pdb_id = self.ui.txt_prediction_load_reference.text().upper()
+            try:
+                # the pdb file gets saved in a scratch directory where it gets deleted immediately
+                cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
+                os.remove(f"{self.scratch_path}/{pdb_id}.pdb")
+                cmd.reinitialize()
+                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
+                self.ui.btn_prediction_next_2.setEnabled(True)
+                styles_utils.color_button_ready(self.ui.btn_prediction_next_2)
+            # if the id does not exist an exception gets raised
+            except pymol.CmdException:
+                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.btn_prediction_next_2.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+                return
+            except FileNotFoundError:
+                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.btn_prediction_next_2.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+                self.ui.lbl_prediction_status_load_reference.setText("Invalid PDB ID.")
+                return
+        else:
+            if self.ui.txt_prediction_load_reference.text().find("/") == -1:
+                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.btn_prediction_next_2.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+
+            elif self.ui.txt_prediction_load_reference.text().find("\\") == -1:
+                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.btn_prediction_next_2.setEnabled(False)
+                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
 
     def enable_chain_information_input_for_prediction(self):
         """This function enables the text boxes to enter the chains for the
@@ -883,31 +1443,85 @@ class MainWindow(QMainWindow):
         except Exception:
             self.status_bar.showMessage("Unexpected Error.")
 
-    def check_prediction_if_txt_prediction_chain_ref_is_filled(self):
-        """This function checks if any chains are in the text field for the
-        reference.
+    def show_prediction_chain_info_reference(self):
+        """This function shows all gui elements for the chain information
+        selection of the reference protein
 
         """
-        self.__check_start_possibility_prediction()
+        self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
+                                                     "border-width: 2px;"
+                                                     "border-radius: 8px;"
+                                                     "border-color: #DCDBE3;")
+        # show and hide relevant gui elements
+        self.ui.btn_prediction_back_2.hide()
+        self.ui.btn_prediction_next_2.hide()
+        self.ui.lbl_prediction_ref_chains.show()
+        self.ui.list_widget_ref_chains.show()
+        self.ui.btn_prediction_back_3.show()
+        self.ui.btn_prediction_start.show()
+        # disable important gui elements
+        self.ui.txt_prediction_load_reference.setEnabled(False)
+        self.ui.btn_prediction_load_reference.setEnabled(False)
+        # colors white
+        self.ui.txt_prediction_load_reference.setStyleSheet("background-color: white")
 
-    def check_prediction_if_txt_prediction_chain_model_is_filled(self):
-        """This function checks if any chains are in the text field for the
-        model.
+        # fill chains list widget
+        if len(self.ui.txt_prediction_load_reference.text()) == 4:
+            pdb_id = self.ui.txt_prediction_load_reference.text().upper()
+            tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
+            tmp_ref_protein.clean_pdb_file()
+            chains = cmd.get_chains(pdb_id)
+        else:
+            cmd.load(self.ui.txt_prediction_load_reference.text(), object="reference_protein")
+            chains = cmd.get_chains("reference_protein")
+        for chain in chains:
+            self.ui.list_widget_ref_chains.addItem(chain)
+        styles_utils.color_button_ready(self.ui.btn_prediction_start)
+        cmd.reinitialize()
+
+    def hide_prediction_chain_info_reference(self):
+        """Hides the gui elements for the reference chains
 
         """
-        self.__check_start_possibility_prediction()
+        self.ui.list_widget_ref_chains.clear()
+        # show and hide relevant gui elements
+        self.ui.btn_prediction_back_2.show()
+        self.ui.btn_prediction_next_2.show()
+        self.ui.lbl_prediction_ref_chains.hide()
+        self.ui.list_widget_ref_chains.hide()
+        self.ui.btn_prediction_back_3.hide()
+        self.ui.btn_prediction_start.hide()
+        # disable important gui elements
+        self.ui.txt_prediction_load_reference.setEnabled(True)
+        self.ui.btn_prediction_load_reference.setEnabled(True)
+        # colors green
+        self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
 
-    def check_prediction_if_txt_prediction_project_name_is_filled(self):
-        """This function checks if the project name text field is filled.
-
-        """
-        self.__check_start_possibility_prediction()
-
-    def check_prediction_if_txt_prediction_load_reference_is_filled(self):
-        """This function checks if a reference pdb file is selected.
-
-        """
-        self.__check_start_possibility_prediction()
+    # def check_prediction_if_txt_prediction_chain_ref_is_filled(self):
+    #     """This function checks if any chains are in the text field for the
+    #     reference.
+    #
+    #     """
+    #     self.__check_start_possibility_prediction()
+    #
+    # def check_prediction_if_txt_prediction_chain_model_is_filled(self):
+    #     """This function checks if any chains are in the text field for the
+    #     model.
+    #
+    #     """
+    #     self.__check_start_possibility_prediction()
+    #
+    # def check_prediction_if_txt_prediction_project_name_is_filled(self):
+    #     """This function checks if the project name text field is filled.
+    #
+    #     """
+    #     self.__check_start_possibility_prediction()
+    #
+    # def check_prediction_if_txt_prediction_load_reference_is_filled(self):
+    #     """This function checks if a reference pdb file is selected.
+    #
+    #     """
+    #     self.__check_start_possibility_prediction()
 
     def predict(self):
         """This function opens a webbrowser with a colab notebook, to run the
@@ -915,9 +1529,12 @@ class MainWindow(QMainWindow):
         prediction.
 
         """
-        self.status_bar.showMessage("Checking user input ...")
-        global global_var_abort_prediction
-        global_var_abort_prediction = False
+        ref_chain_items = self.ui.list_widget_ref_chains.selectedItems()
+        ref_chains = []
+        for chain in ref_chain_items:
+            ref_chains.append(chain.text())
+        # global global_var_abort_prediction
+        # global_var_abort_prediction = False
         # check if a prediction is already finished
         if os.path.isfile(f"{global_utils.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
             self.status_bar.showMessage(
@@ -933,7 +1550,8 @@ class MainWindow(QMainWindow):
         project.create_project_tree()
         project.set_pdb_file(self.ui.txt_prediction_load_reference.text())
         project.set_pdb_id(self.ui.txt_prediction_load_reference.text())
-        project.set_ref_chains(self.ui.txt_prediction_chain_ref.text())
+        # TODO: check if the new list type conflicts with the analysis
+        project.set_ref_chains(ref_chains)
         project.set_model_chains((self.ui.txt_prediction_chain_model.text()))
         # gets reference filename and filepath
         if len(self.ui.txt_prediction_load_reference.text()) == 4:
@@ -962,14 +1580,15 @@ class MainWindow(QMainWindow):
         #     print("AlphaFold is still running ...")
         #     time.sleep(5)
         #     # time.sleep(120)
+        # TODO: loop doesn't work correctly
         while os.path.isfile(FILE_NAME) is False:
             print("AlphaFold is still running ...")
             # time.sleep(5)
             time.sleep(20)
             # time.sleep(120)
             # global global_var_abort_prediction
-            if global_var_abort_prediction:
-                return
+            # if global_var_abort_prediction:
+            #     return
 
         # ----------------------------------------------------------------- #
         # start of the analysis algorithm
@@ -1365,8 +1984,8 @@ class MainWindow(QMainWindow):
         with open(path, 'r', encoding="utf-8") as csv_file:
             for line in csv_file:
                 cleaned_line = line.replace("\n", "")
-                if cleaned_line.split(",")[7] != 'distance':
-                    distance_list.append(float(cleaned_line.split(",")[7]))
+                if cleaned_line.split(",")[8] != 'distance':
+                    distance_list.append(float(cleaned_line.split(",")[8]))
                     cutoff_line.append(global_utils.global_var_settings_obj.get_cutoff())
         # creates actual distance plot line
         graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
@@ -1379,7 +1998,7 @@ class MainWindow(QMainWindow):
         styles = {'font-size': '14px'}
         ax_label_y = "Distance in angstrom"
         graph_widget.setLabel('left', ax_label_y, **styles)
-        graph_widget.setLabel('bottom', "Residue No.", **styles)
+        graph_widget.setLabel('bottom', "Residue pair no.", **styles)
         graph_widget.plotItem.showGrid(x=True, y=True)
         plot_dialog_layout.addWidget(graph_widget)
         plot_dialog.setLayout(plot_dialog_layout)
@@ -1413,8 +2032,8 @@ class MainWindow(QMainWindow):
             i = 0
             for line in csv_file:
                 cleaned_line = line.replace("\n", "")
-                if cleaned_line.split(",")[7] != 'distance':
-                    distance_list.append(float(cleaned_line.split(",")[7]))
+                if cleaned_line.split(",")[8] != 'distance':
+                    distance_list.append(float(cleaned_line.split(",")[8]))
         distance_list.sort()
         length = len(distance_list)
         max_distance = distance_list[length-1]
@@ -1440,6 +2059,7 @@ class MainWindow(QMainWindow):
                                          pen=pg.mkPen(color="#4B91F7"), brush=pg.mkBrush(color="#4B91F7"))
         # creates y-labels for bar chart
         y_labels = []
+        # TODO: last histogram bar has no label
         for i in range((len(y)-1)):
             label = f"{y[i]} - {y[i+1]}"
             y_labels.append(label)
@@ -1495,8 +2115,9 @@ class MainWindow(QMainWindow):
         """
         csv_model = Qt.QtGui.QStandardItemModel()
         csv_model.setColumnCount(7)
-        labels = ["Reference Chain", "Reference Position", "Reference Residue",
-                  "Model Chain", "Model Pos", "Model Residue", "Distance"]
+        labels = ["Residue pair no.", "Reference Chain", "Reference Position", "Reference Residue",
+                  "Model Chain", "Model Pos", "Model Residue", "Distance",
+                  ]
         csv_model.setHorizontalHeaderLabels(labels)
         table_dialog = Qt.QtWidgets.QDialog(self)
         table_view = Qt.QtWidgets.QTableView()
@@ -1525,6 +2146,7 @@ class MainWindow(QMainWindow):
         csv_model.removeRow(0)
         table_view.setAlternatingRowColors(True)
         table_view.resizeColumnsToContents()
+        table_view.verticalHeader().setVisible(False)
 
         table_dialog_layout = QHBoxLayout()
         table_dialog_layout.addWidget(table_view)
