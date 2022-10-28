@@ -26,6 +26,7 @@ import os
 import sys
 import time
 import webbrowser
+from pathlib import Path
 from xml.dom import minidom
 
 import PyQt5.QtCore
@@ -1092,7 +1093,31 @@ class MainWindow(QMainWindow):
         """
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
-        # TODO: write code for project directory and xml creation
+        # save project folder in current workspace
+        # mkdir project
+        folder_paths = [
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/pdb"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/alignment_files"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/distance_csv"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images/interesting_regions"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_histogram"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_plot"),
+            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/sessions/"),
+        ]
+        for path in folder_paths:
+            os.mkdir(path)
+
+        # save reference .pdb
+        # TODO: fix if and else for save reference .pdb
+        if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() == True:
+            if len(self.ui.txt_new_choose_reference.text()) == 4:
+                # PDB ID as input
+            else:
+                # local pdb file as input
 
         # shows options which can be done with the data in the project folder
         self.ui.lbl_prediction.show()
