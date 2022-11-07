@@ -232,6 +232,55 @@ def warning_message_project_exists(project_name, message_detail, path):
         return True
 
 
+def warning_message_project_gets_deleted() -> bool:
+    """This function creates a warning message, which can be customized.
+
+    Args:
+        project_name:
+            name of the active project
+        message_detail:
+            additional information
+        path:
+            path where the prediction is stored
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Warning)
+    msg.setText("Warning")
+    msg.setInformativeText(f"Are you sure you want to delete this project?")
+    msg.setWindowTitle("Warning")
+    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == cancel_button:
+        return False
+    if msg.clickedButton() == ok_button:
+        return True
+
+
+def error_project_data_is_invalid(path) -> bool:
+    """This function creates an error message, if the project data is invalid.
+
+    Args:
+        path:
+            path where the data is missing
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText("Error")
+    msg.setInformativeText(f"Your project data is corrupted.")
+    msg.setDetailedText(f"Data is missing in the following path: {path}")
+    msg.setWindowTitle("Error")
+    # cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    # if msg.clickedButton() == cancel_button:
+    #     return False
+    if msg.clickedButton() == ok_button:
+        return True
+
+
 def warning_switch_pymol_session(message_detail) -> bool:
     """This function creates a warning message box, to inform the
     user to save the current active pymol session.

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>547</width>
+    <width>586</width>
     <height>747</height>
    </rect>
   </property>
@@ -144,6 +144,9 @@
              </property>
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_23">
+               <property name="spacing">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="QLabel" name="lbl_project">
                  <property name="text">
@@ -181,12 +184,19 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QPushButton" name="btn_save_project">
+                 <property name="text">
+                  <string>Save</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_2">
                <property name="spacing">
-                <number>12</number>
+                <number>0</number>
                </property>
                <item>
                 <widget class="QLabel" name="lbl_prediction">
@@ -243,6 +253,9 @@
              </item>
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_5">
+               <property name="spacing">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="QLabel" name="lbl_analysis">
                  <property name="maximumSize">
@@ -296,6 +309,9 @@
              </item>
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_17">
+               <property name="spacing">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="QLabel" name="lbl_handle_pymol_session">
                  <property name="maximumSize">
@@ -574,7 +590,7 @@
              </layout>
             </widget>
             <widget class="QWidget" name="prediction_only_page">
-             <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,0,0,0,0">
+             <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,0,0">
               <property name="leftMargin">
                <number>10</number>
               </property>
@@ -590,35 +606,15 @@
               <item>
                <widget class="QLabel" name="label">
                 <property name="text">
-                 <string>Notebook URL:</string>
+                 <string>Choose a Google Colab Notebook from the list below</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="txt_prediction_only_notebook_url"/>
-              </item>
-              <item>
-               <spacer name="verticalSpacer_6">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>558</height>
-                 </size>
-                </property>
-               </spacer>
+               <widget class="QListWidget" name="list_new_seq_notebooks"/>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_21">
-                <item>
-                 <widget class="QLabel" name="label_2">
-                  <property name="text">
-                   <string>Predict with Colab Notebook</string>
-                  </property>
-                 </widget>
-                </item>
                 <item>
                  <spacer name="horizontalSpacer_4">
                   <property name="orientation">
@@ -635,18 +631,11 @@
                 <item>
                  <widget class="QPushButton" name="btn_prediction_only_start">
                   <property name="text">
-                   <string>Start</string>
+                   <string>Predict</string>
                   </property>
                  </widget>
                 </item>
                </layout>
-              </item>
-              <item>
-               <widget class="QProgressBar" name="progress_bar_prediction_only">
-                <property name="value">
-                 <number>24</number>
-                </property>
-               </widget>
               </item>
              </layout>
             </widget>
@@ -791,7 +780,7 @@
                 <item>
                  <widget class="QLabel" name="lbl_prediction_ref_chains">
                   <property name="text">
-                   <string>Select chains in reference if necessary:</string>
+                   <string>Select chains in reference (if necessary)</string>
                   </property>
                  </widget>
                 </item>
@@ -878,65 +867,62 @@
              </layout>
             </widget>
             <widget class="QWidget" name="single_analysis_page">
-             <layout class="QVBoxLayout" name="verticalLayout_7">
-              <property name="leftMargin">
-               <number>10</number>
-              </property>
-              <property name="topMargin">
-               <number>5</number>
-              </property>
-              <property name="rightMargin">
-               <number>10</number>
-              </property>
-              <property name="bottomMargin">
-               <number>5</number>
+             <layout class="QVBoxLayout" name="verticalLayout_46">
+              <property name="spacing">
+               <number>4</number>
               </property>
               <item>
-               <widget class="QLabel" name="label_19">
-                <property name="text">
-                 <string>Enter a project name:</string>
+               <widget class="QFrame" name="frame_ref_chains">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>275</height>
+                 </size>
                 </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="txt_analysis_project_name"/>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_20">
-                <property name="text">
-                 <string>Choose a .pdb file or enter a PDB ID:</string>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>275</height>
+                 </size>
                 </property>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_45">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_6">
+                   <item>
+                    <widget class="QLabel" name="lbl_analysis_ref_chains">
+                     <property name="text">
+                      <string>Select chains in reference (if necessary)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QListWidget" name="list_analysis_ref_chains"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
                </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_19">
-                <item>
-                 <widget class="QLineEdit" name="txt_analysis_load_reference"/>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btn_analysis_load_reference">
-                  <property name="text">
-                   <string>...</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_4">
-                <item>
-                 <widget class="QPushButton" name="btn_analysis_load_model">
-                  <property name="minimumSize">
-                   <size>
-                    <width>180</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Open model</string>
-                  </property>
-                 </widget>
-                </item>
                 <item>
                  <spacer name="horizontalSpacer_2">
                   <property name="orientation">
@@ -950,51 +936,64 @@
                   </property>
                  </spacer>
                 </item>
+                <item>
+                 <widget class="QPushButton" name="btn_analysis_next">
+                  <property name="text">
+                   <string>Next</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </item>
               <item>
-               <widget class="QTextEdit" name="txt_analysis_load_model">
-                <property name="enabled">
-                 <bool>false</bool>
+               <widget class="QFrame" name="frame_model_chains">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>275</height>
+                 </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>40</height>
+                  <height>275</height>
                  </size>
                 </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="cb_analysis_chain_info">
-                <property name="text">
-                 <string>Add chain information</string>
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
                 </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_44">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_7">
+                   <item>
+                    <widget class="QLabel" name="lbl_analysis_model_chains">
+                     <property name="text">
+                      <string>Select chains in model (if necessary)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QListWidget" name="list_analysis_model_chains"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
                </widget>
-              </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_6">
-                <item>
-                 <widget class="QLabel" name="label_5">
-                  <property name="text">
-                   <string>Chains in reference (input style: G,H)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txt_analysis_chain_ref"/>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_6">
-                  <property name="text">
-                   <string>Chains in models (input style: A,B)</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txt_analysis_chain_model"/>
-                </item>
-               </layout>
               </item>
               <item>
                <spacer name="verticalSpacer_3">
@@ -1004,20 +1003,13 @@
                 <property name="sizeHint" stdset="0">
                  <size>
                   <width>20</width>
-                  <height>328</height>
+                  <height>40</height>
                  </size>
                 </property>
                </spacer>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_5">
-                <item>
-                 <widget class="QLabel" name="label_7">
-                  <property name="text">
-                   <string>Structure prediction analysis</string>
-                  </property>
-                 </widget>
-                </item>
                 <item>
                  <spacer name="horizontalSpacer_3">
                   <property name="orientation">
@@ -1032,6 +1024,13 @@
                  </spacer>
                 </item>
                 <item>
+                 <widget class="QPushButton" name="btn_analysis_back">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QPushButton" name="btn_analysis_start">
                   <property name="text">
                    <string>Start</string>
@@ -1039,13 +1038,6 @@
                  </widget>
                 </item>
                </layout>
-              </item>
-              <item>
-               <widget class="QProgressBar" name="progress_bar_analysis">
-                <property name="value">
-                 <number>24</number>
-                </property>
-               </widget>
               </item>
              </layout>
             </widget>
@@ -1209,21 +1201,9 @@
              </layout>
             </widget>
             <widget class="QWidget" name="results_page">
-             <layout class="QVBoxLayout" name="verticalLayout_12">
-              <property name="leftMargin">
-               <number>10</number>
-              </property>
-              <property name="topMargin">
-               <number>5</number>
-              </property>
-              <property name="rightMargin">
-               <number>10</number>
-              </property>
-              <property name="bottomMargin">
-               <number>5</number>
-              </property>
+             <layout class="QVBoxLayout" name="verticalLayout_52">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_10">
+               <layout class="QVBoxLayout" name="verticalLayout_12">
                 <item>
                  <widget class="QPushButton" name="btn_view_distance_plot">
                   <property name="text">
@@ -1231,17 +1211,6 @@
                   </property>
                  </widget>
                 </item>
-                <item>
-                 <widget class="QPushButton" name="btn_view_struct_alignment">
-                  <property name="text">
-                   <string>View structure alignment</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_11">
                 <item>
                  <widget class="QPushButton" name="btn_view_distance_histogram">
                   <property name="text">
@@ -1255,6 +1224,27 @@
                    <string>View distance table</string>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_view_struct_alignment">
+                  <property name="text">
+                   <string>View structure alignment</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_9">
+                <item>
+                 <widget class="QLabel" name="lbl_results_interest_regions">
+                  <property name="text">
+                   <string>Interesting regions</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QListWidget" name="list_results_interest_regions"/>
                 </item>
                </layout>
               </item>
@@ -1272,51 +1262,12 @@
                 </item>
                </layout>
               </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_9">
-                <item>
-                 <widget class="QLabel" name="label_9">
-                  <property name="text">
-                   <string>Project List:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QListWidget" name="project_list"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <spacer name="verticalSpacer_4">
-                <property name="orientation">
-                 <enum>Qt::Vertical</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>20</width>
-                  <height>284</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="image_page">
-             <layout class="QVBoxLayout" name="verticalLayout_15">
-              <property name="leftMargin">
-               <number>10</number>
-              </property>
-              <property name="topMargin">
-               <number>5</number>
-              </property>
-              <property name="rightMargin">
-               <number>10</number>
-              </property>
-              <property name="bottomMargin">
-               <number>5</number>
-              </property>
+             <layout class="QVBoxLayout" name="verticalLayout_51">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_13">
+               <layout class="QVBoxLayout" name="verticalLayout_15">
                 <item>
                  <widget class="QLabel" name="label_25">
                   <property name="text">
@@ -1330,7 +1281,7 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_12">
+               <layout class="QVBoxLayout" name="verticalLayout_47">
                 <item>
                  <widget class="QLabel" name="label_24">
                   <property name="text">
@@ -1344,7 +1295,7 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_8">
+               <layout class="QVBoxLayout" name="verticalLayout_48">
                 <item>
                  <widget class="QLabel" name="label_8">
                   <property name="text">
@@ -1358,7 +1309,7 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <layout class="QVBoxLayout" name="verticalLayout_49">
                 <item>
                  <widget class="QLabel" name="label_10">
                   <property name="text">
@@ -1372,7 +1323,7 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <layout class="QVBoxLayout" name="verticalLayout_50">
                 <item>
                  <widget class="QLabel" name="label_14">
                   <property name="text">
@@ -1689,9 +1640,9 @@
              </layout>
             </widget>
             <widget class="QWidget" name="open_project">
-             <layout class="QVBoxLayout" name="verticalLayout_31">
+             <layout class="QVBoxLayout" name="verticalLayout_41">
               <property name="spacing">
-               <number>-1</number>
+               <number>4</number>
               </property>
               <property name="leftMargin">
                <number>10</number>
@@ -1706,66 +1657,114 @@
                <number>5</number>
               </property>
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_28">
-                <property name="spacing">
-                 <number>2</number>
+               <widget class="QFrame" name="frame_2">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
                 </property>
-                <item>
-                 <widget class="QLabel" name="label_28">
-                  <property name="text">
-                   <string>Search</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txt_open_search"/>
-                </item>
-                <item>
-                 <widget class="QLabel" name="lbl_open_status_search">
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_31">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_28">
+                   <property name="spacing">
+                    <number>2</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_28">
+                     <property name="text">
+                      <string>Search</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="txt_open_search"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="lbl_open_status_search">
+                     <property name="text">
+                      <string>TextLabel</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_29">
+                   <property name="spacing">
+                    <number>3</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_29">
+                     <property name="text">
+                      <string>Existing projects</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QListWidget" name="list_open_projects"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_29">
-                <property name="spacing">
-                 <number>3</number>
+               <widget class="QFrame" name="frame_3">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
                 </property>
-                <item>
-                 <widget class="QLabel" name="label_29">
-                  <property name="text">
-                   <string>Existing projects</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QListWidget" name="list_open_projects"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_30">
-                <property name="spacing">
-                 <number>2</number>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
                 </property>
-                <item>
-                 <widget class="QLabel" name="label_30">
-                  <property name="text">
-                   <string>Selected project</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txt_open_selected_project">
-                  <property name="readOnly">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+                <layout class="QVBoxLayout" name="verticalLayout_40">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_30">
+                   <property name="spacing">
+                    <number>2</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_30">
+                     <property name="text">
+                      <string>Selected project</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="txt_open_selected_project">
+                     <property name="readOnly">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_24">
@@ -1794,9 +1793,9 @@
              </layout>
             </widget>
             <widget class="QWidget" name="delete_project">
-             <layout class="QVBoxLayout" name="verticalLayout_35">
+             <layout class="QVBoxLayout" name="verticalLayout_43">
               <property name="spacing">
-               <number>-1</number>
+               <number>4</number>
               </property>
               <property name="leftMargin">
                <number>10</number>
@@ -1811,66 +1810,114 @@
                <number>5</number>
               </property>
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_32">
-                <property name="spacing">
-                 <number>2</number>
+               <widget class="QFrame" name="frame_4">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
                 </property>
-                <item>
-                 <widget class="QLabel" name="label_31">
-                  <property name="text">
-                   <string>Search</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txt_delete_search"/>
-                </item>
-                <item>
-                 <widget class="QLabel" name="lbl_delete_status_search">
-                  <property name="text">
-                   <string>TextLabel</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_35">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_32">
+                   <property name="spacing">
+                    <number>2</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_31">
+                     <property name="text">
+                      <string>Search</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="txt_delete_search"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="lbl_delete_status_search">
+                     <property name="text">
+                      <string>TextLabel</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_33">
+                   <property name="spacing">
+                    <number>3</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_32">
+                     <property name="text">
+                      <string>Existing projects</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QListWidget" name="list_delete_projects"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_33">
-                <property name="spacing">
-                 <number>3</number>
+               <widget class="QFrame" name="frame_5">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
                 </property>
-                <item>
-                 <widget class="QLabel" name="label_32">
-                  <property name="text">
-                   <string>Existing projects</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QListWidget" name="list_delete_projects"/>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_34">
-                <property name="spacing">
-                 <number>2</number>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
                 </property>
-                <item>
-                 <widget class="QLabel" name="label_33">
-                  <property name="text">
-                   <string>Selected project</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txt_delete_selected_projects">
-                  <property name="readOnly">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
+                <layout class="QVBoxLayout" name="verticalLayout_42">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_34">
+                   <property name="spacing">
+                    <number>2</number>
+                   </property>
+                   <item>
+                    <widget class="QLabel" name="label_33">
+                     <property name="text">
+                      <string>Selected project</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="txt_delete_selected_projects">
+                     <property name="readOnly">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_25">
@@ -1898,6 +1945,44 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="sequence_vs_pdb_page">
+             <layout class="QVBoxLayout" name="verticalLayout_39">
+              <item>
+               <widget class="QLabel" name="lbl_s_v_p_ref_chains">
+                <property name="text">
+                 <string>Select chains in reference if necessary</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QListWidget" name="list_s_v_p_ref_chains"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_27">
+                <item>
+                 <spacer name="horizontalSpacer_13">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_s_v_p_start">
+                  <property name="text">
+                   <string>Start</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -1913,19 +1998,10 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>547</width>
+     <width>586</width>
      <height>24</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="action_file_open"/>
-    <addaction name="action_file_save"/>
-    <addaction name="separator"/>
-    <addaction name="action_file_quit"/>
-   </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
      <string>Settings</string>
@@ -1941,6 +2017,7 @@
     </property>
     <addaction name="action_file_save_as"/>
     <addaction name="action_add_model"/>
+    <addaction name="action_add_multiple_models"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -1950,7 +2027,6 @@
     <addaction name="action_help_docs_pdf"/>
     <addaction name="action_help_about"/>
    </widget>
-   <addaction name="menuFile"/>
    <addaction name="menuSettings"/>
    <addaction name="menuWizard"/>
    <addaction name="menuHelp"/>
@@ -2026,7 +2102,12 @@
   </action>
   <action name="action_add_model">
    <property name="text">
-    <string>Add Model</string>
+    <string>Add model</string>
+   </property>
+  </action>
+  <action name="action_add_multiple_models">
+   <property name="text">
+    <string>Add multiple models</string>
    </property>
   </action>
  </widget>

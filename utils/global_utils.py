@@ -27,3 +27,4 @@ from utils import project_constants
 # global_var is used to access the settings project-wide
 global_var_settings_obj = settings_utils.Settings(project_constants.SETTINGS_DIR, project_constants.SETTINGS_FILE)
 global_var_settings_obj.load_settings_from_xml()
+global_var_tmp_project_info = []

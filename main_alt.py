@@ -23,6 +23,7 @@
 
 import logging
 import os
+import shutil
 import sys
 import time
 import webbrowser
@@ -38,10 +39,16 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from pymol import Qt
 from pymol import cmd
+from urllib.request import urlopen
+from urllib.error import URLError
 
 import utils.project_utils
 from alternatives.auto_main_window_alt import Ui_MainWindow
 from dialogs import dialog_about
+from dialogs import dialog_add_models
+from dialogs import dialog_add_model
+from dialogs import dialog_startup
+from dialogs import dialog_distance_plot
 from pymolproteintools import core
 from utils import gui_utils
 from utils import job_utils
@@ -50,6 +57,7 @@ from utils import structure_analysis_utils
 from utils import tools
 from utils import global_utils
 from utils import styles_utils
+from utils import project_utils
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -70,8 +78,23 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.lbl_page_title.setText("Home")
-        self.setMinimumWidth(650)
+        self.setMinimumWidth(550)
 
+        # checks if the plugin launched for the first time
+        if global_utils.global_var_settings_obj.get_app_launch() == 0:
+            dialog = dialog_startup.DialogStartup()
+            dialog.exec_()
+            # checks if the cancel button was pressed
+            if dialog_startup.global_var_terminate_app == 1:
+                global_utils.global_var_settings_obj.delete_settings_xml()
+                sys.exit()
+            global_utils.global_var_settings_obj.set_workspace_path(dialog_startup.global_var_startup_workspace)
+            # sets the launch_app var to 1 to indicate that the plugin has successfully overcome the first launch
+            global_utils.global_var_settings_obj.set_app_launch(1)
+            global_utils.global_var_settings_obj.save_settings_to_xml()
+
+        self.plot_dialog = Qt.QtWidgets.QDialog(self)
+        self.view_box = None
         # sets up the status bar
         self._setup_statusbar()
         # # sets up settings.xml
@@ -100,9 +123,19 @@ class MainWindow(QMainWindow):
         #     self.workspace_path = utils.settings_utils.SettingsXml.get_path(self.tmp_settings,
         #                                                                     "workspacePath",
         #                                                                     "value")
+
+        # startup_dialog = dialog_startup.DialogStartup()
+        # startup_dialog.exec_()
+
         self.scratch_path = f"{project_constants.SETTINGS_DIR}/scratch"
         tools.create_directory(project_constants.SETTINGS_DIR, "scratch")
 
+        self.ui.action_add_model.setVisible(False)
+        self.ui.action_add_multiple_models.setVisible(False)
+        self.ui.action_file_save_as.setVisible(False)
+
+        self.ui.btn_s_v_p_start.setEnabled(False)
+        self.ui.btn_prediction_only_start.setEnabled(False)
         self.ui.lbl_current_project_name.setText("")
         self.ui.btn_new_create_project.setEnabled(False)
         self.ui.cb_new_add_reference.setCheckable(False)
@@ -117,8 +150,25 @@ class MainWindow(QMainWindow):
         self.ui.btn_delete_delete_project.setEnabled(False)
         self.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
         self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
+        self.ui.list_s_v_p_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+
+        self.ui.list_new_seq_notebooks.addItem(project_constants.OFFICIAL_NOTEBOOK_NAME)
+        self.ui.list_new_seq_notebooks.currentItemChanged.connect(self.enable_predict_button)
 
         self.ui.btn_new_create_project.clicked.connect(self.create_new_project)
+        self.ui.btn_delete_delete_project.clicked.connect(self.delete_project)
+        self.ui.btn_open_open_project.clicked.connect(self.open_project)
+        self.ui.list_open_projects.doubleClicked.connect(self.open_project)
+        self.ui.btn_save_project.clicked.connect(self.save_project)
+        self.ui.action_add_multiple_models.triggered.connect(self.open_add_models)
+        self.ui.action_add_model.triggered.connect(self.open_add_model)
+        self.ui.btn_analysis_next.clicked.connect(self.analysis_next_step)
+        self.ui.btn_analysis_back.clicked.connect(self.analysis_back_step)
+
+        self.ui.lbl_analysis_model_chains.hide()
+        self.ui.list_analysis_model_chains.hide()
+        self.ui.btn_analysis_back.hide()
+        self.ui.btn_analysis_start.hide()
 
         # setup defaults for pages
         self._init_hide_ui_elements()
@@ -141,18 +191,13 @@ class MainWindow(QMainWindow):
         self._connect_image_buttons()
 
         self._connect_new_text_input()
-        self._connect_new_sequence_text_inputs()
-        self._connect_single_analysis_text_fields()
         self._connect_batch_text_fields()
 
         self._connect_image_combo_boxes()
 
         self._connect_new_checkbox()
-        self._connect_single_analysis_checkbox()
         self._connect_batch_checkbox()
         self._connect_image_checkbox()
-
-        self._connect_results_list_widget()
 
         # create tooltips
         self._create_tooltips_sequence_vs_pdb()
@@ -161,7 +206,7 @@ class MainWindow(QMainWindow):
         self._create_tooltips_image()
 
         # setting additional parameters
-        self.setWindowTitle("PySSA v0.9.0")
+        self.setWindowTitle("PySSA v0.9.2")
 
     def _setup_statusbar(self):
         """This function sets up the status bar and fills it with the current workspace
@@ -186,16 +231,17 @@ class MainWindow(QMainWindow):
         self.ui.btn_prediction_load_reference.hide()
         self.ui.btn_prediction_next_2.hide()
         self.ui.btn_prediction_back_2.hide()
-        self.ui.lbl_prediction_ref_chains.hide()
+        # self.ui.lbl_prediction_ref_chains.hide()
         self.ui.lbl_prediction_model_chains.hide()
         self.ui.txt_prediction_chain_model.hide()
         self.ui.btn_prediction_back_3.hide()
-        self.ui.btn_prediction_start.hide()
+        # self.ui.btn_prediction_start.hide()
         self.ui.btn_hotspots_page.hide()
         # sidebar elements
         self.ui.lbl_prediction.hide()
         self.ui.lbl_analysis.hide()
         self.ui.lbl_handle_pymol_session.hide()
+        self.ui.btn_save_project.hide()
         self.ui.btn_prediction_only_page.hide()
         self.ui.btn_prediction_page.hide()
         self.ui.btn_single_analysis_page.hide()
@@ -254,10 +300,23 @@ class MainWindow(QMainWindow):
     def _init_new_sequence_page(self):
         # sets up defaults: Prediction
         self.ui.btn_prediction_only_start.setEnabled(False)
-        self.ui.progress_bar_prediction_only.setProperty("value", 0)
 
     def _init_sequence_vs_pdb_page(self):
         # sets up defaults: Prediction + Analysis
+        self.ui.label_18.hide()
+        self.ui.txt_prediction_project_name.hide()
+        self.ui.lbl_prediction_status_project_name.hide()
+        self.ui.list_widget_projects.hide()
+        self.ui.btn_prediction_next_1.hide()
+
+        self.ui.lbl_prediction_ref_chains.show()
+        self.ui.list_widget_ref_chains.show()
+        self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
+                                                     "border-width: 2px;"
+                                                     "border-radius: 8px;"
+                                                     "border-color: #DCDBE3;")
+        self.ui.btn_prediction_start.show()
+        self.ui.btn_prediction_start.setEnabled(False)
         self.ui.btn_prediction_next_1.setEnabled(False)
         self.ui.list_widget_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
         self.ui.lbl_prediction_status_project_name.setText("")
@@ -265,10 +324,7 @@ class MainWindow(QMainWindow):
 
     def _init_single_analysis_page(self):
         # sets up defaults: Single Analysis
-        self.ui.txt_analysis_chain_ref.setEnabled(False)
-        self.ui.txt_analysis_chain_model.setEnabled(False)
         self.ui.btn_analysis_start.setEnabled(False)
-        self.ui.progress_bar_analysis.setProperty("value", 0)
 
     def _init_batch_page(self):
         # sets up defaults: Batch
@@ -286,7 +342,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_open_page.clicked.connect(self.display_open_page)
         self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
         self.ui.btn_prediction_only_page.clicked.connect(self.display_prediction_only_page)
-        self.ui.btn_prediction_page.clicked.connect(self.display_prediction_and_analysis_page)
+        self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
         self.ui.btn_job_analysis_page.clicked.connect(self.display_job_analysis_page)
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
@@ -322,20 +378,18 @@ class MainWindow(QMainWindow):
          vs pdb page with their slots
 
         """
-        self.ui.txt_prediction_project_name.textChanged.connect(self.validate_project_name)
-        self.ui.txt_prediction_project_name.returnPressed.connect(self.show_prediction_load_reference)
-        self.ui.btn_prediction_next_1.clicked.connect(self.show_prediction_load_reference)
-        self.ui.btn_prediction_back_2.clicked.connect(self.hide_prediction_load_reference)
-        self.ui.btn_prediction_load_reference.clicked.connect(self.load_reference_for_prediction)
-        self.ui.txt_prediction_load_reference.textChanged.connect(self.validate_reference_for_prediction)
-        self.ui.txt_prediction_load_reference.returnPressed.connect(self.show_prediction_chain_info_reference)
-        self.ui.btn_prediction_next_2.clicked.connect(self.show_prediction_chain_info_reference)
-        self.ui.btn_prediction_back_3.clicked.connect(self.hide_prediction_chain_info_reference)
-        self.ui.btn_prediction_start.clicked.connect(self.predict)
+        # self.ui.txt_prediction_project_name.textChanged.connect(self.validate_project_name)
+        # self.ui.txt_prediction_project_name.returnPressed.connect(self.show_prediction_load_reference)
+        # self.ui.btn_prediction_next_1.clicked.connect(self.show_prediction_load_reference)
+        # self.ui.btn_prediction_back_2.clicked.connect(self.hide_prediction_load_reference)
+        # self.ui.btn_prediction_load_reference.clicked.connect(self.load_reference_for_prediction)
+        # self.ui.txt_prediction_load_reference.textChanged.connect(self.validate_reference_for_prediction)
+        # self.ui.txt_prediction_load_reference.returnPressed.connect(self.show_prediction_chain_info_reference)
+        # self.ui.btn_prediction_next_2.clicked.connect(self.show_prediction_chain_info_reference)
+        # self.ui.btn_prediction_back_3.clicked.connect(self.hide_prediction_chain_info_reference)
+        self.ui.btn_s_v_p_start.clicked.connect(self.predict)
 
     def _connect_single_analysis_buttons(self):
-        self.ui.btn_analysis_load_reference.clicked.connect(self.load_reference_for_analysis)
-        self.ui.btn_analysis_load_model.clicked.connect(self.load_model_for_analysis)
         self.ui.btn_analysis_start.clicked.connect(self.start_process)
 
     def _connect_batch_buttons(self):
@@ -348,7 +402,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
         self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
         self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
-        self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
+        #self.ui.btn_view_interesting_region.clicked.connect(self.tmp_dialog_change)
 
     def _connect_image_buttons(self):
         self.ui.btn_update_scene.clicked.connect(self.update_scene)
@@ -359,18 +413,6 @@ class MainWindow(QMainWindow):
     def _connect_new_text_input(self):
         self.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
         self.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
-
-    def _connect_new_sequence_text_inputs(self):
-        self.ui.txt_prediction_only_notebook_url.textChanged.connect(
-            self.check_prediction_only_if_txt_notebook_url_is_filled)
-
-    def _connect_single_analysis_text_fields(self):
-        self.ui.txt_analysis_project_name.textChanged.connect(
-            self.check_analysis_if_txt_analysis_project_name_is_filled)
-        self.ui.txt_analysis_chain_ref.textChanged.connect(
-            self.check_analysis_if_txt_analysis_chain_ref_is_filled)
-        self.ui.txt_analysis_chain_model.textChanged.connect(
-            self.check_analysis_if_txt_analysis_chain_model_is_filled)
 
     def _connect_batch_text_fields(self):
         self.ui.txt_batch_job_name.textChanged.connect(
@@ -387,10 +429,6 @@ class MainWindow(QMainWindow):
         self.ui.box_ray_trace_mode.activated.connect(self.choose_ray_trace_mode)
         self.ui.box_ray_texture.activated.connect(self.choose_ray_texture)
 
-    def _connect_single_analysis_checkbox(self):
-        self.ui.cb_analysis_chain_info.stateChanged.connect(
-            self.enable_chain_information_input_for_analysis)
-
     def _connect_new_checkbox(self):
         self.ui.cb_new_add_reference.stateChanged.connect(self.show_add_reference)
 
@@ -400,9 +438,6 @@ class MainWindow(QMainWindow):
 
     def _connect_image_checkbox(self):
         self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
-
-    def _connect_results_list_widget(self):
-        self.ui.project_list.currentRowChanged.connect(self.change_interesting_regions)
 
     def _create_tooltips_sequence_vs_pdb(self):
         # for buttons
@@ -416,18 +451,7 @@ class MainWindow(QMainWindow):
 
     def _create_tooltips_single_analysis(self):
         # for buttons
-        self.ui.btn_analysis_load_reference.setToolTip("Open reference pdb file")
-        self.ui.btn_analysis_load_model.setToolTip("Open model pdb file")
         self.ui.btn_analysis_start.setToolTip("Start analysis process")
-
-        # for text fields
-        self.ui.txt_analysis_load_reference.setToolTip("Reference file path")
-        self.ui.txt_analysis_load_model.setToolTip("Model file path")
-        self.ui.txt_analysis_chain_ref.setToolTip("Enter chain(s) of reference")
-        self.ui.txt_analysis_chain_model.setToolTip("Enter chain(s) of model")
-
-        # for checkbox
-        self.ui.cb_analysis_chain_info.setToolTip("Enable input of chains")
 
         # for statusbar
         self.status_bar.setToolTip("Status information: Current process")
@@ -495,6 +519,11 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(1)
         self.ui.lbl_page_title.setText("New Sequence")
+        item = self.ui.list_new_seq_notebooks.findItems("AlphaFold",
+                                                        Qt.QtCore.Qt.MatchContains |
+                                                        Qt.QtCore.Qt.MatchExactly
+                                                        )
+        self.ui.list_new_seq_notebooks.setCurrentItem(item[0])
 
     def display_prediction_and_analysis_page(self):
         """This function displays the prediction + analysis work area
@@ -512,14 +541,36 @@ class MainWindow(QMainWindow):
         self.ui.stackedWidget.setCurrentIndex(2)
         self.ui.lbl_page_title.setText("Sequence vs .pdb")
 
+    def display_sequence_vs_pdb_page(self):
+        # regular opening of work area
+        self.ui.stackedWidget.setCurrentIndex(10)
+        self.ui.lbl_page_title.setText("Sequence vs .pdb")
+
     def display_single_analysis_page(self):
         """This function displays the single analysis work area
 
         """
+        # pre-process
+        # fill chains list widget
+        self.ui.list_analysis_ref_chains.clear()
+        self.ui.list_analysis_model_chains.clear()
+
+        pdb_files = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+
+        # TODO: should there be sub-dirs to determine if it is the ref or the model?
+        cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[0]}", object="reference_protein")
+        cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[1]}", object="model_protein")
+        ref_chains = cmd.get_chains("reference_protein")
+        model_chains = cmd.get_chains("model_protein")
+        for chain in ref_chains:
+            self.ui.list_analysis_ref_chains.addItem(chain)
+        for chain in model_chains:
+            self.ui.list_analysis_model_chains.addItem(chain)
+        styles_utils.color_button_ready(self.ui.btn_analysis_start)
+        cmd.reinitialize()
+        # regular work area opening
         self.ui.stackedWidget.setCurrentIndex(3)
         self.ui.lbl_page_title.setText("Single Analysis")
-        global global_var_work_area_history
-        global_var_work_area_history.append(3)
 
     def display_job_analysis_page(self):
         """This function displays the job analysis work area
@@ -536,8 +587,6 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(5)
         self.ui.lbl_page_title.setText("Results")
-        global global_var_work_area_history
-        global_var_work_area_history.append(5)
 
     def display_image_page(self):
         """This function displays the image work area
@@ -545,8 +594,6 @@ class MainWindow(QMainWindow):
         """
         self.ui.stackedWidget.setCurrentIndex(6)
         self.ui.lbl_page_title.setText("Image")
-        global global_var_work_area_history
-        global_var_work_area_history.append(6)
 
     def display_new_page(self):
         """This function displays the new project work area
@@ -555,10 +602,23 @@ class MainWindow(QMainWindow):
         self.ui.list_new_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        workspace_projects: list[str] = os.listdir(self.workspace_path)
-        workspace_projects.sort()
-        for project in workspace_projects:
-            self.ui.list_new_projects.addItem(project)
+        tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_new_projects)
+        # workspace_projects: list[str] = os.listdir(self.workspace_path)
+        # valid_directories = []
+        # # iterates over possible project directories
+        # for directory in workspace_projects:
+        #     try:
+        #         directory_content = os.listdir(f"{self.workspace_path}/{directory}")
+        #         # iterates over the content in a single project directory
+        #         for content in directory_content:
+        #             if content == "project.xml":
+        #                 valid_directories.append(directory)
+        #     except NotADirectoryError:
+        #         print(f"This: {directory} is not a directory.")
+        #
+        # valid_directories.sort()
+        # for project in valid_directories:
+        #     self.ui.list_new_projects.addItem(project)
 
         self.ui.stackedWidget.setCurrentIndex(7)
         self.ui.lbl_page_title.setText("Create new project")
@@ -570,10 +630,11 @@ class MainWindow(QMainWindow):
         self.ui.list_open_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        workspace_projects: list[str] = os.listdir(self.workspace_path)
-        workspace_projects.sort()
-        for project in workspace_projects:
-            self.ui.list_open_projects.addItem(project)
+        tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_open_projects)
+        # workspace_projects: list[str] = os.listdir(self.workspace_path)
+        # workspace_projects.sort()
+        # for project in workspace_projects:
+        #     self.ui.list_open_projects.addItem(project)
 
         self.ui.stackedWidget.setCurrentIndex(8)
         self.ui.lbl_page_title.setText("Open existing project")
@@ -585,10 +646,11 @@ class MainWindow(QMainWindow):
         self.ui.list_delete_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        workspace_projects: list[str] = os.listdir(self.workspace_path)
-        workspace_projects.sort()
-        for project in workspace_projects:
-            self.ui.list_delete_projects.addItem(project)
+        tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_delete_projects)
+        # workspace_projects: list[str] = os.listdir(self.workspace_path)
+        # workspace_projects.sort()
+        # for project in workspace_projects:
+        #     self.ui.list_delete_projects.addItem(project)
 
         self.ui.stackedWidget.setCurrentIndex(9)
         self.ui.lbl_page_title.setText("Delete existing project")
@@ -803,7 +865,7 @@ class MainWindow(QMainWindow):
         try:
             file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self,
                                                                  "Save PyMOL session",
-                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}",
                                                                  "PyMOL session file (.pse)")
             if file_path == ("", ""):
                 tools.quick_log_and_display("info", "No file has been created.", self.status_bar,
@@ -885,12 +947,12 @@ class MainWindow(QMainWindow):
     #     except Exception:
     #         self.status_bar.showMessage("Preparing the .pdb files failed!")
 
-    @staticmethod
-    def open_settings_global():
+    def open_settings_global(self):
         """This function open the dialog for the global settings.
 
         """
         tools.open_global_settings()
+        self._setup_statusbar()
 
     @staticmethod
     def open_documentation():
@@ -935,6 +997,57 @@ class MainWindow(QMainWindow):
         dialog = dialog_about.DialogAbout()
         dialog.exec_()
 
+    def open_add_models(self):
+        """This function opens the add models dialog.
+
+        """
+        dialog = dialog_add_models.DialogAddModels()
+        dialog.exec_()
+
+        if len(dialog_add_models.global_var_pdb_files) > 0:
+            for pdb_path in dialog_add_models.global_var_pdb_files:
+                pdb_path_info = Qt.QtCore.QFileInfo(pdb_path)
+                pdb_name = pdb_path_info.baseName()
+                # save project folder in current workspace
+                # mkdir project
+                folder_paths = [
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/pdb"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/alignment_files"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/distance_csv"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images/interesting_regions"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_histogram"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_plot"),
+                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/sessions/"),
+                ]
+                for path in folder_paths:
+                    os.mkdir(path)
+                reference_name = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+                shutil.copy(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{reference_name[0]}",
+                            f"{folder_paths[1]}/{reference_name[0]}")
+                shutil.copy(pdb_path, f"{folder_paths[1]}/{pdb_name}.pdb")
+
+    def open_add_model(self):
+        """This function opens the add model dialog.
+
+        """
+        dialog = dialog_add_model.DialogAddModel()
+        dialog.exec_()
+        if dialog_add_model.global_var_add_model[1] is True:
+            file_info = Qt.QtCore.QFileInfo(dialog_add_model.global_var_add_model[0])
+            shutil.copy(dialog_add_model.global_var_add_model[0],
+                        f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{file_info.baseName()}")
+            print("Model was copied to project.")
+            self.ui.lbl_analysis.show()
+            self.ui.btn_single_analysis_page.show()
+            self.ui.action_add_model.setVisible(False)
+            self.ui.action_add_multiple_models.setVisible(False)
+        else:
+            print("No model was added.")
+
     # new project
     def show_add_reference(self):
         """This function shows the reference input section
@@ -943,13 +1056,22 @@ class MainWindow(QMainWindow):
         # checkbox is checked
         if self.ui.cb_new_add_reference.checkState() == 2:
             self.ui.txt_new_choose_reference.clear()
-            self.ui.txt_new_choose_reference.setEnabled(True)
             self.ui.txt_new_choose_reference.setStyleSheet("background-color: white")
             self.ui.lbl_new_choose_reference.show()
             self.ui.txt_new_choose_reference.show()
             self.ui.btn_new_choose_reference.show()
             self.ui.btn_new_create_project.setEnabled(False)
             styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            # check internet connectivity
+            timeout: float = 3
+            try:
+                urlopen('https://www.google.com', timeout=timeout)
+            except URLError:
+                self.ui.txt_new_choose_reference.setEnabled(False)
+                self.ui.lbl_new_status_choose_reference.setText("You cannot enter a PDB ID (no internet).")
+                return
+            self.ui.txt_new_choose_reference.setEnabled(True)
+
         else:
             self.ui.lbl_new_choose_reference.hide()
             self.ui.txt_new_choose_reference.hide()
@@ -1091,33 +1213,43 @@ class MainWindow(QMainWindow):
         """This function creates a new project based on the plugin New ... page
 
         """
+        self._init_hide_ui_elements()
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
         # save project folder in current workspace
-        # mkdir project
-        folder_paths = [
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/pdb"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/alignment_files"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/distance_csv"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images/interesting_regions"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_histogram"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_plot"),
-            Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/sessions/"),
-        ]
-        for path in folder_paths:
-            os.mkdir(path)
+        new_project = project_utils.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
+        new_project.create_project_tree()
+        new_project.save_project_to_xml()
+
+        # # mkdir project
+        # folder_paths = [
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/pdb"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/alignment_files"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/distance_csv"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images/interesting_regions"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_histogram"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_plot"),
+        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/sessions/"),
+        # ]
+        # for path in folder_paths:
+        #     os.mkdir(path)
 
         # save reference .pdb
-        # TODO: fix if and else for save reference .pdb
         if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() == True:
             if len(self.ui.txt_new_choose_reference.text()) == 4:
                 # PDB ID as input
+                # the pdb file gets saved in a scratch directory where it gets deleted immediately
+                pdb_id = self.ui.txt_new_choose_reference.text().upper()
+                cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
+                shutil.move(f"{self.scratch_path}/{pdb_id}.pdb", new_project.get_pdb_path())
+                cmd.reinitialize()
             else:
                 # local pdb file as input
+                shutil.copy(self.ui.txt_new_choose_reference.text(), new_project.get_pdb_path())
 
         # shows options which can be done with the data in the project folder
         self.ui.lbl_prediction.show()
@@ -1131,13 +1263,32 @@ class MainWindow(QMainWindow):
             self.ui.txt_new_project_name.clear()
             self.ui.cb_new_add_reference.setCheckState(0)
         else:
+            # reference pdb given
+            self.ui.action_add_model.setVisible(True)
+            self.ui.action_add_multiple_models.setVisible(True)
             self.ui.btn_prediction_page.show()
             self.ui.btn_prediction_only_page.hide()
             # change to page with sequence vs pdb
-            self.ui.btn_prediction_page.click()
+            self.display_sequence_vs_pdb_page()
+            # fill chains list widget
+            if len(self.ui.txt_new_choose_reference.text()) == 4:
+                pdb_id = self.ui.txt_new_choose_reference.text().upper()
+                tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
+                tmp_ref_protein.clean_pdb_file()
+                chains = cmd.get_chains(pdb_id)
+            else:
+                cmd.load(self.ui.txt_new_choose_reference.text(), object="reference_protein")
+                chains = cmd.get_chains("reference_protein")
+            for chain in chains:
+                self.ui.list_s_v_p_ref_chains.addItem(chain)
+            styles_utils.color_button_ready(self.ui.btn_s_v_p_start)
+            cmd.reinitialize()
+            self.ui.btn_s_v_p_start.setEnabled(True)
             # clean up new project page
             self.ui.txt_new_project_name.clear()
+            self.ui.txt_new_choose_reference.clear()
             self.ui.cb_new_add_reference.setCheckState(0)
+            self.ui.btn_new_create_project.isEnabled()
 
     # open
     def validate_open_search(self):
@@ -1196,7 +1347,10 @@ class MainWindow(QMainWindow):
             print("Check successful.")
 
     def select_project_from_open_list(self):
-        self.ui.txt_open_selected_project.setText(self.ui.list_open_projects.currentItem().text())
+        try:
+            self.ui.txt_open_selected_project.setText(self.ui.list_open_projects.currentItem().text())
+        except AttributeError:
+            self.ui.txt_open_selected_project.setText("")
 
     def activate_open_button(self):
         """This function is used to activate the open button
@@ -1209,9 +1363,77 @@ class MainWindow(QMainWindow):
             self.ui.btn_open_open_project.setEnabled(True)
             styles_utils.color_button_ready(self.ui.btn_open_open_project)
 
+    def open_project(self):
+        """This function opens an existing project
+
+        """
+        self._init_hide_ui_elements()
+        self.ui.lbl_current_project_name.setText(self.ui.list_open_projects.currentItem().text())
+        # check if directory in empty
+        results_paths = ["results/alignment_files"]
+        dir_content = os.listdir(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}/{results_paths[0]}")
+        self.ui.lbl_handle_pymol_session.show()
+        self.ui.btn_image_page.show()
+        if not dir_content:
+            # no analysis was done
+            tmp_content = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+            if len(tmp_content) == 1:
+                # if no model is in the pdb dir
+                self.display_image_page()
+                self.ui.btn_save_project.show()
+                self.ui.action_file_save_as.setVisible(True)
+                self.ui.action_add_model.setVisible(True)
+                self.ui.action_add_multiple_models.setVisible(True)
+            elif len(tmp_content) == 2:
+                # if a model is in the pdb dir
+                self.display_single_analysis_page()
+                self.ui.lbl_analysis.show()
+                self.ui.btn_single_analysis_page.show()
+                self.ui.btn_save_project.show()
+                self.ui.action_file_save_as.setVisible(True)
+                self.ui.action_add_model.setVisible(False)
+                self.ui.action_add_multiple_models.setVisible(False)
+            elif len(tmp_content) == 0:
+                # check if data is corrupted
+                response = tools.check_results_for_integrity(self.workspace_path,
+                                                             self.ui.lbl_current_project_name.text())
+                if response[0]:
+                    self.ui.lbl_handle_pymol_session.hide()
+                    self.ui.btn_image_page.hide()
+                    self.ui.lbl_prediction.show()
+                    self.ui.btn_prediction_only_page.show()
+                    self.display_prediction_only_page()
+
+            else:
+                gui_utils.error_project_data_is_invalid(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+            return
+        else:
+            # check if data is corrupted
+            response = tools.check_results_for_integrity(self.workspace_path, self.ui.lbl_current_project_name.text())
+            if response[0]:
+                # an analysis happened
+                # show results gui elements
+                self.ui.lbl_analysis.show()
+                self.ui.btn_results_page.show()
+                self.display_results_page()
+                self.ui.btn_save_project.show()
+                self.ui.action_file_save_as.setVisible(True)
+            else:
+                gui_utils.error_project_data_is_invalid(response[1])
+                self._init_hide_ui_elements()
+                self.ui.lbl_current_project_name.clear()
+                self.ui.btn_save_project.hide()
+            return
+
     # delete
     def select_project_from_delete_list(self):
-        self.ui.txt_delete_selected_projects.setText(self.ui.list_delete_projects.currentItem().text())
+        """This function selects a project from the project list on the delete page
+
+        """
+        try:
+            self.ui.txt_delete_selected_projects.setText(self.ui.list_delete_projects.currentItem().text())
+        except AttributeError:
+            self.ui.txt_delete_selected_projects.setText("")
 
     def activate_delete_button(self):
         """This function is used to activate the open button
@@ -1279,6 +1501,44 @@ class MainWindow(QMainWindow):
             #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
             print("Check successful.")
 
+    def delete_project(self):
+        """This function deletes an existing project
+
+        """
+        # popup message which warns the user that the selected project gets deleted
+        response: bool = gui_utils.warning_message_project_gets_deleted()
+
+        if response is True:
+            shutil.rmtree(f"{self.workspace_path}/{self.ui.txt_delete_selected_projects.text()}")
+            if self.ui.txt_delete_selected_projects.text() == self.ui.lbl_current_project_name.text():
+                self.ui.lbl_current_project_name.clear()
+                self._init_hide_ui_elements()
+            self.ui.txt_delete_selected_projects.clear()
+            # update list
+            self.ui.list_delete_projects.clear()
+            # pre-process
+            self.status_bar.showMessage(self.workspace.text())
+            self.ui.list_delete_projects.clear()
+            self.status_bar.showMessage(self.workspace.text())
+            tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_delete_projects)
+        else:
+            return
+
+    # save
+    def save_project(self):
+        """This function saves the "project" which is currently only the pymol session
+
+        """
+        session_file = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/")
+        try:
+            cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/{session_file[0]}")
+            self.status_bar.showMessage("Saved project successfully.")
+        except pymol.CmdException:
+            self.status_bar.showMessage("PyMOL internal error while saving.")
+        except IndexError:
+            cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/auto_generated_session_file.pse")
+            self.status_bar.showMessage("Saved project successfully.")
+
     # Prediction
     def check_prediction_only_if_txt_notebook_url_is_filled(self):
         """This function checks if a reference pdb file is selected.
@@ -1290,17 +1550,38 @@ class MainWindow(QMainWindow):
         """This function is used to predict with any google colab notebook.
 
         """
-        self.status_bar.showMessage("Checking user input ...")
-        notebook_url = self.ui.txt_prediction_only_notebook_url.text()
-        if notebook_url.find("https://colab.research.google.com") == -1:
-            tools.quick_log_and_display("error", "The given URL is no valid Google Colab Notebook!",
-                                        self.status_bar, "The given URL is no valid Google Colab Notebook!")
-            gui_utils.error_dialog("The given URL is no valid Google Colab Notebook!", "")
+        notebook_name = self.ui.list_new_seq_notebooks.currentItem().text()
+        if notebook_name == project_constants.OFFICIAL_NOTEBOOK_NAME:
+            webbrowser.open_new(project_constants.OFFICIAL_NOTEBOOK_URL)
+            self.ui.btn_prediction_only_start.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_prediction_only_start)
+            # alphafold specific process
+            archive = "prediction.zip"
+            source_path = global_utils.global_var_settings_obj.get_prediction_path()
+            filename = f"{source_path}/{archive}"
+            while os.path.isfile(filename) is False:
+                print("Prediction is still running ...")
+                time.sleep(20)
+            # move prediction.zip in scratch folder
+            shutil.copy(filename, f"{self.scratch_path}/{archive}")
+            shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
+            shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
+                        f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+            shutil.rmtree(f"{self.scratch_path}/prediction")
+            os.remove(f"{self.scratch_path}/{archive}")
+            try:
+                cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+            except pymol.CmdException:
+                print("Loading the model failed.")
+                return
+        else:
             return
-        # starting the default web browser to display the colab notebook
-        self.status_bar.showMessage("Opening Google colab notebook ...")
-        webbrowser.open_new(self.ui.txt_prediction_only_notebook_url.text())
-        self.status_bar.showMessage("Prediction running, you can use the PySSA.")
+        self.ui.lbl_prediction.hide()
+        self.ui.btn_prediction_only_page.hide()
+        self.ui.btn_save_project.show()
+        self.ui.lbl_handle_pymol_session.show()
+        self.ui.btn_image_page.show()
+        self.display_image_page()
 
     # Prediction + Analysis
     # def validate_project_name(self):
@@ -1468,59 +1749,59 @@ class MainWindow(QMainWindow):
         except Exception:
             self.status_bar.showMessage("Unexpected Error.")
 
-    def show_prediction_chain_info_reference(self):
-        """This function shows all gui elements for the chain information
-        selection of the reference protein
+    # def show_prediction_chain_info_reference(self):
+    #     """This function shows all gui elements for the chain information
+    #     selection of the reference protein
+    #
+    #     """
+    #     self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
+    #                                                  "border-width: 2px;"
+    #                                                  "border-radius: 8px;"
+    #                                                  "border-color: #DCDBE3;")
+    #     # show and hide relevant gui elements
+    #     self.ui.btn_prediction_back_2.hide()
+    #     self.ui.btn_prediction_next_2.hide()
+    #     self.ui.lbl_prediction_ref_chains.show()
+    #     self.ui.list_widget_ref_chains.show()
+    #     self.ui.btn_prediction_back_3.show()
+    #     self.ui.btn_prediction_start.show()
+    #     # disable important gui elements
+    #     self.ui.txt_prediction_load_reference.setEnabled(False)
+    #     self.ui.btn_prediction_load_reference.setEnabled(False)
+    #     # colors white
+    #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: white")
+    #
+    #     # fill chains list widget
+    #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
+    #         pdb_id = self.ui.txt_prediction_load_reference.text().upper()
+    #         tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
+    #         tmp_ref_protein.clean_pdb_file()
+    #         chains = cmd.get_chains(pdb_id)
+    #     else:
+    #         cmd.load(self.ui.txt_prediction_load_reference.text(), object="reference_protein")
+    #         chains = cmd.get_chains("reference_protein")
+    #     for chain in chains:
+    #         self.ui.list_widget_ref_chains.addItem(chain)
+    #     styles_utils.color_button_ready(self.ui.btn_prediction_start)
+    #     cmd.reinitialize()
 
-        """
-        self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
-                                                     "border-width: 2px;"
-                                                     "border-radius: 8px;"
-                                                     "border-color: #DCDBE3;")
-        # show and hide relevant gui elements
-        self.ui.btn_prediction_back_2.hide()
-        self.ui.btn_prediction_next_2.hide()
-        self.ui.lbl_prediction_ref_chains.show()
-        self.ui.list_widget_ref_chains.show()
-        self.ui.btn_prediction_back_3.show()
-        self.ui.btn_prediction_start.show()
-        # disable important gui elements
-        self.ui.txt_prediction_load_reference.setEnabled(False)
-        self.ui.btn_prediction_load_reference.setEnabled(False)
-        # colors white
-        self.ui.txt_prediction_load_reference.setStyleSheet("background-color: white")
-
-        # fill chains list widget
-        if len(self.ui.txt_prediction_load_reference.text()) == 4:
-            pdb_id = self.ui.txt_prediction_load_reference.text().upper()
-            tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
-            tmp_ref_protein.clean_pdb_file()
-            chains = cmd.get_chains(pdb_id)
-        else:
-            cmd.load(self.ui.txt_prediction_load_reference.text(), object="reference_protein")
-            chains = cmd.get_chains("reference_protein")
-        for chain in chains:
-            self.ui.list_widget_ref_chains.addItem(chain)
-        styles_utils.color_button_ready(self.ui.btn_prediction_start)
-        cmd.reinitialize()
-
-    def hide_prediction_chain_info_reference(self):
-        """Hides the gui elements for the reference chains
-
-        """
-        self.ui.list_widget_ref_chains.clear()
-        # show and hide relevant gui elements
-        self.ui.btn_prediction_back_2.show()
-        self.ui.btn_prediction_next_2.show()
-        self.ui.lbl_prediction_ref_chains.hide()
-        self.ui.list_widget_ref_chains.hide()
-        self.ui.btn_prediction_back_3.hide()
-        self.ui.btn_prediction_start.hide()
-        # disable important gui elements
-        self.ui.txt_prediction_load_reference.setEnabled(True)
-        self.ui.btn_prediction_load_reference.setEnabled(True)
-        # colors green
-        self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
+    # def hide_prediction_chain_info_reference(self):
+    #     """Hides the gui elements for the reference chains
+    #
+    #     """
+    #     self.ui.list_widget_ref_chains.clear()
+    #     # show and hide relevant gui elements
+    #     self.ui.btn_prediction_back_2.show()
+    #     self.ui.btn_prediction_next_2.show()
+    #     self.ui.lbl_prediction_ref_chains.hide()
+    #     self.ui.list_widget_ref_chains.hide()
+    #     self.ui.btn_prediction_back_3.hide()
+    #     self.ui.btn_prediction_start.hide()
+    #     # disable important gui elements
+    #     self.ui.txt_prediction_load_reference.setEnabled(True)
+    #     self.ui.btn_prediction_load_reference.setEnabled(True)
+    #     # colors green
+    #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
 
     # def check_prediction_if_txt_prediction_chain_ref_is_filled(self):
     #     """This function checks if any chains are in the text field for the
@@ -1547,6 +1828,10 @@ class MainWindow(QMainWindow):
     #
     #     """
     #     self.__check_start_possibility_prediction()
+
+    def enable_predict_button(self):
+        self.ui.btn_prediction_only_start.setEnabled(True)
+        styles_utils.color_button_ready(self.ui.btn_prediction_only_start)
 
     def predict(self):
         """This function opens a webbrowser with a colab notebook, to run the
@@ -1596,32 +1881,47 @@ class MainWindow(QMainWindow):
         else:
             webbrowser.open_new(project_constants.NOTEBOOK_URL)
 
-        # waiting for the colab notebook to finish
+        # # waiting for the colab notebook to finish
+        # archive = "prediction.zip"
+        # source_path = global_utils.global_var_settings_obj.get_prediction_path()
+        # FILE_NAME = f"{source_path}/{archive}"
+        # # flag = False
+        # # while flag == False:
+        # #     print("AlphaFold is still running ...")
+        # #     time.sleep(5)
+        # #     # time.sleep(120)
+        # # TODO: loop doesn't work correctly
+        # while os.path.isfile(FILE_NAME) is False:
+        #     print("AlphaFold is still running ...")
+        #     # time.sleep(5)
+        #     time.sleep(20)
+        #     # time.sleep(120)
+        #     # global global_var_abort_prediction
+        #     # if global_var_abort_prediction:
+        #     #     return
+
+        # alphafold specific process
         archive = "prediction.zip"
         source_path = global_utils.global_var_settings_obj.get_prediction_path()
-        FILE_NAME = f"{source_path}/{archive}"
-        # flag = False
-        # while flag == False:
-        #     print("AlphaFold is still running ...")
-        #     time.sleep(5)
-        #     # time.sleep(120)
-        # TODO: loop doesn't work correctly
-        while os.path.isfile(FILE_NAME) is False:
+        filename = f"{source_path}/{archive}"
+        while os.path.isfile(filename) is False:
             print("AlphaFold is still running ...")
-            # time.sleep(5)
             time.sleep(20)
-            # time.sleep(120)
-            # global global_var_abort_prediction
-            # if global_var_abort_prediction:
-            #     return
+        # move prediction.zip in scratch folder
+        shutil.copy(filename, f"{self.scratch_path}/{archive}")
+        shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
+        shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
+                    f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+        shutil.rmtree(f"{self.scratch_path}/prediction")
+        os.remove(f"{self.scratch_path}/{archive}")
 
         # ----------------------------------------------------------------- #
         # start of the analysis algorithm
         self.status_bar.showMessage("Protein structure analysis started ...")
 
-        # extracts and moves the prediction.pdb to the workspace/pdb folder
-        tools.extract_and_move_model_pdb(
-            str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
+        # # extracts and moves the prediction.pdb to the workspace/pdb folder
+        # tools.extract_and_move_model_pdb(
+        #     str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
 
         # gets model filename and filepath
         PREDICTION_NAME = tools.get_prediction_file_name(project.get_pdb_path())
@@ -1652,9 +1952,27 @@ class MainWindow(QMainWindow):
         structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
                                                          structure_analysis.model_proteins)
         structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
-                                                self.status_bar, self.ui.progress_bar_prediction)
+                                                self.status_bar, "2")
 
     # Single Analysis
+    def analysis_next_step(self):
+        self.ui.lbl_analysis_model_chains.show()
+        self.ui.list_analysis_model_chains.show()
+        self.ui.btn_analysis_back.show()
+        self.ui.btn_analysis_start.show()
+        self.ui.btn_analysis_next.hide()
+        self.ui.lbl_analysis_ref_chains.setStyleSheet("color: #CACACA")
+        self.ui.list_analysis_ref_chains.setEnabled(False)
+
+    def analysis_back_step(self):
+        self.ui.lbl_analysis_model_chains.hide()
+        self.ui.list_analysis_model_chains.hide()
+        self.ui.btn_analysis_back.hide()
+        self.ui.btn_analysis_start.hide()
+        self.ui.btn_analysis_next.show()
+        self.ui.lbl_analysis_ref_chains.setStyleSheet("color: black")
+        self.ui.list_analysis_ref_chains.setEnabled(True)
+
     def load_reference_for_analysis(self):
         """This function opens a file dialog to choose a .pdb file as
         reference and displays the path in a text box
@@ -1981,76 +2299,93 @@ class MainWindow(QMainWindow):
         png_dialog.setWindowTitle("Image of: structure alignment")
         png_dialog.show()
 
+    def update_distance_plot(self):
+        """This function updates the distance plot
+
+        """
+        from_aa = int(self.ui.sp_distance_plot_from.text())
+        to_aa = int(self.ui.sp_distance_plot_to.text())
+        from_range = float(self.ui.dsp_distance_plot_from_range.text())
+        to_range = float(self.ui.dsp_distance_plot_to_range.text())
+        self.view_box.setRange(xRange=[from_aa, to_aa], yRange=[from_range, to_range])
+        # if self.ui.cb_sync_with_pymol.isChecked():
+        #     print("Sync is active.")
+        #     # TODO: handle objects better
+        #     pdb_list = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+        #     pdb_name = pdb_list[0].replace(".pdb", "")
+        #     zoom_selection = f"/{pdb_name}///{from_aa}-{to_aa}/CA"
+        #     cmd.select("zoom_sele", zoom_selection)
+        #     cmd.zoom("zoom_sele")
+
     def display_distance_plot(self):
         """This function opens a window which displays the distance plot.
 
         """
-        item = self.ui.project_list.selectedItems()
-        if item is None:
-            raise ValueError
+        file_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results"
+        model_name = self.ui.lbl_current_project_name.text()
+        global_utils.global_var_tmp_project_info.clear()
+        global_utils.global_var_tmp_project_info.append(file_path)
+        global_utils.global_var_tmp_project_info.append(model_name)
 
-        plot_dialog = Qt.QtWidgets.QDialog(self)
-        plot_dialog_layout = QHBoxLayout()
-        graph_widget = pg.PlotWidget()
+        dialog = dialog_distance_plot.DialogDistancePlot()
+        dialog.exec_()
 
-        # read csv file
-        global global_var_project_dict
+        # item = self.ui.project_list.selectedItems()
+        # if item is None:
+        #     raise ValueError
 
-        try:
-            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-            model_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
-        except KeyError:
-            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-                                        "No project has been opened.")
-            return
-        path = f"{file_path}/distance_csv/distances.csv"
-        distance_list = []
-        cutoff_line = []
-        with open(path, 'r', encoding="utf-8") as csv_file:
-            for line in csv_file:
-                cleaned_line = line.replace("\n", "")
-                if cleaned_line.split(",")[8] != 'distance':
-                    distance_list.append(float(cleaned_line.split(",")[8]))
-                    cutoff_line.append(global_utils.global_var_settings_obj.get_cutoff())
-        # creates actual distance plot line
-        graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
-                                   symbol="o", symbolSize=10, symbolBrush=('b'))
-        # creates cutoff line
-        graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
-        # styling the plot
-        graph_widget.setBackground('w')
-        graph_widget.setTitle(f"Distance Plot of {model_name}", size="23pt")
-        styles = {'font-size': '14px'}
-        ax_label_y = "Distance in angstrom"
-        graph_widget.setLabel('left', ax_label_y, **styles)
-        graph_widget.setLabel('bottom', "Residue pair no.", **styles)
-        graph_widget.plotItem.showGrid(x=True, y=True)
-        plot_dialog_layout.addWidget(graph_widget)
-        plot_dialog.setLayout(plot_dialog_layout)
-        plot_dialog.setWindowTitle("Distance Plot")
-        plot_dialog.show()
+        # # plot_dialog = Qt.QtWidgets.QDialog(self)
+        # plot_dialog_layout = QHBoxLayout()
+        # graph_widget = pg.PlotWidget()
+        #
+        # # read csv file
+        # file_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results"
+        # model_name = self.ui.lbl_current_project_name.text()
+        #
+        # path = f"{file_path}/distance_csv/distances.csv"
+        # distance_list = []
+        # cutoff_line = []
+        # with open(path, 'r', encoding="utf-8") as csv_file:
+        #     for line in csv_file:
+        #         cleaned_line = line.replace("\n", "")
+        #         if cleaned_line.split(",")[8] != 'distance':
+        #             distance_list.append(float(cleaned_line.split(",")[8]))
+        #             cutoff_line.append(global_utils.global_var_settings_obj.get_cutoff())
+        # # creates actual distance plot line
+        # graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
+        #                            symbol="o", symbolSize=10, symbolBrush=('b'))
+        # self.view_box = graph_widget.plotItem.getViewBox()
+        # self.view_box.setRange(xRange=[23, 40])
+        # # creates cutoff line
+        # graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
+        # # styling the plot
+        # graph_widget.setBackground('w')
+        # graph_widget.setTitle(f"Distance Plot of {model_name}", size="23pt")
+        # styles = {'font-size': '14px'}
+        # ax_label_y = "Distance in Å"
+        # graph_widget.setLabel('left', ax_label_y, **styles)
+        # graph_widget.setLabel('bottom', "Residue pair no.", **styles)
+        # graph_widget.plotItem.showGrid(x=True, y=True)
+        # plot_dialog_layout.addWidget(graph_widget)
+        # self.plot_dialog.setLayout(plot_dialog_layout)
+        # self.plot_dialog.setWindowTitle("Distance Plot")
+        # self.plot_dialog.show()
 
     def display_distance_histogram(self):
         """This function opens a window which displays the distance histogram.
 
         """
-        item = self.ui.project_list.selectedItems()
-        if item is None:
-            raise ValueError
+        # item = self.ui.project_list.selectedItems()
+        # if item is None:
+        #     raise ValueError
 
         plot_dialog = Qt.QtWidgets.QDialog(self)
         plot_dialog_layout = QHBoxLayout()
         graph_widget = pg.PlotWidget()
 
         # read csv file
-        global global_var_project_dict
-        try:
-            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-            model_name = global_var_project_dict[self.ui.project_list.currentRow()].get_model_filename()
-        except KeyError:
-            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-                                        "No project has been opened.")
-            return
+        file_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results"
+        model_name = self.ui.lbl_current_project_name.text()
         path = f"{file_path}/distance_csv/distances.csv"
         distance_list = []
         with open(path, 'r', encoding="utf-8") as csv_file:

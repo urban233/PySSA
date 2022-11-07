@@ -24,6 +24,8 @@
 import os
 import shutil
 import logging
+from pathlib import Path
+
 from pymol import Qt
 from dialogs import dialog_settings_global
 from utils import global_utils
@@ -251,6 +253,62 @@ def quick_log_and_display(log_type: str, log_message: str,
         raise ValueError
     print(log_message)
     status_bar.showMessage(status_bar_message)
+
+
+def check_results_for_integrity(workspace_path, project_name) -> (bool, Path):
+    """This function checks if the results data is complete or not
+
+        Returns:
+            False if data is incomplete and therefore invalid
+                Path of the data which is missing
+            True if data is complete and therefore valid
+    """
+    results_dir_struct = [
+        Path(f"{workspace_path}/{project_name}"),
+        Path(f"{workspace_path}/{project_name}/pdb"),
+        Path(f"{workspace_path}/{project_name}/results"),
+        Path(f"{workspace_path}/{project_name}/results/alignment_files"),
+        Path(f"{workspace_path}/{project_name}/results/distance_csv"),
+        Path(f"{workspace_path}/{project_name}/results/images"),
+        Path(f"{workspace_path}/{project_name}/results/images/interesting_regions"),
+        Path(f"{workspace_path}/{project_name}/results/plots"),
+        Path(f"{workspace_path}/{project_name}/results/plots/distance_histogram"),
+        Path(f"{workspace_path}/{project_name}/results/plots/distance_plot"),
+        Path(f"{workspace_path}/{project_name}/results/sessions/"),
+    ]
+
+    is_pdb_path_empty: bool = False
+    for path in results_dir_struct:
+        content = os.listdir(path)
+        if not content:
+            if path == results_dir_struct[2]:
+                is_pdb_path_empty = True
+        else:
+            if is_pdb_path_empty:
+                # data is incomplete and therefore invalid
+                return False, path
+
+    # data is complete and therefore valid
+    return True, "Data is valid"
+
+
+def scan_workspace_for_vaild_projects(workspace_path, list_new_projects):
+    workspace_projects: list[str] = os.listdir(workspace_path)
+    valid_directories = []
+    # iterates over possible project directories
+    for directory in workspace_projects:
+        try:
+            directory_content = os.listdir(f"{workspace_path}/{directory}")
+            # iterates over the content in a single project directory
+            for content in directory_content:
+                if content == "project.xml":
+                    valid_directories.append(directory)
+        except NotADirectoryError:
+            print(f"This: {directory} is not a directory.")
+
+    valid_directories.sort()
+    for project in valid_directories:
+        list_new_projects.addItem(project)
 
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")

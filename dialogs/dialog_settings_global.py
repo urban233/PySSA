@@ -34,7 +34,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
     """This class opens a settings customization dialog.
 
     """
-    """This variable is for controlling wether the dialog opens or not"""
+    """This variable is for controlling whether the dialog opens or not"""
     ERROR = False
 
     def __init__(self, parent=None):
@@ -50,7 +50,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.ui.txt_workspace_dir.setEnabled(False)
-        self.ui.txt_pdb_storage_dir.setEnabled(False)
         self.ui.txt_zip_storage_dir.setEnabled(False)
 
         # try:
@@ -69,7 +68,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         logging.info("Settings dialog was opened.")
         # loading information from the settings.xml
         self.ui.txt_workspace_dir.setText(global_var_settings_obj.get_workspace_path())
-        self.ui.txt_pdb_storage_dir.setText(global_var_settings_obj.get_model_path())
         self.ui.txt_zip_storage_dir.setText(global_var_settings_obj.get_prediction_path())
         self.ui.spb_cycles.setValue(int(global_var_settings_obj.get_cycles()))
         self.ui.dspb_cutoff.setValue(float(global_var_settings_obj.get_cutoff()))
@@ -84,7 +82,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
         # connect elements with function
         self.ui.btn_workspace_dir.clicked.connect(self.chooseWorkspaceDir)
-        self.ui.btn_pdb_storage_dir.clicked.connect(self.choosePdbStorageDir)
         self.ui.btn_zip_storage_dir.clicked.connect(self.chooseZipStorageDir)
         self.ui.btn_cancel.clicked.connect(self.cancelDialog)
         self.ui.btn_ok.clicked.connect(self.okDialog)
@@ -95,9 +92,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
     def chooseWorkspaceDir(self):
         gui_utils.choose_directory(self, self.ui.txt_workspace_dir)
 
-    def choosePdbStorageDir(self):
-        gui_utils.choose_directory(self, self.ui.txt_pdb_storage_dir)
-
     def chooseZipStorageDir(self):
         gui_utils.choose_directory(self, self.ui.txt_zip_storage_dir)
 
@@ -106,7 +100,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
     def okDialog(self):
         global_var_settings_obj.set_workspace_path(self.ui.txt_workspace_dir.text())
-        global_var_settings_obj.set_model_path(self.ui.txt_pdb_storage_dir.text())
         global_var_settings_obj.set_prediction_path(self.ui.txt_zip_storage_dir.text())
         global_var_settings_obj.set_cycles(str(self.ui.spb_cycles.value()))
         global_var_settings_obj.set_cutoff(str(self.ui.dspb_cutoff.value()))
