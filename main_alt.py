@@ -151,6 +151,8 @@ class MainWindow(QMainWindow):
         self.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
         self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
         self.ui.list_s_v_p_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.btn_prediction_only_next.setEnabled(False)
+        self.ui.lbl_prediction_only_status_protein_name.setText("")
 
         self.ui.list_new_seq_notebooks.addItem(project_constants.OFFICIAL_NOTEBOOK_NAME)
         self.ui.list_new_seq_notebooks.currentItemChanged.connect(self.enable_predict_button)
@@ -164,6 +166,10 @@ class MainWindow(QMainWindow):
         self.ui.action_add_model.triggered.connect(self.open_add_model)
         self.ui.btn_analysis_next.clicked.connect(self.analysis_next_step)
         self.ui.btn_analysis_back.clicked.connect(self.analysis_back_step)
+        self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_protein_name)
+        self.ui.btn_prediction_only_next.clicked.connect(self.show_prediction_only_choose_notebook)
+        self.ui.txt_prediction_only_protein_name.returnPressed.connect(self.show_prediction_only_choose_notebook)
+        self.ui.btn_prediction_only_back.clicked.connect(self.hide_prediction_only_choose_notebook)
 
         self.ui.lbl_analysis_model_chains.hide()
         self.ui.list_analysis_model_chains.hide()
@@ -300,6 +306,10 @@ class MainWindow(QMainWindow):
     def _init_new_sequence_page(self):
         # sets up defaults: Prediction
         self.ui.btn_prediction_only_start.setEnabled(False)
+        self.ui.lbl_prediction_only_choose_notebook.hide()
+        self.ui.list_new_seq_notebooks.hide()
+        self.ui.btn_prediction_only_back.hide()
+        self.ui.btn_prediction_only_start.hide()
 
     def _init_sequence_vs_pdb_page(self):
         # sets up defaults: Prediction + Analysis
@@ -1540,6 +1550,65 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage("Saved project successfully.")
 
     # Prediction
+    def validate_protein_name(self):
+        """This function validates the input of the project name in real-time
+
+        """
+
+        # set color for lineEdit
+        self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #FC5457")
+        if len(self.ui.txt_prediction_only_protein_name.text()) == 0:
+            self.ui.lbl_prediction_only_status_protein_name.setText("")
+            self.ui.btn_prediction_only_next.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+            return
+        elif len(self.ui.txt_prediction_only_protein_name.text()) > 20:
+            self.ui.lbl_prediction_only_status_protein_name.setText("Project name is too long (max. 20 characters).")
+            self.ui.btn_prediction_only_next.setEnabled(False)
+            styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+            return
+        else:
+            regex = Qt.QtCore.QRegularExpression()
+            # TODO: has no dash in regex!
+            regex.setPattern("\\w{20}")
+            validator = QtGui.QRegularExpressionValidator(regex)
+            for i in range(len(self.ui.txt_prediction_only_protein_name.text())):
+                result = validator.validate(self.ui.txt_prediction_only_protein_name.text(), i)
+                if result[0] > 0:
+                    self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #33C065")
+                    self.ui.lbl_prediction_only_status_protein_name.setText("")
+                    self.ui.btn_prediction_only_next.setEnabled(True)
+                    styles_utils.color_button_ready(self.ui.btn_prediction_only_next)
+                else:
+                    self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #FC5457")
+                    self.ui.lbl_prediction_only_status_protein_name.setText("Invalid character.")
+                    self.ui.btn_prediction_only_next.setEnabled(False)
+                    styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+                    return
+
+            print("Check successful.")
+
+    def show_prediction_only_choose_notebook(self):
+        self.ui.lbl_prediction_only_protein_name.setStyleSheet("color: #E1E1E1")
+        self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: white")
+        self.ui.btn_prediction_only_next.setEnabled(False)
+        styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+        self.ui.txt_prediction_only_protein_name.setEnabled(False)
+        self.ui.lbl_prediction_only_choose_notebook.show()
+        self.ui.list_new_seq_notebooks.show()
+        self.ui.btn_prediction_only_back.show()
+        self.ui.btn_prediction_only_start.show()
+
+    def hide_prediction_only_choose_notebook(self):
+        self.ui.lbl_prediction_only_protein_name.setStyleSheet("color: black")
+        self.ui.btn_prediction_only_next.setEnabled(True)
+        styles_utils.color_button_ready(self.ui.btn_prediction_only_next)
+        self.ui.txt_prediction_only_protein_name.setEnabled(True)
+        self.ui.lbl_prediction_only_choose_notebook.hide()
+        self.ui.list_new_seq_notebooks.hide()
+        self.ui.btn_prediction_only_back.hide()
+        self.ui.btn_prediction_only_start.hide()
+
     def check_prediction_only_if_txt_notebook_url_is_filled(self):
         """This function checks if a reference pdb file is selected.
 

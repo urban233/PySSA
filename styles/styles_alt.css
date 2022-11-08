@@ -382,6 +382,21 @@ QListWidget#list_new_seq_notebooks {
     border-color: #DCDBE3;
 }
 
+QLabel#lbl_prediction_only_status_protein_name {
+    color: #FC5457;
+    font-size: 10px;
+}
+
+QLineEdit#txt_prediction_only_protein_name {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #DCDBE3;
+    min-width: 6em;
+    padding: 1px;
+}
+
 /* "Sequence vs pdb" */
 QListWidget#list_s_v_p_ref_chains {
     border-style: solid;

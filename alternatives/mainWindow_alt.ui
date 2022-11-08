@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>586</width>
-    <height>747</height>
+    <width>1027</width>
+    <height>1121</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -418,7 +418,7 @@
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <property name="spacing">
-           <number>-1</number>
+           <number>6</number>
           </property>
           <property name="leftMargin">
            <number>8</number>
@@ -471,7 +471,7 @@
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <property name="spacing">
-           <number>-1</number>
+           <number>6</number>
           </property>
           <property name="leftMargin">
            <number>0</number>
@@ -494,7 +494,7 @@
              </size>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="home_page">
              <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -590,31 +590,105 @@
              </layout>
             </widget>
             <widget class="QWidget" name="prediction_only_page">
-             <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,0,0">
-              <property name="leftMargin">
-               <number>10</number>
-              </property>
-              <property name="topMargin">
-               <number>5</number>
-              </property>
-              <property name="rightMargin">
-               <number>10</number>
-              </property>
-              <property name="bottomMargin">
-               <number>5</number>
-              </property>
+             <layout class="QVBoxLayout" name="verticalLayout_56">
               <item>
-               <widget class="QLabel" name="label">
-                <property name="text">
-                 <string>Choose a Google Colab Notebook from the list below</string>
+               <widget class="QFrame" name="frame_6">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
                 </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_54">
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_16">
+                   <item>
+                    <widget class="QLabel" name="lbl_prediction_only_protein_name">
+                     <property name="text">
+                      <string>Protein name</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="txt_prediction_only_protein_name"/>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="lbl_prediction_only_status_protein_name">
+                     <property name="text">
+                      <string>TextLabel</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_7">
+                   <item>
+                    <spacer name="horizontalSpacer_14">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_prediction_only_next">
+                     <property name="text">
+                      <string>Next</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
                </widget>
               </item>
               <item>
-               <widget class="QListWidget" name="list_new_seq_notebooks"/>
+               <widget class="QFrame" name="frame_7">
+                <property name="frameShape">
+                 <enum>QFrame::StyledPanel</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Raised</enum>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_55">
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_53">
+                   <item>
+                    <widget class="QLabel" name="lbl_prediction_only_choose_notebook">
+                     <property name="text">
+                      <string>Choose a Google Colab Notebook from the list below</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QListWidget" name="list_new_seq_notebooks"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_21">
+               <spacer name="verticalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_6">
                 <item>
                  <spacer name="horizontalSpacer_4">
                   <property name="orientation">
@@ -627,6 +701,13 @@
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_prediction_only_back">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="btn_prediction_only_start">
@@ -1534,13 +1615,13 @@
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
-                  <height>86</height>
+                  <height>90</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>86</height>
+                  <height>90</height>
                  </size>
                 </property>
                 <property name="frameShape">
@@ -1998,8 +2079,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>586</width>
-     <height>24</height>
+     <width>1027</width>
+     <height>36</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
