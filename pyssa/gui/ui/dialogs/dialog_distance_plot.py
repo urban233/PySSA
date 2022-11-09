@@ -19,11 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from PyQt5.QtWidgets import QHBoxLayout
 from pymol import Qt
 import pyqtgraph as pg
-from uiForms.auto.auto_dialog_distance_plot import Ui_Dialog
-from utils import global_utils
+from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialog
+from pyssa.gui.utilities import global_variables
 
 
 class DialogDistancePlot(Qt.QtWidgets.QDialog):

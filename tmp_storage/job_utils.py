@@ -24,7 +24,7 @@
 import os
 from pathlib import Path
 from xml.dom import minidom
-from utils import project_utils
+from pyssa.gui.data_structures import project
 
 
 class Job:

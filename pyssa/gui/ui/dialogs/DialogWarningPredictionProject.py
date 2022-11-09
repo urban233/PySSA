@@ -22,9 +22,9 @@
 
 from pymol import Qt
 
-from uiForms.auto.auto_dialog_finished import Ui_Form
+from pyssa.gui.ui.forms.auto_generated.auto_DialogWarningPredictionProject import Ui_Dialog
 
-class DialogFinished(Qt.QtWidgets.QDialog):
+class DialogWarningPredictionProject(Qt.QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor
 
@@ -34,13 +34,13 @@ class DialogFinished(Qt.QtWidgets.QDialog):
         """
         Qt.QtWidgets.QDialog.__init__(self, parent)
         # build ui object
-        self.ui = Ui_Form()
+        self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-        self.ui.btn_ok.clicked.connect(self.close_dialog)
+        self.ui.btnOkWarning.clicked.connect(self.closeDialog)
 
-        self.setWindowTitle("Analysis Finished")
+        self.setWindowTitle("Warning Project Exists")
 
-    # @SLOT()
-    def close_dialog(self):
+    # @SLOT
+    def closeDialog(self):
         self.close()

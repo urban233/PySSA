@@ -74,7 +74,7 @@ def run_plugin_gui():
         app = Qt.QtWidgets.QApplication(sys.argv)
         app.exec_()
     """
-    from main_alt import MainWindow
+    from pyssa.main import MainWindow
     # getting the value of the global var mainWindow
     global mainWindow
 

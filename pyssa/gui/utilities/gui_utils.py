@@ -26,7 +26,7 @@ import shutil
 from pathlib import Path
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
-from utils import tools
+from pyssa.gui.utilities import tools
 
 
 def fill_combo_box(combo_box, item_list):

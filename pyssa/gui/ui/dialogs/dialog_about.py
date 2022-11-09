@@ -3,28 +3,46 @@
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
-#
+# 
 # Source code is available at <https://github.com/urban233/PySSA>
-#
+# 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
+# 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+# 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for global variables which will be used across this project"""
 
-from utils import settings_utils
-from utils import project_constants
+from pymol import Qt
 
-# global_var is used to access the settings project-wide
-global_var_settings_obj = settings_utils.Settings(project_constants.SETTINGS_DIR, project_constants.SETTINGS_FILE)
-global_var_settings_obj.load_settings_from_xml()
-global_var_tmp_project_info = []
+from pyssa.gui.ui.forms.auto_generated.auto_dialog_about import Ui_Dialog
+
+
+class DialogAbout(Qt.QtWidgets.QDialog):
+
+    def __init__(self, parent=None):
+        """Constructor
+
+        Args:
+            args
+            kwargs
+        """
+        Qt.QtWidgets.QDialog.__init__(self, parent)
+        # build ui object
+        self.ui = Ui_Dialog()
+        self.ui.setupUi(self)
+
+        self.ui.btn_ok.clicked.connect(self.close_dialog)
+
+        self.setWindowTitle("About")
+
+    # @SLOT
+    def close_dialog(self):
+        self.close()

@@ -197,7 +197,7 @@ class Ui_MainWindow(object):
         self.label_3.setMaximumSize(QtCore.QSize(300, 300))
         self.label_3.setAutoFillBackground(False)
         self.label_3.setText("")
-        self.label_3.setPixmap(QtGui.QPixmap("../assets/pyssa_logo.png"))
+        self.label_3.setPixmap(QtGui.QPixmap("../../../../../assets/pyssa_logo.png"))
         self.label_3.setScaledContents(True)
         self.label_3.setAlignment(QtCore.Qt.AlignCenter)
         self.label_3.setIndent(-1)

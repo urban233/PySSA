@@ -18,10 +18,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import utils.project_utils
-from utils import tools
+#
+"""Module for global variables which will be used across this project"""
 
-if __name__ == '__main__':
-    test_project = utils.project_utils.Project()
-    test_project.__setattr__("project_name", "bmp2")
-    print(test_project.__getattribute__("project_name"))
+from pyssa.gui.data_structures import settings
+
+# global_var is used to access the settings project-wide
+global_var_settings_obj = settings_utils.Settings(project_constants.SETTINGS_DIR, project_constants.SETTINGS_FILE)
+global_var_settings_obj.load_settings_from_xml()
+global_var_tmp_project_info = []

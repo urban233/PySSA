@@ -27,9 +27,7 @@ from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree
 from xml.dom import minidom
-from pymol import Qt
-from utils import gui_utils
-from utils import tools
+from pyssa.gui.utilities import gui_utils
 
 
 class Project:

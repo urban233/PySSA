@@ -27,8 +27,8 @@ import logging
 from pathlib import Path
 
 from pymol import Qt
-from dialogs import dialog_settings_global
-from utils import global_utils
+from pyssa.gui.ui.dialogs import dialog_settings_global
+from pyssa.gui.utilities import global_variables
 
 
 def create_directory(parent_path, dir_name) -> None:

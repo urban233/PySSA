@@ -20,15 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from PyQt5.QtGui import QPixmap
 from pymol import Qt
 
-from uiForms.auto.auto_dialog_image import Ui_Dialog
-#from PIL import Image
+from pyssa.gui.ui.forms.auto_generated.auto_DialogWarningPredictionZip import Ui_Dialog
 
-
-class DialogImage(Qt.QtWidgets.QDialog):
-
+class DialogWarningPredictionZip(Qt.QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor
 
@@ -41,11 +37,4 @@ class DialogImage(Qt.QtWidgets.QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-        # image = Image.open(
-        #     "/home/matt/Documents/test_pymol/Results/images/interesting_region_98.png")
-        # resized_image = image.resize((500, 500))
-
-        # pixmap = QPixmap(resized_image)
-        # pixmap.scaled(64, 64)
-        # self.ui.image_label.setPixmap(pixmap)
-        # self.resize(pixmap.width(), pixmap.height())
+        self.setWindowTitle("Warning Prediction Exists")

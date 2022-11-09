@@ -19,10 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import PyQt5.QtWidgets
 from pymol import Qt
 
-from uiForms.auto.auto_dialog_add_models import Ui_Dialog
+from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_models import Ui_Dialog
 
 global_var_pdb_files = []
 

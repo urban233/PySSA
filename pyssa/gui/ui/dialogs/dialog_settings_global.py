@@ -21,10 +21,10 @@
 #
 import logging
 from pymol import Qt
-from utils import gui_utils
-from uiForms.auto.auto_dialog_settings_global import Ui_Dialog
+from pyssa.gui.utilities import gui_utils
+from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 #from main_alt import global_var_settings_obj
-from utils.global_utils import global_var_settings_obj
+from pyssa.gui.utilities.global_variables import global_var_settings_obj
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)

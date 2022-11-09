@@ -42,27 +42,17 @@ from pymol import cmd
 from urllib.request import urlopen
 from urllib.error import URLError
 
-import utils.project_utils
-from alternatives.auto_main_window_alt import Ui_MainWindow
-from dialogs import dialog_about
-from dialogs import dialog_add_models
-from dialogs import dialog_add_model
-from dialogs import dialog_startup
-from dialogs import dialog_distance_plot
+import pyssa.gui.data_structures.project
+from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
+from pyssa.gui.ui.dialogs import dialog_distance_plot, dialog_startup, dialog_about, dialog_add_models, dialog_add_model
 from pymolproteintools import core
-from utils import gui_utils
-from utils import job_utils
-from utils import project_constants
-from utils import structure_analysis_utils
-from utils import tools
-from utils import global_utils
-from utils import styles_utils
-from utils import project_utils
+from pyssa.gui.utilities import gui_utils, tools
+from tmp_storage import job_utils
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
 # global variables
-global_var_project_dict = {0: utils.project_utils.Project("", "")}
+global_var_project_dict = {0: pyssa.gui.data_structures.project.Project("", "")}
 global_var_list_widget_row = 0
 
 
@@ -838,7 +828,7 @@ class MainWindow(QMainWindow):
                         path = loop_element[0].getAttribute('value')
                         path_split = path.split("/")
                         project_name = path_split[(len(path_split) - 1)]
-                        global_var_project_dict[i] = utils.project_utils.Project(project_name,
+                        global_var_project_dict[i] = pyssa.gui.data_structures.project.Project(project_name,
                                                                                  f"{self.workspace_path}/{job_name}")
                         index = len("project_of_")
                         model_name = project_name[index:]
@@ -850,8 +840,8 @@ class MainWindow(QMainWindow):
             else:
                 # project
                 file_name_file_info = Qt.QtCore.QFileInfo(file_name[0])
-                global_var_project_dict[0] = utils.project_utils.Project(file_name_file_info.baseName(),
-                                                                         self.workspace_path)
+                global_var_project_dict[0] = pyssa.gui.data_structures.project.Project(file_name_file_info.baseName(),
+                                                                                       self.workspace_path)
                 global_var_project_dict[0].set_pdb_model(xml_file.getElementsByTagName('pdb_model')[0].getAttribute('value'))
                 # add filename to project list (results tab)
                 self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
@@ -1924,8 +1914,8 @@ class MainWindow(QMainWindow):
             if not check:
                 return
         # creates project without xml creation and model adding these come after the prediction
-        project = utils.project_utils.Project(self.ui.txt_prediction_project_name.text(),
-                                              self.workspace_path)
+        project = pyssa.gui.data_structures.project.Project(self.ui.txt_prediction_project_name.text(),
+                                                            self.workspace_path)
         project.create_project_tree()
         project.set_pdb_file(self.ui.txt_prediction_load_reference.text())
         project.set_pdb_id(self.ui.txt_prediction_load_reference.text())
@@ -2133,8 +2123,8 @@ class MainWindow(QMainWindow):
         MODEL_OBJ_NAME = model_file_info.baseName()
         MODEL_DIR = model_file_info.canonicalPath()
 
-        project = utils.project_utils.Project(self.ui.txt_analysis_project_name.text(),
-                                              self.workspace_path)
+        project = pyssa.gui.data_structures.project.Project(self.ui.txt_analysis_project_name.text(),
+                                                            self.workspace_path)
         if project.create_project_tree() is False:
             self.ui.btn_analysis_start.setEnabled(True)
             return
@@ -2273,7 +2263,7 @@ class MainWindow(QMainWindow):
             MODEL_OBJ_NAME = model_file_info.baseName()
             MODEL_DIR = model_file_info.canonicalPath()
 
-            project = utils.project_utils.Project(f"project_of_{MODEL_OBJ_NAME}",
+            project = pyssa.gui.data_structures.project.Project(f"project_of_{MODEL_OBJ_NAME}",
                                                   f"{self.workspace_path}/{job.get_job_name()}")
             project.create_project_tree()
             project.set_job_name(job.get_job_name())
@@ -2682,7 +2672,7 @@ class MainWindow(QMainWindow):
         """This function updates the current selected PyMOL scene.
 
         """
-        cmd.scene(key="auto", action="update")
+        cmd.scene(key="auto_generated", action="update")
 
     def save_scene(self):
         """This function saves the current view as a new PyMOL scene.
@@ -2754,7 +2744,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    with open('styles/styles_alt.css', 'r', encoding="utf-8") as file:
+    with open('gui/styles/styles.css', 'r', encoding="utf-8") as file:
         style = file.read()
         # Set the stylesheet of the application
         app.setStyleSheet(style)

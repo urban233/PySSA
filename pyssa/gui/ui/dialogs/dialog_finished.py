@@ -22,9 +22,9 @@
 
 from pymol import Qt
 
-from uiForms.auto.auto_DialogWarningPredictionZip import Ui_Dialog
+from pyssa.gui.ui.forms.auto_generated.auto_dialog_finished import Ui_Form
 
-class DialogWarningPredictionZip(Qt.QtWidgets.QDialog):
+class DialogFinished(Qt.QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor
 
@@ -34,7 +34,13 @@ class DialogWarningPredictionZip(Qt.QtWidgets.QDialog):
         """
         Qt.QtWidgets.QDialog.__init__(self, parent)
         # build ui object
-        self.ui = Ui_Dialog()
+        self.ui = Ui_Form()
         self.ui.setupUi(self)
 
-        self.setWindowTitle("Warning Prediction Exists")
+        self.ui.btn_ok.clicked.connect(self.close_dialog)
+
+        self.setWindowTitle("Analysis Finished")
+
+    # @SLOT()
+    def close_dialog(self):
+        self.close()
