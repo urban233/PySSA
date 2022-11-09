@@ -19,15 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for global variables which will be used across this project"""
-
+import logging
 import os
 from pyssa.gui.data_structures import settings
-from pyssa.gui.utilities import constants
 
 
-global_var_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-# global_var is used to access the settings project-wide
-global_var_settings_obj = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILE)
-global_var_settings_obj.load_settings_from_xml()
-global_var_tmp_project_info = []
+class Safeguard:
+    """This class is used to collect all safeguard functions in one place.
+
+    """
+    def __init__(self, settings_obj):
+        """Constructor
+
+        """
+        # var which contains a settings object
+        self.settings: settings.Settings = settings_obj

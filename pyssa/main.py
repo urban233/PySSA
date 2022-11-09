@@ -27,7 +27,7 @@ import shutil
 import sys
 import time
 import webbrowser
-from pathlib import Path
+import pathlib
 from xml.dom import minidom
 
 import PyQt5.QtCore
@@ -42,17 +42,18 @@ from pymol import cmd
 from urllib.request import urlopen
 from urllib.error import URLError
 
-import pyssa.gui.data_structures.project
+from pyssa.gui.data_structures import project
+from pyssa.gui.data_structures import structure_analysis
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.ui.dialogs import dialog_distance_plot, dialog_startup, dialog_about, dialog_add_models, dialog_add_model
 from pymolproteintools import core
-from pyssa.gui.utilities import gui_utils, tools
-from tmp_storage import job_utils
+from pyssa.gui.utilities import gui_utils, tools, constants, global_variables, styles
+# from tmp_storage import job_utils
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
 # global variables
-global_var_project_dict = {0: pyssa.gui.data_structures.project.Project("", "")}
+global_var_project_dict = {0: project.Project("", "")}
 global_var_list_widget_row = 0
 
 
@@ -71,17 +72,17 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(550)
 
         # checks if the plugin launched for the first time
-        if global_utils.global_var_settings_obj.get_app_launch() == 0:
+        if global_variables.global_var_settings_obj.get_app_launch() == 0:
             dialog = dialog_startup.DialogStartup()
             dialog.exec_()
             # checks if the cancel button was pressed
             if dialog_startup.global_var_terminate_app == 1:
-                global_utils.global_var_settings_obj.delete_settings_xml()
+                global_variables.global_var_settings_obj.delete_settings_xml()
                 sys.exit()
-            global_utils.global_var_settings_obj.set_workspace_path(dialog_startup.global_var_startup_workspace)
+            global_variables.global_var_settings_obj.set_workspace_path(dialog_startup.global_var_startup_workspace)
             # sets the launch_app var to 1 to indicate that the plugin has successfully overcome the first launch
-            global_utils.global_var_settings_obj.set_app_launch(1)
-            global_utils.global_var_settings_obj.save_settings_to_xml()
+            global_variables.global_var_settings_obj.set_app_launch(1)
+            global_variables.global_var_settings_obj.save_settings_to_xml()
 
         self.plot_dialog = Qt.QtWidgets.QDialog(self)
         self.view_box = None
@@ -117,8 +118,8 @@ class MainWindow(QMainWindow):
         # startup_dialog = dialog_startup.DialogStartup()
         # startup_dialog.exec_()
 
-        self.scratch_path = f"{project_constants.SETTINGS_DIR}/scratch"
-        tools.create_directory(project_constants.SETTINGS_DIR, "scratch")
+        self.scratch_path = f"{constants.SETTINGS_DIR}/scratch"
+        tools.create_directory(constants.SETTINGS_DIR, "scratch")
 
         self.ui.action_add_model.setVisible(False)
         self.ui.action_add_multiple_models.setVisible(False)
@@ -144,7 +145,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_prediction_only_next.setEnabled(False)
         self.ui.lbl_prediction_only_status_protein_name.setText("")
 
-        self.ui.list_new_seq_notebooks.addItem(project_constants.OFFICIAL_NOTEBOOK_NAME)
+        self.ui.list_new_seq_notebooks.addItem(constants.OFFICIAL_NOTEBOOK_NAME)
         self.ui.list_new_seq_notebooks.currentItemChanged.connect(self.enable_predict_button)
 
         self.ui.btn_new_create_project.clicked.connect(self.create_new_project)
@@ -210,7 +211,7 @@ class MainWindow(QMainWindow):
         """
         self.status_bar = Qt.QtWidgets.QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.workspace_path = global_utils.global_var_settings_obj.get_workspace_path()
+        self.workspace_path = global_variables.global_var_settings_obj.get_workspace_path()
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar.showMessage(self.workspace.text())
 
@@ -395,7 +396,7 @@ class MainWindow(QMainWindow):
     def _connect_batch_buttons(self):
         self.ui.btn_batch_load_reference.clicked.connect(self.load_reference_for_batch)
         self.ui.btn_batch_load_model.clicked.connect(self.load_model_for_batch)
-        self.ui.btn_batch_start.clicked.connect(self.start_process_batch)
+        # self.ui.btn_batch_start.clicked.connect(self.start_process_batch)
 
     def _connect_results_buttons(self):
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
@@ -566,7 +567,7 @@ class MainWindow(QMainWindow):
             self.ui.list_analysis_ref_chains.addItem(chain)
         for chain in model_chains:
             self.ui.list_analysis_model_chains.addItem(chain)
-        styles_utils.color_button_ready(self.ui.btn_analysis_start)
+        styles.color_button_ready(self.ui.btn_analysis_start)
         cmd.reinitialize()
         # regular work area opening
         self.ui.stackedWidget.setCurrentIndex(3)
@@ -733,16 +734,16 @@ class MainWindow(QMainWindow):
     #     # creates path for specific stylesheets
     #     if sys.platform.startswith("darwin"):
     #         # macOS path
-    #         styles_path_btn_ready = f"{project_constants.path_list[1]}/styles/styles_start_button_ready.css"
-    #         styles_path_btn_not_ready = f"{project_constants.path_list[1]}/styles/styles_start_button_not_ready.css"
+    #         styles_path_btn_ready = f"{constants.path_list[1]}/styles/styles_start_button_ready.css"
+    #         styles_path_btn_not_ready = f"{constants.path_list[1]}/styles/styles_start_button_not_ready.css"
     #     elif sys.platform.startswith("linux"):
     #         # Linux path
-    #         styles_path_btn_ready = f"{project_constants.path_list[0]}/styles/styles_start_button_ready.css"
-    #         styles_path_btn_not_ready = f"{project_constants.path_list[0]}/styles/styles_start_button_not_ready.css"
+    #         styles_path_btn_ready = f"{constants.path_list[0]}/styles/styles_start_button_ready.css"
+    #         styles_path_btn_not_ready = f"{constants.path_list[0]}/styles/styles_start_button_not_ready.css"
     #     elif sys.platform.startswith("win32"):
     #         # Windows path
-    #         styles_path_btn_ready = f"{project_constants.path_list[2]}/styles/styles_start_button_ready.css"
-    #         styles_path_btn_not_ready = f"{project_constants.path_list[2]}/styles/styles_start_button_not_ready.css"
+    #         styles_path_btn_ready = f"{constants.path_list[2]}/styles/styles_start_button_ready.css"
+    #         styles_path_btn_not_ready = f"{constants.path_list[2]}/styles/styles_start_button_not_ready.css"
     #
     #     i = 0
     #     j = 0
@@ -828,7 +829,7 @@ class MainWindow(QMainWindow):
                         path = loop_element[0].getAttribute('value')
                         path_split = path.split("/")
                         project_name = path_split[(len(path_split) - 1)]
-                        global_var_project_dict[i] = pyssa.gui.data_structures.project.Project(project_name,
+                        global_var_project_dict[i] = project.Project(project_name,
                                                                                  f"{self.workspace_path}/{job_name}")
                         index = len("project_of_")
                         model_name = project_name[index:]
@@ -840,7 +841,7 @@ class MainWindow(QMainWindow):
             else:
                 # project
                 file_name_file_info = Qt.QtCore.QFileInfo(file_name[0])
-                global_var_project_dict[0] = pyssa.gui.data_structures.project.Project(file_name_file_info.baseName(),
+                global_var_project_dict[0] = project.Project(file_name_file_info.baseName(),
                                                                                        self.workspace_path)
                 global_var_project_dict[0].set_pdb_model(xml_file.getElementsByTagName('pdb_model')[0].getAttribute('value'))
                 # add filename to project list (results tab)
@@ -963,13 +964,13 @@ class MainWindow(QMainWindow):
         # opens the documentation of the os
         if sys.platform.startswith("darwin"):
             # macOS path
-            webbrowser.open_new(f"file://{project_constants.path_list[1]}/docs/pymol_plugin/build/html/index.html")
+            webbrowser.open_new(f"file://{constants.path_list[1]}/docs/pymol_plugin/build/html/index.html")
         elif sys.platform.startswith("linux"):
             # Linux path
-            webbrowser.open_new(f"file://{project_constants.path_list[0]}/docs/pymol_plugin/build/html/index.html")
+            webbrowser.open_new(f"file://{constants.path_list[0]}/docs/pymol_plugin/build/html/index.html")
         elif sys.platform.startswith("win32"):
             # Windows path
-            webbrowser.open_new(f"file://{project_constants.path_list[2]}/docs/pymol_plugin/build/html/index.html")
+            webbrowser.open_new(f"file://{constants.path_list[2]}/docs/pymol_plugin/build/html/index.html")
 
     @staticmethod
     def open_documentation_pdf():
@@ -981,13 +982,13 @@ class MainWindow(QMainWindow):
         # opens the documentation of the os
         if sys.platform.startswith("darwin"):
             # macOS path
-            webbrowser.open_new(f"file://{project_constants.path_list[1]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+            webbrowser.open_new(f"file://{constants.path_list[1]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
         elif sys.platform.startswith("linux"):
             # Linux path
-            webbrowser.open_new(f"file://{project_constants.path_list[0]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+            webbrowser.open_new(f"file://{constants.path_list[0]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
         elif sys.platform.startswith("win32"):
             # Windows path
-            webbrowser.open_new(f"file://{project_constants.path_list[2]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+            webbrowser.open_new(f"file://{constants.path_list[2]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
 
     @staticmethod
     def open_about():
@@ -1011,17 +1012,17 @@ class MainWindow(QMainWindow):
                 # save project folder in current workspace
                 # mkdir project
                 folder_paths = [
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/pdb"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/alignment_files"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/distance_csv"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images/interesting_regions"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_histogram"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_plot"),
-                    Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/sessions/"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/pdb"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/alignment_files"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/distance_csv"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images/interesting_regions"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_histogram"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_plot"),
+                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/sessions/"),
                 ]
                 for path in folder_paths:
                     os.mkdir(path)
@@ -1061,7 +1062,7 @@ class MainWindow(QMainWindow):
             self.ui.txt_new_choose_reference.show()
             self.ui.btn_new_choose_reference.show()
             self.ui.btn_new_create_project.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            styles.color_button_not_ready(self.ui.btn_new_create_project)
             # check internet connectivity
             timeout: float = 3
             try:
@@ -1078,7 +1079,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_new_choose_reference.hide()
             self.ui.lbl_new_status_choose_reference.setText("")
             self.ui.btn_new_create_project.setEnabled(True)
-            styles_utils.color_button_ready(self.ui.btn_new_create_project)
+            styles.color_button_ready(self.ui.btn_new_create_project)
 
     def load_reference_in_project(self):
         """This function loads a reference in a new project
@@ -1096,7 +1097,7 @@ class MainWindow(QMainWindow):
             self.ui.txt_new_choose_reference.setEnabled(False)
             self.ui.txt_new_choose_reference.setStyleSheet("background-color: #33C065")
             self.ui.btn_new_create_project.setEnabled(True)
-            styles_utils.color_button_ready(self.ui.btn_new_create_project)
+            styles.color_button_ready(self.ui.btn_new_create_project)
         except ValueError:
             print("No file has been selected.")
 
@@ -1109,10 +1110,10 @@ class MainWindow(QMainWindow):
             self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
             self.ui.lbl_new_status_choose_reference.setText("")
             self.ui.btn_new_create_project.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            styles.color_button_not_ready(self.ui.btn_new_create_project)
         elif len(self.ui.txt_new_choose_reference.text()) < 4:
             self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
-            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            styles.color_button_not_ready(self.ui.btn_new_create_project)
             self.ui.btn_new_create_project.setEnabled(False)
         # checks if a pdb id was entered
         elif len(self.ui.txt_new_choose_reference.text()) == 4:
@@ -1124,28 +1125,28 @@ class MainWindow(QMainWindow):
                 cmd.reinitialize()
                 self.ui.txt_new_choose_reference.setStyleSheet("background-color: #33C065")
                 self.ui.btn_new_create_project.setEnabled(True)
-                styles_utils.color_button_ready(self.ui.btn_new_create_project)
+                styles.color_button_ready(self.ui.btn_new_create_project)
             # if the id does not exist an exception gets raised
             except pymol.CmdException:
                 self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
-                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                styles.color_button_not_ready(self.ui.btn_new_create_project)
                 return
             except FileNotFoundError:
                 self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
                 self.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
                 self.ui.btn_new_create_project.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                styles.color_button_not_ready(self.ui.btn_new_create_project)
                 return
         else:
             if self.ui.txt_new_choose_reference.text().find("/") == -1:
                 self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
                 self.ui.btn_new_create_project.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                styles.color_button_not_ready(self.ui.btn_new_create_project)
 
             elif self.ui.txt_new_choose_reference.text().find("\\") == -1:
                 self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
                 self.ui.btn_new_create_project.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                styles.color_button_not_ready(self.ui.btn_new_create_project)
 
     def validate_project_name(self):
         """This function validates the input of the project name in real-time
@@ -1161,12 +1162,12 @@ class MainWindow(QMainWindow):
             self.ui.cb_new_add_reference.setCheckable(False)
             self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
             self.ui.btn_new_create_project.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            styles.color_button_not_ready(self.ui.btn_new_create_project)
             return
         elif len(self.ui.txt_new_project_name.text()) > 20:
             self.ui.lbl_new_status_project_name.setText("Project name is too long (max. 20 characters).")
             self.ui.btn_new_create_project.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            styles.color_button_not_ready(self.ui.btn_new_create_project)
             return
         else:
             regex = Qt.QtCore.QRegularExpression()
@@ -1181,14 +1182,14 @@ class MainWindow(QMainWindow):
                     self.ui.cb_new_add_reference.setCheckable(True)
                     self.ui.cb_new_add_reference.setStyleSheet("color: black;")
                     self.ui.btn_new_create_project.setEnabled(True)
-                    styles_utils.color_button_ready(self.ui.btn_new_create_project)
+                    styles.color_button_ready(self.ui.btn_new_create_project)
                 else:
                     self.ui.txt_new_project_name.setStyleSheet("background-color: #FC5457")
                     self.ui.lbl_new_status_project_name.setText("Invalid character.")
                     self.ui.cb_new_add_reference.setCheckable(False)
                     self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
                     self.ui.btn_new_create_project.setEnabled(False)
-                    styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                    styles.color_button_not_ready(self.ui.btn_new_create_project)
                     return
             item = self.ui.list_new_projects.findItems(self.ui.txt_new_project_name.text(),
                                                           Qt.QtCore.Qt.MatchContains |
@@ -1201,12 +1202,12 @@ class MainWindow(QMainWindow):
                 self.ui.cb_new_add_reference.setCheckable(False)
                 self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
                 self.ui.btn_new_create_project.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+                styles.color_button_not_ready(self.ui.btn_new_create_project)
             # else:
             #     self.ui.list_widget_projects.currentItem().setSelected(False)
             #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
             #     self.ui.btn_prediction_next_1.setEnabled(True)
-            #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+            #     styles.color_button_ready(self.ui.btn_prediction_next_1)
             print("Check successful.")
 
     def create_new_project(self):
@@ -1217,23 +1218,23 @@ class MainWindow(QMainWindow):
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
         # save project folder in current workspace
-        new_project = project_utils.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
+        new_project = project.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
         new_project.create_project_tree()
         new_project.save_project_to_xml()
 
         # # mkdir project
         # folder_paths = [
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/pdb"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/alignment_files"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/distance_csv"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images/interesting_regions"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_histogram"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_plot"),
-        #     Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/sessions/"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/pdb"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/alignment_files"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/distance_csv"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images/interesting_regions"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_histogram"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_plot"),
+        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/sessions/"),
         # ]
         # for path in folder_paths:
         #     os.mkdir(path)
@@ -1281,7 +1282,7 @@ class MainWindow(QMainWindow):
                 chains = cmd.get_chains("reference_protein")
             for chain in chains:
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
-            styles_utils.color_button_ready(self.ui.btn_s_v_p_start)
+            styles.color_button_ready(self.ui.btn_s_v_p_start)
             cmd.reinitialize()
             self.ui.btn_s_v_p_start.setEnabled(True)
             # clean up new project page
@@ -1317,14 +1318,14 @@ class MainWindow(QMainWindow):
             #         self.ui.cb_new_add_reference.setCheckable(True)
             #         self.ui.cb_new_add_reference.setStyleSheet("color: black;")
             #         self.ui.btn_new_create_project.setEnabled(True)
-            #         styles_utils.color_button_ready(self.ui.btn_new_create_project)
+            #         styles.color_button_ready(self.ui.btn_new_create_project)
             #     else:
             #         self.ui.txt_open_search.setStyleSheet("background-color: #FC5457")
             #         self.ui.lbl_new_status_project_name.setText("Invalid character.")
             #         self.ui.cb_new_add_reference.setCheckable(False)
             #         self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
             #         self.ui.btn_new_create_project.setEnabled(False)
-            #         styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            #         styles.color_button_not_ready(self.ui.btn_new_create_project)
             #         return
             item = self.ui.list_open_projects.findItems(self.ui.txt_open_search.text(),
                                                           Qt.QtCore.Qt.MatchContains |
@@ -1343,7 +1344,7 @@ class MainWindow(QMainWindow):
             #     self.ui.list_widget_projects.currentItem().setSelected(False)
             #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
             #     self.ui.btn_prediction_next_1.setEnabled(True)
-            #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+            #     styles.color_button_ready(self.ui.btn_prediction_next_1)
             print("Check successful.")
 
     def select_project_from_open_list(self):
@@ -1358,10 +1359,10 @@ class MainWindow(QMainWindow):
         """
         if self.ui.txt_open_selected_project.text() == "":
             self.ui.btn_open_open_project.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_open_open_project)
+            styles.color_button_not_ready(self.ui.btn_open_open_project)
         else:
             self.ui.btn_open_open_project.setEnabled(True)
-            styles_utils.color_button_ready(self.ui.btn_open_open_project)
+            styles.color_button_ready(self.ui.btn_open_open_project)
 
     def open_project(self):
         """This function opens an existing project
@@ -1441,10 +1442,10 @@ class MainWindow(QMainWindow):
         """
         if self.ui.txt_delete_selected_projects.text() == "":
             self.ui.btn_delete_delete_project.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_delete_delete_project)
+            styles.color_button_not_ready(self.ui.btn_delete_delete_project)
         else:
             self.ui.btn_delete_delete_project.setEnabled(True)
-            styles_utils.color_button_ready(self.ui.btn_delete_delete_project)
+            styles.color_button_ready(self.ui.btn_delete_delete_project)
 
     def validate_delete_search(self):
         """This function validates the input of the project name in real-time
@@ -1472,14 +1473,14 @@ class MainWindow(QMainWindow):
             #         self.ui.cb_new_add_reference.setCheckable(True)
             #         self.ui.cb_new_add_reference.setStyleSheet("color: black;")
             #         self.ui.btn_new_create_project.setEnabled(True)
-            #         styles_utils.color_button_ready(self.ui.btn_new_create_project)
+            #         styles.color_button_ready(self.ui.btn_new_create_project)
             #     else:
             #         self.ui.txt_delete_search.setStyleSheet("background-color: #FC5457")
             #         self.ui.lbl_new_status_project_name.setText("Invalid character.")
             #         self.ui.cb_new_add_reference.setCheckable(False)
             #         self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
             #         self.ui.btn_new_create_project.setEnabled(False)
-            #         styles_utils.color_button_not_ready(self.ui.btn_new_create_project)
+            #         styles.color_button_not_ready(self.ui.btn_new_create_project)
             #         return
             item = self.ui.list_delete_projects.findItems(self.ui.txt_delete_search.text(),
                                                           Qt.QtCore.Qt.MatchContains |
@@ -1498,7 +1499,7 @@ class MainWindow(QMainWindow):
             #     self.ui.list_widget_projects.currentItem().setSelected(False)
             #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
             #     self.ui.btn_prediction_next_1.setEnabled(True)
-            #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+            #     styles.color_button_ready(self.ui.btn_prediction_next_1)
             print("Check successful.")
 
     def delete_project(self):
@@ -1550,12 +1551,12 @@ class MainWindow(QMainWindow):
         if len(self.ui.txt_prediction_only_protein_name.text()) == 0:
             self.ui.lbl_prediction_only_status_protein_name.setText("")
             self.ui.btn_prediction_only_next.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+            styles.color_button_not_ready(self.ui.btn_prediction_only_next)
             return
         elif len(self.ui.txt_prediction_only_protein_name.text()) > 20:
             self.ui.lbl_prediction_only_status_protein_name.setText("Project name is too long (max. 20 characters).")
             self.ui.btn_prediction_only_next.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+            styles.color_button_not_ready(self.ui.btn_prediction_only_next)
             return
         else:
             regex = Qt.QtCore.QRegularExpression()
@@ -1568,12 +1569,12 @@ class MainWindow(QMainWindow):
                     self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #33C065")
                     self.ui.lbl_prediction_only_status_protein_name.setText("")
                     self.ui.btn_prediction_only_next.setEnabled(True)
-                    styles_utils.color_button_ready(self.ui.btn_prediction_only_next)
+                    styles.color_button_ready(self.ui.btn_prediction_only_next)
                 else:
                     self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #FC5457")
                     self.ui.lbl_prediction_only_status_protein_name.setText("Invalid character.")
                     self.ui.btn_prediction_only_next.setEnabled(False)
-                    styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+                    styles.color_button_not_ready(self.ui.btn_prediction_only_next)
                     return
 
             print("Check successful.")
@@ -1582,7 +1583,7 @@ class MainWindow(QMainWindow):
         self.ui.lbl_prediction_only_protein_name.setStyleSheet("color: #E1E1E1")
         self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: white")
         self.ui.btn_prediction_only_next.setEnabled(False)
-        styles_utils.color_button_not_ready(self.ui.btn_prediction_only_next)
+        styles.color_button_not_ready(self.ui.btn_prediction_only_next)
         self.ui.txt_prediction_only_protein_name.setEnabled(False)
         self.ui.lbl_prediction_only_choose_notebook.show()
         self.ui.list_new_seq_notebooks.show()
@@ -1592,7 +1593,7 @@ class MainWindow(QMainWindow):
     def hide_prediction_only_choose_notebook(self):
         self.ui.lbl_prediction_only_protein_name.setStyleSheet("color: black")
         self.ui.btn_prediction_only_next.setEnabled(True)
-        styles_utils.color_button_ready(self.ui.btn_prediction_only_next)
+        styles.color_button_ready(self.ui.btn_prediction_only_next)
         self.ui.txt_prediction_only_protein_name.setEnabled(True)
         self.ui.lbl_prediction_only_choose_notebook.hide()
         self.ui.list_new_seq_notebooks.hide()
@@ -1610,13 +1611,13 @@ class MainWindow(QMainWindow):
 
         """
         notebook_name = self.ui.list_new_seq_notebooks.currentItem().text()
-        if notebook_name == project_constants.OFFICIAL_NOTEBOOK_NAME:
-            webbrowser.open_new(project_constants.OFFICIAL_NOTEBOOK_URL)
+        if notebook_name == constants.OFFICIAL_NOTEBOOK_NAME:
+            webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
             self.ui.btn_prediction_only_start.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_prediction_only_start)
+            styles.color_button_not_ready(self.ui.btn_prediction_only_start)
             # alphafold specific process
             archive = "prediction.zip"
-            source_path = global_utils.global_var_settings_obj.get_prediction_path()
+            source_path = global_variables.global_var_settings_obj.get_prediction_path()
             filename = f"{source_path}/{archive}"
             while os.path.isfile(filename) is False:
                 print("Prediction is still running ...")
@@ -1653,11 +1654,11 @@ class MainWindow(QMainWindow):
     #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: #FC5457")
     #     if len(self.ui.txt_prediction_project_name.text()) == 0:
     #         self.ui.btn_prediction_next_1.setEnabled(False)
-    #         styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #         styles.color_button_not_ready(self.ui.btn_prediction_next_1)
     #         return
     #     elif len(self.ui.txt_prediction_project_name.text()) > 20:
     #         self.ui.btn_prediction_next_1.setEnabled(False)
-    #         styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #         styles.color_button_not_ready(self.ui.btn_prediction_next_1)
     #         self.ui.lbl_prediction_status_project_name.setText("Project name is too long (max. 20 characters).")
     #         return
     #     else:
@@ -1670,11 +1671,11 @@ class MainWindow(QMainWindow):
     #             if result[0] > 0:
     #                 self.ui.txt_prediction_project_name.setStyleSheet("background-color: #33C065")
     #                 self.ui.btn_prediction_next_1.setEnabled(True)
-    #                 styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+    #                 styles.color_button_ready(self.ui.btn_prediction_next_1)
     #             else:
     #                 self.ui.txt_prediction_project_name.setStyleSheet("background-color: #FC5457")
     #                 self.ui.btn_prediction_next_1.setEnabled(False)
-    #                 styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #                 styles.color_button_not_ready(self.ui.btn_prediction_next_1)
     #                 self.ui.lbl_prediction_status_project_name.setText("Invalid character.")
     #                 return
     #         item = self.ui.list_widget_projects.findItems(self.ui.txt_prediction_project_name.text(),
@@ -1685,13 +1686,13 @@ class MainWindow(QMainWindow):
     #             self.ui.list_widget_projects.setCurrentItem(item[0])
     #             self.ui.txt_prediction_project_name.setStyleSheet("background-color: #FC5457")
     #             self.ui.btn_prediction_next_1.setEnabled(False)
-    #             styles_utils.color_button_not_ready(self.ui.btn_prediction_next_1)
+    #             styles.color_button_not_ready(self.ui.btn_prediction_next_1)
     #             self.ui.lbl_prediction_status_project_name.setText("Project name already exists.")
     #         # else:
     #         #     self.ui.list_widget_projects.currentItem().setSelected(False)
     #         #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
     #         #     self.ui.btn_prediction_next_1.setEnabled(True)
-    #         #     styles_utils.color_button_ready(self.ui.btn_prediction_next_1)
+    #         #     styles.color_button_ready(self.ui.btn_prediction_next_1)
     #         print("Check successful.")
 
     def show_prediction_load_reference(self):
@@ -1742,7 +1743,7 @@ class MainWindow(QMainWindow):
             self.ui.txt_prediction_load_reference.setEnabled(False)
             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
             self.ui.btn_prediction_next_2.setEnabled(True)
-            styles_utils.color_button_ready(self.ui.btn_prediction_next_2)
+            styles.color_button_ready(self.ui.btn_prediction_next_2)
         except FileNotFoundError:
             self.status_bar.showMessage("Loading the reference failed!")
         except ValueError:
@@ -1756,11 +1757,11 @@ class MainWindow(QMainWindow):
         if len(self.ui.txt_prediction_load_reference.text()) == 0:
             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
             self.ui.btn_prediction_next_2.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+            styles.color_button_not_ready(self.ui.btn_prediction_next_2)
         elif len(self.ui.txt_prediction_load_reference.text()) < 4:
             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
             self.ui.btn_prediction_next_2.setEnabled(False)
-            styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+            styles.color_button_not_ready(self.ui.btn_prediction_next_2)
         # checks if a pdb id was entered
         elif len(self.ui.txt_prediction_load_reference.text()) == 4:
             pdb_id = self.ui.txt_prediction_load_reference.text().upper()
@@ -1771,29 +1772,29 @@ class MainWindow(QMainWindow):
                 cmd.reinitialize()
                 self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
                 self.ui.btn_prediction_next_2.setEnabled(True)
-                styles_utils.color_button_ready(self.ui.btn_prediction_next_2)
+                styles.color_button_ready(self.ui.btn_prediction_next_2)
             # if the id does not exist an exception gets raised
             except pymol.CmdException:
                 self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
                 self.ui.btn_prediction_next_2.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
                 return
             except FileNotFoundError:
                 self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
                 self.ui.btn_prediction_next_2.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
                 self.ui.lbl_prediction_status_load_reference.setText("Invalid PDB ID.")
                 return
         else:
             if self.ui.txt_prediction_load_reference.text().find("/") == -1:
                 self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
                 self.ui.btn_prediction_next_2.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
 
             elif self.ui.txt_prediction_load_reference.text().find("\\") == -1:
                 self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
                 self.ui.btn_prediction_next_2.setEnabled(False)
-                styles_utils.color_button_not_ready(self.ui.btn_prediction_next_2)
+                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
 
     def enable_chain_information_input_for_prediction(self):
         """This function enables the text boxes to enter the chains for the
@@ -1841,7 +1842,7 @@ class MainWindow(QMainWindow):
     #         chains = cmd.get_chains("reference_protein")
     #     for chain in chains:
     #         self.ui.list_widget_ref_chains.addItem(chain)
-    #     styles_utils.color_button_ready(self.ui.btn_prediction_start)
+    #     styles.color_button_ready(self.ui.btn_prediction_start)
     #     cmd.reinitialize()
 
     # def hide_prediction_chain_info_reference(self):
@@ -1890,7 +1891,7 @@ class MainWindow(QMainWindow):
 
     def enable_predict_button(self):
         self.ui.btn_prediction_only_start.setEnabled(True)
-        styles_utils.color_button_ready(self.ui.btn_prediction_only_start)
+        styles.color_button_ready(self.ui.btn_prediction_only_start)
 
     def predict(self):
         """This function opens a webbrowser with a colab notebook, to run the
@@ -1905,30 +1906,30 @@ class MainWindow(QMainWindow):
         # global global_var_abort_prediction
         # global_var_abort_prediction = False
         # check if a prediction is already finished
-        if os.path.isfile(f"{global_utils.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
+        if os.path.isfile(f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
             self.status_bar.showMessage(
                 f"Warning! | Current Workspace: {self.workspace_path}")
             check = gui_utils.warning_message_prediction_exists(
-                f"The prediction is here: {global_utils.global_var_settings_obj.get_prediction_path()}/prediction.zip ",
-                f"{global_utils.global_var_settings_obj.get_prediction_path()}/prediction.zip")
+                f"The prediction is here: {global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip ",
+                f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip")
             if not check:
                 return
         # creates project without xml creation and model adding these come after the prediction
-        project = pyssa.gui.data_structures.project.Project(self.ui.txt_prediction_project_name.text(),
+        project_obj = project.Project(self.ui.txt_prediction_project_name.text(),
                                                             self.workspace_path)
-        project.create_project_tree()
-        project.set_pdb_file(self.ui.txt_prediction_load_reference.text())
-        project.set_pdb_id(self.ui.txt_prediction_load_reference.text())
+        project_obj.create_project_tree()
+        project_obj.set_pdb_file(self.ui.txt_prediction_load_reference.text())
+        project_obj.set_pdb_id(self.ui.txt_prediction_load_reference.text())
         # TODO: check if the new list type conflicts with the analysis
-        project.set_ref_chains(ref_chains)
-        project.set_model_chains((self.ui.txt_prediction_chain_model.text()))
+        project_obj.set_ref_chains(ref_chains)
+        project_obj.set_model_chains((self.ui.txt_prediction_chain_model.text()))
         # gets reference filename and filepath
         if len(self.ui.txt_prediction_load_reference.text()) == 4:
             tmp_protein = core.Protein(self.ui.txt_prediction_load_reference.text(),
-                                       export_data_dir=project.get_pdb_path())
+                                       export_data_dir=project_obj.get_pdb_path())
             tmp_protein.clean_pdb_file()
             REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
-            REFERENCE_DIR = project.get_pdb_path()
+            REFERENCE_DIR = project_obj.get_pdb_path()
         else:
             ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
             REFERENCE_OBJ_NAME = ref_file_info.baseName()
@@ -1936,13 +1937,13 @@ class MainWindow(QMainWindow):
         # starting the default web browser to display the colab notebook
         self.status_bar.showMessage("Opening Google colab notebook ...")
         if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
-            webbrowser.open_new(project_constants.OFFICIAL_NOTEBOOK_URL)
+            webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
         else:
-            webbrowser.open_new(project_constants.NOTEBOOK_URL)
+            webbrowser.open_new(constants.NOTEBOOK_URL)
 
         # # waiting for the colab notebook to finish
         # archive = "prediction.zip"
-        # source_path = global_utils.global_var_settings_obj.get_prediction_path()
+        # source_path = global_variables.global_var_settings_obj.get_prediction_path()
         # FILE_NAME = f"{source_path}/{archive}"
         # # flag = False
         # # while flag == False:
@@ -1961,7 +1962,7 @@ class MainWindow(QMainWindow):
 
         # alphafold specific process
         archive = "prediction.zip"
-        source_path = global_utils.global_var_settings_obj.get_prediction_path()
+        source_path = global_variables.global_var_settings_obj.get_prediction_path()
         filename = f"{source_path}/{archive}"
         while os.path.isfile(filename) is False:
             print("AlphaFold is still running ...")
@@ -1983,15 +1984,15 @@ class MainWindow(QMainWindow):
         #     str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
 
         # gets model filename and filepath
-        PREDICTION_NAME = tools.get_prediction_file_name(project.get_pdb_path())
-        full_model_file_path = f"{project.get_pdb_path()}/{PREDICTION_NAME[0]}"
+        PREDICTION_NAME = tools.get_prediction_file_name(project_obj.get_pdb_path())
+        full_model_file_path = f"{project_obj.get_pdb_path()}/{PREDICTION_NAME[0]}"
         model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
         MODEL_OBJ_NAME = model_file_info.baseName()
         MODEL_DIR = model_file_info.canonicalPath()
 
         # set model in project object
-        project.set_pdb_model(full_model_file_path)
-        project.create_xml_file()
+        project_obj.set_pdb_model(full_model_file_path)
+        project_obj.create_xml_file()
 
         # create the Protein object for the reference
         reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
@@ -1999,18 +2000,18 @@ class MainWindow(QMainWindow):
         # create model Protein object
         model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
         # sets the filepath of the model in the project xml file
-        export_dir = project.get_results_path()
-        structure_analysis = structure_analysis_utils.StructureAnalysis(
+        export_dir = project_obj.get_results_path()
+        structure_analysis_obj = structure_analysis.StructureAnalysis(
             reference_protein, model_proteins,
-            project.get_ref_chains().split(","), project.get_model_chains().split(","),
-            export_dir, cycles=global_utils.global_var_settings_obj.get_cycles(),
-            cutoff=global_utils.global_var_settings_obj.get_cutoff(),
+            project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
+            export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
+            cutoff=global_variables.global_var_settings_obj.get_cutoff(),
         )
-        structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
-                                                         structure_analysis.reference_protein)
-        structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
-                                                         structure_analysis.model_proteins)
-        structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
+        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+                                                         structure_analysis_obj.reference_protein)
+        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+                                                         structure_analysis_obj.model_proteins)
+        structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
                                                 self.status_bar, "2")
 
     # Single Analysis
@@ -2123,25 +2124,25 @@ class MainWindow(QMainWindow):
         MODEL_OBJ_NAME = model_file_info.baseName()
         MODEL_DIR = model_file_info.canonicalPath()
 
-        project = pyssa.gui.data_structures.project.Project(self.ui.txt_analysis_project_name.text(),
+        project_obj = project.Project(self.ui.txt_analysis_project_name.text(),
                                                             self.workspace_path)
-        if project.create_project_tree() is False:
+        if project_obj.create_project_tree() is False:
             self.ui.btn_analysis_start.setEnabled(True)
             return
-        project.set_pdb_file(self.ui.txt_analysis_load_reference.text())
-        project.set_pdb_id(self.ui.txt_analysis_load_reference.text())
-        project.set_pdb_model(self.ui.txt_analysis_load_model.toPlainText())
-        project.set_ref_chains(self.ui.txt_analysis_chain_ref.text())
-        project.set_model_chains((self.ui.txt_analysis_chain_model.text()))
-        project.create_xml_file()
+        project_obj.set_pdb_file(self.ui.txt_analysis_load_reference.text())
+        project_obj.set_pdb_id(self.ui.txt_analysis_load_reference.text())
+        project_obj.set_pdb_model(self.ui.txt_analysis_load_model.toPlainText())
+        project_obj.set_ref_chains(self.ui.txt_analysis_chain_ref.text())
+        project_obj.set_model_chains((self.ui.txt_analysis_chain_model.text()))
+        project_obj.create_xml_file()
 
         # gets reference filename and filepath
         if len(self.ui.txt_analysis_load_reference.text()) == 4:
             tmp_protein = core.Protein(self.ui.txt_analysis_load_reference.text(),
-                                       export_data_dir=project.get_pdb_path())
+                                       export_data_dir=project_obj.get_pdb_path())
             tmp_protein.clean_pdb_file()
             REFERENCE_OBJ_NAME = self.ui.txt_analysis_load_reference.text()
-            REFERENCE_DIR = project.get_pdb_path()
+            REFERENCE_DIR = project_obj.get_pdb_path()
         else:
             ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_analysis_load_reference.text())
             REFERENCE_OBJ_NAME = ref_file_info.baseName()
@@ -2149,21 +2150,21 @@ class MainWindow(QMainWindow):
 
         reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
         model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-        export_dir = project.get_results_path()
-        structure_analysis = structure_analysis_utils.StructureAnalysis(
+        export_dir = project_obj.get_results_path()
+        structure_analysis_obj = structure_analysis.StructureAnalysis(
             reference_protein, model_proteins,
-            project.get_ref_chains().split(","), project.get_model_chains().split(","),
-            export_dir, cycles=global_utils.global_var_settings_obj.get_cycles(),
-            cutoff=global_utils.global_var_settings_obj.get_cutoff(),
+            project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
+            export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
+            cutoff=global_variables.global_var_settings_obj.get_cutoff(),
         )
-        structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
-                                                         structure_analysis.reference_protein)
-        structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
-                                                         structure_analysis.model_proteins)
-        protein_pairs = structure_analysis.create_protein_pairs()
-        structure_analysis.do_analysis_in_pymol(protein_pairs,
+        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+                                                         structure_analysis_obj.reference_protein)
+        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+                                                         structure_analysis_obj.model_proteins)
+        protein_pairs = structure_analysis_obj.create_protein_pairs()
+        structure_analysis_obj.do_analysis_in_pymol(protein_pairs,
                                                 self.status_bar, self.ui.progress_bar_analysis)
-        del structure_analysis
+        del structure_analysis_obj
 
     # Batch
     def load_reference_for_batch(self):
@@ -2246,62 +2247,62 @@ class MainWindow(QMainWindow):
         """
         self.__check_start_possibility_batch()
 
-    def start_process_batch(self):
-        """This function contains the main analysis algorithm for the
-        Protein structure comparison.
-
-        """
-        self.status_bar.showMessage("Checking user input ...")
-        job = job_utils.Job(self.ui.txt_batch_job_name.text(), self.workspace_path)
-        raw_models_input = self.ui.txt_batch_load_model.toPlainText()
-        models = raw_models_input.split("\n")
-
-        # runs analysis with project creation
-        for model in models:
-            cmd.reinitialize()
-            model_file_info = Qt.QtCore.QFileInfo(model)
-            MODEL_OBJ_NAME = model_file_info.baseName()
-            MODEL_DIR = model_file_info.canonicalPath()
-
-            project = pyssa.gui.data_structures.project.Project(f"project_of_{MODEL_OBJ_NAME}",
-                                                  f"{self.workspace_path}/{job.get_job_name()}")
-            project.create_project_tree()
-            project.set_job_name(job.get_job_name())
-            project.set_pdb_file(self.ui.txt_batch_load_reference.text())
-            project.set_pdb_id(self.ui.txt_batch_load_reference.text())
-            project.set_pdb_model(MODEL_OBJ_NAME)
-            project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
-            project.set_model_chains((self.ui.txt_batch_chain_model.text()))
-            project.create_xml_file()
-            job.add_project_to_job(project)
-
-            # gets reference filename and filepath
-            if len(self.ui.txt_batch_load_reference.text()) == 4:
-                tmp_protein = core.Protein(self.ui.txt_batch_load_reference.text(),
-                                           export_data_dir=project.get_pdb_path())
-                tmp_protein.clean_pdb_file()
-                REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
-                REFERENCE_DIR = project.get_pdb_path()
-            else:
-                ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
-                REFERENCE_OBJ_NAME = ref_file_info.baseName()
-                REFERENCE_DIR = ref_file_info.canonicalPath()
-            reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-            model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-            export_dir = project.get_results_path()
-            structure_analysis = structure_analysis_utils.StructureAnalysis(
-                reference_protein, model_proteins,
-                project.get_ref_chains().split(","), project.get_model_chains().split(","),
-                export_dir, cycles=global_utils.global_var_settings_obj.get_cycles(),
-                cutoff=global_utils.global_var_settings_obj.get_cutoff(),
-            )
-            structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
-                                                             structure_analysis.reference_protein)
-            structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
-                                                             structure_analysis.model_proteins)
-            structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
-                                                    self.status_bar, self.ui.progress_bar_batch)
-        job.create_xml_file()
+    # def start_process_batch(self):
+    #     """This function contains the main analysis algorithm for the
+    #     Protein structure comparison.
+    #
+    #     """
+    #     self.status_bar.showMessage("Checking user input ...")
+    #     job = job_utils.Job(self.ui.txt_batch_job_name.text(), self.workspace_path)
+    #     raw_models_input = self.ui.txt_batch_load_model.toPlainText()
+    #     models = raw_models_input.split("\n")
+    #
+    #     # runs analysis with project creation
+    #     for model in models:
+    #         cmd.reinitialize()
+    #         model_file_info = Qt.QtCore.QFileInfo(model)
+    #         MODEL_OBJ_NAME = model_file_info.baseName()
+    #         MODEL_DIR = model_file_info.canonicalPath()
+    #
+    #         project = project.Project(f"project_of_{MODEL_OBJ_NAME}",
+    #                                               f"{self.workspace_path}/{job.get_job_name()}")
+    #         project.create_project_tree()
+    #         project.set_job_name(job.get_job_name())
+    #         project.set_pdb_file(self.ui.txt_batch_load_reference.text())
+    #         project.set_pdb_id(self.ui.txt_batch_load_reference.text())
+    #         project.set_pdb_model(MODEL_OBJ_NAME)
+    #         project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
+    #         project.set_model_chains((self.ui.txt_batch_chain_model.text()))
+    #         project.create_xml_file()
+    #         job.add_project_to_job(project)
+    #
+    #         # gets reference filename and filepath
+    #         if len(self.ui.txt_batch_load_reference.text()) == 4:
+    #             tmp_protein = core.Protein(self.ui.txt_batch_load_reference.text(),
+    #                                        export_data_dir=project.get_pdb_path())
+    #             tmp_protein.clean_pdb_file()
+    #             REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
+    #             REFERENCE_DIR = project.get_pdb_path()
+    #         else:
+    #             ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
+    #             REFERENCE_OBJ_NAME = ref_file_info.baseName()
+    #             REFERENCE_DIR = ref_file_info.canonicalPath()
+    #         reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+    #         model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
+    #         export_dir = project.get_results_path()
+    #         structure_analysis = structure_analysis.StructureAnalysis(
+    #             reference_protein, model_proteins,
+    #             project.get_ref_chains().split(","), project.get_model_chains().split(","),
+    #             export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
+    #             cutoff=global_variables.global_var_settings_obj.get_cutoff(),
+    #         )
+    #         structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
+    #                                                          structure_analysis.reference_protein)
+    #         structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
+    #                                                          structure_analysis.model_proteins)
+    #         structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
+    #                                                 self.status_bar, self.ui.progress_bar_batch)
+    #     job.create_xml_file()
 
     # Results
     def change_interesting_regions(self):
@@ -2382,9 +2383,9 @@ class MainWindow(QMainWindow):
         """
         file_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results"
         model_name = self.ui.lbl_current_project_name.text()
-        global_utils.global_var_tmp_project_info.clear()
-        global_utils.global_var_tmp_project_info.append(file_path)
-        global_utils.global_var_tmp_project_info.append(model_name)
+        global_variables.global_var_tmp_project_info.clear()
+        global_variables.global_var_tmp_project_info.append(file_path)
+        global_variables.global_var_tmp_project_info.append(model_name)
 
         dialog = dialog_distance_plot.DialogDistancePlot()
         dialog.exec_()
@@ -2409,7 +2410,7 @@ class MainWindow(QMainWindow):
         #         cleaned_line = line.replace("\n", "")
         #         if cleaned_line.split(",")[8] != 'distance':
         #             distance_list.append(float(cleaned_line.split(",")[8]))
-        #             cutoff_line.append(global_utils.global_var_settings_obj.get_cutoff())
+        #             cutoff_line.append(global_variables.global_var_settings_obj.get_cutoff())
         # # creates actual distance plot line
         # graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
         #                            symbol="o", symbolSize=10, symbolBrush=('b'))
@@ -2744,7 +2745,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    with open('gui/styles/styles.css', 'r', encoding="utf-8") as file:
+    with open(os.path.join(global_variables.global_var_root_dir, "gui", "styles", "styles.css"), 'r', encoding="utf-8") as file:
         style = file.read()
         # Set the stylesheet of the application
         app.setStyleSheet(style)

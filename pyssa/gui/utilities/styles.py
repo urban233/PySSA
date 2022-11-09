@@ -20,6 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all styles related functions"""
+import os
+from pyssa.gui.utilities import global_variables
 
 
 def color_button_ready(button):
@@ -29,7 +31,7 @@ def color_button_ready(button):
         button:
             button ui element
     """
-    with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
+    with open(os.path.join(global_variables.global_var_root_dir, "gui", "styles", "styles_start_button_ready.css"), 'r') as style_sheet_file:
         button_style = style_sheet_file.read()
         # Set the stylesheet of the application
         button.setStyleSheet(button_style)
@@ -42,7 +44,7 @@ def color_button_not_ready(button):
         button:
             button ui element
     """
-    with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
+    with open(os.path.join(global_variables.global_var_root_dir, "gui", "styles", "styles_start_button_not_ready.css"), 'r') as style_sheet_file:
         button_style = style_sheet_file.read()
         # Set the stylesheet of the application
         button.setStyleSheet(button_style)
