@@ -63,11 +63,13 @@ QLabel#lbl_current_project_name {
 }
 
 QFrame#side_menu {
-    background: #E9E9F0;
+    /*background: #E9E9F0;*/
+    background: #F6F4F8;
 }
 
 QLabel#lbl_project {
-    background: #E9E9F0;
+    /*background: #E9E9F0;*/
+    background: #F6F4F8;
     color: #969696;
     font: bold;
 }
@@ -344,6 +346,138 @@ QPushButton::pressed#btn_save_project {
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
 }
 
+/* Button for "Edit" */
+QPushButton#btn_edit_page {
+    background-color: #E9E9F0;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_edit_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_edit_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_edit_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "View" */
+QPushButton#btn_view_page {
+    background-color: #E9E9F0;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_view_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_view_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_view_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "Use" */
+QPushButton#btn_use_page {
+    background-color: #E9E9F0;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_use_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_use_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_use_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "Close" */
+QPushButton#btn_close_project {
+    background-color: #E9E9F0;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_close_project {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_close_project {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_close_project {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
 /* Button for "Prediction" */
 QPushButton#btn_prediction_only_page {
     background-color: #E9E9F0;
@@ -388,6 +522,16 @@ QLabel#lbl_prediction_only_status_protein_name {
 }
 
 QLineEdit#txt_prediction_only_protein_name {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #DCDBE3;
+    min-width: 6em;
+    padding: 1px;
+}
+
+QLineEdit#txt_cloud_pred_mono_prot_seq {
     background-color: white;
     border-style: solid;
     border-width: 2px;
@@ -615,6 +759,39 @@ QPushButton::focus#btn_results_page {
 }
 
 QPushButton::pressed#btn_results_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "Cloud Multimer" */
+QPushButton#btn_new_page {
+    background-color: #E9E9F0;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_new_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_new_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_new_page {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0 #276cea, stop: 0.4 #0047c8,
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);

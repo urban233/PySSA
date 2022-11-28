@@ -28,26 +28,36 @@ import sys
 import time
 import webbrowser
 import pathlib
-from xml.dom import minidom
-
 import PyQt5.QtCore
 import numpy as np
 import pymol
 import pyqtgraph as pg
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import *
-from PyQt5.QtWidgets import QHBoxLayout
+
 from pymol import Qt
 from pymol import cmd
+# TODO: fix import statements so that they do not import a class!
 from urllib.request import urlopen
 from urllib.error import URLError
+from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5 import QtWebEngineWidgets
 
+from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.data_structures import project
 from pyssa.gui.data_structures import structure_analysis
-from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.gui.ui.dialogs import dialog_distance_plot, dialog_startup, dialog_about, dialog_add_models, dialog_add_model
+from pyssa.gui.ui.dialogs import dialog_distance_plot
+from pyssa.gui.ui.dialogs import dialog_startup
+from pyssa.gui.ui.dialogs import dialog_about
+from pyssa.gui.ui.dialogs import dialog_add_models
+from pyssa.gui.ui.dialogs import dialog_add_model
+from pyssa.gui.ui.dialogs import web_interface
+from pyssa.gui.utilities import gui_utils
+from pyssa.gui.utilities import tools
+from pyssa.gui.utilities import constants
+from pyssa.gui.utilities import global_variables
+from pyssa.gui.utilities import styles
 from pymolproteintools import core
-from pyssa.gui.utilities import gui_utils, tools, constants, global_variables, styles
 # from tmp_storage import job_utils
 
 # setup logger
@@ -70,6 +80,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.ui.lbl_page_title.setText("Home")
         self.setMinimumWidth(550)
+        self._init_side_menu()
 
         # checks if the plugin launched for the first time
         if global_variables.global_var_settings_obj.get_app_launch() == 0:
@@ -118,90 +129,30 @@ class MainWindow(QMainWindow):
         # startup_dialog = dialog_startup.DialogStartup()
         # startup_dialog.exec_()
 
-        self.scratch_path = f"{constants.SETTINGS_DIR}/scratch"
+        self.scratch_path = constants.SCRATCH_DIR
         tools.create_directory(constants.SETTINGS_DIR, "scratch")
 
-        self.ui.action_add_model.setVisible(False)
-        self.ui.action_add_multiple_models.setVisible(False)
-        self.ui.action_file_save_as.setVisible(False)
-
-        self.ui.btn_s_v_p_start.setEnabled(False)
-        self.ui.btn_prediction_only_start.setEnabled(False)
-        self.ui.lbl_current_project_name.setText("")
-        self.ui.btn_new_create_project.setEnabled(False)
-        self.ui.cb_new_add_reference.setCheckable(False)
-        self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
-        self.ui.txt_open_search.textChanged.connect(self.validate_open_search)
-        self.ui.lbl_open_status_search.setText("")
-        self.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
-        self.ui.lbl_delete_status_search.setText("")
-        self.ui.btn_open_open_project.setEnabled(False)
-        self.ui.txt_open_selected_project.textChanged.connect(self.activate_open_button)
-        self.ui.list_open_projects.currentItemChanged.connect(self.select_project_from_open_list)
-        self.ui.btn_delete_delete_project.setEnabled(False)
-        self.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
-        self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
-        self.ui.list_s_v_p_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.ui.btn_prediction_only_next.setEnabled(False)
-        self.ui.lbl_prediction_only_status_protein_name.setText("")
+        self._setup_default_configuration()
 
         self.ui.list_new_seq_notebooks.addItem(constants.OFFICIAL_NOTEBOOK_NAME)
         self.ui.list_new_seq_notebooks.currentItemChanged.connect(self.enable_predict_button)
-
-        self.ui.btn_new_create_project.clicked.connect(self.create_new_project)
-        self.ui.btn_delete_delete_project.clicked.connect(self.delete_project)
-        self.ui.btn_open_open_project.clicked.connect(self.open_project)
-        self.ui.list_open_projects.doubleClicked.connect(self.open_project)
-        self.ui.btn_save_project.clicked.connect(self.save_project)
-        self.ui.action_add_multiple_models.triggered.connect(self.open_add_models)
-        self.ui.action_add_model.triggered.connect(self.open_add_model)
-        self.ui.btn_analysis_next.clicked.connect(self.analysis_next_step)
-        self.ui.btn_analysis_back.clicked.connect(self.analysis_back_step)
-        self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_protein_name)
-        self.ui.btn_prediction_only_next.clicked.connect(self.show_prediction_only_choose_notebook)
-        self.ui.txt_prediction_only_protein_name.returnPressed.connect(self.show_prediction_only_choose_notebook)
-        self.ui.btn_prediction_only_back.clicked.connect(self.hide_prediction_only_choose_notebook)
-
-        self.ui.lbl_analysis_model_chains.hide()
-        self.ui.list_analysis_model_chains.hide()
-        self.ui.btn_analysis_back.hide()
-        self.ui.btn_analysis_start.hide()
 
         # setup defaults for pages
         self._init_hide_ui_elements()
         self._init_fill_combo_boxes()
         self._init_new_page()
         self._init_new_sequence_page()
-        self._init_sequence_vs_pdb_page()
+        # self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_batch_page()
 
         # connections
-        self._connect_sidebar_buttons()
-        self._connect_menu_entries()
-        self._connect_new_buttons()
-        self._connect_new_sequence_buttons()
-        self._connect_sequence_vs_pdb_buttons()
-        self._connect_single_analysis_buttons()
-        self._connect_batch_buttons()
-        self._connect_results_buttons()
-        self._connect_image_buttons()
-
-        self._connect_new_text_input()
-        self._connect_batch_text_fields()
-
-        self._connect_image_combo_boxes()
-
-        self._connect_new_checkbox()
-        self._connect_batch_checkbox()
-        self._connect_image_checkbox()
-
+        self._connect_all_gui_elements()
         # create tooltips
-        self._create_tooltips_sequence_vs_pdb()
-        self._create_tooltips_single_analysis()
-        self._create_tooltips_batch()
-        self._create_tooltips_image()
+        self._create_all_tooltips()
 
+        self.number_of_pdb_files = None
+        self._configuration()
         # setting additional parameters
         self.setWindowTitle("PySSA v0.9.2")
 
@@ -214,6 +165,246 @@ class MainWindow(QMainWindow):
         self.workspace_path = global_variables.global_var_settings_obj.get_workspace_path()
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar.showMessage(self.workspace.text())
+
+    def _setup_default_configuration(self):
+        self.ui.lbl_current_project_name.setText("")
+        # menu
+        self.ui.action_add_model.setVisible(False)
+        self.ui.action_add_multiple_models.setVisible(False)
+        self.ui.action_file_save_as.setVisible(False)
+        # side menu
+
+        # new project page
+        self.ui.btn_new_create_project.setEnabled(False)
+        self.ui.cb_new_add_reference.setCheckable(False)
+        self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
+        # open project page
+        self.ui.lbl_open_status_search.setText("")
+        self.ui.btn_open_open_project.setEnabled(False)
+        # delete project page
+        self.ui.lbl_delete_status_search.setText("")
+        self.ui.btn_delete_delete_project.setEnabled(False)
+        # edit project page
+
+        # view project page
+
+        # use project page
+
+        # new sequence page
+        self.ui.btn_prediction_only_start.setEnabled(False)
+        self.ui.btn_prediction_only_next.setEnabled(False)
+        self.ui.lbl_prediction_only_status_protein_name.setText("")
+        # sequence vs .pdb page
+        self.ui.btn_s_v_p_start.setEnabled(False)
+        self.ui.list_s_v_p_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        # single analysis page
+        self.ui.lbl_analysis_model_chains.hide()
+        self.ui.list_analysis_model_chains.hide()
+        self.ui.btn_analysis_back.hide()
+        self.ui.btn_analysis_start.hide()
+        # batch analysis page
+
+        # results page
+
+        # image page
+
+    def _configuration(self):
+        if self.number_of_pdb_files is None:
+            self.ui.btn_new_page.show()
+            self.ui.btn_open_page.show()
+            self.ui.btn_delete_page.show()
+        elif self.number_of_pdb_files == 0:
+            self.ui.btn_new_page.hide()
+            self.ui.btn_open_page.hide()
+            self.ui.btn_delete_page.hide()
+            self.ui.btn_prediction_only_page.show()
+            self.ui.btn_close_project.show()
+            self.ui.btn_use_page.show()
+            self.ui.btn_edit_page.show()
+        elif self.number_of_pdb_files == 1:
+            # hide project management
+            self.ui.btn_new_page.hide()
+            self.ui.btn_open_page.hide()
+            self.ui.btn_delete_page.hide()
+            # number of pdb files specific
+            self.ui.btn_prediction_page.show()
+            self.ui.btn_image_page.show()
+            # show project management
+            self.ui.btn_save_project.show()
+            self.ui.btn_close_project.show()
+            self.ui.btn_use_page.show()
+            self.ui.btn_edit_page.show()
+        elif self.number_of_pdb_files == 2:
+            # hide project management
+            self.ui.btn_new_page.hide()
+            self.ui.btn_open_page.hide()
+            self.ui.btn_delete_page.hide()
+            # number of pdb files specific
+            self.ui.btn_single_analysis_page.show()
+            self.ui.btn_image_page.show()
+            # show project management
+            self.ui.btn_save_project.show()
+            self.ui.btn_close_project.show()
+            self.ui.btn_use_page.show()
+            self.ui.btn_edit_page.show()
+        elif self.number_of_pdb_files > 2:
+            # hide project management
+            self.ui.btn_new_page.hide()
+            self.ui.btn_open_page.hide()
+            self.ui.btn_delete_page.hide()
+            # number of pdb files specific
+            self.ui.btn_single_analysis_page.show()
+            self.ui.btn_job_analysis_page.show()
+            self.ui.btn_image_page.show()
+            # show project management
+            self.ui.btn_save_project.show()
+            self.ui.btn_close_project.show()
+            self.ui.btn_use_page.show()
+            self.ui.btn_edit_page.show()
+
+    def _connect_all_gui_elements(self):
+        """This function connects all gui elements with their corresponding slots
+
+        """
+        # menu
+        self.ui.action_file_quit.triggered.connect(self.quit_app)
+        self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
+        self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
+        self.ui.action_add_multiple_models.triggered.connect(self.open_add_models)
+        self.ui.action_add_model.triggered.connect(self.open_add_model)
+        self.ui.action_help_docs.triggered.connect(self.open_documentation)
+        self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation_pdf)
+        self.ui.action_help_about.triggered.connect(self.open_about)
+        # side menu
+        self.ui.btn_new_page.clicked.connect(self.display_new_page)
+        self.ui.btn_open_page.clicked.connect(self.display_open_page)
+        self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
+        self.ui.btn_save_project.clicked.connect(self.save_project)
+        self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
+        self.ui.btn_close_project.clicked.connect(self.close_project)
+        self.ui.btn_prediction_only_page.clicked.connect(self.display_prediction_only_page)
+        self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
+        self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
+        self.ui.btn_job_analysis_page.clicked.connect(self.display_job_analysis_page)
+        self.ui.btn_results_page.clicked.connect(self.display_results_page)
+        self.ui.btn_image_page.clicked.connect(self.display_image_page)
+        # new project page
+        self.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
+        self.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
+        self.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
+        self.ui.cb_new_add_reference.stateChanged.connect(self.show_add_reference)
+        self.ui.btn_new_create_project.clicked.connect(self.create_new_project)
+        # open project page
+        self.ui.btn_open_open_project.clicked.connect(self.open_project)
+        self.ui.list_open_projects.doubleClicked.connect(self.open_project)
+        self.ui.txt_open_search.textChanged.connect(self.validate_open_search)
+        self.ui.txt_open_selected_project.textChanged.connect(self.activate_open_button)
+        self.ui.list_open_projects.currentItemChanged.connect(self.select_project_from_open_list)
+        # delete project page
+        self.ui.btn_delete_delete_project.clicked.connect(self.delete_project)
+        self.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
+        self.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
+        self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
+        # edit project page
+
+        # view project page
+
+        # use project page
+
+        # new sequence page
+        self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_protein_name)
+        self.ui.btn_prediction_only_next.clicked.connect(self.show_cloud_prediction_mono_protein_sequence)
+        self.ui.txt_prediction_only_protein_name.returnPressed.connect(self.show_cloud_prediction_mono_protein_sequence)
+        self.ui.btn_cloud_pred_mono_back.clicked.connect(self.hide_cloud_prediction_mono_protein_sequence)
+        self.ui.txt_cloud_pred_mono_prot_seq.textChanged.connect(self.validate_protein_sequence)
+        self.ui.btn_cloud_pred_mono_next_2.clicked.connect(self.show_prediction_only_choose_notebook)
+        self.ui.btn_prediction_only_back.clicked.connect(self.hide_prediction_only_choose_notebook)
+        self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
+        # sequence vs .pdb page
+        self.ui.btn_s_v_p_start.clicked.connect(self.predict)
+        # single analysis page
+        self.ui.btn_analysis_start.clicked.connect(self.start_process)
+        self.ui.btn_analysis_next.clicked.connect(self.analysis_next_step)
+        self.ui.btn_analysis_back.clicked.connect(self.analysis_back_step)
+        # batch analysis page
+        self.ui.btn_batch_load_reference.clicked.connect(self.load_reference_for_batch)
+        self.ui.btn_batch_load_model.clicked.connect(self.load_model_for_batch)
+        self.ui.txt_batch_job_name.textChanged.connect(
+            self.check_batch_if_txt_batch_job_name_is_filled)
+        self.ui.txt_batch_chain_ref.textChanged.connect(
+            self.check_batch_if_txt_batch_chain_ref_is_filled)
+        self.ui.txt_batch_chain_model.textChanged.connect(
+            self.check_batch_if_txt_batch_chain_model_is_filled)
+        self.ui.cb_batch_chain_info.stateChanged.connect(
+            self.enable_chain_information_input_for_batch)
+        # results page
+        self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
+        self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
+        self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
+        # self.ui.btn_view_interesting_region.clicked.connect(self.tmp_dialog_change)
+        self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
+        # image page
+        self.ui.btn_update_scene.clicked.connect(self.update_scene)
+        self.ui.btn_save_scene.clicked.connect(self.save_scene)
+        self.ui.btn_save_image.clicked.connect(self.save_image)
+        self.ui.btn_preview_image.clicked.connect(self.preview_image)
+        self.ui.box_representation.activated.connect(self.show_representation)
+        self.ui.box_bg_color.activated.connect(self.choose_bg_color)
+        self.ui.box_renderer.activated.connect(self.choose_renderer)
+        self.ui.box_ray_trace_mode.activated.connect(self.choose_ray_trace_mode)
+        self.ui.box_ray_texture.activated.connect(self.choose_ray_texture)
+        self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
+
+    def _create_all_tooltips(self):
+        # menu
+
+        # side menu
+
+        # new project page
+
+        # open project page
+
+        # delete project page
+
+        # edit project page
+
+        # view project page
+
+        # use project page
+
+        # new sequence page
+
+        # sequence vs .pdb page
+        self.ui.btn_prediction_load_reference.setToolTip("Open reference pdb file")
+        self.ui.btn_prediction_start.setToolTip("Predict with Colab Notebook")
+        self.ui.txt_prediction_load_reference.setToolTip("Reference file path")
+        # self.ui.txt_prediction_chain_ref.setToolTip("Enter chain(s) of reference")
+        self.ui.txt_prediction_chain_model.setToolTip("Enter chain(s) of model")
+        # single analysis page
+        self.ui.btn_analysis_start.setToolTip("Start analysis process")
+        self.status_bar.setToolTip("Status information: Current process")
+        # batch analysis page
+        self.ui.btn_batch_load_reference.setToolTip("Open reference pdb file")
+        self.ui.btn_batch_load_model.setToolTip("Open model pdb files")
+        self.ui.btn_batch_start.setToolTip("Start batch process")
+        self.ui.txt_batch_load_reference.setToolTip("Reference file path")
+        self.ui.txt_batch_load_model.setToolTip("Model file paths")
+        self.ui.txt_batch_chain_ref.setToolTip("Enter chain(s) of reference")
+        self.ui.txt_batch_chain_model.setToolTip("Enter chain(s) of models")
+        self.ui.cb_batch_chain_info.setToolTip("Enable input of chains")
+        self.status_bar.setToolTip("Status information: Current process")
+        # results page
+
+        # image page
+        self.ui.btn_save_scene.setToolTip("Create new PyMOL scene")
+        self.ui.btn_update_scene.setToolTip("Overwrite current scene")
+        self.ui.btn_save_image.setToolTip("Save current viewpoint as png file")
+        self.ui.cb_ray_tracing.setToolTip("Enable ray-tracing")
+        self.ui.cb_transparent_bg.setToolTip("Enable transparent background")
+        self.ui.box_representation.setToolTip("Choose a representation")
+        self.ui.box_bg_color.setToolTip("Choose a background color")
+        self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
+        self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
 
     def _init_hide_ui_elements(self):
         """This function hides all UI elements which need to be hidden during the
@@ -290,42 +481,142 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
 
+    def _init_side_menu(self):
+        self.ui.btn_new_page.show()
+        self.ui.btn_open_page.show()
+        self.ui.btn_delete_page.show()
+        self.ui.btn_save_project.hide()
+        self.ui.btn_edit_page.hide()
+        self.ui.btn_view_page.hide()
+        self.ui.btn_use_page.hide()
+        self.ui.btn_close_project.hide()
+
+    def _init_project_management(self):
+        # hide
+        self.ui.btn_new_page.hide()
+        self.ui.btn_open_page.hide()
+        self.ui.btn_delete_page.hide()
+        # show
+        self.ui.btn_save_project.show()
+        self.ui.btn_edit_page.show()
+        self.ui.btn_view_page.show()
+        self.ui.btn_use_page.show()
+        self.ui.btn_close_project.show()
+
     def _init_new_page(self):
+        """This function clears all text fields and hides everything which is needed
+
+        """
         self.ui.lbl_new_status_project_name.setText("")
         self.ui.lbl_new_status_choose_reference.setText("")
 
     def _init_new_sequence_page(self):
+        """This function clears all text fields and hides everything which is needed
+
+        """
+        # clears everything
+        self.ui.txt_prediction_only_protein_name.clear()
+        self.ui.txt_cloud_pred_mono_prot_seq.clear()
         # sets up defaults: Prediction
         self.ui.btn_prediction_only_start.setEnabled(False)
-        self.ui.lbl_prediction_only_choose_notebook.hide()
-        self.ui.list_new_seq_notebooks.hide()
-        self.ui.btn_prediction_only_back.hide()
-        self.ui.btn_prediction_only_start.hide()
+        self.ui.btn_cloud_pred_mono_next_2.setEnabled(False)
+        self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("")
+
+        gui_elements = [
+            self.ui.lbl_cloud_pred_mono_prot_seq,
+            self.ui.txt_cloud_pred_mono_prot_seq,
+            self.ui.lbl_cloud_pred_mono_status_prot_seq,
+            self.ui.btn_cloud_pred_mono_back,
+            self.ui.btn_cloud_pred_mono_next_2,
+            self.ui.lbl_prediction_only_choose_notebook,
+            self.ui.list_new_seq_notebooks,
+            self.ui.lbl_cloud_pred_mono_advanced_config,
+            self.ui.btn_cloud_pred_mono_advanced_config,
+            self.ui.btn_prediction_only_back,
+            self.ui.btn_prediction_only_start,
+        ]
+        gui_utils.hide_gui_elements(gui_elements)
 
     def _init_sequence_vs_pdb_page(self):
-        # sets up defaults: Prediction + Analysis
-        self.ui.label_18.hide()
-        self.ui.txt_prediction_project_name.hide()
-        self.ui.lbl_prediction_status_project_name.hide()
-        self.ui.list_widget_projects.hide()
-        self.ui.btn_prediction_next_1.hide()
+        """This function clears all text fields and hides everything which is needed
 
-        self.ui.lbl_prediction_ref_chains.show()
-        self.ui.list_widget_ref_chains.show()
-        self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
-                                                     "border-width: 2px;"
-                                                     "border-radius: 8px;"
-                                                     "border-color: #DCDBE3;")
-        self.ui.btn_prediction_start.show()
-        self.ui.btn_prediction_start.setEnabled(False)
-        self.ui.btn_prediction_next_1.setEnabled(False)
-        self.ui.list_widget_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.ui.lbl_prediction_status_project_name.setText("")
-        self.ui.lbl_prediction_status_load_reference.setText("")
+        """
+        self.ui.list_s_v_p_ref_chains.clear()
+
+
+        # # sets up defaults: Prediction + Analysis
+        #
+        # #self.ui.label_18.hide()
+        # #self.ui.txt_prediction_project_name.hide()
+        # #self.ui.lbl_prediction_status_project_name.hide()
+        # # stage 1
+        # self.ui.lbl_prediction_status_project_name.setText("")
+        #
+        # #self.ui.list_widget_projects.hide()
+        # #self.ui.btn_prediction_next_1.hide()
+        # # stage 2
+        # self.ui.lbl_prediction_load_reference.hide()
+        # self.ui.txt_prediction_load_reference.clear()
+        # self.ui.txt_prediction_load_reference.hide()
+        # self.ui.lbl_prediction_status_load_reference.setText("")
+        # self.ui.btn_prediction_back_2.setEnabled(False)
+        # self.ui.btn_prediction_back_2.hide()
+        # self.ui.btn_prediction_next_2.setEnabled(False)
+        # self.ui.btn_prediction_next_2.hide()
+        #
+        # # stage 3
+        # self.ui.lbl_prediction_ref_chains.hide()
+        # self.ui.list_widget_ref_chains.hide()
+        # # TODO: stylesheet needs to be integrated into the styles.css
+        # self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
+        #                                              "border-width: 2px;"
+        #                                              "border-radius: 8px;"
+        #                                              "border-color: #DCDBE3;")
+        # self.ui.list_widget_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        # self.ui.btn_prediction_back_3.setEnabled(False)
+        # self.ui.btn_prediction_back_3.hide()
+        # self.ui.btn_prediction_start.setEnabled(False)
+        # self.ui.btn_prediction_start.hide()
+        # # TODO: needs to be removed if model chains are implemented at the right spot
+        # self.ui.lbl_prediction_model_chains.hide()
+        # self.ui.txt_prediction_chain_model.hide()
 
     def _init_single_analysis_page(self):
-        # sets up defaults: Single Analysis
+        """This function clears all text fields and hides everything which is needed
+
+        """
+        # stage 1
+        self.ui.list_analysis_ref_chains.clear()
+        self.ui.btn_analysis_next.setEnabled(False)
+        self.ui.btn_analysis_next.show()
+        # stage 2
+        self.ui.lbl_analysis_model_chains.hide()
+        self.ui.list_analysis_model_chains.clear()
+        self.ui.list_analysis_model_chains.hide()
+        self.ui.btn_analysis_back.setEnabled(False)
+        self.ui.btn_analysis_back.hide()
         self.ui.btn_analysis_start.setEnabled(False)
+        self.ui.btn_analysis_start.hide()
+
+    def _init_results_page(self):
+        """This function clears all text fields and hides everything which is needed
+
+        """
+        # stage 1
+        self.ui.list_results_interest_regions.clear()
+
+    def _init_image_page(self):
+        """This function clears all text fields and hides everything which is needed
+
+        """
+        # stage 1
+        self.ui.box_representation.setCurrentIndex(0)
+        self.ui.box_bg_color.setCurrentIndex(0)
+        self.ui.box_renderer.setCurrentIndex(0)
+        self.ui.box_ray_trace_mode.setCurrentIndex(0)
+        self.ui.box_ray_texture.setCurrentIndex(0)
+        self.ui.cb_ray_tracing.setChecked(False)
+        self.ui.cb_transparent_bg.setChecked(False)
 
     def _init_batch_page(self):
         # sets up defaults: Batch
@@ -333,163 +624,6 @@ class MainWindow(QMainWindow):
         self.ui.txt_batch_chain_model.setEnabled(False)
         self.ui.btn_batch_start.setEnabled(False)
         self.ui.progress_bar_batch.setProperty("value", 0)
-
-    def _connect_sidebar_buttons(self):
-        """This function connects all buttons on the sidebar
-        to their slots
-
-        """
-        self.ui.btn_new_page.clicked.connect(self.display_new_page)
-        self.ui.btn_open_page.clicked.connect(self.display_open_page)
-        self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
-        self.ui.btn_prediction_only_page.clicked.connect(self.display_prediction_only_page)
-        self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
-        self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
-        self.ui.btn_job_analysis_page.clicked.connect(self.display_job_analysis_page)
-        self.ui.btn_results_page.clicked.connect(self.display_results_page)
-        self.ui.btn_image_page.clicked.connect(self.display_image_page)
-
-    def _connect_menu_entries(self):
-        """This function connects all menu entries with their
-        slots
-
-        """
-        self.ui.action_file_open.triggered.connect(self.open)
-        self.ui.action_file_save_as.triggered.connect(self.save_as)
-        self.ui.action_file_save.triggered.connect(self.save)
-        self.ui.action_file_quit.triggered.connect(self.quit_app)
-        self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
-        self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
-        self.ui.action_help_docs.triggered.connect(self.open_documentation)
-        self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation_pdf)
-        self.ui.action_help_about.triggered.connect(self.open_about)
-
-    def _connect_new_buttons(self):
-        self.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
-
-    def _connect_new_sequence_buttons(self):
-        """This function connects all buttons on the new
-        sequence page with their slots
-
-        """
-        self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
-
-    def _connect_sequence_vs_pdb_buttons(self):
-        """This function connects all buttons on the sequence
-         vs pdb page with their slots
-
-        """
-        # self.ui.txt_prediction_project_name.textChanged.connect(self.validate_project_name)
-        # self.ui.txt_prediction_project_name.returnPressed.connect(self.show_prediction_load_reference)
-        # self.ui.btn_prediction_next_1.clicked.connect(self.show_prediction_load_reference)
-        # self.ui.btn_prediction_back_2.clicked.connect(self.hide_prediction_load_reference)
-        # self.ui.btn_prediction_load_reference.clicked.connect(self.load_reference_for_prediction)
-        # self.ui.txt_prediction_load_reference.textChanged.connect(self.validate_reference_for_prediction)
-        # self.ui.txt_prediction_load_reference.returnPressed.connect(self.show_prediction_chain_info_reference)
-        # self.ui.btn_prediction_next_2.clicked.connect(self.show_prediction_chain_info_reference)
-        # self.ui.btn_prediction_back_3.clicked.connect(self.hide_prediction_chain_info_reference)
-        self.ui.btn_s_v_p_start.clicked.connect(self.predict)
-
-    def _connect_single_analysis_buttons(self):
-        self.ui.btn_analysis_start.clicked.connect(self.start_process)
-
-    def _connect_batch_buttons(self):
-        self.ui.btn_batch_load_reference.clicked.connect(self.load_reference_for_batch)
-        self.ui.btn_batch_load_model.clicked.connect(self.load_model_for_batch)
-        # self.ui.btn_batch_start.clicked.connect(self.start_process_batch)
-
-    def _connect_results_buttons(self):
-        self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
-        self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
-        self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
-        self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
-        #self.ui.btn_view_interesting_region.clicked.connect(self.tmp_dialog_change)
-
-    def _connect_image_buttons(self):
-        self.ui.btn_update_scene.clicked.connect(self.update_scene)
-        self.ui.btn_save_scene.clicked.connect(self.save_scene)
-        self.ui.btn_save_image.clicked.connect(self.save_image)
-        self.ui.btn_preview_image.clicked.connect(self.preview_image)
-
-    def _connect_new_text_input(self):
-        self.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
-        self.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
-
-    def _connect_batch_text_fields(self):
-        self.ui.txt_batch_job_name.textChanged.connect(
-            self.check_batch_if_txt_batch_job_name_is_filled)
-        self.ui.txt_batch_chain_ref.textChanged.connect(
-            self.check_batch_if_txt_batch_chain_ref_is_filled)
-        self.ui.txt_batch_chain_model.textChanged.connect(
-            self.check_batch_if_txt_batch_chain_model_is_filled)
-
-    def _connect_image_combo_boxes(self):
-        self.ui.box_representation.activated.connect(self.show_representation)
-        self.ui.box_bg_color.activated.connect(self.choose_bg_color)
-        self.ui.box_renderer.activated.connect(self.choose_renderer)
-        self.ui.box_ray_trace_mode.activated.connect(self.choose_ray_trace_mode)
-        self.ui.box_ray_texture.activated.connect(self.choose_ray_texture)
-
-    def _connect_new_checkbox(self):
-        self.ui.cb_new_add_reference.stateChanged.connect(self.show_add_reference)
-
-    def _connect_batch_checkbox(self):
-        self.ui.cb_batch_chain_info.stateChanged.connect(
-            self.enable_chain_information_input_for_batch)
-
-    def _connect_image_checkbox(self):
-        self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
-
-    def _create_tooltips_sequence_vs_pdb(self):
-        # for buttons
-        self.ui.btn_prediction_load_reference.setToolTip("Open reference pdb file")
-        self.ui.btn_prediction_start.setToolTip("Predict with Colab Notebook")
-
-        # for text fields
-        self.ui.txt_prediction_load_reference.setToolTip("Reference file path")
-        # self.ui.txt_prediction_chain_ref.setToolTip("Enter chain(s) of reference")
-        self.ui.txt_prediction_chain_model.setToolTip("Enter chain(s) of model")
-
-    def _create_tooltips_single_analysis(self):
-        # for buttons
-        self.ui.btn_analysis_start.setToolTip("Start analysis process")
-
-        # for statusbar
-        self.status_bar.setToolTip("Status information: Current process")
-
-    def _create_tooltips_batch(self):
-        # for buttons
-        self.ui.btn_batch_load_reference.setToolTip("Open reference pdb file")
-        self.ui.btn_batch_load_model.setToolTip("Open model pdb files")
-        self.ui.btn_batch_start.setToolTip("Start batch process")
-
-        # for text fields
-        self.ui.txt_batch_load_reference.setToolTip("Reference file path")
-        self.ui.txt_batch_load_model.setToolTip("Model file paths")
-        self.ui.txt_batch_chain_ref.setToolTip("Enter chain(s) of reference")
-        self.ui.txt_batch_chain_model.setToolTip("Enter chain(s) of models")
-
-        # for checkbox
-        self.ui.cb_batch_chain_info.setToolTip("Enable input of chains")
-
-        # for statusbar
-        self.status_bar.setToolTip("Status information: Current process")
-
-    def _create_tooltips_image(self):
-        # for buttons
-        self.ui.btn_save_scene.setToolTip("Create new PyMOL scene")
-        self.ui.btn_update_scene.setToolTip("Overwrite current scene")
-        self.ui.btn_save_image.setToolTip("Save current viewpoint as png file")
-
-        # for checkboxes
-        self.ui.cb_ray_tracing.setToolTip("Enable ray-tracing")
-        self.ui.cb_transparent_bg.setToolTip("Enable transparent background")
-
-        # for combo-boxes
-        self.ui.box_representation.setToolTip("Choose a representation")
-        self.ui.box_bg_color.setToolTip("Choose a background color")
-        self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
-        self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
 
     # Slots
     # def handle_side_menu(self):
@@ -513,13 +647,17 @@ class MainWindow(QMainWindow):
     #         self.ui.btn_side_menu.setText("->")
     #         self.ui.btn_side_menu.setToolTip("Expand")
     #     self.ui.side_menu_container.setFixedWidth(new_width)
+    def display_home_page(self):
+        """This function displays the homepage of the plugin
+
+        """
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 0, "Home")
 
     def display_prediction_only_page(self):
         """This function displays the prediction only work area
 
         """
-        self.ui.stackedWidget.setCurrentIndex(1)
-        self.ui.lbl_page_title.setText("New Sequence")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 1, "New Sequence")
         item = self.ui.list_new_seq_notebooks.findItems("AlphaFold",
                                                         Qt.QtCore.Qt.MatchContains |
                                                         Qt.QtCore.Qt.MatchExactly
@@ -539,13 +677,13 @@ class MainWindow(QMainWindow):
             self.ui.list_widget_projects.addItem(project)
 
         # regular opening of work area
-        self.ui.stackedWidget.setCurrentIndex(2)
-        self.ui.lbl_page_title.setText("Sequence vs .pdb")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 2, "Sequence vs .pdb")
 
     def display_sequence_vs_pdb_page(self):
-        # regular opening of work area
-        self.ui.stackedWidget.setCurrentIndex(10)
-        self.ui.lbl_page_title.setText("Sequence vs .pdb")
+        """This function displays the sequence vs .pdb page
+
+        """
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 10, "Sequence vs .pdb")
 
     def display_single_analysis_page(self):
         """This function displays the single analysis work area
@@ -570,31 +708,25 @@ class MainWindow(QMainWindow):
         styles.color_button_ready(self.ui.btn_analysis_start)
         cmd.reinitialize()
         # regular work area opening
-        self.ui.stackedWidget.setCurrentIndex(3)
-        self.ui.lbl_page_title.setText("Single Analysis")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 3, "Single Analysis")
 
     def display_job_analysis_page(self):
         """This function displays the job analysis work area
 
         """
-        self.ui.stackedWidget.setCurrentIndex(4)
-        self.ui.lbl_page_title.setText("Job Analysis")
-        global global_var_work_area_history
-        global_var_work_area_history.append(4)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Job Analysis")
 
     def display_results_page(self):
         """This function displays the results work area
 
         """
-        self.ui.stackedWidget.setCurrentIndex(5)
-        self.ui.lbl_page_title.setText("Results")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 5, "Results")
 
     def display_image_page(self):
         """This function displays the image work area
 
         """
-        self.ui.stackedWidget.setCurrentIndex(6)
-        self.ui.lbl_page_title.setText("Image")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 6, "Image")
 
     def display_new_page(self):
         """This function displays the new project work area
@@ -604,25 +736,7 @@ class MainWindow(QMainWindow):
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
         tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_new_projects)
-        # workspace_projects: list[str] = os.listdir(self.workspace_path)
-        # valid_directories = []
-        # # iterates over possible project directories
-        # for directory in workspace_projects:
-        #     try:
-        #         directory_content = os.listdir(f"{self.workspace_path}/{directory}")
-        #         # iterates over the content in a single project directory
-        #         for content in directory_content:
-        #             if content == "project.xml":
-        #                 valid_directories.append(directory)
-        #     except NotADirectoryError:
-        #         print(f"This: {directory} is not a directory.")
-        #
-        # valid_directories.sort()
-        # for project in valid_directories:
-        #     self.ui.list_new_projects.addItem(project)
-
-        self.ui.stackedWidget.setCurrentIndex(7)
-        self.ui.lbl_page_title.setText("Create new project")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 7, "Create new project")
 
     def display_open_page(self):
         """This function displays the open project work area
@@ -632,13 +746,7 @@ class MainWindow(QMainWindow):
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
         tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_open_projects)
-        # workspace_projects: list[str] = os.listdir(self.workspace_path)
-        # workspace_projects.sort()
-        # for project in workspace_projects:
-        #     self.ui.list_open_projects.addItem(project)
-
-        self.ui.stackedWidget.setCurrentIndex(8)
-        self.ui.lbl_page_title.setText("Open existing project")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
 
     def display_delete_page(self):
         """This function displays the "delete" project work area
@@ -648,13 +756,16 @@ class MainWindow(QMainWindow):
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
         tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_delete_projects)
-        # workspace_projects: list[str] = os.listdir(self.workspace_path)
-        # workspace_projects.sort()
-        # for project in workspace_projects:
-        #     self.ui.list_delete_projects.addItem(project)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 9, "Delete existing project")
 
-        self.ui.stackedWidget.setCurrentIndex(9)
-        self.ui.lbl_page_title.setText("Delete existing project")
+    def display_edit_page(self):
+        """This function displays the edit project page
+
+        """
+        self.ui.list_edit_project_proteins.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "Edit current project")
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be
@@ -795,110 +906,110 @@ class MainWindow(QMainWindow):
 
     # @SLOT
     # Menu
-    def open(self):
-        """This function opens a project.xml file and fills the input boxes with the right values
-
-        """
-        # open file dialog
-        try:
-            global global_var_project_dict
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
-                                                                 "Open project file",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "Plugin Project File (*.xml)")
-            if file_name == ("", ""):
-                tools.quick_log_and_display("info", "No file has been selected.",
-                                            self.status_bar, "No file has been selected.")
-                return
-            # clear current project list and interesting regions
-            self.ui.project_list.clear()
-            self.ui.cb_interesting_regions.clear()
-
-            xml_file = minidom.parse(file_name[0])
-            element = xml_file.getElementsByTagName('project_name')
-            job_file_info = Qt.QtCore.QFileInfo(file_name[0])
-            job_name = job_file_info.baseName()
-
-            if len(element) == 0:
-                # job
-                i = 0
-                loop_element = ["", ""]
-                while loop_element != []:
-                    loop_element = xml_file.getElementsByTagName(f'project_{i}')
-                    if loop_element != []:
-                        path = loop_element[0].getAttribute('value')
-                        path_split = path.split("/")
-                        project_name = path_split[(len(path_split) - 1)]
-                        global_var_project_dict[i] = project.Project(project_name,
-                                                                                 f"{self.workspace_path}/{job_name}")
-                        index = len("project_of_")
-                        model_name = project_name[index:]
-                        # TODO: insert modelname
-                        global_var_project_dict[i].set_pdb_model(model_name)
-                        self.ui.project_list.addItem(global_var_project_dict[i].get_project_name())
-                    i += 1
-
-            else:
-                # project
-                file_name_file_info = Qt.QtCore.QFileInfo(file_name[0])
-                global_var_project_dict[0] = project.Project(file_name_file_info.baseName(),
-                                                                                       self.workspace_path)
-                global_var_project_dict[0].set_pdb_model(xml_file.getElementsByTagName('pdb_model')[0].getAttribute('value'))
-                # add filename to project list (results tab)
-                self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
-
-            # fill combo box of interesting regions
-            results_path = global_var_project_dict[0].get_results_path()
-            dir_content = os.listdir(f"{results_path}/images/interesting_regions")
-            for tmp_file in dir_content:
-                self.ui.cb_interesting_regions.addItem(tmp_file)
-            self.ui.project_list.setCurrentRow(0)
-
-        except FileNotFoundError:
-            print("File could not be opened.")
-        except ValueError:
-            print("No file has been selected.")
-
-    def save_as(self):
-        """This function saves the current pymol session.
-
-        """
-        try:
-            file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self,
-                                                                 "Save PyMOL session",
-                                                                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}",
-                                                                 "PyMOL session file (.pse)")
-            if file_path == ("", ""):
-                tools.quick_log_and_display("info", "No file has been created.", self.status_bar,
-                                            "No file has been created.")
-            cmd.save(f"{file_path[0]}.pse")
-            tools.quick_log_and_display("info", "Saving the pymol session was successful.",
-                                        self.status_bar, "Saving was successful.")
-        except FileExistsError:
-            tools.quick_log_and_display("warning", "File already exists!", self.status_bar,
-                                        "File already exists!")
-        except pymol.CmdException:
-            tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-                                                 "current pymol session", self.status_bar,
-                                        "Unexpected Error from PyMOL")
-
-    def save(self):
-        """This function saves the current pymol session.
-
-        """
-        global global_var_project_dict
-        try:
-            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-            cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
-            tools.quick_log_and_display("info", "Saving the pymol session was successful.",
-                                        self.status_bar, "Saving was successful.")
-        except KeyError:
-            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-                                        "No project has been opened.")
-        except pymol.CmdException:
-            tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-                                                 "current pymol session", self.status_bar,
-                                        "Unexpected Error from PyMOL")
+    # def open(self):
+    #     """This function opens a project.xml file and fills the input boxes with the right values
+    #
+    #     """
+    #     # open file dialog
+    #     try:
+    #         global global_var_project_dict
+    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
+    #                                                              "Open project file",
+    #                                                              Qt.QtCore.QDir.homePath(),
+    #                                                              "Plugin Project File (*.xml)")
+    #         if file_name == ("", ""):
+    #             tools.quick_log_and_display("info", "No file has been selected.",
+    #                                         self.status_bar, "No file has been selected.")
+    #             return
+    #         # clear current project list and interesting regions
+    #         self.ui.project_list.clear()
+    #         self.ui.cb_interesting_regions.clear()
+    #
+    #         xml_file = minidom.parse(file_name[0])
+    #         element = xml_file.getElementsByTagName('project_name')
+    #         job_file_info = Qt.QtCore.QFileInfo(file_name[0])
+    #         job_name = job_file_info.baseName()
+    #
+    #         if len(element) == 0:
+    #             # job
+    #             i = 0
+    #             loop_element = ["", ""]
+    #             while loop_element != []:
+    #                 loop_element = xml_file.getElementsByTagName(f'project_{i}')
+    #                 if loop_element != []:
+    #                     path = loop_element[0].getAttribute('value')
+    #                     path_split = path.split("/")
+    #                     project_name = path_split[(len(path_split) - 1)]
+    #                     global_var_project_dict[i] = project.Project(project_name,
+    #                                                                              f"{self.workspace_path}/{job_name}")
+    #                     index = len("project_of_")
+    #                     model_name = project_name[index:]
+    #                     # TODO: insert modelname
+    #                     global_var_project_dict[i].set_pdb_model(model_name)
+    #                     self.ui.project_list.addItem(global_var_project_dict[i].get_project_name())
+    #                 i += 1
+    #
+    #         else:
+    #             # project
+    #             file_name_file_info = Qt.QtCore.QFileInfo(file_name[0])
+    #             global_var_project_dict[0] = project.Project(file_name_file_info.baseName(),
+    #                                                                                    self.workspace_path)
+    #             global_var_project_dict[0].set_pdb_model(xml_file.getElementsByTagName('pdb_model')[0].getAttribute('value'))
+    #             # add filename to project list (results tab)
+    #             self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
+    #
+    #         # fill combo box of interesting regions
+    #         results_path = global_var_project_dict[0].get_results_path()
+    #         dir_content = os.listdir(f"{results_path}/images/interesting_regions")
+    #         for tmp_file in dir_content:
+    #             self.ui.cb_interesting_regions.addItem(tmp_file)
+    #         self.ui.project_list.setCurrentRow(0)
+    #
+    #     except FileNotFoundError:
+    #         print("File could not be opened.")
+    #     except ValueError:
+    #         print("No file has been selected.")
+    #
+    # def save_as(self):
+    #     """This function saves the current pymol session.
+    #
+    #     """
+    #     try:
+    #         file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self,
+    #                                                              "Save PyMOL session",
+    #                                                              f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}",
+    #                                                              "PyMOL session file (.pse)")
+    #         if file_path == ("", ""):
+    #             tools.quick_log_and_display("info", "No file has been created.", self.status_bar,
+    #                                         "No file has been created.")
+    #         cmd.save(f"{file_path[0]}.pse")
+    #         tools.quick_log_and_display("info", "Saving the pymol session was successful.",
+    #                                     self.status_bar, "Saving was successful.")
+    #     except FileExistsError:
+    #         tools.quick_log_and_display("warning", "File already exists!", self.status_bar,
+    #                                     "File already exists!")
+    #     except pymol.CmdException:
+    #         tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
+    #                                              "current pymol session", self.status_bar,
+    #                                     "Unexpected Error from PyMOL")
+    #
+    # def save(self):
+    #     """This function saves the current pymol session.
+    #
+    #     """
+    #     global global_var_project_dict
+    #     try:
+    #         file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
+    #         cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
+    #         tools.quick_log_and_display("info", "Saving the pymol session was successful.",
+    #                                     self.status_bar, "Saving was successful.")
+    #     except KeyError:
+    #         tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
+    #                                     "No project has been opened.")
+    #     except pymol.CmdException:
+    #         tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
+    #                                              "current pymol session", self.status_bar,
+    #                                     "Unexpected Error from PyMOL")
 
     def restore_settings(self):
         """This function deletes the old settings.xml and creates a new one,
@@ -1171,8 +1282,7 @@ class MainWindow(QMainWindow):
             return
         else:
             regex = Qt.QtCore.QRegularExpression()
-            # TODO: has no dash in regex!
-            regex.setPattern("\\w{20}")
+            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
             validator = QtGui.QRegularExpressionValidator(regex)
             for i in range(len(self.ui.txt_new_project_name.text())):
                 result = validator.validate(self.ui.txt_new_project_name.text(), i)
@@ -1215,6 +1325,8 @@ class MainWindow(QMainWindow):
 
         """
         self._init_hide_ui_elements()
+        # show project management options in side menu
+        self._init_project_management()
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
         # save project folder in current workspace
@@ -1307,8 +1419,7 @@ class MainWindow(QMainWindow):
             return
         else:
             # regex = Qt.QtCore.QRegularExpression()
-            # # TODO: has no dash in regex!
-            # regex.setPattern("\\w{20}")
+            # regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
             # validator = QtGui.QRegularExpressionValidator(regex)
             # for i in range(len(self.ui.txt_open_search.text())):
             #     result = validator.validate(self.ui.txt_open_search.text(), i)
@@ -1369,6 +1480,8 @@ class MainWindow(QMainWindow):
 
         """
         self._init_hide_ui_elements()
+        # show project management options in side menu
+        self._init_project_management()
         self.ui.lbl_current_project_name.setText(self.ui.list_open_projects.currentItem().text())
         # check if directory in empty
         results_paths = ["results/alignment_files"]
@@ -1462,8 +1575,7 @@ class MainWindow(QMainWindow):
             return
         else:
             # regex = Qt.QtCore.QRegularExpression()
-            # # TODO: has no dash in regex!
-            # regex.setPattern("\\w{20}")
+            # regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
             # validator = QtGui.QRegularExpressionValidator(regex)
             # for i in range(len(self.ui.txt_delete_search.text())):
             #     result = validator.validate(self.ui.txt_delete_search.text(), i)
@@ -1525,7 +1637,7 @@ class MainWindow(QMainWindow):
         else:
             return
 
-    # save
+    # save project
     def save_project(self):
         """This function saves the "project" which is currently only the pymol session
 
@@ -1540,12 +1652,23 @@ class MainWindow(QMainWindow):
             cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/auto_generated_session_file.pse")
             self.status_bar.showMessage("Saved project successfully.")
 
+    # close project
+    def close_project(self):
+        self._init_side_menu()
+        self._init_hide_ui_elements()
+        self.ui.lbl_current_project_name.setText("")
+        self._init_new_sequence_page()
+        self._init_sequence_vs_pdb_page()
+        self._init_single_analysis_page()
+        self._init_results_page()
+        self._init_image_page()
+        self.display_home_page()
+
     # Prediction
     def validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
         """
-
         # set color for lineEdit
         self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #FC5457")
         if len(self.ui.txt_prediction_only_protein_name.text()) == 0:
@@ -1560,8 +1683,7 @@ class MainWindow(QMainWindow):
             return
         else:
             regex = Qt.QtCore.QRegularExpression()
-            # TODO: has no dash in regex!
-            regex.setPattern("\\w{20}")
+            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
             validator = QtGui.QRegularExpressionValidator(regex)
             for i in range(len(self.ui.txt_prediction_only_protein_name.text())):
                 result = validator.validate(self.ui.txt_prediction_only_protein_name.text(), i)
@@ -1579,26 +1701,112 @@ class MainWindow(QMainWindow):
 
             print("Check successful.")
 
-    def show_prediction_only_choose_notebook(self):
-        self.ui.lbl_prediction_only_protein_name.setStyleSheet("color: #E1E1E1")
-        self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: white")
-        self.ui.btn_prediction_only_next.setEnabled(False)
-        styles.color_button_not_ready(self.ui.btn_prediction_only_next)
-        self.ui.txt_prediction_only_protein_name.setEnabled(False)
-        self.ui.lbl_prediction_only_choose_notebook.show()
-        self.ui.list_new_seq_notebooks.show()
-        self.ui.btn_prediction_only_back.show()
-        self.ui.btn_prediction_only_start.show()
+    def validate_protein_sequence(self):
+        """This function validates the input of the protein sequence in real-time
 
-    def hide_prediction_only_choose_notebook(self):
-        self.ui.lbl_prediction_only_protein_name.setStyleSheet("color: black")
+        """
+        # set color for lineEdit
+        self.ui.txt_cloud_pred_mono_prot_seq.setStyleSheet("background-color: #FC5457")
+        if len(self.ui.txt_cloud_pred_mono_prot_seq.text()) == 0:
+            self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("")
+            self.ui.btn_cloud_pred_mono_next_2.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_cloud_pred_mono_next_2)
+            return
+        # elif len(self.ui.txt_prediction_only_protein_name.text()) > 20:
+        #     self.ui.lbl_prediction_only_status_protein_name.setText("Project name is too long (max. 20 characters).")
+        #     self.ui.btn_prediction_only_next.setEnabled(False)
+        #     styles.color_button_not_ready(self.ui.btn_prediction_only_next)
+        #     return
+        else:
+            regex = Qt.QtCore.QRegularExpression()
+            regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
+            validator = QtGui.QRegularExpressionValidator(regex)
+            for i in range(len(self.ui.txt_cloud_pred_mono_prot_seq.text())):
+                result = validator.validate(self.ui.txt_cloud_pred_mono_prot_seq.text(), i)
+                if result[0] > 0:
+                    self.ui.txt_cloud_pred_mono_prot_seq.setStyleSheet("background-color: #33C065")
+                    self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("")
+                    self.ui.btn_cloud_pred_mono_next_2.setEnabled(True)
+                    styles.color_button_ready(self.ui.btn_cloud_pred_mono_next_2)
+                else:
+                    self.ui.txt_cloud_pred_mono_prot_seq.setStyleSheet("background-color: #FC5457")
+                    self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("Invalid character.")
+                    self.ui.btn_cloud_pred_mono_next_2.setEnabled(False)
+                    styles.color_button_not_ready(self.ui.btn_cloud_pred_mono_next_2)
+                    return
+
+    def show_cloud_prediction_mono_protein_sequence(self):
+        gui_elements_hide = [
+            self.ui.btn_prediction_only_next,
+        ]
+        gui_elements_show = [
+            self.ui.lbl_cloud_pred_mono_prot_seq,
+            self.ui.lbl_cloud_pred_mono_status_prot_seq,
+            self.ui.txt_cloud_pred_mono_prot_seq,
+            self.ui.btn_cloud_pred_mono_back,
+            self.ui.btn_cloud_pred_mono_next_2,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_hide)
+        gui_utils.show_gui_elements(gui_elements_show)
+        gui_utils.disable_text_box(self.ui.txt_prediction_only_protein_name,
+                                   self.ui.lbl_prediction_only_protein_name)
+
+    def hide_cloud_prediction_mono_protein_sequence(self):
+        gui_elements_hide = [
+            self.ui.lbl_cloud_pred_mono_prot_seq,
+            self.ui.lbl_cloud_pred_mono_status_prot_seq,
+            self.ui.txt_cloud_pred_mono_prot_seq,
+            self.ui.btn_cloud_pred_mono_back,
+            self.ui.btn_cloud_pred_mono_next_2,
+        ]
+        gui_elements_show = [
+            self.ui.btn_prediction_only_next,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_hide)
+        gui_utils.show_gui_elements(gui_elements_show)
+        gui_utils.enable_text_box(self.ui.txt_prediction_only_protein_name,
+                                  self.ui.lbl_prediction_only_protein_name)
+
+    def show_prediction_only_choose_notebook(self):
+        gui_elements_show = [
+            self.ui.lbl_prediction_only_choose_notebook,
+            self.ui.list_new_seq_notebooks,
+            self.ui.btn_prediction_only_back,
+            self.ui.btn_prediction_only_start,
+            self.ui.list_new_seq_notebooks,
+            self.ui.lbl_cloud_pred_mono_advanced_config,
+            self.ui.btn_cloud_pred_mono_advanced_config,
+        ]
+        gui_elements_hide = [
+            self.ui.btn_cloud_pred_mono_back,
+            self.ui.btn_cloud_pred_mono_next_2,
+        ]
+        gui_utils.show_gui_elements(gui_elements_show)
+        gui_utils.hide_gui_elements(gui_elements_hide)
+        gui_utils.disable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
+                                   self.ui.lbl_cloud_pred_mono_prot_seq)
         self.ui.btn_prediction_only_next.setEnabled(True)
         styles.color_button_ready(self.ui.btn_prediction_only_next)
-        self.ui.txt_prediction_only_protein_name.setEnabled(True)
-        self.ui.lbl_prediction_only_choose_notebook.hide()
-        self.ui.list_new_seq_notebooks.hide()
-        self.ui.btn_prediction_only_back.hide()
-        self.ui.btn_prediction_only_start.hide()
+
+    def hide_prediction_only_choose_notebook(self):
+        gui_elements_hide = [
+            self.ui.lbl_prediction_only_choose_notebook,
+            self.ui.list_new_seq_notebooks,
+            self.ui.btn_prediction_only_back,
+            self.ui.btn_prediction_only_start,
+            self.ui.lbl_cloud_pred_mono_advanced_config,
+            self.ui.btn_cloud_pred_mono_advanced_config,
+        ]
+        gui_elements_show = [
+            self.ui.btn_cloud_pred_mono_back,
+            self.ui.btn_cloud_pred_mono_next_2,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_hide)
+        gui_utils.show_gui_elements(gui_elements_show)
+        gui_utils.enable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
+                                  self.ui.lbl_cloud_pred_mono_prot_seq)
+        self.ui.btn_prediction_only_next.setEnabled(True)
+        styles.color_button_ready(self.ui.btn_prediction_only_next)
 
     def check_prediction_only_if_txt_notebook_url_is_filled(self):
         """This function checks if a reference pdb file is selected.
@@ -1610,31 +1818,30 @@ class MainWindow(QMainWindow):
         """This function is used to predict with any google colab notebook.
 
         """
-        notebook_name = self.ui.list_new_seq_notebooks.currentItem().text()
-        if notebook_name == constants.OFFICIAL_NOTEBOOK_NAME:
-            webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
-            self.ui.btn_prediction_only_start.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_prediction_only_start)
-            # alphafold specific process
-            archive = "prediction.zip"
-            source_path = global_variables.global_var_settings_obj.get_prediction_path()
-            filename = f"{source_path}/{archive}"
-            while os.path.isfile(filename) is False:
-                print("Prediction is still running ...")
-                time.sleep(20)
-            # move prediction.zip in scratch folder
-            shutil.copy(filename, f"{self.scratch_path}/{archive}")
-            shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
-            shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
-                        f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-            shutil.rmtree(f"{self.scratch_path}/prediction")
-            os.remove(f"{self.scratch_path}/{archive}")
-            try:
-                cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-            except pymol.CmdException:
-                print("Loading the model failed.")
-                return
-        else:
+        # web_interface inject
+        web_gui = web_interface.WebInterface()
+        web_gui.set_protein_sequence(self.ui.txt_cloud_pred_mono_prot_seq.text())
+        web_gui.set_job_name(self.ui.lbl_current_project_name.text())
+        web_gui.show_interface()
+        if web_gui.get_exit_code() != 0:
+            print("An error ocurred!")
+            return
+        # colabfold: AlphaFold2_mmseqs2 notebook specific process
+        archive = f"{self.ui.lbl_current_project_name.text()}.result.zip"
+        source_path = f"{os.environ['HOME']}/Downloads"
+        filename = f"{source_path}/{archive}"
+        # move prediction.zip in scratch folder
+        shutil.copy(filename, f"{self.scratch_path}/{archive}")
+        shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
+        # TODO: find correct filenames
+        shutil.copy(f"{self.scratch_path}/{self.ui.lbl_current_project_name.text()}.result/selected_prediction.pdb",
+                    f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+        shutil.rmtree(f"{self.scratch_path}/prediction")
+        os.remove(f"{self.scratch_path}/{archive}")
+        try:
+            cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+        except pymol.CmdException:
+            print("Loading the model failed.")
             return
         self.ui.lbl_prediction.hide()
         self.ui.btn_prediction_only_page.hide()
@@ -1664,7 +1871,7 @@ class MainWindow(QMainWindow):
     #     else:
     #         regex = Qt.QtCore.QRegularExpression()
     #         # TODO: has no dash in regex!
-    #         regex.setPattern("\\w{20}")
+    #         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
     #         validator = QtGui.QRegularExpressionValidator(regex)
     #         for i in range(len(self.ui.txt_prediction_project_name.text())):
     #             result = validator.validate(self.ui.txt_prediction_project_name.text(), i)

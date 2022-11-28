@@ -18,98 +18,88 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import pyssa.gui.data_structures.project
 
 import os
-from pathlib import Path
-from xml.etree import ElementTree
-from xml.dom import minidom
+import json
 
 
-class Settings:
-    """This class is for the handling of the settings.xml file.
-        Var:
-            workspace_path:
-                path of the workspace
-            prediction_path:
-                path where the models from predictions are initially stored
-            cycles:
-                number of structure alignment cycles
-            cutoff:
-                cutoff of the structure alignment
-        """
-    #dir_settings: str, filename: str
+class Protein:
+    """This class stores one protein in a PyMOL compatible form
 
+    Var:
+        selection:
+            a pymol selection string which needs to conform with the selection algebra
+            from pymol
+    """
+    selection: str = None
 
-    def __init__(self, ) -> None:
-        """Constructor
+    def __init__(self, molecule_object: str, import_data_dir: str = None,
+                 export_data_dir: str = None):
+        """Constructor.
 
         Args:
-            dir_settings:
-                directory where the settings.xml is stored
-            filename:
-                name of the settings.xml
+            molecule_object (str):
+                name of the reference Protein in the pymol session
+            import_data_dir (str):
+                directory where the pdb files of both model and
+                reference are stored
+            export_data_dir (str, optional):
+                directory where all results related to the Protein
+                will be stored.
+                All subdirectories like ``images``, ``alignment_files``
+                and ``distances`` will be created automatically.
+                The export_data_dir will then function as parent directory.
+
+        Raises:
+            NotADirectoryError: If directory not found.
+            FileNotFoundError: If file not found.
         """
-        self._workspace_path = str(Path(f"{os.path.expanduser('~')}/Documents"))
-        self._prediction_path = str(Path(f"{os.path.expanduser('~')}/Downloads"))
-        self._cycles: int = 0
-        self._cutoff: float = 1.0
+        self.molecule_object = molecule_object
+        self.import_data_dir = import_data_dir
+        self.export_data_dir = export_data_dir
 
-        self.settings = [
-            [
-                "workspace_path", self._workspace_path
-            ],
-            [
-                "prediction_path", self._prediction_path
-            ],
-            [
-                "cycles", self._cycles
-            ],
-            [
-                "cutoff", self._cutoff
-            ],
-        ]
+        # argument test
+        if import_data_dir is not None:
+            if not os.path.exists(f"{import_data_dir}"):
+                raise NotADirectoryError(f"The path {import_data_dir} was not "
+                                         f"found.")
+        if export_data_dir is not None:
+            if not os.path.exists(f"{export_data_dir}"):
+                raise NotADirectoryError(f"The path {export_data_dir} was not "
+                                         f"found.")
+        if import_data_dir is not None:
+            if not os.path.exists(f"{import_data_dir}/{molecule_object}.pdb"):
+                raise FileNotFoundError(f"The pdb file {molecule_object} was "
+                                        f"not found under {import_data_dir}.")
 
-        #self._dir_settings: str = dir_settings
-        #self._filename: str = filename
-        # uses default values
-        # if not os.path.exists(f"{self._dir_settings}/{self._filename}"):
-        #     self.save_settings_to_xml()
+    def set_selection(self, selection: str) -> None:
+        """This function sets a selection for the Protein object.
 
+        Args:
+            selection (str):
+                A pymol conform selection as a string.
 
-    def save_settings_to_xml(self):
-        root = ElementTree.Element("settings")
+        Example:
+            This is a pymol conform selection::
 
-        for setting in self.settings:
-            tmp_xml_element = ElementTree.Element(setting[0])
-            tmp_xml_element.text = str(setting[1])
-            root.append(tmp_xml_element)
-
-        # creates a pretty xml file
-        xml_as_string = minidom.parseString(ElementTree.tostring(root)).toprettyxml(indent="   ")
-        with open("test_settings.xml", "w") as f:
-            f.write(xml_as_string)
-
-    def load_settings_from_xml(self, xml_file):
-        tree = ElementTree.parse(xml_file)
-        root = tree.getroot()
-        child_content = []
-        for child in root:
-            child_content.append(child.text)
-        self.settings[0][1] = str(child_content[0])
-        self.settings[1][1] = str(child_content[1])
-        self.settings[2][1] = int(child_content[2])
-        self.settings[3][1] = float(child_content[3])
+                "pymol_6omn////CA"
+        """
+        self.selection = selection
 
 
 if __name__ == '__main__':
-    settings = Settings()
-    settings.save_settings_to_xml()
-    settings.load_settings_from_xml("test_settings.xml")
-
-
+    new_protein = Protein("3bmp")
+    # creates a dict from the object
+    protein_dict = new_protein.__dict__
+    f = open("data.json", "w", encoding="utf-8")
+    json.dump(protein_dict, f)
 
 if __name__ == '__main__':
-    test_project = pyssa.gui.data_structures.project.Project()
-    test_project.__setattr__("project_name", "bmp2")
-    print(test_project.__getattribute__("project_name"))
+    f = open("data.json", "r", encoding="utf-8")
+    protein_dict = json.load(f)
+    print(f"Dict from loaded json:      {protein_dict}")
+    new_protein = Protein(protein_dict.get("molecule_object"), protein_dict.get("import_data_dir"),
+                          protein_dict.get("export_data_dir"))
+    print(f"Name of the protein object: {new_protein.molecule_object}")
+    print(f"Import data directory:      {new_protein.import_data_dir}")
+    print(f"Export data directory:      {new_protein.export_data_dir}")

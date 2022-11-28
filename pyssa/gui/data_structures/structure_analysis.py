@@ -28,7 +28,8 @@ from pymol import Qt
 from matplotlib import pyplot as plt
 from pymolproteintools import core
 from pymolproteintools import graphics
-from pyssa.gui.utilities import gui_utils, tools
+from pyssa.gui.utilities import gui_utils
+from pyssa.gui.utilities import tools
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)

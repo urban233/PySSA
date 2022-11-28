@@ -27,6 +27,8 @@ from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree
 from xml.dom import minidom
+
+import core
 from pyssa.gui.utilities import gui_utils
 
 
@@ -46,10 +48,14 @@ class Project:
     _operating_system = platform.system()
     _workspace = ""
     _project_name: str = ""
-    _ref_chains: str = "no_chains_selected"
-    _model_chains: str = "no_chains_selected"
+    # _ref_chains: str = "no_chains_selected"
+    # _model_chains: str = "no_chains_selected"
+    _prot_structure_1_chains: str = "no_chains_selected"
+    _prot_structure_2_chains: str = "no_chains_selected"
     _folder_paths: list[Path] = []
     _session_file_name: str = "session_file_model_s.pse"
+    _proteins: core.Protein = []
+    _protein_pairs: core.ProteinPair = []
 
     def __init__(self, project_name, workspace_path) -> None:
         """Constructor
@@ -77,6 +83,34 @@ class Project:
             Path(f"{workspace_path}/{project_name_with_underscores}/results/plots/distance_plot"),
             Path(f"{workspace_path}/{project_name_with_underscores}/results/sessions/"),
         ]
+
+    def add_new_protein(self, protein_name) -> None:
+        """This function adds a new protein to the project.
+
+        Args:
+            protein_name:
+                name of the protein
+        """
+        new_protein = core.Protein(protein_name)
+        self._proteins.append(new_protein)
+
+    def add_existing_protein(self, protein: core.Protein) -> None:
+        """This function adds an existing protein object to the project.
+
+        Args:
+            protein:
+                name of the existing protein object
+        """
+        self._proteins.append(protein)
+
+    def add_protein_pair(self, protein_pair: core.ProteinPair) -> None:
+        """This function adds an existing protein_pair object to the project.
+
+        Args:
+            protein_pair:
+                name of the existing protein_pairs object
+        """
+        self._protein_pairs.append(protein_pair)
 
     def create_project_tree(self) -> bool:
         """This function creates the directory structure for a new project.

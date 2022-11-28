@@ -41,8 +41,8 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         graph_widget = pg.PlotWidget()
 
         # read csv file
-        file_path = global_utils.global_var_tmp_project_info[0]
-        model_name = global_utils.global_var_tmp_project_info[1]
+        file_path = global_variables.global_var_tmp_project_info[0]
+        model_name = global_variables.global_var_tmp_project_info[1]
 
         path = f"{file_path}/distance_csv/distances.csv"
         distance_list = []
@@ -52,7 +52,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
                 cleaned_line = line.replace("\n", "")
                 if cleaned_line.split(",")[8] != 'distance':
                     distance_list.append(float(cleaned_line.split(",")[8]))
-                    cutoff_line.append(global_utils.global_var_settings_obj.get_cutoff())
+                    cutoff_line.append(global_variables.global_var_settings_obj.get_cutoff())
         # creates actual distance plot line
         graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
                                    symbol="o", symbolSize=10, symbolBrush=('b'))

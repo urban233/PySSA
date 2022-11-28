@@ -310,6 +310,24 @@ def scan_workspace_for_vaild_projects(workspace_path, list_new_projects):
     for project in valid_directories:
         list_new_projects.addItem(project)
 
+
+def switch_page(stackedWidget: Qt.QtWidgets.QStackedWidget, lbl_page_title: Qt.QtWidgets.QLabel, index: int, text: str) -> None:
+    """This function switches a given stackedWidget page.
+
+    Args:
+        stackedWidget:
+            QStackedWidget
+        lbl_page_title:
+            Label which holds the page title
+        index:
+            the stacked widget page index
+        text:
+            the page title which should get displayed
+
+    """
+    stackedWidget.setCurrentIndex(index)
+    lbl_page_title.setText(text)
+
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")
 #

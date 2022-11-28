@@ -40,6 +40,7 @@ class Protein:
             from pymol
     """
     selection: str = None
+    sequence: str = None
 
     def __init__(self, molecule_object: str, import_data_dir: str = None,
                  export_data_dir: str = None):
@@ -48,7 +49,7 @@ class Protein:
         Args:
             molecule_object (str):
                 name of the reference Protein in the pymol session
-            import_data_dir (str):
+            import_data_dir (str, optional):
                 directory where the pdb files of both model and
                 reference are stored
             export_data_dir (str, optional):
@@ -93,6 +94,28 @@ class Protein:
                 "pymol_6omn////CA"
         """
         self.selection = selection
+
+    def set_sequence(self, sequence=None):
+        """This function sets the sequence for the protein, either automatically with the help
+        of the get_fastastr method from PyMOL or directly through a function argument
+
+        Args:
+            sequence:
+                string of the sequence which gets set for the protein
+        """
+        if sequence is None:
+            cmd.reinitialize()
+            if self.import_data_dir is None:
+                # this means a PDB ID was given
+                cmd.fetch(self.molecule_object)
+                self.sequence = cmd.get_fastastr('all')
+            else:
+                # a .pdb file was given
+                cmd.load(f"{self.import_data_dir}/{self.molecule_object}.pdb")
+                self.sequence = cmd.get_fastastr('all')
+        else:
+            # TODO: validate if the sequence is valid
+            self.sequence = sequence
 
     def clean_pdb_file(self) -> None:
         """This function cleans a pdb file from the PDB

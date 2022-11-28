@@ -303,3 +303,118 @@ def warning_switch_pymol_session(message_detail) -> bool:
         return False
     if msg.clickedButton() == yes_button:
         return True
+
+
+def warning_prediction_is_running(dialog_obj):
+    """This function creates a warning message box, to inform the
+    user to save the current active pymol session.
+
+    Args:
+        message_detail:
+            detailed message string
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Warning)
+    msg.setText("Warning")
+    msg.setInformativeText("The AlphaFold prediction is running ...")
+    msg.setWindowTitle("Prediction is running.")
+    abort_button = msg.addButton("Abort", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == abort_button:
+        dialog_obj.close()
+        msg.close()
+        return False, msg
+    return True, msg
+
+
+def warning_prediction_is_finished(dialog_obj):
+    """This function creates a warning message box, to inform the
+    user to save the current active pymol session.
+
+    Args:
+        message_detail:
+            detailed message string
+    """
+    # closes the previous message box
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Information)
+    msg.setText("Finish")
+    msg.setInformativeText("The AlphaFold prediction is finished.")
+    msg.setWindowTitle("Prediction is finished.")
+    finish_button = msg.addButton("OK", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == finish_button:
+        dialog_obj.close()
+        msg.close()
+
+
+def error_prediction_progress_lost() -> bool:
+    """This function creates an error message, if the project data is invalid.
+
+    Args:
+        path:
+            path where the data is missing
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText("Error")
+    msg.setInformativeText(f"Your prediction data was not saved!")
+    # msg.setDetailedText(f"Due to an error the prediction process was aborted.")
+    msg.setWindowTitle("Error")
+    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == ok_button:
+        return True
+
+
+def hide_gui_elements(gui_elements: list):
+    """This function hides gui elements
+
+    Args:
+        gui_elements:
+            a list of pyqt gui elements
+    """
+    for gui_element in gui_elements:
+        gui_element.hide()
+
+
+def show_gui_elements(gui_elements: list):
+    """This function shows gui elements
+
+    Args:
+        gui_elements:
+            a list of pyqt gui elements
+    """
+    for gui_element in gui_elements:
+        gui_element.show()
+
+
+def disable_text_box(text_box, text_box_label):
+    """This function disables a text box and grays out the corresponding label
+
+    Args:
+        text_box:
+            pyqt line edit
+        text_box_label:
+            pyqt label which describes the text box
+    """
+    text_box_label.setStyleSheet("color: #E1E1E1")
+    text_box.setStyleSheet("background-color: white")
+    text_box.setEnabled(False)
+
+
+def enable_text_box(text_box, text_box_label):
+    """This function enables a text box and colors the corresponding label black
+
+    Args:
+        text_box:
+            pyqt line edit
+        text_box_label:
+            pyqt label which describes the text box
+    """
+    text_box_label.setStyleSheet("color: black")
+    text_box.setStyleSheet("background-color: white")
+    text_box.setEnabled(True)
