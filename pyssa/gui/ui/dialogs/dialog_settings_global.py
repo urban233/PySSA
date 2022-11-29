@@ -19,6 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import subprocess
+import os
 import logging
 from pymol import Qt
 from pyssa.gui.utilities import gui_utils
@@ -85,6 +87,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.btn_zip_storage_dir.clicked.connect(self.chooseZipStorageDir)
         self.ui.btn_cancel.clicked.connect(self.cancelDialog)
         self.ui.btn_ok.clicked.connect(self.okDialog)
+        self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
 
         self.setWindowTitle("Global Settings")
 
@@ -105,3 +108,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         global_var_settings_obj.set_cutoff(str(self.ui.dspb_cutoff.value()))
         global_var_settings_obj.save_settings_to_xml()
         self.close()
+
+    def install_local_colabfold(self):
+        print(subprocess.run(f"{os.environ['HOME']}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"))
