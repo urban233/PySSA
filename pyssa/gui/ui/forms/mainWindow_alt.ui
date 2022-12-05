@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>523</width>
-    <height>747</height>
+    <width>878</width>
+    <height>1068</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -176,8 +176,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>151</width>
-                  <height>679</height>
+                  <width>144</width>
+                  <height>970</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -278,7 +278,7 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QLabel" name="lbl_prediction">
+                    <widget class="QLabel" name="lbl_pred_cloud">
                      <property name="maximumSize">
                       <size>
                        <width>135</width>
@@ -297,12 +297,25 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="btn_prediction_only_page">
+                    <widget class="QPushButton" name="btn_pred_cloud_monomer_page">
                      <property name="focusPolicy">
                       <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="layoutDirection">
                       <enum>Qt::LeftToRight</enum>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">QPushButton {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}</string>
                      </property>
                      <property name="text">
                       <string>Monomer</string>
@@ -319,7 +332,7 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="btn_prediction_page">
+                    <widget class="QPushButton" name="btn_pred_cloud_monomer_vs_pdb_page">
                      <property name="focusPolicy">
                       <enum>Qt::ClickFocus</enum>
                      </property>
@@ -329,14 +342,14 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton_11">
+                    <widget class="QPushButton" name="btn_pred_cloud_multimer_page">
                      <property name="text">
                       <string>Multimer</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton_12">
+                    <widget class="QPushButton" name="btn_pred_cloud_multimer_vs_pdb_page">
                      <property name="text">
                       <string>Multimer vs .pdb</string>
                      </property>
@@ -350,35 +363,35 @@
                     <number>4</number>
                    </property>
                    <item>
-                    <widget class="QLabel" name="label_42">
+                    <widget class="QLabel" name="lbl_pred_local">
                      <property name="text">
                       <string>Local Prediction</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton_13">
+                    <widget class="QPushButton" name="btn_pred_local_monomer_page">
                      <property name="text">
                       <string>Monomer</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton_14">
+                    <widget class="QPushButton" name="btn_pred_local_monomer_vs_pdb_page">
                      <property name="text">
                       <string>Monomer vs .pdb</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton_15">
+                    <widget class="QPushButton" name="btn_pred_local_multimer_page">
                      <property name="text">
                       <string>Multimer</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pushButton_16">
+                    <widget class="QPushButton" name="btn_pred_local_multimer_vs_pdb_page">
                      <property name="text">
                       <string>Multimer vs .pdb</string>
                      </property>
@@ -1705,7 +1718,7 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_13">
                   <property name="spacing">
-                   <number>-1</number>
+                   <number>6</number>
                   </property>
                   <property name="leftMargin">
                    <number>0</number>
@@ -2983,8 +2996,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>523</width>
-     <height>24</height>
+     <width>878</width>
+     <height>36</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">

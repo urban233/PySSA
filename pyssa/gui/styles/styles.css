@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 QFrame#content {
     background: #ffffff;
 }
@@ -67,6 +66,10 @@ QFrame#side_menu {
     background: #F6F4F8;
 }
 
+QWidget#scrollAreaWidgetContents {
+    background: #F6F4F8;
+}
+
 QLabel#lbl_project {
     /*background: #E9E9F0;*/
     background: #F6F4F8;
@@ -75,26 +78,27 @@ QLabel#lbl_project {
 }
 
 QLabel#lbl_prediction {
-    background: #E9E9F0;
+    background: #F6F4F8;
     color: #969696;
     font: bold;
 }
 
 QLabel#lbl_analysis {
-    background: #E9E9F0;
+    background: #F6F4F8;
     color: #969696;
     font: bold;
 }
 
 QLabel#lbl_handle_pymol_session {
-    background: #E9E9F0;
+    /*background: #E9E9F0;*/ /*OLD BACKGROUND COLOR*/
+    background: #F6F4F8;
     color: #969696;
     font: bold;
 }
 
 /* Button for "New" */
 QPushButton#btn_new_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -182,7 +186,7 @@ QLabel#lbl_new_status_choose_reference {
 
 /* Button for "Open" */
 QPushButton#btn_open_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -249,7 +253,7 @@ QLabel#lbl_open_status_search {
 
 /* Button for "Delete" */
 QPushButton#btn_delete_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -315,7 +319,7 @@ QLabel#lbl_delete_status_search {
 
 /* Button for "Save" */
 QPushButton#btn_save_project {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -348,7 +352,7 @@ QPushButton::pressed#btn_save_project {
 
 /* Button for "Edit" */
 QPushButton#btn_edit_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -381,7 +385,7 @@ QPushButton::pressed#btn_edit_page {
 
 /* Button for "View" */
 QPushButton#btn_view_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -414,7 +418,7 @@ QPushButton::pressed#btn_view_page {
 
 /* Button for "Use" */
 QPushButton#btn_use_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -447,7 +451,7 @@ QPushButton::pressed#btn_use_page {
 
 /* Button for "Close" */
 QPushButton#btn_close_project {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -478,9 +482,298 @@ QPushButton::pressed#btn_close_project {
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
 }
 
+/* Label for "Cloud Prediction" */
+QLabel#lbl_pred_cloud {
+    color: #969696;
+    font: bold;
+}
+
+/* Button for "Monomer"*/
+QPushButton#btn_pred_cloud_monomer_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_cloud_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_cloud_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_cloud_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+
+/* Button for "Monomer vs .pdb" */
+QPushButton#btn_pred_cloud_monomer_vs_pdb_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_cloud_monomer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_cloud_monomer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_cloud_monomer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+
+/* Button for "Multimer" */
+QPushButton#btn_pred_cloud_multimer_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_cloud_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_cloud_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_cloud_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "Multimer vs .pdb" */
+QPushButton#btn_pred_cloud_multimer_vs_pdb_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_cloud_multimer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_cloud_multimer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_cloud_multimer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Label for "Local Prediction" */
+QLabel#lbl_pred_local {
+    color: #969696;
+    font: bold;
+}
+
+/* Button for "Monomer" */
+QPushButton#btn_pred_local_monomer_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_local_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_local_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_local_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "Monomer vs .pdb" */
+QPushButton#btn_pred_local_monomer_vs_pdb_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_local_monomer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_local_monomer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_local_monomer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "Multimer" */
+QPushButton#btn_pred_local_multimer_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_local_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_local_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_local_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Button for "Multimer vs .pdb" */
+QPushButton#btn_pred_local_multimer_vs_pdb_page {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_local_multimer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_local_multimer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_local_multimer_vs_pdb_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+/* Label for "Analysis" */
+QLabel#lbl_analysis {
+    color: #4B91F7;
+    font: bold;
+}
+
+/* last code for lbls and btns are below */
+
+
+
+
 /* Button for "Prediction" */
 QPushButton#btn_prediction_only_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-width: 0px;
     border-radius: 6px;
     max-width: 8.9em;
@@ -542,6 +835,7 @@ QLineEdit#txt_cloud_pred_mono_prot_seq {
 }
 
 /* "Sequence vs pdb" */
+
 QListWidget#list_s_v_p_ref_chains {
     border-style: solid;
     border-width: 2px;
@@ -551,7 +845,7 @@ QListWidget#list_s_v_p_ref_chains {
 
 /* "Prediction + Analysis" */
 QPushButton#btn_prediction_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -671,7 +965,7 @@ QLabel#lbl_prediction_status_load_reference {
 
 /* Button for "Single Analysis" */
 QPushButton#btn_single_analysis_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-width: 0px;
     border-radius: 6px;
     max-width: 8.9em;
@@ -703,7 +997,7 @@ QPushButton::pressed#btn_single_analysis_page {
 
 /* Button for "Job Analysis" */
 QPushButton#btn_job_analysis_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-width: 0px;
     border-radius: 6px;
     max-width: 8.9em;
@@ -735,7 +1029,7 @@ QPushButton::pressed#btn_job_analysis_page {
 
 /* Button for "Results" */
 QPushButton#btn_results_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-width: 0px;
     border-radius: 6px;
     max-width: 8.9em;
@@ -766,7 +1060,7 @@ QPushButton::pressed#btn_results_page {
 
 /* Button for "Cloud Multimer" */
 QPushButton#btn_new_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 0px;
     border-radius: 6px;
@@ -800,7 +1094,7 @@ QPushButton::pressed#btn_new_page {
 
 /* Button for "Image" */
 QPushButton#btn_image_page {
-    background-color: #E9E9F0;
+    background-color: #F6F4F8;
     border-width: 0px;
     border-radius: 6px;
     max-width: 8.9em;
@@ -831,7 +1125,7 @@ QPushButton::pressed#btn_image_page {
 
 /* Button for "Hotspots" */
 QPushButton#btn_hotspots_page {
-    background-color: white;
+    background-color: F6F4F8;
     border-style: outset;
     border-width: 2px;
     border-radius: 6px;
@@ -871,7 +1165,6 @@ QPushButton#btn_side_menu {
 }
 
 
-
 QPushButton {
     background-color: white;
     border-style: outset;
@@ -896,6 +1189,7 @@ QPushButton::pressed {
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
     border-color: #276cea;
 }
+
 
 QListWidget {
     border-style: solid;
@@ -958,13 +1252,6 @@ QLineEdit#txt_workspace {
     border-color: #DCDBE3;
     min-width: 6em;
     padding: 1px;
-}
-
-
-/* Settings for transparent background */
-
-QMainWindow {
-    background: transparent;
 }
 
 QFrame {
