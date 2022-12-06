@@ -50,12 +50,10 @@ class Project:
     _project_name: str = ""
     # _ref_chains: str = "no_chains_selected"
     # _model_chains: str = "no_chains_selected"
-    _prot_structure_1_chains: str = "no_chains_selected"
-    _prot_structure_2_chains: str = "no_chains_selected"
     _folder_paths: list[Path] = []
     _session_file_name: str = "session_file_model_s.pse"
-    _proteins: core.Protein = []
-    _protein_pairs: core.ProteinPair = []
+    _proteins: list[core.Protein] = []
+    _protein_pairs: list[core.ProteinPair] = []
 
     def __init__(self, project_name, workspace_path) -> None:
         """Constructor
@@ -66,22 +64,22 @@ class Project:
             workspace_path:
                 path of the workspace
         """
-        project_name_with_underscores = project_name.replace(" ", "_")
-        self._project_name = project_name_with_underscores
+        # project_name_with_underscores = project_name.replace(" ", "_")
+        self._project_name = project_name
         self._workspace = workspace_path
 
         self._folder_paths = [
-            Path(f"{workspace_path}/{project_name_with_underscores}"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/pdb"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/alignment_files"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/distance_csv"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/images"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/images/interesting_regions"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/plots"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/plots/distance_histogram"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/plots/distance_plot"),
-            Path(f"{workspace_path}/{project_name_with_underscores}/results/sessions/"),
+            Path(f"{workspace_path}/{self._project_name}"),
+            Path(f"{workspace_path}/{self._project_name}/pdb"),
+            Path(f"{workspace_path}/{self._project_name}/results"),
+            # Path(f"{workspace_path}/{self._project_name}/results/alignment_files"),
+            # Path(f"{workspace_path}/{self._project_name}/results/distance_csv"),
+            # Path(f"{workspace_path}/{self._project_name}/results/images"),
+            # Path(f"{workspace_path}/{self._project_name}/results/images/interesting_regions"),
+            # Path(f"{workspace_path}/{self._project_name}/results/plots"),
+            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_histogram"),
+            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_plot"),
+            # Path(f"{workspace_path}/{self._project_name}/results/sessions/"),
         ]
 
     def add_new_protein(self, protein_name) -> None:
@@ -134,20 +132,6 @@ class Project:
             session_file as complete path with file name
         """
         return f"{self._folder_paths[10]}/{self._session_file_name}"
-
-    def get_project_name(self) -> str:
-        """This function gets the value of the project_name variable
-
-        Returns (str):
-            project_name
-        """
-        return self._project_name
-
-    def set_project_name(self, value: str) -> None:
-        """This function gets the value of the project_name variable
-
-        """
-        self._project_name = value
 
     def get_ref_chains(self) -> str:
         """This function gets the value of the ref_chains variable
@@ -229,60 +213,3 @@ class Project:
         xml_as_string = minidom.parseString(ElementTree.tostring(root)).toprettyxml(indent="   ")
         with open(f"{self._folder_paths[0]}/project.xml", "w") as f:
             f.write(xml_as_string)
-
-    # def create_xml_file(self, attribute="value") -> None:
-    #     """This function create the settings xml with the format:
-    #
-    #     Args:
-    #         attribute (optional str):
-    #             defines the attribute to access the elements
-    #
-    #     <?xml version="1.0" ?>
-    #     <root>
-    #         <project_name DEFAULT_ATTRIBUTE=project_name_value/>
-    #         <pdb_file DEFAULT_ATTRIBUTE=pdb_file_path>
-    #         <pdb_id DEFAULT_ATTRIBUTE=pdb_id_value/>
-    #         <pdb_models DEFAULT_ATTRIBUTE=pdb_models_value/>
-    #         <ref_chains DEFAULT_ATTRIBUTE=ref_chains_value/>
-    #         <model_chains DEFAULT_ATTRIBUTE=model_chains_value/>
-    #         <results_path DEFAULT_ATTRIBUTE=results_path_value/>
-    #     </root>
-    #     """
-    #     root = minidom.Document()
-    #     root_node = root.createElement("root")
-    #     root.appendChild(root_node)
-    #
-    #     job_name_path_node = root.createElement("job_name")
-    #     job_name_path_node.setAttribute(attribute, self._job_name)
-    #     root_node.appendChild(job_name_path_node)
-    #
-    #     project_name_path_node = root.createElement("project_name")
-    #     project_name_path_node.setAttribute(attribute, self._project_name)
-    #     root_node.appendChild(project_name_path_node)
-    #
-    #     pdb_file_path_node = root.createElement("pdb_file")
-    #     pdb_file_path_node.setAttribute(attribute, self._pdb_file)
-    #     root_node.appendChild(pdb_file_path_node)
-    #
-    #     pdb_id_path_node = root.createElement("pdb_id")
-    #     pdb_id_path_node.setAttribute(attribute, self._pdb_id)
-    #     root_node.appendChild(pdb_id_path_node)
-    #
-    #     pdb_models_path_node = root.createElement("pdb_model")
-    #     pdb_models_path_node.setAttribute(attribute, self.get_pdb_models())
-    #     root_node.appendChild(pdb_models_path_node)
-    #
-    #     ref_chains_path_node = root.createElement("ref_chains")
-    #     ref_chains_path_node.setAttribute(attribute, self._ref_chains)
-    #     root_node.appendChild(ref_chains_path_node)
-    #
-    #     model_chains_path_node = root.createElement("model_chains")
-    #     model_chains_path_node.setAttribute(attribute, self._model_chains)
-    #     root_node.appendChild(model_chains_path_node)
-    #
-    #     results_path_path_node = root.createElement("results_path")
-    #     results_path_path_node.setAttribute(attribute, self.get_results_path())
-    #     root_node.appendChild(results_path_path_node)
-    #
-    #     with open(f"{self.get_project_path()}/{self.get_project_name()}.xml", "w", encoding="utf-8") as file:
-    #         file.write(root.toprettyxml())
