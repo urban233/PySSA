@@ -166,7 +166,7 @@ class Settings:
 
         # creates a pretty xml file
         xml_as_string = minidom.parseString(ElementTree.tostring(root)).toprettyxml(indent="   ")
-        with open(f"{self._dir_settings}/{self._filename}", "w") as f:
+        with open(f"{self._dir_settings}\\{self._filename}", "w") as f:
             f.write(xml_as_string)
 
     def load_settings_from_xml(self):

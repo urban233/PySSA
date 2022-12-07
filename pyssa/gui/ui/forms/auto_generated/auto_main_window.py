@@ -2,16 +2,18 @@
 
 # Form implementation generated from reading ui file 'mainWindow_alt.ui'
 #
-# Created by: PyQt5 UI code generator 5.15.7
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(878, 1068)
+        MainWindow.resize(550, 833)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
@@ -54,17 +56,19 @@ class Ui_MainWindow(object):
         self.navigation_frame = QtWidgets.QFrame(self.side_menu)
         self.navigation_frame.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.navigation_frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.navigation_frame.setLineWidth(0)
         self.navigation_frame.setObjectName("navigation_frame")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.navigation_frame)
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_5.setContentsMargins(5, 0, 0, 0)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.scrollArea = QtWidgets.QScrollArea(self.navigation_frame)
+        self.scrollArea.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 144, 970))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 142, 739))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout_64 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout_64.setContentsMargins(0, 0, 0, 0)
@@ -1242,7 +1246,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.main_body)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 878, 36))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 550, 26))
         self.menubar.setObjectName("menubar")
         self.menuSettings = QtWidgets.QMenu(self.menubar)
         self.menuSettings.setObjectName("menuSettings")
@@ -1456,4 +1460,3 @@ class Ui_MainWindow(object):
         self.action_help_about.setText(_translate("MainWindow", "About"))
         self.action_add_model.setText(_translate("MainWindow", "Add model"))
         self.action_add_multiple_models.setText(_translate("MainWindow", "Add multiple models"))
-

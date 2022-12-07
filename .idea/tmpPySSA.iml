@@ -9,7 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/testing_area" />
       <excludeFolder url="file://$MODULE_DIR$/tmp_storage" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9 (tmpPySSA)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="pyssa" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

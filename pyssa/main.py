@@ -83,7 +83,8 @@ class MainWindow(QMainWindow):
         self._init_side_menu()
 
         # checks if the plugin launched for the first time
-        if global_variables.global_var_settings_obj.get_app_launch() == 0:
+        if global_variables.global_var_settings_obj.get_app_launch() == 0 or not os.path.exists(
+                pathlib.Path(constants.SETTINGS_DIR / constants.SETTINGS_FILE)):
             dialog = dialog_startup.DialogStartup()
             dialog.exec_()
             # checks if the cancel button was pressed
