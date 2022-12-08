@@ -22,11 +22,13 @@
 import subprocess
 import os
 import logging
-from pymol import Qt
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
-#from main_alt import global_var_settings_obj
+from pyssa.gui.ui.dialogs import dialog_message_wsl
 from pyssa.gui.utilities.global_variables import global_var_settings_obj
+from pymol import Qt
+from PyQt5.QtWidgets import QMessageBox
+from pyssa.gui.utilities import tools
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -88,7 +90,8 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.btn_cancel.clicked.connect(self.cancelDialog)
         self.ui.btn_ok.clicked.connect(self.okDialog)
         self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
-
+        self.ui.btn_enable_wsl2.clicked.connect(self.install_wsl)
+        
         self.setWindowTitle("Global Settings")
 
     # @SLOT()
@@ -111,3 +114,11 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
     def install_local_colabfold(self):
         print(subprocess.run(f"{os.environ['HOME']}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"))
+
+    # install wsl2
+    def install_wsl(self):
+        print ("It goes on.")
+        # print(subprocess.run("wsl --install"))
+
+        dialog = dialog_message_wsl.DialogMessageWsl()
+        dialog.exec_()
