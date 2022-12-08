@@ -113,7 +113,13 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def install_local_colabfold(self):
-        print(subprocess.run(f"{os.environ['HOME']}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"))
+        user_name = os.getlogin()
+        print(subprocess.run(
+            ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"]))
+        print(subprocess.run(
+            ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"]))
+        print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"]))
+        print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"]))
 
     # install wsl2
     def install_wsl(self):

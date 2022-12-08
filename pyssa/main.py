@@ -33,6 +33,7 @@ import numpy as np
 import pymol
 import pyqtgraph as pg
 from PyQt5 import QtGui
+from PyQt5.QtGui import QIcon
 
 from pymol import Qt
 from pymol import cmd
@@ -155,6 +156,7 @@ class MainWindow(QMainWindow):
         self.number_of_pdb_files = None
         self._configuration()
         # setting additional parameters
+        self.setWindowIcon(QIcon("..\\assets\\pyssa_logo.png"))
         self.setWindowTitle("PySSA v0.9.2")
 
     def _setup_statusbar(self):

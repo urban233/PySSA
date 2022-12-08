@@ -1,7 +1,7 @@
-#!/bin/bash
-
-type wget || { echo "wget command is not installed. Please install it at first using apt or yum." ; exit 1 ; }
-type curl || { echo "curl command is not installed. Please install it at first using apt or yum. " ; exit 1 ; }
+##!/bin/bash
+#
+#type wget || { echo "wget command is not installed. Please install it at first using apt or yum." ; exit 1 ; }
+#type curl || { echo "curl command is not installed. Please install it at first using apt or yum. " ; exit 1 ; }
 
 CURRENTPATH=`pwd`
 COLABFOLDDIR="${CURRENTPATH}/colabfold_batch"
