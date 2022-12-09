@@ -18,10 +18,9 @@ type wget || { sudo apt install wget -y;}
 
 # copy install_colabbatch_linux.sh
 #cd scripts
-
+echo $HOME
 cd scripts
 pwd
-mkdir $HOME/.pyssa
 cp install_colabbatch_linux.sh $HOME/.pyssa
 cp post_colabfold_installation.sh $HOME/.pyssa
 cp update.sh $HOME/.pyssa

@@ -24,6 +24,8 @@ from pymol import Qt
 from datetime import datetime
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_message_wsl import Ui_Dialog
 from pyssa.gui.utilities import gui_utils
+import subprocess
+import os
 
 class DialogMessageWsl(Qt.QtWidgets.QDialog):
 
@@ -40,11 +42,50 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.setWindowTitle("WSL2 installation")
-
-        # functions for btns
-        def
-
+        self.ui.lbl_message_wsl.setText("Are you sure that you want the WSL2 installation?")
+        # btn
+        self.ui.btn_message_wsl_ok.show()
+        self.ui.btn_message_wsl_cancel.show()
+        self.ui.btn_message_wsl_restart.hide()
+        self.ui.btn_message_wsl_restart_later.hide()
 
         # btn connections
+        self.ui.btn_message_wsl_ok.clicked.connect(self.installation_in_progress)
+        self.ui.btn_message_wsl_cancel.clicked.connect(self.cancel_installation)
+        self.ui.btn_message_wsl_ok.clicked.connect(self.installation_is_finished)
+        self.ui.btn_message_wsl_restart_later.clicked.connect(self.restart_later)
+        self.ui.btn_message_wsl_restart.clicked.connect(self.restart_system)
+
+        # btn functions
+    def installation_in_progress(self):
+        self.ui.lbl_message_wsl.setText("Don't close the window and wait!")
+        self.ui.btn_message_wsl_ok.hide()
+        self.ui.btn_message_wsl_cancel.hide()
+        self.ui.btn_message_wsl_restart.hide()
+        self.ui.btn_message_wsl_restart_later.hide()
+        subprocess.run("wsl --install")
+
+    def cancel_installation(self):
+        self.close()
+
+    def installation_is_finished(self):
+        self.ui.lbl_message_wsl.setText("Installation is finished! Restart is necessary.")
+        self.ui.btn_message_wsl_ok.hide()
+        self.ui.btn_message_wsl_cancel.hide()
+        self.ui.btn_message_wsl_restart.show()
+        self.ui.btn_message_wsl_restart_later.show()
+
+    def close_dlg_installation_interface(self):
+        self.close()
+
+    def restart_later(self):
+        self.close()
+
+    def restart_system(self):
+        os.system("shutdown /r")
+
+
+
+
 
 

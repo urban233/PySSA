@@ -114,8 +114,11 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
     def install_local_colabfold(self):
         user_name = os.getlogin()
+        print(subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"]))
         print(subprocess.run(
             ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"]))
+        print(subprocess.run(
+            ["wsl", "cd", "/home/$USER/.pyssa", "&&", "wget", "-q", "-P", ".", "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"]))
         print(subprocess.run(
             ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"]))
         print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"]))
@@ -127,4 +130,5 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         # print(subprocess.run("wsl --install"))
 
         dialog = dialog_message_wsl.DialogMessageWsl()
+
         dialog.exec_()
