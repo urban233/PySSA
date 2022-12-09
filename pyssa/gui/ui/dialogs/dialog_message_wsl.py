@@ -83,9 +83,3 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
 
     def restart_system(self):
         os.system("shutdown /r")
-
-
-
-
-
-
