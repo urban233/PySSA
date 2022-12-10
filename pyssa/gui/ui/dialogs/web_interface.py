@@ -17,6 +17,8 @@ class WebInterface(Qt.QtWidgets.QDialog):
         "https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb")
     url_with_pre_login = QUrl(
         'https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb?pli=1')
+    account_page = QUrl("https://myaccount.google.com/?hl=de&utm_source=OGB&utm_medium=act&pli=1")
+
     abort_msg_box = None
     """Exit codes:
     0: Prediction successful
@@ -174,6 +176,10 @@ class WebInterface(Qt.QtWidgets.QDialog):
 
         """
         self.open_login_page()
+        self.exec_()
+
+    def show_account_page(self):
+        self.web_page.setUrl(self.account_page)
         self.exec_()
 
     def get_exit_code(self):

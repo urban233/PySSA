@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'dlgSettingsGlobal.ui'
+# Form implementation generated from reading ui file '.\dlgSettingsGlobal.ui'
 #
-# Created by: PyQt5 UI code generator 5.15.7
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -95,19 +97,29 @@ class Ui_Dialog(object):
         self.btn_install_local_prediction.setObjectName("btn_install_local_prediction")
         self.horizontalLayout_3.addWidget(self.btn_install_local_prediction)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
-        spacerItem = QtWidgets.QSpacerItem(20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
-        self.verticalLayout.addItem(spacerItem)
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        self.label = QtWidgets.QLabel(Dialog)
+        self.label.setObjectName("label")
+        self.horizontalLayout_7.addWidget(self.label)
+        self.btn_manage_google = QtWidgets.QPushButton(Dialog)
+        self.btn_manage_google.setMaximumSize(QtCore.QSize(121, 16777215))
+        self.btn_manage_google.setObjectName("btn_manage_google")
+        self.horizontalLayout_7.addWidget(self.btn_manage_google)
+        self.verticalLayout.addLayout(self.horizontalLayout_7)
+        spacerItem = QtWidgets.QSpacerItem(20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        self.verticalLayout.addItem(spacerItem)
+        self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_7.addItem(spacerItem1)
+        self.horizontalLayout_8.addItem(spacerItem1)
         self.btn_cancel = QtWidgets.QPushButton(Dialog)
         self.btn_cancel.setObjectName("btn_cancel")
-        self.horizontalLayout_7.addWidget(self.btn_cancel)
+        self.horizontalLayout_8.addWidget(self.btn_cancel)
         self.btn_ok = QtWidgets.QPushButton(Dialog)
         self.btn_ok.setObjectName("btn_ok")
-        self.horizontalLayout_7.addWidget(self.btn_ok)
-        self.verticalLayout.addLayout(self.horizontalLayout_7)
+        self.horizontalLayout_8.addWidget(self.btn_ok)
+        self.verticalLayout.addLayout(self.horizontalLayout_8)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -126,6 +138,7 @@ class Ui_Dialog(object):
         self.btn_enable_wsl2.setText(_translate("Dialog", "Enable"))
         self.lbl_local_prediction.setText(_translate("Dialog", "Local Prediction"))
         self.btn_install_local_prediction.setText(_translate("Dialog", "Install"))
+        self.label.setText(_translate("Dialog", "Google Account for cloud predictions"))
+        self.btn_manage_google.setText(_translate("Dialog", "Manage"))
         self.btn_cancel.setText(_translate("Dialog", "Cancel"))
         self.btn_ok.setText(_translate("Dialog", "OK"))
-

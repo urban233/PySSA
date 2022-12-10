@@ -173,6 +173,30 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Google Account for cloud predictions</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_manage_google">
+       <property name="maximumSize">
+        <size>
+         <width>121</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Manage</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -189,7 +213,7 @@
     </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">

@@ -309,7 +309,8 @@ class MainWindow(QMainWindow):
         self.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
         self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
         # edit project page
-
+        self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
+        self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
         # view project page
         self.ui.btn_view_page.clicked.connect(self.display_view_page)
         self.ui.btn_view_project_show.clicked.connect(self.view_sequence)
@@ -776,6 +777,19 @@ class MainWindow(QMainWindow):
         # list all proteins from pdb directory
         tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
                                               self.ui.list_view_project_proteins)
+
+    def display_edit_page(self):
+        """This function displays the edit project page
+
+        """
+        self.ui.list_edit_project_proteins.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
+
+        # list all proteins from pdb directory
+        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                              self.ui.list_edit_project_proteins)
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be
@@ -1524,8 +1538,6 @@ class MainWindow(QMainWindow):
                 if response[0]:
                     self.ui.lbl_handle_pymol_session.hide()
                     self.ui.btn_image_page.hide()
-                    self.ui.lbl_prediction.show()
-                    self.ui.btn_prediction_only_page.show()
                     self.display_prediction_only_page()
 
             else:
@@ -1669,6 +1681,19 @@ class MainWindow(QMainWindow):
         sequence = tools.get_sequence_from_pdb_file(f"{project_path}/pdb/{protein}")
         self.ui.txtedit_view_sequence.clear()
         self.ui.txtedit_view_sequence.append(sequence)
+
+    # edit project
+    def delete_protein(self):
+        protein_name = self.ui.list_edit_project_proteins.currentItem().text()
+        project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
+        response = gui_utils.warning_message_protein_gets_deleted()
+        if response:
+            tools.remove_pdb_file(f"{project_path}/pdb/{protein_name}")
+            self.ui.list_edit_project_proteins.clear()
+            tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                                  self.ui.list_edit_project_proteins)
+        else:
+            print("Nothing happend.")
 
     def close_project(self):
         self._init_side_menu()

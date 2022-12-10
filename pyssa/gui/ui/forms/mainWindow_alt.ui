@@ -183,7 +183,7 @@
                   <x>0</x>
                   <y>0</y>
                   <width>142</width>
-                  <height>739</height>
+                  <height>741</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -311,17 +311,7 @@
                       <enum>Qt::LeftToRight</enum>
                      </property>
                      <property name="styleSheet">
-                      <string notr="true">QPushButton {
-    background-color: #F6F4F8;
-    border-style: outset;
-    border-width: 0px;
-    border-radius: 6px;
-    border-color: #E9E9F0;
-    max-width: 8.9em;
-    min-width: 6em;
-    padding: 5px;
-    text-align: left;
-}</string>
+                      <string notr="true"/>
                      </property>
                      <property name="text">
                       <string>Monomer</string>
@@ -652,7 +642,7 @@
              </size>
             </property>
             <property name="currentIndex">
-             <number>11</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="home_page">
              <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -705,7 +695,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="label_4">
+                 <widget class="QLabel" name="lbl_homepage">
                   <property name="font">
                    <font>
                     <pointsize>22</pointsize>
@@ -2987,6 +2977,48 @@
                   </property>
                   <property name="text">
                    <string>Predict</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_3">
+             <layout class="QVBoxLayout" name="verticalLayout_66">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_65">
+                <item>
+                 <widget class="QLabel" name="label_34">
+                  <property name="text">
+                   <string>Proteins in current project</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QListWidget" name="list_edit_project_proteins"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_38">
+                <item>
+                 <spacer name="horizontalSpacer_27">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_edit_project_delete">
+                  <property name="text">
+                   <string>Delete</string>
                   </property>
                  </widget>
                 </item>

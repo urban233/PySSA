@@ -361,6 +361,14 @@ def get_sequence_from_pdb_file(file_path):
     sequence = ''.join(sequence_list)
     return sequence
 
+
+def remove_pdb_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    else:
+        print(f"There is no protein in this project under: {file_path}")
+
+
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")
 #

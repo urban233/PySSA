@@ -24,6 +24,8 @@
 import os
 import shutil
 from pathlib import Path
+
+from PyQt5.QtGui import QIcon
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from pyssa.gui.utilities import tools
@@ -247,6 +249,32 @@ def warning_message_project_gets_deleted() -> bool:
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
     msg.setInformativeText(f"Are you sure you want to delete this project?")
+    msg.setWindowTitle("Warning")
+    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == cancel_button:
+        return False
+    if msg.clickedButton() == ok_button:
+        return True
+
+
+def warning_message_protein_gets_deleted() -> bool:
+    """This function creates a warning message, which can be customized.
+
+    Args:
+        project_name:
+            name of the active project
+        message_detail:
+            additional information
+        path:
+            path where the prediction is stored
+    """
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Warning)
+    msg.setText("Warning")
+    msg.setInformativeText(f"Are you sure you want to delete this protein?")
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)

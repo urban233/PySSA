@@ -20,6 +20,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+QLabel {
+    font-family: "Microsoft YaHei";
+    font-size: 13px;
+}
+
+QPushButton {
+    font-family: "Microsoft YaHei";
+    font-size: 13px;
+}
+
+QPushButton:hover {
+    font: bold;
+}
+
 QFrame#content {
     background: #ffffff;
 }
@@ -33,6 +47,10 @@ QToolTip {
     color: white;
     font: bold;
     font-size: 14px;
+}
+
+QLabel#lbl_homepage {
+    font-size: 22px;
 }
 
 /* Top Navigation Bar styles */
@@ -73,27 +91,29 @@ QWidget#scrollAreaWidgetContents {
 QLabel#lbl_project {
     /*background: #E9E9F0;*/
     background: #F6F4F8;
-    color: #969696;
+    color: #878787;
     font: bold;
+    font-size: 14px;
 }
 
 QLabel#lbl_prediction {
     background: #F6F4F8;
-    color: #969696;
+    color: #696969;
     font: bold;
 }
 
 QLabel#lbl_analysis {
     background: #F6F4F8;
-    color: #969696;
+    color: #878787;
     font: bold;
 }
 
 QLabel#lbl_handle_pymol_session {
     /*background: #E9E9F0;*/ /*OLD BACKGROUND COLOR*/
     background: #F6F4F8;
-    color: #969696;
+    color: #878787;
     font: bold;
+    font-size: 14px;
 }
 
 /* Button for "New" */
@@ -484,8 +504,10 @@ QPushButton::pressed#btn_close_project {
 
 /* Label for "Cloud Prediction" */
 QLabel#lbl_pred_cloud {
-    color: #969696;
+    background: #F6F4F8;
+    color: #878787;
     font: bold;
+    font-size: 14px;
 }
 
 /* Button for "Monomer"*/
@@ -520,7 +542,6 @@ QPushButton::pressed#btn_pred_cloud_monomer_page {
                                 stop: 0 #276cea, stop: 0.4 #0047c8,
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
 }
-
 
 /* Button for "Monomer vs .pdb" */
 QPushButton#btn_pred_cloud_monomer_vs_pdb_page {
@@ -624,8 +645,10 @@ QPushButton::pressed#btn_pred_cloud_multimer_vs_pdb_page {
 
 /* Label for "Local Prediction" */
 QLabel#lbl_pred_local {
-    color: #969696;
+    background: #F6F4F8;
+    color: #878787;
     font: bold;
+    font-size: 14px;
 }
 
 /* Button for "Monomer" */
@@ -762,8 +785,10 @@ QPushButton::pressed#btn_pred_local_multimer_vs_pdb_page {
 
 /* Label for "Analysis" */
 QLabel#lbl_analysis {
-    color: #4B91F7;
+    background: #F6F4F8;
+    color: #878787;
     font: bold;
+    font-size: 14px;
 }
 
 /* last code for lbls and btns are below */
