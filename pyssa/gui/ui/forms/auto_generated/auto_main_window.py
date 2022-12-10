@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mainWindow_alt.ui'
+# Form implementation generated from reading ui file '.\mainWindow_alt.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -1111,9 +1111,13 @@ class Ui_MainWindow(object):
         self.label_7 = QtWidgets.QLabel(self.page)
         self.label_7.setObjectName("label_7")
         self.verticalLayout_52.addWidget(self.label_7)
-        self.list_edit_project_proteins = QtWidgets.QListWidget(self.page)
-        self.list_edit_project_proteins.setObjectName("list_edit_project_proteins")
-        self.verticalLayout_52.addWidget(self.list_edit_project_proteins)
+        self.list_view_project_proteins = QtWidgets.QListWidget(self.page)
+        self.list_view_project_proteins.setObjectName("list_view_project_proteins")
+        self.verticalLayout_52.addWidget(self.list_view_project_proteins)
+        self.txtedit_view_sequence = QtWidgets.QTextEdit(self.page)
+        self.txtedit_view_sequence.setEnabled(False)
+        self.txtedit_view_sequence.setObjectName("txtedit_view_sequence")
+        self.verticalLayout_52.addWidget(self.txtedit_view_sequence)
         self.verticalLayout_57.addLayout(self.verticalLayout_52)
         self.horizontalLayout_30 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_30.setObjectName("horizontalLayout_30")
@@ -1122,9 +1126,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_30.addWidget(self.label_9)
         spacerItem27 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_30.addItem(spacerItem27)
-        self.btn_view_project_open = QtWidgets.QPushButton(self.page)
-        self.btn_view_project_open.setObjectName("btn_view_project_open")
-        self.horizontalLayout_30.addWidget(self.btn_view_project_open)
+        self.btn_view_project_show = QtWidgets.QPushButton(self.page)
+        self.btn_view_project_show.setObjectName("btn_view_project_show")
+        self.horizontalLayout_30.addWidget(self.btn_view_project_show)
         self.verticalLayout_57.addLayout(self.horizontalLayout_30)
         self.verticalLayout_58.addLayout(self.verticalLayout_57)
         self.stackedWidget.addWidget(self.page)
@@ -1304,7 +1308,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.stackedWidget.setCurrentIndex(1)
+        self.stackedWidget.setCurrentIndex(11)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -1426,7 +1430,7 @@ class Ui_MainWindow(object):
         self.btn_s_v_p_start.setText(_translate("MainWindow", "Start"))
         self.label_7.setText(_translate("MainWindow", "Proteins in current project"))
         self.label_9.setText(_translate("MainWindow", "Sequence of selected protein"))
-        self.btn_view_project_open.setText(_translate("MainWindow", "Open"))
+        self.btn_view_project_show.setText(_translate("MainWindow", "Show"))
         self.label_36.setText(_translate("MainWindow", "Protein name"))
         self.label_38.setText(_translate("MainWindow", "TextLabel"))
         self.pushButton_3.setText(_translate("MainWindow", "Next"))

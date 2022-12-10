@@ -283,7 +283,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_open_page.clicked.connect(self.display_open_page)
         self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
         self.ui.btn_save_project.clicked.connect(self.save_project)
-        self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
+        self.ui.btn_edit_page.clicked.connect(self.display_view_page)
         self.ui.btn_close_project.clicked.connect(self.close_project)
         #self.ui.btn_prediction_only_page.clicked.connect(self.display_prediction_only_page)
         #self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
@@ -311,7 +311,9 @@ class MainWindow(QMainWindow):
         # edit project page
 
         # view project page
-
+        self.ui.btn_view_page.clicked.connect(self.display_view_page)
+        self.ui.btn_view_project_show.clicked.connect(self.view_sequence)
+        self.ui.list_view_project_proteins.doubleClicked.connect(self.view_sequence)
         # use project page
 
         # new sequence page
@@ -738,7 +740,7 @@ class MainWindow(QMainWindow):
         self.ui.list_new_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_new_projects)
+        tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_new_projects)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 7, "Create new project")
 
     def display_open_page(self):
@@ -748,7 +750,7 @@ class MainWindow(QMainWindow):
         self.ui.list_open_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_open_projects)
+        tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
 
     def display_delete_page(self):
@@ -758,17 +760,22 @@ class MainWindow(QMainWindow):
         self.ui.list_delete_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_delete_projects)
+        tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_delete_projects)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 9, "Delete existing project")
 
-    def display_edit_page(self):
+    def display_view_page(self):
         """This function displays the edit project page
 
         """
-        self.ui.list_edit_project_proteins.clear()
+        self.ui.list_view_project_proteins.clear()
+        self.ui.txtedit_view_sequence.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "Edit current project")
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
+
+        # list all proteins from pdb directory
+        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                              self.ui.list_view_project_proteins)
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be
@@ -1636,7 +1643,7 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(self.workspace.text())
             self.ui.list_delete_projects.clear()
             self.status_bar.showMessage(self.workspace.text())
-            tools.scan_workspace_for_vaild_projects(self.workspace_path, self.ui.list_delete_projects)
+            tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_delete_projects)
         else:
             return
 
@@ -1655,7 +1662,14 @@ class MainWindow(QMainWindow):
             cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/auto_generated_session_file.pse")
             self.status_bar.showMessage("Saved project successfully.")
 
-    # close project
+    # view project
+    def view_sequence(self):
+        project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
+        protein = self.ui.list_view_project_proteins.currentItem().text()
+        sequence = tools.get_sequence_from_pdb_file(f"{project_path}/pdb/{protein}")
+        self.ui.txtedit_view_sequence.clear()
+        self.ui.txtedit_view_sequence.append(sequence)
+
     def close_project(self):
         self._init_side_menu()
         self._init_hide_ui_elements()
@@ -1703,6 +1717,7 @@ class MainWindow(QMainWindow):
                     return
 
             print("Check successful.")
+    # close project
 
     def validate_protein_sequence(self):
         """This function validates the input of the protein sequence in real-time

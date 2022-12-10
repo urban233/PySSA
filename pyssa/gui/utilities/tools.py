@@ -24,6 +24,8 @@
 import os
 import shutil
 import logging
+import fnmatch
+from Bio import PDB
 from pathlib import Path
 
 from pymol import Qt
@@ -292,7 +294,7 @@ def check_results_for_integrity(workspace_path, project_name) -> (bool, Path):
     return True, "Data is valid"
 
 
-def scan_workspace_for_vaild_projects(workspace_path, list_new_projects):
+def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
     workspace_projects: list[str] = os.listdir(workspace_path)
     valid_directories = []
     # iterates over possible project directories
@@ -311,6 +313,17 @@ def scan_workspace_for_vaild_projects(workspace_path, list_new_projects):
         list_new_projects.addItem(project)
 
 
+def scan_project_for_valid_proteins(project_path, list_view_project_proteins):
+    directory = "pdb"
+    project_proteins: list[str] = os.listdir(f"{project_path}/{directory}")
+    valid_proteins = []
+    pattern = "*.pdb"
+    # iterates over possible project directories
+    for protein in project_proteins:
+        if fnmatch.fnmatch(protein, pattern):
+            list_view_project_proteins.addItem(protein)
+
+
 def switch_page(stackedWidget: Qt.QtWidgets.QStackedWidget, lbl_page_title: Qt.QtWidgets.QLabel, index: int, text: str) -> None:
     """This function switches a given stackedWidget page.
 
@@ -327,6 +340,26 @@ def switch_page(stackedWidget: Qt.QtWidgets.QStackedWidget, lbl_page_title: Qt.Q
     """
     stackedWidget.setCurrentIndex(index)
     lbl_page_title.setText(text)
+
+
+def get_sequence_from_pdb_file(file_path):
+    # You can use a dict to convert three letter code to one letter code
+    d3to1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
+             'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
+             'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
+             'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+    parser_pdb = PDB.PDBParser()
+    structure = parser_pdb.get_structure("struct", file_path)
+    sequence_list = []
+    for model in structure:
+        for chain in model:
+            for residue in chain:
+                try:
+                    sequence_list.append(d3to1[residue.resname])
+                except KeyError:
+                    print(f"Residue {residue} is not a valid residue!")
+    sequence = ''.join(sequence_list)
+    return sequence
 
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")

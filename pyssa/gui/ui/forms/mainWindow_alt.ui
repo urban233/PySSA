@@ -652,7 +652,7 @@
              </size>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>11</number>
             </property>
             <widget class="QWidget" name="home_page">
              <layout class="QVBoxLayout" name="verticalLayout_20">
@@ -2643,7 +2643,14 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QListWidget" name="list_edit_project_proteins"/>
+                   <widget class="QListWidget" name="list_view_project_proteins"/>
+                  </item>
+                  <item>
+                   <widget class="QTextEdit" name="txtedit_view_sequence">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </item>
@@ -2670,9 +2677,9 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="btn_view_project_open">
+                   <widget class="QPushButton" name="btn_view_project_show">
                     <property name="text">
-                     <string>Open</string>
+                     <string>Show</string>
                     </property>
                    </widget>
                   </item>
