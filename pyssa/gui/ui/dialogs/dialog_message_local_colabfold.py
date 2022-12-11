@@ -22,13 +22,12 @@
 import PyQt5.QtWidgets
 from pymol import Qt
 from datetime import datetime
-from pyssa.gui.ui.forms.auto_generated.auto_dialog_message_wsl import Ui_Dialog
+from pyssa.gui.ui.forms.auto_generated.auto_dialog_message_local_colabfold import Ui_Dialog
 from pyssa.gui.utilities import gui_utils
 import subprocess
 import os
 
-class DialogMessageWsl(Qt.QtWidgets.QDialog):
-
+class DialogMessageLocalColabfold(Qt.QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor
 
@@ -41,24 +40,26 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-        self.setWindowTitle("WSL2 installation")
-        self.ui.lbl_message_wsl.setText("Are you sure that you want the WSL2 installation?")
+        self.setWindowTitle("Local Colabfold installation")
+        self.ui.lbl_message_wsl.setText("Are you sure that you want the Local Colabfold installation?")
         # btn
         self.ui.btn_message_wsl_ok.show()
-        self.ui.btn_message_wsl_ok_2.hide()
         self.ui.btn_message_wsl_cancel.show()
         self.ui.btn_message_wsl_restart.hide()
         self.ui.btn_message_wsl_restart_later.hide()
+        self.ui.btn_message_wsl_ok_2.hide()
 
         # btn connections
         self.ui.btn_message_wsl_ok.clicked.connect(self.installation_in_progress)
         self.ui.btn_message_wsl_cancel.clicked.connect(self.cancel_installation)
         self.ui.btn_message_wsl_ok.clicked.connect(self.installation_is_finished)
-        self.ui.btn_message_wsl_restart_later.clicked.connect(self.restart_later)
-        self.ui.btn_message_wsl_restart.clicked.connect(self.restart_system)
+        self.ui.btn_message_wsl_ok_2.clicked.connect(self.close_dlg_installation_interface)
+        # self.ui.btn_message_wsl_restart_later.clicked.connect(self.restart_later)
+        # self.ui.btn_message_wsl_ok_2.clicked.connect(self.close_dlg_installation_interface)
+        # self.ui.btn_message_wsl_restart.clicked.connect(self.restart_system)
 
         # btn functions
-    # def wsl2_is_included(self):
+    # def local_colabfold_is_included(self):
     #     self.ui.btn
 
     def installation_in_progress(self):
@@ -68,24 +69,35 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui.btn_message_wsl_cancel.hide()
         self.ui.btn_message_wsl_restart.hide()
         self.ui.btn_message_wsl_restart_later.hide()
-        subprocess.run("wsl --install")
+        user_name = os.getlogin()
+        subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"])
+        subprocess.run(
+            ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"])
+        subprocess.run(
+            ["wsl", "cd", "/home/$USER/.pyssa", "&&", "wget", "-q", "-P", ".",
+             "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"])
+        subprocess.run(
+            ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"])
+        subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"])
+        subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"])
+
 
     def cancel_installation(self):
         self.close()
 
     def installation_is_finished(self):
-        self.ui.lbl_message_wsl.setText("Installation is finished! Restart is necessary.")
+        self.ui.lbl_message_wsl.setText("Installation is finished!")
         self.ui.btn_message_wsl_ok.hide()
-        self.ui.btn_message_wsl_ok_2.hide()
+        self.ui.btn_message_wsl_ok_2.show()
         self.ui.btn_message_wsl_cancel.hide()
-        self.ui.btn_message_wsl_restart.show()
-        self.ui.btn_message_wsl_restart_later.show()
+        self.ui.btn_message_wsl_restart.hide()
+        self.ui.btn_message_wsl_restart_later.hide()
 
-    def close_dlg_installation_interface(self):
+    def close_dlg_installation_interface(self): 
         self.close()
 
     def restart_later(self):
         self.close()
 
-    def restart_system(self):
-        os.system("shutdown /r")
+    # def restart_system(self):
+    #     os.system("shutdown /r")

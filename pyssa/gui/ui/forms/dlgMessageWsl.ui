@@ -91,6 +91,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="btn_message_wsl_ok_2">
+       <property name="text">
+        <string>Ok</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="btn_message_wsl_ok">
        <property name="text">
         <string>Ok</string>
