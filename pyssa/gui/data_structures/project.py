@@ -133,34 +133,6 @@ class Project:
         """
         return f"{self._folder_paths[10]}/{self._session_file_name}"
 
-    def get_ref_chains(self) -> str:
-        """This function gets the value of the ref_chains variable
-
-        Returns (str):
-            project_name
-        """
-        return self._ref_chains
-
-    def set_ref_chains(self, value: str) -> None:
-        """This function gets the value of the ref_chains variable
-
-        """
-        self._ref_chains = value
-
-    def get_model_chains(self) -> str:
-        """This function gets the value of the model_chains variable
-
-        Returns (str):
-            project_name
-        """
-        return self._model_chains
-
-    def set_model_chains(self, value: str) -> None:
-        """This function gets the value of the model_chains variable
-
-        """
-        self._model_chains = value
-
     def get_project_path(self) -> str:
         """This function returns the project path of the project
 
@@ -190,12 +162,6 @@ class Project:
             ],
             [
                 "project_name", self._project_name
-            ],
-            [
-                "reference_chains", self._ref_chains
-            ],
-            [
-                "model_chains", self._model_chains
             ],
         ]
         return project

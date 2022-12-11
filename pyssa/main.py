@@ -47,11 +47,13 @@ from PyQt5 import QtWebEngineWidgets
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.data_structures import project
 from pyssa.gui.data_structures import structure_analysis
+from pyssa.gui.data_structures.data_classes import protein_info
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
 from pyssa.gui.ui.dialogs import dialog_add_model
+from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.dialogs import web_interface
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.utilities import tools
@@ -143,6 +145,7 @@ class MainWindow(QMainWindow):
         self._init_hide_ui_elements()
         self._init_fill_combo_boxes()
         self._init_new_page()
+        self._init_use_page()
         self._init_new_sequence_page()
         # self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
@@ -213,57 +216,165 @@ class MainWindow(QMainWindow):
 
     def _configuration(self):
         if self.number_of_pdb_files is None:
-            self.ui.btn_new_page.show()
-            self.ui.btn_open_page.show()
-            self.ui.btn_delete_page.show()
+            gui_elements_to_show = [
+                self.ui.btn_new_page,
+                self.ui.btn_open_page,
+                self.ui.btn_delete_page,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_elements_to_hide = [
+                self.ui.btn_close_project,
+                self.ui.btn_use_page,
+                self.ui.btn_edit_page,
+                self.ui.lbl_pred_cloud,
+                self.ui.btn_pred_cloud_monomer_page,
+                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+                self.ui.btn_pred_cloud_multimer_page,
+                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+                self.ui.lbl_pred_local,
+                self.ui.btn_pred_local_monomer_page,
+                self.ui.btn_pred_local_monomer_vs_pdb_page,
+                self.ui.btn_pred_local_multimer_page,
+                self.ui.btn_pred_local_multimer_vs_pdb_page,
+                self.ui.lbl_analysis,
+                self.ui.btn_single_analysis_page,
+                self.ui.btn_job_analysis_page,
+                self.ui.btn_results_page,
+                self.ui.lbl_handle_pymol_session,
+                self.ui.btn_image_page,
+                self.ui.btn_hotspots_page,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
         elif self.number_of_pdb_files == 0:
-            self.ui.btn_new_page.hide()
-            self.ui.btn_open_page.hide()
-            self.ui.btn_delete_page.hide()
-            self.ui.btn_prediction_only_page.show()
-            self.ui.btn_close_project.show()
-            self.ui.btn_use_page.show()
-            self.ui.btn_edit_page.show()
+            gui_elements_to_show = [
+                self.ui.btn_close_project,
+                self.ui.btn_use_page,
+                self.ui.btn_edit_page,
+                self.ui.lbl_pred_cloud,
+                self.ui.btn_pred_cloud_monomer_page,
+                self.ui.btn_pred_cloud_multimer_page,
+                self.ui.lbl_pred_local,
+                self.ui.btn_pred_local_monomer_page,
+                self.ui.btn_pred_local_multimer_page,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_elements_to_hide = [
+                self.ui.btn_new_page,
+                self.ui.btn_open_page,
+                self.ui.btn_delete_page,
+                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+                self.ui.btn_pred_local_monomer_vs_pdb_page,
+                self.ui.btn_pred_local_multimer_vs_pdb_page,
+                self.ui.lbl_analysis,
+                self.ui.btn_single_analysis_page,
+                self.ui.btn_job_analysis_page,
+                self.ui.btn_results_page,
+                self.ui.lbl_handle_pymol_session,
+                self.ui.btn_image_page,
+                self.ui.btn_hotspots_page,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.display_view_page()
         elif self.number_of_pdb_files == 1:
-            # hide project management
-            self.ui.btn_new_page.hide()
-            self.ui.btn_open_page.hide()
-            self.ui.btn_delete_page.hide()
-            # number of pdb files specific
-            self.ui.btn_prediction_page.show()
-            self.ui.btn_image_page.show()
-            # show project management
-            self.ui.btn_save_project.show()
-            self.ui.btn_close_project.show()
-            self.ui.btn_use_page.show()
-            self.ui.btn_edit_page.show()
+            gui_elements_to_show = [
+                self.ui.btn_close_project,
+                self.ui.btn_save_project,
+                self.ui.btn_use_page,
+                self.ui.btn_edit_page,
+                self.ui.btn_view_page,
+                self.ui.lbl_pred_cloud,
+                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+                self.ui.lbl_pred_local,
+                self.ui.btn_pred_local_monomer_vs_pdb_page,
+                self.ui.btn_pred_local_multimer_vs_pdb_page,
+                self.ui.lbl_handle_pymol_session,
+                self.ui.btn_image_page,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_elements_to_hide = [
+                self.ui.btn_new_page,
+                self.ui.btn_open_page,
+                self.ui.btn_delete_page,
+                self.ui.btn_pred_cloud_monomer_page,
+                self.ui.btn_pred_cloud_multimer_page,
+                self.ui.btn_pred_local_monomer_page,
+                self.ui.btn_pred_local_multimer_page,
+                self.ui.lbl_analysis,
+                self.ui.btn_single_analysis_page,
+                self.ui.btn_job_analysis_page,
+                self.ui.btn_results_page,
+                self.ui.btn_hotspots_page,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.display_view_page()
         elif self.number_of_pdb_files == 2:
-            # hide project management
-            self.ui.btn_new_page.hide()
-            self.ui.btn_open_page.hide()
-            self.ui.btn_delete_page.hide()
-            # number of pdb files specific
-            self.ui.btn_single_analysis_page.show()
-            self.ui.btn_image_page.show()
-            # show project management
-            self.ui.btn_save_project.show()
-            self.ui.btn_close_project.show()
-            self.ui.btn_use_page.show()
-            self.ui.btn_edit_page.show()
+            gui_elements_to_show = [
+                self.ui.btn_close_project,
+                self.ui.btn_save_project,
+                self.ui.btn_use_page,
+                self.ui.btn_edit_page,
+                self.ui.btn_view_page,
+                self.ui.lbl_analysis,
+                self.ui.btn_single_analysis_page,
+                self.ui.btn_results_page,
+                self.ui.lbl_handle_pymol_session,
+                self.ui.btn_image_page,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_elements_to_hide = [
+                self.ui.btn_new_page,
+                self.ui.btn_open_page,
+                self.ui.btn_delete_page,
+                self.ui.lbl_pred_cloud,
+                self.ui.btn_pred_cloud_monomer_page,
+                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+                self.ui.btn_pred_cloud_multimer_page,
+                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+                self.ui.lbl_pred_local,
+                self.ui.btn_pred_local_monomer_vs_pdb_page,
+                self.ui.btn_pred_local_multimer_vs_pdb_page,
+                self.ui.btn_pred_local_monomer_page,
+                self.ui.btn_pred_local_multimer_page,
+                self.ui.btn_job_analysis_page,
+                self.ui.btn_hotspots_page,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.display_view_page()
         elif self.number_of_pdb_files > 2:
-            # hide project management
-            self.ui.btn_new_page.hide()
-            self.ui.btn_open_page.hide()
-            self.ui.btn_delete_page.hide()
-            # number of pdb files specific
-            self.ui.btn_single_analysis_page.show()
-            self.ui.btn_job_analysis_page.show()
-            self.ui.btn_image_page.show()
-            # show project management
-            self.ui.btn_save_project.show()
-            self.ui.btn_close_project.show()
-            self.ui.btn_use_page.show()
-            self.ui.btn_edit_page.show()
+            gui_elements_to_show = [
+                self.ui.btn_close_project,
+                self.ui.btn_save_project,
+                self.ui.btn_use_page,
+                self.ui.btn_edit_page,
+                self.ui.btn_view_page,
+                self.ui.lbl_analysis,
+                self.ui.btn_single_analysis_page,
+                self.ui.btn_job_analysis_page,
+                self.ui.btn_results_page,
+                self.ui.lbl_handle_pymol_session,
+                self.ui.btn_image_page,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_elements_to_hide = [
+                self.ui.btn_new_page,
+                self.ui.btn_open_page,
+                self.ui.btn_delete_page,
+                self.ui.lbl_pred_cloud,
+                self.ui.btn_pred_cloud_monomer_page,
+                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+                self.ui.btn_pred_cloud_multimer_page,
+                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+                self.ui.lbl_pred_local,
+                self.ui.btn_pred_local_monomer_vs_pdb_page,
+                self.ui.btn_pred_local_multimer_vs_pdb_page,
+                self.ui.btn_pred_local_monomer_page,
+                self.ui.btn_pred_local_multimer_page,
+                self.ui.btn_hotspots_page,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.display_view_page()
 
     def _connect_all_gui_elements(self):
         """This function connects all gui elements with their corresponding slots
@@ -284,8 +395,11 @@ class MainWindow(QMainWindow):
         self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
         self.ui.btn_save_project.clicked.connect(self.save_project)
         self.ui.btn_edit_page.clicked.connect(self.display_view_page)
+        self.ui.btn_view_page.clicked.connect(self.display_view_page)
+        self.ui.btn_use_page.clicked.connect(self.display_use_page)
         self.ui.btn_close_project.clicked.connect(self.close_project)
-        #self.ui.btn_prediction_only_page.clicked.connect(self.display_prediction_only_page)
+        self.ui.btn_pred_cloud_monomer_page.clicked.connect(self.display_prediction_only_page)
+        self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
         #self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
         self.ui.btn_job_analysis_page.clicked.connect(self.display_job_analysis_page)
@@ -312,11 +426,18 @@ class MainWindow(QMainWindow):
         self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
         # view project page
-        self.ui.btn_view_page.clicked.connect(self.display_view_page)
         self.ui.btn_view_project_show.clicked.connect(self.view_sequence)
         self.ui.list_view_project_proteins.doubleClicked.connect(self.view_sequence)
         # use project page
-
+        self.ui.txt_use_project_name.textChanged.connect(self.validate_use_project_name)
+        self.ui.btn_use_next.clicked.connect(self.show_protein_selection_for_use)
+        self.ui.txt_use_search.textChanged.connect(self.validate_use_search)
+        self.ui.btn_use_add_available_protein_structures.clicked.connect(self.add_protein_structure_to_new_project)
+        self.ui.list_use_available_protein_structures.doubleClicked.connect(self.add_protein_structure_to_new_project)
+        self.ui.btn_use_remove_selected_protein_structures.clicked.connect(self.remove_protein_structure_to_new_project)
+        self.ui.list_use_selected_protein_structures.doubleClicked.connect(self.remove_protein_structure_to_new_project)
+        self.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
+        self.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
         # new sequence page
         self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_protein_name)
         self.ui.btn_prediction_only_next.clicked.connect(self.show_cloud_prediction_mono_protein_sequence)
@@ -325,6 +446,7 @@ class MainWindow(QMainWindow):
         self.ui.txt_cloud_pred_mono_prot_seq.textChanged.connect(self.validate_protein_sequence)
         self.ui.btn_cloud_pred_mono_next_2.clicked.connect(self.show_prediction_only_choose_notebook)
         self.ui.btn_prediction_only_back.clicked.connect(self.hide_prediction_only_choose_notebook)
+        self.ui.btn_cloud_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
         # sequence vs .pdb page
         self.ui.btn_s_v_p_start.clicked.connect(self.predict)
@@ -515,6 +637,26 @@ class MainWindow(QMainWindow):
         """
         self.ui.lbl_new_status_project_name.setText("")
         self.ui.lbl_new_status_choose_reference.setText("")
+
+    def _init_use_page(self):
+        gui_elements = [
+            self.ui.lbl_use_search,
+            self.ui.lbl_use_status_search,
+            self.ui.txt_use_search,
+            self.ui.btn_use_add_available_protein_structures,
+            self.ui.lbl_use_available_protein_structures,
+            self.ui.list_use_available_protein_structures,
+            self.ui.btn_use_remove_selected_protein_structures,
+            self.ui.lbl_use_selected_protein_structures,
+            self.ui.list_use_selected_protein_structures,
+            self.ui.btn_use_back,
+            self.ui.btn_use_create_new_project,
+            self.ui.lbl_use_new_project,
+        ]
+        gui_utils.hide_gui_elements(gui_elements)
+        self.ui.lbl_use_status_project_name.setText("")
+        self.ui.lbl_use_status_search.setText("")
+        self.ui.btn_use_next.setEnabled(False)
 
     def _init_new_sequence_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -764,6 +906,19 @@ class MainWindow(QMainWindow):
         tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_delete_projects)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 9, "Delete existing project")
 
+    def display_edit_page(self):
+        """This function displays the edit project page
+
+        """
+        self.ui.list_edit_project_proteins.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
+
+        # list all proteins from pdb directory
+        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                              self.ui.list_edit_project_proteins)
+
     def display_view_page(self):
         """This function displays the edit project page
 
@@ -778,18 +933,31 @@ class MainWindow(QMainWindow):
         tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
                                               self.ui.list_view_project_proteins)
 
-    def display_edit_page(self):
-        """This function displays the edit project page
+    def display_local_pred_mono(self):
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 15, "Local Monomer Prediction")
 
-        """
-        self.ui.list_edit_project_proteins.clear()
-        # pre-process
-        self.status_bar.showMessage(self.workspace.text())
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
+    def display_use_page(self):
+        self.ui.list_use_available_protein_structures.clear()
+        self.ui.list_use_selected_protein_structures.clear()
+        valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
 
-        # list all proteins from pdb directory
-        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                              self.ui.list_edit_project_proteins)
+        # filesystem operations
+        tools.scan_project_for_valid_proteins(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}",
+                                              self.ui.list_use_selected_protein_structures)
+        protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(valid_projects,
+                                                                                      self.ui.lbl_current_project_name.text(),
+                                                                                      self.workspace_path,
+                                                                                      self.ui.list_use_available_protein_structures)
+        global_variables.global_var_workspace_proteins = protein_dict
+        # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
+        # are available
+        for i in range(self.ui.list_use_selected_protein_structures.count()):
+            self.ui.list_use_selected_protein_structures.setCurrentRow(i)
+            tmp_prot_name = self.ui.list_use_selected_protein_structures.currentItem().text()
+            if tmp_prot_name in protein_names:
+                protein_names.remove(tmp_prot_name)
+        self.ui.list_use_available_protein_structures.addItems(protein_names)
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be
@@ -1034,7 +1202,6 @@ class MainWindow(QMainWindow):
     #         tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
     #                                              "current pymol session", self.status_bar,
     #                                     "Unexpected Error from PyMOL")
-
     def restore_settings(self):
         """This function deletes the old settings.xml and creates a new one,
         with the default values.
@@ -1432,7 +1599,6 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-
         if self.ui.list_open_projects.currentItem() is not None:
             self.ui.list_open_projects.currentItem().setSelected(False)
         # set color for lineEdit
@@ -1507,59 +1673,62 @@ class MainWindow(QMainWindow):
         # show project management options in side menu
         self._init_project_management()
         self.ui.lbl_current_project_name.setText(self.ui.list_open_projects.currentItem().text())
+        self.number_of_pdb_files = len(os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb"))
+        self._configuration()
         # check if directory in empty
-        results_paths = ["results/alignment_files"]
-        dir_content = os.listdir(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}/{results_paths[0]}")
-        self.ui.lbl_handle_pymol_session.show()
-        self.ui.btn_image_page.show()
-        if not dir_content:
-            # no analysis was done
-            tmp_content = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-            if len(tmp_content) == 1:
-                # if no model is in the pdb dir
-                self.display_image_page()
-                self.ui.btn_save_project.show()
-                self.ui.action_file_save_as.setVisible(True)
-                self.ui.action_add_model.setVisible(True)
-                self.ui.action_add_multiple_models.setVisible(True)
-            elif len(tmp_content) == 2:
-                # if a model is in the pdb dir
-                self.display_single_analysis_page()
-                self.ui.lbl_analysis.show()
-                self.ui.btn_single_analysis_page.show()
-                self.ui.btn_save_project.show()
-                self.ui.action_file_save_as.setVisible(True)
-                self.ui.action_add_model.setVisible(False)
-                self.ui.action_add_multiple_models.setVisible(False)
-            elif len(tmp_content) == 0:
-                # check if data is corrupted
-                response = tools.check_results_for_integrity(self.workspace_path,
-                                                             self.ui.lbl_current_project_name.text())
-                if response[0]:
-                    self.ui.lbl_handle_pymol_session.hide()
-                    self.ui.btn_image_page.hide()
-                    self.display_prediction_only_page()
-
-            else:
-                gui_utils.error_project_data_is_invalid(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-            return
-        else:
-            # check if data is corrupted
-            response = tools.check_results_for_integrity(self.workspace_path, self.ui.lbl_current_project_name.text())
-            if response[0]:
-                # an analysis happened
-                # show results gui elements
-                self.ui.lbl_analysis.show()
-                self.ui.btn_results_page.show()
-                self.display_results_page()
-                self.ui.btn_save_project.show()
-                self.ui.action_file_save_as.setVisible(True)
-            else:
-                gui_utils.error_project_data_is_invalid(response[1])
-                self._init_hide_ui_elements()
-                self.ui.lbl_current_project_name.clear()
-                self.ui.btn_save_project.hide()
-            return
+        # TODO: code below does not work with new project class!
+        # results_paths = ["results/alignment_files"]
+        # dir_content = os.listdir(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}/{results_paths[0]}")
+        # self.ui.lbl_handle_pymol_session.show()
+        # self.ui.btn_image_page.show()
+        # if not dir_content:
+        #     # no analysis was done
+        #     tmp_content = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+        #     if len(tmp_content) == 1:
+        #         # if no model is in the pdb dir
+        #         self.display_image_page()
+        #         self.ui.btn_save_project.show()
+        #         self.ui.action_file_save_as.setVisible(True)
+        #         self.ui.action_add_model.setVisible(True)
+        #         self.ui.action_add_multiple_models.setVisible(True)
+        #     elif len(tmp_content) == 2:
+        #         # if a model is in the pdb dir
+        #         self.display_single_analysis_page()
+        #         self.ui.lbl_analysis.show()
+        #         self.ui.btn_single_analysis_page.show()
+        #         self.ui.btn_save_project.show()
+        #         self.ui.action_file_save_as.setVisible(True)
+        #         self.ui.action_add_model.setVisible(False)
+        #         self.ui.action_add_multiple_models.setVisible(False)
+        #     elif len(tmp_content) == 0:
+        #         # check if data is corrupted
+        #         response = tools.check_results_for_integrity(self.workspace_path,
+        #                                                      self.ui.lbl_current_project_name.text())
+        #         if response[0]:
+        #             self.ui.lbl_handle_pymol_session.hide()
+        #             self.ui.btn_image_page.hide()
+        #             self.display_prediction_only_page()
+        #
+        #     else:
+        #         gui_utils.error_project_data_is_invalid(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+        #     return
+        # else:
+        #     # check if data is corrupted
+        #     response = tools.check_results_for_integrity(self.workspace_path, self.ui.lbl_current_project_name.text())
+        #     if response[0]:
+        #         # an analysis happened
+        #         # show results gui elements
+        #         self.ui.lbl_analysis.show()
+        #         self.ui.btn_results_page.show()
+        #         self.display_results_page()
+        #         self.ui.btn_save_project.show()
+        #         self.ui.action_file_save_as.setVisible(True)
+        #     else:
+        #         gui_utils.error_project_data_is_invalid(response[1])
+        #         self._init_hide_ui_elements()
+        #         self.ui.lbl_current_project_name.clear()
+        #         self.ui.btn_save_project.hide()
+        #     return
 
     # delete
     def select_project_from_delete_list(self):
@@ -1674,14 +1843,6 @@ class MainWindow(QMainWindow):
             cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/auto_generated_session_file.pse")
             self.status_bar.showMessage("Saved project successfully.")
 
-    # view project
-    def view_sequence(self):
-        project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
-        protein = self.ui.list_view_project_proteins.currentItem().text()
-        sequence = tools.get_sequence_from_pdb_file(f"{project_path}/pdb/{protein}")
-        self.ui.txtedit_view_sequence.clear()
-        self.ui.txtedit_view_sequence.append(sequence)
-
     # edit project
     def delete_protein(self):
         protein_name = self.ui.list_edit_project_proteins.currentItem().text()
@@ -1690,11 +1851,177 @@ class MainWindow(QMainWindow):
         if response:
             tools.remove_pdb_file(f"{project_path}/pdb/{protein_name}")
             self.ui.list_edit_project_proteins.clear()
-            tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                                  self.ui.list_edit_project_proteins)
+            tools.scan_project_for_valid_proteins(
+                f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                self.ui.list_edit_project_proteins)
         else:
             print("Nothing happend.")
 
+    # view project
+    def view_sequence(self):
+        project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
+        protein = self.ui.list_view_project_proteins.currentItem().text()
+        sequence = tools.get_sequence_from_pdb_file(f"{project_path}/pdb/{protein}")
+        self.ui.txtedit_view_sequence.clear()
+        self.ui.txtedit_view_sequence.append(sequence)
+
+    # use project
+    def validate_use_project_name(self):
+        """This function validates the input of the project name in real-time
+
+        """
+
+        if self.ui.list_use_existing_projects.currentItem() is not None:
+            self.ui.list_use_existing_projects.currentItem().setSelected(False)
+        # set color for lineEdit
+        self.ui.txt_use_project_name.setStyleSheet("background-color: #FC5457")
+        if len(self.ui.txt_use_project_name.text()) == 0:
+            self.ui.lbl_use_status_project_name.setText("")
+            self.ui.btn_use_next.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_use_next)
+            return
+        elif len(self.ui.txt_use_project_name.text()) > 20:
+            self.ui.lbl_use_status_project_name.setText("Project name is too long (max. 20 characters).")
+            self.ui.btn_use_next.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_use_next)
+            return
+        else:
+            regex = Qt.QtCore.QRegularExpression()
+            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
+            validator = QtGui.QRegularExpressionValidator(regex)
+            for i in range(len(self.ui.txt_use_project_name.text())):
+                result = validator.validate(self.ui.txt_use_project_name.text(), i)
+                if result[0] > 0:
+                    self.ui.txt_use_project_name.setStyleSheet("background-color: #33C065")
+                    self.ui.lbl_use_status_project_name.setText("")
+                    self.ui.btn_use_next.setEnabled(True)
+                    styles.color_button_ready(self.ui.btn_use_next)
+                else:
+                    self.ui.txt_use_project_name.setStyleSheet("background-color: #FC5457")
+                    self.ui.lbl_use_status_project_name.setText("Invalid character.")
+                    self.ui.btn_use_next.setEnabled(False)
+                    styles.color_button_not_ready(self.ui.btn_use_next)
+                    return
+            item = self.ui.list_use_existing_projects.findItems(self.ui.txt_use_project_name.text(),
+                                                          Qt.QtCore.Qt.MatchContains |
+                                                          Qt.QtCore.Qt.MatchExactly
+                                                          )
+            if len(item) != 0:
+                self.ui.list_use_existing_projects.setCurrentItem(item[0])
+                self.ui.txt_use_project_name.setStyleSheet("background-color: #FC5457")
+                self.ui.lbl_use_status_project_name.setText("Project name already exists.")
+                self.ui.btn_use_next.setEnabled(False)
+                styles.color_button_not_ready(self.ui.btn_use_next)
+            print("Check successful.")
+
+    def validate_use_search(self):
+        """This function validates the input of the project name in real-time
+
+        """
+        if self.ui.list_use_available_protein_structures.currentItem() is not None:
+            self.ui.list_use_available_protein_structures.currentItem().setSelected(False)
+        # set color for lineEdit
+        self.ui.txt_use_search.setStyleSheet("background-color: white")
+        if len(self.ui.txt_use_search.text()) == 0:
+            self.ui.lbl_use_status_search.setText("")
+            return
+        else:
+            item = self.ui.list_use_available_protein_structures.findItems(self.ui.txt_use_search.text(),
+                                                          Qt.QtCore.Qt.MatchContains |
+                                                          Qt.QtCore.Qt.MatchExactly
+                                                          )
+            if len(item) != 0:
+                self.ui.list_use_available_protein_structures.setCurrentItem(item[0])
+                self.ui.lbl_use_status_search.setText("")
+            else:
+                self.ui.txt_use_search.setStyleSheet("background-color: #FC5457")
+                self.ui.lbl_use_status_search.setText("Protein structure does not exists.")
+
+    def add_protein_structure_to_new_project(self):
+        prot_to_add = self.ui.list_use_available_protein_structures.currentItem().text()
+        self.ui.list_use_selected_protein_structures.addItem(prot_to_add)
+        self.ui.list_use_available_protein_structures.takeItem(self.ui.list_use_available_protein_structures.currentRow())
+
+    def remove_protein_structure_to_new_project(self):
+        prot_to_remove = self.ui.list_use_selected_protein_structures.currentItem()
+        self.ui.list_use_selected_protein_structures.takeItem(self.ui.list_use_selected_protein_structures.currentRow())
+        self.ui.list_use_available_protein_structures.addItem(prot_to_remove)
+
+    def show_protein_selection_for_use(self):
+        gui_elements_to_show = [
+            self.ui.lbl_use_search,
+            self.ui.lbl_use_status_search,
+            self.ui.txt_use_search,
+            self.ui.btn_use_add_available_protein_structures,
+            self.ui.lbl_use_available_protein_structures,
+            self.ui.list_use_available_protein_structures,
+            self.ui.btn_use_remove_selected_protein_structures,
+            self.ui.lbl_use_selected_protein_structures,
+            self.ui.list_use_selected_protein_structures,
+            self.ui.btn_use_back,
+            self.ui.btn_use_create_new_project,
+            self.ui.lbl_use_new_project,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        self.ui.txt_use_project_name.setEnabled(False)
+
+        gui_elements_to_hide = [
+            self.ui.btn_use_next,
+            self.ui.list_use_existing_projects,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.disable_text_box(self.ui.txt_use_project_name, self.ui.lbl_use_project_name)
+
+    def hide_protein_selection_for_use(self):
+        gui_elements_to_show = [
+            self.ui.btn_use_next,
+            self.ui.list_use_existing_projects,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        self.ui.txt_use_project_name.setEnabled(True)
+
+        gui_elements_to_hide = [
+            self.ui.lbl_use_search,
+            self.ui.lbl_use_status_search,
+            self.ui.txt_use_search,
+            self.ui.btn_use_add_available_protein_structures,
+            self.ui.lbl_use_available_protein_structures,
+            self.ui.list_use_available_protein_structures,
+            self.ui.btn_use_remove_selected_protein_structures,
+            self.ui.lbl_use_selected_protein_structures,
+            self.ui.list_use_selected_protein_structures,
+            self.ui.btn_use_back,
+            self.ui.btn_use_create_new_project,
+            self.ui.lbl_use_new_project,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_use_project_name, self.ui.lbl_use_project_name)
+
+    def create_use_project(self):
+        self._init_hide_ui_elements()
+        # show project management options in side menu
+        self._init_project_management()
+        self.ui.lbl_current_project_name.setText(self.ui.txt_use_project_name.text())
+        self.status_bar.showMessage(
+            f"Current project path: {self.workspace_path}/{self.ui.txt_use_project_name.text()}")
+        # save project folder in current workspace
+        new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
+        new_project.create_project_tree()
+        new_project.save_project_to_xml()
+
+        # copy proteins in new project
+        prots_to_copy = []
+        for i in range(self.ui.list_use_selected_protein_structures.count()):
+            self.ui.list_use_selected_protein_structures.setCurrentRow(i)
+            prots_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
+        for protein in prots_to_copy:
+            protein_path = global_variables.global_var_workspace_proteins[protein]
+            shutil.copy(protein_path, f"{new_project.get_pdb_path()}/{protein}")
+
+        self.number_of_pdb_files = len(prots_to_copy)
+        self._configuration()
+
+    # close project
     def close_project(self):
         self._init_side_menu()
         self._init_hide_ui_elements()
@@ -1742,7 +2069,10 @@ class MainWindow(QMainWindow):
                     return
 
             print("Check successful.")
-    # close project
+
+    def show_prediction_configuration(self):
+        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
+        config.exec_()
 
     def validate_protein_sequence(self):
         """This function validates the input of the protein sequence in real-time

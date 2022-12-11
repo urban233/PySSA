@@ -30,7 +30,7 @@ from pathlib import Path
 
 from pymol import Qt
 from pyssa.gui.ui.dialogs import dialog_settings_global
-from pyssa.gui.utilities import global_variables
+from pyssa.gui.data_structures.data_classes import protein_info
 
 
 def create_directory(parent_path, dir_name) -> None:
@@ -311,6 +311,45 @@ def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
     valid_directories.sort()
     for project in valid_directories:
         list_new_projects.addItem(project)
+    return valid_directories
+
+
+def scan_workspace_for_non_duplicate_proteins(valid_projects: list, current_project_name: str,
+                                              workspace_path: str, list_widget: Qt.QtWidgets.QListWidget) -> tuple[dict, list]:
+    """This function scans the workspace directory for protein structures and eliminates all duplicates
+
+    Args:
+        valid_projects (list):
+            a list of all projects within the workspace
+        current_project_name (str):
+            name of the currently loaded project
+        workspace_path (str):
+            path of the current workspace
+        list_widget (Qt.QtWidgets.QListWidget)
+            list widget which is needed to temporarily store the results from the function "scan_project_for_valid_proteins"
+
+    Returns:
+        dict which contains all proteins without duplicates
+    """
+    """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
+    workspace_proteins = []
+    protein_names = []
+    protein_tuples_notation = []
+    for valid_project in valid_projects:
+        if valid_project != current_project_name:
+            """Var: project_proteins is a list which contains all proteins from a single project"""
+            project_proteins = scan_project_for_valid_proteins(f"{workspace_path}/{valid_project}", list_widget)
+            list_widget.clear()
+            for protein in project_proteins:
+                tmp_protein = protein_info.ProteinInfo(protein, f"{workspace_path}/{valid_project}/pdb/{protein}")
+                workspace_proteins.append(tmp_protein)
+                if tmp_protein.name not in protein_names:
+                    protein_names.append(tmp_protein.name)
+    # this for-loop is necessary for the creation of the protein dictionary
+    for protein in workspace_proteins:
+        protein_tuples_notation.append(protein.get_tuple_notation())
+    protein_dict = dict(protein_tuples_notation)
+    return protein_dict, protein_names
 
 
 def scan_project_for_valid_proteins(project_path, list_view_project_proteins):
@@ -322,6 +361,7 @@ def scan_project_for_valid_proteins(project_path, list_view_project_proteins):
     for protein in project_proteins:
         if fnmatch.fnmatch(protein, pattern):
             list_view_project_proteins.addItem(protein)
+    return project_proteins
 
 
 def switch_page(stackedWidget: Qt.QtWidgets.QStackedWidget, lbl_page_title: Qt.QtWidgets.QLabel, index: int, text: str) -> None:

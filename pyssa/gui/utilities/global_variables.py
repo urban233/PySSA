@@ -31,3 +31,4 @@ global_var_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), "
 global_var_settings_obj = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILE)
 global_var_settings_obj.load_settings_from_xml()
 global_var_tmp_project_info = []
+global_var_workspace_proteins: dict = {}
