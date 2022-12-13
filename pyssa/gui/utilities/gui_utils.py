@@ -420,6 +420,20 @@ def show_gui_elements(gui_elements: list):
         gui_element.show()
 
 
+def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list):
+    """This function is a combination of "show_gui_elements" and "hide_gui_elements" to quickly
+    manage the visibility of gui elements
+
+    Args:
+        gui_elements_to_show:
+            list which contains the gui elements which should be displayed
+        gui_elements_to_hide:
+            list which contains the gui elements which should be hidden
+    """
+    show_gui_elements(gui_elements_to_show)
+    hide_gui_elements(gui_elements_to_hide)
+
+
 def disable_text_box(text_box, text_box_label):
     """This function disables a text box and grays out the corresponding label
 

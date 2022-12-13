@@ -28,6 +28,7 @@ import sys
 import time
 import webbrowser
 import pathlib
+import subprocess
 import PyQt5.QtCore
 import numpy as np
 import pymol
@@ -147,6 +148,7 @@ class MainWindow(QMainWindow):
         self._init_new_page()
         self._init_use_page()
         self._init_new_sequence_page()
+        self._init_local_pred_mono_page()
         # self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_batch_page()
@@ -441,7 +443,6 @@ class MainWindow(QMainWindow):
         # new sequence page
         self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_protein_name)
         self.ui.btn_prediction_only_next.clicked.connect(self.show_cloud_prediction_mono_protein_sequence)
-        self.ui.txt_prediction_only_protein_name.returnPressed.connect(self.show_cloud_prediction_mono_protein_sequence)
         self.ui.btn_cloud_pred_mono_back.clicked.connect(self.hide_cloud_prediction_mono_protein_sequence)
         self.ui.txt_cloud_pred_mono_prot_seq.textChanged.connect(self.validate_protein_sequence)
         self.ui.btn_cloud_pred_mono_next_2.clicked.connect(self.show_prediction_only_choose_notebook)
@@ -450,6 +451,16 @@ class MainWindow(QMainWindow):
         self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
         # sequence vs .pdb page
         self.ui.btn_s_v_p_start.clicked.connect(self.predict)
+        # monomer local prediction page
+        self.ui.txt_local_pred_mono_protein_name.textChanged.connect(self.local_pred_mono_validate_protein_name)
+        self.ui.btn_local_pred_mono_next.clicked.connect(self.local_pred_mono_show_protein_sequence)
+        self.ui.btn_local_pred_mono_back.clicked.connect(self.local_pred_mono_hide_protein_sequence)
+        self.ui.txt_local_pred_mono_prot_seq.textChanged.connect(self.local_pred_mono_validate_protein_sequence)
+        self.ui.btn_local_pred_mono_next_2.clicked.connect(self.local_pred_mono_show_advanced_config)
+        self.ui.btn_local_pred_mono_back_2.clicked.connect(self.local_pred_mono_hide_advanced_config)
+        self.ui.btn_local_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
+        self.ui.btn_local_pred_mono_predict.clicked.connect(self.predict_local_monomer)
+
         # single analysis page
         self.ui.btn_analysis_start.clicked.connect(self.start_process)
         self.ui.btn_analysis_next.clicked.connect(self.analysis_next_step)
@@ -682,6 +693,29 @@ class MainWindow(QMainWindow):
             self.ui.btn_cloud_pred_mono_advanced_config,
             self.ui.btn_prediction_only_back,
             self.ui.btn_prediction_only_start,
+        ]
+        gui_utils.hide_gui_elements(gui_elements)
+
+    def _init_local_pred_mono_page(self):
+        # clears everything
+        self.ui.txt_local_pred_mono_protein_name.clear()
+        self.ui.txt_local_pred_mono_prot_seq.clear()
+        # sets up defaults: Prediction
+        self.ui.btn_local_pred_mono_next_2.setEnabled(False)
+        self.ui.btn_local_pred_mono_predict.setEnabled(False)
+        self.ui.lbl_local_pred_mono_status_protein_name.setText("")
+        self.ui.lbl_local_pred_mono_status_prot_seq.setText("")
+
+        gui_elements = [
+            self.ui.lbl_local_pred_mono_prot_seq,
+            self.ui.txt_local_pred_mono_prot_seq,
+            self.ui.lbl_local_pred_mono_status_prot_seq,
+            self.ui.btn_local_pred_mono_back,
+            self.ui.btn_local_pred_mono_next_2,
+            self.ui.lbl_local_pred_mono_advanced_config,
+            self.ui.btn_local_pred_mono_advanced_config,
+            self.ui.btn_local_pred_mono_back_2,
+            self.ui.btn_local_pred_mono_predict,
         ]
         gui_utils.hide_gui_elements(gui_elements)
 
@@ -1454,62 +1488,9 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-
-        if self.ui.list_new_projects.currentItem() is not None:
-            self.ui.list_new_projects.currentItem().setSelected(False)
-        # set color for lineEdit
-        self.ui.txt_new_project_name.setStyleSheet("background-color: #FC5457")
-        if len(self.ui.txt_new_project_name.text()) == 0:
-            self.ui.lbl_new_status_project_name.setText("")
-            self.ui.cb_new_add_reference.setCheckable(False)
-            self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
-            self.ui.btn_new_create_project.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_new_create_project)
-            return
-        elif len(self.ui.txt_new_project_name.text()) > 20:
-            self.ui.lbl_new_status_project_name.setText("Project name is too long (max. 20 characters).")
-            self.ui.btn_new_create_project.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_new_create_project)
-            return
-        else:
-            regex = Qt.QtCore.QRegularExpression()
-            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(self.ui.txt_new_project_name.text())):
-                result = validator.validate(self.ui.txt_new_project_name.text(), i)
-                if result[0] > 0:
-                    self.ui.txt_new_project_name.setStyleSheet("background-color: #33C065")
-                    self.ui.lbl_new_status_project_name.setText("")
-                    self.ui.cb_new_add_reference.setCheckable(True)
-                    self.ui.cb_new_add_reference.setStyleSheet("color: black;")
-                    self.ui.btn_new_create_project.setEnabled(True)
-                    styles.color_button_ready(self.ui.btn_new_create_project)
-                else:
-                    self.ui.txt_new_project_name.setStyleSheet("background-color: #FC5457")
-                    self.ui.lbl_new_status_project_name.setText("Invalid character.")
-                    self.ui.cb_new_add_reference.setCheckable(False)
-                    self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
-                    self.ui.btn_new_create_project.setEnabled(False)
-                    styles.color_button_not_ready(self.ui.btn_new_create_project)
-                    return
-            item = self.ui.list_new_projects.findItems(self.ui.txt_new_project_name.text(),
-                                                          Qt.QtCore.Qt.MatchContains |
-                                                          Qt.QtCore.Qt.MatchExactly
-                                                          )
-            if len(item) != 0:
-                self.ui.list_new_projects.setCurrentItem(item[0])
-                self.ui.txt_new_project_name.setStyleSheet("background-color: #FC5457")
-                self.ui.lbl_new_status_project_name.setText("Project name already exists.")
-                self.ui.cb_new_add_reference.setCheckable(False)
-                self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
-                self.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_new_create_project)
-            # else:
-            #     self.ui.list_widget_projects.currentItem().setSelected(False)
-            #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
-            #     self.ui.btn_prediction_next_1.setEnabled(True)
-            #     styles.color_button_ready(self.ui.btn_prediction_next_1)
-            print("Check successful.")
+        tools.validate_project_name(self.ui.list_new_projects, self.ui.txt_use_project_name,
+                                    self.ui.lbl_new_status_project_name, self.ui.btn_new_create_project,
+                                    self.ui.cb_new_add_reference)
 
     def create_new_project(self):
         """This function creates a new project based on the plugin New ... page
@@ -1870,72 +1851,15 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-
-        if self.ui.list_use_existing_projects.currentItem() is not None:
-            self.ui.list_use_existing_projects.currentItem().setSelected(False)
-        # set color for lineEdit
-        self.ui.txt_use_project_name.setStyleSheet("background-color: #FC5457")
-        if len(self.ui.txt_use_project_name.text()) == 0:
-            self.ui.lbl_use_status_project_name.setText("")
-            self.ui.btn_use_next.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_use_next)
-            return
-        elif len(self.ui.txt_use_project_name.text()) > 20:
-            self.ui.lbl_use_status_project_name.setText("Project name is too long (max. 20 characters).")
-            self.ui.btn_use_next.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_use_next)
-            return
-        else:
-            regex = Qt.QtCore.QRegularExpression()
-            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(self.ui.txt_use_project_name.text())):
-                result = validator.validate(self.ui.txt_use_project_name.text(), i)
-                if result[0] > 0:
-                    self.ui.txt_use_project_name.setStyleSheet("background-color: #33C065")
-                    self.ui.lbl_use_status_project_name.setText("")
-                    self.ui.btn_use_next.setEnabled(True)
-                    styles.color_button_ready(self.ui.btn_use_next)
-                else:
-                    self.ui.txt_use_project_name.setStyleSheet("background-color: #FC5457")
-                    self.ui.lbl_use_status_project_name.setText("Invalid character.")
-                    self.ui.btn_use_next.setEnabled(False)
-                    styles.color_button_not_ready(self.ui.btn_use_next)
-                    return
-            item = self.ui.list_use_existing_projects.findItems(self.ui.txt_use_project_name.text(),
-                                                          Qt.QtCore.Qt.MatchContains |
-                                                          Qt.QtCore.Qt.MatchExactly
-                                                          )
-            if len(item) != 0:
-                self.ui.list_use_existing_projects.setCurrentItem(item[0])
-                self.ui.txt_use_project_name.setStyleSheet("background-color: #FC5457")
-                self.ui.lbl_use_status_project_name.setText("Project name already exists.")
-                self.ui.btn_use_next.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_use_next)
-            print("Check successful.")
+        tools.validate_project_name(self.ui.list_use_existing_projects, self.ui.txt_use_project_name,
+                                    self.ui.lbl_use_status_project_name, self.ui.btn_use_next)
 
     def validate_use_search(self):
         """This function validates the input of the project name in real-time
 
         """
-        if self.ui.list_use_available_protein_structures.currentItem() is not None:
-            self.ui.list_use_available_protein_structures.currentItem().setSelected(False)
-        # set color for lineEdit
-        self.ui.txt_use_search.setStyleSheet("background-color: white")
-        if len(self.ui.txt_use_search.text()) == 0:
-            self.ui.lbl_use_status_search.setText("")
-            return
-        else:
-            item = self.ui.list_use_available_protein_structures.findItems(self.ui.txt_use_search.text(),
-                                                          Qt.QtCore.Qt.MatchContains |
-                                                          Qt.QtCore.Qt.MatchExactly
-                                                          )
-            if len(item) != 0:
-                self.ui.list_use_available_protein_structures.setCurrentItem(item[0])
-                self.ui.lbl_use_status_search.setText("")
-            else:
-                self.ui.txt_use_search.setStyleSheet("background-color: #FC5457")
-                self.ui.lbl_use_status_search.setText("Protein structure does not exists.")
+        tools.validate_search_input(self.ui.list_use_available_protein_structures, self.ui.txt_use_search,
+                                    self.ui.lbl_use_status_search)
 
     def add_protein_structure_to_new_project(self):
         prot_to_add = self.ui.list_use_available_protein_structures.currentItem().text()
@@ -2027,48 +1951,21 @@ class MainWindow(QMainWindow):
         self._init_hide_ui_elements()
         self.ui.lbl_current_project_name.setText("")
         self._init_new_sequence_page()
+        self._init_local_pred_mono_page()
         self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_results_page()
         self._init_image_page()
         self.display_home_page()
 
-    # Prediction
+    # Monomer Cloud Prediction functions
     def validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
         """
-        # set color for lineEdit
-        self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #FC5457")
-        if len(self.ui.txt_prediction_only_protein_name.text()) == 0:
-            self.ui.lbl_prediction_only_status_protein_name.setText("")
-            self.ui.btn_prediction_only_next.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_prediction_only_next)
-            return
-        elif len(self.ui.txt_prediction_only_protein_name.text()) > 20:
-            self.ui.lbl_prediction_only_status_protein_name.setText("Project name is too long (max. 20 characters).")
-            self.ui.btn_prediction_only_next.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_prediction_only_next)
-            return
-        else:
-            regex = Qt.QtCore.QRegularExpression()
-            regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(self.ui.txt_prediction_only_protein_name.text())):
-                result = validator.validate(self.ui.txt_prediction_only_protein_name.text(), i)
-                if result[0] > 0:
-                    self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #33C065")
-                    self.ui.lbl_prediction_only_status_protein_name.setText("")
-                    self.ui.btn_prediction_only_next.setEnabled(True)
-                    styles.color_button_ready(self.ui.btn_prediction_only_next)
-                else:
-                    self.ui.txt_prediction_only_protein_name.setStyleSheet("background-color: #FC5457")
-                    self.ui.lbl_prediction_only_status_protein_name.setText("Invalid character.")
-                    self.ui.btn_prediction_only_next.setEnabled(False)
-                    styles.color_button_not_ready(self.ui.btn_prediction_only_next)
-                    return
-
-            print("Check successful.")
+        tools.validate_protein_name(self.ui.txt_prediction_only_protein_name,
+                                    self.ui.lbl_prediction_only_status_protein_name,
+                                    self.ui.btn_prediction_only_next)
 
     def show_prediction_configuration(self):
         config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
@@ -2078,35 +1975,9 @@ class MainWindow(QMainWindow):
         """This function validates the input of the protein sequence in real-time
 
         """
-        # set color for lineEdit
-        self.ui.txt_cloud_pred_mono_prot_seq.setStyleSheet("background-color: #FC5457")
-        if len(self.ui.txt_cloud_pred_mono_prot_seq.text()) == 0:
-            self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("")
-            self.ui.btn_cloud_pred_mono_next_2.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_cloud_pred_mono_next_2)
-            return
-        # elif len(self.ui.txt_prediction_only_protein_name.text()) > 20:
-        #     self.ui.lbl_prediction_only_status_protein_name.setText("Project name is too long (max. 20 characters).")
-        #     self.ui.btn_prediction_only_next.setEnabled(False)
-        #     styles.color_button_not_ready(self.ui.btn_prediction_only_next)
-        #     return
-        else:
-            regex = Qt.QtCore.QRegularExpression()
-            regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
-            validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(self.ui.txt_cloud_pred_mono_prot_seq.text())):
-                result = validator.validate(self.ui.txt_cloud_pred_mono_prot_seq.text(), i)
-                if result[0] > 0:
-                    self.ui.txt_cloud_pred_mono_prot_seq.setStyleSheet("background-color: #33C065")
-                    self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("")
-                    self.ui.btn_cloud_pred_mono_next_2.setEnabled(True)
-                    styles.color_button_ready(self.ui.btn_cloud_pred_mono_next_2)
-                else:
-                    self.ui.txt_cloud_pred_mono_prot_seq.setStyleSheet("background-color: #FC5457")
-                    self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("Invalid character.")
-                    self.ui.btn_cloud_pred_mono_next_2.setEnabled(False)
-                    styles.color_button_not_ready(self.ui.btn_cloud_pred_mono_next_2)
-                    return
+        tools.validate_protein_sequence(self.ui.txt_cloud_pred_mono_prot_seq,
+                                        self.ui.lbl_cloud_pred_mono_status_prot_seq,
+                                        self.ui.btn_cloud_pred_mono_next_2)
 
     def show_cloud_prediction_mono_protein_sequence(self):
         gui_elements_hide = [
@@ -2119,8 +1990,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_cloud_pred_mono_back,
             self.ui.btn_cloud_pred_mono_next_2,
         ]
-        gui_utils.hide_gui_elements(gui_elements_hide)
-        gui_utils.show_gui_elements(gui_elements_show)
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
         gui_utils.disable_text_box(self.ui.txt_prediction_only_protein_name,
                                    self.ui.lbl_prediction_only_protein_name)
 
@@ -2135,8 +2005,7 @@ class MainWindow(QMainWindow):
         gui_elements_show = [
             self.ui.btn_prediction_only_next,
         ]
-        gui_utils.hide_gui_elements(gui_elements_hide)
-        gui_utils.show_gui_elements(gui_elements_show)
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
         gui_utils.enable_text_box(self.ui.txt_prediction_only_protein_name,
                                   self.ui.lbl_prediction_only_protein_name)
 
@@ -2154,8 +2023,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_cloud_pred_mono_back,
             self.ui.btn_cloud_pred_mono_next_2,
         ]
-        gui_utils.show_gui_elements(gui_elements_show)
-        gui_utils.hide_gui_elements(gui_elements_hide)
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
         gui_utils.disable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
                                    self.ui.lbl_cloud_pred_mono_prot_seq)
         self.ui.btn_prediction_only_next.setEnabled(True)
@@ -2174,8 +2042,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_cloud_pred_mono_back,
             self.ui.btn_cloud_pred_mono_next_2,
         ]
-        gui_utils.hide_gui_elements(gui_elements_hide)
-        gui_utils.show_gui_elements(gui_elements_show)
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
         gui_utils.enable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
                                   self.ui.lbl_cloud_pred_mono_prot_seq)
         self.ui.btn_prediction_only_next.setEnabled(True)
@@ -2279,15 +2146,20 @@ class MainWindow(QMainWindow):
         """Shows the text field and tool button for the load reference functionality
 
         """
-        self.ui.lbl_prediction_load_reference.show()
-        self.ui.txt_prediction_load_reference.show()
-        self.ui.btn_prediction_load_reference.show()
+        gui_elements_show = [
+            self.ui.lbl_prediction_load_reference,
+            self.ui.txt_prediction_load_reference,
+            self.ui.btn_prediction_load_reference,
+            self.ui.btn_prediction_next_2,
+            self.ui.btn_prediction_back_2,
+        ]
+        gui_elements_hide = [
+            self.ui.btn_prediction_next_1
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
         self.ui.txt_prediction_project_name.setEnabled(False)
         self.ui.list_widget_projects.setEnabled(False)
-        self.ui.btn_prediction_next_1.hide()
-        self.ui.btn_prediction_next_2.show()
         self.ui.btn_prediction_next_2.setEnabled(False)
-        self.ui.btn_prediction_back_2.show()
         self.ui.txt_prediction_load_reference.setEnabled(True)
         self.ui.txt_prediction_project_name.setStyleSheet("background-color: white")
 
@@ -2295,14 +2167,19 @@ class MainWindow(QMainWindow):
         """Hides the text field and tool button for the load reference functionality
 
         """
-        self.ui.lbl_prediction_load_reference.hide()
-        self.ui.txt_prediction_load_reference.hide()
-        self.ui.btn_prediction_load_reference.hide()
+        gui_elements_show = [
+            self.ui.btn_prediction_next_1,
+        ]
+        gui_elements_hide = [
+            self.ui.lbl_prediction_load_reference,
+            self.ui.txt_prediction_load_reference,
+            self.ui.btn_prediction_load_reference,
+            self.ui.btn_prediction_next_2,
+            self.ui.btn_prediction_back_2,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
         self.ui.txt_prediction_project_name.setEnabled(True)
         self.ui.list_widget_projects.setEnabled(True)
-        self.ui.btn_prediction_next_1.show()
-        self.ui.btn_prediction_next_2.hide()
-        self.ui.btn_prediction_back_2.hide()
         self.ui.txt_prediction_load_reference.clear()
         # color green
         self.ui.txt_prediction_project_name.setStyleSheet("background-color: #33C065")
@@ -2593,6 +2470,117 @@ class MainWindow(QMainWindow):
                                                          structure_analysis_obj.model_proteins)
         structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
                                                 self.status_bar, "2")
+
+    # Monomer Local Prediction functions
+    def local_pred_mono_validate_protein_name(self):
+        """This function validates the input of the project name in real-time
+
+        """
+        tools.validate_protein_name(self.ui.txt_local_pred_mono_protein_name,
+                                    self.ui.lbl_local_pred_mono_status_protein_name,
+                                    self.ui.btn_local_pred_mono_next)
+
+    def local_pred_mono_show_prediction_configuration(self):
+        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
+        config.exec_()
+
+    def local_pred_mono_validate_protein_sequence(self):
+        """This function validates the input of the protein sequence in real-time
+
+        """
+        tools.validate_protein_sequence(self.ui.txt_local_pred_mono_prot_seq,
+                                        self.ui.lbl_local_pred_mono_status_prot_seq,
+                                        self.ui.btn_local_pred_mono_next_2)
+
+    def local_pred_mono_show_protein_sequence(self):
+        gui_elements_hide = [
+            self.ui.btn_local_pred_mono_next,
+        ]
+        gui_elements_show = [
+            self.ui.lbl_local_pred_mono_prot_seq,
+            self.ui.lbl_local_pred_mono_status_prot_seq,
+            self.ui.txt_local_pred_mono_prot_seq,
+            self.ui.btn_local_pred_mono_back,
+            self.ui.btn_local_pred_mono_next_2,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+        gui_utils.disable_text_box(self.ui.txt_local_pred_mono_protein_name,
+                                   self.ui.lbl_local_pred_mono_protein_name)
+
+    def local_pred_mono_hide_protein_sequence(self):
+        gui_elements_hide = [
+            self.ui.lbl_local_pred_mono_prot_seq,
+            self.ui.lbl_local_pred_mono_status_prot_seq,
+            self.ui.txt_local_pred_mono_prot_seq,
+            self.ui.btn_local_pred_mono_back,
+            self.ui.btn_local_pred_mono_next_2,
+        ]
+        gui_elements_show = [
+            self.ui.btn_local_pred_mono_next,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+        gui_utils.enable_text_box(self.ui.txt_local_pred_mono_protein_name,
+                                  self.ui.lbl_local_pred_mono_protein_name)
+
+    def local_pred_mono_show_advanced_config(self):
+        gui_elements_show = [
+            self.ui.btn_local_pred_mono_back_2,
+            self.ui.btn_local_pred_mono_predict,
+            self.ui.lbl_local_pred_mono_advanced_config,
+            self.ui.btn_local_pred_mono_advanced_config,
+        ]
+        gui_elements_hide = [
+            self.ui.btn_local_pred_mono_back,
+            self.ui.btn_local_pred_mono_next_2,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+        gui_utils.disable_text_box(self.ui.txt_local_pred_mono_prot_seq,
+                                   self.ui.lbl_local_pred_mono_prot_seq)
+        self.ui.btn_local_pred_mono_predict.setEnabled(True)
+        styles.color_button_ready(self.ui.btn_local_pred_mono_predict)
+
+    def local_pred_mono_hide_advanced_config(self):
+        gui_elements_hide = [
+            self.ui.btn_local_pred_mono_back_2,
+            self.ui.btn_local_pred_mono_predict,
+            self.ui.lbl_local_pred_mono_advanced_config,
+            self.ui.btn_local_pred_mono_advanced_config,
+        ]
+        gui_elements_show = [
+            self.ui.btn_local_pred_mono_back,
+            self.ui.btn_local_pred_mono_next_2,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+        gui_utils.enable_text_box(self.ui.txt_local_pred_mono_prot_seq,
+                                  self.ui.lbl_local_pred_mono_prot_seq)
+        self.ui.btn_local_pred_mono_predict.setEnabled(False)
+        styles.color_button_not_ready(self.ui.btn_local_pred_mono_predict)
+
+    def predict_local_monomer(self):
+        # creating tmp directories in scratch folder to organize prediction inputs and outputs
+        # TODO: is there a more elegant way to do it?
+        if not os.path.exists(pathlib.Path(f"{self.scratch_path}/local_predictions")):
+            os.mkdir(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        if not os.path.exists(constants.PREDICTION_FASTA_DIR):
+            os.mkdir(constants.PREDICTION_FASTA_DIR)
+        if not os.path.exists(constants.PREDICTION_PDB_DIR):
+            os.mkdir(constants.PREDICTION_PDB_DIR)
+        # create fasta file and move to scratch fasta dir
+        fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{self.ui.txt_local_pred_mono_protein_name.text()}.fasta", "w")
+        fasta_file.write(f">{self.ui.txt_local_pred_mono_protein_name.text()}\n")
+        fasta_file.write(self.ui.txt_local_pred_mono_prot_seq.text())
+
+        # TODO: make paths below more variable and not hard-coded like this
+        fasta_path = "/mnt/c/Users/martin/.pyssa/scratch/local_predictions/fasta"
+        pdb_path = "/mnt/c/Users/martin/.pyssa/scratch/local_predictions/pdb"
+        try:
+            # TODO: make the script path below more variable and not hard-coded like this
+            subprocess.run(["wsl", "/mnt/c/Users/martin/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
+                            fasta_path, pdb_path])
+        except OSError:
+            shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+
+
 
     # Single Analysis
     def analysis_next_step(self):

@@ -30,6 +30,8 @@ SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
 SETTINGS_FILE = "settings.xml"
 
 SCRATCH_DIR = f"{SETTINGS_DIR}/scratch"
+PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")
+PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
 
 # Constants for the structure prediction
 OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
