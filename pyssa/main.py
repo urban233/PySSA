@@ -149,6 +149,7 @@ class MainWindow(QMainWindow):
         self._init_use_page()
         self._init_new_sequence_page()
         self._init_local_pred_mono_page()
+        self._init_local_pred_multi_page()
         # self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_batch_page()
@@ -402,6 +403,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_close_project.clicked.connect(self.close_project)
         self.ui.btn_pred_cloud_monomer_page.clicked.connect(self.display_prediction_only_page)
         self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
+        self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
         #self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
         self.ui.btn_job_analysis_page.clicked.connect(self.display_job_analysis_page)
@@ -460,6 +462,15 @@ class MainWindow(QMainWindow):
         self.ui.btn_local_pred_mono_back_2.clicked.connect(self.local_pred_mono_hide_advanced_config)
         self.ui.btn_local_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
         self.ui.btn_local_pred_mono_predict.clicked.connect(self.predict_local_monomer)
+        # multimer local prediction page
+        self.ui.btn_local_pred_multi_single.clicked.connect(self.show_protein_name_stage)
+        # single connections
+        self.ui.btn_local_pred_multi_next.clicked.connect(self.show_protein_sequence_stage)
+        self.ui.btn_local_pred_multi_back.clicked.connect(self.hide_protein_sequence_stage)
+        self.ui.btn_local_pred_multi_next_2.clicked.connect(self.show_predict_stage)
+        self.ui.btn_local_pred_multi_back_2.clicked.connect(self.hide_predict_stage)
+        # batch connections
+        self.ui.btn_local_pred_multi_batch.clicked.connect(self.show_protein_sequence_stage_batch)
 
         # single analysis page
         self.ui.btn_analysis_start.clicked.connect(self.start_process)
@@ -719,6 +730,47 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.hide_gui_elements(gui_elements)
 
+    def _init_local_pred_multi_page(self):
+        # clears everything
+        self.ui.txt_local_pred_multi_protein_name.clear()
+        self.ui.txt_local_pred_multi_prot_seq.clear()
+        # sets up defaults: Prediction
+        self.ui.btn_local_pred_multi_predict.setEnabled(False)
+        self.ui.lbl_local_pred_multi_status_protein_name.setText("")
+        self.ui.lbl_local_pred_multi_status_prot_seq.setText("")
+
+        gui_elements_to_show = [
+            self.ui.lbl_local_pred_prediction_mode,
+            self.ui.btn_local_pred_multi_single,
+            self.ui.btn_local_pred_multi_batch,
+        ]
+
+        gui_elements = [
+            # single only
+            self.ui.lbl_local_pred_multi_protein_name,
+            self.ui.txt_local_pred_multi_protein_name,
+            self.ui.lbl_local_pred_multi_status_protein_name,
+            self.ui.btn_local_pred_multi_next,
+            self.ui.lbl_local_pred_multi_prot_seq_single,
+            self.ui.txt_local_pred_multi_prot_seq,
+            self.ui.lbl_local_pred_multi_status_prot_seq,
+            self.ui.btn_local_pred_multi_add_seq_single,
+            # batch + single
+            self.ui.lbl_local_pred_multi_prot_overview,
+            self.ui.table_local_pred_multi_prot_overview,
+            # batch only
+            self.ui.lbl_local_pred_multi_prot_seq_batch,
+            self.ui.btn_local_pred_multi_add_seq_batch,
+            # batch + single
+            self.ui.btn_local_pred_multi_back,
+            self.ui.btn_local_pred_multi_next_2,
+            self.ui.lbl_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_back_2,
+            self.ui.btn_local_pred_multi_predict,
+        ]
+        gui_utils.hide_gui_elements(gui_elements)
+
     def _init_sequence_vs_pdb_page(self):
         """This function clears all text fields and hides everything which is needed
 
@@ -969,6 +1021,9 @@ class MainWindow(QMainWindow):
 
     def display_local_pred_mono(self):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 15, "Local Monomer Prediction")
+
+    def display_local_pred_multi(self):
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 16, "Local Multimer Prediction")
 
     def display_use_page(self):
         self.ui.list_use_available_protein_structures.clear()
@@ -1952,6 +2007,7 @@ class MainWindow(QMainWindow):
         self.ui.lbl_current_project_name.setText("")
         self._init_new_sequence_page()
         self._init_local_pred_mono_page()
+        self._init_local_pred_multi_page()
         self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_results_page()
@@ -2580,7 +2636,114 @@ class MainWindow(QMainWindow):
         except OSError:
             shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
 
+    # Multimer Local Prediction functions
+    def show_protein_name_stage(self):
+        gui_elements_to_show = [
+            self.ui.lbl_local_pred_multi_protein_name,
+            self.ui.txt_local_pred_multi_protein_name,
+            self.ui.lbl_local_pred_multi_status_protein_name,
+            self.ui.btn_local_pred_multi_next,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_elements_to_hide = [
+            self.ui.lbl_local_pred_prediction_mode,
+            self.ui.btn_local_pred_multi_single,
+            self.ui.btn_local_pred_multi_batch,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
 
+    def show_protein_sequence_stage(self):
+        gui_utils.disable_text_box(self.ui.txt_local_pred_multi_protein_name,
+                                   self.ui.lbl_local_pred_multi_protein_name)
+        gui_elements_to_show = [
+            self.ui.lbl_local_pred_multi_prot_seq_single,
+            self.ui.txt_local_pred_multi_prot_seq,
+            self.ui.lbl_local_pred_multi_status_prot_seq,
+            self.ui.btn_local_pred_multi_add_seq_single,
+            # protein overview table
+            self.ui.lbl_local_pred_multi_prot_overview,
+            self.ui.table_local_pred_multi_prot_overview,
+            self.ui.btn_local_pred_multi_back,
+            self.ui.btn_local_pred_multi_next_2,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_elements_to_hide = [
+            self.ui.btn_local_pred_multi_next,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def hide_protein_sequence_stage(self):
+        gui_utils.enable_text_box(self.ui.txt_local_pred_multi_protein_name,
+                                  self.ui.lbl_local_pred_multi_protein_name)
+        gui_elements_to_show = [
+            self.ui.btn_local_pred_multi_next,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_elements_to_hide = [
+            self.ui.lbl_local_pred_multi_prot_seq_single,
+            self.ui.txt_local_pred_multi_prot_seq,
+            self.ui.lbl_local_pred_multi_status_prot_seq,
+            self.ui.btn_local_pred_multi_add_seq_single,
+            # protein overview table
+            self.ui.lbl_local_pred_multi_prot_overview,
+            self.ui.table_local_pred_multi_prot_overview,
+            self.ui.btn_local_pred_multi_back,
+            self.ui.btn_local_pred_multi_next_2,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def show_predict_stage(self):
+        gui_utils.disable_text_box(self.ui.txt_local_pred_multi_prot_seq,
+                                   self.ui.lbl_local_pred_multi_prot_seq_single)
+        gui_elements_to_show = [
+            self.ui.lbl_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_back_2,
+            self.ui.btn_local_pred_multi_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_elements_to_hide = [
+            self.ui.btn_local_pred_multi_add_seq_single,
+            self.ui.btn_local_pred_multi_back,
+            self.ui.btn_local_pred_multi_next_2,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def hide_predict_stage(self):
+        gui_utils.enable_text_box(self.ui.txt_local_pred_multi_prot_seq,
+                                  self.ui.lbl_local_pred_multi_prot_seq_single)
+        gui_elements_to_show = [
+            self.ui.btn_local_pred_multi_add_seq_single,
+            self.ui.btn_local_pred_multi_back,
+            self.ui.btn_local_pred_multi_next_2,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_elements_to_hide = [
+            self.ui.lbl_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_back_2,
+            self.ui.btn_local_pred_multi_predict,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def show_protein_sequence_stage_batch(self):
+        gui_elements_to_show = [
+            self.ui.lbl_local_pred_multi_prot_overview,
+            self.ui.table_local_pred_multi_prot_overview,
+            self.ui.lbl_local_pred_multi_prot_seq_batch,
+            self.ui.btn_local_pred_multi_add_seq_batch,
+            self.ui.lbl_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_advanced_config,
+            self.ui.btn_local_pred_multi_back_2,
+            self.ui.btn_local_pred_multi_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_elements_to_hide = [
+            self.ui.lbl_local_pred_prediction_mode,
+            self.ui.btn_local_pred_multi_single,
+            self.ui.btn_local_pred_multi_batch,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
 
     # Single Analysis
     def analysis_next_step(self):
