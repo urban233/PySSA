@@ -20,8 +20,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the project class"""
-
+import json
 import os
+import pathlib
 import platform
 from datetime import datetime
 from pathlib import Path
@@ -34,28 +35,29 @@ from pyssa.gui.utilities import gui_utils
 
 class Project:
     """This class is for the projects used in the plugin
-    Var:
-        project_name:
-            name of the project
-        ref_chains:
-            chains which are used for the reference Protein
-        model_chains:
-            chains which are used for the model Protein
-        results_path:
-            path where all results are stored
-    """
-    _date = datetime.now()
-    _operating_system = platform.system()
-    _workspace = ""
-    _project_name: str = ""
-    # _ref_chains: str = "no_chains_selected"
-    # _model_chains: str = "no_chains_selected"
-    _folder_paths: list[Path] = []
-    _session_file_name: str = "session_file_model_s.pse"
-    _proteins: list[core.Protein] = []
-    _protein_pairs: list[core.ProteinPair] = []
 
-    def __init__(self, project_name, workspace_path) -> None:
+    Attributes:
+        _project_name:
+            The name of the project.
+        _workspace:
+            The path of the projects' workspace.
+        project_path:
+            The path where the project is located.
+        _date:
+            The creation date of the project.
+        _operating_system:
+            The operating system, where the project was created on.
+        _folder_paths:
+            A list of all major paths of the project.
+        _session_file_name:
+            The name of the pymol session.
+        proteins:
+            A list of protein.Protein objects which are used within the project.
+        protein_pairs:
+            A list of protein_pair.ProteinPair objects which are used within the project.
+
+    """
+    def __init__(self, project_name: str, workspace_path: pathlib.Path) -> None:
         """Constructor
 
         Args:
@@ -64,23 +66,18 @@ class Project:
             workspace_path:
                 path of the workspace
         """
-        # project_name_with_underscores = project_name.replace(" ", "_")
-        self._project_name = project_name
-        self._workspace = workspace_path
+        self._project_name: str = project_name
+        self._workspace: pathlib.Path = workspace_path
 
-        self._folder_paths = [
-            Path(f"{workspace_path}/{self._project_name}"),
-            Path(f"{workspace_path}/{self._project_name}/pdb"),
-            Path(f"{workspace_path}/{self._project_name}/results"),
-            # Path(f"{workspace_path}/{self._project_name}/results/alignment_files"),
-            # Path(f"{workspace_path}/{self._project_name}/results/distance_csv"),
-            # Path(f"{workspace_path}/{self._project_name}/results/images"),
-            # Path(f"{workspace_path}/{self._project_name}/results/images/interesting_regions"),
-            # Path(f"{workspace_path}/{self._project_name}/results/plots"),
-            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_histogram"),
-            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_plot"),
-            # Path(f"{workspace_path}/{self._project_name}/results/sessions/"),
-        ]
+        self.project_path: pathlib.Path = Path(f"{workspace_path}/{project_name}")
+        self._date = str(datetime.now())
+        self._operating_system = platform.system()
+        # self._workspace_path: pathlib.Path = ""
+        self._folder_paths: list[Path] = []
+        self._session_file_name: str = "session_file_model_s.pse"
+        self.proteins: list[core.Protein] = []
+        self.protein_pairs: list[core.ProteinPair] = []
+        self.create_folder_paths()
 
     def add_new_protein(self, protein_name) -> None:
         """This function adds a new protein to the project.
@@ -90,7 +87,7 @@ class Project:
                 name of the protein
         """
         new_protein = core.Protein(protein_name)
-        self._proteins.append(new_protein)
+        self.proteins.append(new_protein)
 
     def add_existing_protein(self, protein: core.Protein) -> None:
         """This function adds an existing protein object to the project.
@@ -99,7 +96,7 @@ class Project:
             protein:
                 name of the existing protein object
         """
-        self._proteins.append(protein)
+        self.proteins.append(protein)
 
     def add_protein_pair(self, protein_pair: core.ProteinPair) -> None:
         """This function adds an existing protein_pair object to the project.
@@ -125,6 +122,22 @@ class Project:
         for folder in self._folder_paths:
             os.mkdir(folder)
 
+    def create_folder_paths(self):
+        self._folder_paths = [
+            Path(f"{self._workspace}/{self._project_name}"),
+            Path(f"{self._workspace}/{self._project_name}/pdb"),
+            Path(f"{self._workspace}/{self._project_name}/results"),
+            Path(f"{self._workspace}/{self._project_name}/.objects"),
+            # Path(f"{workspace_path}/{self._project_name}/results/alignment_files"),
+            # Path(f"{workspace_path}/{self._project_name}/results/distance_csv"),
+            # Path(f"{workspace_path}/{self._project_name}/results/images"),
+            # Path(f"{workspace_path}/{self._project_name}/results/images/interesting_regions"),
+            # Path(f"{workspace_path}/{self._project_name}/results/plots"),
+            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_histogram"),
+            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_plot"),
+            # Path(f"{workspace_path}/{self._project_name}/results/sessions/"),
+        ]
+
     def get_session_file(self) -> str:
         """This function gets the value of the session_file variable
 
@@ -149,6 +162,31 @@ class Project:
         """
         return str(self._folder_paths[1])
 
+    def get_results_path(self):
+        """This function returns the results path of the project
+
+        Returns:
+            the results path
+        """
+        return str(self._folder_paths[2])
+
+    def get_objects_path(self):
+        """This function returns the objects path of the project
+
+        Returns:
+            the object path
+        """
+        return str(self._folder_paths[3])
+
+    def get_number_of_proteins(self):
+        return len(self.proteins)
+
+    def get_project_name(self):
+        return self._project_name
+
+    def set_folder_paths(self, value):
+        self._folder_paths = value
+
     def construct_xml_element_pairs(self):
         project = [
             [
@@ -163,6 +201,12 @@ class Project:
             [
                 "project_name", self._project_name
             ],
+            [
+                "proteins", self.proteins
+            ],
+            [
+                "protein_pairs", self.protein_pairs
+            ]
         ]
         return project
 
@@ -179,3 +223,41 @@ class Project:
         xml_as_string = minidom.parseString(ElementTree.tostring(root)).toprettyxml(indent="   ")
         with open(f"{self._folder_paths[0]}/project.xml", "w") as f:
             f.write(xml_as_string)
+
+    def serialize_project(self, filepath, filename) -> None:
+        """This function serialize the protein object
+
+        """
+        if not os.path.exists(filepath):
+            print(f"The filepath: {filepath} does not exists!")
+            return
+        # self._folder_paths.__str__()
+        project_dict = self.__dict__
+        update = {
+            '_workspace': str(self._workspace),
+            'project_path': str(self.project_path),
+            '_folder_paths': [str(self._folder_paths[0]), str(self._folder_paths[1]), str(self._folder_paths[2]), str(self._folder_paths[3])],
+        }
+        project_dict.update(update)
+        print(project_dict)
+        project_file = open(f"{filepath}\\{filename}.json", "w", encoding="utf-8")
+        json.dump(project_dict, project_file, indent=4)
+
+    @staticmethod
+    def deserialize_project(filepath):
+        """This function constructs the protein object from
+        the json file
+
+        Returns:
+            a complete project object deserialized from a json file
+        """
+        try:
+            project_obj_file = open(pathlib.Path(f"{filepath}/project.json"), "r", encoding="utf-8")
+        except FileNotFoundError:
+            print(f"There is no valid json file under: {filepath}")
+            return
+        project_dict = json.load(project_obj_file)
+        tmp_project: Project = Project(project_dict.get("_project_name"), project_dict.get("_workspace"))
+        tmp_project.set_folder_paths(project_dict.get("_folder_paths"))
+        tmp_project.project_path = project_dict.get("project_path")
+        return tmp_project

@@ -106,7 +106,7 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.web_page.runJavaScript("document.getElementsByTagName('paper-button').item(2).click()")
         if self.web_page.url() == self.url_without_pre_login or self.web_page.url() == self.url_with_pre_login:
             self.setWindowTitle("Prediction started ...")
-            self.hide()
+            #self.hide()
             # sets up a dialog window which is used to control the behaviour of the QWebEnginePage
             self.dialog = dialog_notebook_managment.DialogNotebookManagment()
             self.dialog.web_page = self.web_page

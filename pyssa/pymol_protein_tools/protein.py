@@ -22,6 +22,7 @@
 """Module for the protein class"""
 import json
 import os
+import pathlib
 
 import pymol
 from pymol import cmd
@@ -34,16 +35,30 @@ from typing import Dict, Tuple
 class Protein:
     """This class stores one protein in a PyMOL compatible form
 
+    Attributes:
+        molecule_object:
+            The name of the protein which is also used within pymol.
+        filepath:
+            The filepath where the pdb file is stored.
+        export_data_dir:
+            The filepath where results are saved. Default is None.
+        selection:
+            A pymol selection string which needs to conform with the selection algebra
+            from pymol.
+        sequence:
+            The primary sequence of the protein.
+        chains:
+            A list of chains which occur in the protein.
     """
 
-    def __init__(self, molecule_object: str, import_data_dir: str = None,
-                 export_data_dir: str = None):
+    def __init__(self, molecule_object: str, filepath: pathlib.Path = None,
+                 export_data_dir: pathlib.Path = None):
         """Constructor.
 
         Args:
             molecule_object (str):
                 name of the reference Protein in the pymol session
-            import_data_dir (str, optional):
+            filepath (str, optional):
                 directory where the pdb files of both model and
                 reference are stored
             export_data_dir (str, optional):
@@ -52,39 +67,31 @@ class Protein:
                 All subdirectories like ``images``, ``alignment_files``
                 and ``distances`` will be created automatically.
                 The export_data_dir will then function as parent directory.
-        Vars:
-            selection:
-                a pymol selection string which needs to conform with the selection algebra
-                from pymol
-            sequence:
-                the sequence of the protein
-            chains:
-                list of available chains in the protein
 
         Raises:
             NotADirectoryError: If directory not found.
             FileNotFoundError: If file not found.
         """
         self.molecule_object = molecule_object
-        self.import_data_dir = import_data_dir
-        self.export_data_dir = export_data_dir
+        self.filepath: pathlib.Path = filepath
+        self.export_data_dir: pathlib.Path = export_data_dir
         self.selection: str = ""
         self.sequence: str = ""
         self.chains: list[str] = []
 
         # argument test
-        if import_data_dir is not None:
-            if not os.path.exists(f"{import_data_dir}"):
-                raise NotADirectoryError(f"The path {import_data_dir} was not "
+        if filepath is not None:
+            if not os.path.exists(f"{filepath}"):
+                raise NotADirectoryError(f"The path {filepath} was not "
                                          f"found.")
         if export_data_dir is not None:
             if not os.path.exists(f"{export_data_dir}"):
                 raise NotADirectoryError(f"The path {export_data_dir} was not "
                                          f"found.")
-        if import_data_dir is not None:
-            if not os.path.exists(f"{import_data_dir}/{molecule_object}.pdb"):
+        if filepath is not None:
+            if not os.path.exists(f"{filepath}/{molecule_object}.pdb"):
                 raise FileNotFoundError(f"The pdb file {molecule_object} was "
-                                        f"not found under {import_data_dir}.")
+                                        f"not found under {filepath}.")
 
     def set_selection(self, selection: str) -> None:
         """This function sets a selection for the Protein object.
@@ -110,13 +117,13 @@ class Protein:
         """
         if sequence is None:
             cmd.reinitialize()
-            if self.import_data_dir is None:
+            if self.filepath is None:
                 # this means a PDB ID was given
                 cmd.fetch(self.molecule_object)
                 self.sequence = cmd.get_fastastr('all')
             else:
                 # a .pdb file was given
-                cmd.load(f"{self.import_data_dir}/{self.molecule_object}.pdb")
+                cmd.load(f"{self.filepath}/{self.molecule_object}.pdb")
                 self.sequence = cmd.get_fastastr('all')
         else:
             self.sequence = sequence
@@ -128,13 +135,13 @@ class Protein:
         """
         if chains is None:
             cmd.reinitialize()
-            if self.import_data_dir is None:
+            if self.filepath is None:
                 # this means a PDB ID was given
                 cmd.fetch(self.molecule_object)
                 self.chains = cmd.get_chains(self.molecule_object)
             else:
                 # a .pdb file was given
-                cmd.load(f"{self.import_data_dir}/{self.molecule_object}.pdb")
+                cmd.load(f"{self.filepath}/{self.molecule_object}.pdb")
                 self.chains = cmd.get_chains(self.molecule_object)
         else:
             self.chains = chains
@@ -183,7 +190,7 @@ class Protein:
         # save the pdb file under the path (export_data_dir)
         cmd.save(f"{self.export_data_dir}/{self.molecule_object}.pdb")
 
-    def serialize_protein(self, filepath) -> None:
+    def serialize_protein(self, filepath, filename) -> None:
         """This function serialize the protein object
 
         """
@@ -191,10 +198,16 @@ class Protein:
             print(f"The filepath: {filepath} does not exists!")
             return
         protein_dict = self.__dict__
-        protein_file = open(filepath, "w", encoding="utf-8")
-        json.dump(protein_dict, protein_file)
+        update = {
+            "full_filepath": str(self.filepath),
+            "export_data_dir": str(self.export_data_dir),
+        }
+        protein_dict.update(update)
+        protein_file = open(pathlib.Path(f"{filepath}/{filename}.json"), "w", encoding="utf-8")
+        json.dump(protein_dict, protein_file, indent=4)
 
-    def deserialize_protein(self, protein_obj_json_file):
+    @staticmethod
+    def deserialize_protein(protein_obj_json_file):
         """This function constructs the protein object from
         the json file
 
@@ -207,9 +220,9 @@ class Protein:
             print(f"There is no valid json file under: {protein_obj_json_file}")
             return
         protein_dict = json.load(protein_obj_file)
-        tmp_protein = self.__init__(protein_dict.get("molecule_object"),
-                                    protein_dict.get("import_data_dir"),
-                                    protein_dict.get("export_data_dir"))
+        tmp_protein = Protein(protein_dict.get("molecule_object"),
+                              protein_dict.get("import_data_dir"),
+                              protein_dict.get("export_data_dir"))
         tmp_protein.set_sequence(protein_dict.get("sequence"))
         tmp_protein.set_selection(protein_dict.get("selection"))
         tmp_protein.set_chains(protein_dict.get("chains"))

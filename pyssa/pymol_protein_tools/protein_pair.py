@@ -76,10 +76,10 @@ class ProteinPair:
         """
         try:
             # loading the reference in the active PyMol session
-            cmd.load(f"{self.ref_obj.import_data_dir}/"
+            cmd.load(f"{self.ref_obj.filepath}/"
                      f"{self.ref_obj.molecule_object}.pdb")
             # loading the model in the active PyMol session
-            cmd.load(f"{self.model_obj.import_data_dir}/"
+            cmd.load(f"{self.model_obj.filepath}/"
                      f"{self.model_obj.molecule_object}.pdb")
 
         except pymol.CmdException:
@@ -679,14 +679,14 @@ class ProteinPair:
         protein_structures_dict = {
             "ref_obj": self.ref_obj,
             "prot_1_molecule_object": protein_structure_1.molecule_object,
-            "prot_1_import_data_dir": protein_structure_1.import_data_dir,
+            "prot_1_import_data_dir": protein_structure_1.filepath,
             "prot_1_export_data_dir": protein_structure_1.export_data_dir,
             "prot_1_selection": protein_structure_1.selection,
             "prot_1_sequence": protein_structure_1.sequence,
             "prot_1_chains": protein_structure_1.chains,
             "model_obj": self.model_obj,
             "prot_2_molecule_object": protein_structure_2.molecule_object,
-            "prot_2_import_data_dir": protein_structure_2.import_data_dir,
+            "prot_2_import_data_dir": protein_structure_2.filepath,
             "prot_2_export_data_dir": protein_structure_2.export_data_dir,
             "prot_2_selection": protein_structure_2.selection,
             "prot_2_sequence": protein_structure_2.sequence,
@@ -711,9 +711,9 @@ class ProteinPair:
             return
         protein_dict = json.load(protein_obj_file)
 
-        tmp_protein_pair = self.__init__(protein_dict.get("ref_obj"),
-                                         protein_dict.get("model_obj"),
-                                         protein_dict.get("results_dir"))
+        tmp_protein_pair = ProteinPair(protein_dict.get("ref_obj"),
+                                       protein_dict.get("model_obj"),
+                                       protein_dict.get("results_dir"))
 
         tmp_protein_1 = protein.Protein.__init__(protein_dict.get("prot_1_molecule_object"),
                                                  protein_dict.get("prot_1_import_data_dir"),

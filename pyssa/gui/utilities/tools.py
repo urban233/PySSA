@@ -29,9 +29,11 @@ from Bio import PDB
 from pathlib import Path
 
 from pymol import Qt
+from pymol import cmd
 from PyQt5 import QtGui
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.utilities import styles
+from pyssa.gui.utilities import constants
 from pyssa.gui.data_structures.data_classes import protein_info
 
 
@@ -305,7 +307,7 @@ def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
             directory_content = os.listdir(f"{workspace_path}/{directory}")
             # iterates over the content in a single project directory
             for content in directory_content:
-                if content == "project.xml":
+                if content == "project.json":
                     valid_directories.append(directory)
         except NotADirectoryError:
             print(f"This: {directory} is not a directory.")
@@ -354,15 +356,16 @@ def scan_workspace_for_non_duplicate_proteins(valid_projects: list, current_proj
     return protein_dict, protein_names
 
 
-def scan_project_for_valid_proteins(project_path, list_view_project_proteins):
+def scan_project_for_valid_proteins(project_path, list_view_project_proteins=None):
     directory = "pdb"
     project_proteins: list[str] = os.listdir(f"{project_path}/{directory}")
     valid_proteins = []
     pattern = "*.pdb"
     # iterates over possible project directories
-    for protein in project_proteins:
-        if fnmatch.fnmatch(protein, pattern):
-            list_view_project_proteins.addItem(protein)
+    if list_view_project_proteins is not None:
+        for protein in project_proteins:
+            if fnmatch.fnmatch(protein, pattern):
+                list_view_project_proteins.addItem(protein)
     return project_proteins
 
 
@@ -409,6 +412,17 @@ def remove_pdb_file(file_path):
         os.remove(file_path)
     else:
         print(f"There is no protein in this project under: {file_path}")
+
+
+def add_chains_from_pdb_file_to_list(project_path, protein_filename, list_widget=None) -> list:
+    cmd.load(f"{project_path}/pdb/{protein_filename}", object="tmp_protein")
+    tmp_chains: list = cmd.get_chains("tmp_protein")
+    if list_widget is not None:
+        list_widget.clear()
+        for chain in tmp_chains:
+            list_widget.addItem(chain)
+    cmd.reinitialize()
+    return tmp_chains
 
 
 def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status_project_name,
@@ -469,8 +483,8 @@ def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status
                 styles.color_button_not_ready(btn_for_next_step)
                 return
         item = list_of_projects.findItems(txt_for_project_name.text(),
-                                           Qt.QtCore.Qt.MatchContains |
-                                           Qt.QtCore.Qt.MatchExactly)
+                                          Qt.QtCore.Qt.MatchContains |
+                                          Qt.QtCore.Qt.MatchExactly)
         if len(item) != 0:
             list_of_projects.setCurrentItem(item[0])
             txt_for_project_name.setStyleSheet("background-color: #FC5457")
@@ -602,6 +616,11 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
                 btn_next.setEnabled(False)
                 styles.color_button_not_ready(btn_next)
                 return
+
+
+def clean_scratch_folder():
+    shutil.rmtree(constants.SCRATCH_DIR)
+    os.mkdir(constants.SCRATCH_DIR)
 
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")

@@ -45,25 +45,29 @@ from urllib.error import URLError
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtWebEngineWidgets
-
+from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.data_structures import project
 from pyssa.gui.data_structures import structure_analysis
 from pyssa.gui.data_structures.data_classes import protein_info
+from pyssa.gui.data_structures import project_watcher
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
 from pyssa.gui.ui.dialogs import dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
+from pyssa.gui.ui.dialogs import dialog_edit_prot_table
 from pyssa.gui.ui.dialogs import web_interface
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.utilities import tools
 from pyssa.gui.utilities import constants
 from pyssa.gui.utilities import global_variables
 from pyssa.gui.utilities import styles
+from pyssa.gui.utilities import gui_page_management
+from pyssa.gui.utilities.data_classes import stage
+from pyssa.pymol_protein_tools import protein
 from pymolproteintools import core
-# from tmp_storage import job_utils
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -73,12 +77,42 @@ global_var_list_widget_row = 0
 
 
 class MainWindow(QMainWindow):
-    """This class contains all information about the new design MainWindow in the
+    """This class contains all information about the MainWindow in the
     application
 
-    """
+    Attributes:
+        app_project:
+            The active project.Project object which contains all information about the currently loaded project.
+        _project_watcher:
+            The project watcher object to determine the status of the project.
+        scratch_path:
+            The path where all files are stored temporarily before being copied in the project directory.
+        workspace_path:
+            The path where all projects are stored.
+        workspace:
+            A QLabel which holds information from workspace_path.
+        status_bar:
+            The status_bar object for the main window.
+        no_of_selected_chains:
+            Holds the number of selected chains from the single analysis page.
+        plot_dialog:
+            Is a Qt dialog window which is used in combination with pyqtgraph.
+        view_box:
+            The view box object from pyqtgraph, to manipulate the graphs view.
+        cloud_pred_monomer_management:
+            The object which contains information in form of stages of the page.
+        cloud_pred_multimer_management:
+            The object which contains information in form of stages of the page.
+        local_pred_monomer_management:
+            The object which contains information in form of stages of the page.
+        local_pred_multimer_management:
+            The object which contains information in form of stages of the page.
+        single_analysis_management:
+            The object which contains information in form of stages of the page.
 
+    """
     def __init__(self):
+        # ----- Initialize the ui building process
         super().__init__()
         # build ui object
         self.ui = Ui_MainWindow()
@@ -86,6 +120,25 @@ class MainWindow(QMainWindow):
         self.ui.lbl_page_title.setText("Home")
         self.setMinimumWidth(550)
         self._init_side_menu()
+
+        # ----- All class attributes are listed here
+        self.app_project = project.Project("", pathlib.Path(""))
+        self._project_watcher = project_watcher.ProjectWatcher(self.app_project, no_of_pdb_files=None)
+        self.scratch_path = constants.SCRATCH_DIR
+        self.workspace_path = global_variables.global_var_settings_obj.get_workspace_path()
+
+        self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
+        self.status_bar = Qt.QtWidgets.QStatusBar()
+
+        self.no_of_selected_chains = 0
+        self.plot_dialog = Qt.QtWidgets.QDialog(self)
+        self.view_box = None
+        # -- Gui page management vars
+        self.cloud_pred_monomer_management: gui_page_management.GuiPageManagement
+        self.cloud_pred_multimer_management: gui_page_management.GuiPageManagement
+        self.local_pred_monomer_management: gui_page_management.GuiPageManagement
+        self.local_pred_multimer_management: gui_page_management.GuiPageManagement
+        self.single_analysis_management: gui_page_management.GuiPageManagement
 
         # checks if the plugin launched for the first time
         if global_variables.global_var_settings_obj.get_app_launch() == 0 or not os.path.exists(
@@ -101,8 +154,6 @@ class MainWindow(QMainWindow):
             global_variables.global_var_settings_obj.set_app_launch(1)
             global_variables.global_var_settings_obj.save_settings_to_xml()
 
-        self.plot_dialog = Qt.QtWidgets.QDialog(self)
-        self.view_box = None
         # sets up the status bar
         self._setup_statusbar()
         # # sets up settings.xml
@@ -135,7 +186,6 @@ class MainWindow(QMainWindow):
         # startup_dialog = dialog_startup.DialogStartup()
         # startup_dialog.exec_()
 
-        self.scratch_path = constants.SCRATCH_DIR
         tools.create_directory(constants.SETTINGS_DIR, "scratch")
 
         self._setup_default_configuration()
@@ -143,12 +193,23 @@ class MainWindow(QMainWindow):
         self.ui.list_new_seq_notebooks.addItem(constants.OFFICIAL_NOTEBOOK_NAME)
         self.ui.list_new_seq_notebooks.currentItemChanged.connect(self.enable_predict_button)
 
+        self.ui.list_cloud_pred_multi_seq_notebooks.addItem(constants.OFFICIAL_NOTEBOOK_NAME)
+        self.ui.list_cloud_pred_multi_seq_notebooks.currentItemChanged.connect(self.enable_cloud_predict_button)
+
+        # management
+        self._create_cloud_pred_monomer_management()
+        self._create_cloud_pred_multimer_management()
+        self._create_local_pred_monomer_management()
+        self._create_local_pred_multimer_management()
+        self._create_single_analysis_management()
+
         # setup defaults for pages
         self._init_hide_ui_elements()
         self._init_fill_combo_boxes()
         self._init_new_page()
         self._init_use_page()
         self._init_new_sequence_page()
+        self._init_cloud_pred_multi_page()
         self._init_local_pred_mono_page()
         self._init_local_pred_multi_page()
         # self._init_sequence_vs_pdb_page()
@@ -159,21 +220,270 @@ class MainWindow(QMainWindow):
         self._connect_all_gui_elements()
         # create tooltips
         self._create_all_tooltips()
-
-        self.number_of_pdb_files = None
-        self._configuration()
+        self._project_watcher.show_valid_options(self.ui)
         # setting additional parameters
         self.setWindowIcon(QIcon("..\\assets\\pyssa_logo.png"))
         self.setWindowTitle("PySSA v0.9.2")
+
+    # ----- Functions for GuiPageManagement obj creation
+
+    def _create_cloud_pred_monomer_management(self):
+        # gui element management
+        tmp_stages = [
+            # protein name stage
+            stage.Stage(
+                {
+                    "label_protein_name": self.ui.lbl_prediction_only_protein_name,
+                    "text_field_protein_name": self.ui.txt_prediction_only_protein_name,
+                    "label_protein_name_status": self.ui.lbl_prediction_only_status_protein_name,
+                 },
+                {
+                    "next_button": self.ui.btn_prediction_only_next,
+                }
+            ),
+            # protein sequence stage
+            stage.Stage(
+                {
+                    "label_protein_sequence": self.ui.lbl_cloud_pred_mono_prot_seq,
+                    "text_field_protein_sequence": self.ui.txt_cloud_pred_mono_prot_seq,
+                    "label_protein_sequence_status": self.ui.lbl_cloud_pred_mono_status_prot_seq,
+                },
+                {
+                    "back_button": self.ui.btn_cloud_pred_mono_back,
+                    "next_button": self.ui.btn_cloud_pred_mono_next_2,
+                }
+            ),
+            # prediction stage (with advanced configurations)
+            stage.Stage(
+                {
+                    "label_choose_notebook": self.ui.lbl_prediction_only_choose_notebook,
+                    "list_choose_notebook": self.ui.list_new_seq_notebooks,
+                    "label_advanced_config": self.ui.lbl_cloud_pred_mono_advanced_config,
+                    "button_advanced_config": self.ui.btn_cloud_pred_mono_advanced_config,
+                },
+                {
+                    "back_button": self.ui.btn_prediction_only_back,
+                    "predict_button": self.ui.btn_prediction_only_start,
+                }
+            ),
+        ]
+        self.cloud_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_cloud_pred_multimer_management(self):
+        # gui element management
+        tmp_stages = [
+            # protein name stage
+            stage.Stage(
+                {
+                    "label_protein_name": self.ui.lbl_cloud_pred_multi_protein_name,
+                    "text_field_protein_name": self.ui.txt_cloud_pred_multi_protein_name,
+                    "label_protein_name_status": self.ui.lbl_cloud_pred_multi_status_protein_name,
+                 },
+                {
+                    "next_button": self.ui.btn_cloud_pred_multi_next,
+                }
+            ),
+            # protein sequence stage
+            stage.Stage(
+                {
+                    "label_protein_sequence": self.ui.lbl_cloud_pred_multi_prot_seq_single,
+                    "text_field_protein_sequence": self.ui.txt_cloud_pred_multi_prot_seq,
+                    "label_protein_sequence_status": self.ui.lbl_cloud_pred_multi_status_prot_seq,
+                    "button_add_sequence": self.ui.btn_cloud_pred_multi_add_seq_single,
+                    "label_protein_sequence_overview": self.ui.lbl_cloud_pred_multi_prot_overview,
+                    "table_protein_sequence_overview": self.ui.table_cloud_pred_multi_prot_overview,
+                    "label_selected_protein_1": self.ui.lbl_cloud_pred_multi_selected_protein_1,
+                    "button_edit_selected_protein": self.ui.btn_cloud_pred_multi_selected_protein_edit,
+                    "label_selected_protein_2": self.ui.lbl_cloud_pred_multi_selected_protein_2,
+                    "button_remove_selected_protein": self.ui.btn_cloud_pred_multi_selected_protein_remove,
+                },
+                {
+                    "back_button": self.ui.btn_cloud_pred_multi_back,
+                    "next_button": self.ui.btn_cloud_pred_multi_next_2,
+                }
+            ),
+            # prediction stage (with advanced configurations)
+            stage.Stage(
+                {
+                    "label_choose_notebook": self.ui.lbl_cloud_pred_multi_choose_notebook,
+                    "list_choose_notebook": self.ui.list_cloud_pred_multi_seq_notebooks,
+                    "label_advanced_config": self.ui.lbl_cloud_pred_multi_advanced_config,
+                    "button_advanced_config": self.ui.btn_cloud_pred_multi_advanced_config,
+                },
+                {
+                    "back_button": self.ui.btn_cloud_pred_multi_back_2,
+                    "predict_button": self.ui.btn_cloud_pred_multi_predict,
+                }
+            ),
+        ]
+        self.cloud_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_local_pred_monomer_management(self):
+        # gui element management
+        tmp_stages = [
+            # protein name stage
+            stage.Stage(
+                {
+                    "label_protein_name": self.ui.lbl_local_pred_mono_protein_name,
+                    "text_field_protein_name": self.ui.txt_local_pred_mono_protein_name,
+                    "label_protein_name_status": self.ui.lbl_local_pred_mono_status_protein_name,
+                 },
+                {
+                    "next_button": self.ui.btn_local_pred_mono_next,
+                }
+            ),
+            # protein sequence stage
+            stage.Stage(
+                {
+                    "label_protein_sequence": self.ui.lbl_local_pred_mono_prot_seq,
+                    "text_field_protein_sequence": self.ui.txt_local_pred_mono_prot_seq,
+                    "label_protein_sequence_status": self.ui.lbl_local_pred_mono_status_prot_seq,
+                },
+                {
+                    "back_button": self.ui.btn_local_pred_mono_back,
+                    "next_button": self.ui.btn_local_pred_mono_next_2,
+                }
+            ),
+            # prediction stage (with advanced configurations)
+            stage.Stage(
+                {
+                    "label_advanced_config": self.ui.lbl_local_pred_mono_advanced_config,
+                    "button_advanced_config": self.ui.btn_local_pred_mono_advanced_config,
+                },
+                {
+                    "back_button": self.ui.btn_local_pred_mono_back_2,
+                    "predict_button": self.ui.btn_local_pred_mono_predict,
+                }
+            ),
+        ]
+        self.cloud_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_local_pred_multimer_management(self):
+        # gui element management
+        tmp_stages = [
+            # prediction mode: stage 0
+            stage.Stage(
+                {
+                    "label_prediction_mode": self.ui.lbl_local_pred_prediction_mode,
+                 },
+                {
+                    "single_button": self.ui.btn_local_pred_multi_single,
+                    "batch_button": self.ui.btn_local_pred_multi_batch,
+                }
+            ),
+            # protein name: stage 1
+            stage.Stage(
+                {
+                    "label_protein_name": self.ui.lbl_local_pred_multi_protein_name,
+                    "text_field_protein_name": self.ui.txt_local_pred_multi_protein_name,
+                    "label_protein_name_status": self.ui.lbl_local_pred_multi_status_protein_name,
+                 },
+                {
+                    "back_button": self.ui.btn_local_pred_multi_back_prediction_mode,
+                    "next_button": self.ui.btn_local_pred_multi_next,
+                }
+            ),
+            # single protein sequence: stage 2
+            stage.Stage(
+                {
+                    "label_protein_sequence": self.ui.lbl_local_pred_multi_prot_seq_single,
+                    "text_field_protein_sequence": self.ui.txt_local_pred_multi_prot_seq,
+                    "label_protein_sequence_status": self.ui.lbl_local_pred_multi_status_prot_seq,
+                    "button_add_sequence": self.ui.btn_local_pred_multi_add_seq_single,
+                    "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
+                    "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
+                },
+                {
+                    "back_button": self.ui.btn_local_pred_multi_back,
+                    "next_button": self.ui.btn_local_pred_multi_next_2,
+                }
+            ),
+            # batch protein sequence: stage 3
+            stage.Stage(
+                {
+                    "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
+                    "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
+                    "label_protein_sequence_batch": self.ui.lbl_local_pred_multi_prot_seq_batch,
+                    "button_add_sequence_batch": self.ui.btn_local_pred_multi_add_seq_batch
+                },
+                {
+                    "back_button": self.ui.btn_local_pred_multi_back,
+                    "next_button": self.ui.btn_local_pred_multi_next_2,
+                }
+            ),
+            # single prediction: stage 4 (with advanced configurations)
+            stage.Stage(
+                {
+                    "label_advanced_config": self.ui.lbl_local_pred_multi_advanced_config,
+                    "button_advanced_config": self.ui.btn_local_pred_multi_advanced_config,
+                },
+                {
+                    "back_button": self.ui.btn_local_pred_multi_back_2,
+                    "predict_button": self.ui.btn_local_pred_multi_predict,
+                }
+            ),
+            # batch prediction: stage 5 (with advanced configurations)
+            stage.Stage(
+                {
+                    "label_advanced_config_batch": self.ui.lbl_local_pred_multi_advanced_config,
+                    "button_advanced_config_batch": self.ui.btn_local_pred_multi_advanced_config,
+                },
+                {
+                    "back_button": self.ui.btn_local_pred_multi_back_3,
+                    "predict_button": self.ui.btn_local_pred_multi_predict,
+                }
+            ),
+        ]
+        self.local_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_single_analysis_management(self):
+        # gui element management
+        tmp_stages = [
+            # choose protein structures: stage 0
+            stage.Stage(
+                {
+                    "label_protein_structure_1": self.ui.lbl_analysis_prot_struct_1,
+                    "box_protein_structure_1": self.ui.box_analysis_prot_struct_1,
+                    "label_vs": self.ui.lbl_analysis_vs,
+                    "label_protein_structure_2": self.ui.lbl_analysis_prot_struct_2,
+                    "box_protein_structure_2": self.ui.box_analysis_prot_struct_2,
+                },
+                {
+                    "next_button": self.ui.btn_analysis_next,
+                }
+            ),
+            # choose chains from prot structure 1: stage 1
+            stage.Stage(
+                {
+                    "label_protein_structure_1_chains": self.ui.lbl_analysis_ref_chains,
+                    "list_protein_structure_1_chains": self.ui.list_analysis_ref_chains,
+                },
+                {
+                    "back_button": self.ui.btn_analysis_back,
+                    "next_button": self.ui.btn_analysis_next_2,
+                }
+            ),
+            # choose chains from prot structure 2: stage 2
+            stage.Stage(
+                {
+                    "label_protein_structure_2_chains": self.ui.lbl_analysis_model_chains,
+                    "list_protein_structure_2_chains": self.ui.list_analysis_model_chains,
+                    "label_images": self.ui.lbl_analysis_images,
+                    "checkbox_images": self.ui.cb_analysis_images,
+                },
+                {
+                    "back_button": self.ui.btn_analysis_back_2,
+                    "start_button": self.ui.btn_analysis_start,
+                }
+            ),
+        ]
+        self.single_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
 
     def _setup_statusbar(self):
         """This function sets up the status bar and fills it with the current workspace
 
         """
-        self.status_bar = Qt.QtWidgets.QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.workspace_path = global_variables.global_var_settings_obj.get_workspace_path()
-        self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar.showMessage(self.workspace.text())
 
     def _setup_default_configuration(self):
@@ -218,167 +528,167 @@ class MainWindow(QMainWindow):
 
         # image page
 
-    def _configuration(self):
-        if self.number_of_pdb_files is None:
-            gui_elements_to_show = [
-                self.ui.btn_new_page,
-                self.ui.btn_open_page,
-                self.ui.btn_delete_page,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_elements_to_hide = [
-                self.ui.btn_close_project,
-                self.ui.btn_use_page,
-                self.ui.btn_edit_page,
-                self.ui.lbl_pred_cloud,
-                self.ui.btn_pred_cloud_monomer_page,
-                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-                self.ui.btn_pred_cloud_multimer_page,
-                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-                self.ui.lbl_pred_local,
-                self.ui.btn_pred_local_monomer_page,
-                self.ui.btn_pred_local_monomer_vs_pdb_page,
-                self.ui.btn_pred_local_multimer_page,
-                self.ui.btn_pred_local_multimer_vs_pdb_page,
-                self.ui.lbl_analysis,
-                self.ui.btn_single_analysis_page,
-                self.ui.btn_job_analysis_page,
-                self.ui.btn_results_page,
-                self.ui.lbl_handle_pymol_session,
-                self.ui.btn_image_page,
-                self.ui.btn_hotspots_page,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        elif self.number_of_pdb_files == 0:
-            gui_elements_to_show = [
-                self.ui.btn_close_project,
-                self.ui.btn_use_page,
-                self.ui.btn_edit_page,
-                self.ui.lbl_pred_cloud,
-                self.ui.btn_pred_cloud_monomer_page,
-                self.ui.btn_pred_cloud_multimer_page,
-                self.ui.lbl_pred_local,
-                self.ui.btn_pred_local_monomer_page,
-                self.ui.btn_pred_local_multimer_page,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_elements_to_hide = [
-                self.ui.btn_new_page,
-                self.ui.btn_open_page,
-                self.ui.btn_delete_page,
-                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-                self.ui.btn_pred_local_monomer_vs_pdb_page,
-                self.ui.btn_pred_local_multimer_vs_pdb_page,
-                self.ui.lbl_analysis,
-                self.ui.btn_single_analysis_page,
-                self.ui.btn_job_analysis_page,
-                self.ui.btn_results_page,
-                self.ui.lbl_handle_pymol_session,
-                self.ui.btn_image_page,
-                self.ui.btn_hotspots_page,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self.display_view_page()
-        elif self.number_of_pdb_files == 1:
-            gui_elements_to_show = [
-                self.ui.btn_close_project,
-                self.ui.btn_save_project,
-                self.ui.btn_use_page,
-                self.ui.btn_edit_page,
-                self.ui.btn_view_page,
-                self.ui.lbl_pred_cloud,
-                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-                self.ui.lbl_pred_local,
-                self.ui.btn_pred_local_monomer_vs_pdb_page,
-                self.ui.btn_pred_local_multimer_vs_pdb_page,
-                self.ui.lbl_handle_pymol_session,
-                self.ui.btn_image_page,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_elements_to_hide = [
-                self.ui.btn_new_page,
-                self.ui.btn_open_page,
-                self.ui.btn_delete_page,
-                self.ui.btn_pred_cloud_monomer_page,
-                self.ui.btn_pred_cloud_multimer_page,
-                self.ui.btn_pred_local_monomer_page,
-                self.ui.btn_pred_local_multimer_page,
-                self.ui.lbl_analysis,
-                self.ui.btn_single_analysis_page,
-                self.ui.btn_job_analysis_page,
-                self.ui.btn_results_page,
-                self.ui.btn_hotspots_page,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self.display_view_page()
-        elif self.number_of_pdb_files == 2:
-            gui_elements_to_show = [
-                self.ui.btn_close_project,
-                self.ui.btn_save_project,
-                self.ui.btn_use_page,
-                self.ui.btn_edit_page,
-                self.ui.btn_view_page,
-                self.ui.lbl_analysis,
-                self.ui.btn_single_analysis_page,
-                self.ui.btn_results_page,
-                self.ui.lbl_handle_pymol_session,
-                self.ui.btn_image_page,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_elements_to_hide = [
-                self.ui.btn_new_page,
-                self.ui.btn_open_page,
-                self.ui.btn_delete_page,
-                self.ui.lbl_pred_cloud,
-                self.ui.btn_pred_cloud_monomer_page,
-                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-                self.ui.btn_pred_cloud_multimer_page,
-                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-                self.ui.lbl_pred_local,
-                self.ui.btn_pred_local_monomer_vs_pdb_page,
-                self.ui.btn_pred_local_multimer_vs_pdb_page,
-                self.ui.btn_pred_local_monomer_page,
-                self.ui.btn_pred_local_multimer_page,
-                self.ui.btn_job_analysis_page,
-                self.ui.btn_hotspots_page,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self.display_view_page()
-        elif self.number_of_pdb_files > 2:
-            gui_elements_to_show = [
-                self.ui.btn_close_project,
-                self.ui.btn_save_project,
-                self.ui.btn_use_page,
-                self.ui.btn_edit_page,
-                self.ui.btn_view_page,
-                self.ui.lbl_analysis,
-                self.ui.btn_single_analysis_page,
-                self.ui.btn_job_analysis_page,
-                self.ui.btn_results_page,
-                self.ui.lbl_handle_pymol_session,
-                self.ui.btn_image_page,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_elements_to_hide = [
-                self.ui.btn_new_page,
-                self.ui.btn_open_page,
-                self.ui.btn_delete_page,
-                self.ui.lbl_pred_cloud,
-                self.ui.btn_pred_cloud_monomer_page,
-                self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-                self.ui.btn_pred_cloud_multimer_page,
-                self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-                self.ui.lbl_pred_local,
-                self.ui.btn_pred_local_monomer_vs_pdb_page,
-                self.ui.btn_pred_local_multimer_vs_pdb_page,
-                self.ui.btn_pred_local_monomer_page,
-                self.ui.btn_pred_local_multimer_page,
-                self.ui.btn_hotspots_page,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self.display_view_page()
+    # def _configuration(self):
+    #     if self.number_of_pdb_files is None:
+    #         gui_elements_to_show = [
+    #             self.ui.btn_new_page,
+    #             self.ui.btn_open_page,
+    #             self.ui.btn_delete_page,
+    #         ]
+    #         gui_utils.show_gui_elements(gui_elements_to_show)
+    #         gui_elements_to_hide = [
+    #             self.ui.btn_close_project,
+    #             self.ui.btn_use_page,
+    #             self.ui.btn_edit_page,
+    #             self.ui.lbl_pred_cloud,
+    #             self.ui.btn_pred_cloud_monomer_page,
+    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_cloud_multimer_page,
+    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+    #             self.ui.lbl_pred_local,
+    #             self.ui.btn_pred_local_monomer_page,
+    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_local_multimer_page,
+    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
+    #             self.ui.lbl_analysis,
+    #             self.ui.btn_single_analysis_page,
+    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_results_page,
+    #             self.ui.lbl_handle_pymol_session,
+    #             self.ui.btn_image_page,
+    #             self.ui.btn_hotspots_page,
+    #         ]
+    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
+    #     elif self.number_of_pdb_files == 0:
+    #         gui_elements_to_show = [
+    #             self.ui.btn_close_project,
+    #             self.ui.btn_use_page,
+    #             self.ui.btn_edit_page,
+    #             self.ui.lbl_pred_cloud,
+    #             self.ui.btn_pred_cloud_monomer_page,
+    #             self.ui.btn_pred_cloud_multimer_page,
+    #             self.ui.lbl_pred_local,
+    #             self.ui.btn_pred_local_monomer_page,
+    #             self.ui.btn_pred_local_multimer_page,
+    #         ]
+    #         gui_utils.show_gui_elements(gui_elements_to_show)
+    #         gui_elements_to_hide = [
+    #             self.ui.btn_new_page,
+    #             self.ui.btn_open_page,
+    #             self.ui.btn_delete_page,
+    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
+    #             self.ui.lbl_analysis,
+    #             self.ui.btn_single_analysis_page,
+    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_results_page,
+    #             self.ui.lbl_handle_pymol_session,
+    #             self.ui.btn_image_page,
+    #             self.ui.btn_hotspots_page,
+    #         ]
+    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
+    #         self.display_view_page()
+    #     elif self.number_of_pdb_files == 1:
+    #         gui_elements_to_show = [
+    #             self.ui.btn_close_project,
+    #             self.ui.btn_save_project,
+    #             self.ui.btn_use_page,
+    #             self.ui.btn_edit_page,
+    #             self.ui.btn_view_page,
+    #             self.ui.lbl_pred_cloud,
+    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+    #             self.ui.lbl_pred_local,
+    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
+    #             self.ui.lbl_handle_pymol_session,
+    #             self.ui.btn_image_page,
+    #         ]
+    #         gui_utils.show_gui_elements(gui_elements_to_show)
+    #         gui_elements_to_hide = [
+    #             self.ui.btn_new_page,
+    #             self.ui.btn_open_page,
+    #             self.ui.btn_delete_page,
+    #             self.ui.btn_pred_cloud_monomer_page,
+    #             self.ui.btn_pred_cloud_multimer_page,
+    #             self.ui.btn_pred_local_monomer_page,
+    #             self.ui.btn_pred_local_multimer_page,
+    #             self.ui.lbl_analysis,
+    #             self.ui.btn_single_analysis_page,
+    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_results_page,
+    #             self.ui.btn_hotspots_page,
+    #         ]
+    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
+    #         self.display_view_page()
+    #     elif self.number_of_pdb_files == 2:
+    #         gui_elements_to_show = [
+    #             self.ui.btn_close_project,
+    #             self.ui.btn_save_project,
+    #             self.ui.btn_use_page,
+    #             self.ui.btn_edit_page,
+    #             self.ui.btn_view_page,
+    #             self.ui.lbl_analysis,
+    #             self.ui.btn_single_analysis_page,
+    #             self.ui.btn_results_page,
+    #             self.ui.lbl_handle_pymol_session,
+    #             self.ui.btn_image_page,
+    #         ]
+    #         gui_utils.show_gui_elements(gui_elements_to_show)
+    #         gui_elements_to_hide = [
+    #             self.ui.btn_new_page,
+    #             self.ui.btn_open_page,
+    #             self.ui.btn_delete_page,
+    #             self.ui.lbl_pred_cloud,
+    #             self.ui.btn_pred_cloud_monomer_page,
+    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_cloud_multimer_page,
+    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+    #             self.ui.lbl_pred_local,
+    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
+    #             self.ui.btn_pred_local_monomer_page,
+    #             self.ui.btn_pred_local_multimer_page,
+    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_hotspots_page,
+    #         ]
+    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
+    #         self.display_view_page()
+    #     elif self.number_of_pdb_files > 2:
+    #         gui_elements_to_show = [
+    #             self.ui.btn_close_project,
+    #             self.ui.btn_save_project,
+    #             self.ui.btn_use_page,
+    #             self.ui.btn_edit_page,
+    #             self.ui.btn_view_page,
+    #             self.ui.lbl_analysis,
+    #             self.ui.btn_single_analysis_page,
+    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_results_page,
+    #             self.ui.lbl_handle_pymol_session,
+    #             self.ui.btn_image_page,
+    #         ]
+    #         gui_utils.show_gui_elements(gui_elements_to_show)
+    #         gui_elements_to_hide = [
+    #             self.ui.btn_new_page,
+    #             self.ui.btn_open_page,
+    #             self.ui.btn_delete_page,
+    #             self.ui.lbl_pred_cloud,
+    #             self.ui.btn_pred_cloud_monomer_page,
+    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_cloud_multimer_page,
+    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
+    #             self.ui.lbl_pred_local,
+    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
+    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
+    #             self.ui.btn_pred_local_monomer_page,
+    #             self.ui.btn_pred_local_multimer_page,
+    #             self.ui.btn_hotspots_page,
+    #         ]
+    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
+    #         self.display_view_page()
 
     def _connect_all_gui_elements(self):
         """This function connects all gui elements with their corresponding slots
@@ -403,6 +713,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_use_page.clicked.connect(self.display_use_page)
         self.ui.btn_close_project.clicked.connect(self.close_project)
         self.ui.btn_pred_cloud_monomer_page.clicked.connect(self.display_prediction_only_page)
+        self.ui.btn_pred_cloud_multimer_page.clicked.connect(self.display_cloud_pred_multi)
         self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
         self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
         #self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
@@ -443,17 +754,28 @@ class MainWindow(QMainWindow):
         self.ui.list_use_selected_protein_structures.doubleClicked.connect(self.remove_protein_structure_to_new_project)
         self.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
         self.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
-        # new sequence page
-        self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_protein_name)
-        self.ui.btn_prediction_only_next.clicked.connect(self.show_cloud_prediction_mono_protein_sequence)
-        self.ui.btn_cloud_pred_mono_back.clicked.connect(self.hide_cloud_prediction_mono_protein_sequence)
-        self.ui.txt_cloud_pred_mono_prot_seq.textChanged.connect(self.validate_protein_sequence)
-        self.ui.btn_cloud_pred_mono_next_2.clicked.connect(self.show_prediction_only_choose_notebook)
-        self.ui.btn_prediction_only_back.clicked.connect(self.hide_prediction_only_choose_notebook)
-        self.ui.btn_cloud_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
-        self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
         # sequence vs .pdb page
         self.ui.btn_s_v_p_start.clicked.connect(self.predict)
+        # monomer cloud prediction page
+        self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_cloud_mono)
+        self.ui.btn_prediction_only_next.clicked.connect(self.show_cloud_pred_mono_stage_1)
+        self.ui.btn_cloud_pred_mono_back.clicked.connect(self.show_cloud_pred_mono_stage_0)
+        self.ui.txt_cloud_pred_mono_prot_seq.textChanged.connect(self.validate_cloud_mono)
+        self.ui.btn_cloud_pred_mono_next_2.clicked.connect(self.show_cloud_pred_mono_stage_2)
+        self.ui.btn_prediction_only_back.clicked.connect(self.show_cloud_pred_mono_stage_1)
+        self.ui.btn_cloud_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
+        self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
+        # multimer cloud prediction page
+        self.ui.btn_cloud_pred_multi_next.clicked.connect(self.show_cloud_pred_multi_stage_1)
+        self.ui.btn_cloud_pred_multi_back.clicked.connect(self.show_cloud_pred_multi_stage_0)
+        self.ui.btn_cloud_pred_multi_next_2.clicked.connect(self.show_cloud_pred_multi_stage_2)
+        self.ui.btn_cloud_pred_multi_back_2.clicked.connect(self.show_cloud_pred_multi_stage_1)
+        self.ui.txt_cloud_pred_multi_prot_seq.textChanged.connect(self.validate_cloud_pred_multi)
+        self.ui.txt_cloud_pred_multi_protein_name.textChanged.connect(self.validate_cloud_pred_multi)
+        self.ui.btn_cloud_pred_multi_add_seq_single.clicked.connect(self.add_sequence_cloud_pred_multi)
+        self.ui.btn_cloud_pred_multi_selected_protein_edit.clicked.connect(self.edit_protein_cloud_pred_multi)
+        self.ui.btn_cloud_pred_multi_selected_protein_remove.clicked.connect(self.remove_protein_cloud_pred_multi)
+        self.ui.btn_cloud_pred_multi_predict.clicked.connect(self.cloud_multi_predict)
         # monomer local prediction page
         self.ui.txt_local_pred_mono_protein_name.textChanged.connect(self.local_pred_mono_validate_protein_name)
         self.ui.btn_local_pred_mono_next.clicked.connect(self.local_pred_mono_show_protein_sequence)
@@ -464,19 +786,29 @@ class MainWindow(QMainWindow):
         self.ui.btn_local_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
         self.ui.btn_local_pred_mono_predict.clicked.connect(self.predict_local_monomer)
         # multimer local prediction page
-        self.ui.btn_local_pred_multi_single.clicked.connect(self.show_protein_name_stage)
+        self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
+        self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
         # single connections
-        self.ui.btn_local_pred_multi_next.clicked.connect(self.show_protein_sequence_stage)
-        self.ui.btn_local_pred_multi_back.clicked.connect(self.hide_protein_sequence_stage)
-        self.ui.btn_local_pred_multi_next_2.clicked.connect(self.show_predict_stage)
-        self.ui.btn_local_pred_multi_back_2.clicked.connect(self.hide_predict_stage)
+        self.ui.btn_local_pred_multi_next.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
+        self.ui.btn_local_pred_multi_back.clicked.connect(self.show_local_pred_multi_stage_protein_name)
+        self.ui.btn_local_pred_multi_next_2.clicked.connect(self.show_local_pred_multi_stage_prediction_single)
+        self.ui.btn_local_pred_multi_back_2.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
         # batch connections
-        self.ui.btn_local_pred_multi_batch.clicked.connect(self.show_protein_sequence_stage_batch)
-
+        self.ui.btn_local_pred_multi_batch.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_batch)
+        #self.ui.btn_local_pred_multi_back_3.clicked.connect(self.hide_protein_sequence_stage_batch)
+        # text fields
+        self.ui.txt_local_pred_multi_protein_name.textChanged.connect(self.validate_local_pred_multi)
+        self.ui.txt_local_pred_multi_prot_seq.textChanged.connect(self.validate_local_pred_multi)
         # single analysis page
+        self.ui.btn_analysis_next.clicked.connect(self.show_single_analysis_stage_1)
+        self.ui.btn_analysis_next_2.clicked.connect(self.show_single_analysis_stage_2)
+        self.ui.btn_analysis_back.clicked.connect(self.show_single_analysis_stage_0)
+        self.ui.btn_analysis_back_2.clicked.connect(self.show_single_analysis_stage_1)
         self.ui.btn_analysis_start.clicked.connect(self.start_process)
-        self.ui.btn_analysis_next.clicked.connect(self.analysis_next_step)
-        self.ui.btn_analysis_back.clicked.connect(self.analysis_back_step)
+        self.ui.box_analysis_prot_struct_1.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
+        self.ui.box_analysis_prot_struct_2.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
+        self.ui.list_analysis_ref_chains.itemSelectionChanged.connect(self.count_selected_chains_for_prot_struct_1)
+        self.ui.list_analysis_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected)
         # batch analysis page
         self.ui.btn_batch_load_reference.clicked.connect(self.load_reference_for_batch)
         self.ui.btn_batch_load_model.clicked.connect(self.load_model_for_batch)
@@ -561,32 +893,36 @@ class MainWindow(QMainWindow):
         """This function hides all UI elements which need to be hidden during the
         plugin startup
 
+        TODO: this function should be obsolete with the introduction of the project_watcher?!
         """
-        self.ui.lbl_new_choose_reference.hide()
-        self.ui.txt_new_choose_reference.hide()
-        self.ui.btn_new_choose_reference.hide()
-        self.ui.lbl_prediction_load_reference.hide()
-        self.ui.txt_prediction_load_reference.hide()
-        self.ui.btn_prediction_load_reference.hide()
-        self.ui.btn_prediction_next_2.hide()
-        self.ui.btn_prediction_back_2.hide()
-        # self.ui.lbl_prediction_ref_chains.hide()
-        self.ui.lbl_prediction_model_chains.hide()
-        self.ui.txt_prediction_chain_model.hide()
-        self.ui.btn_prediction_back_3.hide()
-        # self.ui.btn_prediction_start.hide()
-        self.ui.btn_hotspots_page.hide()
-        # sidebar elements
-        #self.ui.lbl_prediction.hide()
-        self.ui.lbl_analysis.hide()
-        self.ui.lbl_handle_pymol_session.hide()
-        self.ui.btn_save_project.hide()
-        #self.ui.btn_prediction_only_page.hide()
-        #self.ui.btn_prediction_page.hide()
-        self.ui.btn_single_analysis_page.hide()
-        self.ui.btn_job_analysis_page.hide()
-        self.ui.btn_results_page.hide()
-        self.ui.btn_image_page.hide()
+        gui_elements_to_hide = [
+            self.ui.lbl_new_choose_reference,
+            self.ui.txt_new_choose_reference,
+            self.ui.btn_new_choose_reference,
+            self.ui.lbl_prediction_load_reference,
+            self.ui.txt_prediction_load_reference,
+            self.ui.btn_prediction_load_reference,
+            self.ui.btn_prediction_next_2,
+            self.ui.btn_prediction_back_2,
+            # self.ui.lbl_prediction_ref_chains.hide()
+            self.ui.lbl_prediction_model_chains,
+            self.ui.txt_prediction_chain_model,
+            self.ui.btn_prediction_back_3,
+            # self.ui.btn_prediction_start.hide()
+            self.ui.btn_hotspots_page,
+            # sidebar elements
+            # self.ui.lbl_prediction.hide()
+            self.ui.lbl_analysis,
+            self.ui.lbl_handle_pymol_session,
+            self.ui.btn_save_project,
+            # self.ui.btn_prediction_only_page.hide()
+            # self.ui.btn_prediction_page.hide()
+            self.ui.btn_single_analysis_page,
+            self.ui.btn_job_analysis_page,
+            self.ui.btn_results_page,
+            self.ui.btn_image_page,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
 
     def _init_fill_combo_boxes(self):
         """This function fills all combo boxes of the plugin
@@ -685,28 +1021,38 @@ class MainWindow(QMainWindow):
         """This function clears all text fields and hides everything which is needed
 
         """
-        # clears everything
-        self.ui.txt_prediction_only_protein_name.clear()
-        self.ui.txt_cloud_pred_mono_prot_seq.clear()
-        # sets up defaults: Prediction
-        self.ui.btn_prediction_only_start.setEnabled(False)
-        self.ui.btn_cloud_pred_mono_next_2.setEnabled(False)
-        self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("")
+        self.cloud_pred_monomer_management.show_stage_x(0)
+        self.cloud_pred_monomer_management.disable_all_next_buttons()
+        self.cloud_pred_monomer_management.set_empty_string_in_label()
 
-        gui_elements = [
-            self.ui.lbl_cloud_pred_mono_prot_seq,
-            self.ui.txt_cloud_pred_mono_prot_seq,
-            self.ui.lbl_cloud_pred_mono_status_prot_seq,
-            self.ui.btn_cloud_pred_mono_back,
-            self.ui.btn_cloud_pred_mono_next_2,
-            self.ui.lbl_prediction_only_choose_notebook,
-            self.ui.list_new_seq_notebooks,
-            self.ui.lbl_cloud_pred_mono_advanced_config,
-            self.ui.btn_cloud_pred_mono_advanced_config,
-            self.ui.btn_prediction_only_back,
-            self.ui.btn_prediction_only_start,
-        ]
-        gui_utils.hide_gui_elements(gui_elements)
+        # # clears everything
+        # self.ui.txt_prediction_only_protein_name.clear()
+        # self.ui.txt_cloud_pred_mono_prot_seq.clear()
+        # # sets up defaults: Prediction
+        # self.ui.btn_prediction_only_start.setEnabled(False)
+        # self.ui.btn_prediction_only_next.setEnabled(False)
+        # self.ui.btn_cloud_pred_mono_next_2.setEnabled(False)
+        # self.ui.lbl_cloud_pred_mono_status_prot_seq.setText("")
+        #
+        # gui_elements = [
+        #     self.ui.lbl_cloud_pred_mono_prot_seq,
+        #     self.ui.txt_cloud_pred_mono_prot_seq,
+        #     self.ui.lbl_cloud_pred_mono_status_prot_seq,
+        #     self.ui.btn_cloud_pred_mono_back,
+        #     self.ui.btn_cloud_pred_mono_next_2,
+        #     self.ui.lbl_prediction_only_choose_notebook,
+        #     self.ui.list_new_seq_notebooks,
+        #     self.ui.lbl_cloud_pred_mono_advanced_config,
+        #     self.ui.btn_cloud_pred_mono_advanced_config,
+        #     self.ui.btn_prediction_only_back,
+        #     self.ui.btn_prediction_only_start,
+        # ]
+        # gui_utils.hide_gui_elements(gui_elements)
+
+    def _init_cloud_pred_multi_page(self):
+        self.cloud_pred_multimer_management.show_stage_x(0)
+        self.cloud_pred_multimer_management.disable_all_next_buttons()
+        self.cloud_pred_multimer_management.set_empty_string_in_label()
 
     def _init_local_pred_mono_page(self):
         # clears everything
@@ -732,53 +1078,16 @@ class MainWindow(QMainWindow):
         gui_utils.hide_gui_elements(gui_elements)
 
     def _init_local_pred_multi_page(self):
-        # clears everything
-        self.ui.txt_local_pred_multi_protein_name.clear()
-        self.ui.txt_local_pred_multi_prot_seq.clear()
-        # sets up defaults: Prediction
-        self.ui.btn_local_pred_multi_predict.setEnabled(False)
-        self.ui.lbl_local_pred_multi_status_protein_name.setText("")
-        self.ui.lbl_local_pred_multi_status_prot_seq.setText("")
-
-        gui_elements_to_show = [
-            self.ui.lbl_local_pred_prediction_mode,
-            self.ui.btn_local_pred_multi_single,
-            self.ui.btn_local_pred_multi_batch,
-        ]
-
-        gui_elements = [
-            # single only
-            self.ui.lbl_local_pred_multi_protein_name,
-            self.ui.txt_local_pred_multi_protein_name,
-            self.ui.lbl_local_pred_multi_status_protein_name,
-            self.ui.btn_local_pred_multi_next,
-            self.ui.lbl_local_pred_multi_prot_seq_single,
-            self.ui.txt_local_pred_multi_prot_seq,
-            self.ui.lbl_local_pred_multi_status_prot_seq,
-            self.ui.btn_local_pred_multi_add_seq_single,
-            # batch + single
-            self.ui.lbl_local_pred_multi_prot_overview,
-            self.ui.table_local_pred_multi_prot_overview,
-            # batch only
-            self.ui.lbl_local_pred_multi_prot_seq_batch,
-            self.ui.btn_local_pred_multi_add_seq_batch,
-            # batch + single
-            self.ui.btn_local_pred_multi_back,
-            self.ui.btn_local_pred_multi_next_2,
-            self.ui.lbl_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_back_2,
-            self.ui.btn_local_pred_multi_predict,
-        ]
-        gui_utils.hide_gui_elements(gui_elements)
+        self.local_pred_multimer_management.show_stage_x(0)
+        self.local_pred_multimer_management.disable_all_next_buttons()
+        self.local_pred_multimer_management.clear_all_text_boxes()
+        self.local_pred_multimer_management.set_empty_string_in_label()
 
     def _init_sequence_vs_pdb_page(self):
         """This function clears all text fields and hides everything which is needed
 
         """
         self.ui.list_s_v_p_ref_chains.clear()
-
-
         # # sets up defaults: Prediction + Analysis
         #
         # #self.ui.label_18.hide()
@@ -802,7 +1111,7 @@ class MainWindow(QMainWindow):
         # # stage 3
         # self.ui.lbl_prediction_ref_chains.hide()
         # self.ui.list_widget_ref_chains.hide()
-        # # TODO: stylesheet needs to be integrated into the styles.css
+        # # TO-DO: stylesheet needs to be integrated into the styles.css
         # self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
         #                                              "border-width: 2px;"
         #                                              "border-radius: 8px;"
@@ -812,7 +1121,7 @@ class MainWindow(QMainWindow):
         # self.ui.btn_prediction_back_3.hide()
         # self.ui.btn_prediction_start.setEnabled(False)
         # self.ui.btn_prediction_start.hide()
-        # # TODO: needs to be removed if model chains are implemented at the right spot
+        # # TO-DO: needs to be removed if model chains are implemented at the right spot
         # self.ui.lbl_prediction_model_chains.hide()
         # self.ui.txt_prediction_chain_model.hide()
 
@@ -820,18 +1129,9 @@ class MainWindow(QMainWindow):
         """This function clears all text fields and hides everything which is needed
 
         """
-        # stage 1
-        self.ui.list_analysis_ref_chains.clear()
-        self.ui.btn_analysis_next.setEnabled(False)
-        self.ui.btn_analysis_next.show()
-        # stage 2
-        self.ui.lbl_analysis_model_chains.hide()
-        self.ui.list_analysis_model_chains.clear()
-        self.ui.list_analysis_model_chains.hide()
-        self.ui.btn_analysis_back.setEnabled(False)
-        self.ui.btn_analysis_back.hide()
-        self.ui.btn_analysis_start.setEnabled(False)
-        self.ui.btn_analysis_start.hide()
+        self.single_analysis_management.show_stage_x(0)
+        self.single_analysis_management.disable_all_next_buttons()
+        self.single_analysis_management.set_empty_string_in_label()
 
     def _init_results_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -925,23 +1225,27 @@ class MainWindow(QMainWindow):
 
         """
         # pre-process
-        # fill chains list widget
-        self.ui.list_analysis_ref_chains.clear()
-        self.ui.list_analysis_model_chains.clear()
+        # # fill chains list widget
+        # self.ui.list_analysis_ref_chains.clear()
+        # self.ui.list_analysis_model_chains.clear()
+        #
+        # pdb_files = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
+        #
+        # # TO-DO: should there be sub-dirs to determine if it is the ref or the model?
+        # cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[0]}", object="reference_protein")
+        # cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[1]}", object="model_protein")
+        # ref_chains = cmd.get_chains("reference_protein")
+        # model_chains = cmd.get_chains("model_protein")
+        # for chain in ref_chains:
+        #     self.ui.list_analysis_ref_chains.addItem(chain)
+        # for chain in model_chains:
+        #     self.ui.list_analysis_model_chains.addItem(chain)
+        # styles.color_button_ready(self.ui.btn_analysis_start)
+        # cmd.reinitialize()
 
-        pdb_files = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-
-        # TODO: should there be sub-dirs to determine if it is the ref or the model?
-        cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[0]}", object="reference_protein")
-        cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[1]}", object="model_protein")
-        ref_chains = cmd.get_chains("reference_protein")
-        model_chains = cmd.get_chains("model_protein")
-        for chain in ref_chains:
-            self.ui.list_analysis_ref_chains.addItem(chain)
-        for chain in model_chains:
-            self.ui.list_analysis_model_chains.addItem(chain)
-        styles.color_button_ready(self.ui.btn_analysis_start)
-        cmd.reinitialize()
+        self.fill_protein_structure_boxes()
+        self.ui.list_analysis_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
         # regular work area opening
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 3, "Single Analysis")
 
@@ -1019,6 +1323,14 @@ class MainWindow(QMainWindow):
         # list all proteins from pdb directory
         tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
                                               self.ui.list_view_project_proteins)
+
+    def display_cloud_pred_multi(self):
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 17, "Cloud Multimer Prediction")
+        item = self.ui.list_cloud_pred_multi_seq_notebooks.findItems("AlphaFold",
+                                                                     Qt.QtCore.Qt.MatchContains |
+                                                                     Qt.QtCore.Qt.MatchExactly
+                                                                     )
+        self.ui.list_cloud_pred_multi_seq_notebooks.setCurrentItem(item[0])
 
     def display_local_pred_mono(self):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 15, "Local Monomer Prediction")
@@ -1226,7 +1538,7 @@ class MainWindow(QMainWindow):
     #                                                                              f"{self.workspace_path}/{job_name}")
     #                     index = len("project_of_")
     #                     model_name = project_name[index:]
-    #                     # TODO: insert modelname
+    #                     # TO-DO: insert modelname
     #                     global_var_project_dict[i].set_pdb_model(model_name)
     #                     self.ui.project_list.addItem(global_var_project_dict[i].get_project_name())
     #                 i += 1
@@ -1456,7 +1768,7 @@ class MainWindow(QMainWindow):
         else:
             print("No model was added.")
 
-    # new project
+    # ----- Functions for New project page
     def show_add_reference(self):
         """This function shows the reference input section
 
@@ -1559,7 +1871,7 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-        tools.validate_project_name(self.ui.list_new_projects, self.ui.txt_use_project_name,
+        tools.validate_project_name(self.ui.list_new_projects, self.ui.txt_new_project_name,
                                     self.ui.lbl_new_status_project_name, self.ui.btn_new_create_project,
                                     self.ui.cb_new_add_reference)
 
@@ -1573,80 +1885,51 @@ class MainWindow(QMainWindow):
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
         # save project folder in current workspace
-        new_project = project.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
-        new_project.create_project_tree()
-        new_project.save_project_to_xml()
-
-        # # mkdir project
-        # folder_paths = [
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/pdb"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/alignment_files"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/distance_csv"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/images/interesting_regions"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_histogram"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/plots/distance_plot"),
-        #     pathlib.Path(f"{self.workspace_path}/{self.ui.txt_new_project_name.text()}/results/sessions/"),
-        # ]
-        # for path in folder_paths:
-        #     os.mkdir(path)
+        self.app_project = project.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
+        self.app_project.create_project_tree()
+        self.app_project.serialize_project(self.app_project.project_path, "project")
 
         # save reference .pdb
-        if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() == True:
+        if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() is True:
             if len(self.ui.txt_new_choose_reference.text()) == 4:
                 # PDB ID as input
                 # the pdb file gets saved in a scratch directory where it gets deleted immediately
                 pdb_id = self.ui.txt_new_choose_reference.text().upper()
-                cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
-                shutil.move(f"{self.scratch_path}/{pdb_id}.pdb", new_project.get_pdb_path())
-                cmd.reinitialize()
+                try:
+                    cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
+                except pymol.CmdException:
+                    tools.clean_scratch_folder()
+                    # TODO: add message that fetching the reference failed
+                    return
+
+                shutil.move(f"{self.scratch_path}/{pdb_id}.pdb", self.app_project.get_pdb_path())
+                tmp_ref_protein = protein.Protein(pdb_id,
+                                                  filepath=self.app_project.get_pdb_path(),
+                                                  export_data_dir=self.scratch_path)
+                tmp_ref_protein.clean_pdb_file()
             else:
                 # local pdb file as input
-                shutil.copy(self.ui.txt_new_choose_reference.text(), new_project.get_pdb_path())
-
-        # shows options which can be done with the data in the project folder
-        self.ui.lbl_prediction.show()
-        if self.ui.txt_new_choose_reference.text() == "":
-            # no reference pdb given
-            self.ui.btn_prediction_only_page.show()
-            self.ui.btn_prediction_page.hide()
-            # change to page with new sequence
-            self.ui.btn_prediction_only_page.click()
-            # clean up new project page
-            self.ui.txt_new_project_name.clear()
-            self.ui.cb_new_add_reference.setCheckState(0)
-        else:
-            # reference pdb given
-            self.ui.action_add_model.setVisible(True)
-            self.ui.action_add_multiple_models.setVisible(True)
-            self.ui.btn_prediction_page.show()
-            self.ui.btn_prediction_only_page.hide()
-            # change to page with sequence vs pdb
-            self.display_sequence_vs_pdb_page()
-            # fill chains list widget
-            if len(self.ui.txt_new_choose_reference.text()) == 4:
-                pdb_id = self.ui.txt_new_choose_reference.text().upper()
-                tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
-                tmp_ref_protein.clean_pdb_file()
-                chains = cmd.get_chains(pdb_id)
-            else:
-                cmd.load(self.ui.txt_new_choose_reference.text(), object="reference_protein")
-                chains = cmd.get_chains("reference_protein")
+                shutil.copy(self.ui.txt_new_choose_reference.text(), self.app_project.get_pdb_path())
+                protein_file_info = QtCore.QFileInfo(self.ui.txt_new_choose_reference.text())
+                pdb_id = protein_file_info.baseName()
+                tmp_ref_protein = protein.Protein(pdb_id,
+                                                  self.app_project.get_pdb_path(),
+                                                  export_data_dir=self.scratch_path)
+                cmd.load(self.ui.txt_new_choose_reference.text(), object=pdb_id)
+            tmp_ref_protein.set_chains()
+            tmp_ref_protein.set_sequence()
+            chains = cmd.get_chains(pdb_id)
+            cmd.reinitialize()
+            self.app_project.add_existing_protein(tmp_ref_protein)
+            tmp_ref_protein.serialize_protein(self.app_project.get_objects_path(), pdb_id)
             for chain in chains:
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
-            styles.color_button_ready(self.ui.btn_s_v_p_start)
-            cmd.reinitialize()
-            self.ui.btn_s_v_p_start.setEnabled(True)
-            # clean up new project page
-            self.ui.txt_new_project_name.clear()
-            self.ui.txt_new_choose_reference.clear()
-            self.ui.cb_new_add_reference.setCheckState(0)
-            self.ui.btn_new_create_project.isEnabled()
+        # shows options which can be done with the data in the project folder
+        self._project_watcher.current_project = self.app_project
+        self._project_watcher.show_valid_options(self.ui)
+        self.display_view_page()
 
-    # open
+    # ----- Functions for Open project page
     def validate_open_search(self):
         """This function validates the input of the project name in real-time
 
@@ -1721,14 +2004,19 @@ class MainWindow(QMainWindow):
         """This function opens an existing project
 
         """
-        self._init_hide_ui_elements()
         # show project management options in side menu
         self._init_project_management()
-        self.ui.lbl_current_project_name.setText(self.ui.list_open_projects.currentItem().text())
-        self.number_of_pdb_files = len(os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb"))
-        self._configuration()
+        tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
+        self.app_project = project.Project.deserialize_project(tmp_project_path)
+        self._project_watcher.current_project = self.app_project
+        if self.app_project.get_number_of_proteins() > 0:
+            for single_protein in self.app_project.proteins:
+                self.app_project.add_existing_protein(protein.Protein.deserialize_protein(single_protein))
+        self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
+        self._project_watcher.show_valid_options(self.ui)
+        self.display_view_page()
         # check if directory in empty
-        # TODO: code below does not work with new project class!
+        # TO-DO: code below does not work with new project class!
         # results_paths = ["results/alignment_files"]
         # dir_content = os.listdir(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}/{results_paths[0]}")
         # self.ui.lbl_handle_pymol_session.show()
@@ -1782,7 +2070,7 @@ class MainWindow(QMainWindow):
         #         self.ui.btn_save_project.hide()
         #     return
 
-    # delete
+    # ----- Functions for Delete project page
     def select_project_from_delete_list(self):
         """This function selects a project from the project list on the delete page
 
@@ -1880,22 +2168,30 @@ class MainWindow(QMainWindow):
         else:
             return
 
-    # save project
+    # ----- Functions for Save project
     def save_project(self):
         """This function saves the "project" which is currently only the pymol session
 
         """
-        session_file = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/")
-        try:
-            cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/{session_file[0]}")
-            self.status_bar.showMessage("Saved project successfully.")
-        except pymol.CmdException:
-            self.status_bar.showMessage("PyMOL internal error while saving.")
-        except IndexError:
-            cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/auto_generated_session_file.pse")
-            self.status_bar.showMessage("Saved project successfully.")
+        new_project = project.Project(self.ui.txt_use_project_name.text(), pathlib.Path(self.workspace_path))
+        new_project.serialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA", "testproject")
 
-    # edit project
+        opened_project = project.Project("", "").deserialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA\\testproject.json")
+        opened_project.create_folder_paths()
+
+
+        # # old saving process
+        # session_file = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/")
+        # try:
+        #     cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/{session_file[0]}")
+        #     self.status_bar.showMessage("Saved project successfully.")
+        # except pymol.CmdException:
+        #     self.status_bar.showMessage("PyMOL internal error while saving.")
+        # except IndexError:
+        #     cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/auto_generated_session_file.pse")
+        #     self.status_bar.showMessage("Saved project successfully.")
+
+    # ----- Functions for Edit project page
     def delete_protein(self):
         protein_name = self.ui.list_edit_project_proteins.currentItem().text()
         project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
@@ -1909,7 +2205,7 @@ class MainWindow(QMainWindow):
         else:
             print("Nothing happend.")
 
-    # view project
+    # ----- Functions for View project page
     def view_sequence(self):
         project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
         protein = self.ui.list_view_project_proteins.currentItem().text()
@@ -1917,7 +2213,7 @@ class MainWindow(QMainWindow):
         self.ui.txtedit_view_sequence.clear()
         self.ui.txtedit_view_sequence.append(sequence)
 
-    # use project
+    # ----- Functions for Use project page
     def validate_use_project_name(self):
         """This function validates the input of the project name in real-time
 
@@ -2016,12 +2312,14 @@ class MainWindow(QMainWindow):
         self.number_of_pdb_files = len(prots_to_copy)
         self._configuration()
 
-    # close project
+    # ----- Functions for Close project
     def close_project(self):
-        self._init_side_menu()
-        self._init_hide_ui_elements()
+        self._project_watcher.current_project = project.Project("", pathlib.Path(""))
+        self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText("")
+        self._init_side_menu()
         self._init_new_sequence_page()
+        self._init_cloud_pred_multi_page()
         self._init_local_pred_mono_page()
         self._init_local_pred_multi_page()
         self._init_sequence_vs_pdb_page()
@@ -2030,7 +2328,20 @@ class MainWindow(QMainWindow):
         self._init_image_page()
         self.display_home_page()
 
-    # Monomer Cloud Prediction functions
+    # ----- Functions for Monomer Cloud Prediction
+    def show_cloud_pred_mono_stage_0(self):
+        self.cloud_pred_monomer_management.show_stage_x(0)
+
+    def show_cloud_pred_mono_stage_1(self):
+        self.cloud_pred_monomer_management.show_stage_x(1)
+
+    def show_cloud_pred_mono_stage_2(self):
+        self.cloud_pred_monomer_management.show_stage_x(2)
+
+    def validate_cloud_mono(self):
+        self.cloud_pred_monomer_management.create_validation()
+
+
     def validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
@@ -2182,7 +2493,7 @@ class MainWindow(QMainWindow):
     #         return
     #     else:
     #         regex = Qt.QtCore.QRegularExpression()
-    #         # TODO: has no dash in regex!
+    #         # TO-DO: has no dash in regex!
     #         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
     #         validator = QtGui.QRegularExpressionValidator(regex)
     #         for i in range(len(self.ui.txt_prediction_project_name.text())):
@@ -2479,7 +2790,7 @@ class MainWindow(QMainWindow):
         # #     print("AlphaFold is still running ...")
         # #     time.sleep(5)
         # #     # time.sleep(120)
-        # # TODO: loop doesn't work correctly
+        # # TO-DO: loop doesn't work correctly
         # while os.path.isfile(FILE_NAME) is False:
         #     print("AlphaFold is still running ...")
         #     # time.sleep(5)
@@ -2543,7 +2854,101 @@ class MainWindow(QMainWindow):
         structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
                                                 self.status_bar, "2")
 
-    # Monomer Local Prediction functions
+    # ----- Functions for Multimer Cloud Prediction
+    def show_cloud_pred_multi_stage_0(self):
+        self.cloud_pred_multimer_management.show_stage_x(0)
+
+    def show_cloud_pred_multi_stage_1(self):
+        self.cloud_pred_multimer_management.show_stage_x(1)
+        first_table_item = self.ui.table_cloud_pred_multi_prot_overview.item(0, 0)
+        if first_table_item is not None:
+            for row in range(self.ui.table_cloud_pred_multi_prot_overview.rowCount()):
+                new_item = QTableWidgetItem(self.ui.txt_cloud_pred_multi_protein_name.text())
+                self.ui.table_cloud_pred_multi_prot_overview.setItem(row, 0, new_item)
+
+    def show_cloud_pred_multi_stage_2(self):
+        self.cloud_pred_multimer_management.show_stage_x(2)
+
+    def validate_cloud_pred_multi(self):
+        self.cloud_pred_multimer_management.create_validation()
+
+    def add_sequence_cloud_pred_multi(self):
+        no_of_rows = self.ui.table_cloud_pred_multi_prot_overview.rowCount()
+        if no_of_rows < 26:
+            self.ui.table_cloud_pred_multi_prot_overview.setRowCount(no_of_rows + 1)
+            name = QTableWidgetItem(self.ui.txt_cloud_pred_multi_protein_name.text())
+            chain = QTableWidgetItem(constants.chain_dict[no_of_rows])
+            sequence = QTableWidgetItem(self.ui.txt_cloud_pred_multi_prot_seq.text())
+            self.ui.table_cloud_pred_multi_prot_overview.setItem(no_of_rows, 0, name)
+            self.ui.table_cloud_pred_multi_prot_overview.setItem(no_of_rows, 1, chain)
+            self.ui.table_cloud_pred_multi_prot_overview.setItem(no_of_rows, 2, sequence)
+        else:
+            self.ui.btn_cloud_pred_multi_add_seq_single.setEnabled(False)
+
+    def edit_protein_cloud_pred_multi(self):
+        dialog = dialog_edit_prot_table.DialogEditProtTable()
+        dialog.protein_name = self.ui.table_cloud_pred_multi_prot_overview.item(
+            self.ui.table_cloud_pred_multi_prot_overview.currentRow(), 0
+        )
+        dialog.chain = self.ui.table_cloud_pred_multi_prot_overview.item(
+            self.ui.table_cloud_pred_multi_prot_overview.currentRow(), 1
+        )
+        dialog.sequence = self.ui.table_cloud_pred_multi_prot_overview.item(
+            self.ui.table_cloud_pred_multi_prot_overview.currentRow(), 2
+        )
+        dialog.set_all_parameters(self.ui.table_cloud_pred_multi_prot_overview,
+                                  self.ui.table_cloud_pred_multi_prot_overview.currentRow())
+        dialog.exec_()
+
+    def remove_protein_cloud_pred_multi(self):
+        self.ui.table_cloud_pred_multi_prot_overview.removeRow(self.ui.table_cloud_pred_multi_prot_overview.currentRow())
+
+    def enable_cloud_predict_button(self):
+        self.ui.btn_cloud_pred_multi_predict.setEnabled(True)
+        styles.color_button_ready(self.ui.btn_prediction_only_start)
+
+    def cloud_multi_predict(self):
+        """This function is used to predict with any google colab notebook.
+
+        """
+        # web_interface inject
+        web_gui = web_interface.WebInterface()
+        # prepare sequences
+        seqs = []
+        for row in range(self.ui.table_cloud_pred_multi_prot_overview.rowCount()):
+            tmp_seq = self.ui.table_cloud_pred_multi_prot_overview.item(row, 2).text()
+            seqs.append(tmp_seq)
+        complete_sequence = ':'.join(seqs)
+
+        web_gui.set_protein_sequence(complete_sequence)
+        web_gui.set_job_name(self.ui.lbl_current_project_name.text())
+        web_gui.show_interface()
+        if web_gui.get_exit_code() != 0:
+            print("An error occurred!")
+            return
+        # colabfold: AlphaFold2_mmseqs2 notebook specific process
+        archive = f"{self.ui.lbl_current_project_name.text()}.result.zip"
+        source_path = f"{os.environ['HOME']}/Downloads"
+        filename = f"{source_path}/{archive}"
+        # move prediction.zip in scratch folder
+        shutil.copy(filename, f"{self.scratch_path}/{archive}")
+        shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
+        # TODO: find correct filenames
+        shutil.copy(f"{self.scratch_path}/{self.ui.lbl_current_project_name.text()}.result/selected_prediction.pdb",
+                    f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+        shutil.rmtree(f"{self.scratch_path}/prediction")
+        os.remove(f"{self.scratch_path}/{archive}")
+        try:
+            cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+        except pymol.CmdException:
+            print("Loading the model failed.")
+            return
+        self.ui.btn_save_project.show()
+        self.ui.lbl_handle_pymol_session.show()
+        self.ui.btn_image_page.show()
+        self.display_image_page()
+
+    # ----- Functions for Monomer Local Prediction
     def local_pred_mono_validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
@@ -2552,6 +2957,7 @@ class MainWindow(QMainWindow):
                                     self.ui.lbl_local_pred_mono_status_protein_name,
                                     self.ui.btn_local_pred_mono_next)
 
+    @staticmethod
     def local_pred_mono_show_prediction_configuration(self):
         config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
         config.exec_()
@@ -2652,210 +3058,112 @@ class MainWindow(QMainWindow):
         except OSError:
             shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
 
-    # Multimer Local Prediction functions
-    def show_protein_name_stage(self):
-        gui_elements_to_show = [
-            self.ui.lbl_local_pred_multi_protein_name,
-            self.ui.txt_local_pred_multi_protein_name,
-            self.ui.lbl_local_pred_multi_status_protein_name,
-            self.ui.btn_local_pred_multi_next,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_elements_to_hide = [
-            self.ui.lbl_local_pred_prediction_mode,
-            self.ui.btn_local_pred_multi_single,
-            self.ui.btn_local_pred_multi_batch,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+    # ----- Functions for Multimer Local Prediction
+    # TODO: navigation in batch mode is still broken
+    def validate_local_pred_multi(self):
+        self.local_pred_multimer_management.create_validation()
 
-    def show_protein_sequence_stage(self):
-        gui_utils.disable_text_box(self.ui.txt_local_pred_multi_protein_name,
-                                   self.ui.lbl_local_pred_multi_protein_name)
+    def show_local_pred_multi_stage_prediction_mode(self):
+        self.local_pred_multimer_management.show_stage_x(0)
+
+    # --- single prediction
+    def show_local_pred_multi_stage_protein_name(self):
+        self.local_pred_multimer_management.show_stage_x(1)
+
+    def show_local_pred_multi_stage_protein_sequence_single(self):
         gui_elements_to_show = [
-            self.ui.lbl_local_pred_multi_prot_seq_single,
-            self.ui.txt_local_pred_multi_prot_seq,
-            self.ui.lbl_local_pred_multi_status_prot_seq,
-            self.ui.btn_local_pred_multi_add_seq_single,
-            # protein overview table
-            self.ui.lbl_local_pred_multi_prot_overview,
-            self.ui.table_local_pred_multi_prot_overview,
-            self.ui.btn_local_pred_multi_back,
-            self.ui.btn_local_pred_multi_next_2,
+            self.ui.btn_local_pred_multi_add_seq_single
         ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
         gui_elements_to_hide = [
             self.ui.btn_local_pred_multi_next,
+            self.ui.btn_local_pred_multi_back_prediction_mode,
         ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2], [0, 3, 4, 5],
+                                                                      hide_specific_elements=gui_elements_to_hide,
+                                                                      show_specific_elements=gui_elements_to_show)
+        self.local_pred_multimer_management.disable_text_boxes_stage_x([1])
+        self.local_pred_multimer_management.enable_text_boxes_stage_x([2])
 
-    def hide_protein_sequence_stage(self):
-        gui_utils.enable_text_box(self.ui.txt_local_pred_multi_protein_name,
-                                  self.ui.lbl_local_pred_multi_protein_name)
+    def show_local_pred_multi_stage_prediction_single(self):
+        gui_elements_to_hide = [
+            self.ui.btn_local_pred_multi_add_seq_single
+        ]
+        self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2, 4], [0, 3, 5], hide_specific_elements=gui_elements_to_hide)
+        self.local_pred_multimer_management.disable_text_boxes_stage_x([1, 2])
+        self.local_pred_multimer_management.activate_specific_button(self.ui.btn_local_pred_multi_predict)
+
+    # --- batch prediction
+    def show_local_pred_multi_stage_protein_sequence_batch(self):
+        self.local_pred_multimer_management.show_gui_elements_stage_x([3], [0, 1, 2, 4, 5])
+
+    # ----- Functions for Single Analysis
+    def show_single_analysis_stage_0(self):
+        self.single_analysis_management.show_stage_x(0)
+        self.ui.lbl_analysis_prot_struct_1.setText("Protein structure 1")
+        self.ui.lbl_analysis_prot_struct_2.setText("Protein structure 2")
+
+    def show_single_analysis_stage_1(self):
+        self.single_analysis_management.show_stage_x(1)
+        self.ui.lbl_analysis_prot_struct_1.setText(self.ui.box_analysis_prot_struct_1.currentText())
+        self.ui.lbl_analysis_prot_struct_2.setText(self.ui.box_analysis_prot_struct_2.currentText())
+        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                               self.ui.box_analysis_prot_struct_1.currentText(),
+                                               self.ui.list_analysis_ref_chains)
+        self.ui.btn_analysis_next_2.setEnabled(True)
+
+    def show_single_analysis_stage_2(self):
+        self.single_analysis_management.show_stage_x(2)
+        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                               self.ui.box_analysis_prot_struct_2.currentText(),
+                                               self.ui.list_analysis_model_chains)
         gui_elements_to_show = [
-            self.ui.btn_local_pred_multi_next,
+            self.ui.lbl_analysis_ref_chains,
+            self.ui.list_analysis_ref_chains,
+            self.ui.lbl_analysis_model_chains,
+            self.ui.list_analysis_model_chains,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_elements_to_hide = [
-            self.ui.lbl_local_pred_multi_prot_seq_single,
-            self.ui.txt_local_pred_multi_prot_seq,
-            self.ui.lbl_local_pred_multi_status_prot_seq,
-            self.ui.btn_local_pred_multi_add_seq_single,
-            # protein overview table
-            self.ui.lbl_local_pred_multi_prot_overview,
-            self.ui.table_local_pred_multi_prot_overview,
-            self.ui.btn_local_pred_multi_back,
-            self.ui.btn_local_pred_multi_next_2,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self.no_of_selected_chains == 1:
+            self.ui.lbl_analysis_model_chains.setText(
+                f"Please select {self.no_of_selected_chains} chains in protein structure 2.")
+            self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
+        elif self.no_of_selected_chains > 1:
+            self.ui.lbl_analysis_model_chains.setText(
+                f"Please select {self.no_of_selected_chains} chains in protein structure 2.")
+            self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        else:
+            gui_elements_to_hide = [
+                self.ui.lbl_analysis_ref_chains,
+                self.ui.list_analysis_ref_chains,
+                self.ui.lbl_analysis_model_chains,
+                self.ui.list_analysis_model_chains,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_analysis_start.setEnabled(False)
 
-    def show_predict_stage(self):
-        gui_utils.disable_text_box(self.ui.txt_local_pred_multi_prot_seq,
-                                   self.ui.lbl_local_pred_multi_prot_seq_single)
-        gui_elements_to_show = [
-            self.ui.lbl_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_back_2,
-            self.ui.btn_local_pred_multi_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_elements_to_hide = [
-            self.ui.btn_local_pred_multi_add_seq_single,
-            self.ui.btn_local_pred_multi_back,
-            self.ui.btn_local_pred_multi_next_2,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+    def fill_protein_structure_boxes(self):
+        proteins = tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}")
+        proteins.insert(0, "")
+        self.ui.box_analysis_prot_struct_1.clear()
+        self.ui.box_analysis_prot_struct_2.clear()
+        gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_1, proteins)
+        gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_2, proteins)
 
-    def hide_predict_stage(self):
-        gui_utils.enable_text_box(self.ui.txt_local_pred_multi_prot_seq,
-                                  self.ui.lbl_local_pred_multi_prot_seq_single)
-        gui_elements_to_show = [
-            self.ui.btn_local_pred_multi_add_seq_single,
-            self.ui.btn_local_pred_multi_back,
-            self.ui.btn_local_pred_multi_next_2,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_elements_to_hide = [
-            self.ui.lbl_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_back_2,
-            self.ui.btn_local_pred_multi_predict,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+    def check_if_prot_structs_are_filled(self):
+        prot_1 = self.ui.box_analysis_prot_struct_1.itemText(self.ui.box_analysis_prot_struct_1.currentIndex())
+        prot_2 = self.ui.box_analysis_prot_struct_2.itemText(self.ui.box_analysis_prot_struct_2.currentIndex())
+        if prot_1 != "" and prot_2 != "":
+            self.ui.btn_analysis_next.setEnabled(True)
+        else:
+            self.ui.btn_analysis_next.setEnabled(False)
 
-    def show_protein_sequence_stage_batch(self):
-        gui_elements_to_show = [
-            self.ui.lbl_local_pred_multi_prot_overview,
-            self.ui.table_local_pred_multi_prot_overview,
-            self.ui.lbl_local_pred_multi_prot_seq_batch,
-            self.ui.btn_local_pred_multi_add_seq_batch,
-            self.ui.lbl_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_advanced_config,
-            self.ui.btn_local_pred_multi_back_2,
-            self.ui.btn_local_pred_multi_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_elements_to_hide = [
-            self.ui.lbl_local_pred_prediction_mode,
-            self.ui.btn_local_pred_multi_single,
-            self.ui.btn_local_pred_multi_batch,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+    def count_selected_chains_for_prot_struct_1(self):
+        self.no_of_selected_chains = len(self.ui.list_analysis_ref_chains.selectedItems())
 
-    # Single Analysis
-    def analysis_next_step(self):
-        self.ui.lbl_analysis_model_chains.show()
-        self.ui.list_analysis_model_chains.show()
-        self.ui.btn_analysis_back.show()
-        self.ui.btn_analysis_start.show()
-        self.ui.btn_analysis_next.hide()
-        self.ui.lbl_analysis_ref_chains.setStyleSheet("color: #CACACA")
-        self.ui.list_analysis_ref_chains.setEnabled(False)
-
-    def analysis_back_step(self):
-        self.ui.lbl_analysis_model_chains.hide()
-        self.ui.list_analysis_model_chains.hide()
-        self.ui.btn_analysis_back.hide()
-        self.ui.btn_analysis_start.hide()
-        self.ui.btn_analysis_next.show()
-        self.ui.lbl_analysis_ref_chains.setStyleSheet("color: black")
-        self.ui.list_analysis_ref_chains.setEnabled(True)
-
-    def load_reference_for_analysis(self):
-        """This function opens a file dialog to choose a .pdb file as
-        reference and displays the path in a text box
-
-        """
-        try:
-            # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
-            # display path in text box
-            if file_name == ("", ""):
-                raise ValueError
-            # display path in text box
-            self.ui.txt_analysis_load_reference.setText(str(file_name[0]))
-            self.status_bar.showMessage("Loading the reference was successful.")
-            self.__check_start_possibility_prediction()
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the reference failed!")
-        except ValueError:
-            print("No file has been selected.")
-            self.__check_start_possibility()
-
-    def load_model_for_analysis(self):
-        """This function opens a file dialog to choose a .pdb file as
-        model and displays the path in a text box
-
-        """
-        try:
-            # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Model",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
-            if file_name == ("", ""):
-                raise ValueError
-            # display path in text box
-            self.ui.txt_analysis_load_model.setText(str(file_name[0]))
-            self.status_bar.showMessage("Loading the model was successful.")
-            self.__check_start_possibility()
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the model failed!")
-        except ValueError:
-            print("No file has been selected.")
-
-    def enable_chain_information_input_for_analysis(self):
-        """This function enables the text boxes to enter the chains for the
-        reference and the model
-
-        """
-        try:
-            self.ui.txt_analysis_chain_ref.setEnabled(self.ui.cb_analysis_chain_info.checkState())
-            self.ui.txt_analysis_chain_model.setEnabled(self.ui.cb_analysis_chain_info.checkState())
-            self.status_bar.showMessage("Enter the chain information.")
-            self.__check_start_possibility()
-        except Exception:
-            self.status_bar.showMessage("Unexpected Error.")
-
-    def check_analysis_if_txt_analysis_project_name_is_filled(self):
-        """This function checks if a project name is entered into the text field
-
-        """
-        self.__check_start_possibility()
-
-    def check_analysis_if_txt_analysis_chain_ref_is_filled(self):
-        """This function checks if any chains are in the text field for the
-        reference.
-
-        """
-        self.__check_start_possibility()
-
-    def check_analysis_if_txt_analysis_chain_model_is_filled(self):
-        """This function checks if any chains are in the text field for the
-        model.
-
-        """
-        self.__check_start_possibility()
+    def check_if_same_no_of_chains_selected(self):
+        self.ui.btn_analysis_start.setEnabled(False)
+        if self.no_of_selected_chains == len(self.ui.list_analysis_model_chains.selectedItems()):
+            self.ui.btn_analysis_start.setEnabled(True)
 
     def start_process(self):
         """This function contains the main analysis algorithm for the
@@ -2913,7 +3221,54 @@ class MainWindow(QMainWindow):
                                                 self.status_bar, self.ui.progress_bar_analysis)
         del structure_analysis_obj
 
-    # Batch
+
+    def load_reference_for_analysis(self):
+        """This function opens a file dialog to choose a .pdb file as
+        reference and displays the path in a text box
+
+        """
+        try:
+            # open file dialog
+            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
+                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 "PDB Files (*.pdb)")
+            # display path in text box
+            if file_name == ("", ""):
+                raise ValueError
+            # display path in text box
+            self.ui.txt_analysis_load_reference.setText(str(file_name[0]))
+            self.status_bar.showMessage("Loading the reference was successful.")
+            self.__check_start_possibility_prediction()
+        except FileNotFoundError:
+            self.status_bar.showMessage("Loading the reference failed!")
+        except ValueError:
+            print("No file has been selected.")
+            self.__check_start_possibility()
+
+    def load_model_for_analysis(self):
+        """This function opens a file dialog to choose a .pdb file as
+        model and displays the path in a text box
+
+        """
+        try:
+            # open file dialog
+            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Model",
+                                                                 Qt.QtCore.QDir.homePath(),
+                                                                 "PDB Files (*.pdb)")
+            if file_name == ("", ""):
+                raise ValueError
+            # display path in text box
+            self.ui.txt_analysis_load_model.setText(str(file_name[0]))
+            self.status_bar.showMessage("Loading the model was successful.")
+            self.__check_start_possibility()
+        except FileNotFoundError:
+            self.status_bar.showMessage("Loading the model failed!")
+        except ValueError:
+            print("No file has been selected.")
+
+
+
+    # ----- Functions for Batch
     def load_reference_for_batch(self):
         """This function opens a file dialog to choose a .pdb file as
         reference and displays the path in a text box
@@ -3096,7 +3451,7 @@ class MainWindow(QMainWindow):
                                         "No project has been opened.")
             return
         pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/structure_alignment.png")
-        # TODO: Create setting for min. image size
+        # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
         label.setScaledContents(True)
@@ -3117,7 +3472,7 @@ class MainWindow(QMainWindow):
         self.view_box.setRange(xRange=[from_aa, to_aa], yRange=[from_range, to_range])
         # if self.ui.cb_sync_with_pymol.isChecked():
         #     print("Sync is active.")
-        #     # TODO: handle objects better
+        #     # TO-DO: handle objects better
         #     pdb_list = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
         #     pdb_name = pdb_list[0].replace(".pdb", "")
         #     zoom_selection = f"/{pdb_name}///{from_aa}-{to_aa}/CA"
@@ -3266,7 +3621,7 @@ class MainWindow(QMainWindow):
             return
         file_name = self.ui.cb_interesting_regions.currentText()
         pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/interesting_regions/{file_name}")
-        # TODO: Create setting for min. image size
+        # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
         label.setScaledContents(True)
@@ -3321,7 +3676,7 @@ class MainWindow(QMainWindow):
         table_dialog.setWindowTitle("Distances of Structure Alignment")
         table_dialog.show()
 
-    # Image
+    # ----- Functions for Image page
     def show_representation(self):
         """This function sets the representation.
 

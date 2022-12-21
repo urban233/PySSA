@@ -137,9 +137,6 @@ def error_dialog_settings(message, message_detail):
 
     open_global_settings_button = msg.addButton("Open Settings", QMessageBox.ActionRole)
     restore_settings_button = msg.addButton("Restore Settings", QMessageBox.ActionRole)
-    # TODO:
-    #  * Should a help function be implemented?
-    # help_button = msg.addButton("Help", QMessageBox.ActionRole)
     msg.exec_()
 
     # button logic

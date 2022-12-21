@@ -678,7 +678,7 @@
                    <string/>
                   </property>
                   <property name="pixmap">
-                   <pixmap>../../../../../../.designer/assets/pyssa_logo.png</pixmap>
+                   <pixmap>../../../../../../../../.designer/assets/pyssa_logo.png</pixmap>
                   </property>
                   <property name="scaledContents">
                    <bool>true</bool>
@@ -1228,19 +1228,22 @@
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_46">
                   <item>
-                   <widget class="QLabel" name="label_16">
+                   <widget class="QLabel" name="lbl_analysis_prot_struct_1">
                     <property name="text">
                      <string>Protein structure 1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox"/>
+                   <widget class="QComboBox" name="box_analysis_prot_struct_1"/>
                   </item>
                  </layout>
                 </item>
                 <item>
-                 <widget class="QLabel" name="label_15">
+                 <widget class="QLabel" name="lbl_analysis_vs">
                   <property name="text">
                    <string>vs.</string>
                   </property>
@@ -1252,14 +1255,17 @@
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_59">
                   <item>
-                   <widget class="QLabel" name="label_19">
+                   <widget class="QLabel" name="lbl_analysis_prot_struct_2">
                     <property name="text">
                      <string>Protein structure 2</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="comboBox_2"/>
+                   <widget class="QComboBox" name="box_analysis_prot_struct_2"/>
                   </item>
                  </layout>
                 </item>
@@ -1281,7 +1287,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_analysis_next_2">
+                 <widget class="QPushButton" name="btn_analysis_next">
                   <property name="text">
                    <string>Next</string>
                   </property>
@@ -1319,14 +1325,14 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_analysis_back_2">
+                 <widget class="QPushButton" name="btn_analysis_back">
                   <property name="text">
                    <string>Back</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_analysis_next">
+                 <widget class="QPushButton" name="btn_analysis_next_2">
                   <property name="text">
                    <string>Next</string>
                   </property>
@@ -1349,6 +1355,24 @@
                </layout>
               </item>
               <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_5">
+                <item>
+                 <widget class="QLabel" name="lbl_analysis_images">
+                  <property name="text">
+                   <string>Create ray-traced images (slow)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_analysis_images">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
                <spacer name="verticalSpacer_3">
                 <property name="orientation">
                  <enum>Qt::Vertical</enum>
@@ -1365,7 +1389,7 @@
                </spacer>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <layout class="QHBoxLayout" name="horizontalLayout_55">
                 <item>
                  <spacer name="horizontalSpacer_3">
                   <property name="orientation">
@@ -1380,7 +1404,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_analysis_back">
+                 <widget class="QPushButton" name="btn_analysis_back_2">
                   <property name="text">
                    <string>Back</string>
                   </property>
@@ -3462,7 +3486,7 @@
              </layout>
             </widget>
             <widget class="QWidget" name="page_2">
-             <layout class="QVBoxLayout" name="verticalLayout_78">
+             <layout class="QVBoxLayout" name="verticalLayout_82">
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_48">
                 <item>
@@ -3523,6 +3547,13 @@
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_local_pred_multi_back_prediction_mode">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="btn_local_pred_multi_next">
@@ -3728,6 +3759,13 @@
                  </spacer>
                 </item>
                 <item>
+                 <widget class="QPushButton" name="btn_local_pred_multi_back_3">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QPushButton" name="btn_local_pred_multi_back_2">
                   <property name="text">
                    <string>Back</string>
@@ -3736,6 +3774,321 @@
                 </item>
                 <item>
                  <widget class="QPushButton" name="btn_local_pred_multi_predict">
+                  <property name="text">
+                   <string>Predict</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_3">
+             <layout class="QVBoxLayout" name="verticalLayout_83">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_80">
+                <item>
+                 <widget class="QLabel" name="lbl_cloud_pred_multi_protein_name">
+                  <property name="text">
+                   <string>Protein name</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="txt_cloud_pred_multi_protein_name"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_cloud_pred_multi_status_protein_name">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_60">
+                <item>
+                 <spacer name="horizontalSpacer_43">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_cloud_pred_multi_next">
+                  <property name="text">
+                   <string>Next</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_79">
+                <property name="spacing">
+                 <number>4</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="lbl_cloud_pred_multi_prot_seq_single">
+                  <property name="text">
+                   <string>Protein sequence</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="txt_cloud_pred_multi_prot_seq"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_cloud_pred_multi_status_prot_seq">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_59">
+                  <item>
+                   <spacer name="horizontalSpacer_42">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_cloud_pred_multi_add_seq_single">
+                    <property name="text">
+                     <string>Add</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_78">
+                <property name="spacing">
+                 <number>4</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="lbl_cloud_pred_multi_prot_overview">
+                  <property name="text">
+                   <string>Proteins to predict</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTableWidget" name="table_cloud_pred_multi_prot_overview">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="sizeAdjustPolicy">
+                   <enum>QAbstractScrollArea::AdjustIgnored</enum>
+                  </property>
+                  <property name="editTriggers">
+                   <set>QAbstractItemView::NoEditTriggers</set>
+                  </property>
+                  <property name="alternatingRowColors">
+                   <bool>true</bool>
+                  </property>
+                  <property name="selectionMode">
+                   <enum>QAbstractItemView::SingleSelection</enum>
+                  </property>
+                  <property name="sortingEnabled">
+                   <bool>true</bool>
+                  </property>
+                  <column>
+                   <property name="text">
+                    <string>Name</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>Chain</string>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>Sequence</string>
+                   </property>
+                  </column>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_61">
+                  <item>
+                   <widget class="QLabel" name="lbl_cloud_pred_multi_selected_protein_1">
+                    <property name="text">
+                     <string>Selected protein sequence</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_cloud_pred_multi_selected_protein_edit">
+                    <property name="maximumSize">
+                     <size>
+                      <width>121</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Edit</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_62">
+                  <item>
+                   <widget class="QLabel" name="lbl_cloud_pred_multi_selected_protein_2">
+                    <property name="text">
+                     <string>Selected protein</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_cloud_pred_multi_selected_protein_remove">
+                    <property name="maximumSize">
+                     <size>
+                      <width>121</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Remove</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_58">
+                <item>
+                 <spacer name="horizontalSpacer_41">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_cloud_pred_multi_back">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_cloud_pred_multi_next_2">
+                  <property name="text">
+                   <string>Next</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_81">
+                <item>
+                 <widget class="QLabel" name="lbl_cloud_pred_multi_choose_notebook">
+                  <property name="text">
+                   <string>Choose a Google Colab Notebook from the list below</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QListWidget" name="list_cloud_pred_multi_seq_notebooks"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_57">
+                <item>
+                 <widget class="QLabel" name="lbl_cloud_pred_multi_advanced_config">
+                  <property name="text">
+                   <string>Advanced configurations</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_cloud_pred_multi_advanced_config">
+                  <property name="maximumSize">
+                   <size>
+                    <width>121</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Edit</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_9">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::MinimumExpanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>114</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_54">
+                <item>
+                 <spacer name="horizontalSpacer_39">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_cloud_pred_multi_back_2">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_cloud_pred_multi_predict">
                   <property name="text">
                    <string>Predict</string>
                   </property>
