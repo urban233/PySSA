@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'dlgSettingsGlobal.ui'
+# Form implementation generated from reading ui file '.\dlgSettingsGlobal.ui'
 #
-# Created by: PyQt5 UI code generator 5.15.7
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -80,10 +82,10 @@ class Ui_Dialog(object):
         self.lbl_wsl2 = QtWidgets.QLabel(Dialog)
         self.lbl_wsl2.setObjectName("lbl_wsl2")
         self.horizontalLayout.addWidget(self.lbl_wsl2)
-        self.btn_enable_wsl2 = QtWidgets.QPushButton(Dialog)
-        self.btn_enable_wsl2.setMaximumSize(QtCore.QSize(121, 16777215))
-        self.btn_enable_wsl2.setObjectName("btn_enable_wsl2")
-        self.horizontalLayout.addWidget(self.btn_enable_wsl2)
+        self.btn_install_wsl2 = QtWidgets.QPushButton(Dialog)
+        self.btn_install_wsl2.setMaximumSize(QtCore.QSize(121, 16777215))
+        self.btn_install_wsl2.setObjectName("btn_install_wsl2")
+        self.horizontalLayout.addWidget(self.btn_install_wsl2)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -123,9 +125,8 @@ class Ui_Dialog(object):
         self.label_4.setText(_translate("Dialog", "Cycles"))
         self.label_5.setText(_translate("Dialog", "Cutoff in Å"))
         self.lbl_wsl2.setText(_translate("Dialog", "WSL2"))
-        self.btn_enable_wsl2.setText(_translate("Dialog", "Enable"))
+        self.btn_install_wsl2.setText(_translate("Dialog", "Install"))
         self.lbl_local_prediction.setText(_translate("Dialog", "Local Prediction"))
         self.btn_install_local_prediction.setText(_translate("Dialog", "Install"))
         self.btn_cancel.setText(_translate("Dialog", "Cancel"))
         self.btn_ok.setText(_translate("Dialog", "OK"))
-

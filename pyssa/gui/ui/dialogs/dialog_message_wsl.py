@@ -45,7 +45,6 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui.lbl_message_wsl.setText("Are you sure that you want the WSL2 installation?")
         # btn
         self.ui.btn_message_wsl_ok.show()
-        self.ui.btn_message_wsl_ok_2.hide()
         self.ui.btn_message_wsl_cancel.show()
         self.ui.btn_message_wsl_restart.hide()
         self.ui.btn_message_wsl_restart_later.hide()
@@ -57,14 +56,9 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui.btn_message_wsl_restart_later.clicked.connect(self.restart_later)
         self.ui.btn_message_wsl_restart.clicked.connect(self.restart_system)
 
-        # btn functions
-    # def wsl2_is_included(self):
-    #     self.ui.btn
-
     def installation_in_progress(self):
         self.ui.lbl_message_wsl.setText("Don't close the window and wait!")
         self.ui.btn_message_wsl_ok.hide()
-        self.ui.btn_message_wsl_ok_2.hide()
         self.ui.btn_message_wsl_cancel.hide()
         self.ui.btn_message_wsl_restart.hide()
         self.ui.btn_message_wsl_restart_later.hide()
@@ -76,7 +70,6 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
     def installation_is_finished(self):
         self.ui.lbl_message_wsl.setText("Installation is finished! Restart is necessary.")
         self.ui.btn_message_wsl_ok.hide()
-        self.ui.btn_message_wsl_ok_2.hide()
         self.ui.btn_message_wsl_cancel.hide()
         self.ui.btn_message_wsl_restart.show()
         self.ui.btn_message_wsl_restart_later.show()

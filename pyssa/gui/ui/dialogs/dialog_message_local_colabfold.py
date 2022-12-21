@@ -41,34 +41,29 @@ class DialogMessageLocalColabfold(Qt.QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.setWindowTitle("Local Colabfold installation")
-        self.ui.lbl_message_wsl.setText("Are you sure that you want the Local Colabfold installation?")
+        self.ui.lbl_message_localcolabfold.setText("Are you sure that you want the Local Colabfold installation?")
         # btn
-        self.ui.btn_message_wsl_ok.show()
-        self.ui.btn_message_wsl_cancel.show()
-        self.ui.btn_message_wsl_restart.hide()
-        self.ui.btn_message_wsl_restart_later.hide()
-        self.ui.btn_message_wsl_ok_2.hide()
+        self.ui.btn_message_localcolabfold_ok.show()
+        self.ui.btn_message_localcolabfold_cancel.show()
+        self.ui.btn_message_localcolabfold_restart.hide()
+        self.ui.btn_message_localcolabfold_restart_later.hide()
+        self.ui.btn_message_localcolabfold_ok_2.hide()
 
         # btn connections
-        self.ui.btn_message_wsl_ok.clicked.connect(self.installation_in_progress)
-        self.ui.btn_message_wsl_cancel.clicked.connect(self.cancel_installation)
-        self.ui.btn_message_wsl_ok.clicked.connect(self.installation_is_finished)
-        self.ui.btn_message_wsl_ok_2.clicked.connect(self.close_dlg_installation_interface)
-        # self.ui.btn_message_wsl_restart_later.clicked.connect(self.restart_later)
-        # self.ui.btn_message_wsl_ok_2.clicked.connect(self.close_dlg_installation_interface)
-        # self.ui.btn_message_wsl_restart.clicked.connect(self.restart_system)
-
-        # btn functions
-    # def local_colabfold_is_included(self):
-    #     self.ui.btn
+        self.ui.btn_message_localcolabfold_ok.clicked.connect(self.installation_in_progress)
+        self.ui.btn_message_localcolabfold_cancel.clicked.connect(self.cancel_installation)
+        self.ui.btn_message_localcolabfold_ok.clicked.connect(self.installation_is_finished)
+        self.ui.btn_message_localcolabfold_ok_2.clicked.connect(self.close_dlg_installation_interface)
+        # self.ui.btn_message_localcolabfold_restart_later.clicked.connect(self.restart_later)
+        # self.ui.btn_message_localcolabfold_restart.clicked.connect(self.restart_system)
 
     def installation_in_progress(self):
-        self.ui.lbl_message_wsl.setText("Don't close the window and wait!")
-        self.ui.btn_message_wsl_ok.hide()
-        self.ui.btn_message_wsl_ok_2.hide()
-        self.ui.btn_message_wsl_cancel.hide()
-        self.ui.btn_message_wsl_restart.hide()
-        self.ui.btn_message_wsl_restart_later.hide()
+        self.ui.lbl_message_localcolabfold.setText("Don't close the window and wait!")
+        self.ui.btn_message_localcolabfold_ok.hide()
+        self.ui.btn_message_localcolabfold_ok_2.hide()
+        self.ui.btn_message_localcolabfold_cancel.hide()
+        self.ui.btn_message_localcolabfold_restart.hide()
+        self.ui.btn_message_localcolabfold_restart_later.hide()
         user_name = os.getlogin()
         subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"])
         subprocess.run(
@@ -81,19 +76,18 @@ class DialogMessageLocalColabfold(Qt.QtWidgets.QDialog):
         subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"])
         subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"])
 
-
     def cancel_installation(self):
         self.close()
 
     def installation_is_finished(self):
-        self.ui.lbl_message_wsl.setText("Installation is finished!")
-        self.ui.btn_message_wsl_ok.hide()
-        self.ui.btn_message_wsl_ok_2.show()
-        self.ui.btn_message_wsl_cancel.hide()
-        self.ui.btn_message_wsl_restart.hide()
-        self.ui.btn_message_wsl_restart_later.hide()
+        self.ui.lbl_message_localcolabfold.setText("Installation is finished!")
+        self.ui.btn_message_localcolabfold_ok.hide()
+        self.ui.btn_message_localcolabfold_ok_2.show()
+        self.ui.btn_message_localcolabfold_cancel.hide()
+        self.ui.btn_message_localcolabfold_restart.hide()
+        self.ui.btn_message_localcolabfold_restart_later.hide()
 
-    def close_dlg_installation_interface(self): 
+    def close_dlg_installation_interface(self):
         self.close()
 
     def restart_later(self):

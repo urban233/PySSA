@@ -30,7 +30,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="lbl_message_wsl">
+      <widget class="QLabel" name="lbl_message_localcolabfold">
        <property name="text">
         <string>TextLabel</string>
        </property>
@@ -70,28 +70,35 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_message_wsl_restart_later">
+      <widget class="QPushButton" name="btn_message_localcolabfold_restart_later">
        <property name="text">
         <string>Restart later</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_message_wsl_restart">
+      <widget class="QPushButton" name="btn_message_localcolabfold_restart">
        <property name="text">
         <string>Restart now</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_message_wsl_cancel">
+      <widget class="QPushButton" name="btn_message_localcolabfold_cancel">
        <property name="text">
         <string>Cancel</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_message_wsl_ok">
+      <widget class="QPushButton" name="btn_message_localcolabfold_ok_2">
+       <property name="text">
+        <string>Ok</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_message_localcolabfold_ok">
        <property name="text">
         <string>Ok</string>
        </property>
