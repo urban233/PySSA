@@ -25,7 +25,7 @@ import logging
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 from pyssa.gui.ui.dialogs import dialog_message_wsl
-from pyssa.gui.ui.dialogs import web_interface
+from pyssa.gui.ui.dialogs import dialog_message_local_colabfold
 from pyssa.gui.utilities.global_variables import global_var_settings_obj
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
@@ -92,8 +92,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.btn_ok.clicked.connect(self.okDialog)
         self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
         self.ui.btn_enable_wsl2.clicked.connect(self.install_wsl)
-        self.ui.btn_manage_google.clicked.connect(self.manage_google_account)
-
+        
         self.setWindowTitle("Global Settings")
 
     # @SLOT()
@@ -115,30 +114,22 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def install_local_colabfold(self):
-        user_name = os.getlogin()
-        print(subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"]))
-        print(subprocess.run(
-            ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"]))
-        print(subprocess.run(
-            ["wsl", "cd", "/home/$USER/.pyssa", "&&", "wget", "-q", "-P", ".", "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"]))
-        print(subprocess.run(
-            ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"]))
-        print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"]))
-        print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"]))
+        # user_name = os.getlogin()
+        # print(subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"]))
+        # print(subprocess.run(
+        #     ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"]))
+        # print(subprocess.run(
+        #     ["wsl", "cd", "/home/$USER/.pyssa", "&&", "wget", "-q", "-P", ".", "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"]))
+        # print(subprocess.run(
+        #     ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"]))
+        # print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"]))
+        # print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"]))
+        dialog = dialog_message_local_colabfold.DialogMessageLocalColabfold()
+        dialog.exec_()
 
-    # install wsl2
     def install_wsl(self):
-        print ("It goes on.")
+        # print ("It goes on.")
         # print(subprocess.run("wsl --install"))
 
         dialog = dialog_message_wsl.DialogMessageWsl()
-
         dialog.exec_()
-
-    def manage_google_account(self):
-        """This function uses the web interface to manage the current google account
-
-        """
-        self.close()
-        interface = web_interface.WebInterface()
-        interface.show_account_page()

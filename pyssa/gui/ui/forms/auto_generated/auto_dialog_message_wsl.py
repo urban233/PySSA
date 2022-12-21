@@ -52,6 +52,6 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.lbl_message_wsl.setText(_translate("Dialog", "TextLabel"))
         self.btn_message_wsl_restart_later.setText(_translate("Dialog", "Restart later"))
-        self.btn_message_wsl_restart.setText(_translate("Dialog", "Restart"))
+        self.btn_message_wsl_restart.setText(_translate("Dialog", "Restart now"))
         self.btn_message_wsl_cancel.setText(_translate("Dialog", "Cancel"))
         self.btn_message_wsl_ok.setText(_translate("Dialog", "Ok"))

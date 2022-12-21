@@ -56,7 +56,6 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui.btn_message_wsl_restart_later.clicked.connect(self.restart_later)
         self.ui.btn_message_wsl_restart.clicked.connect(self.restart_system)
 
-        # btn functions
     def installation_in_progress(self):
         self.ui.lbl_message_wsl.setText("Don't close the window and wait!")
         self.ui.btn_message_wsl_ok.hide()

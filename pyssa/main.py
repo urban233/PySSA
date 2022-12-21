@@ -24,6 +24,7 @@
 import logging
 import os
 import shutil
+import subprocess
 import sys
 import time
 import webbrowser
@@ -1343,6 +1344,21 @@ class MainWindow(QMainWindow):
         """This function open the dialog for the global settings.
 
         """
+        # TODO: Wsl2 und Localcolabfold btn -> Is it on machine? -> Don't show btn
+        # wsl2 btn
+        # subprocess.run("(gcm wsl).Version"): # gives version of wsl
+        # PS C:\Users\hannah> wsl hostname -i 127.0.1.1
+
+
+        # local colabfold # TODO: make it possible that it grap on btn
+        # "/home/$USER/.pyssa/colabfold_batch/bin/colabfold_batch"
+        if os.path.exists("/home/$USER/.pyssa/colabfold_batch/bin/colabfold_batch"):
+            self.ui.btn_install_local_prediction.hide()
+
+        else:
+            self.ui.btn_install_local_prediction.show()
+
+
         tools.open_global_settings()
         self._setup_statusbar()
 
