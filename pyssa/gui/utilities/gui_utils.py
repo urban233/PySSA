@@ -403,7 +403,8 @@ def hide_gui_elements(gui_elements: list):
             a list of pyqt gui elements
     """
     for gui_element in gui_elements:
-        gui_element.hide()
+        if gui_element is not None:
+            gui_element.hide()
 
 
 def show_gui_elements(gui_elements: list):
@@ -414,7 +415,8 @@ def show_gui_elements(gui_elements: list):
             a list of pyqt gui elements
     """
     for gui_element in gui_elements:
-        gui_element.show()
+        if gui_element is not None:
+            gui_element.show()
 
 
 def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list):

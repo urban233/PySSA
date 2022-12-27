@@ -51,6 +51,7 @@ from pyssa.gui.data_structures import project
 from pyssa.gui.data_structures import structure_analysis
 from pyssa.gui.data_structures.data_classes import protein_info
 from pyssa.gui.data_structures import project_watcher
+from pyssa.gui.data_structures import data_transformer
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.dialogs import dialog_about
@@ -130,6 +131,7 @@ class MainWindow(QMainWindow):
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar = Qt.QtWidgets.QStatusBar()
 
+        self.results_name = ""
         self.no_of_selected_chains = 0
         self.plot_dialog = Qt.QtWidgets.QDialog(self)
         self.view_box = None
@@ -139,6 +141,8 @@ class MainWindow(QMainWindow):
         self.local_pred_monomer_management: gui_page_management.GuiPageManagement
         self.local_pred_multimer_management: gui_page_management.GuiPageManagement
         self.single_analysis_management: gui_page_management.GuiPageManagement
+        self.batch_analysis_management: gui_page_management.GuiPageManagement
+        self.results_management: gui_page_management.GuiPageManagement
 
         # checks if the plugin launched for the first time
         if global_variables.global_var_settings_obj.get_app_launch() == 0 or not os.path.exists(
@@ -202,6 +206,8 @@ class MainWindow(QMainWindow):
         self._create_local_pred_monomer_management()
         self._create_local_pred_multimer_management()
         self._create_single_analysis_management()
+        self._create_batch_analysis_management()
+        self._create_results_management()
 
         # setup defaults for pages
         self._init_hide_ui_elements()
@@ -479,6 +485,104 @@ class MainWindow(QMainWindow):
         ]
         self.single_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
 
+    def _create_batch_analysis_management(self):
+        # gui element management
+        tmp_stages = [
+            # add a prot analysis: stage 0
+            stage.Stage(
+                {
+                    "label_batch_analysis_overview": self.ui.lbl_analysis_batch_overview,
+                    "box_protein_structure_1": self.ui.list_analysis_batch_overview,
+                },
+                {
+                    "add_button": self.ui.btn_analysis_batch_add,
+                    "remove_button": self.ui.btn_analysis_batch_remove,
+                }
+            ),
+            # choose protein structures: stage 1
+            stage.Stage(
+                {
+                    "label_protein_structure_1": self.ui.lbl_analysis_batch_prot_struct_1,
+                    "box_protein_structure_1": self.ui.box_analysis_batch_prot_struct_1,
+                    "label_vs": self.ui.lbl_analysis_batch_vs,
+                    "label_protein_structure_2": self.ui.lbl_analysis_batch_prot_struct_2,
+                    "box_protein_structure_2": self.ui.box_analysis_batch_prot_struct_2,
+                },
+                {
+                    "next_button": self.ui.btn_analysis_batch_next,
+                    "back_button": self.ui.btn_analysis_batch_back,
+                }
+            ),
+            # choose chains from prot structure 1: stage 2
+            stage.Stage(
+                {
+                    "label_protein_structure_1_chains": self.ui.lbl_analysis_batch_ref_chains,
+                    "list_protein_structure_1_chains": self.ui.list_analysis_batch_ref_chains,
+                },
+                {
+                    "back_button": self.ui.btn_analysis_batch_back_2,
+                    "next_button": self.ui.btn_analysis_batch_next_2,
+                }
+            ),
+            # choose chains from prot structure 2: stage 3
+            stage.Stage(
+                {
+                    "label_protein_structure_2_chains": self.ui.lbl_analysis_batch_model_chains,
+                    "list_protein_structure_2_chains": self.ui.list_analysis_batch_model_chains,
+                },
+                {
+                    "back_button": self.ui.btn_analysis_batch_back_3,
+                    "next_button": self.ui.btn_analysis_batch_next_3,
+                },
+            ),
+            # start batch run: stage 4
+            stage.Stage(
+                {
+                    "label_images": self.ui.lbl_analysis_batch_images,
+                    "checkbox_images": self.ui.cb_analysis_batch_images,
+                },
+                {
+                    "start_button": self.ui.btn_analysis_batch_start,
+                }
+            ),
+        ]
+        self.batch_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_results_management(self):
+        # gui element management
+        tmp_stages = [
+            # choose protein structures: stage 0
+            stage.Stage(
+                {
+                    "label_analysis_options": self.ui.lbl_results_analysis_options,
+                    "box_results_analysis_options": self.ui.cb_results_analysis_options,
+                },
+                {
+                    "": None,
+                }
+            ),
+            # choose chains from prot structure 1: stage 1
+            stage.Stage(
+                {
+                    "label_results_distance_plot": self.ui.lbl_results_distance_plot,
+                    "button_view_distance_plot": self.ui.btn_view_distance_plot,
+                    "label_results_distance_histogram": self.ui.lbl_results_distance_histogram,
+                    "button_view_distance_histogram": self.ui.btn_view_distance_histogram,
+                    "label_results_distance_table": self.ui.lbl_results_distance_table,
+                    "button_view_distance_table": self.ui.btn_view_distance_table,
+                    "label_results_structure_alignment": self.ui.lbl_results_structure_alignment,
+                    "button_view_struct_alignment": self.ui.btn_view_struct_alignment,
+                    "label_results_interest_regions": self.ui.lbl_results_interest_regions,
+                    "list_results_interest_regions": self.ui.list_results_interest_regions,
+                    "button_results_interest_regions": self.ui.btn_view_interesting_region,
+                },
+                {
+                    "": None,
+                }
+            ),
+        ]
+        self.results_management = gui_page_management.GuiPageManagement(tmp_stages)
+
     def _setup_statusbar(self):
         """This function sets up the status bar and fills it with the current workspace
 
@@ -552,7 +656,7 @@ class MainWindow(QMainWindow):
     #             self.ui.btn_pred_local_multimer_vs_pdb_page,
     #             self.ui.lbl_analysis,
     #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_batch_analysis_page,
     #             self.ui.btn_results_page,
     #             self.ui.lbl_handle_pymol_session,
     #             self.ui.btn_image_page,
@@ -582,7 +686,7 @@ class MainWindow(QMainWindow):
     #             self.ui.btn_pred_local_multimer_vs_pdb_page,
     #             self.ui.lbl_analysis,
     #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_batch_analysis_page,
     #             self.ui.btn_results_page,
     #             self.ui.lbl_handle_pymol_session,
     #             self.ui.btn_image_page,
@@ -617,7 +721,7 @@ class MainWindow(QMainWindow):
     #             self.ui.btn_pred_local_multimer_page,
     #             self.ui.lbl_analysis,
     #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_batch_analysis_page,
     #             self.ui.btn_results_page,
     #             self.ui.btn_hotspots_page,
     #         ]
@@ -651,7 +755,7 @@ class MainWindow(QMainWindow):
     #             self.ui.btn_pred_local_multimer_vs_pdb_page,
     #             self.ui.btn_pred_local_monomer_page,
     #             self.ui.btn_pred_local_multimer_page,
-    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_batch_analysis_page,
     #             self.ui.btn_hotspots_page,
     #         ]
     #         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -665,7 +769,7 @@ class MainWindow(QMainWindow):
     #             self.ui.btn_view_page,
     #             self.ui.lbl_analysis,
     #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_job_analysis_page,
+    #             self.ui.btn_batch_analysis_page,
     #             self.ui.btn_results_page,
     #             self.ui.lbl_handle_pymol_session,
     #             self.ui.btn_image_page,
@@ -718,7 +822,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
         #self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
-        self.ui.btn_job_analysis_page.clicked.connect(self.display_job_analysis_page)
+        self.ui.btn_batch_analysis_page.clicked.connect(self.display_job_analysis_page)
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
         # new project page
@@ -810,17 +914,21 @@ class MainWindow(QMainWindow):
         self.ui.list_analysis_ref_chains.itemSelectionChanged.connect(self.count_selected_chains_for_prot_struct_1)
         self.ui.list_analysis_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected)
         # batch analysis page
-        self.ui.btn_batch_load_reference.clicked.connect(self.load_reference_for_batch)
-        self.ui.btn_batch_load_model.clicked.connect(self.load_model_for_batch)
-        self.ui.txt_batch_job_name.textChanged.connect(
-            self.check_batch_if_txt_batch_job_name_is_filled)
-        self.ui.txt_batch_chain_ref.textChanged.connect(
-            self.check_batch_if_txt_batch_chain_ref_is_filled)
-        self.ui.txt_batch_chain_model.textChanged.connect(
-            self.check_batch_if_txt_batch_chain_model_is_filled)
-        self.ui.cb_batch_chain_info.stateChanged.connect(
-            self.enable_chain_information_input_for_batch)
+        self.ui.btn_analysis_batch_add.clicked.connect(self.show_batch_analysis_stage_1)
+        self.ui.btn_analysis_batch_remove.clicked.connect(self.remove_analysis_run)
+        self.ui.btn_analysis_batch_back.clicked.connect(self.show_batch_analysis_stage_0)
+        self.ui.btn_analysis_batch_next.clicked.connect(self.show_batch_analysis_stage_2)
+        self.ui.btn_analysis_batch_back_2.clicked.connect(self.show_batch_analysis_stage_1)
+        self.ui.btn_analysis_batch_next_2.clicked.connect(self.show_batch_analysis_stage_3)
+        self.ui.btn_analysis_batch_back_3.clicked.connect(self.show_batch_analysis_stage_2)
+        self.ui.btn_analysis_batch_next_3.clicked.connect(self.show_batch_analysis_stage_0)
+        self.ui.box_analysis_batch_prot_struct_1.currentIndexChanged.connect(self.check_if_prot_structs_are_filled_batch)
+        self.ui.box_analysis_batch_prot_struct_2.currentIndexChanged.connect(self.check_if_prot_structs_are_filled_batch)
+        self.ui.list_analysis_batch_ref_chains.itemSelectionChanged.connect(self.count_batch_selected_chains_for_prot_struct_1)
+        self.ui.list_analysis_batch_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected_batch)
+        self.ui.list_analysis_batch_overview.itemSelectionChanged.connect(self.check_if_at_least_one_analysis)
         # results page
+        self.ui.cb_results_analysis_options.currentIndexChanged.connect(self.load_results)
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
         self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
         self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
@@ -867,14 +975,6 @@ class MainWindow(QMainWindow):
         self.ui.btn_analysis_start.setToolTip("Start analysis process")
         self.status_bar.setToolTip("Status information: Current process")
         # batch analysis page
-        self.ui.btn_batch_load_reference.setToolTip("Open reference pdb file")
-        self.ui.btn_batch_load_model.setToolTip("Open model pdb files")
-        self.ui.btn_batch_start.setToolTip("Start batch process")
-        self.ui.txt_batch_load_reference.setToolTip("Reference file path")
-        self.ui.txt_batch_load_model.setToolTip("Model file paths")
-        self.ui.txt_batch_chain_ref.setToolTip("Enter chain(s) of reference")
-        self.ui.txt_batch_chain_model.setToolTip("Enter chain(s) of models")
-        self.ui.cb_batch_chain_info.setToolTip("Enable input of chains")
         self.status_bar.setToolTip("Status information: Current process")
         # results page
 
@@ -918,7 +1018,7 @@ class MainWindow(QMainWindow):
             # self.ui.btn_prediction_only_page.hide()
             # self.ui.btn_prediction_page.hide()
             self.ui.btn_single_analysis_page,
-            self.ui.btn_job_analysis_page,
+            self.ui.btn_batch_analysis_page,
             self.ui.btn_results_page,
             self.ui.btn_image_page,
         ]
@@ -1155,10 +1255,7 @@ class MainWindow(QMainWindow):
 
     def _init_batch_page(self):
         # sets up defaults: Batch
-        self.ui.txt_batch_chain_ref.setEnabled(False)
-        self.ui.txt_batch_chain_model.setEnabled(False)
-        self.ui.btn_batch_start.setEnabled(False)
-        self.ui.progress_bar_batch.setProperty("value", 0)
+        self.show_batch_analysis_stage_0()
 
     # Slots
     # def handle_side_menu(self):
@@ -1253,13 +1350,21 @@ class MainWindow(QMainWindow):
         """This function displays the job analysis work area
 
         """
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Job Analysis")
+        self.ui.list_analysis_batch_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_analysis_batch_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.batch_analysis_management.show_stage_x(0)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Batch Analysis")
 
     def display_results_page(self):
         """This function displays the results work area
 
         """
+        results = os.listdir(self.app_project.get_results_path())
+        results.insert(0, "")
+        self.ui.cb_results_analysis_options.clear()
+        gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 5, "Results")
+        self.show_analysis_results_options()
 
     def display_image_page(self):
         """This function displays the image work area
@@ -1664,11 +1769,11 @@ class MainWindow(QMainWindow):
 
         # local colabfold # TODO: make it possible that it grap on btn
         # "/home/$USER/.pyssa/colabfold_batch/bin/colabfold_batch"
-        if os.path.exists("/home/$USER/.pyssa/colabfold_batch/bin/colabfold_batch"):
-            self.ui.btn_install_local_prediction.hide()
-
-        else:
-            self.ui.btn_install_local_prediction.show()
+        # if os.path.exists("/home/$USER/.pyssa/colabfold_batch/bin/colabfold_batch"):
+        #     self.ui.btn_install_local_prediction.hide()
+        #
+        # else:
+        #     self.ui.btn_install_local_prediction.show()
 
 
         tools.open_global_settings()
@@ -1904,7 +2009,7 @@ class MainWindow(QMainWindow):
 
                 shutil.move(f"{self.scratch_path}/{pdb_id}.pdb", self.app_project.get_pdb_path())
                 tmp_ref_protein = protein.Protein(pdb_id,
-                                                  filepath=self.app_project.get_pdb_path(),
+                                                  filepath=pathlib.Path(self.app_project.get_pdb_path()),
                                                   export_data_dir=self.scratch_path)
                 tmp_ref_protein.clean_pdb_file()
             else:
@@ -1913,7 +2018,7 @@ class MainWindow(QMainWindow):
                 protein_file_info = QtCore.QFileInfo(self.ui.txt_new_choose_reference.text())
                 pdb_id = protein_file_info.baseName()
                 tmp_ref_protein = protein.Protein(pdb_id,
-                                                  self.app_project.get_pdb_path(),
+                                                  filepath=pathlib.Path(self.app_project.get_pdb_path()),
                                                   export_data_dir=self.scratch_path)
                 cmd.load(self.ui.txt_new_choose_reference.text(), object=pdb_id)
             tmp_ref_protein.set_chains()
@@ -1924,6 +2029,7 @@ class MainWindow(QMainWindow):
             tmp_ref_protein.serialize_protein(self.app_project.get_objects_path(), pdb_id)
             for chain in chains:
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
+        self.app_project.serialize_project(self.app_project.project_path, "project")
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
@@ -2010,8 +2116,13 @@ class MainWindow(QMainWindow):
         self.app_project = project.Project.deserialize_project(tmp_project_path)
         self._project_watcher.current_project = self.app_project
         if self.app_project.get_number_of_proteins() > 0:
-            for single_protein in self.app_project.proteins:
-                self.app_project.add_existing_protein(protein.Protein.deserialize_protein(single_protein))
+            tmp_proteins = os.listdir(self.app_project.get_pdb_path())
+            self.app_project.proteins.clear()
+            self.app_project.protein_pairs.clear()
+            for single_protein in tmp_proteins:
+                tmp_protein_name = single_protein.replace(".pdb", "")
+                json_path = pathlib.Path(f"{self.app_project.get_objects_path()}/{tmp_protein_name}.json")
+                self.app_project.add_existing_protein(protein.Protein.deserialize_protein(json_path))
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
@@ -2298,19 +2409,24 @@ class MainWindow(QMainWindow):
         # save project folder in current workspace
         new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
         new_project.create_project_tree()
-        new_project.save_project_to_xml()
+        self.app_project = new_project
 
         # copy proteins in new project
         prots_to_copy = []
         for i in range(self.ui.list_use_selected_protein_structures.count()):
             self.ui.list_use_selected_protein_structures.setCurrentRow(i)
             prots_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
-        for protein in prots_to_copy:
-            protein_path = global_variables.global_var_workspace_proteins[protein]
-            shutil.copy(protein_path, f"{new_project.get_pdb_path()}/{protein}")
-
-        self.number_of_pdb_files = len(prots_to_copy)
-        self._configuration()
+        for tmp_protein in prots_to_copy:
+            protein_path = global_variables.global_var_workspace_proteins[tmp_protein]
+            shutil.copy(protein_path, f"{self.app_project.get_pdb_path()}/{tmp_protein}")
+            new_protein = protein.Protein(tmp_protein, filepath=pathlib.Path(self.app_project.get_pdb_path()))
+            new_protein.serialize_protein(self.app_project.get_objects_path(), tmp_protein)
+            self.app_project.add_existing_protein(new_protein)
+        self.app_project.serialize_project(self.app_project.project_path, "project")
+        # shows options which can be done with the data in the project folder
+        self._project_watcher.current_project = self.app_project
+        self._project_watcher.show_valid_options(self.ui)
+        self.display_view_page()
 
     # ----- Functions for Close project
     def close_project(self):
@@ -3110,6 +3226,8 @@ class MainWindow(QMainWindow):
                                                self.ui.box_analysis_prot_struct_1.currentText(),
                                                self.ui.list_analysis_ref_chains)
         self.ui.btn_analysis_next_2.setEnabled(True)
+        self.ui.lbl_analysis_ref_chains.setText(
+            f"Select chains in protein structure {self.ui.lbl_analysis_prot_struct_1.text()}.")
 
     def show_single_analysis_stage_2(self):
         self.single_analysis_management.show_stage_x(2)
@@ -3123,13 +3241,14 @@ class MainWindow(QMainWindow):
             self.ui.list_analysis_model_chains,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
+        self.ui.btn_analysis_start.setEnabled(False)
         if self.no_of_selected_chains == 1:
             self.ui.lbl_analysis_model_chains.setText(
-                f"Please select {self.no_of_selected_chains} chains in protein structure 2.")
+                f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
             self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
         elif self.no_of_selected_chains > 1:
             self.ui.lbl_analysis_model_chains.setText(
-                f"Please select {self.no_of_selected_chains} chains in protein structure 2.")
+                f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
             self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
         else:
             gui_elements_to_hide = [
@@ -3139,7 +3258,7 @@ class MainWindow(QMainWindow):
                 self.ui.list_analysis_model_chains,
             ]
             gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.ui.btn_analysis_start.setEnabled(False)
+            self.ui.btn_analysis_start.setEnabled(True)
 
     def fill_protein_structure_boxes(self):
         proteins = tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}")
@@ -3148,6 +3267,9 @@ class MainWindow(QMainWindow):
         self.ui.box_analysis_prot_struct_2.clear()
         gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_1, proteins)
         gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_2, proteins)
+
+    def count_batch_selected_chains_for_prot_struct_1(self):
+        self.no_of_selected_chains = len(self.ui.list_analysis_batch_ref_chains.selectedItems())
 
     def check_if_prot_structs_are_filled(self):
         prot_1 = self.ui.box_analysis_prot_struct_1.itemText(self.ui.box_analysis_prot_struct_1.currentIndex())
@@ -3173,102 +3295,208 @@ class MainWindow(QMainWindow):
         self.ui.btn_analysis_start.setEnabled(False)
         self.status_bar.showMessage("Protein structure analysis started ...")
         cmd.reinitialize()
+        data_transformer_analysis = data_transformer.DataTransformer(self.ui)
+        transformed_analysis_data = data_transformer_analysis.transform_to_analysis(self.app_project)
 
-        model_full_filepath = self.ui.txt_analysis_load_model.toPlainText()
-        model_file_info = Qt.QtCore.QFileInfo(model_full_filepath)
-        MODEL_OBJ_NAME = model_file_info.baseName()
-        MODEL_DIR = model_file_info.canonicalPath()
-
-        project_obj = project.Project(self.ui.txt_analysis_project_name.text(),
-                                                            self.workspace_path)
-        if project_obj.create_project_tree() is False:
-            self.ui.btn_analysis_start.setEnabled(True)
-            return
-        project_obj.set_pdb_file(self.ui.txt_analysis_load_reference.text())
-        project_obj.set_pdb_id(self.ui.txt_analysis_load_reference.text())
-        project_obj.set_pdb_model(self.ui.txt_analysis_load_model.toPlainText())
-        project_obj.set_ref_chains(self.ui.txt_analysis_chain_ref.text())
-        project_obj.set_model_chains((self.ui.txt_analysis_chain_model.text()))
-        project_obj.create_xml_file()
-
-        # gets reference filename and filepath
-        if len(self.ui.txt_analysis_load_reference.text()) == 4:
-            tmp_protein = core.Protein(self.ui.txt_analysis_load_reference.text(),
-                                       export_data_dir=project_obj.get_pdb_path())
-            tmp_protein.clean_pdb_file()
-            REFERENCE_OBJ_NAME = self.ui.txt_analysis_load_reference.text()
-            REFERENCE_DIR = project_obj.get_pdb_path()
+        if not os.path.exists(transformed_analysis_data[2]):
+            os.mkdir(transformed_analysis_data[2])
         else:
-            ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_analysis_load_reference.text())
-            REFERENCE_OBJ_NAME = ref_file_info.baseName()
-            REFERENCE_DIR = ref_file_info.canonicalPath()
+            # TODO: talk about what should happen if an analysis result already exists
+            print("A analysis already exists")
 
-        reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-        model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-        export_dir = project_obj.get_results_path()
         structure_analysis_obj = structure_analysis.StructureAnalysis(
-            reference_protein, model_proteins,
-            project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
-            export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
+            reference_protein=[transformed_analysis_data[0]], model_proteins=[transformed_analysis_data[1]],
+            ref_chains=transformed_analysis_data[0].chains, model_chains=transformed_analysis_data[1].chains,
+            export_dir=transformed_analysis_data[2], cycles=global_variables.global_var_settings_obj.get_cycles(),
             cutoff=global_variables.global_var_settings_obj.get_cutoff(),
         )
+        if self.ui.cb_analysis_images.isChecked():
+            structure_analysis_obj.response_create_images = True
         structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-                                                         structure_analysis_obj.reference_protein)
+                                                             structure_analysis_obj.reference_protein)
         structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-                                                         structure_analysis_obj.model_proteins)
+                                                             structure_analysis_obj.model_proteins)
         protein_pairs = structure_analysis_obj.create_protein_pairs()
-        structure_analysis_obj.do_analysis_in_pymol(protein_pairs,
-                                                self.status_bar, self.ui.progress_bar_analysis)
-        del structure_analysis_obj
+        structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
+        self._project_watcher.show_valid_options(self.ui)
 
-
-    def load_reference_for_analysis(self):
-        """This function opens a file dialog to choose a .pdb file as
-        reference and displays the path in a text box
-
-        """
-        try:
-            # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
-            # display path in text box
-            if file_name == ("", ""):
-                raise ValueError
-            # display path in text box
-            self.ui.txt_analysis_load_reference.setText(str(file_name[0]))
-            self.status_bar.showMessage("Loading the reference was successful.")
-            self.__check_start_possibility_prediction()
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the reference failed!")
-        except ValueError:
-            print("No file has been selected.")
-            self.__check_start_possibility()
-
-    def load_model_for_analysis(self):
-        """This function opens a file dialog to choose a .pdb file as
-        model and displays the path in a text box
-
-        """
-        try:
-            # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Model",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
-            if file_name == ("", ""):
-                raise ValueError
-            # display path in text box
-            self.ui.txt_analysis_load_model.setText(str(file_name[0]))
-            self.status_bar.showMessage("Loading the model was successful.")
-            self.__check_start_possibility()
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the model failed!")
-        except ValueError:
-            print("No file has been selected.")
-
-
+    # def load_reference_for_analysis(self):
+    #     """This function opens a file dialog to choose a .pdb file as
+    #     reference and displays the path in a text box
+    #
+    #     """
+    #     try:
+    #         # open file dialog
+    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
+    #                                                              Qt.QtCore.QDir.homePath(),
+    #                                                              "PDB Files (*.pdb)")
+    #         # display path in text box
+    #         if file_name == ("", ""):
+    #             raise ValueError
+    #         # display path in text box
+    #         self.ui.txt_analysis_load_reference.setText(str(file_name[0]))
+    #         self.status_bar.showMessage("Loading the reference was successful.")
+    #         self.__check_start_possibility_prediction()
+    #     except FileNotFoundError:
+    #         self.status_bar.showMessage("Loading the reference failed!")
+    #     except ValueError:
+    #         print("No file has been selected.")
+    #         self.__check_start_possibility()
+    #
+    # def load_model_for_analysis(self):
+    #     """This function opens a file dialog to choose a .pdb file as
+    #     model and displays the path in a text box
+    #
+    #     """
+    #     try:
+    #         # open file dialog
+    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Model",
+    #                                                              Qt.QtCore.QDir.homePath(),
+    #                                                              "PDB Files (*.pdb)")
+    #         if file_name == ("", ""):
+    #             raise ValueError
+    #         # display path in text box
+    #         self.ui.txt_analysis_load_model.setText(str(file_name[0]))
+    #         self.status_bar.showMessage("Loading the model was successful.")
+    #         self.__check_start_possibility()
+    #     except FileNotFoundError:
+    #         self.status_bar.showMessage("Loading the model failed!")
+    #     except ValueError:
+    #         print("No file has been selected.")
 
     # ----- Functions for Batch
+
+    def show_batch_analysis_stage_0(self):
+        if self.ui.lbl_analysis_batch_prot_struct_1.text() != "Protein structure 1":
+            prot_1_name = self.ui.lbl_analysis_batch_prot_struct_1.text().replace(".pdb", "")
+            prot_1_chains = []
+            for chain in self.ui.list_analysis_batch_ref_chains.selectedItems():
+                prot_1_chains.append(chain.text())
+            prot_1_chains = '_'.join([str(elem) for elem in prot_1_chains])
+            prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text().replace(".pdb", "")
+            prot_2_chains = []
+            for chain in self.ui.list_analysis_batch_model_chains.selectedItems():
+                prot_2_chains.append(chain.text())
+            prot_2_chains = '_'.join([str(elem) for elem in prot_2_chains])
+            analysis_name = f"{prot_1_name}_{prot_1_chains}_vs_{prot_2_name}_{prot_2_chains}"
+            item = QListWidgetItem(analysis_name)
+            self.ui.list_analysis_batch_overview.addItem(item)
+        if self.ui.list_analysis_batch_overview.count() == 0:
+            self.batch_analysis_management.show_stage_x(0)
+        else:
+            gui_elements_to_show = [
+                self.ui.btn_analysis_batch_add,
+                self.ui.btn_analysis_batch_remove,
+            ]
+            self.batch_analysis_management.show_gui_elements_stage_x(
+                [0, 4], [1, 2, 3], show_specific_elements=gui_elements_to_show
+            )
+
+    def show_batch_analysis_stage_1(self):
+        gui_elements_to_hide = [
+            self.ui.btn_analysis_batch_add,
+            self.ui.btn_analysis_batch_remove,
+        ]
+        self.batch_analysis_management.show_gui_elements_stage_x(
+            [0, 1], [2, 3, 4], hide_specific_elements=gui_elements_to_hide)
+        self.fill_protein_boxes_batch()
+        self.ui.lbl_analysis_batch_prot_struct_1.setText("Protein structure 1")
+        self.ui.lbl_analysis_batch_prot_struct_2.setText("Protein structure 2")
+
+    def show_batch_analysis_stage_2(self):
+        self.batch_analysis_management.show_gui_elements_stage_x(
+            [0, 1, 2], [3, 4], hide_specific_elements=[self.ui.box_analysis_batch_prot_struct_1,
+                                                       self.ui.box_analysis_batch_prot_struct_2,
+                                                       self.ui.btn_analysis_batch_next,
+                                                       self.ui.btn_analysis_batch_back]
+        )
+        self.ui.lbl_analysis_batch_prot_struct_1.setText(self.ui.box_analysis_batch_prot_struct_1.currentText())
+        self.ui.lbl_analysis_batch_prot_struct_2.setText(self.ui.box_analysis_batch_prot_struct_2.currentText())
+        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                               self.ui.box_analysis_batch_prot_struct_1.currentText(),
+                                               self.ui.list_analysis_batch_ref_chains)
+        self.ui.lbl_analysis_batch_ref_chains.setText(
+            f"Select chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
+
+    def show_batch_analysis_stage_3(self):
+        self.ui.btn_analysis_batch_next_3.setEnabled(False)
+        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                               self.ui.box_analysis_batch_prot_struct_2.currentText(),
+                                               self.ui.list_analysis_batch_model_chains)
+        gui_elements_to_hide = [
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_next,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next_2,
+            self.ui.btn_analysis_batch_back_2,
+        ]
+        if self.no_of_selected_chains == 1:
+            # only one chain was selected
+            self.ui.lbl_analysis_batch_model_chains.setText(
+                f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.")
+            self.ui.list_analysis_batch_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
+            self.batch_analysis_management.show_gui_elements_stage_x(
+                [0, 1, 2, 3], [4], hide_specific_elements=gui_elements_to_hide
+            )
+        elif self.no_of_selected_chains > 1:
+            # multiple chains were selected
+            self.ui.lbl_analysis_batch_model_chains.setText(
+                f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.")
+            self.ui.list_analysis_batch_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+            self.batch_analysis_management.show_gui_elements_stage_x(
+                [0, 1, 2, 3], [4], hide_specific_elements=gui_elements_to_hide
+            )
+        else:
+            # no chains were selected
+            gui_elements_to_show = [
+                self.ui.btn_analysis_batch_add,
+                self.ui.btn_analysis_batch_remove,
+            ]
+            self.batch_analysis_management.show_gui_elements_stage_x(
+                [0, 4], [1, 2, 3], show_specific_elements=gui_elements_to_show
+            )
+            prot_1_name = self.ui.lbl_analysis_batch_prot_struct_1.text().replace(".pdb", "")
+            prot_1_chains = self.ui.list_analysis_batch_ref_chains.selectedItems()
+            prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text().replace(".pdb", "")
+            prot_2_chains = self.ui.list_analysis_batch_model_chains.selectedItems()
+            analysis_name = f"{prot_1_name}_{prot_1_chains}_vs_{prot_2_name}_{prot_2_chains}"
+            item = QListWidgetItem(analysis_name)
+            #item = QListWidgetItem(f"{self.ui.lbl_analysis_batch_prot_struct_1.text()}_vs_{self.ui.lbl_analysis_batch_prot_struct_2.text()}")
+            self.ui.list_analysis_batch_overview.addItem(item)
+
+    def fill_protein_boxes_batch(self):
+        proteins = tools.scan_project_for_valid_proteins(
+            f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}")
+        proteins.insert(0, "")
+        self.ui.box_analysis_batch_prot_struct_1.clear()
+        self.ui.box_analysis_batch_prot_struct_2.clear()
+        gui_utils.fill_combo_box(self.ui.box_analysis_batch_prot_struct_1, proteins)
+        gui_utils.fill_combo_box(self.ui.box_analysis_batch_prot_struct_2, proteins)
+
+    def remove_analysis_run(self):
+        self.ui.list_analysis_batch_overview.takeItem(self.ui.list_analysis_batch_overview.currentRow())
+
+    def check_if_same_no_of_chains_selected_batch(self):
+        self.ui.btn_analysis_batch_next_3.setEnabled(False)
+        styles.color_button_not_ready(self.ui.btn_analysis_batch_next_3)
+        if self.no_of_selected_chains == len(self.ui.list_analysis_batch_model_chains.selectedItems()):
+            styles.color_button_ready(self.ui.btn_analysis_batch_next_3)
+            self.ui.btn_analysis_batch_next_3.setEnabled(True)
+
+    def check_if_prot_structs_are_filled_batch(self):
+        prot_1 = self.ui.box_analysis_batch_prot_struct_1.itemText(self.ui.box_analysis_batch_prot_struct_1.currentIndex())
+        prot_2 = self.ui.box_analysis_batch_prot_struct_2.itemText(self.ui.box_analysis_batch_prot_struct_2.currentIndex())
+        if prot_1 != "" and prot_2 != "":
+            self.ui.btn_analysis_batch_next.setEnabled(True)
+        else:
+            self.ui.btn_analysis_batch_next.setEnabled(False)
+
+    def check_if_at_least_one_analysis(self):
+        # TODO: function does not work expected
+        if self.ui.list_analysis_batch_overview.count() == 0:
+            self.batch_analysis_management.show_stage_x(0)
+
     def load_reference_for_batch(self):
         """This function opens a file dialog to choose a .pdb file as
         reference and displays the path in a text box
@@ -3407,6 +3635,74 @@ class MainWindow(QMainWindow):
     #     job.create_xml_file()
 
     # Results
+    def show_analysis_results_options(self):
+        self.results_management.show_stage_x(0)
+
+    def show_results_interactions(self, gui_elements_to_show=None, gui_elements_to_hide=None):
+        if gui_elements_to_hide is not None:
+            self.results_management.show_gui_elements_stage_x([0, 1], [],
+                                                              show_specific_elements=[self.ui.lbl_results_analysis_options,
+                                                                                      self.ui.cb_results_analysis_options],
+                                                              hide_specific_elements=gui_elements_to_hide)
+        else:
+            self.results_management.show_gui_elements_stage_x([0, 1], [],
+                                                              show_specific_elements=[
+                                                                  self.ui.lbl_results_analysis_options,
+                                                                  self.ui.cb_results_analysis_options])
+
+    def load_results(self):
+        self.results_name = self.ui.cb_results_analysis_options.currentText()
+        if self.results_name == "":
+            self.show_analysis_results_options()
+            return
+        current_results_path = pathlib.Path(f"{self.app_project.get_results_path()}/{self.results_name}")
+        gui_elements_to_hide = []
+        if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
+            # no images where made
+            gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
+            gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
+            gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+            gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+            gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+        elif os.path.exists(pathlib.Path(f"{current_results_path}/images")):
+            if not os.path.exists(pathlib.Path(f"{current_results_path}/images/structure_alignment.png")):
+                gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
+                gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
+            elif not os.path.exists(pathlib.Path(f"{current_results_path}/images/interesting_")):
+                gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+                gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+                gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+
+        # check if histogram can be created
+        # read csv file
+        file_path = pathlib.Path(
+            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
+        path = f"{file_path}/distance_csv/distances.csv"
+        distance_list = []
+        with open(path, 'r', encoding="utf-8") as csv_file:
+            i = 0
+            for line in csv_file:
+                cleaned_line = line.replace("\n", "")
+                if cleaned_line.split(",")[8] != 'distance':
+                    distance_list.append(float(cleaned_line.split(",")[8]))
+        distance_list.sort()
+        x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
+        if x.size != y.size:
+            x = np.resize(x, (1, y.size))
+        # this conversion is needed for the pyqtgraph library!
+        x = x.tolist()
+        try:
+            x = x[0]
+        except IndexError:
+            # histogram could not be created
+            gui_elements_to_hide.append(self.ui.lbl_results_distance_histogram)
+            gui_elements_to_hide.append(self.ui.btn_view_distance_histogram)
+
+        if gui_elements_to_hide:
+            self.show_results_interactions(gui_elements_to_hide=gui_elements_to_hide)
+        else:
+            self.show_results_interactions()
+
     def change_interesting_regions(self):
         """This function is used to switch between projects within a job.
 
@@ -3443,13 +3739,8 @@ class MainWindow(QMainWindow):
         """
         png_dialog = Qt.QtWidgets.QDialog(self)
         label = Qt.QtWidgets.QLabel(self)
-        global global_var_project_dict
-        try:
-            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-        except KeyError:
-            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-                                        "No project has been opened.")
-            return
+        file_path = pathlib.Path(
+            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/structure_alignment.png")
         # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
@@ -3483,7 +3774,7 @@ class MainWindow(QMainWindow):
         """This function opens a window which displays the distance plot.
 
         """
-        file_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results"
+        file_path = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         model_name = self.ui.lbl_current_project_name.text()
         global_variables.global_var_tmp_project_info.clear()
         global_variables.global_var_tmp_project_info.append(file_path)
@@ -3546,7 +3837,7 @@ class MainWindow(QMainWindow):
         graph_widget = pg.PlotWidget()
 
         # read csv file
-        file_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results"
+        file_path = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         model_name = self.ui.lbl_current_project_name.text()
         path = f"{file_path}/distance_csv/distances.csv"
         distance_list = []
@@ -3613,13 +3904,10 @@ class MainWindow(QMainWindow):
         png_dialog = Qt.QtWidgets.QDialog(self)
         label = Qt.QtWidgets.QLabel(self)
         global global_var_project_dict
-        try:
-            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-        except KeyError:
-            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-                                        "No project has been opened.")
-            return
-        file_name = self.ui.cb_interesting_regions.currentText()
+        file_path = pathlib.Path(
+            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
+        #file_name = self.ui.cb_interesting_regions.currentText()
+        file_name = ""
         pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/interesting_regions/{file_name}")
         # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
@@ -3645,13 +3933,8 @@ class MainWindow(QMainWindow):
         table_view = Qt.QtWidgets.QTableView()
         table_view.setModel(csv_model)
 
-        global global_var_project_dict
-        try:
-            file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-        except KeyError:
-            tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-                                        "No project has been opened.")
-            return
+        file_path = pathlib.Path(
+            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         path = f"{file_path}/distance_csv/distances.csv"
         with open(path, 'r', encoding="utf-8") as csv_file:
             i = 0

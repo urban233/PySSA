@@ -81,7 +81,7 @@ class ProjectWatcher:
                 ui.btn_pred_local_multimer_vs_pdb_page,
                 ui.lbl_analysis,
                 ui.btn_single_analysis_page,
-                ui.btn_job_analysis_page,
+                ui.btn_batch_analysis_page,
                 ui.btn_results_page,
                 ui.lbl_handle_pymol_session,
                 ui.btn_image_page,
@@ -110,7 +110,7 @@ class ProjectWatcher:
                 ui.btn_pred_local_multimer_vs_pdb_page,
                 ui.lbl_analysis,
                 ui.btn_single_analysis_page,
-                ui.btn_job_analysis_page,
+                ui.btn_batch_analysis_page,
                 ui.btn_results_page,
                 ui.lbl_handle_pymol_session,
                 ui.btn_image_page,
@@ -143,7 +143,7 @@ class ProjectWatcher:
                 ui.btn_pred_local_multimer_page,
                 ui.lbl_analysis,
                 ui.btn_single_analysis_page,
-                ui.btn_job_analysis_page,
+                ui.btn_batch_analysis_page,
                 ui.btn_results_page,
                 ui.btn_hotspots_page,
             ]
@@ -174,7 +174,7 @@ class ProjectWatcher:
                 ui.btn_pred_local_multimer_vs_pdb_page,
                 ui.btn_pred_local_monomer_page,
                 ui.btn_pred_local_multimer_page,
-                ui.btn_job_analysis_page,
+                ui.btn_batch_analysis_page,
                 ui.btn_hotspots_page,
             ]
             if self.no_of_results > 0:
@@ -191,7 +191,7 @@ class ProjectWatcher:
                 ui.btn_view_page,
                 ui.lbl_analysis,
                 ui.btn_single_analysis_page,
-                ui.btn_job_analysis_page,
+                ui.btn_batch_analysis_page,
                 ui.lbl_handle_pymol_session,
                 ui.btn_image_page,
             ]

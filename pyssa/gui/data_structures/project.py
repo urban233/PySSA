@@ -31,7 +31,8 @@ from xml.dom import minidom
 
 import core
 from pyssa.gui.utilities import gui_utils
-
+from pyssa.pymol_protein_tools import protein_pair
+from pyssa.pymol_protein_tools import protein
 
 class Project:
     """This class is for the projects used in the plugin
@@ -75,8 +76,8 @@ class Project:
         # self._workspace_path: pathlib.Path = ""
         self._folder_paths: list[Path] = []
         self._session_file_name: str = "session_file_model_s.pse"
-        self.proteins: list[core.Protein] = []
-        self.protein_pairs: list[core.ProteinPair] = []
+        self.proteins: list[protein.Protein] = []
+        self.protein_pairs: list[protein_pair.ProteinPair] = []
         self.create_folder_paths()
 
     def add_new_protein(self, protein_name) -> None:
@@ -89,23 +90,23 @@ class Project:
         new_protein = core.Protein(protein_name)
         self.proteins.append(new_protein)
 
-    def add_existing_protein(self, protein: core.Protein) -> None:
+    def add_existing_protein(self, value_protein: protein.Protein) -> None:
         """This function adds an existing protein object to the project.
 
         Args:
             protein:
                 name of the existing protein object
         """
-        self.proteins.append(protein)
+        self.proteins.append(value_protein)
 
-    def add_protein_pair(self, protein_pair: core.ProteinPair) -> None:
+    def add_protein_pair(self, value_protein_pair: protein_pair.ProteinPair) -> None:
         """This function adds an existing protein_pair object to the project.
 
         Args:
             protein_pair:
                 name of the existing protein_pairs object
         """
-        self._protein_pairs.append(protein_pair)
+        self.protein_pairs.append(value_protein_pair)
 
     def create_project_tree(self) -> bool:
         """This function creates the directory structure for a new project.
@@ -233,10 +234,18 @@ class Project:
             return
         # self._folder_paths.__str__()
         project_dict = self.__dict__
+        protein_names = []
+        for tmp_protein in self.proteins:
+            protein_names.append(tmp_protein.molecule_object)
+        protein_pair_names = []
+        for tmp_protein_pair in self.protein_pairs:
+            protein_pair_names.append(tmp_protein_pair.name)
         update = {
             '_workspace': str(self._workspace),
             'project_path': str(self.project_path),
             '_folder_paths': [str(self._folder_paths[0]), str(self._folder_paths[1]), str(self._folder_paths[2]), str(self._folder_paths[3])],
+            'proteins': protein_names,
+            'protein_pairs': protein_pair_names,
         }
         project_dict.update(update)
         print(project_dict)
@@ -260,4 +269,12 @@ class Project:
         tmp_project: Project = Project(project_dict.get("_project_name"), project_dict.get("_workspace"))
         tmp_project.set_folder_paths(project_dict.get("_folder_paths"))
         tmp_project.project_path = project_dict.get("project_path")
+        tmp_project.proteins = list(project_dict.get("proteins"))
+        tmp_project.protein_pairs = list(project_dict.get("protein_pairs"))
         return tmp_project
+
+    def search_protein(self, protein_name):
+        for tmp_protein in self.proteins:
+            if tmp_protein.molecule_object == protein_name:
+                return tmp_protein
+        print(f"No matching protein with the name {protein_name} found.")

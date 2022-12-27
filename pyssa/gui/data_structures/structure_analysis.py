@@ -30,6 +30,8 @@ from pymolproteintools import core
 from pymolproteintools import graphics
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.utilities import tools
+from pyssa.pymol_protein_tools import protein
+from pyssa.pymol_protein_tools import protein_pair
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -44,6 +46,7 @@ class StructureAnalysis:
     model_proteins = []
     ref_chains = []
     model_chains = []
+    response_create_images = False
     export_dir: str = ""
     _cycles: int = 1
     _cutoff: float = 1.0
@@ -52,7 +55,7 @@ class StructureAnalysis:
     _alignment_file_name: str = "alignment_file_model_s"
     _session_file_name: str = "session_file_model_s"  # little Tesla easter egg ;)
 
-    def __init__(self, reference_protein: list[core.Protein], model_proteins: list[core.Protein],
+    def __init__(self, reference_protein: list[protein.Protein], model_proteins: list[protein.Protein],
                  ref_chains, model_chains, export_dir, cycles=1, cutoff=1.0) -> None:
         self.reference_protein = reference_protein
         self.model_proteins = model_proteins
@@ -192,7 +195,7 @@ class StructureAnalysis:
         return txt_box_chain_ref.text().split(",")
 
     @staticmethod
-    def create_selection_for_proteins(chains: list, proteins: list[core.Protein]) -> None:
+    def create_selection_for_proteins(chains: list, proteins: list[protein.Protein]) -> None:
         """This function creates the selections for the proteins and sets these directly into
         the Protein objects
 
@@ -212,25 +215,23 @@ class StructureAnalysis:
             tmp_list.append(tmp_selection)
             selection = seperator.join(tmp_list)
         # adds the selections into the Protein object
-        for protein in proteins:
-            protein.set_selection(selection)
+        for tmp_protein in proteins:
+            tmp_protein.set_selection(selection)
 
-    def create_protein_pairs(self) -> list[core.ProteinPair]:
+    def create_protein_pairs(self) -> list[protein_pair.ProteinPair]:
         """This function creates Protein pairs based on the proteins in the object
 
         Returns:
             protein_pairs: list of Protein pairs
         """
-        protein_pairs = []
+        tmp_protein_pairs = []
         for model in self.model_proteins:
-            protein_pair = core.ProteinPair(self.reference_protein[0], model,
-                                            self.export_dir)
-            protein_pairs.append(protein_pair)
-        return protein_pairs
+            tmp_protein_pair = protein_pair.ProteinPair(self.reference_protein[0], model, self.export_dir)
+            tmp_protein_pairs.append(tmp_protein_pair)
+        return tmp_protein_pairs
 
-    def do_analysis_in_pymol(self, protein_pairs: list[core.ProteinPair],
-                             status_bar_obj: Qt.QtWidgets.QStatusBar,
-                             progress_bar_obj: Qt.QtWidgets.QProgressBar) -> None:
+    def do_analysis_in_pymol(self, protein_pairs: list[protein_pair.ProteinPair],
+                             status_bar_obj: Qt.QtWidgets.QStatusBar) -> None:
         """This function does the actual structure analysis in pymol based on the Protein pairs
 
         Args:
@@ -238,32 +239,28 @@ class StructureAnalysis:
                 list of Protein pairs which were created with the function create_protein_pairs
             status_bar_obj:
                 the statusbar object from the main window
-            progress_bar_obj:
-                the progressbar object from the main window
         """
-        for protein_pair in protein_pairs:
+        for tmp_protein_pair in protein_pairs:
             # reinitialize pymol session
             msg = "Reinitialize pymol session ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            progress_bar_obj.setProperty("value", 10)
 
             # load both proteins in the pymol session
             msg = "Finished reinitializing pymol session. | Load proteins ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            protein_pair.load_protein_pair()
-            progress_bar_obj.setProperty("value", 15)
+            tmp_protein_pair.load_protein_pair()
 
             # color Protein with default colors; ref: green, model: blue
             msg = "Finished loading proteins. | Color proteins ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            protein_pair.color_protein_pair()
-            progress_bar_obj.setProperty("value", 20)
+            # TODO: throws pymol exception, idk why
+            tmp_protein_pair.color_protein_pair()
 
             # do the structure alignment
             msg = "Finished coloring proteins. | Align proteins ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             try:
-                protein_pair.align_protein_pair(self._cycles, self._cutoff, self._alignment_file_name)
+                tmp_protein_pair.align_protein_pair(self._cycles, self._cutoff, self._alignment_file_name)
             except pymol.CmdException:
                 if len(self.ref_chains) != 0:
                     tools.quick_log_and_display("critical", "There is a problem with the chain selection!",
@@ -272,62 +269,57 @@ class StructureAnalysis:
                                                "There is a problem with the chain selection!"
                                                "You should check if you have entered the correct chains.")
                 return
-            progress_bar_obj.setProperty("value", 25)
 
             # do the distance calculation
             msg = "Finished aligning proteins. | Calculate distances ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            distance_results = protein_pair.calculate_distance_between_ca_atoms(self._alignment_file_name)
-            protein_pair.export_distance_between_ca_atoms(distance_results)
-            progress_bar_obj.setProperty("value", 40)
+            distance_results = tmp_protein_pair.calculate_distance_between_ca_atoms(self._alignment_file_name)
+            tmp_protein_pair.export_distance_between_ca_atoms(distance_results)
 
             # create an instance of the Graphics class
             msg = "Finished calculating distances. | Create distance plot ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            graphics_instance: graphics.Graphics = graphics.Graphics(protein_pair, distance_results, self._figure_size)
+            graphics_instance: graphics.Graphics = graphics.Graphics(tmp_protein_pair, distance_results, self._figure_size)
 
             # create distance plot
             fig = graphics_instance.create_distance_plot(self._distance_label, self._cutoff)
             # save distance plot
-            if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                os.mkdir(f"{protein_pair.results_dir}/plots")
-            if not os.path.exists(f"{protein_pair.results_dir}/plots/distance_plot"):
-                os.mkdir(f"{protein_pair.results_dir}/plots/distance_plot")
-            plt.savefig(f"{protein_pair.results_dir}/plots/distance_plot/"
-                        f"distance_plot_{protein_pair.model_obj.molecule_object}.svg")
+            if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots"):
+                os.mkdir(f"{tmp_protein_pair.results_dir}/plots")
+            if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots/distance_plot"):
+                os.mkdir(f"{tmp_protein_pair.results_dir}/plots/distance_plot")
+            plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_plot/"
+                        f"distance_plot_{tmp_protein_pair.model_obj.molecule_object}.svg")
             plt.close(fig)
-            progress_bar_obj.setProperty("value", 45)
 
             # create distance histogram
             msg = "Finished creating distance plot. | Create distance histogram ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             graphics_instance.create_distance_histogram()
             # save distance histogram
-            if not os.path.exists(f"{protein_pair.results_dir}/plots"):
-                os.mkdir(f"{protein_pair.results_dir}/plots")
+            if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots"):
+                os.mkdir(f"{tmp_protein_pair.results_dir}/plots")
             if not os.path.exists(
-                    f"{protein_pair.results_dir}/plots/distance_histogram"):
-                os.mkdir(f"{protein_pair.results_dir}/plots/distance_histogram")
-            plt.savefig(f"{protein_pair.results_dir}/plots/distance_histogram"
-                        f"/distance_histogram_{protein_pair.model_obj.molecule_object}.svg")
-            progress_bar_obj.setProperty("value", 50)
+                    f"{tmp_protein_pair.results_dir}/plots/distance_histogram"):
+                os.mkdir(f"{tmp_protein_pair.results_dir}/plots/distance_histogram")
+            plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_histogram"
+                        f"/distance_histogram_{tmp_protein_pair.model_obj.molecule_object}.svg")
 
             # TODO: uncomment section below !!!
-            # # take image of whole structure alignment
-            # msg = "Finished creating distance histogram. | Take image of structure alignment ..."
-            # tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            # graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon", "structure_alignment")
-            # progress_bar_obj.setProperty("value", 70)
-            #
-            # # take image of interesting regions
-            # msg = f"Finished taking image of structure alignment. | Take images "\
-            #       f"of interesting regions (within {self._cutoff} angstrom)"
-            # tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            # graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1)
-            # progress_bar_obj.setProperty("value", 75)
+            if self.response_create_images is True:
+                # take image of whole structure alignment
+                msg = "Finished creating distance histogram. | Take image of structure alignment ..."
+                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+                graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon", "structure_alignment")
+
+                # take image of interesting regions
+                msg = f"Finished taking image of structure alignment. | Take images "\
+                      f"of interesting regions (within {self._cutoff} angstrom)"
+                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+                graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1)
 
             # NOT THIS
-            # color residues by distance
+            # # color residues by distance
             # graphics_instance.color_by_distance(ALIGNMENT_FILE_NAME)
             # print(f"Finished coloring of prediction with color_by_distance.")
             # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
@@ -339,9 +331,7 @@ class StructureAnalysis:
             # save pymol session
             msg = "Finished taking images of interesting regions. | Save PyMOL session"
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            protein_pair.save_session_of_protein_pair(self._session_file_name)
-            progress_bar_obj.setProperty("value", 95)
+            tmp_protein_pair.save_session_of_protein_pair(self._session_file_name)
 
             msg = "Finished saving PyMOL session. | Protein structure analysis has successfully finished."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            progress_bar_obj.setProperty("value", 100)

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>833</height>
+    <height>921</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -182,8 +182,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>142</width>
-                  <height>741</height>
+                  <width>163</width>
+                  <height>827</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -422,7 +422,7 @@
                    <item>
                     <widget class="QPushButton" name="btn_single_analysis_page">
                      <property name="focusPolicy">
-                      <enum>Qt::ClickFocus</enum>
+                      <enum>Qt::StrongFocus</enum>
                      </property>
                      <property name="text">
                       <string>Single Analysis</string>
@@ -430,19 +430,19 @@
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="btn_job_analysis_page">
+                    <widget class="QPushButton" name="btn_batch_analysis_page">
                      <property name="focusPolicy">
-                      <enum>Qt::ClickFocus</enum>
+                      <enum>Qt::StrongFocus</enum>
                      </property>
                      <property name="text">
-                      <string>Job Analysis</string>
+                      <string>Batch Analysis</string>
                      </property>
                     </widget>
                    </item>
                    <item>
                     <widget class="QPushButton" name="btn_results_page">
                      <property name="focusPolicy">
-                      <enum>Qt::ClickFocus</enum>
+                      <enum>Qt::StrongFocus</enum>
                      </property>
                      <property name="text">
                       <string>Results</string>
@@ -635,6 +635,12 @@
           </property>
           <item>
            <widget class="QStackedWidget" name="stackedWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="minimumSize">
              <size>
               <width>353</width>
@@ -1222,7 +1228,7 @@
              </layout>
             </widget>
             <widget class="QWidget" name="single_analysis_page">
-             <layout class="QVBoxLayout" name="verticalLayout_44">
+             <layout class="QVBoxLayout" name="verticalLayout_86">
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_4">
                 <item>
@@ -1389,7 +1395,7 @@
                </spacer>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_55">
+               <layout class="QHBoxLayout" name="horizontalLayout_63">
                 <item>
                  <spacer name="horizontalSpacer_3">
                   <property name="orientation">
@@ -1421,66 +1427,180 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="job_analysis_page">
-             <layout class="QVBoxLayout" name="verticalLayout_8">
-              <property name="leftMargin">
-               <number>10</number>
-              </property>
-              <property name="topMargin">
-               <number>5</number>
-              </property>
-              <property name="rightMargin">
-               <number>10</number>
-              </property>
-              <property name="bottomMargin">
-               <number>5</number>
-              </property>
+            <widget class="QWidget" name="batch_analysis_page">
+             <layout class="QVBoxLayout" name="verticalLayout_87">
               <item>
-               <widget class="QLabel" name="label_21">
-                <property name="text">
-                 <string>Enter a job name:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLineEdit" name="txt_batch_job_name"/>
-              </item>
-              <item>
-               <widget class="QLabel" name="label_22">
-                <property name="text">
-                 <string>Choose a .pdb file or enter a PDB ID:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_20">
+               <layout class="QVBoxLayout" name="verticalLayout_44">
                 <item>
-                 <widget class="QLineEdit" name="txt_batch_load_reference"/>
-                </item>
-                <item>
-                 <widget class="QToolButton" name="btn_batch_load_reference">
+                 <widget class="QLabel" name="lbl_analysis_batch_overview">
                   <property name="text">
-                   <string>...</string>
+                   <string>Protein structure analysis'</string>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <widget class="QListWidget" name="list_analysis_batch_overview">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_20">
+                  <item>
+                   <spacer name="horizontalSpacer_6">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_analysis_batch_remove">
+                    <property name="text">
+                     <string>Remove</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_analysis_batch_add">
+                    <property name="text">
+                     <string>Add</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_15">
                 <item>
-                 <widget class="QPushButton" name="btn_batch_load_model">
-                  <property name="minimumSize">
-                   <size>
-                    <width>180</width>
-                    <height>0</height>
-                   </size>
-                  </property>
+                 <layout class="QVBoxLayout" name="verticalLayout_84">
+                  <item>
+                   <widget class="QLabel" name="lbl_analysis_batch_prot_struct_1">
+                    <property name="text">
+                     <string>Protein structure 1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="box_analysis_batch_prot_struct_1"/>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_analysis_batch_vs">
                   <property name="text">
-                   <string>Open models</string>
+                   <string>vs.</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
                   </property>
                  </widget>
                 </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_85">
+                  <item>
+                   <widget class="QLabel" name="lbl_analysis_batch_prot_struct_2">
+                    <property name="text">
+                     <string>Protein structure 2</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="box_analysis_batch_prot_struct_2"/>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_55">
+                <item>
+                 <spacer name="horizontalSpacer_40">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_analysis_batch_back">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_analysis_batch_next">
+                  <property name="text">
+                   <string>Next</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_8">
+                <item>
+                 <widget class="QLabel" name="lbl_analysis_batch_ref_chains">
+                  <property name="text">
+                   <string>Select chains in protein structure 1 (if necessary)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QListWidget" name="list_analysis_batch_ref_chains">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_56">
                 <item>
                  <spacer name="horizontalSpacer_5">
                   <property name="orientation">
@@ -1494,63 +1614,53 @@
                   </property>
                  </spacer>
                 </item>
+                <item>
+                 <widget class="QPushButton" name="btn_analysis_batch_back_2">
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_analysis_batch_next_2">
+                  <property name="text">
+                   <string>Next</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
-              </item>
-              <item>
-               <widget class="QTextEdit" name="txt_batch_load_model">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QCheckBox" name="cb_batch_chain_info">
-                <property name="text">
-                 <string>Add chain information</string>
-                </property>
-               </widget>
               </item>
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_11">
                 <item>
-                 <widget class="QLabel" name="label_11">
+                 <widget class="QLabel" name="lbl_analysis_batch_model_chains">
                   <property name="text">
-                   <string>Chains in reference (input style: G,H)</string>
+                   <string>Select chains in protein structure 2 (if necessary)</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="txt_batch_chain_ref"/>
-                </item>
-                <item>
-                 <widget class="QLabel" name="label_12">
-                  <property name="text">
-                   <string>Chains in models (input style: A,B)</string>
+                 <widget class="QListWidget" name="list_analysis_batch_model_chains">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>16777215</height>
+                   </size>
                   </property>
                  </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="txt_batch_chain_model"/>
                 </item>
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_16">
+               <layout class="QHBoxLayout" name="horizontalLayout_64">
                 <item>
-                 <widget class="QLabel" name="label_13">
-                  <property name="text">
-                   <string>Batch structure analysis</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_6">
+                 <spacer name="horizontalSpacer_45">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
@@ -1563,20 +1673,78 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_batch_start">
+                 <widget class="QPushButton" name="btn_analysis_batch_back_3">
                   <property name="text">
-                   <string>Start</string>
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_analysis_batch_next_3">
+                  <property name="text">
+                   <string>Next</string>
                   </property>
                  </widget>
                 </item>
                </layout>
               </item>
               <item>
-               <widget class="QProgressBar" name="progress_bar_batch">
-                <property name="value">
-                 <number>24</number>
+               <layout class="QHBoxLayout" name="horizontalLayout_16">
+                <item>
+                 <widget class="QLabel" name="lbl_analysis_batch_images">
+                  <property name="text">
+                   <string>Create ray-traced images (slow)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="cb_analysis_batch_images">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_12">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
                 </property>
-               </widget>
+                <property name="sizeType">
+                 <enum>QSizePolicy::MinimumExpanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_65">
+                <item>
+                 <spacer name="horizontalSpacer_44">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_analysis_batch_start">
+                  <property name="text">
+                   <string>Start</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </widget>
@@ -1585,21 +1753,21 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_34">
                 <item>
-                 <widget class="QLabel" name="label_20">
+                 <widget class="QLabel" name="lbl_results_analysis_options">
                   <property name="text">
                    <string>Analysis of</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QComboBox" name="comboBox_3"/>
+                 <widget class="QComboBox" name="cb_results_analysis_options"/>
                 </item>
                </layout>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_33">
                 <item>
-                 <widget class="QLabel" name="label">
+                 <widget class="QLabel" name="lbl_results_distance_plot">
                   <property name="text">
                    <string>Distance Plot</string>
                   </property>
@@ -1629,7 +1797,7 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_10">
                 <item>
-                 <widget class="QLabel" name="label_2">
+                 <widget class="QLabel" name="lbl_results_distance_histogram">
                   <property name="text">
                    <string>Distance Histogram</string>
                   </property>
@@ -1659,7 +1827,7 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_11">
                 <item>
-                 <widget class="QLabel" name="label_5">
+                 <widget class="QLabel" name="lbl_results_distance_table">
                   <property name="text">
                    <string>Distance Table</string>
                   </property>
@@ -1689,7 +1857,7 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_12">
                 <item>
-                 <widget class="QLabel" name="label_6">
+                 <widget class="QLabel" name="lbl_results_structure_alignment">
                   <property name="text">
                    <string>Structure Alignment</string>
                   </property>
@@ -1781,6 +1949,22 @@
                  </layout>
                 </item>
                </layout>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_11">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeType">
+                 <enum>QSizePolicy::MinimumExpanding</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
             </widget>
@@ -4114,7 +4298,7 @@
      <x>0</x>
      <y>0</y>
      <width>550</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">

@@ -57,6 +57,7 @@ class ProteinPair:
         self.ref_obj: protein.Protein = reference_obj
         self.model_obj: protein.Protein = model_obj
         self.results_dir: str = results_dir
+        self.name = f"{reference_obj.molecule_object}_{model_obj.molecule_object}"
 
         # argument test
         if not os.path.exists(f"{results_dir}"):
@@ -74,16 +75,22 @@ class ProteinPair:
         .. _load:
             https://pymolwiki.org/index.php/Load
         """
-        try:
-            # loading the reference in the active PyMol session
-            cmd.load(f"{self.ref_obj.filepath}/"
-                     f"{self.ref_obj.molecule_object}.pdb")
-            # loading the model in the active PyMol session
-            cmd.load(f"{self.model_obj.filepath}/"
-                     f"{self.model_obj.molecule_object}.pdb")
-
-        except pymol.CmdException:
-            print(f"PyMOL internal error.")
+        # check if the protein is a duplicate
+        if self.ref_obj.molecule_object.find("_1"):
+            tmp_ref_molecule_object = self.ref_obj.molecule_object.replace("_1", "")
+        else:
+            tmp_ref_molecule_object = self.ref_obj.molecule_object
+        if self.model_obj.molecule_object.find("_2"):
+            tmp_model_molecule_object = self.model_obj.molecule_object.replace("_2", "")
+        else:
+            tmp_model_molecule_object = self.model_obj.molecule_object
+        # loading the reference in the active PyMol session
+        cmd.load(f"{self.ref_obj.filepath}/"
+                 f"{tmp_ref_molecule_object}.pdb", object=self.ref_obj.molecule_object)
+        # loading the model in the active PyMol session
+        cmd.load(f"{self.model_obj.filepath}/"
+                 f"{tmp_model_molecule_object}.pdb", object=self.model_obj.molecule_object)
+        print(cmd.get_object_list())
 
     def color_protein_pair(self, color_ref="green", color_model="blue") -> None:
         """This function colors both the reference and the model Protein.
@@ -109,16 +116,16 @@ class ProteinPair:
         # argument test
         # checks if either the reference or the model is an actual object
         # in the memory
-        if cmd.get_model(self.ref_obj.molecule_object) is None \
-                or cmd.get_model(self.model_obj.molecule_object) is None:
-            raise pymol.CmdException(f"Either the reference or the model is "
-                                     f"not in the pymol session as object.")
-        # checks if both the reference and the model are actual objects
-        # in the memory
-        if cmd.get_model(self.ref_obj.molecule_object) is None \
-                and cmd.get_model(self.model_obj.molecule_object) is None:
-            raise pymol.CmdException(f"Both, the reference and the model are "
-                                     f"not in the pymol session as objects.")
+        # if cmd.get_model(self.ref_obj.molecule_object) is None \
+        #         or cmd.get_model(self.model_obj.molecule_object) is None:
+        #     raise pymol.CmdException(f"Either the reference or the model is "
+        #                              f"not in the pymol session as object.")
+        # # checks if both the reference and the model are actual objects
+        # # in the memory
+        # if cmd.get_model(self.ref_obj.molecule_object) is None \
+        #         and cmd.get_model(self.model_obj.molecule_object) is None:
+        #     raise pymol.CmdException(f"Both, the reference and the model are "
+        #                              f"not in the pymol session as objects.")
         # actual color cmd command
         cmd.color(color_ref, self.ref_obj.molecule_object)
         cmd.color(color_model, self.model_obj.molecule_object)

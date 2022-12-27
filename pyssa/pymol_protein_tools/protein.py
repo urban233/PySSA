@@ -80,18 +80,22 @@ class Protein:
         self.chains: list[str] = []
 
         # argument test
+        if molecule_object.find(".pdb"):
+            self.molecule_object = molecule_object.replace(".pdb", "")
+
         if filepath is not None:
-            if not os.path.exists(f"{filepath}"):
+            if not os.path.exists(f"{self.filepath}"):
                 raise NotADirectoryError(f"The path {filepath} was not "
                                          f"found.")
         if export_data_dir is not None:
-            if not os.path.exists(f"{export_data_dir}"):
+            if not os.path.exists(f"{self.export_data_dir}"):
                 raise NotADirectoryError(f"The path {export_data_dir} was not "
                                          f"found.")
         if filepath is not None:
-            if not os.path.exists(f"{filepath}/{molecule_object}.pdb"):
-                raise FileNotFoundError(f"The pdb file {molecule_object} was "
-                                        f"not found under {filepath}.")
+            print(f"Path {filepath}/{self.molecule_object}.pdb does not exists")
+            if not os.path.exists(pathlib.Path(f"{filepath}/{self.molecule_object}.pdb")):
+                raise FileNotFoundError(f"The pdb file {self.molecule_object} was "
+                                        f"not found under {self.filepath}.")
 
     def set_selection(self, selection: str) -> None:
         """This function sets a selection for the Protein object.
@@ -197,9 +201,11 @@ class Protein:
         if not os.path.exists(filepath):
             print(f"The filepath: {filepath} does not exists!")
             return
+        if filename.find(".pdb"):
+            filename = filename.replace(".pdb", "")
         protein_dict = self.__dict__
         update = {
-            "full_filepath": str(self.filepath),
+            "filepath": str(self.filepath),
             "export_data_dir": str(self.export_data_dir),
         }
         protein_dict.update(update)
@@ -215,15 +221,25 @@ class Protein:
             a complete protein object deserialized from a json file
         """
         try:
-            protein_obj_file = open(protein_obj_json_file, "w", encoding="utf-8")
+            protein_obj_file = open(protein_obj_json_file, "r", encoding="utf-8")
         except FileNotFoundError:
             print(f"There is no valid json file under: {protein_obj_json_file}")
             return
         protein_dict = json.load(protein_obj_file)
+        if protein_dict.get("export_data_dir") == "None":
+            update = {"export_data_dir": None}
+            protein_dict.update(update)
         tmp_protein = Protein(protein_dict.get("molecule_object"),
-                              protein_dict.get("import_data_dir"),
+                              protein_dict.get("filepath"),
                               protein_dict.get("export_data_dir"))
         tmp_protein.set_sequence(protein_dict.get("sequence"))
         tmp_protein.set_selection(protein_dict.get("selection"))
         tmp_protein.set_chains(protein_dict.get("chains"))
+        return tmp_protein
+
+    def duplicate_protein(self):
+        tmp_protein = Protein(self.molecule_object, self.filepath, self.export_data_dir)
+        tmp_protein.set_sequence(self.sequence)
+        tmp_protein.set_selection(self.selection)
+        tmp_protein.set_chains(self.chains)
         return tmp_protein
