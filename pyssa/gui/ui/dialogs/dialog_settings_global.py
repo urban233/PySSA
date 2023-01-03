@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import pathlib
 import subprocess
 import os
 import logging
@@ -91,7 +92,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.btn_cancel.clicked.connect(self.cancelDialog)
         self.ui.btn_ok.clicked.connect(self.okDialog)
         self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
-        #self.ui.btn_enable_wsl2.clicked.connect(self.install_wsl)
+        # self.ui.btn_enable_wsl2.clicked.connect(self.install_wsl)
         
         self.setWindowTitle("Global Settings")
 
@@ -114,22 +115,18 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def install_local_colabfold(self):
-        # user_name = os.getlogin()
-        # print(subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"]))
-        # print(subprocess.run(
-        #     ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"]))
-        # print(subprocess.run(
-        #     ["wsl", "cd", "/home/$USER/.pyssa", "&&", "wget", "-q", "-P", ".", "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"]))
-        # print(subprocess.run(
-        #     ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"]))
-        # print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"]))
-        # print(subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"]))
-        dialog = dialog_message_local_colabfold.DialogMessageLocalColabfold()
-        dialog.exec_()
+        home_path_wsl = r"\\wsl$\Ubuntu\home"
+        colabfold_username = os.listdir(r"\\wsl$\Ubuntu\home")
+        colabbatch_path = r"\.pyssa\colabfold_batch\bin\colabfold_batch"
+        path_colabfold = home_path_wsl  + "\\" + colabfold_username[0] + colabbatch_path
+        if os.path.exists(path_colabfold):
+            subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
+            self.ui.btn_install_local_prediction.setText("Install")
+        else:
+            dialog = dialog_message_local_colabfold.DialogMessageLocalColabfold()
+            dialog.exec_()
+            self.ui.btn_install_local_prediction.setText("Uninstall")
 
     def install_wsl(self):
-        # print ("It goes on.")
-        # print(subprocess.run("wsl --install"))
-
         dialog = dialog_message_wsl.DialogMessageWsl()
         dialog.exec_()
