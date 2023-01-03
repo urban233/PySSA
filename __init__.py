@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import pathlib
 import sys
 import os
 
@@ -31,7 +31,8 @@ import os
 path_list = [
     f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
     f"{os.path.expanduser('~')}/opt/anaconda3/envs/pyssa/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
-    f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\pyssa\\",
+    #f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\pyssa\\",
+    pathlib.Path(f"{os.path.expanduser('~')}/AppData/Roaming/pymol/startup")
 ]
 styles_path_list = [
     f"{path_list[0]}/styles/styles_alt.css",

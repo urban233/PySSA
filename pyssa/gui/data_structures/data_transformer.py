@@ -1,5 +1,5 @@
 import pathlib
-
+from pyssa.gui.data_structures.data_classes import protein_analysis_info
 
 class DataTransformer:
     
@@ -33,3 +33,37 @@ class DataTransformer:
             f"{project.get_results_path()}/{prot_1.molecule_object}_vs_{prot_2.molecule_object}")
         
         return prot_1, prot_2, export_dir
+
+    def transform_data_for_analysis(self, project, protein_list: list[tuple[protein_analysis_info.ProteinAnalysisInfo, protein_analysis_info.ProteinAnalysisInfo]]):
+        tmp_data = []
+        for protein_pair_tuple in protein_list:
+            prot_1_name = protein_pair_tuple[0].protein_name.replace(".pdb", "")
+            prot_2_name = protein_pair_tuple[1].protein_name.replace(".pdb", "")
+
+            prot_1 = project.search_protein(prot_1_name)
+            if prot_1_name == prot_2_name:
+                prot_2 = prot_1.duplicate_protein()
+                prot_1.molecule_object = f"{prot_1.molecule_object}_1"
+                prot_2.molecule_object = f"{prot_2.molecule_object}_2"
+            else:
+                prot_2 = project.search_protein(prot_2_name)
+
+            prot_1_chains_selected = protein_pair_tuple[0].protein_chains
+            prot_1_chains = []
+            for tmp_chain in prot_1_chains_selected:
+                prot_1_chains.append(tmp_chain)
+            prot_1.set_chains(prot_1_chains)
+
+            prot_2_chains_selected = protein_pair_tuple[1].protein_chains
+            prot_2_chains = []
+            for tmp_chain in prot_2_chains_selected:
+                prot_2_chains.append(tmp_chain)
+            prot_2.set_chains(prot_2_chains)
+
+            tmp_analysis_name = protein_pair_tuple[0].analysis_name.replace(",", "_")
+            tmp_analysis_name = tmp_analysis_name.replace(";", "_")
+            export_dir = pathlib.Path(
+                f"{project.get_results_path()}/{tmp_analysis_name}")
+            transformed_data: tuple = prot_1, prot_2, export_dir
+            tmp_data.append(transformed_data)
+        return tmp_data

@@ -24,9 +24,7 @@
 import logging
 import os
 import shutil
-import subprocess
 import sys
-import time
 import webbrowser
 import pathlib
 import subprocess
@@ -34,7 +32,6 @@ import PyQt5.QtCore
 import numpy as np
 import pymol
 import pyqtgraph as pg
-from PyQt5 import QtGui
 from PyQt5.QtGui import QIcon
 
 from pymol import Qt
@@ -44,12 +41,11 @@ from urllib.request import urlopen
 from urllib.error import URLError
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5 import QtWebEngineWidgets
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.data_structures import project
 from pyssa.gui.data_structures import structure_analysis
-from pyssa.gui.data_structures.data_classes import protein_info
+from pyssa.gui.data_structures.data_classes import protein_analysis_info
 from pyssa.gui.data_structures import project_watcher
 from pyssa.gui.data_structures import data_transformer
 from pyssa.gui.ui.dialogs import dialog_distance_plot
@@ -68,12 +64,11 @@ from pyssa.gui.utilities import styles
 from pyssa.gui.utilities import gui_page_management
 from pyssa.gui.utilities.data_classes import stage
 from pyssa.pymol_protein_tools import protein
-from pymolproteintools import core
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
 # global variables
-global_var_project_dict = {0: project.Project("", "")}
+global_var_project_dict = {0: project.Project("", pathlib.Path(""))}
 global_var_list_widget_row = 0
 
 
@@ -127,7 +122,7 @@ class MainWindow(QMainWindow):
         self._project_watcher = project_watcher.ProjectWatcher(self.app_project, no_of_pdb_files=None)
         self.scratch_path = constants.SCRATCH_DIR
         self.workspace_path = global_variables.global_var_settings_obj.get_workspace_path()
-
+        self.web_gui = None
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar = Qt.QtWidgets.QStatusBar()
 
@@ -221,6 +216,7 @@ class MainWindow(QMainWindow):
         # self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_batch_page()
+        self.ui.action_toggle_notebook_visibility.setVisible(False)
 
         # connections
         self._connect_all_gui_elements()
@@ -362,7 +358,7 @@ class MainWindow(QMainWindow):
                 }
             ),
         ]
-        self.cloud_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
+        self.local_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
 
     def _create_local_pred_multimer_management(self):
         # gui element management
@@ -804,6 +800,7 @@ class MainWindow(QMainWindow):
         self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
         self.ui.action_add_multiple_models.triggered.connect(self.open_add_models)
         self.ui.action_add_model.triggered.connect(self.open_add_model)
+        self.ui.action_toggle_notebook_visibility.triggered.connect(self.toggle_colab_notebook_interface)
         self.ui.action_help_docs.triggered.connect(self.open_documentation)
         self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation_pdf)
         self.ui.action_help_about.triggered.connect(self.open_about)
@@ -859,7 +856,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
         self.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
         # sequence vs .pdb page
-        self.ui.btn_s_v_p_start.clicked.connect(self.predict)
+        #self.ui.btn_s_v_p_start.clicked.connect(self.predict)
         # monomer cloud prediction page
         self.ui.txt_prediction_only_protein_name.textChanged.connect(self.validate_cloud_mono)
         self.ui.btn_prediction_only_next.clicked.connect(self.show_cloud_pred_mono_stage_1)
@@ -926,7 +923,7 @@ class MainWindow(QMainWindow):
         self.ui.box_analysis_batch_prot_struct_2.currentIndexChanged.connect(self.check_if_prot_structs_are_filled_batch)
         self.ui.list_analysis_batch_ref_chains.itemSelectionChanged.connect(self.count_batch_selected_chains_for_prot_struct_1)
         self.ui.list_analysis_batch_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected_batch)
-        self.ui.list_analysis_batch_overview.itemSelectionChanged.connect(self.check_if_at_least_one_analysis)
+        self.ui.btn_analysis_batch_start.clicked.connect(self.start_process_batch)
         # results page
         self.ui.cb_results_analysis_options.currentIndexChanged.connect(self.load_results)
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
@@ -1113,7 +1110,9 @@ class MainWindow(QMainWindow):
             self.ui.lbl_use_new_project,
         ]
         gui_utils.hide_gui_elements(gui_elements)
+        self.ui.txt_use_project_name.clear()
         self.ui.lbl_use_status_project_name.setText("")
+        self.ui.txt_use_search.clear()
         self.ui.lbl_use_status_search.setText("")
         self.ui.btn_use_next.setEnabled(False)
 
@@ -1873,6 +1872,9 @@ class MainWindow(QMainWindow):
         else:
             print("No model was added.")
 
+    def toggle_colab_notebook_interface(self):
+        self.web_gui.toggle_notebook_view()
+
     # ----- Functions for New project page
     def show_add_reference(self):
         """This function shows the reference input section
@@ -1992,8 +1994,6 @@ class MainWindow(QMainWindow):
         # save project folder in current workspace
         self.app_project = project.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
         self.app_project.create_project_tree()
-        self.app_project.serialize_project(self.app_project.project_path, "project")
-
         # save reference .pdb
         if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() is True:
             if len(self.ui.txt_new_choose_reference.text()) == 4:
@@ -2287,10 +2287,8 @@ class MainWindow(QMainWindow):
         new_project = project.Project(self.ui.txt_use_project_name.text(), pathlib.Path(self.workspace_path))
         new_project.serialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA", "testproject")
 
-        opened_project = project.Project("", "").deserialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA\\testproject.json")
+        opened_project = project.Project("", pathlib.Path("")).deserialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA\\testproject.json")
         opened_project.create_folder_paths()
-
-
         # # old saving process
         # session_file = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/")
         # try:
@@ -2313,8 +2311,9 @@ class MainWindow(QMainWindow):
             tools.scan_project_for_valid_proteins(
                 f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
                 self.ui.list_edit_project_proteins)
+            self._project_watcher.show_valid_options(self.ui)
         else:
-            print("Nothing happend.")
+            print("Nothing happened.")
 
     # ----- Functions for View project page
     def view_sequence(self):
@@ -2426,10 +2425,16 @@ class MainWindow(QMainWindow):
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
+        self._init_use_page()
         self.display_view_page()
 
     # ----- Functions for Close project
     def close_project(self):
+        if self.web_gui is not None:
+            if self.web_gui.isVisible():
+                # TODO: create a better message box
+                gui_utils.critical_message("A prediction is currently running! If you close your project, the progress will be lost!",
+                                           "Closing a project can result in direct data loss!!")
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
         self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText("")
@@ -2447,6 +2452,7 @@ class MainWindow(QMainWindow):
     # ----- Functions for Monomer Cloud Prediction
     def show_cloud_pred_mono_stage_0(self):
         self.cloud_pred_monomer_management.show_stage_x(0)
+        self.ui.btn_cloud_pred_mono_advanced_config.hide()
 
     def show_cloud_pred_mono_stage_1(self):
         self.cloud_pred_monomer_management.show_stage_x(1)
@@ -2457,139 +2463,101 @@ class MainWindow(QMainWindow):
     def validate_cloud_mono(self):
         self.cloud_pred_monomer_management.create_validation()
 
-
-    def validate_protein_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
-        tools.validate_protein_name(self.ui.txt_prediction_only_protein_name,
-                                    self.ui.lbl_prediction_only_status_protein_name,
-                                    self.ui.btn_prediction_only_next)
-
-    def show_prediction_configuration(self):
+    @staticmethod
+    def show_prediction_configuration():
         config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
         config.exec_()
 
-    def validate_protein_sequence(self):
-        """This function validates the input of the protein sequence in real-time
-
-        """
-        tools.validate_protein_sequence(self.ui.txt_cloud_pred_mono_prot_seq,
-                                        self.ui.lbl_cloud_pred_mono_status_prot_seq,
-                                        self.ui.btn_cloud_pred_mono_next_2)
-
-    def show_cloud_prediction_mono_protein_sequence(self):
-        gui_elements_hide = [
-            self.ui.btn_prediction_only_next,
-        ]
-        gui_elements_show = [
-            self.ui.lbl_cloud_pred_mono_prot_seq,
-            self.ui.lbl_cloud_pred_mono_status_prot_seq,
-            self.ui.txt_cloud_pred_mono_prot_seq,
-            self.ui.btn_cloud_pred_mono_back,
-            self.ui.btn_cloud_pred_mono_next_2,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.disable_text_box(self.ui.txt_prediction_only_protein_name,
-                                   self.ui.lbl_prediction_only_protein_name)
-
-    def hide_cloud_prediction_mono_protein_sequence(self):
-        gui_elements_hide = [
-            self.ui.lbl_cloud_pred_mono_prot_seq,
-            self.ui.lbl_cloud_pred_mono_status_prot_seq,
-            self.ui.txt_cloud_pred_mono_prot_seq,
-            self.ui.btn_cloud_pred_mono_back,
-            self.ui.btn_cloud_pred_mono_next_2,
-        ]
-        gui_elements_show = [
-            self.ui.btn_prediction_only_next,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.enable_text_box(self.ui.txt_prediction_only_protein_name,
-                                  self.ui.lbl_prediction_only_protein_name)
-
-    def show_prediction_only_choose_notebook(self):
-        gui_elements_show = [
-            self.ui.lbl_prediction_only_choose_notebook,
-            self.ui.list_new_seq_notebooks,
-            self.ui.btn_prediction_only_back,
-            self.ui.btn_prediction_only_start,
-            self.ui.list_new_seq_notebooks,
-            self.ui.lbl_cloud_pred_mono_advanced_config,
-            self.ui.btn_cloud_pred_mono_advanced_config,
-        ]
-        gui_elements_hide = [
-            self.ui.btn_cloud_pred_mono_back,
-            self.ui.btn_cloud_pred_mono_next_2,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.disable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
-                                   self.ui.lbl_cloud_pred_mono_prot_seq)
-        self.ui.btn_prediction_only_next.setEnabled(True)
-        styles.color_button_ready(self.ui.btn_prediction_only_next)
-
-    def hide_prediction_only_choose_notebook(self):
-        gui_elements_hide = [
-            self.ui.lbl_prediction_only_choose_notebook,
-            self.ui.list_new_seq_notebooks,
-            self.ui.btn_prediction_only_back,
-            self.ui.btn_prediction_only_start,
-            self.ui.lbl_cloud_pred_mono_advanced_config,
-            self.ui.btn_cloud_pred_mono_advanced_config,
-        ]
-        gui_elements_show = [
-            self.ui.btn_cloud_pred_mono_back,
-            self.ui.btn_cloud_pred_mono_next_2,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.enable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
-                                  self.ui.lbl_cloud_pred_mono_prot_seq)
-        self.ui.btn_prediction_only_next.setEnabled(True)
-        styles.color_button_ready(self.ui.btn_prediction_only_next)
-
-    def check_prediction_only_if_txt_notebook_url_is_filled(self):
-        """This function checks if a reference pdb file is selected.
-
-        """
-        self.__check_start_possibility_prediction_only()
-
-    def predict_only(self):
-        """This function is used to predict with any google colab notebook.
-
-        """
-        # web_interface inject
-        web_gui = web_interface.WebInterface()
-        web_gui.set_protein_sequence(self.ui.txt_cloud_pred_mono_prot_seq.text())
-        web_gui.set_job_name(self.ui.lbl_current_project_name.text())
-        web_gui.show_interface()
-        if web_gui.get_exit_code() != 0:
-            print("An error ocurred!")
-            return
-        # colabfold: AlphaFold2_mmseqs2 notebook specific process
-        archive = f"{self.ui.lbl_current_project_name.text()}.result.zip"
-        source_path = f"{os.environ['HOME']}/Downloads"
-        filename = f"{source_path}/{archive}"
-        # move prediction.zip in scratch folder
-        shutil.copy(filename, f"{self.scratch_path}/{archive}")
-        shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
-        # TODO: find correct filenames
-        shutil.copy(f"{self.scratch_path}/{self.ui.lbl_current_project_name.text()}.result/selected_prediction.pdb",
-                    f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-        shutil.rmtree(f"{self.scratch_path}/prediction")
-        os.remove(f"{self.scratch_path}/{archive}")
-        try:
-            cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-        except pymol.CmdException:
-            print("Loading the model failed.")
-            return
-        self.ui.lbl_prediction.hide()
-        self.ui.btn_prediction_only_page.hide()
-        self.ui.btn_save_project.show()
-        self.ui.lbl_handle_pymol_session.show()
-        self.ui.btn_image_page.show()
-        self.display_image_page()
-
-    # Prediction + Analysis
+    # def validate_protein_name(self):
+    #     """This function validates the input of the project name in real-time
+    #
+    #     """
+    #     tools.validate_protein_name(self.ui.txt_prediction_only_protein_name,
+    #                                 self.ui.lbl_prediction_only_status_protein_name,
+    #                                 self.ui.btn_prediction_only_next)
+    #
+    # def validate_protein_sequence(self):
+    #     """This function validates the input of the protein sequence in real-time
+    #
+    #     """
+    #     tools.validate_protein_sequence(self.ui.txt_cloud_pred_mono_prot_seq,
+    #                                     self.ui.lbl_cloud_pred_mono_status_prot_seq,
+    #                                     self.ui.btn_cloud_pred_mono_next_2)
+    #
+    # def show_cloud_prediction_mono_protein_sequence(self):
+    #     gui_elements_hide = [
+    #         self.ui.btn_prediction_only_next,
+    #     ]
+    #     gui_elements_show = [
+    #         self.ui.lbl_cloud_pred_mono_prot_seq,
+    #         self.ui.lbl_cloud_pred_mono_status_prot_seq,
+    #         self.ui.txt_cloud_pred_mono_prot_seq,
+    #         self.ui.btn_cloud_pred_mono_back,
+    #         self.ui.btn_cloud_pred_mono_next_2,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.disable_text_box(self.ui.txt_prediction_only_protein_name,
+    #                                self.ui.lbl_prediction_only_protein_name)
+    #
+    # def hide_cloud_prediction_mono_protein_sequence(self):
+    #     gui_elements_hide = [
+    #         self.ui.lbl_cloud_pred_mono_prot_seq,
+    #         self.ui.lbl_cloud_pred_mono_status_prot_seq,
+    #         self.ui.txt_cloud_pred_mono_prot_seq,
+    #         self.ui.btn_cloud_pred_mono_back,
+    #         self.ui.btn_cloud_pred_mono_next_2,
+    #     ]
+    #     gui_elements_show = [
+    #         self.ui.btn_prediction_only_next,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.enable_text_box(self.ui.txt_prediction_only_protein_name,
+    #                               self.ui.lbl_prediction_only_protein_name)
+    #
+    # def show_prediction_only_choose_notebook(self):
+    #     gui_elements_show = [
+    #         self.ui.lbl_prediction_only_choose_notebook,
+    #         self.ui.list_new_seq_notebooks,
+    #         self.ui.btn_prediction_only_back,
+    #         self.ui.btn_prediction_only_start,
+    #         self.ui.list_new_seq_notebooks,
+    #         self.ui.lbl_cloud_pred_mono_advanced_config,
+    #         self.ui.btn_cloud_pred_mono_advanced_config,
+    #     ]
+    #     gui_elements_hide = [
+    #         self.ui.btn_cloud_pred_mono_back,
+    #         self.ui.btn_cloud_pred_mono_next_2,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.disable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
+    #                                self.ui.lbl_cloud_pred_mono_prot_seq)
+    #     self.ui.btn_prediction_only_next.setEnabled(True)
+    #     styles.color_button_ready(self.ui.btn_prediction_only_next)
+    #
+    # def hide_prediction_only_choose_notebook(self):
+    #     gui_elements_hide = [
+    #         self.ui.lbl_prediction_only_choose_notebook,
+    #         self.ui.list_new_seq_notebooks,
+    #         self.ui.btn_prediction_only_back,
+    #         self.ui.btn_prediction_only_start,
+    #         self.ui.lbl_cloud_pred_mono_advanced_config,
+    #         self.ui.btn_cloud_pred_mono_advanced_config,
+    #     ]
+    #     gui_elements_show = [
+    #         self.ui.btn_cloud_pred_mono_back,
+    #         self.ui.btn_cloud_pred_mono_next_2,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.enable_text_box(self.ui.txt_cloud_pred_mono_prot_seq,
+    #                               self.ui.lbl_cloud_pred_mono_prot_seq)
+    #     self.ui.btn_prediction_only_next.setEnabled(True)
+    #     styles.color_button_ready(self.ui.btn_prediction_only_next)
+    #
+    # def check_prediction_only_if_txt_notebook_url_is_filled(self):
+    #     """This function checks if a reference pdb file is selected.
+    #
+    #     """
+    #     self.__check_start_possibility_prediction_only()
     # def validate_project_name(self):
     #     """This function validates the input of the project name in real-time
     #
@@ -2641,6 +2609,43 @@ class MainWindow(QMainWindow):
     #         #     styles.color_button_ready(self.ui.btn_prediction_next_1)
     #         print("Check successful.")
 
+    def predict_only(self):
+        """This function is used to predict with any google colab notebook.
+
+        """
+        self.ui.action_toggle_notebook_visibility.setVisible(True)
+        # web_interface inject
+        self.web_gui = web_interface.WebInterface()
+        self.web_gui.set_protein_sequence(self.ui.txt_cloud_pred_mono_prot_seq.text())
+        self.web_gui.set_job_name(self.ui.lbl_current_project_name.text())
+        self.web_gui.show_interface()
+        if self.web_gui.exit_code != 0:
+            print("An error occurred!")
+            return
+        self.ui.action_toggle_notebook_visibility.setVisible(False)
+        # colabfold: AlphaFold2_mmseqs2 notebook specific process
+        archive = f"{constants.NOTEBOOK_RESULTS_ZIP_NAME}.zip"
+        shutil.unpack_archive(f"{self.scratch_path}/{archive}", f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}", "zip")
+        prediction_results: list[str] = os.listdir(pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}"))
+        for filename in prediction_results:
+            check = filename.find("_relaxed_rank_1")
+            if check != -1:
+                src = pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}/{filename}")
+                dest = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
+                shutil.copy(src, dest)
+                os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}", f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
+                break
+        shutil.rmtree(f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}")
+        os.remove(f"{self.scratch_path}/{archive}")
+        try:
+            cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
+        except pymol.CmdException:
+            print("Loading the model failed.")
+            return
+        self._project_watcher.show_valid_options(self.ui)
+        self.display_view_page()
+
+    # Prediction + Analysis
     def show_prediction_load_reference(self):
         """Shows the text field and tool button for the load reference functionality
 
@@ -2849,126 +2854,125 @@ class MainWindow(QMainWindow):
         self.ui.btn_prediction_only_start.setEnabled(True)
         styles.color_button_ready(self.ui.btn_prediction_only_start)
 
-    def predict(self):
-        """This function opens a webbrowser with a colab notebook, to run the
-        prediction. In addition, it runs the entire analysis after the
-        prediction.
-
-        """
-        ref_chain_items = self.ui.list_widget_ref_chains.selectedItems()
-        ref_chains = []
-        for chain in ref_chain_items:
-            ref_chains.append(chain.text())
-        # global global_var_abort_prediction
-        # global_var_abort_prediction = False
-        # check if a prediction is already finished
-        if os.path.isfile(f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
-            self.status_bar.showMessage(
-                f"Warning! | Current Workspace: {self.workspace_path}")
-            check = gui_utils.warning_message_prediction_exists(
-                f"The prediction is here: {global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip ",
-                f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip")
-            if not check:
-                return
-        # creates project without xml creation and model adding these come after the prediction
-        project_obj = project.Project(self.ui.txt_prediction_project_name.text(),
-                                                            self.workspace_path)
-        project_obj.create_project_tree()
-        project_obj.set_pdb_file(self.ui.txt_prediction_load_reference.text())
-        project_obj.set_pdb_id(self.ui.txt_prediction_load_reference.text())
-        # TODO: check if the new list type conflicts with the analysis
-        project_obj.set_ref_chains(ref_chains)
-        project_obj.set_model_chains((self.ui.txt_prediction_chain_model.text()))
-        # gets reference filename and filepath
-        if len(self.ui.txt_prediction_load_reference.text()) == 4:
-            tmp_protein = core.Protein(self.ui.txt_prediction_load_reference.text(),
-                                       export_data_dir=project_obj.get_pdb_path())
-            tmp_protein.clean_pdb_file()
-            REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
-            REFERENCE_DIR = project_obj.get_pdb_path()
-        else:
-            ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
-            REFERENCE_OBJ_NAME = ref_file_info.baseName()
-            REFERENCE_DIR = ref_file_info.canonicalPath()
-        # starting the default web browser to display the colab notebook
-        self.status_bar.showMessage("Opening Google colab notebook ...")
-        if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
-            webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
-        else:
-            webbrowser.open_new(constants.NOTEBOOK_URL)
-
-        # # waiting for the colab notebook to finish
-        # archive = "prediction.zip"
-        # source_path = global_variables.global_var_settings_obj.get_prediction_path()
-        # FILE_NAME = f"{source_path}/{archive}"
-        # # flag = False
-        # # while flag == False:
-        # #     print("AlphaFold is still running ...")
-        # #     time.sleep(5)
-        # #     # time.sleep(120)
-        # # TO-DO: loop doesn't work correctly
-        # while os.path.isfile(FILE_NAME) is False:
-        #     print("AlphaFold is still running ...")
-        #     # time.sleep(5)
-        #     time.sleep(20)
-        #     # time.sleep(120)
-        #     # global global_var_abort_prediction
-        #     # if global_var_abort_prediction:
-        #     #     return
-
-        # alphafold specific process
-        archive = "prediction.zip"
-        source_path = global_variables.global_var_settings_obj.get_prediction_path()
-        filename = f"{source_path}/{archive}"
-        while os.path.isfile(filename) is False:
-            print("AlphaFold is still running ...")
-            time.sleep(20)
-        # move prediction.zip in scratch folder
-        shutil.copy(filename, f"{self.scratch_path}/{archive}")
-        shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
-        shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
-                    f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-        shutil.rmtree(f"{self.scratch_path}/prediction")
-        os.remove(f"{self.scratch_path}/{archive}")
-
-        # ----------------------------------------------------------------- #
-        # start of the analysis algorithm
-        self.status_bar.showMessage("Protein structure analysis started ...")
-
-        # # extracts and moves the prediction.pdb to the workspace/pdb folder
-        # tools.extract_and_move_model_pdb(
-        #     str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
-
-        # gets model filename and filepath
-        PREDICTION_NAME = tools.get_prediction_file_name(project_obj.get_pdb_path())
-        full_model_file_path = f"{project_obj.get_pdb_path()}/{PREDICTION_NAME[0]}"
-        model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
-        MODEL_OBJ_NAME = model_file_info.baseName()
-        MODEL_DIR = model_file_info.canonicalPath()
-
-        # set model in project object
-        project_obj.set_pdb_model(full_model_file_path)
-        project_obj.create_xml_file()
-
-        # create the Protein object for the reference
-        reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-
-        # create model Protein object
-        model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-        # sets the filepath of the model in the project xml file
-        export_dir = project_obj.get_results_path()
-        structure_analysis_obj = structure_analysis.StructureAnalysis(
-            reference_protein, model_proteins,
-            project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
-            export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
-            cutoff=global_variables.global_var_settings_obj.get_cutoff(),
-        )
-        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-                                                         structure_analysis_obj.reference_protein)
-        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-                                                         structure_analysis_obj.model_proteins)
-        structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
-                                                self.status_bar, "2")
+    # def predict(self):
+    #     """This function opens a webbrowser with a colab notebook, to run the
+    #     prediction. In addition, it runs the entire analysis after the
+    #     prediction.
+    #
+    #     """
+    #     ref_chain_items = self.ui.list_widget_ref_chains.selectedItems()
+    #     ref_chains = []
+    #     for chain in ref_chain_items:
+    #         ref_chains.append(chain.text())
+    #     # global global_var_abort_prediction
+    #     # global_var_abort_prediction = False
+    #     # check if a prediction is already finished
+    #     if os.path.isfile(f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
+    #         self.status_bar.showMessage(
+    #             f"Warning! | Current Workspace: {self.workspace_path}")
+    #         check = gui_utils.warning_message_prediction_exists(
+    #             f"The prediction is here: {global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip ",
+    #             f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip")
+    #         if not check:
+    #             return
+    #     # creates project without xml creation and model adding these come after the prediction
+    #     project_obj = project.Project(self.ui.txt_prediction_project_name.text(),
+    #                                                         self.workspace_path)
+    #     project_obj.create_project_tree()
+    #     project_obj.set_pdb_file(self.ui.txt_prediction_load_reference.text())
+    #     project_obj.set_pdb_id(self.ui.txt_prediction_load_reference.text())
+    #     project_obj.set_ref_chains(ref_chains)
+    #     project_obj.set_model_chains((self.ui.txt_prediction_chain_model.text()))
+    #     # gets reference filename and filepath
+    #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
+    #         tmp_protein = core.Protein(self.ui.txt_prediction_load_reference.text(),
+    #                                    export_data_dir=project_obj.get_pdb_path())
+    #         tmp_protein.clean_pdb_file()
+    #         REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
+    #         REFERENCE_DIR = project_obj.get_pdb_path()
+    #     else:
+    #         ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
+    #         REFERENCE_OBJ_NAME = ref_file_info.baseName()
+    #         REFERENCE_DIR = ref_file_info.canonicalPath()
+    #     # starting the default web browser to display the colab notebook
+    #     self.status_bar.showMessage("Opening Google colab notebook ...")
+    #     if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
+    #         webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
+    #     else:
+    #         webbrowser.open_new(constants.NOTEBOOK_URL)
+    #
+    #     # # waiting for the colab notebook to finish
+    #     # archive = "prediction.zip"
+    #     # source_path = global_variables.global_var_settings_obj.get_prediction_path()
+    #     # FILE_NAME = f"{source_path}/{archive}"
+    #     # # flag = False
+    #     # # while flag == False:
+    #     # #     print("AlphaFold is still running ...")
+    #     # #     time.sleep(5)
+    #     # #     # time.sleep(120)
+    #     # # TO-DO: loop doesn't work correctly
+    #     # while os.path.isfile(FILE_NAME) is False:
+    #     #     print("AlphaFold is still running ...")
+    #     #     # time.sleep(5)
+    #     #     time.sleep(20)
+    #     #     # time.sleep(120)
+    #     #     # global global_var_abort_prediction
+    #     #     # if global_var_abort_prediction:
+    #     #     #     return
+    #
+    #     # alphafold specific process
+    #     archive = "prediction.zip"
+    #     source_path = global_variables.global_var_settings_obj.get_prediction_path()
+    #     filename = f"{source_path}/{archive}"
+    #     while os.path.isfile(filename) is False:
+    #         print("AlphaFold is still running ...")
+    #         time.sleep(20)
+    #     # move prediction.zip in scratch folder
+    #     shutil.copy(filename, f"{self.scratch_path}/{archive}")
+    #     shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
+    #     shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
+    #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+    #     shutil.rmtree(f"{self.scratch_path}/prediction")
+    #     os.remove(f"{self.scratch_path}/{archive}")
+    #
+    #     # ----------------------------------------------------------------- #
+    #     # start of the analysis algorithm
+    #     self.status_bar.showMessage("Protein structure analysis started ...")
+    #
+    #     # # extracts and moves the prediction.pdb to the workspace/pdb folder
+    #     # tools.extract_and_move_model_pdb(
+    #     #     str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
+    #
+    #     # gets model filename and filepath
+    #     PREDICTION_NAME = tools.get_prediction_file_name(project_obj.get_pdb_path())
+    #     full_model_file_path = f"{project_obj.get_pdb_path()}/{PREDICTION_NAME[0]}"
+    #     model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
+    #     MODEL_OBJ_NAME = model_file_info.baseName()
+    #     MODEL_DIR = model_file_info.canonicalPath()
+    #
+    #     # set model in project object
+    #     project_obj.set_pdb_model(full_model_file_path)
+    #     project_obj.create_xml_file()
+    #
+    #     # create the Protein object for the reference
+    #     reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+    #
+    #     # create model Protein object
+    #     model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
+    #     # sets the filepath of the model in the project xml file
+    #     export_dir = project_obj.get_results_path()
+    #     structure_analysis_obj = structure_analysis.StructureAnalysis(
+    #         reference_protein, model_proteins,
+    #         project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
+    #         export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
+    #         cutoff=global_variables.global_var_settings_obj.get_cutoff(),
+    #     )
+    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+    #                                                      structure_analysis_obj.reference_protein)
+    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+    #                                                      structure_analysis_obj.model_proteins)
+    #     structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
+    #                                             self.status_bar, "2")
 
     # ----- Functions for Multimer Cloud Prediction
     def show_cloud_pred_multi_stage_0(self):
@@ -3027,8 +3031,8 @@ class MainWindow(QMainWindow):
         """This function is used to predict with any google colab notebook.
 
         """
-        # web_interface inject
-        web_gui = web_interface.WebInterface()
+        self.ui.action_toggle_notebook_visibility.setVisible(True)
+        self.web_gui = web_interface.WebInterface()
         # prepare sequences
         seqs = []
         for row in range(self.ui.table_cloud_pred_multi_prot_overview.rowCount()):
@@ -3036,33 +3040,38 @@ class MainWindow(QMainWindow):
             seqs.append(tmp_seq)
         complete_sequence = ':'.join(seqs)
 
-        web_gui.set_protein_sequence(complete_sequence)
-        web_gui.set_job_name(self.ui.lbl_current_project_name.text())
-        web_gui.show_interface()
-        if web_gui.get_exit_code() != 0:
+        self.web_gui.set_protein_sequence(complete_sequence)
+        self.web_gui.set_job_name(self.ui.lbl_current_project_name.text())
+        self.web_gui.show_interface()
+        if self.web_gui.exit_code != 0:
             print("An error occurred!")
             return
+        self.ui.action_toggle_notebook_visibility.setVisible(False)
         # colabfold: AlphaFold2_mmseqs2 notebook specific process
-        archive = f"{self.ui.lbl_current_project_name.text()}.result.zip"
-        source_path = f"{os.environ['HOME']}/Downloads"
-        filename = f"{source_path}/{archive}"
-        # move prediction.zip in scratch folder
-        shutil.copy(filename, f"{self.scratch_path}/{archive}")
-        shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
-        # TODO: find correct filenames
-        shutil.copy(f"{self.scratch_path}/{self.ui.lbl_current_project_name.text()}.result/selected_prediction.pdb",
-                    f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-        shutil.rmtree(f"{self.scratch_path}/prediction")
+        archive = f"{constants.NOTEBOOK_RESULTS_ZIP_NAME}.zip"
+        shutil.unpack_archive(f"{self.scratch_path}/{archive}",
+                              f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}", "zip")
+        prediction_results: list[str] = os.listdir(
+            pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}"))
+        for filename in prediction_results:
+            check = filename.find("_relaxed_rank_1")
+            if check != -1:
+                src = pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}/{filename}")
+                dest = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
+                shutil.copy(src, dest)
+                os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
+                          f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
+                break
+        shutil.rmtree(f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}")
         os.remove(f"{self.scratch_path}/{archive}")
         try:
-            cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+            cmd.load(
+                f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
         except pymol.CmdException:
             print("Loading the model failed.")
             return
-        self.ui.btn_save_project.show()
-        self.ui.lbl_handle_pymol_session.show()
-        self.ui.btn_image_page.show()
-        self.display_image_page()
+        self._project_watcher.show_valid_options(self.ui)
+        self.display_view_page()
 
     # ----- Functions for Monomer Local Prediction
     def local_pred_mono_validate_protein_name(self):
@@ -3175,7 +3184,6 @@ class MainWindow(QMainWindow):
             shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
 
     # ----- Functions for Multimer Local Prediction
-    # TODO: navigation in batch mode is still broken
     def validate_local_pred_multi(self):
         self.local_pred_multimer_management.create_validation()
 
@@ -3184,7 +3192,10 @@ class MainWindow(QMainWindow):
 
     # --- single prediction
     def show_local_pred_multi_stage_protein_name(self):
-        self.local_pred_multimer_management.show_stage_x(1)
+        if self.ui.table_local_pred_multi_prot_overview.isVisible():
+            self.local_pred_multimer_management.show_stage_x(0)
+        else:
+            self.local_pred_multimer_management.show_stage_x(1)
 
     def show_local_pred_multi_stage_protein_sequence_single(self):
         gui_elements_to_show = [
@@ -3372,13 +3383,13 @@ class MainWindow(QMainWindow):
             prot_1_chains = []
             for chain in self.ui.list_analysis_batch_ref_chains.selectedItems():
                 prot_1_chains.append(chain.text())
-            prot_1_chains = '_'.join([str(elem) for elem in prot_1_chains])
+            prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
             prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text().replace(".pdb", "")
             prot_2_chains = []
             for chain in self.ui.list_analysis_batch_model_chains.selectedItems():
                 prot_2_chains.append(chain.text())
-            prot_2_chains = '_'.join([str(elem) for elem in prot_2_chains])
-            analysis_name = f"{prot_1_name}_{prot_1_chains}_vs_{prot_2_name}_{prot_2_chains}"
+            prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+            analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
             item = QListWidgetItem(analysis_name)
             self.ui.list_analysis_batch_overview.addItem(item)
         if self.ui.list_analysis_batch_overview.count() == 0:
@@ -3457,12 +3468,9 @@ class MainWindow(QMainWindow):
                 [0, 4], [1, 2, 3], show_specific_elements=gui_elements_to_show
             )
             prot_1_name = self.ui.lbl_analysis_batch_prot_struct_1.text().replace(".pdb", "")
-            prot_1_chains = self.ui.list_analysis_batch_ref_chains.selectedItems()
             prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text().replace(".pdb", "")
-            prot_2_chains = self.ui.list_analysis_batch_model_chains.selectedItems()
-            analysis_name = f"{prot_1_name}_{prot_1_chains}_vs_{prot_2_name}_{prot_2_chains}"
+            analysis_name = f"{prot_1_name}_vs_{prot_2_name}"
             item = QListWidgetItem(analysis_name)
-            #item = QListWidgetItem(f"{self.ui.lbl_analysis_batch_prot_struct_1.text()}_vs_{self.ui.lbl_analysis_batch_prot_struct_2.text()}")
             self.ui.list_analysis_batch_overview.addItem(item)
 
     def fill_protein_boxes_batch(self):
@@ -3476,6 +3484,8 @@ class MainWindow(QMainWindow):
 
     def remove_analysis_run(self):
         self.ui.list_analysis_batch_overview.takeItem(self.ui.list_analysis_batch_overview.currentRow())
+        if self.ui.list_analysis_batch_overview.count() == 0:
+            self.batch_analysis_management.show_stage_x(0)
 
     def check_if_same_no_of_chains_selected_batch(self):
         self.ui.btn_analysis_batch_next_3.setEnabled(False)
@@ -3492,147 +3502,126 @@ class MainWindow(QMainWindow):
         else:
             self.ui.btn_analysis_batch_next.setEnabled(False)
 
-    def check_if_at_least_one_analysis(self):
-        # TODO: function does not work expected
-        if self.ui.list_analysis_batch_overview.count() == 0:
-            self.batch_analysis_management.show_stage_x(0)
-
-    def load_reference_for_batch(self):
-        """This function opens a file dialog to choose a .pdb file as
-        reference and displays the path in a text box
+    def start_process_batch(self):
+        """This function contains the main analysis algorithm for the
+        Protein structure comparison.
 
         """
-        try:
-            # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
-            # display path in text box
-            if file_name == ("", ""):
-                raise ValueError
-            # display path in text box
-            self.ui.txt_batch_load_reference.setText(str(file_name[0]))
-            self.status_bar.showMessage("Loading the reference was successful.")
-            self.__check_start_possibility_batch()
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the reference failed!")
-        except ValueError:
-            print("No file has been selected.")
-            self.__check_start_possibility()
+        batch_analysis = []
+        for row_no in range(self.ui.list_analysis_batch_overview.count()):
+            tmp_batch_analysis = self.ui.list_analysis_batch_overview.item(row_no).text()
+            separator_index = tmp_batch_analysis.find("_vs_")
+            prot_1 = tmp_batch_analysis[:separator_index]
+            if prot_1.find(";"):
+                prot_1_name = prot_1[:prot_1.find(";")]
+                prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
+            else:
+                prot_1_name = prot_1
+                prot_1_chains = None
+            prot_2 = tmp_batch_analysis[separator_index + 4:]
+            if prot_2.find(";"):
+                prot_2_name = prot_2[:prot_2.find(";")]
+                prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
+            else:
+                prot_2_name = prot_2
+                prot_2_chains = None
 
-    def load_model_for_batch(self):
-        """This function loads multiple files as models.
+            tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
+            tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
+            print(tmp_batch_analysis)
+            batch_analysis.append((tmp_prot_1, tmp_prot_2))
 
-        """
-        try:
-            # open file dialog
-            file_names = Qt.QtWidgets.QFileDialog.getOpenFileNames(self, "Open Models",
-                                                                   Qt.QtCore.QDir.homePath(),
-                                                                   "PDB Files (*.pdb)")
-            if file_names == ([""], ""):
-                raise ValueError
-            # display path in text box
-            for file in file_names[0]:
-                self.ui.txt_batch_load_model.append(str(file))
-            self.status_bar.showMessage("Loading the models was successful.")
-            self.__check_start_possibility_batch()
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the models failed!")
-        except ValueError:
-            print("No file has been selected.")
-            self.__check_start_possibility()
+        print(batch_analysis)
+        transformer = data_transformer.DataTransformer(self.ui)
+        # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir), ...)
+        batch_data = transformer.transform_data_for_analysis(self.app_project, batch_analysis)
 
-    def enable_chain_information_input_for_batch(self):
-        """This function enables the text boxes to enter the chains for the
-        reference and the model
+        for analysis_data in batch_data:
+            if not os.path.exists(analysis_data[2]):
+                os.mkdir(analysis_data[2])
+            else:
+                # TODO: talk about what should happen if an analysis result already exists
+                print("A analysis already exists")
 
-        """
-        try:
-            self.ui.txt_batch_chain_ref.setEnabled(
-                self.ui.cb_batch_chain_info.checkState())
-            self.ui.txt_batch_chain_model.setEnabled(
-                self.ui.cb_batch_chain_info.checkState())
-            self.status_bar.showMessage("Enter the chain information.")
-            self.__check_start_possibility_batch()
-        except Exception:
-            self.status_bar.showMessage("Unexpected Error.")
+            cmd.reinitialize()
+            structure_analysis_obj = structure_analysis.StructureAnalysis(
+                reference_protein=[analysis_data[0]], model_proteins=[analysis_data[1]],
+                ref_chains=analysis_data[0].chains, model_chains=analysis_data[1].chains,
+                export_dir=analysis_data[2], cycles=global_variables.global_var_settings_obj.get_cycles(),
+                cutoff=global_variables.global_var_settings_obj.get_cutoff(),
+            )
+            if self.ui.cb_analysis_images.isChecked():
+                structure_analysis_obj.response_create_images = True
+            structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+                                                                 structure_analysis_obj.reference_protein)
+            structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+                                                                 structure_analysis_obj.model_proteins)
+            protein_pairs = structure_analysis_obj.create_protein_pairs()
+            structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
+            self._project_watcher.show_valid_options(self.ui)
 
-    def check_batch_if_txt_batch_job_name_is_filled(self):
-        """This function checks if a job name was entered in the text field.
+        # self.ui.btn_analysis_start.setEnabled(False)
+        # self.status_bar.showMessage("Protein structure analysis started ...")
+        # cmd.reinitialize()
+        # data_transformer_analysis = data_transformer.DataTransformer(self.ui)
+        # transformed_analysis_data = data_transformer_analysis.transform_to_analysis(self.app_project)
+        #
 
-        """
-        self.__check_start_possibility_batch()
-
-    def check_batch_if_txt_batch_chain_ref_is_filled(self):
-        """This function checks if any chains are in the text field for the
-        reference.
-
-        """
-        self.__check_start_possibility_batch()
-
-    def check_batch_if_txt_batch_chain_model_is_filled(self):
-        """This function checks if any chains are in the text field for the
-        model.
-
-        """
-        self.__check_start_possibility_batch()
-
-    # def start_process_batch(self):
-    #     """This function contains the main analysis algorithm for the
-    #     Protein structure comparison.
-    #
-    #     """
-    #     self.status_bar.showMessage("Checking user input ...")
-    #     job = job_utils.Job(self.ui.txt_batch_job_name.text(), self.workspace_path)
-    #     raw_models_input = self.ui.txt_batch_load_model.toPlainText()
-    #     models = raw_models_input.split("\n")
-    #
-    #     # runs analysis with project creation
-    #     for model in models:
-    #         cmd.reinitialize()
-    #         model_file_info = Qt.QtCore.QFileInfo(model)
-    #         MODEL_OBJ_NAME = model_file_info.baseName()
-    #         MODEL_DIR = model_file_info.canonicalPath()
-    #
-    #         project = project.Project(f"project_of_{MODEL_OBJ_NAME}",
-    #                                               f"{self.workspace_path}/{job.get_job_name()}")
-    #         project.create_project_tree()
-    #         project.set_job_name(job.get_job_name())
-    #         project.set_pdb_file(self.ui.txt_batch_load_reference.text())
-    #         project.set_pdb_id(self.ui.txt_batch_load_reference.text())
-    #         project.set_pdb_model(MODEL_OBJ_NAME)
-    #         project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
-    #         project.set_model_chains((self.ui.txt_batch_chain_model.text()))
-    #         project.create_xml_file()
-    #         job.add_project_to_job(project)
-    #
-    #         # gets reference filename and filepath
-    #         if len(self.ui.txt_batch_load_reference.text()) == 4:
-    #             tmp_protein = core.Protein(self.ui.txt_batch_load_reference.text(),
-    #                                        export_data_dir=project.get_pdb_path())
-    #             tmp_protein.clean_pdb_file()
-    #             REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
-    #             REFERENCE_DIR = project.get_pdb_path()
-    #         else:
-    #             ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
-    #             REFERENCE_OBJ_NAME = ref_file_info.baseName()
-    #             REFERENCE_DIR = ref_file_info.canonicalPath()
-    #         reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-    #         model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-    #         export_dir = project.get_results_path()
-    #         structure_analysis = structure_analysis.StructureAnalysis(
-    #             reference_protein, model_proteins,
-    #             project.get_ref_chains().split(","), project.get_model_chains().split(","),
-    #             export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
-    #             cutoff=global_variables.global_var_settings_obj.get_cutoff(),
-    #         )
-    #         structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
-    #                                                          structure_analysis.reference_protein)
-    #         structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
-    #                                                          structure_analysis.model_proteins)
-    #         structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
-    #                                                 self.status_bar, self.ui.progress_bar_batch)
-    #     job.create_xml_file()
+        #
+        #
+        # self.status_bar.showMessage("Checking user input ...")
+        # job = job_utils.Job(self.ui.txt_batch_job_name.text(), self.workspace_path)
+        # raw_models_input = self.ui.txt_batch_load_model.toPlainText()
+        # models = raw_models_input.split("\n")
+        #
+        #
+        #
+        # # runs analysis with project creation
+        # for model in models:
+        #     cmd.reinitialize()
+        #     model_file_info = Qt.QtCore.QFileInfo(model)
+        #     MODEL_OBJ_NAME = model_file_info.baseName()
+        #     MODEL_DIR = model_file_info.canonicalPath()
+        #
+        #     project = project.Project(f"project_of_{MODEL_OBJ_NAME}",
+        #                                           f"{self.workspace_path}/{job.get_job_name()}")
+        #     project.create_project_tree()
+        #     project.set_job_name(job.get_job_name())
+        #     project.set_pdb_file(self.ui.txt_batch_load_reference.text())
+        #     project.set_pdb_id(self.ui.txt_batch_load_reference.text())
+        #     project.set_pdb_model(MODEL_OBJ_NAME)
+        #     project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
+        #     project.set_model_chains((self.ui.txt_batch_chain_model.text()))
+        #     project.create_xml_file()
+        #     job.add_project_to_job(project)
+        #
+        #     # gets reference filename and filepath
+        #     if len(self.ui.txt_batch_load_reference.text()) == 4:
+        #         tmp_protein = core.Protein(self.ui.txt_batch_load_reference.text(),
+        #                                    export_data_dir=project.get_pdb_path())
+        #         tmp_protein.clean_pdb_file()
+        #         REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
+        #         REFERENCE_DIR = project.get_pdb_path()
+        #     else:
+        #         ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
+        #         REFERENCE_OBJ_NAME = ref_file_info.baseName()
+        #         REFERENCE_DIR = ref_file_info.canonicalPath()
+        #     reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+        #     model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
+        #     export_dir = project.get_results_path()
+        #     structure_analysis = structure_analysis.StructureAnalysis(
+        #         reference_protein, model_proteins,
+        #         project.get_ref_chains().split(","), project.get_model_chains().split(","),
+        #         export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
+        #         cutoff=global_variables.global_var_settings_obj.get_cutoff(),
+        #     )
+        #     structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
+        #                                                      structure_analysis.reference_protein)
+        #     structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
+        #                                                      structure_analysis.model_proteins)
+        #     structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
+        #                                             self.status_bar, self.ui.progress_bar_batch)
+        # job.create_xml_file()
 
     # Results
     def show_analysis_results_options(self):

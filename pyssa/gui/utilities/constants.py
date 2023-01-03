@@ -37,6 +37,7 @@ PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
 OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
 OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
 NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
+NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
 
 # linux, macOS, Windows path
 path_list = [

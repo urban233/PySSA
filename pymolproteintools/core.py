@@ -114,7 +114,6 @@ class Protein:
                 cmd.load(f"{self.import_data_dir}/{self.molecule_object}.pdb")
                 self.sequence = cmd.get_fastastr('all')
         else:
-            # TODO: validate if the sequence is valid
             self.sequence = sequence
 
     def clean_pdb_file(self) -> None:

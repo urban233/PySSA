@@ -22,7 +22,6 @@
 import os
 import json
 
-
 class Protein:
     """This class stores one protein in a PyMOL compatible form
 
@@ -103,3 +102,7 @@ if __name__ == '__main__':
     print(f"Name of the protein object: {new_protein.molecule_object}")
     print(f"Import data directory:      {new_protein.import_data_dir}")
     print(f"Export data directory:      {new_protein.export_data_dir}")
+
+if __name__ == '__main__':
+    string = r"\\wsl$\Ubuntu\home"
+    print(string)

@@ -356,7 +356,7 @@
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_24">
                    <property name="spacing">
-                    <number>4</number>
+                    <number>0</number>
                    </property>
                    <item>
                     <widget class="QLabel" name="lbl_pred_local">
@@ -398,7 +398,7 @@
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_63">
                    <property name="spacing">
-                    <number>4</number>
+                    <number>0</number>
                    </property>
                    <item>
                     <widget class="QLabel" name="lbl_analysis">
@@ -4317,6 +4317,7 @@
     <addaction name="action_file_save_as"/>
     <addaction name="action_add_model"/>
     <addaction name="action_add_multiple_models"/>
+    <addaction name="action_toggle_notebook_visibility"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -4407,6 +4408,11 @@
   <action name="action_add_multiple_models">
    <property name="text">
     <string>Add multiple models</string>
+   </property>
+  </action>
+  <action name="action_toggle_notebook_visibility">
+   <property name="text">
+    <string>Toggle notebook visibility</string>
    </property>
   </action>
  </widget>

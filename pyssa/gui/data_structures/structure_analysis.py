@@ -253,7 +253,6 @@ class StructureAnalysis:
             # color Protein with default colors; ref: green, model: blue
             msg = "Finished loading proteins. | Color proteins ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            # TODO: throws pymol exception, idk why
             tmp_protein_pair.color_protein_pair()
 
             # do the structure alignment
@@ -305,7 +304,6 @@ class StructureAnalysis:
             plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_histogram"
                         f"/distance_histogram_{tmp_protein_pair.model_obj.molecule_object}.svg")
 
-            # TODO: uncomment section below !!!
             if self.response_create_images is True:
                 # take image of whole structure alignment
                 msg = "Finished creating distance histogram. | Take image of structure alignment ..."
