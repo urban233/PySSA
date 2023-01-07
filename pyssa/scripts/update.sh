@@ -1,6 +1,6 @@
 # '/path/to/your/colabfold_batch' should be substituted to your path, e.g. '/home/moriwaki/Desktop/colabfold_batch'
 # install GPU-supported jaxlib
-COLABFOLDDIR="/home/matt/.pyssa/colabfold_batch/"
+COLABFOLDDIR="/home/$USER/.pyssa/colabfold_batch/"
 ${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip uninstall "colabfold[alphafold] @ git+https://github.com/sokrypton/ColabFold" -y
 ${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip uninstall alphafold-colabfold -y
 ${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip install "colabfold[alphafold] @ git+https://github.com/sokrypton/ColabFold"

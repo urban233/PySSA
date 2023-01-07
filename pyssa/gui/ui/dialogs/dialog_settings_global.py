@@ -92,7 +92,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.btn_cancel.clicked.connect(self.cancelDialog)
         self.ui.btn_ok.clicked.connect(self.okDialog)
         self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
-        # self.ui.btn_enable_wsl2.clicked.connect(self.install_wsl)
+        self.ui.btn_install_wsl2.clicked.connect(self.install_wsl)
         
         self.setWindowTitle("Global Settings")
 
