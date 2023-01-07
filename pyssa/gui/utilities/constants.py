@@ -25,12 +25,16 @@ import os
 import pathlib
 from pathlib import Path
 
+
+VERSION_NUMBER = "v0.9.2"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
 SETTINGS_FILE = "settings.xml"
 SETTINGS_FILENAME = "settings.json"
 SETTINGS_FULL_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/{SETTINGS_FILENAME}")
+
+DEFAULT_WORKSPACE_PATH = pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/default_workspace")
 
 SCRATCH_DIR = Path(f"{SETTINGS_DIR}/scratch")
 PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")

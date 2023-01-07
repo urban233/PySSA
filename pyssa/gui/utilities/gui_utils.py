@@ -22,6 +22,7 @@
 """Module for functions which reduce code duplicates in the main module"""
 
 import os
+import pathlib
 import shutil
 from pathlib import Path
 
@@ -70,14 +71,14 @@ def choose_directory(self, txt_box_dir):
         txt_box_dir:
             qt textbox object which holds the current path
     """
-    current_file_path = txt_box_dir.text()
-    new_file_path = Qt.QtWidgets.QFileDialog.getExistingDirectory(
-        self, "Open Directory", current_file_path,
-        options=Qt.QtWidgets.QFileDialog.ShowDirsOnly)
+    current_file_path = pathlib.Path(txt_box_dir.text())
+    new_file_path = pathlib.Path(Qt.QtWidgets.QFileDialog.getExistingDirectory(
+        self, "Open Directory", str(current_file_path),
+        options=Qt.QtWidgets.QFileDialog.ShowDirsOnly))
     if new_file_path == "":
-        txt_box_dir.setText(current_file_path)
+        txt_box_dir.setText(str(current_file_path))
     else:
-        txt_box_dir.setText(new_file_path)
+        txt_box_dir.setText(str(new_file_path))
 
 
 def critical_message(message, message_detail):
@@ -118,7 +119,7 @@ def error_dialog(message, message_detail):
     msg.exec_()
 
 
-def error_dialog_settings(message, message_detail):
+def error_dialog_settings(message, message_detail, settings_obj):
     """This function creates an error dialog, which can be customized.
 
     Args:
@@ -126,23 +127,25 @@ def error_dialog_settings(message, message_detail):
             text which should get displayed in the dialog
         message_detail:
             additional information
+        settings_obj:
+            settings object of the MainWindow class
     """
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Critical)
-    msg.setText("Error")
-    msg.setInformativeText(message)
-    msg.setDetailedText(message_detail)
+    msg.setText(message)
+    msg.setInformativeText(message_detail)
+    #msg.setDetailedText()
     msg.setWindowTitle("Error")
 
-    open_global_settings_button = msg.addButton("Open Settings", QMessageBox.ActionRole)
+    #open_global_settings_button = msg.addButton("Open Settings", QMessageBox.ActionRole)
     restore_settings_button = msg.addButton("Restore Settings", QMessageBox.ActionRole)
     msg.exec_()
 
     # button logic
     if msg.clickedButton() == restore_settings_button:
-        tools.restore_default_settings()
-    elif msg.clickedButton() == open_global_settings_button:
-        tools.open_global_settings()
+        tools.restore_default_settings(settings_obj)
+    #elif msg.clickedButton() == open_global_settings_button:
+        #tools.open_global_settings()
     # elif msg.clickedButton() == help_button:
     #     webbrowser.open_new("docs/pymol_plugin/build/html/index.html")
 

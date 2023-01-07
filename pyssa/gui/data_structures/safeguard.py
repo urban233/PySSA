@@ -28,9 +28,36 @@ class Safeguard:
     """This class is used to collect all safeguard functions in one place.
 
     """
-    def __init__(self, settings_obj):
+    def __init__(self):
         """Constructor
 
         """
-        # var which contains a settings object
-        self.settings: settings.Settings = settings_obj
+        pass
+
+    @staticmethod
+    def check_filepath(filepath) -> bool:
+        """This function checks if the filepath exists or not.
+
+        Returns:
+            True: if path exists
+            False: if path does NOT exist
+        """
+        if not os.path.exists(filepath):
+            logging.critical(f"The path {filepath} does NOT exist!")
+            return False
+        elif os.path.exists(filepath):
+            # logging.info(f"The path {filepath} does exist!")
+            return True
+
+    @staticmethod
+    def check_if_number_is_positive(value) -> bool:
+        """This function checks if a number is positive
+
+        Returns:
+            True: if number is positive (0 is also positive)
+            False: if number is negative
+        """
+        if value >= 0:
+            return True
+        else:
+            return False

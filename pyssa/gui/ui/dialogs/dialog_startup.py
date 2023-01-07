@@ -25,6 +25,7 @@ import sys
 import PyQt5.QtWidgets
 from pymol import Qt
 
+from gui.utilities import constants
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_startup import Ui_Dialog
 
 global_var_startup_workspace = ""
@@ -64,7 +65,7 @@ class DialogStartup(Qt.QtWidgets.QDialog):
             self.ui.txt_workspace.setText(path_list[0])
         elif sys.platform.startswith("win32"):
             # Windows path
-            self.ui.txt_workspace.setText(path_list[2])
+            self.ui.txt_workspace.setText(str(constants.DEFAULT_WORKSPACE_PATH))
 
         self.setWindowTitle("PySSA Launch")
 

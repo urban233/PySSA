@@ -32,6 +32,7 @@ import numpy as np
 import pymol
 import pyqtgraph as pg
 
+from gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.utilities import global_variables
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.utilities import constants
@@ -51,6 +52,7 @@ from pyssa.gui.data_structures import structure_analysis
 from pyssa.gui.data_structures.data_classes import protein_analysis_info
 from pyssa.gui.data_structures import project_watcher
 from pyssa.gui.data_structures import data_transformer
+from pyssa.gui.data_structures import safeguard
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
@@ -94,10 +96,6 @@ class MainWindow(QMainWindow):
             Is a Qt dialog window which is used in combination with pyqtgraph.
         view_box:
             The view box object from pyqtgraph, to manipulate the graphs view.
-        cloud_pred_monomer_management:
-            The object which contains information in form of stages of the page.
-        cloud_pred_multimer_management:
-            The object which contains information in form of stages of the page.
         local_pred_monomer_management:
             The object which contains information in form of stages of the page.
         local_pred_multimer_management:
@@ -114,7 +112,6 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.ui.lbl_page_title.setText("Home")
         self.setMinimumWidth(550)
-        self._init_side_menu()
 
         self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
@@ -127,13 +124,18 @@ class MainWindow(QMainWindow):
             self.app_settings.app_launch = 1
             self.app_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
             self.app_settings.serialize_settings()
-        self.app_settings = self.app_settings.deserialize_settings()
+        try:
+            self.app_settings = self.app_settings.deserialize_settings()
+        except ValueError:
+            print("The settings file is corrupted. Please restore the settings!")
+            gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
+                                            self.app_settings)
 
         # ----- All class attributes are listed here
         self.app_project = project.Project("", pathlib.Path(""))
         self._project_watcher = project_watcher.ProjectWatcher(self.app_project, no_of_pdb_files=None)
         self.scratch_path = constants.SCRATCH_DIR
-        self.workspace_path = self.app_settings.get_workspace_path()
+        self.workspace_path = self.app_settings.workspace_path
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar = Qt.QtWidgets.QStatusBar()
 
@@ -151,38 +153,7 @@ class MainWindow(QMainWindow):
 
         # sets up the status bar
         self._setup_statusbar()
-        # # sets up settings.xml
-        # if not os.path.exists(self.SETTINGS):
-        #     settings = utils.settings_utils.SettingsXml(self.SETTINGS)
-        #     settings.create_settings_xml_file()
-        # settings = utils.settings_utils.SettingsXml(self.SETTINGS)
-        # self.tmp_settings = settings.load_xml_in_memory()
-        #
-        # # safeguard workspace path
-        # sg_1 = tools.safeguard_filepath_xml(self.tmp_settings, 'workspacePath', 'value')
-        # # safeguard pdb path
-        # sg_2 = tools.safeguard_filepath_xml(self.tmp_settings, 'pdbPath', 'value')
-        # # safeguard zip path
-        # sg_3 = tools.safeguard_filepath_xml(self.tmp_settings, 'zipPath', 'value')
-        # # safeguard cycles value
-        # sg_4 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cyclesValue', 'value', 'int')
-        # # safeguard cutoff value
-        # sg_5 = tools.safeguard_numerical_value_xml(self.tmp_settings, 'cutoffValue', 'value', 'float')
-        #
-        # if sg_1 is False or sg_2 is False or sg_3 is False or sg_4 is False or sg_5 is False:
-        #     self.status_bar.showMessage("The settings.xml is corrupted! Please fix this issue first!")
-        #     gui_utils.error_dialog_settings("The settings.xml is corrupted! Please fix this issue first!",
-        #                                     "Check the log for more info.")
-        # else:
-        #     self.workspace_path = utils.settings_utils.SettingsXml.get_path(self.tmp_settings,
-        #                                                                     "workspacePath",
-        #                                                                     "value")
-
-        # startup_dialog = dialog_startup.DialogStartup()
-        # startup_dialog.exec_()
-
         tools.create_directory(constants.SETTINGS_DIR, "scratch")
-
         self._setup_default_configuration()
 
         # management
@@ -193,7 +164,6 @@ class MainWindow(QMainWindow):
         self._create_results_management()
 
         # setup defaults for pages
-        self._init_hide_ui_elements()
         self._init_fill_combo_boxes()
         self._init_new_page()
         self._init_use_page()
@@ -201,7 +171,7 @@ class MainWindow(QMainWindow):
         self._init_local_pred_multi_page()
         # self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
-        self._init_batch_page()
+        self._init_batch_analysis_page()
         self.ui.action_toggle_notebook_visibility.setVisible(False)
 
         # connections
@@ -211,7 +181,7 @@ class MainWindow(QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
         # setting additional parameters
         self.setWindowIcon(QIcon("..\\assets\\pyssa_logo.png"))
-        self.setWindowTitle("PySSA v0.9.2")
+        self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
 
     # ----- Functions for GuiPageManagement obj creation
     def _create_local_pred_monomer_management(self):
@@ -522,168 +492,6 @@ class MainWindow(QMainWindow):
 
         # image page
 
-    # def _configuration(self):
-    #     if self.number_of_pdb_files is None:
-    #         gui_elements_to_show = [
-    #             self.ui.btn_new_page,
-    #             self.ui.btn_open_page,
-    #             self.ui.btn_delete_page,
-    #         ]
-    #         gui_utils.show_gui_elements(gui_elements_to_show)
-    #         gui_elements_to_hide = [
-    #             self.ui.btn_close_project,
-    #             self.ui.btn_use_page,
-    #             self.ui.btn_edit_page,
-    #             self.ui.lbl_pred_cloud,
-    #             self.ui.btn_pred_cloud_monomer_page,
-    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_cloud_multimer_page,
-    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-    #             self.ui.lbl_pred_local,
-    #             self.ui.btn_pred_local_monomer_page,
-    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_local_multimer_page,
-    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
-    #             self.ui.lbl_analysis,
-    #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_batch_analysis_page,
-    #             self.ui.btn_results_page,
-    #             self.ui.lbl_handle_pymol_session,
-    #             self.ui.btn_image_page,
-    #             self.ui.btn_hotspots_page,
-    #         ]
-    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
-    #     elif self.number_of_pdb_files == 0:
-    #         gui_elements_to_show = [
-    #             self.ui.btn_close_project,
-    #             self.ui.btn_use_page,
-    #             self.ui.btn_edit_page,
-    #             self.ui.lbl_pred_cloud,
-    #             self.ui.btn_pred_cloud_monomer_page,
-    #             self.ui.btn_pred_cloud_multimer_page,
-    #             self.ui.lbl_pred_local,
-    #             self.ui.btn_pred_local_monomer_page,
-    #             self.ui.btn_pred_local_multimer_page,
-    #         ]
-    #         gui_utils.show_gui_elements(gui_elements_to_show)
-    #         gui_elements_to_hide = [
-    #             self.ui.btn_new_page,
-    #             self.ui.btn_open_page,
-    #             self.ui.btn_delete_page,
-    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
-    #             self.ui.lbl_analysis,
-    #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_batch_analysis_page,
-    #             self.ui.btn_results_page,
-    #             self.ui.lbl_handle_pymol_session,
-    #             self.ui.btn_image_page,
-    #             self.ui.btn_hotspots_page,
-    #         ]
-    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
-    #         self.display_view_page()
-    #     elif self.number_of_pdb_files == 1:
-    #         gui_elements_to_show = [
-    #             self.ui.btn_close_project,
-    #             self.ui.btn_save_project,
-    #             self.ui.btn_use_page,
-    #             self.ui.btn_edit_page,
-    #             self.ui.btn_view_page,
-    #             self.ui.lbl_pred_cloud,
-    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-    #             self.ui.lbl_pred_local,
-    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
-    #             self.ui.lbl_handle_pymol_session,
-    #             self.ui.btn_image_page,
-    #         ]
-    #         gui_utils.show_gui_elements(gui_elements_to_show)
-    #         gui_elements_to_hide = [
-    #             self.ui.btn_new_page,
-    #             self.ui.btn_open_page,
-    #             self.ui.btn_delete_page,
-    #             self.ui.btn_pred_cloud_monomer_page,
-    #             self.ui.btn_pred_cloud_multimer_page,
-    #             self.ui.btn_pred_local_monomer_page,
-    #             self.ui.btn_pred_local_multimer_page,
-    #             self.ui.lbl_analysis,
-    #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_batch_analysis_page,
-    #             self.ui.btn_results_page,
-    #             self.ui.btn_hotspots_page,
-    #         ]
-    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
-    #         self.display_view_page()
-    #     elif self.number_of_pdb_files == 2:
-    #         gui_elements_to_show = [
-    #             self.ui.btn_close_project,
-    #             self.ui.btn_save_project,
-    #             self.ui.btn_use_page,
-    #             self.ui.btn_edit_page,
-    #             self.ui.btn_view_page,
-    #             self.ui.lbl_analysis,
-    #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_results_page,
-    #             self.ui.lbl_handle_pymol_session,
-    #             self.ui.btn_image_page,
-    #         ]
-    #         gui_utils.show_gui_elements(gui_elements_to_show)
-    #         gui_elements_to_hide = [
-    #             self.ui.btn_new_page,
-    #             self.ui.btn_open_page,
-    #             self.ui.btn_delete_page,
-    #             self.ui.lbl_pred_cloud,
-    #             self.ui.btn_pred_cloud_monomer_page,
-    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_cloud_multimer_page,
-    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-    #             self.ui.lbl_pred_local,
-    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
-    #             self.ui.btn_pred_local_monomer_page,
-    #             self.ui.btn_pred_local_multimer_page,
-    #             self.ui.btn_batch_analysis_page,
-    #             self.ui.btn_hotspots_page,
-    #         ]
-    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
-    #         self.display_view_page()
-    #     elif self.number_of_pdb_files > 2:
-    #         gui_elements_to_show = [
-    #             self.ui.btn_close_project,
-    #             self.ui.btn_save_project,
-    #             self.ui.btn_use_page,
-    #             self.ui.btn_edit_page,
-    #             self.ui.btn_view_page,
-    #             self.ui.lbl_analysis,
-    #             self.ui.btn_single_analysis_page,
-    #             self.ui.btn_batch_analysis_page,
-    #             self.ui.btn_results_page,
-    #             self.ui.lbl_handle_pymol_session,
-    #             self.ui.btn_image_page,
-    #         ]
-    #         gui_utils.show_gui_elements(gui_elements_to_show)
-    #         gui_elements_to_hide = [
-    #             self.ui.btn_new_page,
-    #             self.ui.btn_open_page,
-    #             self.ui.btn_delete_page,
-    #             self.ui.lbl_pred_cloud,
-    #             self.ui.btn_pred_cloud_monomer_page,
-    #             self.ui.btn_pred_cloud_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_cloud_multimer_page,
-    #             self.ui.btn_pred_cloud_multimer_vs_pdb_page,
-    #             self.ui.lbl_pred_local,
-    #             self.ui.btn_pred_local_monomer_vs_pdb_page,
-    #             self.ui.btn_pred_local_multimer_vs_pdb_page,
-    #             self.ui.btn_pred_local_monomer_page,
-    #             self.ui.btn_pred_local_multimer_page,
-    #             self.ui.btn_hotspots_page,
-    #         ]
-    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
-    #         self.display_view_page()
-
     def _connect_all_gui_elements(self):
         """This function connects all gui elements with their corresponding slots
 
@@ -857,40 +665,40 @@ class MainWindow(QMainWindow):
         self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
         self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
 
-    def _init_hide_ui_elements(self):
-        """This function hides all UI elements which need to be hidden during the
-        plugin startup
-
-        TODO: this function should be obsolete with the introduction of the project_watcher?!
-        """
-        gui_elements_to_hide = [
-            self.ui.lbl_new_choose_reference,
-            self.ui.txt_new_choose_reference,
-            self.ui.btn_new_choose_reference,
-            self.ui.lbl_prediction_load_reference,
-            self.ui.txt_prediction_load_reference,
-            self.ui.btn_prediction_load_reference,
-            self.ui.btn_prediction_next_2,
-            self.ui.btn_prediction_back_2,
-            # self.ui.lbl_prediction_ref_chains.hide()
-            self.ui.lbl_prediction_model_chains,
-            self.ui.txt_prediction_chain_model,
-            self.ui.btn_prediction_back_3,
-            # self.ui.btn_prediction_start.hide()
-            self.ui.btn_hotspots_page,
-            # sidebar elements
-            # self.ui.lbl_prediction.hide()
-            self.ui.lbl_analysis,
-            self.ui.lbl_handle_pymol_session,
-            self.ui.btn_save_project,
-            # self.ui.btn_prediction_only_page.hide()
-            # self.ui.btn_prediction_page.hide()
-            self.ui.btn_single_analysis_page,
-            self.ui.btn_batch_analysis_page,
-            self.ui.btn_results_page,
-            self.ui.btn_image_page,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+    # def _init_hide_ui_elements(self):
+    #     """This function hides all UI elements which need to be hidden during the
+    #     plugin startup
+    #
+    #     TODO: this function should be obsolete with the introduction of the project_watcher?!
+    #     """
+    #     gui_elements_to_hide = [
+    #         self.ui.lbl_new_choose_reference,
+    #         self.ui.txt_new_choose_reference,
+    #         self.ui.btn_new_choose_reference,
+    #         self.ui.lbl_prediction_load_reference,
+    #         self.ui.txt_prediction_load_reference,
+    #         self.ui.btn_prediction_load_reference,
+    #         self.ui.btn_prediction_next_2,
+    #         self.ui.btn_prediction_back_2,
+    #         # self.ui.lbl_prediction_ref_chains.hide()
+    #         self.ui.lbl_prediction_model_chains,
+    #         self.ui.txt_prediction_chain_model,
+    #         self.ui.btn_prediction_back_3,
+    #         # self.ui.btn_prediction_start.hide()
+    #         self.ui.btn_hotspots_page,
+    #         # sidebar elements
+    #         # self.ui.lbl_prediction.hide()
+    #         self.ui.lbl_analysis,
+    #         self.ui.lbl_handle_pymol_session,
+    #         self.ui.btn_save_project,
+    #         # self.ui.btn_prediction_only_page.hide()
+    #         # self.ui.btn_prediction_page.hide()
+    #         self.ui.btn_single_analysis_page,
+    #         self.ui.btn_batch_analysis_page,
+    #         self.ui.btn_results_page,
+    #         self.ui.btn_image_page,
+    #     ]
+    #     gui_utils.hide_gui_elements(gui_elements_to_hide)
 
     def _init_fill_combo_boxes(self):
         """This function fills all combo boxes of the plugin
@@ -935,28 +743,6 @@ class MainWindow(QMainWindow):
             "Fiber",
         ]
         gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
-
-    def _init_side_menu(self):
-        self.ui.btn_new_page.show()
-        self.ui.btn_open_page.show()
-        self.ui.btn_delete_page.show()
-        self.ui.btn_save_project.hide()
-        self.ui.btn_edit_page.hide()
-        self.ui.btn_view_page.hide()
-        self.ui.btn_use_page.hide()
-        self.ui.btn_close_project.hide()
-
-    def _init_project_management(self):
-        # hide
-        self.ui.btn_new_page.hide()
-        self.ui.btn_open_page.hide()
-        self.ui.btn_delete_page.hide()
-        # show
-        self.ui.btn_save_project.show()
-        self.ui.btn_edit_page.show()
-        self.ui.btn_view_page.show()
-        self.ui.btn_use_page.show()
-        self.ui.btn_close_project.show()
 
     def _init_new_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -1086,17 +872,16 @@ class MainWindow(QMainWindow):
         self.ui.cb_ray_tracing.setChecked(False)
         self.ui.cb_transparent_bg.setChecked(False)
 
-    def _init_batch_page(self):
+    def _init_batch_analysis_page(self):
         # sets up defaults: Batch
         self.show_batch_analysis_stage_0()
 
     def _init_all_pages(self):
-        self._init_side_menu()
         self._init_local_pred_mono_page()
         self._init_local_pred_multi_page()
         self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
-        self._init_batch_page()
+        self._init_batch_analysis_page()
         self._init_results_page()
         self._init_image_page()
 
@@ -1218,11 +1003,22 @@ class MainWindow(QMainWindow):
         """This function displays the open project work area
 
         """
-        self.ui.list_open_projects.clear()
-        # pre-process
-        self.status_bar.showMessage(self.workspace.text())
-        tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
+        if safeguard.Safeguard.check_filepath(self.workspace_path):
+            self.ui.list_open_projects.clear()
+            # pre-process
+            self.status_bar.showMessage(self.workspace.text())
+            try:
+                tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
+            except PermissionError:
+                gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
+                                                self.app_settings)
+                self.display_home_page()
+                return
+            tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
+        else:
+            gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
+                                            self.app_settings)
+            self.display_home_page()
 
     def display_delete_page(self):
         """This function displays the "delete" project work area
@@ -1598,7 +1394,8 @@ class MainWindow(QMainWindow):
         #
         # else:
         #     self.ui.btn_install_local_prediction.show()
-        tools.open_global_settings()
+        dialog = dialog_settings_global.DialogSettingsGlobal()
+        dialog.exec_()
         self._setup_statusbar()
 
     @staticmethod
@@ -2598,7 +2395,7 @@ class MainWindow(QMainWindow):
                                     self.ui.btn_local_pred_mono_next)
 
     @staticmethod
-    def local_pred_mono_show_prediction_configuration(self):
+    def local_pred_mono_show_prediction_configuration():
         config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
         config.exec_()
 

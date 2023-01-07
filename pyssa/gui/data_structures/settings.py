@@ -23,9 +23,8 @@
 import json
 import os
 import pathlib
-from xml.etree import ElementTree
-from xml.dom import minidom
 from gui.utilities import constants
+from gui.data_structures import safeguard
 
 
 class Settings:
@@ -51,7 +50,9 @@ class Settings:
             filename:
                 name of the settings.xml
         """
-        self.workspace_path = pathlib.Path(f"{os.path.expanduser('~')}/Documents")
+        if not os.path.exists(constants.DEFAULT_WORKSPACE_PATH):
+            os.mkdir(constants.DEFAULT_WORKSPACE_PATH)
+        self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self.prediction_path = pathlib.Path(f"{os.path.expanduser('~')}/Downloads")
         self.cycles: int = 0
         self.cutoff: float = 1.0
@@ -72,7 +73,6 @@ class Settings:
             'dir_settings': str(self.dir_settings),
         }
         settings_dict.update(update)
-        print(settings_dict)
         settings_file = open(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}", "w", encoding="utf-8")
         json.dump(settings_dict, settings_file, indent=4)
 
@@ -87,15 +87,34 @@ class Settings:
         try:
             settings_obj_file = open(pathlib.Path(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}"), "r", encoding="utf-8")
         except FileNotFoundError:
-            print(f"There is no valid json file under: {constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}")
+            print(f"There is no valid json file under: {constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}. Please restore the settings!")
             return
         settings_dict = json.load(settings_obj_file)
         tmp_settings: Settings = Settings(settings_dict.get("dir_settings"), settings_dict.get("filename"))
-        tmp_settings.workspace_path = settings_dict.get("workspace_path")
-        tmp_settings.prediction_path = settings_dict.get("prediction_path")
-        tmp_settings.cycles = settings_dict.get("cycles")
-        tmp_settings.cutoff = settings_dict.get("cutoff")
-        tmp_settings.app_launch = settings_dict.get("app_launch")
+        if safeguard.Safeguard.check_filepath(settings_dict.get("workspace_path")):
+            tmp_settings.workspace_path = settings_dict.get("workspace_path")
+        else:
+            raise ValueError
+        if safeguard.Safeguard.check_filepath(settings_dict.get("prediction_path")):
+            tmp_settings.prediction_path = settings_dict.get("prediction_path")
+        else:
+            raise ValueError
+        if safeguard.Safeguard.check_if_number_is_positive(int(settings_dict.get("cycles"))):
+            tmp_settings.cycles = settings_dict.get("cycles")
+        else:
+            raise ValueError
+        if safeguard.Safeguard.check_if_number_is_positive(float(settings_dict.get("cutoff"))):
+            tmp_settings.cutoff = settings_dict.get("cutoff")
+        else:
+            raise ValueError
+        if int(settings_dict.get("app_launch")) == 0 or int(settings_dict.get("app_launch")) == 1:
+            tmp_settings.app_launch = settings_dict.get("app_launch")
+        else:
+            raise ValueError
+        if not safeguard.Safeguard.check_filepath(settings_dict.get("dir_settings")):
+            raise ValueError
+        if not settings_dict.get("filename") == "settings.json":
+            raise ValueError
         return tmp_settings
 
     def get_workspace_path(self) -> pathlib.Path:
@@ -112,7 +131,7 @@ class Settings:
         """
         self.workspace_path = value
 
-    def get_prediction_path(self) -> str:
+    def get_prediction_path(self) -> pathlib.Path:
         """This function gets the value of the prediction_path variable
 
         Returns (str):

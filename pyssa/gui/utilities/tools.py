@@ -22,6 +22,7 @@
 """Module for functions which can be used across the entire project"""
 
 import os
+import pathlib
 import shutil
 import logging
 import fnmatch
@@ -48,7 +49,7 @@ def create_directory(parent_path, dir_name) -> None:
         dir_name:
             name of the new directory
     """
-    new_dir = f"{parent_path}/{dir_name}"
+    new_dir = pathlib.Path(f"{parent_path}/{dir_name}")
     if not os.path.exists(new_dir):
         os.mkdir(new_dir)
 
@@ -219,17 +220,6 @@ def restore_default_settings(settings_obj: settings.Settings) -> None:
 
     """
     settings_obj.restore_settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
-
-
-def open_global_settings() -> None:
-    """This function opens the global settings dialog
-
-    """
-    dialog = dialog_settings_global.DialogSettingsGlobal()
-    if not dialog.ERROR:
-        dialog.exec_()
-    else:
-        logging.error("Settings dialog cannot be opened due to an error.")
 
 
 def quick_log_and_display(log_type: str, log_message: str,

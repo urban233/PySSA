@@ -56,23 +56,14 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         self.tmp_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
-        self.settings = self.tmp_settings.deserialize_settings()
-
+        try:
+            self.settings = self.tmp_settings.deserialize_settings()
+        except ValueError:
+            logging.error("Settings dialog cannot be opened due to an error.")
+            return
+        logging.info("Loading values from settings.xml was successful.")
         self.ui.txt_workspace_dir.setEnabled(False)
         self.ui.txt_zip_storage_dir.setEnabled(False)
-
-        # try:
-        #     self.xmlFile = self.xmlObj.load_xml_in_memory()
-        # except IsADirectoryError:
-        #     logging.error("There is only a directory and not a file.")
-        #     gui_utils.error_dialog("There is only a directory.", "More information in the log.")
-        #     # is used to stop opening this dialog
-        #     self.ERROR = True
-        # except FileNotFoundError:
-        #     logging.error("The settings.xml file was not found and could therefore not be opened.")
-        #     gui_utils.error_dialog("The settings.xml file was not found and could therefore not be opened.", "")
-        #     # is used to stop opening this dialog
-        #     self.ERROR = True
 
         logging.info("Settings dialog was opened.")
         # loading information from the settings.xml
@@ -80,7 +71,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.txt_zip_storage_dir.setText(str(self.settings.get_prediction_path()))
         self.ui.spb_cycles.setValue(int(self.settings.get_cycles()))
         self.ui.dspb_cutoff.setValue(float(self.settings.get_cutoff()))
-        logging.info("Loading values from settings.xml was successful.")
         # customize spin boxes
         self.ui.spb_cycles.setMinimum(0)
         # self.ui.spb_cycles.setMaximum(20) # is a maximum needed?
@@ -115,19 +105,40 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.settings.set_cycles(str(self.ui.spb_cycles.value()))
         self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))
         self.settings.serialize_settings()
+        logging.info("Settings were successfully saved.")
         self.close()
 
     def install_local_colabfold(self):
         home_path_wsl = r"\\wsl$\Ubuntu\home"
         colabfold_username = os.listdir(r"\\wsl$\Ubuntu\home")
         colabbatch_path = r"\.pyssa\colabfold_batch\bin\colabfold_batch"
-        path_colabfold = home_path_wsl  + "\\" + colabfold_username[0] + colabbatch_path
+        path_colabfold = home_path_wsl + "\\" + colabfold_username[0] + colabbatch_path
         if os.path.exists(path_colabfold):
+            # dialog_message_local_colabfold.installation_local_colabfold_accept(self) # I added this line, to give
+            # you a hint where to place the first message box
             subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
+            # I would recommend that you comment out the line above for testing purposes
             self.ui.btn_install_local_prediction.setText("Install")
         else:
             dialog_message_local_colabfold.installation_local_colabfold_accept(self)
+            # you need to evaluate every return value from the message boxes if they have one
             dialog_message_local_colabfold.installation_local_colabfold_progress(self)
+
+            # It is smart to do the actual installation process here and not inside a message box
+
+            # user_name = os.getlogin()
+            # subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
+            # subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"])
+            # subprocess.run(
+            #     ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"])
+            # subprocess.run(
+            #     ["wsl", "cd", "/home/$USER/.pyssa", "&&", "wget", "-q", "-P", ".",
+            #      "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"])
+            # subprocess.run(
+            #     ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"])
+            # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"])
+            # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"])
+
             dialog_message_local_colabfold.installation_local_colabfold_end(self)
             self.ui.btn_install_local_prediction.setText("Uninstall")
 

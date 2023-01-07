@@ -67,6 +67,8 @@ class ProjectWatcher:
             ]
             gui_elements_to_hide = [
                 ui.btn_close_project,
+                ui.btn_save_project,
+                ui.btn_view_page,
                 ui.btn_use_page,
                 ui.btn_edit_page,
                 ui.lbl_pred_cloud,
@@ -225,7 +227,6 @@ class ProjectWatcher:
         """
         if self.current_project.get_pdb_path() == "pdb":
             self.no_of_pdb_files = None
-            print("Empty project.")
         elif not os.path.exists(self.current_project.get_pdb_path()):
             raise ValueError(f"The pdb path {self.current_project.get_pdb_path()} does not exist!")
         else:
