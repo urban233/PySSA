@@ -25,7 +25,6 @@ import os
 import shutil
 from pathlib import Path
 
-from PyQt5.QtGui import QIcon
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from pyssa.gui.utilities import tools

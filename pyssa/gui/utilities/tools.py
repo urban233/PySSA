@@ -31,6 +31,8 @@ from pathlib import Path
 from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtGui
+
+from gui.data_structures import settings
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.utilities import styles
 from pyssa.gui.utilities import constants
@@ -211,13 +213,12 @@ def safeguard_numerical_value_xml(settings_file, xml_tag, xml_attribute, data_ty
             return True
 
 
-def restore_default_settings() -> None:
+def restore_default_settings(settings_obj: settings.Settings) -> None:
     """This function creates a settings.xml file which is filled with the
     pre-defined values.
 
     """
-    global_utils.global_var_settings_obj.restore_settings()
-    global_utils.global_var_settings_obj.save_settings_to_xml()
+    settings_obj.restore_settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
 
 
 def open_global_settings() -> None:

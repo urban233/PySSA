@@ -33,18 +33,27 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
 
+
 class DialogMessageLocalColabfold(QWidget):
+    # You don't need to create a class and inherent a QWidget, you can just write independent functions
+    # It is best to delete the class and use the functions "installation_Local_Colabfold_accept",
+    # "installation_Local_Colabfold_progress" and "installation_Local_Colabfold_end" in an independent manner
+    # An example for independent functions is the gui_utils.py file; there is no class only functions
+
     def __init__(self): # hier fehlt was? Parameterübergabe?
+        # There is nothing missing here, self is completely enough
         super().__init__()
         # Please, help me :(
         self.installation_Local_Colabfold_accept(self)
+        # you don't need to pass self as function argument
         self.installation_Local_Colabfold_progress(self)
         self.installation_Local_Colabfold_end(self)
 
     def installation_Local_Colabfold_accept(self):
+        # fixme: for function names use snake case
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Question)
-        msg.setText("Are you sure that you want the Local Colabfold installation?")
+        msg.setText("Are you sure that you want to install Local Colabfold?")
         msg.setWindowTitle("Local Colabfold installation")
         btn_installation_local_colabfold_accept_yes = msg.addButton("Yes", QMessageBox.ActionRole)
         btn_installation_local_colabfold_accept_no = msg.addButton("No", QMessageBox.ActionRole)
@@ -53,13 +62,18 @@ class DialogMessageLocalColabfold(QWidget):
         if msg.clickedButton() == btn_installation_local_colabfold_accept_yes:
            # else:
                 sys.exit()
+            # sys.exit is somewhat ambitious here, I think it could kill more than just the message box, just use
+            # msg.close()
 
     def installation_Local_Colabfold_progress(self):
+        # fixme: for function names use snake case
         msg = QMessageBox()
         msg.setIcon(QMessageBox.warning)
         msg.setText("Don't close the window and wait!")
         msg.setWindowTitle("Local Colabfold installation")
         msg.setStandardButtons(None) # hide btns?
+        # If you want to know more about a specific qt element, search first on this website: https://doc.qt.io/qtforpython/
+        # This is the no. 1 source for information about pyqt, get used to read this documentation a lot
         msg.exec_()
         # user_name = os.getlogin()
         # subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",pathlib.Path(f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
@@ -75,11 +89,14 @@ class DialogMessageLocalColabfold(QWidget):
         # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"])
 
     def installation_Local_Colabfold_end(self):
+        # fixme: for function names use snake case
         msg = QMessageBox()
         msg.setIcon(QMessageBox.information)
         msg.setText("Installation is finished!")
         msg.setWindowTitle("Local Colabfold installation")
         msg.setStandardButtons(QMessageBox.Ok)
+        # Just a compliment: I really like this part, where you use the standard button from qt, this is the
+        # best solution!!! Great work
         msg.exec_()
 
 

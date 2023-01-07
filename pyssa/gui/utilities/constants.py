@@ -22,12 +22,15 @@
 """Module for storing project-wide constants"""
 
 import os
+import pathlib
 from pathlib import Path
 
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
 SETTINGS_FILE = "settings.xml"
+SETTINGS_FILENAME = "settings.json"
+SETTINGS_FULL_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/{SETTINGS_FILENAME}")
 
 SCRATCH_DIR = Path(f"{SETTINGS_DIR}/scratch")
 PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")

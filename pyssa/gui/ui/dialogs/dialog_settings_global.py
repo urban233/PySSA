@@ -27,7 +27,8 @@ from pyssa.gui.utilities import gui_utils
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 from pyssa.gui.ui.dialogs import dialog_message_wsl
 from pyssa.gui.ui.dialogs import dialog_message_local_colabfold
-from pyssa.gui.utilities.global_variables import global_var_settings_obj
+from pyssa.gui.data_structures import settings
+from pyssa.gui.utilities import constants
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from pyssa.gui.utilities import tools
@@ -54,6 +55,8 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.tmp_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
+        self.settings = self.tmp_settings.deserialize_settings()
 
         self.ui.txt_workspace_dir.setEnabled(False)
         self.ui.txt_zip_storage_dir.setEnabled(False)
@@ -73,10 +76,10 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
         logging.info("Settings dialog was opened.")
         # loading information from the settings.xml
-        self.ui.txt_workspace_dir.setText(global_var_settings_obj.get_workspace_path())
-        self.ui.txt_zip_storage_dir.setText(global_var_settings_obj.get_prediction_path())
-        self.ui.spb_cycles.setValue(int(global_var_settings_obj.get_cycles()))
-        self.ui.dspb_cutoff.setValue(float(global_var_settings_obj.get_cutoff()))
+        self.ui.txt_workspace_dir.setText(str(self.settings.get_workspace_path()))
+        self.ui.txt_zip_storage_dir.setText(str(self.settings.get_prediction_path()))
+        self.ui.spb_cycles.setValue(int(self.settings.get_cycles()))
+        self.ui.dspb_cutoff.setValue(float(self.settings.get_cutoff()))
         logging.info("Loading values from settings.xml was successful.")
         # customize spin boxes
         self.ui.spb_cycles.setMinimum(0)
@@ -107,11 +110,11 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def okDialog(self):
-        global_var_settings_obj.set_workspace_path(self.ui.txt_workspace_dir.text())
-        global_var_settings_obj.set_prediction_path(self.ui.txt_zip_storage_dir.text())
-        global_var_settings_obj.set_cycles(str(self.ui.spb_cycles.value()))
-        global_var_settings_obj.set_cutoff(str(self.ui.dspb_cutoff.value()))
-        global_var_settings_obj.save_settings_to_xml()
+        self.settings.set_workspace_path(self.ui.txt_workspace_dir.text())
+        self.settings.set_prediction_path(self.ui.txt_zip_storage_dir.text())
+        self.settings.set_cycles(str(self.ui.spb_cycles.value()))
+        self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))
+        self.settings.serialize_settings()
         self.close()
 
     def install_local_colabfold(self):
@@ -124,7 +127,9 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             self.ui.btn_install_local_prediction.setText("Install")
         else:
             dialog = dialog_message_local_colabfold.DialogMessageLocalColabfold()
+            # you do not have a dialog, you have independent message boxes
             dialog.exec_()
+            # you cannot execute a QWidget
             self.ui.btn_install_local_prediction.setText("Uninstall")
 
     def install_wsl(self):

@@ -20,12 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main window of the pyssa plugin"""
-import json
 import logging
 import os
 import shutil
 import sys
-import time
 import webbrowser
 import pathlib
 import subprocess
@@ -33,8 +31,12 @@ import PyQt5.QtCore
 import numpy as np
 import pymol
 import pyqtgraph as pg
-from PyQt5.QtGui import QIcon
 
+from pyssa.gui.utilities import global_variables
+from pyssa.gui.ui.dialogs import dialog_startup
+from pyssa.gui.utilities import constants
+
+from PyQt5.QtGui import QIcon
 from pymol import Qt
 from pymol import cmd
 # TODO: fix import statements so that they do not import a class!
@@ -50,21 +52,17 @@ from pyssa.gui.data_structures.data_classes import protein_analysis_info
 from pyssa.gui.data_structures import project_watcher
 from pyssa.gui.data_structures import data_transformer
 from pyssa.gui.ui.dialogs import dialog_distance_plot
-from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
 from pyssa.gui.ui.dialogs import dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.dialogs import dialog_edit_prot_table
-from pyssa.gui.ui.dialogs import web_interface
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.utilities import tools
-from pyssa.gui.utilities import constants
-from pyssa.gui.utilities import global_variables
 from pyssa.gui.utilities import styles
 from pyssa.gui.utilities import gui_page_management
 from pyssa.gui.utilities.data_classes import stage
 from pyssa.pymol_protein_tools import protein
+from pyssa.gui.data_structures import settings
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -118,11 +116,24 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(550)
         self._init_side_menu()
 
+        self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
+        if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
+            dialog = dialog_startup.DialogStartup()
+            dialog.exec_()
+            # checks if the cancel button was pressed
+            if dialog_startup.global_var_terminate_app == 1:
+                os.remove(constants.SETTINGS_FULL_FILEPATH)
+                sys.exit()
+            self.app_settings.app_launch = 1
+            self.app_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
+            self.app_settings.serialize_settings()
+        self.app_settings = self.app_settings.deserialize_settings()
+
         # ----- All class attributes are listed here
         self.app_project = project.Project("", pathlib.Path(""))
         self._project_watcher = project_watcher.ProjectWatcher(self.app_project, no_of_pdb_files=None)
         self.scratch_path = constants.SCRATCH_DIR
-        self.workspace_path = global_variables.global_var_settings_obj.get_workspace_path()
+        self.workspace_path = self.app_settings.get_workspace_path()
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar = Qt.QtWidgets.QStatusBar()
 
@@ -130,26 +141,13 @@ class MainWindow(QMainWindow):
         self.no_of_selected_chains = 0
         self.plot_dialog = Qt.QtWidgets.QDialog(self)
         self.view_box = None
+
         # -- Gui page management vars
         self.local_pred_monomer_management: gui_page_management.GuiPageManagement
         self.local_pred_multimer_management: gui_page_management.GuiPageManagement
         self.single_analysis_management: gui_page_management.GuiPageManagement
         self.batch_analysis_management: gui_page_management.GuiPageManagement
         self.results_management: gui_page_management.GuiPageManagement
-
-        # checks if the plugin launched for the first time
-        if global_variables.global_var_settings_obj.get_app_launch() == 0 or not os.path.exists(
-                pathlib.Path(constants.SETTINGS_DIR / constants.SETTINGS_FILE)):
-            dialog = dialog_startup.DialogStartup()
-            dialog.exec_()
-            # checks if the cancel button was pressed
-            if dialog_startup.global_var_terminate_app == 1:
-                global_variables.global_var_settings_obj.delete_settings_xml()
-                sys.exit()
-            global_variables.global_var_settings_obj.set_workspace_path(dialog_startup.global_var_startup_workspace)
-            # sets the launch_app var to 1 to indicate that the plugin has successfully overcome the first launch
-            global_variables.global_var_settings_obj.set_app_launch(1)
-            global_variables.global_var_settings_obj.save_settings_to_xml()
 
         # sets up the status bar
         self._setup_statusbar()
@@ -1092,6 +1090,16 @@ class MainWindow(QMainWindow):
         # sets up defaults: Batch
         self.show_batch_analysis_stage_0()
 
+    def _init_all_pages(self):
+        self._init_side_menu()
+        self._init_local_pred_mono_page()
+        self._init_local_pred_multi_page()
+        self._init_sequence_vs_pdb_page()
+        self._init_single_analysis_page()
+        self._init_batch_page()
+        self._init_results_page()
+        self._init_image_page()
+
     # Slots
     # def handle_side_menu(self):
     #     """This function is used to hide and show the side menu
@@ -1532,7 +1540,7 @@ class MainWindow(QMainWindow):
         """
         out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?", "")
         if out:
-            tools.restore_default_settings()
+            tools.restore_default_settings(self.app_settings)
             self.status_bar.showMessage("Settings were successfully restored.")
             logging.info("Settings were successfully restored.")
         else:
@@ -1590,8 +1598,6 @@ class MainWindow(QMainWindow):
         #
         # else:
         #     self.ui.btn_install_local_prediction.show()
-
-
         tools.open_global_settings()
         self._setup_statusbar()
 
@@ -2098,11 +2104,14 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
-        new_project = project.Project(self.ui.txt_use_project_name.text(), pathlib.Path(self.workspace_path))
-        new_project.serialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA", "testproject")
+        sequence = "MAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRMAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR"
+        print(subprocess.run(["wsl", "curl", "-X", "POST", "--data", f"{sequence}", "https://api.esmatlas.com/foldSequence/v1/pdb/", "-OutFile", "protein.pdb"]))
 
-        opened_project = project.Project("", pathlib.Path("")).deserialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA\\testproject.json")
-        opened_project.create_folder_paths()
+        # new_project = project.Project(self.ui.txt_use_project_name.text(), pathlib.Path(self.workspace_path))
+        # new_project.serialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA", "testproject")
+        #
+        # opened_project = project.Project("", pathlib.Path("")).deserialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA\\testproject.json")
+        # opened_project.create_folder_paths()
         # # old saving process
         # session_file = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/")
         # try:
@@ -2244,23 +2253,10 @@ class MainWindow(QMainWindow):
 
     # ----- Functions for Close project
     def close_project(self):
-        if self.web_gui is not None:
-            if self.web_gui.isVisible():
-                # TODO: create a better message box
-                gui_utils.critical_message("A prediction is currently running! If you close your project, the progress will be lost!",
-                                           "Closing a project can result in direct data loss!!")
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
         self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText("")
-        self._init_side_menu()
-        self._init_new_sequence_page()
-        self._init_cloud_pred_multi_page()
-        self._init_local_pred_mono_page()
-        self._init_local_pred_multi_page()
-        self._init_sequence_vs_pdb_page()
-        self._init_single_analysis_page()
-        self._init_results_page()
-        self._init_image_page()
+        self._init_all_pages()
         self.display_home_page()
 
     # Prediction + Analysis
@@ -2691,13 +2687,13 @@ class MainWindow(QMainWindow):
         fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{self.ui.txt_local_pred_mono_protein_name.text()}.fasta", "w")
         fasta_file.write(f">{self.ui.txt_local_pred_mono_protein_name.text()}\n")
         fasta_file.write(self.ui.txt_local_pred_mono_prot_seq.text())
+        fasta_file.close()
+        user_name = os.getlogin()
+        fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
+        pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
 
-        # TODO: make paths below more variable and not hard-coded like this
-        fasta_path = "/mnt/c/Users/martin/.pyssa/scratch/local_predictions/fasta"
-        pdb_path = "/mnt/c/Users/martin/.pyssa/scratch/local_predictions/pdb"
         try:
-            # TODO: make the script path below more variable and not hard-coded like this
-            subprocess.run(["wsl", "/mnt/c/Users/martin/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
+            subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
                             fasta_path, pdb_path])
         except OSError:
             shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))

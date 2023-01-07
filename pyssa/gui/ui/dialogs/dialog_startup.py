@@ -44,6 +44,8 @@ class DialogStartup(Qt.QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.workspace_dir = ""
+
         self.ui.btn_cancel.clicked.connect(self.close_dialog)
         self.ui.btn_choose_workspace.clicked.connect(self.choose_workspace)
         self.ui.btn_launch.clicked.connect(self.launch_app)
@@ -76,11 +78,11 @@ class DialogStartup(Qt.QtWidgets.QDialog):
         """This function opens a file dialog to choose a workspace directory
 
         """
-        workspace_dir = PyQt5.QtWidgets.QFileDialog.getExistingDirectory(
+        self.workspace_dir = PyQt5.QtWidgets.QFileDialog.getExistingDirectory(
             self, "Open Workspace Directory", Qt.QtCore.QDir.homePath(),
             PyQt5.QtWidgets.QFileDialog.ShowDirsOnly | PyQt5.QtWidgets.QFileDialog.DontResolveSymlinks)
-        if workspace_dir != "":
-            self.ui.txt_workspace.setText(workspace_dir)
+        if self.workspace_dir != "":
+            self.ui.txt_workspace.setText(self.workspace_dir)
 
     def launch_app(self):
         """This function launches the plugin
