@@ -126,10 +126,9 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
             self.ui.btn_install_local_prediction.setText("Install")
         else:
-            dialog = dialog_message_local_colabfold.DialogMessageLocalColabfold()
-            # you do not have a dialog, you have independent message boxes
-            dialog.exec_()
-            # you cannot execute a QWidget
+            dialog_message_local_colabfold.installation_local_colabfold_accept(self)
+            dialog_message_local_colabfold.installation_local_colabfold_progress(self)
+            dialog_message_local_colabfold.installation_local_colabfold_end(self)
             self.ui.btn_install_local_prediction.setText("Uninstall")
 
     def install_wsl(self):
