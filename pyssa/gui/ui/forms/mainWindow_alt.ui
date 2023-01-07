@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>921</height>
+    <height>951</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -183,7 +183,7 @@
                   <x>0</x>
                   <y>0</y>
                   <width>163</width>
-                  <height>827</height>
+                  <height>847</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -217,7 +217,7 @@
                       <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="text">
-                      <string>New ...</string>
+                      <string>New</string>
                      </property>
                     </widget>
                    </item>
@@ -227,7 +227,7 @@
                       <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="text">
-                      <string>Open ...</string>
+                      <string>Open</string>
                      </property>
                     </widget>
                    </item>
@@ -237,7 +237,7 @@
                       <enum>Qt::ClickFocus</enum>
                      </property>
                      <property name="text">
-                      <string>Delete ...</string>
+                      <string>Delete</string>
                      </property>
                     </widget>
                    </item>
@@ -251,21 +251,21 @@
                    <item>
                     <widget class="QPushButton" name="btn_edit_page">
                      <property name="text">
-                      <string>Edit ...</string>
+                      <string>Edit</string>
                      </property>
                     </widget>
                    </item>
                    <item>
                     <widget class="QPushButton" name="btn_view_page">
                      <property name="text">
-                      <string>View ...</string>
+                      <string>View</string>
                      </property>
                     </widget>
                    </item>
                    <item>
                     <widget class="QPushButton" name="btn_use_page">
                      <property name="text">
-                      <string>Use ...</string>
+                      <string>Use</string>
                      </property>
                     </widget>
                    </item>
@@ -710,7 +710,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>PySSA - Python-Plugin for Sequence-to-Structure Analysis</string>
+                   <string>PySSA - Python-Plugin for protein Sequence-to-Structure Analysis</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -4298,7 +4298,7 @@
      <x>0</x>
      <y>0</y>
      <width>550</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -4317,7 +4317,6 @@
     <addaction name="action_file_save_as"/>
     <addaction name="action_add_model"/>
     <addaction name="action_add_multiple_models"/>
-    <addaction name="action_toggle_notebook_visibility"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">

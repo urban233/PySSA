@@ -31,13 +31,12 @@ import os
 path_list = [
     f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
     f"{os.path.expanduser('~')}/opt/anaconda3/envs/pyssa/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
-    #f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\pyssa\\",
-    pathlib.Path(f"{os.path.expanduser('~')}/AppData/Roaming/pymol/startup")
+    f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\tmpPySSA\\",
 ]
 styles_path_list = [
     f"{path_list[0]}/styles/styles_alt.css",
     f"{path_list[1]}/styles/styles_alt.css",
-    f"{path_list[2]}/styles/styles_alt.css",
+    pathlib.Path(f"{path_list[2]}/pyssa/gui/styles/styles.css"),
 ]
 # appends the os specific python path
 if sys.platform.startswith("darwin"):
@@ -75,7 +74,7 @@ def run_plugin_gui():
         app = Qt.QtWidgets.QApplication(sys.argv)
         app.exec_()
     """
-    from pyssa.main import MainWindow
+    from .pyssa.main import MainWindow
     # getting the value of the global var mainWindow
     global mainWindow
 

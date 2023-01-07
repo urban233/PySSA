@@ -1,19 +1,21 @@
-import datetime
-from pymol import Qt
-from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout,
-                             QPushButton, QLabel)
+import json
+import pathlib
+import sys
+import PyQt5
 from PyQt5 import QtCore
-from PyQt5.QtCore import QUrl
-from pyssa.gui.utilities import constants
-from pyssa.gui.utilities import gui_utils
-from pyssa.gui.ui.dialogs import dialog_notebook_managment
+from pymol.Qt import QtWidgets
 try:
     from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineDownloadItem
 except ImportError:
-    print("QtWebEngineWidgets could not be imported correctly!")
+    print("QtWebEngineWidgets could not be imported correctly! In the colab_notebook.py file.")
+import datetime
+from pymol import Qt
+from PyQt5.QtWidgets import (QHBoxLayout, QPushButton, QLabel)
+from PyQt5.QtCore import QUrl
+from gui.utilities import constants
 
 
-class WebInterface(Qt.QtWidgets.QDialog):
+class WebInterface(Qt.QtWidgets.QMainWindow):
     google_login_page = "https://accounts.google.com/v3/signin/identifier?dsh=S487182181%3A1668865110328278&continue=https%3A%2F%2Fcolab.research.google.com%2Fgithub%2Fsokrypton%2FColabFold%2Fblob%2Fmain%2FAlphaFold2.ipynb&ec=GAZAqQM&passive=true&flowName=GlifWebSignIn&flowEntry=ServiceLogin&ifkv=ARgdvAu0jNh8qAP4PLZtLHO1saEbt8gL7tdnPxJNzq-nQ8HD1od95scPNdlXBiSB5aGTVZWwLQ-f-A"
     colab_login_page = "https://accounts.google.com/ServiceLogin?passive=true&continue=https%3A%2F%2Fcolab.research.google.com%2Fgithub%2Fsokrypton%2FColabFold%2Fblob%2Fmain%2FAlphaFold2.ipynb&ec=GAZAqQM"
     login_page = "https://accounts.google.com/v3/signin/identifier?dsh=S-301988812%3A1672417305836195&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&hl=de&passive=true&flowName=GlifWebSignIn&flowEntry=ServiceLogin&ifkv=AeAAQh6nGazOofUFZXEEKfU4PB58c6ZxzdbUX2maYjsI4mCm7wqSvzZ3SCIux6lnC0hiRjVaT4p97w"
@@ -33,12 +35,12 @@ class WebInterface(Qt.QtWidgets.QDialog):
     """
     exit_code = 2
     # the values need to be in single quotes!
-    prediction_params = {
-        "seq": 'AFRGQEAFRGQEAFRGQEAFRGQEAFRGQE',
-        "job_name": '',
-        "amber": 'false',
-        "templates": ('pdb70', '1'),
-    }
+    # prediction_params = {
+    #     "seq": 'AFRGQEAFRGQEAFRGQEAFRGQEAFRGQE',
+    #     "job_name": '',
+    #     "amber": 'false',
+    #     "templates": ('pdb70', '1'),
+    # }
 
     def __init__(self, parent=None):
         """Constructor
@@ -47,10 +49,16 @@ class WebInterface(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
-        self.dialog: dialog_notebook_managment.DialogNotebookManagment
+        super().__init__()
         self.status = ""
         self.current_time = ""
+        # basic main window setup
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.centralwidget.setObjectName("centralwidget")
+        self.outer_layout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.side_menu_container = QtWidgets.QFrame(self.centralwidget)
+        # Set the central widget
+        self.setCentralWidget(self.centralwidget)
         # QWebEngineView is used to display the content from the QWebEnginePage
         self.browser = QWebEngineView()
         self.web_page = QWebEnginePage()
@@ -62,17 +70,16 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.button.setMinimumWidth(120)
         self.button_abort.setMinimumWidth(120)
         # basic layout
-        outer_layout = QVBoxLayout()
-        label_layout = QHBoxLayout()
-        button_layout = QHBoxLayout()
-        outer_layout.addWidget(self.browser)
-        label_layout.addWidget(self.label)
-        button_layout.addStretch()
-        button_layout.addWidget(self.button)
-        button_layout.addWidget(self.button_abort)
-        outer_layout.addLayout(label_layout)
-        outer_layout.addLayout(button_layout)
-        self.setLayout(outer_layout)
+        self.label_layout = QHBoxLayout()
+        self.button_layout = QHBoxLayout()
+        self.outer_layout.addWidget(self.browser)
+        self.label_layout.addWidget(self.label)
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(self.button)
+        self.button_layout.addWidget(self.button_abort)
+        self.outer_layout.addLayout(self.label_layout)
+        self.outer_layout.addLayout(self.button_layout)
+        self.setLayout(self.outer_layout)
 
         self.button.hide()
         self.label.hide()
@@ -80,13 +87,22 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.browser.page().profile().downloadRequested.connect(self.on_downloadRequested)
         self.button.clicked.connect(self.control_status)
         self.button_abort.clicked.connect(self.disconnect_active_runtime)
+        # reading in prediction config
+        try:
+            params_file = open(pathlib.Path(f"{constants.SCRATCH_DIR}\\prediction_params.json"), "r", encoding="utf-8")
+        except FileNotFoundError:
+            self.exit_code = 1
+            return
+        self.prediction_params = json.load(params_file)
+        params_file.close()
+        print(self.prediction_params)
         # window settings
-        self.setMinimumSize(575, 150)
-        self.setMaximumSize(575, 150)
-        self.setWindowTitle("Sign-In Google")
+        #self.setMinimumSize(575, 150)
+        #self.setMaximumSize(575, 150)
+        self.setWindowTitle("Cloud Prediction")
         self.show()
 
-    # @QtCore.pyqtSlot("QWebEngineDownloadItem*")
+    @QtCore.pyqtSlot("QWebEngineDownloadItem*")
     def on_downloadRequested(self, download):
         """This function is called if the notebook wants to download the results
 
@@ -119,6 +135,7 @@ class WebInterface(Qt.QtWidgets.QDialog):
                     } 
                     """, self.process_authentication_status)
 
+
     def process_authentication_status(self, value) -> None:
         if value == "login needed":
             # Login is needed to proceed!
@@ -131,7 +148,7 @@ class WebInterface(Qt.QtWidgets.QDialog):
             print("Unexpected case happened.")
 
     def run_colab_notebook_js(self):
-        self.browser.hide()
+        #self.browser.hide()
         self.label.show()
         self.button.show()
         self.current_time = datetime.datetime.now().strftime("%H:%M:%S")
@@ -170,7 +187,8 @@ class WebInterface(Qt.QtWidgets.QDialog):
         """This function does steps to finish the prediction with the google colab notebook
 
         """
-        gui_utils.warning_prediction_is_finished(self)
+        #gui_utils.warning_prediction_is_finished(self)
+        print("Finished")
 
     def check_status(self) -> int:
         """This function checks the state of the Google colab kernel and returns the exit code
@@ -224,17 +242,26 @@ class WebInterface(Qt.QtWidgets.QDialog):
             self.browser.show()
             self.setMaximumSize(1080, 900)
 
-    def show_interface(self):
-        """This function is called from outside the class to initiate the opening of the interface
-
-        """
-        self.open_colab_notebook()
-        self.exec_()
-
-    def show_account_page(self):
-        self.web_page.setUrl(self.account_page)
-        self.exec_()
+    # def show_interface(self):
+    #     """This function is called from outside the class to initiate the opening of the interface
+    #
+    #     """
+    #     self.open_colab_notebook()
+    #     self.exec_()
+    #
+    # def show_account_page(self):
+    #     self.web_page.setUrl(self.account_page)
+    #     self.exec_()
 
     def disconnect_active_runtime(self):
         self.web_page.runJavaScript("colab.global.notebook.kernel.disconnect()")
         self.close()
+
+
+if __name__ == '__main__':
+    app = PyQt5.QtWidgets.QApplication(sys.argv)
+    window = WebInterface()
+    if not window.exit_code == 1:
+        window.show()
+        window.open_colab_notebook()
+        sys.exit(app.exec_())

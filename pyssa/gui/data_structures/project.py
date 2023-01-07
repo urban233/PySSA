@@ -28,11 +28,10 @@ from datetime import datetime
 from pathlib import Path
 from xml.etree import ElementTree
 from xml.dom import minidom
-
-import core
 from pyssa.gui.utilities import gui_utils
 from pyssa.pymol_protein_tools import protein_pair
 from pyssa.pymol_protein_tools import protein
+
 
 class Project:
     """This class is for the projects used in the plugin
@@ -87,7 +86,7 @@ class Project:
             protein_name:
                 name of the protein
         """
-        new_protein = core.Protein(protein_name)
+        new_protein = protein.Protein(protein_name)
         self.proteins.append(new_protein)
 
     def add_existing_protein(self, value_protein: protein.Protein) -> None:

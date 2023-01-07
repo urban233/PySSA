@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the project watcher class"""
+"""Module for the project watcher class which is hard coded based on pyssa"""
 import os
 from pyssa.gui.data_structures import project
 from pyssa.gui.utilities import gui_utils
@@ -93,9 +93,6 @@ class ProjectWatcher:
                 ui.btn_close_project,
                 ui.btn_use_page,
                 ui.btn_edit_page,
-                ui.lbl_pred_cloud,
-                ui.btn_pred_cloud_monomer_page,
-                ui.btn_pred_cloud_multimer_page,
                 ui.lbl_pred_local,
                 ui.btn_pred_local_monomer_page,
                 ui.btn_pred_local_multimer_page,
@@ -104,6 +101,9 @@ class ProjectWatcher:
                 ui.btn_new_page,
                 ui.btn_open_page,
                 ui.btn_delete_page,
+                ui.lbl_pred_cloud,
+                ui.btn_pred_cloud_monomer_page,
+                ui.btn_pred_cloud_multimer_page,
                 ui.btn_pred_cloud_monomer_vs_pdb_page,
                 ui.btn_pred_cloud_multimer_vs_pdb_page,
                 ui.btn_pred_local_monomer_vs_pdb_page,
