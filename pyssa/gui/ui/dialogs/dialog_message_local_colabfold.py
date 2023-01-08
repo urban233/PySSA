@@ -33,69 +33,53 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
 
-
-def __init__(self):
-    # the __init__ function is not needed, because you do not have any classes
-    super().__init__()
-    self.installation_Local_Colabfold_accept()
-    self.installation_Local_Colabfold_progress()
-    self.installation_Local_Colabfold_end()
-
-
-def installation_local_colabfold_accept(self):
-    # you do not need the self as function argument
+def installation_local_colabfold_accept():
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Question)
     msg.setText("Are you sure that you want to install Local Colabfold?")
     msg.setWindowTitle("Local Colabfold installation")
     btn_installation_local_colabfold_accept_yes = msg.addButton("Yes", QMessageBox.ActionRole)
-    msg.setStandardButtons(msg.No)
-    # The usage of setStandardButtons is in this case not the best solution. The problem is I do not know the return
-    # value of the "standard no" button
-    # The idea is that this function (message box) a return value has which can be evaluated and used in the
-    # dialog_settings_global.py to decide whether to start the installation process or not.
-    # Therefor I would recommend to use the button implementation shown below.
-    # btn_installation_local_colabfold_accept_no = msg.addButton("No", QMessageBox.ActionRole)
+    btn_installation_local_colabfold_accept_no = msg.addButton("No", QMessageBox.ActionRole)
+    msg.exec_()
 
-    msg.close()
-    # a closing statement should not be used here
-    # msg.exec_() # I added this line, you need this one, to show the message box
-
-    ilcp = installation_local_colabfold_progress(self)
+     # def def get_a_random_number() -> int:
+     #   ilcp = installation_local_colabfold_progress()
+     #  return ???
     # with this line, you will save the return value from "installation_local_colabfold_progress" into ilcp but
     # the function does not have any return value
     # Extra tip: annotate your function heads like this: def get_a_random_number() -> int:
     # this helps to identify if a function has a return value or not
 
+    # ??? Question ???
+    # I think, that I don't understand to 100% how this function works. So I understand, that we need a return value, but when the return value must be an int,
+    # it don't can be True or False. But when I took e.g. a 1 as a return value, a lot of mistakes appears. I play with the function, but I don't find a solution.
+    # So I need your help again. Thanks a lot for your patience!!!
+
     if msg.clickedButton() == btn_installation_local_colabfold_accept_yes:
-        return ilcp
+        return True
         # you can better return a True, which gets evaluated in the dialog_settings_global.py through an
         # if/else statement
     else:
         msg.close()
+        return False
         # closing the message box is the right way, but you are missing a return value like False
 
 
-def installation_local_colabfold_progress(self):
-    # you do not need the self as function argument
+def installation_local_colabfold_progress():
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Don't close the window and wait!")
     msg.setWindowTitle("Local Colabfold installation")
-    #msg.setStandardButtons(None) # with luck, it is right, when not: read source from Todoist
-    # unfortunately the above line doesn't work, I tested it
-    msg.close()
-    # a closing statement should not be used here
-    # msg.exec_() # I added this line, you need this one, to show the message box
+    # fixme: hide msg.setStandardButtons -> read source from Todoist
+    msg.exec_()
 
-
-def installation_local_colabfold_end(self):
-    # you do not need the self as function argument, besides this everything seems to be great
+def installation_local_colabfold_end():
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
     msg.setText("Installation is finished!")
     msg.setWindowTitle("Local Colabfold installation")
     msg.setStandardButtons(QMessageBox.Ok)
+
 
 # garbage
 # class DialogMessageLocalColabfold(QWidget):

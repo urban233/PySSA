@@ -114,18 +114,24 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         colabbatch_path = r"\.pyssa\colabfold_batch\bin\colabfold_batch"
         path_colabfold = home_path_wsl + "\\" + colabfold_username[0] + colabbatch_path
         if os.path.exists(path_colabfold):
+            dialog_message_local_colabfold.installation_local_colabfold_accept(True)
             # dialog_message_local_colabfold.installation_local_colabfold_accept(self) # I added this line, to give
             # you a hint where to place the first message box
-            subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
-            # I would recommend that you comment out the line above for testing purposes
+            # ??? QUESTION ???
+            # Why must there be the first box, because it stands by else. So the other boxes are don't used here. That's in my brain.
+            # Can you explain why here must stand the message boxes?
+
+            # subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
             self.ui.btn_install_local_prediction.setText("Install")
         else:
-            dialog_message_local_colabfold.installation_local_colabfold_accept(self)
+            dialog_message_local_colabfold.installation_local_colabfold_accept(True)
             # you need to evaluate every return value from the message boxes if they have one
-            dialog_message_local_colabfold.installation_local_colabfold_progress(self)
 
-            # It is smart to do the actual installation process here and not inside a message box
+            # ??? QUESTION ???
+            # I think in the dialog_message_local_colabfold.py are mistakes, so here appears "unexpected argument".
+            # Please switch in this file and explain my dump.
 
+            dialog_message_local_colabfold.installation_local_colabfold_progress()
             # user_name = os.getlogin()
             # subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
             # subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"])
@@ -139,7 +145,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"])
             # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"])
 
-            dialog_message_local_colabfold.installation_local_colabfold_end(self)
+            dialog_message_local_colabfold.installation_local_colabfold_end()
             self.ui.btn_install_local_prediction.setText("Uninstall")
 
     def install_wsl(self):
