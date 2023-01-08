@@ -43,35 +43,15 @@ def installation_local_colabfold_accept() -> bool:
     btn_installation_local_colabfold_accept_no = msg.addButton("No", QMessageBox.ActionRole)
     msg.exec_()
 
-     # def def get_a_random_number() -> int:
-     #   ilcp = installation_local_colabfold_progress()
-     #  return ???
-    # with this line, you will save the return value from "installation_local_colabfold_progress" into ilcp but
-    # the function does not have any return value
-    # Extra tip: annotate your function heads like this: def get_a_random_number() -> int:
-    # this helps to identify if a function has a return value or not
-
-    # ??? Question ???
-    # I think, that I don't understand to 100% how this function works. So I understand, that we need a return value, but when the return value must be an int,
-    # it don't can be True or False. But when I took e.g. a 1 as a return value, a lot of mistakes appears. I play with the function, but I don't find a solution.
-    # So I need your help again. Thanks a lot for your patience!!!
-    # --- Answer ---
-    # The function "get_a_random_number()" was just an example to show you how you can annotate your function heads.
-    # You do NOT need this function here or elsewhere.
-    # For better visualization of function annotation, I added the annotation
-    # to the function "installation_local_colabfold_accept()"
-
     if msg.clickedButton() == btn_installation_local_colabfold_accept_yes:
         return True
         # you can better return a True, which gets evaluated in the dialog_settings_global.py through an
-        # if/else statement
     else:
         msg.close()
         return False
-        # closing the message box is the right way, but you are missing a return value like False
 
 
-def installation_local_colabfold_progress():
+def installation_local_colabfold_progress() -> bool:
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Don't close the window and wait!")
@@ -79,13 +59,25 @@ def installation_local_colabfold_progress():
     # fixme: hide msg.setStandardButtons -> read source from Todoist
     msg.exec_()
 
+    if msg.setIcon(QMessageBox.Warning) == msg.setIcon(QMessageBox.Warning):
+        return True
+    else:
+        msg.close()
+        return False
+    # ??? - Is it okay, because we have no btn?
 
-def installation_local_colabfold_end():
+def installation_local_colabfold_end() -> bool:
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
     msg.setText("Installation is finished!")
     msg.setWindowTitle("Local Colabfold installation")
     msg.setStandardButtons(QMessageBox.Ok)
+
+    if msg.clickedButton() == msg.setStandardButtons(QMessageBox.Ok):
+        return True
+    else:
+        msg.close()
+        return False
 
 
 # garbage

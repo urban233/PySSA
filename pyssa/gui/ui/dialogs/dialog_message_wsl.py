@@ -103,12 +103,3 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
 
     def restart_system(self):
         os.system("shutdown /r")
-
-    # def function(self):
-    #     if self.status == "installed":
-    #         self.installation_is_finished()
-    #     else:
-    #         self.installation_in_progress()
-
-    def install_wsl_command(self):
-        time.sleep(5)
