@@ -53,6 +53,7 @@ from pyssa.gui.data_structures.data_classes import protein_analysis_info
 from pyssa.gui.data_structures import project_watcher
 from pyssa.gui.data_structures import data_transformer
 from pyssa.gui.data_structures import safeguard
+from pyssa.gui.data_structures.data_classes import prediction_configuration
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
@@ -138,6 +139,7 @@ class MainWindow(QMainWindow):
         self.workspace_path = self.app_settings.workspace_path
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar = Qt.QtWidgets.QStatusBar()
+        self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
 
         self.results_name = ""
         self.no_of_selected_chains = 0
@@ -448,7 +450,7 @@ class MainWindow(QMainWindow):
 
         """
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage(self.workspace.text())
+        self.status_bar.showMessage(str(self.workspace_path))
 
     def _setup_default_configuration(self):
         self.ui.lbl_current_project_name.setText("")
@@ -1067,10 +1069,8 @@ class MainWindow(QMainWindow):
         self.ui.list_use_available_protein_structures.clear()
         self.ui.list_use_selected_protein_structures.clear()
         valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
-
         # filesystem operations
-        tools.scan_project_for_valid_proteins(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}",
+        tools.scan_project_for_valid_proteins(pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"),
                                               self.ui.list_use_selected_protein_structures)
         protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(valid_projects,
                                                                                       self.ui.lbl_current_project_name.text(),
@@ -1085,6 +1085,7 @@ class MainWindow(QMainWindow):
             if tmp_prot_name in protein_names:
                 protein_names.remove(tmp_prot_name)
         self.ui.list_use_available_protein_structures.addItems(protein_names)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be
@@ -1396,6 +1397,8 @@ class MainWindow(QMainWindow):
         #     self.ui.btn_install_local_prediction.show()
         dialog = dialog_settings_global.DialogSettingsGlobal()
         dialog.exec_()
+        self.app_settings = self.app_settings.deserialize_settings()
+        self.workspace_path = self.app_settings.workspace_path
         self._setup_statusbar()
 
     @staticmethod
@@ -1603,9 +1606,6 @@ class MainWindow(QMainWindow):
         """This function creates a new project based on the plugin New ... page
 
         """
-        self._init_hide_ui_elements()
-        # show project management options in side menu
-        self._init_project_management()
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
         # save project folder in current workspace
@@ -1643,7 +1643,7 @@ class MainWindow(QMainWindow):
             chains = cmd.get_chains(pdb_id)
             cmd.reinitialize()
             self.app_project.add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.serialize_protein(self.app_project.get_objects_path(), pdb_id)
+            tmp_ref_protein.serialize_protein(self.app_project.get_objects_proteins_path(), pdb_id)
             for chain in chains:
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
         self.app_project.serialize_project(self.app_project.project_path, "project")
@@ -1728,18 +1728,18 @@ class MainWindow(QMainWindow):
 
         """
         # show project management options in side menu
-        self._init_project_management()
+        # self._init_project_management()
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
         self.app_project = project.Project.deserialize_project(tmp_project_path)
         self._project_watcher.current_project = self.app_project
-        if self.app_project.get_number_of_proteins() > 0:
-            tmp_proteins = os.listdir(self.app_project.get_pdb_path())
-            self.app_project.proteins.clear()
-            self.app_project.protein_pairs.clear()
-            for single_protein in tmp_proteins:
-                tmp_protein_name = single_protein.replace(".pdb", "")
-                json_path = pathlib.Path(f"{self.app_project.get_objects_path()}/{tmp_protein_name}.json")
-                self.app_project.add_existing_protein(protein.Protein.deserialize_protein(json_path))
+        # if self.app_project.get_number_of_proteins() > 0:
+        #     tmp_proteins = os.listdir(self.app_project.get_pdb_path())
+        #     self.app_project.proteins.clear()
+        #     self.app_project.protein_pairs.clear()
+        #     for single_protein in tmp_proteins:
+        #         tmp_protein_name = single_protein.replace(".pdb", "")
+        #         json_path = pathlib.Path(f"{self.app_project.get_objects_proteins_path()}/{tmp_protein_name}.json")
+        #         self.app_project.add_existing_protein(protein.Protein.deserialize_protein(json_path))
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
@@ -2019,17 +2019,14 @@ class MainWindow(QMainWindow):
         gui_utils.enable_text_box(self.ui.txt_use_project_name, self.ui.lbl_use_project_name)
 
     def create_use_project(self):
-        self._init_hide_ui_elements()
-        # show project management options in side menu
-        self._init_project_management()
         self.ui.lbl_current_project_name.setText(self.ui.txt_use_project_name.text())
         self.status_bar.showMessage(
             f"Current project path: {self.workspace_path}/{self.ui.txt_use_project_name.text()}")
         # save project folder in current workspace
+        existing_project = self.app_project
         new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
         new_project.create_project_tree()
         self.app_project = new_project
-
         # copy proteins in new project
         prots_to_copy = []
         for i in range(self.ui.list_use_selected_protein_structures.count()):
@@ -2039,7 +2036,7 @@ class MainWindow(QMainWindow):
             protein_path = global_variables.global_var_workspace_proteins[tmp_protein]
             shutil.copy(protein_path, f"{self.app_project.get_pdb_path()}/{tmp_protein}")
             new_protein = protein.Protein(tmp_protein, filepath=pathlib.Path(self.app_project.get_pdb_path()))
-            new_protein.serialize_protein(self.app_project.get_objects_path(), tmp_protein)
+            new_protein.serialize_protein(self.app_project.get_objects_proteins_path(), tmp_protein)
             self.app_project.add_existing_protein(new_protein)
         self.app_project.serialize_project(self.app_project.project_path, "project")
         # shows options which can be done with the data in the project folder
@@ -2394,10 +2391,11 @@ class MainWindow(QMainWindow):
                                     self.ui.lbl_local_pred_mono_status_protein_name,
                                     self.ui.btn_local_pred_mono_next)
 
-    @staticmethod
-    def local_pred_mono_show_prediction_configuration():
-        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
+    def local_pred_mono_show_prediction_configuration(self):
+        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(self.prediction_configuration)
         config.exec_()
+        self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
+        self.prediction_configuration.templates = config.prediction_config.templates
 
     def local_pred_mono_validate_protein_sequence(self):
         """This function validates the input of the protein sequence in real-time
@@ -2655,8 +2653,8 @@ class MainWindow(QMainWindow):
         structure_analysis_obj = structure_analysis.StructureAnalysis(
             reference_protein=[transformed_analysis_data[0]], model_proteins=[transformed_analysis_data[1]],
             ref_chains=transformed_analysis_data[0].chains, model_chains=transformed_analysis_data[1].chains,
-            export_dir=transformed_analysis_data[2], cycles=global_variables.global_var_settings_obj.get_cycles(),
-            cutoff=global_variables.global_var_settings_obj.get_cutoff(),
+            export_dir=transformed_analysis_data[2], cycles=self.app_settings.get_cycles(),
+            cutoff=self.app_settings.get_cutoff(),
         )
         if self.ui.cb_analysis_images.isChecked():
             structure_analysis_obj.response_create_images = True
@@ -2665,7 +2663,18 @@ class MainWindow(QMainWindow):
         structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
                                                              structure_analysis_obj.model_proteins)
         protein_pairs = structure_analysis_obj.create_protein_pairs()
+        analysis_name = f"{transformed_analysis_data[0].molecule_object};{transformed_analysis_data[0].chains}_vs_{transformed_analysis_data[1].molecule_object};{transformed_analysis_data[1].chains}"
+        analysis_name = analysis_name.replace(";", "_")
+        analysis_name = analysis_name.replace(",", "_")
+        analysis_name = analysis_name.replace("[", "")
+        analysis_name = analysis_name.replace("]", "")
+        analysis_name = analysis_name.replace("'", "")
+        protein_pairs[0].name = analysis_name
+        protein_pairs[0].cutoff = self.app_settings.cutoff
+        self.app_project.add_protein_pair(protein_pairs[0])
+        protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
         structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
+        self.app_project.serialize_project(self.app_project.project_path, "project")
         self._project_watcher.show_valid_options(self.ui)
 
     # def load_reference_for_analysis(self):
@@ -2884,8 +2893,8 @@ class MainWindow(QMainWindow):
             structure_analysis_obj = structure_analysis.StructureAnalysis(
                 reference_protein=[analysis_data[0]], model_proteins=[analysis_data[1]],
                 ref_chains=analysis_data[0].chains, model_chains=analysis_data[1].chains,
-                export_dir=analysis_data[2], cycles=global_variables.global_var_settings_obj.get_cycles(),
-                cutoff=global_variables.global_var_settings_obj.get_cutoff(),
+                export_dir=analysis_data[2], cycles=self.app_settings.get_cycles(),
+                cutoff=self.app_settings.get_cutoff(),
             )
             if self.ui.cb_analysis_images.isChecked():
                 structure_analysis_obj.response_create_images = True
@@ -3100,13 +3109,8 @@ class MainWindow(QMainWindow):
         """This function opens a window which displays the distance plot.
 
         """
-        file_path = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
-        model_name = self.ui.lbl_current_project_name.text()
-        global_variables.global_var_tmp_project_info.clear()
-        global_variables.global_var_tmp_project_info.append(file_path)
-        global_variables.global_var_tmp_project_info.append(model_name)
-
-        dialog = dialog_distance_plot.DialogDistancePlot()
+        protein_pair_of_analysis = self.app_project.get_specific_protein_pair(self.ui.cb_results_analysis_options.currentText())
+        dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
         dialog.exec_()
 
         # item = self.ui.project_list.selectedItems()
@@ -3157,15 +3161,15 @@ class MainWindow(QMainWindow):
         # item = self.ui.project_list.selectedItems()
         # if item is None:
         #     raise ValueError
+        protein_pair_of_analysis = self.app_project.get_specific_protein_pair(
+            self.ui.cb_results_analysis_options.currentText())
 
         plot_dialog = Qt.QtWidgets.QDialog(self)
         plot_dialog_layout = QHBoxLayout()
         graph_widget = pg.PlotWidget()
 
         # read csv file
-        file_path = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
-        model_name = self.ui.lbl_current_project_name.text()
-        path = f"{file_path}/distance_csv/distances.csv"
+        path = pathlib.Path(f"{protein_pair_of_analysis.results_dir}/distance_csv/distances.csv")
         distance_list = []
         with open(path, 'r', encoding="utf-8") as csv_file:
             i = 0
@@ -3210,7 +3214,7 @@ class MainWindow(QMainWindow):
 
         # styling the plot
         graph_widget.setBackground('w')
-        graph_widget.setTitle(f"Distance Histogram of {model_name}", size="23pt")
+        graph_widget.setTitle(f"Distance Histogram of {protein_pair_of_analysis.name}", size="23pt")
         styles = {'font-size': '14px'}
         ax_label_x = "Distance in angstrom"
         graph_widget.setLabel('left', ax_label_x, **styles)

@@ -88,6 +88,7 @@ class Protein:
                 raise NotADirectoryError(f"The path {filepath} was not "
                                          f"found.")
         if export_data_dir is not None:
+            export_data_dir = pathlib.Path(export_data_dir)
             if not os.path.exists(f"{self.export_data_dir}"):
                 raise NotADirectoryError(f"The path {export_data_dir} was not "
                                          f"found.")
@@ -223,7 +224,7 @@ class Protein:
         try:
             protein_obj_file = open(protein_obj_json_file, "r", encoding="utf-8")
         except FileNotFoundError:
-            print(f"There is no valid json file under: {protein_obj_json_file}")
+            print(f"There is no valid protein json file under: {protein_obj_json_file}")
             return
         protein_dict = json.load(protein_obj_file)
         if protein_dict.get("export_data_dir") == "None":

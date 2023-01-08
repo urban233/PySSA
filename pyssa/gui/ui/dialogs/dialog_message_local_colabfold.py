@@ -33,7 +33,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
 
-def installation_local_colabfold_accept():
+
+def installation_local_colabfold_accept() -> bool:
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Question)
     msg.setText("Are you sure that you want to install Local Colabfold?")
@@ -54,6 +55,11 @@ def installation_local_colabfold_accept():
     # I think, that I don't understand to 100% how this function works. So I understand, that we need a return value, but when the return value must be an int,
     # it don't can be True or False. But when I took e.g. a 1 as a return value, a lot of mistakes appears. I play with the function, but I don't find a solution.
     # So I need your help again. Thanks a lot for your patience!!!
+    # --- Answer ---
+    # The function "get_a_random_number()" was just an example to show you how you can annotate your function heads.
+    # You do NOT need this function here or elsewhere.
+    # For better visualization of function annotation, I added the annotation
+    # to the function "installation_local_colabfold_accept()"
 
     if msg.clickedButton() == btn_installation_local_colabfold_accept_yes:
         return True
@@ -72,6 +78,7 @@ def installation_local_colabfold_progress():
     msg.setWindowTitle("Local Colabfold installation")
     # fixme: hide msg.setStandardButtons -> read source from Todoist
     msg.exec_()
+
 
 def installation_local_colabfold_end():
     msg = QMessageBox()

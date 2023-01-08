@@ -114,22 +114,36 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         colabbatch_path = r"\.pyssa\colabfold_batch\bin\colabfold_batch"
         path_colabfold = home_path_wsl + "\\" + colabfold_username[0] + colabbatch_path
         if os.path.exists(path_colabfold):
-            dialog_message_local_colabfold.installation_local_colabfold_accept(True)
-            # dialog_message_local_colabfold.installation_local_colabfold_accept(self) # I added this line, to give
-            # you a hint where to place the first message box
             # ??? QUESTION ???
-            # Why must there be the first box, because it stands by else. So the other boxes are don't used here. That's in my brain.
-            # Can you explain why here must stand the message boxes?
+            # Why does the first box need to be placed here, and somewhere else? Are the other boxes not used here?
+            # Can you explain why the first message box need to be here?
+            # --- Answer ---
+            # Here you will need a message box, which asks the user, if he would like to remove local colabfold from
+            # his system.
+            # The logical message of this if-statement is: the local colabfold is installed
+
+            # here you will need to implement a message box which asks the user if he wants to remove local colabfold
+            # and evaluate the return value as it's done in line 139
 
             # subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
             self.ui.btn_install_local_prediction.setText("Install")
         else:
-            dialog_message_local_colabfold.installation_local_colabfold_accept(True)
-            # you need to evaluate every return value from the message boxes if they have one
-
             # ??? QUESTION ???
             # I think in the dialog_message_local_colabfold.py are mistakes, so here appears "unexpected argument".
             # Please switch in this file and explain my dump.
+            # --- Answers ---
+            # The error "unexpected argument" is raised, because your function "installation_local_colabfold_accept()"
+            # does not have any arguments to pass
+            # Furthermore you need to evaluate the return value from the function "installation_local_colabfold_accept()"
+            # like this:
+            if dialog_message_local_colabfold.installation_local_colabfold_accept() is True:
+                # logical message: the user wants to install local colabfold
+                # substitute "pass" with the action which needs to be done for installing local colabfold
+                pass
+            else:
+                # logical message: the user does NOT want to install local colabfold
+                # substitute "pass" with the action which needs to be done for aborting the local colabfold installation
+                pass
 
             dialog_message_local_colabfold.installation_local_colabfold_progress()
             # user_name = os.getlogin()
@@ -146,6 +160,8 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"])
 
             dialog_message_local_colabfold.installation_local_colabfold_end()
+            # every process and message box needs to be either in the if or the else block, where currently is only pass!
+
             self.ui.btn_install_local_prediction.setText("Uninstall")
 
     def install_wsl(self):

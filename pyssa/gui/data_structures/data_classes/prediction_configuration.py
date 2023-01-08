@@ -23,11 +23,10 @@ from dataclasses import dataclass
 
 
 @dataclass
-class ProteinAnalysisInfo:
-    protein_name: str
-    protein_chains: str
-    analysis_name: str
+class PredictionConfiguration:
+    amber_force_field: bool
+    templates: str
 
     def get_tuple_notation(self):
-        tuple_notation: tuple[str, str] = (self.protein_name, self.protein_chains)
+        tuple_notation: tuple[bool, str] = (self.amber_force_field, self.templates)
         return tuple_notation

@@ -22,6 +22,8 @@
 """Module for the protein pair class"""
 import json
 import os
+import pathlib
+
 import pymol
 import pandas as pd
 import numpy as np
@@ -37,7 +39,7 @@ class ProteinPair:
     """
 
     def __init__(self, reference_obj: protein.Protein, model_obj: protein.Protein,
-                 results_dir: str) -> None:
+                 results_dir: pathlib.Path) -> None:
         """Constructor.
 
         Args:
@@ -56,8 +58,9 @@ class ProteinPair:
         """
         self.ref_obj: protein.Protein = reference_obj
         self.model_obj: protein.Protein = model_obj
-        self.results_dir: str = results_dir
-        self.name = f"{reference_obj.molecule_object}_{model_obj.molecule_object}"
+        self.results_dir: pathlib.Path = results_dir
+        self.name = "generic"
+        self.cutoff = 0
 
         # argument test
         if not os.path.exists(f"{results_dir}"):
@@ -675,7 +678,7 @@ class ProteinPair:
         # save image as 300 dpi png image
         cmd.png(f'{self.results_dir}/images/{filename}.png', dpi=300)
 
-    def serialize_protein_pair(self, filepath, protein_structure_1: protein.Protein, protein_structure_2: protein.Protein) -> None:
+    def serialize_protein_pair(self, filepath) -> None:
         """This function serialize the protein pair object
 
         """
@@ -684,27 +687,47 @@ class ProteinPair:
             return
 
         protein_structures_dict = {
-            "ref_obj": self.ref_obj,
-            "prot_1_molecule_object": protein_structure_1.molecule_object,
-            "prot_1_import_data_dir": protein_structure_1.filepath,
-            "prot_1_export_data_dir": protein_structure_1.export_data_dir,
-            "prot_1_selection": protein_structure_1.selection,
-            "prot_1_sequence": protein_structure_1.sequence,
-            "prot_1_chains": protein_structure_1.chains,
-            "model_obj": self.model_obj,
-            "prot_2_molecule_object": protein_structure_2.molecule_object,
-            "prot_2_import_data_dir": protein_structure_2.filepath,
-            "prot_2_export_data_dir": protein_structure_2.export_data_dir,
-            "prot_2_selection": protein_structure_2.selection,
-            "prot_2_sequence": protein_structure_2.sequence,
-            "prot_2_chains": protein_structure_2.chains,
-            "results_dir": self.results_dir,
+            "prot_1_molecule_object": self.ref_obj.molecule_object,
+            "prot_1_import_data_dir": str(self.ref_obj.filepath),
+            "prot_1_export_data_dir": str(self.ref_obj.export_data_dir),
+            "prot_1_selection": self.ref_obj.selection,
+            "prot_1_sequence": self.ref_obj.sequence,
+            "prot_1_chains": self.ref_obj.chains,
+            "prot_2_molecule_object": self.model_obj.molecule_object,
+            "prot_2_import_data_dir": str(self.model_obj.filepath),
+            "prot_2_export_data_dir": str(self.model_obj.export_data_dir),
+            "prot_2_selection": self.model_obj.selection,
+            "prot_2_sequence": self.model_obj.sequence,
+            "prot_2_chains": self.model_obj.chains,
+            "results_dir": str(self.results_dir),
+            "cutoff": self.cutoff,
+            "name": self.name,
         }
+        # protein_structures_dict = {
+        #     "ref_obj": self.ref_obj,
+        #     "prot_1_molecule_object": protein_structure_1.molecule_object,
+        #     "prot_1_import_data_dir": protein_structure_1.filepath,
+        #     "prot_1_export_data_dir": protein_structure_1.export_data_dir,
+        #     "prot_1_selection": protein_structure_1.selection,
+        #     "prot_1_sequence": protein_structure_1.sequence,
+        #     "prot_1_chains": protein_structure_1.chains,
+        #     "model_obj": self.model_obj,
+        #     "prot_2_molecule_object": protein_structure_2.molecule_object,
+        #     "prot_2_import_data_dir": protein_structure_2.filepath,
+        #     "prot_2_export_data_dir": protein_structure_2.export_data_dir,
+        #     "prot_2_selection": protein_structure_2.selection,
+        #     "prot_2_sequence": protein_structure_2.sequence,
+        #     "prot_2_chains": protein_structure_2.chains,
+        #     "results_dir": self.results_dir,
+        #     "cutoff": self.cutoff,
+        #     "name": self.name,
+        # }
 
-        protein_file = open(filepath, "w", encoding="utf-8")
-        json.dump(protein_structures_dict, protein_file)
+        protein_file = open(pathlib.Path(f"{filepath}/{self.name}.json"), "w", encoding="utf-8")
+        json.dump(protein_structures_dict, protein_file, indent=4)
 
-    def deserialize_protein(self, protein_obj_json_file):
+    @staticmethod
+    def deserialize_protein_pair(protein_obj_json_file):
         """This function constructs the protein pair object from
         the json file
 
@@ -712,26 +735,39 @@ class ProteinPair:
             two complete protein objects and a protein pair object deserialized from a json file
         """
         try:
-            protein_obj_file = open(protein_obj_json_file, "w", encoding="utf-8")
+            protein_obj_file = open(protein_obj_json_file, "r", encoding="utf-8")
         except FileNotFoundError:
-            print(f"There is no valid json file under: {protein_obj_json_file}")
+            print(f"There is no valid protein pair json file under: {protein_obj_json_file}")
             return
         protein_dict = json.load(protein_obj_file)
 
-        tmp_protein_pair = ProteinPair(protein_dict.get("ref_obj"),
-                                       protein_dict.get("model_obj"),
-                                       protein_dict.get("results_dir"))
+        tmp_protein_pair = ProteinPair(protein_dict.get("prot_1_molecule_object"),
+                                       protein_dict.get("prot_2_molecule_object"),
+                                       pathlib.Path(protein_dict.get("results_dir")),
+                                       )
+        tmp_protein_pair.cutoff = protein_dict.get("cutoff")
+        tmp_protein_pair.name = protein_dict.get("name")
 
-        tmp_protein_1 = protein.Protein.__init__(protein_dict.get("prot_1_molecule_object"),
-                                                 protein_dict.get("prot_1_import_data_dir"),
-                                                 protein_dict.get("prot_1_export_data_dir"))
+        if protein_dict.get("prot_1_export_data_dir") == "None":
+            export_data_dir = None
+        else:
+            export_data_dir = protein_dict.get("prot_1_export_data_dir")
+        tmp_protein_1 = protein.Protein(protein_dict.get("prot_1_molecule_object"),
+                                        protein_dict.get("prot_1_import_data_dir"),
+                                        export_data_dir=export_data_dir,
+                                        )
         tmp_protein_1.set_sequence(protein_dict.get("prot_1_sequence"))
         tmp_protein_1.set_selection(protein_dict.get("prot_1_selection"))
         tmp_protein_1.set_chains(protein_dict.get("prot_1_chains"))
 
-        tmp_protein_2 = protein.Protein.__init__(protein_dict.get("prot_2_molecule_object"),
-                                                 protein_dict.get("prot_2_import_data_dir"),
-                                                 protein_dict.get("prot_2_export_data_dir"))
+        if protein_dict.get("prot_2_export_data_dir") == "None":
+            export_data_dir = None
+        else:
+            export_data_dir = protein_dict.get("prot_2_export_data_dir")
+        tmp_protein_2 = protein.Protein(protein_dict.get("prot_2_molecule_object"),
+                                        protein_dict.get("prot_2_import_data_dir"),
+                                        export_data_dir=export_data_dir,
+                                        )
         tmp_protein_2.set_sequence(protein_dict.get("prot_2_sequence"))
         tmp_protein_2.set_selection(protein_dict.get("prot_2_selection"))
         tmp_protein_2.set_chains(protein_dict.get("prot_2_chains"))

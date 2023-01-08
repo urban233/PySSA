@@ -76,7 +76,7 @@ class Project:
         self._folder_paths: list[Path] = []
         self._session_file_name: str = "session_file_model_s.pse"
         self.proteins: list[protein.Protein] = []
-        self.protein_pairs: list[protein_pair.ProteinPair] = []
+        self.protein_pairs: list[tuple[protein.Protein, protein.Protein, protein_pair.ProteinPair]] = []
         self.create_folder_paths()
 
     def add_new_protein(self, protein_name) -> None:
@@ -127,7 +127,9 @@ class Project:
             Path(f"{self._workspace}/{self._project_name}"),
             Path(f"{self._workspace}/{self._project_name}/pdb"),
             Path(f"{self._workspace}/{self._project_name}/results"),
-            Path(f"{self._workspace}/{self._project_name}/.objects"),
+            Path(f"{self._workspace}/{self._project_name}/.objects/"),
+            Path(f"{self._workspace}/{self._project_name}/.objects/proteins"),
+            Path(f"{self._workspace}/{self._project_name}/.objects/protein_pairs"),
             # Path(f"{workspace_path}/{self._project_name}/results/alignment_files"),
             # Path(f"{workspace_path}/{self._project_name}/results/distance_csv"),
             # Path(f"{workspace_path}/{self._project_name}/results/images"),
@@ -177,6 +179,22 @@ class Project:
             the object path
         """
         return str(self._folder_paths[3])
+
+    def get_objects_proteins_path(self):
+        """This function returns the objects path of the project
+
+                Returns:
+                    the object path
+                """
+        return str(self._folder_paths[4])
+
+    def get_objects_protein_pairs_path(self):
+        """This function returns the objects path of the project
+
+                Returns:
+                    the object path
+                """
+        return str(self._folder_paths[5])
 
     def get_number_of_proteins(self):
         return len(self.proteins)
@@ -242,7 +260,7 @@ class Project:
         update = {
             '_workspace': str(self._workspace),
             'project_path': str(self.project_path),
-            '_folder_paths': [str(self._folder_paths[0]), str(self._folder_paths[1]), str(self._folder_paths[2]), str(self._folder_paths[3])],
+            '_folder_paths': [str(self._folder_paths[0]), str(self._folder_paths[1]), str(self._folder_paths[2]), str(self._folder_paths[3]), str(self._folder_paths[4]), str(self._folder_paths[5])],
             'proteins': protein_names,
             'protein_pairs': protein_pair_names,
         }
@@ -268,8 +286,16 @@ class Project:
         tmp_project: Project = Project(project_dict.get("_project_name"), project_dict.get("_workspace"))
         tmp_project.set_folder_paths(project_dict.get("_folder_paths"))
         tmp_project.project_path = project_dict.get("project_path")
-        tmp_project.proteins = list(project_dict.get("proteins"))
-        tmp_project.protein_pairs = list(project_dict.get("protein_pairs"))
+        # adding proteins to projects object
+        if len(os.listdir(tmp_project.get_objects_proteins_path())) > 0:
+            for tmp_protein_file in os.listdir(tmp_project.get_objects_proteins_path()):
+                tmp_protein = protein.Protein.deserialize_protein(pathlib.Path(f"{tmp_project.get_objects_proteins_path()}/{tmp_protein_file}"))
+                tmp_project.add_existing_protein(tmp_protein)
+        # adding protein pairs to projects object
+        if len(os.listdir(tmp_project.get_objects_protein_pairs_path())) > 0:
+            for tmp_protein_pair_file in os.listdir(tmp_project.get_objects_protein_pairs_path()):
+                tmp_protein_pair = protein_pair.ProteinPair.deserialize_protein_pair(pathlib.Path(f"{tmp_project.get_objects_protein_pairs_path()}/{tmp_protein_pair_file}"))
+                tmp_project.add_protein_pair(tmp_protein_pair)
         return tmp_project
 
     def search_protein(self, protein_name):
@@ -277,3 +303,47 @@ class Project:
             if tmp_protein.molecule_object == protein_name:
                 return tmp_protein
         print(f"No matching protein with the name {protein_name} found.")
+
+    def search_protein_pair(self, protein_pair_name):
+        """This function searches all protein_pairs within the project and returns true if the project contains the pair
+
+        Args:
+            protein_pair_name:
+                name of the pair to search
+        Returns:
+            True: is in the project
+            False: is NOT in the project
+        """
+        for tmp_protein_pair in self.protein_pairs:
+            if tmp_protein_pair[2].name == protein_pair_name:
+                return True
+        print(f"No matching protein with the name {protein_pair_name} found.")
+        return False
+
+    def get_specific_protein_pair(self, protein_pair_name):
+        """This function gets a specific protein_pair by name from the project
+
+        Args:
+            protein_pair_name:
+                name of the pair to get
+        Returns:
+            the actual protein pair
+        """
+        for tmp_protein_pair in self.protein_pairs:
+            if tmp_protein_pair[2].name == protein_pair_name:
+                return tmp_protein_pair[2]
+        print(f"No matching protein with the name {protein_pair_name} found.")
+
+    def get_specific_protein_pair_tuple(self, protein_pair_name):
+        """This function gets a specific protein_pair by name from the project
+
+        Args:
+            protein_pair_name:
+                name of the pair to get
+        Returns:
+            the actual protein pair
+        """
+        for tmp_protein_pair in self.protein_pairs:
+            if tmp_protein_pair[2].name == protein_pair_name:
+                return tmp_protein_pair
+        print(f"No matching protein with the name {protein_pair_name} found.")

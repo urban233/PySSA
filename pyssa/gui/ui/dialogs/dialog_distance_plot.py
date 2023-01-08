@@ -19,15 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import pathlib
+
 from pymol import Qt
 import pyqtgraph as pg
+
+from pymol_protein_tools import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialog
 from pyssa.gui.utilities import global_variables
 
 
 class DialogDistancePlot(Qt.QtWidgets.QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, protein_pair_from_project, parent=None):
         """Constructor
 
         Args:
@@ -39,12 +43,9 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         graph_widget = pg.PlotWidget()
-
+        protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         # read csv file
-        file_path = global_variables.global_var_tmp_project_info[0]
-        model_name = global_variables.global_var_tmp_project_info[1]
-
-        path = f"{file_path}/distance_csv/distances.csv"
+        path = pathlib.Path(f"{protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
         distance_list = []
         cutoff_line = []
         with open(path, 'r', encoding="utf-8") as csv_file:
@@ -52,7 +53,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
                 cleaned_line = line.replace("\n", "")
                 if cleaned_line.split(",")[8] != 'distance':
                     distance_list.append(float(cleaned_line.split(",")[8]))
-                    cutoff_line.append(global_variables.global_var_settings_obj.get_cutoff())
+                    cutoff_line.append(float(protein_pair_for_analysis.cutoff))
         # creates actual distance plot line
         graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
                                    symbol="o", symbolSize=10, symbolBrush=('b'))
@@ -61,7 +62,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
         # styling the plot
         graph_widget.setBackground('w')
-        graph_widget.setTitle(f"Distance Plot of {model_name}", size="23pt")
+        graph_widget.setTitle(f"Distance Plot of {protein_pair_for_analysis.name}", size="23pt")
         styles = {'font-size': '14px'}
         ax_label_y = "Distance in Å"
         graph_widget.setLabel('left', ax_label_y, **styles)

@@ -95,6 +95,8 @@ class ProjectWatcher:
                 ui.btn_close_project,
                 ui.btn_use_page,
                 ui.btn_edit_page,
+                ui.btn_save_project,
+                ui.btn_view_page,
                 ui.lbl_pred_local,
                 ui.btn_pred_local_monomer_page,
                 ui.btn_pred_local_multimer_page,
