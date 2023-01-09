@@ -1252,6 +1252,16 @@ QLineEdit {
     padding: 1px;
 }
 
+QTextEdit {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #DCDBE3;
+    min-width: 6em;
+    padding: 1px;
+}
+
 QToolButton {
     background-color: white;
     border-style: outset;

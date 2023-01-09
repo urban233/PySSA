@@ -23,8 +23,8 @@
 import json
 import os
 import pathlib
-from gui.utilities import constants
-from gui.data_structures import safeguard
+from pyssa.gui.utilities import constants
+from pyssa.gui.data_structures import safeguard
 
 
 class Settings:

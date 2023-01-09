@@ -23,13 +23,13 @@
 import json
 import os
 import pathlib
-
 import pymol
 import pandas as pd
 import numpy as np
 from pymol import cmd
 from Bio import AlignIO
 from pyssa.pymol_protein_tools import protein
+from pyssa.gui.data_structures import safeguard
 
 
 class ProteinPair:
@@ -56,15 +56,14 @@ class ProteinPair:
         Raises:
             NotADirectoryError: If directory not found.
         """
+        # argument test
+        if not safeguard.Safeguard.check_filepath(results_dir):
+            raise NotADirectoryError
         self.ref_obj: protein.Protein = reference_obj
         self.model_obj: protein.Protein = model_obj
         self.results_dir: pathlib.Path = results_dir
         self.name = "generic"
         self.cutoff = 0
-
-        # argument test
-        if not os.path.exists(f"{results_dir}"):
-            raise NotADirectoryError
 
     def load_protein_pair(self) -> None:
         """This function loads to proteins with the `load`_ command from
@@ -93,7 +92,6 @@ class ProteinPair:
         # loading the model in the active PyMol session
         cmd.load(f"{self.model_obj.filepath}/"
                  f"{tmp_model_molecule_object}.pdb", object=self.model_obj.molecule_object)
-        print(cmd.get_object_list())
 
     def color_protein_pair(self, color_ref="green", color_model="blue") -> None:
         """This function colors both the reference and the model Protein.
@@ -117,18 +115,11 @@ class ProteinPair:
             https://pymolwiki.org/index.php/Color_Values
         """
         # argument test
-        # checks if either the reference or the model is an actual object
-        # in the memory
-        # if cmd.get_model(self.ref_obj.molecule_object) is None \
-        #         or cmd.get_model(self.model_obj.molecule_object) is None:
-        #     raise pymol.CmdException(f"Either the reference or the model is "
-        #                              f"not in the pymol session as object.")
-        # # checks if both the reference and the model are actual objects
-        # # in the memory
-        # if cmd.get_model(self.ref_obj.molecule_object) is None \
-        #         and cmd.get_model(self.model_obj.molecule_object) is None:
-        #     raise pymol.CmdException(f"Both, the reference and the model are "
-        #                              f"not in the pymol session as objects.")
+        # checks if either the reference or the model is an actual object in the memory
+        if not safeguard.Safeguard.check_if_protein_is_in_pymol(self.ref_obj.molecule_object):
+            raise pymol.CmdException(f"The reference is not in the pymol session as an object.")
+        if not safeguard.Safeguard.check_if_protein_is_in_pymol(self.model_obj.molecule_object):
+            raise pymol.CmdException(f"The model is not in the pymol session as an object.")
         # actual color cmd command
         cmd.color(color_ref, self.ref_obj.molecule_object)
         cmd.color(color_model, self.model_obj.molecule_object)
@@ -186,15 +177,13 @@ class ProteinPair:
             https://pymolwiki.org/index.php/Align
         """
         # argument test
-        if self.ref_obj.selection is None or self.model_obj.selection is None:
-            raise ValueError("Either the reference or the model "
-                             "has an empty selection.")
-        if self.ref_obj.selection is None and self.model_obj.selection is None:
-            raise ValueError("Both, the reference and the model "
-                             "have an empty selection.")
-        if cycle_number < 0:
+        if not safeguard.Safeguard.check_if_pymol_selection_is_valid(self.ref_obj.selection):
+            raise ValueError(f"The reference has an invalid selection: {self.ref_obj.selection}")
+        if not safeguard.Safeguard.check_if_pymol_selection_is_valid(self.model_obj.selection):
+            raise ValueError(f"The model has an invalid selection: {self.model_obj.selection}")
+        if not safeguard.Safeguard.check_if_number_is_positive(cycle_number):
             raise ValueError("Number of cycles must be greater or equal than zero.")
-        if cutoff_value <= 0:
+        if not safeguard.Safeguard.check_if_number_is_positive(cutoff_value):
             raise ValueError("The cutoff needs to be greater than zero.")
 
         # This block runs if an alignObject should be created.
@@ -206,13 +195,11 @@ class ProteinPair:
                                 cutoff=cutoff_value,
                                 quiet=0)
 
-            if not os.path.exists(f"{self.results_dir}/alignment_files"):
-                os.mkdir(f"{self.results_dir}/alignment_files")
+            if not os.path.exists(pathlib.Path(f"{self.results_dir}/alignment_files")):
+                os.mkdir(pathlib.Path(f"{self.results_dir}/alignment_files"))
 
             # save the align object from pymol as alignment file
-            cmd.save(f"{self.results_dir}/alignment_files/"
-                     f"{alignment_filename}.aln")
-
+            cmd.save(pathlib.Path(f"{self.results_dir}/alignment_files/{alignment_filename}.aln"))
             return results[0], results[1]
 
         # This block runs if no alignObject should be created.
@@ -224,8 +211,6 @@ class ProteinPair:
                                 quiet=1)
 
             return results[0], results[1]
-            # tup_results = (results[0], results[1])
-            # return tup_results
 
     def calculate_distance_between_ca_atoms(self, alignment_filename: str,
                                             cutoff: float = 20.0) -> dict[str, np.ndarray]:
@@ -269,25 +254,14 @@ class ProteinPair:
                     f"aln_results_Bmp2_0_CA.aln"
         """
         # argument test
-        try:
-            file = open(f"{self.results_dir}/alignment_files/"
-                        f"{alignment_filename}.aln", "r")
-            file.close()
-        except FileNotFoundError:
+        if not safeguard.Safeguard.check_if_file_is_readable(pathlib.Path(f"{self.results_dir}/alignment_files/{alignment_filename}.aln")):
             print(f"File not found, in {self.results_dir}.")
-
-        cmd.create(f"{self.ref_obj.molecule_object}_CA",
-                   f"/{self.ref_obj.molecule_object}////CA")
+        cmd.create(f"{self.ref_obj.molecule_object}_CA", f"/{self.ref_obj.molecule_object}////CA")
         ref_ca_obj = cmd.get_model(f"{self.ref_obj.molecule_object}_CA")
-
-        cmd.create(f"{self.model_obj.molecule_object}_CA",
-                   f"/{self.model_obj.molecule_object}////CA")
+        cmd.create(f"{self.model_obj.molecule_object}_CA", f"/{self.model_obj.molecule_object}////CA")
         model_ca_obj = cmd.get_model(f"{self.model_obj.molecule_object}_CA")
-
         # read in alignment file from alignProteinPair function
-        align = AlignIO.read(f"{self.results_dir}/alignment_files/"
-                             f"{alignment_filename}.aln", "clustal")
-
+        align = AlignIO.read(pathlib.Path(f"{self.results_dir}/alignment_files/{alignment_filename}.aln"), "clustal")
         index_list: [int] = []
         ref_chain_list: [str] = []
         ref_pos_list: [int] = []
@@ -416,6 +390,8 @@ class ProteinPair:
                 hash table which contains the full information of the distance
                 calculations
         """
+        if not safeguard.Safeguard.check_if_dict_is_empty(distance_results):
+            raise ValueError("The dictionary of the distances is empty!")
         distance_data = {
             "index": distance_results.get("index"),
             "ref_chain": distance_results.get("ref_chain"),
@@ -427,9 +403,6 @@ class ProteinPair:
             "distance": distance_results.get("distance")
         }
         tmp_frame = pd.DataFrame(distance_data)
-
-        # check if path exists where the data will be exported,
-        # if not the directory will be created
         if not os.path.exists(f"{self.results_dir}/distance_csv"):
             os.mkdir(f"{self.results_dir}/distance_csv")
         # exports dataframe to csv file
@@ -670,8 +643,6 @@ class ProteinPair:
         cmd.set('ray_opaque_background', opaque_background)
         cmd.ray(2400, 2400, renderer=0)
 
-        # check if path exists where the data will be exported,
-        # if not the directory will be created
         if not os.path.exists(f"{self.results_dir}/images"):
             os.mkdir(f"{self.results_dir}/images")
 
@@ -682,7 +653,7 @@ class ProteinPair:
         """This function serialize the protein pair object
 
         """
-        if not os.path.exists(filepath):
+        if not safeguard.Safeguard.check_filepath(filepath):
             print(f"The filepath: {filepath} does not exists!")
             return
 
@@ -690,12 +661,14 @@ class ProteinPair:
             "prot_1_molecule_object": self.ref_obj.molecule_object,
             "prot_1_import_data_dir": str(self.ref_obj.filepath),
             "prot_1_export_data_dir": str(self.ref_obj.export_data_dir),
+            "prot_1_filename": str(self.ref_obj.filename),
             "prot_1_selection": self.ref_obj.selection,
             "prot_1_sequence": self.ref_obj.sequence,
             "prot_1_chains": self.ref_obj.chains,
             "prot_2_molecule_object": self.model_obj.molecule_object,
             "prot_2_import_data_dir": str(self.model_obj.filepath),
             "prot_2_export_data_dir": str(self.model_obj.export_data_dir),
+            "prot_2_filename": str(self.model_obj.filename),
             "prot_2_selection": self.model_obj.selection,
             "prot_2_sequence": self.model_obj.sequence,
             "prot_2_chains": self.model_obj.chains,
@@ -703,25 +676,6 @@ class ProteinPair:
             "cutoff": self.cutoff,
             "name": self.name,
         }
-        # protein_structures_dict = {
-        #     "ref_obj": self.ref_obj,
-        #     "prot_1_molecule_object": protein_structure_1.molecule_object,
-        #     "prot_1_import_data_dir": protein_structure_1.filepath,
-        #     "prot_1_export_data_dir": protein_structure_1.export_data_dir,
-        #     "prot_1_selection": protein_structure_1.selection,
-        #     "prot_1_sequence": protein_structure_1.sequence,
-        #     "prot_1_chains": protein_structure_1.chains,
-        #     "model_obj": self.model_obj,
-        #     "prot_2_molecule_object": protein_structure_2.molecule_object,
-        #     "prot_2_import_data_dir": protein_structure_2.filepath,
-        #     "prot_2_export_data_dir": protein_structure_2.export_data_dir,
-        #     "prot_2_selection": protein_structure_2.selection,
-        #     "prot_2_sequence": protein_structure_2.sequence,
-        #     "prot_2_chains": protein_structure_2.chains,
-        #     "results_dir": self.results_dir,
-        #     "cutoff": self.cutoff,
-        #     "name": self.name,
-        # }
 
         protein_file = open(pathlib.Path(f"{filepath}/{self.name}.json"), "w", encoding="utf-8")
         json.dump(protein_structures_dict, protein_file, indent=4)
@@ -752,23 +706,28 @@ class ProteinPair:
             export_data_dir = None
         else:
             export_data_dir = protein_dict.get("prot_1_export_data_dir")
-        tmp_protein_1 = protein.Protein(protein_dict.get("prot_1_molecule_object"),
+        tmp_protein_1 = protein.Protein(protein_dict.get("prot_1_filename"),
                                         protein_dict.get("prot_1_import_data_dir"),
                                         export_data_dir=export_data_dir,
                                         )
+        tmp_protein_1.molecule_object = protein_dict.get("prot_1_molecule_object")
         tmp_protein_1.set_sequence(protein_dict.get("prot_1_sequence"))
         tmp_protein_1.set_selection(protein_dict.get("prot_1_selection"))
         tmp_protein_1.set_chains(protein_dict.get("prot_1_chains"))
+        tmp_protein_pair.ref_obj = tmp_protein_1
 
         if protein_dict.get("prot_2_export_data_dir") == "None":
             export_data_dir = None
         else:
             export_data_dir = protein_dict.get("prot_2_export_data_dir")
-        tmp_protein_2 = protein.Protein(protein_dict.get("prot_2_molecule_object"),
+        tmp_protein_2 = protein.Protein(protein_dict.get("prot_2_filename"),
                                         protein_dict.get("prot_2_import_data_dir"),
                                         export_data_dir=export_data_dir,
                                         )
+        tmp_protein_2.molecule_object = protein_dict.get("prot_2_molecule_object")
         tmp_protein_2.set_sequence(protein_dict.get("prot_2_sequence"))
         tmp_protein_2.set_selection(protein_dict.get("prot_2_selection"))
         tmp_protein_2.set_chains(protein_dict.get("prot_2_chains"))
-        return tmp_protein_1, tmp_protein_2, tmp_protein_pair
+        tmp_protein_pair.model_obj = tmp_protein_2
+
+        return tmp_protein_pair

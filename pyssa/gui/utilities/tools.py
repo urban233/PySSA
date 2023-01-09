@@ -33,7 +33,7 @@ from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtGui
 
-from gui.data_structures import settings
+from pyssa.gui.data_structures import settings
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.utilities import styles
 from pyssa.gui.utilities import constants
@@ -488,7 +488,8 @@ def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status
             styles.color_button_not_ready(btn_for_next_step)
 
 
-def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_search, txt_for_selected_project=None):
+def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_search, status_message,
+                          txt_for_selected_project=None):
     """This function validates the input of the project name in real-time
 
     Args:
@@ -500,7 +501,8 @@ def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_sear
             label which gives feedback
         txt_for_selected_project:
             line edit widget which is used to display the selected project
-
+        status_message:
+            message which should get displayed
     """
     if list_for_projects.currentItem() is not None:
         list_for_projects.currentItem().setSelected(False)
@@ -522,7 +524,7 @@ def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_sear
                 txt_for_selected_project.setText(list_for_projects.currentItem().text())
         else:
             txt_for_search.setStyleSheet("background-color: #FC5457")
-            lbl_for_status_search.setText("Project name does not exists.")
+            lbl_for_status_search.setText(status_message)
             if txt_for_selected_project is not None:
                 txt_for_selected_project.setText("")
 
@@ -586,7 +588,7 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
     """
     # set color for lineEdit
     txt_protein_sequence.setStyleSheet("background-color: #FC5457")
-    if len(txt_protein_sequence.text()) == 0:
+    if len(txt_protein_sequence.toPlainText()) == 0:
         lbl_status_protein_sequence.setText("")
         btn_next.setEnabled(False)
         styles.color_button_not_ready(btn_next)
@@ -595,8 +597,8 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
         regex = Qt.QtCore.QRegularExpression()
         regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
         validator = QtGui.QRegularExpressionValidator(regex)
-        for i in range(len(txt_protein_sequence.text())):
-            result = validator.validate(txt_protein_sequence.text(), i)
+        for i in range(len(txt_protein_sequence.toPlainText())):
+            result = validator.validate(txt_protein_sequence.toPlainText(), i)
             if result[0] > 0:
                 txt_protein_sequence.setStyleSheet("background-color: #33C065")
                 lbl_status_protein_sequence.setText("")

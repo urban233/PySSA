@@ -8,7 +8,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from pyssa.gui.data_structures import settings
-from gui.data_structures import safeguard
+from pyssa.gui.data_structures import safeguard
 
 
 class SettingsSafeguard(safeguard.Safeguard):

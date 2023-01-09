@@ -76,7 +76,7 @@ class Project:
         self._folder_paths: list[Path] = []
         self._session_file_name: str = "session_file_model_s.pse"
         self.proteins: list[protein.Protein] = []
-        self.protein_pairs: list[tuple[protein.Protein, protein.Protein, protein_pair.ProteinPair]] = []
+        self.protein_pairs: list[protein_pair.ProteinPair] = []
         self.create_folder_paths()
 
     def add_new_protein(self, protein_name) -> None:
@@ -205,43 +205,6 @@ class Project:
     def set_folder_paths(self, value):
         self._folder_paths = value
 
-    def construct_xml_element_pairs(self):
-        project = [
-            [
-                "date", self._date
-            ],
-            [
-                "operating_system", self._operating_system
-            ],
-            [
-                "workspace", self._workspace
-            ],
-            [
-                "project_name", self._project_name
-            ],
-            [
-                "proteins", self.proteins
-            ],
-            [
-                "protein_pairs", self.protein_pairs
-            ]
-        ]
-        return project
-
-    def save_project_to_xml(self):
-        root = ElementTree.Element("project")
-        settings = self.construct_xml_element_pairs()
-
-        for setting in settings:
-            tmp_xml_element = ElementTree.Element(setting[0])
-            tmp_xml_element.text = str(setting[1])
-            root.append(tmp_xml_element)
-
-        # creates a pretty xml file
-        xml_as_string = minidom.parseString(ElementTree.tostring(root)).toprettyxml(indent="   ")
-        with open(f"{self._folder_paths[0]}/project.xml", "w") as f:
-            f.write(xml_as_string)
-
     def serialize_project(self, filepath, filename) -> None:
         """This function serialize the protein object
 
@@ -315,7 +278,7 @@ class Project:
             False: is NOT in the project
         """
         for tmp_protein_pair in self.protein_pairs:
-            if tmp_protein_pair[2].name == protein_pair_name:
+            if tmp_protein_pair.name == protein_pair_name:
                 return True
         print(f"No matching protein with the name {protein_pair_name} found.")
         return False

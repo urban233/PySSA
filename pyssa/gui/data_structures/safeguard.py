@@ -21,6 +21,7 @@
 #
 import logging
 import os
+from pymol import cmd
 from pyssa.gui.data_structures import settings
 
 
@@ -58,6 +59,47 @@ class Safeguard:
             False: if number is negative
         """
         if value >= 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def check_if_number_is_greater_zero(value) -> bool:
+        if value > 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def check_if_file_is_readable(full_filepath) -> bool:
+        try:
+            file = open(full_filepath, "r", encoding="utf-8")
+        except FileNotFoundError:
+            return False
+        except PermissionError:
+            return False
+        except IOError:
+            return False
+        file.close()
+        return True
+
+    @staticmethod
+    def check_if_protein_is_in_pymol(molecule_object) -> bool:
+        if cmd.get_model(molecule_object) is not None:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def check_if_pymol_selection_is_valid(selection) -> bool:
+        if selection is None or selection == "":
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def check_if_dict_is_empty(value: dict) -> bool:
+        if len(value) is not 0:
             return True
         else:
             return False

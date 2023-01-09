@@ -25,7 +25,7 @@ import sys
 import PyQt5.QtWidgets
 from pymol import Qt
 
-from gui.utilities import constants
+from pyssa.gui.utilities import constants
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_startup import Ui_Dialog
 
 global_var_startup_workspace = ""

@@ -32,7 +32,7 @@ import numpy as np
 import pymol
 import pyqtgraph as pg
 
-from gui.ui.dialogs import dialog_settings_global
+from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.utilities import global_variables
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.utilities import constants
@@ -545,6 +545,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
         # view project page
         self.ui.btn_view_project_show.clicked.connect(self.view_sequence)
+        self.ui.btn_view_project_show_structure.clicked.connect(self.view_structure)
         self.ui.list_view_project_proteins.doubleClicked.connect(self.view_sequence)
         # use project page
         self.ui.txt_use_project_name.textChanged.connect(self.validate_use_project_name)
@@ -773,6 +774,9 @@ class MainWindow(QMainWindow):
         self.ui.lbl_use_status_project_name.setText("")
         self.ui.txt_use_search.clear()
         self.ui.lbl_use_status_search.setText("")
+        self.ui.list_use_available_protein_structures.clear()
+        self.ui.list_use_selected_protein_structures.clear()
+        self.ui.list_use_existing_projects.clear()
         self.ui.btn_use_next.setEnabled(False)
 
     def _init_local_pred_mono_page(self):
@@ -1066,6 +1070,7 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 16, "Local Multimer Prediction")
 
     def display_use_page(self):
+        self._init_use_page()
         self.ui.list_use_available_protein_structures.clear()
         self.ui.list_use_selected_protein_structures.clear()
         valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
@@ -1647,6 +1652,7 @@ class MainWindow(QMainWindow):
             for chain in chains:
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
         self.app_project.serialize_project(self.app_project.project_path, "project")
+        self.app_project = project.Project.deserialize_project(self.app_project.project_path)
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
@@ -1881,10 +1887,9 @@ class MainWindow(QMainWindow):
         response: bool = gui_utils.warning_message_project_gets_deleted()
 
         if response is True:
-            shutil.rmtree(f"{self.workspace_path}/{self.ui.txt_delete_selected_projects.text()}")
+            shutil.rmtree(pathlib.Path(f"{self.workspace_path}/{self.ui.txt_delete_selected_projects.text()}"))
             if self.ui.txt_delete_selected_projects.text() == self.ui.lbl_current_project_name.text():
                 self.ui.lbl_current_project_name.clear()
-                self._init_hide_ui_elements()
             self.ui.txt_delete_selected_projects.clear()
             # update list
             self.ui.list_delete_projects.clear()
@@ -1929,7 +1934,7 @@ class MainWindow(QMainWindow):
             tools.remove_pdb_file(f"{project_path}/pdb/{protein_name}")
             self.ui.list_edit_project_proteins.clear()
             tools.scan_project_for_valid_proteins(
-                f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"),
                 self.ui.list_edit_project_proteins)
             self._project_watcher.show_valid_options(self.ui)
         else:
@@ -1943,6 +1948,16 @@ class MainWindow(QMainWindow):
         self.ui.txtedit_view_sequence.clear()
         self.ui.txtedit_view_sequence.append(sequence)
 
+    def view_structure(self):
+        protein_name = self.ui.list_view_project_proteins.currentItem().text()
+        protein_path = pathlib.Path(f"{self.app_project.get_pdb_path()}/{protein_name}")
+        # TODO: ask if the session should be saved
+        cmd.reinitialize()
+        try:
+            cmd.load(protein_path)
+        except pymol.CmdException:
+            print("Error while loading protein in PyMOL!")
+
     # ----- Functions for Use project page
     def validate_use_project_name(self):
         """This function validates the input of the project name in real-time
@@ -1955,8 +1970,9 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
+        message = "Protein structure does not exists."
         tools.validate_search_input(self.ui.list_use_available_protein_structures, self.ui.txt_use_search,
-                                    self.ui.lbl_use_status_search)
+                                    self.ui.lbl_use_status_search, message)
 
     def add_protein_structure_to_new_project(self):
         prot_to_add = self.ui.list_use_available_protein_structures.currentItem().text()
@@ -2039,6 +2055,7 @@ class MainWindow(QMainWindow):
             new_protein.serialize_protein(self.app_project.get_objects_proteins_path(), tmp_protein)
             self.app_project.add_existing_protein(new_protein)
         self.app_project.serialize_project(self.app_project.project_path, "project")
+        self.app_project = project.Project.deserialize_project(self.app_project.project_path)
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
@@ -2481,7 +2498,7 @@ class MainWindow(QMainWindow):
         # create fasta file and move to scratch fasta dir
         fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{self.ui.txt_local_pred_mono_protein_name.text()}.fasta", "w")
         fasta_file.write(f">{self.ui.txt_local_pred_mono_protein_name.text()}\n")
-        fasta_file.write(self.ui.txt_local_pred_mono_prot_seq.text())
+        fasta_file.write(self.ui.txt_local_pred_mono_prot_seq.toPlainText())
         fasta_file.close()
         user_name = os.getlogin()
         fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
@@ -2663,6 +2680,7 @@ class MainWindow(QMainWindow):
         structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
                                                              structure_analysis_obj.model_proteins)
         protein_pairs = structure_analysis_obj.create_protein_pairs()
+        structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
         analysis_name = f"{transformed_analysis_data[0].molecule_object};{transformed_analysis_data[0].chains}_vs_{transformed_analysis_data[1].molecule_object};{transformed_analysis_data[1].chains}"
         analysis_name = analysis_name.replace(";", "_")
         analysis_name = analysis_name.replace(",", "_")
@@ -2673,8 +2691,8 @@ class MainWindow(QMainWindow):
         protein_pairs[0].cutoff = self.app_settings.cutoff
         self.app_project.add_protein_pair(protein_pairs[0])
         protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-        structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
         self.app_project.serialize_project(self.app_project.project_path, "project")
+        self.app_project = project.Project.deserialize_project(self.app_project.project_path)
         self._project_watcher.show_valid_options(self.ui)
 
     # def load_reference_for_analysis(self):
@@ -3037,6 +3055,9 @@ class MainWindow(QMainWindow):
             self.show_results_interactions(gui_elements_to_hide=gui_elements_to_hide)
         else:
             self.show_results_interactions()
+        session_filepath = pathlib.Path(f"{current_results_path}/sessions/session_file_model_s.pse")
+        cmd.reinitialize()
+        cmd.load(str(session_filepath))
 
     def change_interesting_regions(self):
         """This function is used to switch between projects within a job.

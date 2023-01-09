@@ -19,12 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os.path
 import pathlib
 
 from pymol import Qt
 import pyqtgraph as pg
-
-from pymol_protein_tools import protein_pair
+import pyqtgraph.exporters
+from pyssa.pymol_protein_tools import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialog
 from pyssa.gui.utilities import global_variables
 
@@ -42,10 +43,10 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-        graph_widget = pg.PlotWidget()
-        protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
+        self.graph_widget = pg.PlotWidget()
+        self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         # read csv file
-        path = pathlib.Path(f"{protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
+        path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
         distance_list = []
         cutoff_line = []
         with open(path, 'r', encoding="utf-8") as csv_file:
@@ -53,24 +54,25 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
                 cleaned_line = line.replace("\n", "")
                 if cleaned_line.split(",")[8] != 'distance':
                     distance_list.append(float(cleaned_line.split(",")[8]))
-                    cutoff_line.append(float(protein_pair_for_analysis.cutoff))
+                    cutoff_line.append(float(self.protein_pair_for_analysis.cutoff))
         # creates actual distance plot line
-        graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
+        self.graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
                                    symbol="o", symbolSize=10, symbolBrush=('b'))
-        self.view_box = graph_widget.plotItem.getViewBox()
+        self.view_box = self.graph_widget.plotItem.getViewBox()
         # creates cutoff line
-        graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
+        self.graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
         # styling the plot
-        graph_widget.setBackground('w')
-        graph_widget.setTitle(f"Distance Plot of {protein_pair_for_analysis.name}", size="23pt")
+        self.graph_widget.setBackground('w')
+        self.graph_widget.setTitle(f"Distance Plot of {self.protein_pair_for_analysis.name}", size="23pt")
         styles = {'font-size': '14px'}
         ax_label_y = "Distance in Å"
-        graph_widget.setLabel('left', ax_label_y, **styles)
-        graph_widget.setLabel('bottom', "Residue pair no.", **styles)
-        graph_widget.plotItem.showGrid(x=True, y=True)
-        self.ui.main_Layout.addWidget(graph_widget)
+        self.graph_widget.setLabel('left', ax_label_y, **styles)
+        self.graph_widget.setLabel('bottom', "Residue pair no.", **styles)
+        self.graph_widget.plotItem.showGrid(x=True, y=True)
+        self.ui.main_Layout.addWidget(self.graph_widget)
 
         self.ui.btn_distance_plot_update.clicked.connect(self.update_distance_plot)
+        self.ui.btn_distance_plot_save.clicked.connect(self.save_plot_to_file)
 
         self.setWindowTitle("Distance Plot")
 
@@ -80,8 +82,8 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         """
         from_aa = int(self.ui.sp_distance_plot_from.text())
         to_aa = int(self.ui.sp_distance_plot_to.text())
-        from_range = float(self.ui.dsp_distance_plot_from_range.text())
-        to_range = float(self.ui.dsp_distance_plot_to_range.text())
+        from_range = float(self.ui.dsp_distance_plot_from_range.text().replace(",", "."))
+        to_range = float(self.ui.dsp_distance_plot_to_range.text().replace(",", "."))
         self.view_box.setRange(xRange=[from_aa, to_aa], yRange=[from_range, to_range])
         # if self.ui.cb_sync_with_pymol.isChecked():
         #     print("Sync is active.")
@@ -91,3 +93,21 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         #     zoom_selection = f"/{pdb_name}///{from_aa}-{to_aa}/CA"
         #     cmd.select("zoom_sele", zoom_selection)
         #     cmd.zoom("zoom_sele")
+
+    def save_plot_to_file(self):
+        # create an exporter instance, as an argument give it
+        # the item you wish to export
+        exporter = pg.exporters.ImageExporter(self.graph_widget.plotItem)
+
+        # set export parameters if needed
+        exporter.parameters()['width'] = 1000  # (note this also affects height parameter)
+        exporter.parameters()['height'] = 1440
+        # save to file
+        results_image_path = pathlib.Path(
+            f"{self.protein_pair_for_analysis.results_dir}/user_images")
+        if not os.path.exists(results_image_path):
+            os.mkdir(results_image_path)
+        file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self,"Save Plot as Image", str(results_image_path), "Portable Network Graphic (.png)")
+        if file_path == ("", ""):
+            return
+        exporter.export(f'{file_path[0]}.png')

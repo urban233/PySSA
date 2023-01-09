@@ -150,7 +150,7 @@ def error_dialog_settings(message, message_detail, settings_obj):
     #     webbrowser.open_new("docs/pymol_plugin/build/html/index.html")
 
 
-def warning_dialog_restore_settings(message, message_detail):
+def warning_dialog_restore_settings(message):
     """This function creates a warning dialog, which can be customized.
 
     Args:
@@ -163,9 +163,7 @@ def warning_dialog_restore_settings(message, message_detail):
     """
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Warning)
-    msg.setText("Warning")
-    msg.setInformativeText(message)
-    msg.setDetailedText(message_detail)
+    msg.setText(message)
     msg.setWindowTitle("Warning")
     yes_button = msg.addButton("Yes", QMessageBox.ActionRole)
     no_button = msg.addButton("No", QMessageBox.ActionRole)
@@ -246,8 +244,7 @@ def warning_message_project_gets_deleted() -> bool:
     """
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Warning)
-    msg.setText("Warning")
-    msg.setInformativeText(f"Are you sure you want to delete this project?")
+    msg.setText(f"Are you sure you want to delete this project?")
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)
@@ -272,8 +269,7 @@ def warning_message_protein_gets_deleted() -> bool:
     """
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Warning)
-    msg.setText("Warning")
-    msg.setInformativeText(f"Are you sure you want to delete this protein?")
+    msg.setText(f"Are you sure you want to delete this protein?")
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)

@@ -1,6 +1,6 @@
 import pathlib
 
-from pymol_protein_tools import protein
+from pyssa.pymol_protein_tools import protein
 from pyssa.gui.data_structures.data_classes import protein_analysis_info
 
 

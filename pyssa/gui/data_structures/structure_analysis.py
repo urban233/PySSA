@@ -26,7 +26,6 @@ import logging
 import pymol
 from pymol import Qt
 from matplotlib import pyplot as plt
-from pymolproteintools import core
 from pymolproteintools import graphics
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.utilities import tools
@@ -216,6 +215,8 @@ class StructureAnalysis:
             selection = seperator.join(tmp_list)
         # adds the selections into the Protein object
         for tmp_protein in proteins:
+            if selection == "":
+                selection = f"/{tmp_protein.molecule_object}////CA"
             tmp_protein.set_selection(selection)
 
     def create_protein_pairs(self) -> list[protein_pair.ProteinPair]:

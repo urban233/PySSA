@@ -75,13 +75,20 @@ class Protein:
         self.molecule_object = molecule_object
         self.filepath: pathlib.Path = filepath
         self.export_data_dir: pathlib.Path = export_data_dir
+        self.filename = ""
         self.selection: str = ""
         self.sequence: str = ""
         self.chains: list[str] = []
 
         # argument test
-        if molecule_object.find(".pdb"):
+        er = molecule_object.find(".pdb")
+        if molecule_object.find(".pdb") != -1:
+            # pdb file is given
             self.molecule_object = molecule_object.replace(".pdb", "")
+            self.filename = molecule_object
+        else:
+            # PDB ID is given
+            self.filename = f"{self.molecule_object}.pdb"
 
         if filepath is not None:
             if not os.path.exists(f"{self.filepath}"):
@@ -92,11 +99,10 @@ class Protein:
             if not os.path.exists(f"{self.export_data_dir}"):
                 raise NotADirectoryError(f"The path {export_data_dir} was not "
                                          f"found.")
-        if filepath is not None:
-            print(f"Path {filepath}/{self.molecule_object}.pdb does not exists")
-            if not os.path.exists(pathlib.Path(f"{filepath}/{self.molecule_object}.pdb")):
-                raise FileNotFoundError(f"The pdb file {self.molecule_object} was "
-                                        f"not found under {self.filepath}.")
+        if not os.path.exists(pathlib.Path(f"{filepath}/{self.filename}")):
+            path = pathlib.Path(f"{filepath}/{self.filename}")
+            raise FileNotFoundError(f"Path {path} does not exists")
+
 
     def set_selection(self, selection: str) -> None:
         """This function sets a selection for the Protein object.
@@ -233,6 +239,7 @@ class Protein:
         tmp_protein = Protein(protein_dict.get("molecule_object"),
                               protein_dict.get("filepath"),
                               protein_dict.get("export_data_dir"))
+        tmp_protein.filename = protein_dict.get("filename")
         tmp_protein.set_sequence(protein_dict.get("sequence"))
         tmp_protein.set_selection(protein_dict.get("selection"))
         tmp_protein.set_chains(protein_dict.get("chains"))

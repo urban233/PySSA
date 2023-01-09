@@ -710,7 +710,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>PySSA - Python-Plugin for protein Sequence-to-Structure Analysis</string>
+                   <string>PySSA - Python-Plugin for Protein Sequence-to-Structure Analysis</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -2828,60 +2828,87 @@
              </layout>
             </widget>
             <widget class="QWidget" name="view_page">
-             <layout class="QVBoxLayout" name="verticalLayout_58">
+             <layout class="QVBoxLayout" name="verticalLayout_57">
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_57">
+               <layout class="QVBoxLayout" name="verticalLayout_52">
                 <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_52">
-                  <item>
-                   <widget class="QLabel" name="label_7">
-                    <property name="text">
-                     <string>Proteins in current project</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QListWidget" name="list_view_project_proteins"/>
-                  </item>
-                  <item>
-                   <widget class="QTextEdit" name="txtedit_view_sequence">
-                    <property name="enabled">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                 <widget class="QLabel" name="label_7">
+                  <property name="text">
+                   <string>Proteins in current project</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_30">
-                  <item>
-                   <widget class="QLabel" name="label_9">
-                    <property name="text">
-                     <string>Sequence of selected protein</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacer_20">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btn_view_project_show">
-                    <property name="text">
-                     <string>Show</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                 <widget class="QListWidget" name="list_view_project_proteins"/>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="txtedit_view_sequence">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_30">
+                <item>
+                 <widget class="QLabel" name="label_9">
+                  <property name="text">
+                   <string>Sequence of selected protein</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_20">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_view_project_show">
+                  <property name="text">
+                   <string>Show</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_66">
+                <item>
+                 <widget class="QLabel" name="label_11">
+                  <property name="text">
+                   <string>Structure of selected protein</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_46">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_view_project_show_structure">
+                  <property name="text">
+                   <string>Show</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>
@@ -3437,7 +3464,7 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="page">
+            <widget class="QWidget" name="local_monomer">
              <layout class="QVBoxLayout" name="verticalLayout_74">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_73">
@@ -3500,7 +3527,14 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="txt_local_pred_mono_prot_seq"/>
+                 <widget class="QTextEdit" name="txt_local_pred_mono_prot_seq">
+                  <property name="acceptRichText">
+                   <bool>false</bool>
+                  </property>
+                  <property name="cursorWidth">
+                   <number>1</number>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="lbl_local_pred_mono_status_prot_seq">
@@ -3669,7 +3703,7 @@
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="page_2">
+            <widget class="QWidget" name="local_multimer">
              <layout class="QVBoxLayout" name="verticalLayout_82">
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_48">
@@ -3761,7 +3795,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="txt_local_pred_multi_prot_seq"/>
+                 <widget class="QTextEdit" name="txt_local_pred_multi_prot_seq"/>
                 </item>
                 <item>
                  <widget class="QLabel" name="lbl_local_pred_multi_status_prot_seq">
