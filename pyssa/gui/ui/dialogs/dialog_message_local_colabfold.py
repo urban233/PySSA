@@ -51,21 +51,6 @@ def installation_local_colabfold_accept() -> bool:
         return False
 
 
-def installation_local_colabfold_progress() -> bool:
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Warning)
-    msg.setText("Don't close the window and wait!")
-    msg.setWindowTitle("Local Colabfold installation")
-    # fixme: hide msg.setStandardButtons -> read source from Todoist
-    msg.exec_()
-
-    if msg.setIcon(QMessageBox.Warning) == msg.setIcon(QMessageBox.Warning):
-        return True
-    else:
-        msg.close()
-        return False
-    # ??? - Is it okay, because we have no btn?
-
 def installation_local_colabfold_end() -> bool:
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
