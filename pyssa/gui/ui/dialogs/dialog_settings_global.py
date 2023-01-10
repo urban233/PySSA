@@ -19,10 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import multiprocessing
 import pathlib
 import subprocess
 import os
 import logging
+import threading
+import time
+
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 from pyssa.gui.ui.dialogs import dialog_message_wsl
@@ -61,12 +65,12 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         except ValueError:
             logging.error("Settings dialog cannot be opened due to an error.")
             return
-        logging.info("Loading values from settings.xml was successful.")
+        logging.info("Loading values from settings.json was successful.")
         self.ui.txt_workspace_dir.setEnabled(False)
         self.ui.txt_zip_storage_dir.setEnabled(False)
 
         logging.info("Settings dialog was opened.")
-        # loading information from the settings.xml
+        # loading information from the settings.json
         self.ui.txt_workspace_dir.setText(str(self.settings.get_workspace_path()))
         self.ui.txt_zip_storage_dir.setText(str(self.settings.get_prediction_path()))
         self.ui.spb_cycles.setValue(int(self.settings.get_cycles()))
@@ -109,39 +113,19 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def install_local_colabfold(self):
-        home_path_wsl = pathlib.Path("//wsl$/Ubuntu/home//")
-        colabfold_username = os.getlogin()
-        # colabfold_username = os.listdir(r"\\wsl$\Ubuntu\home")
-        colabbatch_path = str(pathlib.Path("/.pyssa/colabfold_batch/bin/colabfold_batch"))
-        path_colabfold = pathlib.Path("home_path_wsl + colabfold_username[0] + colabbatch_path")
+        # TODO: check if "Ubuntu" needs to be changed
+        home_path_wsl = r"\\wsl$\Ubuntu\home"
+        colabfold_username = os.listdir(r"\\wsl$\Ubuntu\home")
+        colabbatch_path = r"\.pyssa\colabfold_batch\bin\colabfold_batch"
+        path_colabfold = home_path_wsl + "\\" + colabfold_username[0] + colabbatch_path
         if os.path.exists(path_colabfold):
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Question)
-            msg.setText("Are you sure that you want to remove Local Colabfold from your system?")
-            msg.setWindowTitle("Remove Local Colabfold")
-            msg.setStandardButtons(QMessageBox.Yes)
-            msg.setStandardButtons(QMessageBox.No)
-            msg.exec_()
-            # --- Answer ---
-            # Here you will need a message box, which asks the user, if he would like to remove local colabfold from
-            # his system.
-            # The logical message of this if-statement is: the local colabfold is installed
-
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Question)
-            msg.setText("Do you want to remove Local Colabfold from your system and and remove the folder?")
-            msg.setWindowTitle("Remove Local Colabfold")
-            msg.setStandardButtons(QMessageBox.Yes)
-            msg.setStandardButtons(QMessageBox.No)
-            msg.exec_()
-            # here you will need to implement a message box which asks the user if he wants to remove local colabfold
-            # and evaluate the return value as it's done in line 139
-
-            # ???
-            # Is it right? Why we ask the same question in every message box?
-
-            # subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
-            self.ui.btn_install_local_prediction.setText("Install")
+            # colabfold installed on system, user wants to uninstall local colabfold
+            if dialog_message_local_colabfold.installation_local_colabfold_remove():
+                pass
+                # subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
+                self.ui.btn_install_local_prediction.setText("Install")
+            else:
+                return
         else:
             if dialog_message_local_colabfold.installation_local_colabfold_accept() is True:
                 # logical message: the user wants to install local colabfold
@@ -151,8 +135,6 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
                 # logical message: the user does NOT want to install local colabfold
                 # substitute "pass" with the action which needs to be done for aborting the local colabfold installation
                 pass
-
-            if dialog_message_local_colabfold.installation_local_colabfold_progress() is True:
             # user_name = os.getlogin()
             # subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
             # subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"])
@@ -165,15 +147,11 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             #     ["wsl", "cd", "/home/$USER/.pyssa", "&&", "./install_colabbatch_linux.sh"])
             # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./post_colabfold_installation.sh"])
             # subprocess.run(["wsl", "cd", "/home/$USER/.pyssa", "&&", "./update.sh"])
-                pass
-            else:
-                pass
 
             if dialog_message_local_colabfold.installation_local_colabfold_end() is True:
                 pass
             else:
                 pass
-
             self.ui.btn_install_local_prediction.setText("Uninstall")
 
     def install_wsl(self):

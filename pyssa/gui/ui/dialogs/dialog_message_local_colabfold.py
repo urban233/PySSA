@@ -65,6 +65,22 @@ def installation_local_colabfold_end() -> bool:
         return False
 
 
+def installation_local_colabfold_remove() -> bool:
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Question)
+    msg.setText("Are you sure that you want to remove Local Colabfold from your system?")
+    msg.setWindowTitle("Remove Local Colabfold")
+    btn_installation_local_colabfold_accept_yes = msg.addButton("Yes", QMessageBox.ActionRole)
+    btn_installation_local_colabfold_accept_no = msg.addButton("No", QMessageBox.ActionRole)
+    msg.exec_()
+
+    if msg.clickedButton() == btn_installation_local_colabfold_accept_yes:
+
+        return True
+    else:
+        msg.close()
+        return False
+
 # garbage
 # class DialogMessageLocalColabfold(QWidget):
 #
