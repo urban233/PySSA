@@ -35,7 +35,7 @@ from pyssa.gui.data_structures import settings
 from pyssa.gui.utilities import constants
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
-from pyssa.gui.utilities import tools
+
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)

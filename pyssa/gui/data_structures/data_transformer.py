@@ -32,15 +32,18 @@ class DataTransformer:
             prot_2_chains.append(tmp_chain.text())
         prot_2.set_chains(prot_2_chains)
 
-        analysis_name = f"{prot_1.molecule_object};{prot_1_chains}_vs_{prot_2.molecule_object};{prot_2_chains}"
-        analysis_name = analysis_name.replace(";", "_")
-        analysis_name = analysis_name.replace(",", "_")
-        analysis_name = analysis_name.replace("[", "")
-        analysis_name = analysis_name.replace("]", "")
-        analysis_name = analysis_name.replace("'", "")
+        if len(prot_1.chains) != 0:
+            analysis_name = f"{prot_1.molecule_object};{prot_1_chains}_vs_{prot_2.molecule_object};{prot_2_chains}"
+            analysis_name = analysis_name.replace(";", "_")
+            analysis_name = analysis_name.replace(",", "_")
+            analysis_name = analysis_name.replace("[", "")
+            analysis_name = analysis_name.replace("]", "")
+            analysis_name = analysis_name.replace("'", "")
+        else:
+            analysis_name = f"{prot_1.molecule_object}_vs_{prot_2.molecule_object}"
         export_dir = pathlib.Path(
             f"{project.get_results_path()}/{analysis_name}")
-        return prot_1, prot_2, export_dir
+        return prot_1, prot_2, export_dir, analysis_name
 
     def transform_data_for_analysis(self, project, protein_list: list[tuple[protein_analysis_info.ProteinAnalysisInfo, protein_analysis_info.ProteinAnalysisInfo]]):
         tmp_data = []

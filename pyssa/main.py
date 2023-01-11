@@ -857,6 +857,8 @@ class MainWindow(QMainWindow):
         self.single_analysis_management.show_stage_x(0)
         self.single_analysis_management.disable_all_next_buttons()
         self.single_analysis_management.set_empty_string_in_label()
+        self.ui.lbl_analysis_prot_struct_1.setText("Protein structure 1")
+        self.ui.lbl_analysis_prot_struct_2.setText("Protein structure 2")
 
     def _init_results_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -2681,19 +2683,14 @@ class MainWindow(QMainWindow):
                                                              structure_analysis_obj.model_proteins)
         protein_pairs = structure_analysis_obj.create_protein_pairs()
         structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
-        analysis_name = f"{transformed_analysis_data[0].molecule_object};{transformed_analysis_data[0].chains}_vs_{transformed_analysis_data[1].molecule_object};{transformed_analysis_data[1].chains}"
-        analysis_name = analysis_name.replace(";", "_")
-        analysis_name = analysis_name.replace(",", "_")
-        analysis_name = analysis_name.replace("[", "")
-        analysis_name = analysis_name.replace("]", "")
-        analysis_name = analysis_name.replace("'", "")
-        protein_pairs[0].name = analysis_name
+        protein_pairs[0].name = transformed_analysis_data[3]
         protein_pairs[0].cutoff = self.app_settings.cutoff
         self.app_project.add_protein_pair(protein_pairs[0])
         protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
         self.app_project.serialize_project(self.app_project.project_path, "project")
         self.app_project = project.Project.deserialize_project(self.app_project.project_path)
         self._project_watcher.show_valid_options(self.ui)
+        self._init_single_analysis_page()
 
     # def load_reference_for_analysis(self):
     #     """This function opens a file dialog to choose a .pdb file as

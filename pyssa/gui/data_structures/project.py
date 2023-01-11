@@ -214,20 +214,20 @@ class Project:
             return
         # self._folder_paths.__str__()
         project_dict = self.__dict__
-        protein_names = []
-        for tmp_protein in self.proteins:
-            protein_names.append(tmp_protein.molecule_object)
-        protein_pair_names = []
-        for tmp_protein_pair in self.protein_pairs:
-            protein_pair_names.append(tmp_protein_pair.name)
+        # protein_names = []
+        # for tmp_protein in self.proteins:
+        #     protein_names.append(tmp_protein.molecule_object)
+        # protein_pair_names = []
+        # for tmp_protein_pair in self.protein_pairs:
+        #     protein_pair_names.append(tmp_protein_pair.name)
         update = {
             '_workspace': str(self._workspace),
             'project_path': str(self.project_path),
             '_folder_paths': [str(self._folder_paths[0]), str(self._folder_paths[1]), str(self._folder_paths[2]), str(self._folder_paths[3]), str(self._folder_paths[4]), str(self._folder_paths[5])],
-            'proteins': protein_names,
-            'protein_pairs': protein_pair_names,
         }
         project_dict.update(update)
+        project_dict.pop('proteins')
+        project_dict.pop('protein_pairs')
         print(project_dict)
         project_file = open(f"{filepath}\\{filename}.json", "w", encoding="utf-8")
         json.dump(project_dict, project_file, indent=4)
@@ -293,8 +293,8 @@ class Project:
             the actual protein pair
         """
         for tmp_protein_pair in self.protein_pairs:
-            if tmp_protein_pair[2].name == protein_pair_name:
-                return tmp_protein_pair[2]
+            if tmp_protein_pair.name == protein_pair_name:
+                return tmp_protein_pair
         print(f"No matching protein with the name {protein_pair_name} found.")
 
     def get_specific_protein_pair_tuple(self, protein_pair_name):
