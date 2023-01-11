@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>550</width>
+    <width>539</width>
     <height>951</height>
    </rect>
   </property>
@@ -183,7 +183,7 @@
                   <x>0</x>
                   <y>0</y>
                   <width>163</width>
-                  <height>847</height>
+                  <height>865</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_64">
@@ -4316,6 +4316,106 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="page">
+             <layout class="QVBoxLayout" name="verticalLayout_88">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_58">
+                <item>
+                 <widget class="QLabel" name="label_5">
+                  <property name="text">
+                   <string>Choose protein structure(s)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QListWidget" name="list_hotspots_choose_protein"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_69">
+                <item>
+                 <widget class="QLabel" name="lbl_hotspots_resi_no">
+                  <property name="text">
+                   <string>Residue no.</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="sp_hotspots_resi_no">
+                  <property name="maximumSize">
+                   <size>
+                    <width>70</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_67">
+                <item>
+                 <widget class="QLabel" name="lbl_hotspots_resi_show">
+                  <property name="text">
+                   <string>Residue as balls and sticks</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_hotspots_resi_show">
+                  <property name="maximumSize">
+                   <size>
+                    <width>121</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Show</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_68">
+                <item>
+                 <widget class="QLabel" name="lbl_hotspots_resi_zoom">
+                  <property name="text">
+                   <string>Residue position</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_hotspots_resi_zoom">
+                  <property name="maximumSize">
+                   <size>
+                    <width>121</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Zoom</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_13">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>617</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -4331,8 +4431,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>550</width>
-     <height>26</height>
+     <width>539</width>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">

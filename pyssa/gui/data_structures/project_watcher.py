@@ -71,6 +71,7 @@ class ProjectWatcher:
                 ui.btn_view_page,
                 ui.btn_use_page,
                 ui.btn_edit_page,
+                ui.btn_hotspots_page,
                 ui.lbl_pred_cloud,
                 ui.btn_pred_cloud_monomer_page,
                 ui.btn_pred_cloud_monomer_vs_pdb_page,
@@ -87,7 +88,6 @@ class ProjectWatcher:
                 ui.btn_results_page,
                 ui.lbl_handle_pymol_session,
                 ui.btn_image_page,
-                ui.btn_hotspots_page,
             ]
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
         elif self.no_of_pdb_files == 0:
@@ -136,6 +136,7 @@ class ProjectWatcher:
                 ui.btn_pred_local_multimer_vs_pdb_page,
                 ui.lbl_handle_pymol_session,
                 ui.btn_image_page,
+                ui.btn_hotspots_page,
             ]
             gui_elements_to_hide = [
                 ui.btn_new_page,
@@ -149,7 +150,6 @@ class ProjectWatcher:
                 ui.btn_single_analysis_page,
                 ui.btn_batch_analysis_page,
                 ui.btn_results_page,
-                ui.btn_hotspots_page,
             ]
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
         # elif self.no_of_pdb_files == 2:
@@ -198,6 +198,7 @@ class ProjectWatcher:
                 ui.btn_batch_analysis_page,
                 ui.lbl_handle_pymol_session,
                 ui.btn_image_page,
+                ui.btn_hotspots_page,
             ]
             gui_elements_to_hide = [
                 ui.btn_new_page,
@@ -213,7 +214,6 @@ class ProjectWatcher:
                 ui.btn_pred_local_multimer_vs_pdb_page,
                 ui.btn_pred_local_monomer_page,
                 ui.btn_pred_local_multimer_page,
-                ui.btn_hotspots_page,
             ]
             if self.no_of_results > 0:
                 gui_elements_to_show.append(ui.btn_results_page)

@@ -1165,7 +1165,7 @@ QPushButton::pressed#btn_image_page {
 
 /* Button for "Hotspots" */
 QPushButton#btn_hotspots_page {
-    background-color: F6F4F8;
+    background-color: #F6F4F8;
     border-style: outset;
     border-width: 2px;
     border-radius: 6px;

@@ -26,6 +26,7 @@ import pathlib
 
 import pymol
 from pymol import cmd
+from pyssa.gui.data_structures import safeguard
 from Bio import AlignIO
 import pandas as pd
 import numpy as np
@@ -49,6 +50,8 @@ class Protein:
             The primary sequence of the protein.
         chains:
             A list of chains which occur in the protein.
+        filename:
+            The name of the file with extension
     """
 
     def __init__(self, molecule_object: str, filepath: pathlib.Path = None,
@@ -81,7 +84,6 @@ class Protein:
         self.chains: list[str] = []
 
         # argument test
-        er = molecule_object.find(".pdb")
         if molecule_object.find(".pdb") != -1:
             # pdb file is given
             self.molecule_object = molecule_object.replace(".pdb", "")
@@ -200,6 +202,21 @@ class Protein:
             os.mkdir(f"{self.export_data_dir}")
         # save the pdb file under the path (export_data_dir)
         cmd.save(f"{self.export_data_dir}/{self.molecule_object}.pdb")
+
+    def load_protein(self) -> None:
+        if not safeguard.Safeguard.check_filepath(f"{self.filepath}/{self.filename}"):
+            raise FileNotFoundError
+        cmd.load(f"{self.filepath}/{self.filename}", object=self.molecule_object)
+
+    def choose_resi_no_protein(self) -> None:
+        pass
+
+    def show_resi_in_balls_and_sticks(self) -> None:
+        cmd.show(representation="sticks", selection=self.selection) # Is it possible, because selection must be a string, but the object is no string
+        # Do selection as an input, that is uniform, for a string
+
+    def zoom_resi_protein_position(self) -> None:
+        cmd.zoom(selection="sticks", buffer=0.0, state=0, complete=0)
 
     def serialize_protein(self, filepath, filename) -> None:
         """This function serialize the protein object

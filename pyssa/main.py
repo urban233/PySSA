@@ -523,6 +523,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_batch_analysis_page.clicked.connect(self.display_job_analysis_page)
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
+        self.ui.btn_hotspots_page.clicked.connect(self.display_hotspots_page)
         # new project page
         self.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
         self.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
@@ -624,6 +625,9 @@ class MainWindow(QMainWindow):
         self.ui.box_ray_trace_mode.activated.connect(self.choose_ray_trace_mode)
         self.ui.box_ray_texture.activated.connect(self.choose_ray_texture)
         self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
+        # hotspots page
+        self.ui.list_hotspots_choose_protein.currentItemChanged.connect(self.open_protein)
+        self.ui.btn_hotspots_resi_show.clicked.connect(self.show_resi_sticks)
 
     def _create_all_tooltips(self):
         # menu
@@ -1093,6 +1097,11 @@ class MainWindow(QMainWindow):
                 protein_names.remove(tmp_prot_name)
         self.ui.list_use_available_protein_structures.addItems(protein_names)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
+
+    def display_hotspots_page(self):
+        self.ui.list_hotspots_choose_protein.clear()
+        tools.scan_project_for_valid_proteins(self.app_project.project_path, self.ui.list_hotspots_choose_protein)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be
@@ -3474,6 +3483,38 @@ class MainWindow(QMainWindow):
                 tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
                                                      "an image", self.status_bar,
                                             "Unexpected Error from PyMOL")
+
+    # ----- Functions for Hotspots page
+    def open_protein(self):
+        input = self.ui.list_hotspots_choose_protein.currentItem().text()
+        if input.find(".pdb") != -1:
+            # one protein is selected
+            tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
+            tmp_protein.load_protein()
+        else:
+            # protein pair is selected
+            tmp_protein_pair = self.app_project.get_specific_protein_pair(input)
+            tmp_protein_pair.load_protein_pair()
+
+    def choose_resi_no(self):
+
+        pass
+
+    def show_resi_sticks(self):
+        # for protein
+        input = self.ui.list_hotspots_choose_protein.currentItem().text()
+        if input.find(".pdb") != -1:
+            # one protein is selected
+            tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
+            tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
+            tmp_protein.show_resi_in_balls_and_sticks()
+        # for protein pair/ if and else
+        pass
+
+    def zoom_resi_position(self):
+        # for protein
+        protein.Protein.zoom_resi_protein_position(self.choose_resi_no())
+        pass
 
 
 if __name__ == '__main__':
