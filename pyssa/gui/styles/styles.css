@@ -1166,13 +1166,11 @@ QPushButton::pressed#btn_image_page {
 /* Button for "Hotspots" */
 QPushButton#btn_hotspots_page {
     background-color: #F6F4F8;
-    border-style: outset;
-    border-width: 2px;
+    border-width: 0px;
     border-radius: 6px;
-    border-color: #f7f7f7;
     max-width: 8.9em;
     min-width: 6em;
-    padding: 2px;
+    padding: 5px;
     text-align: left;
 }
 
