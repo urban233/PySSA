@@ -50,6 +50,8 @@ class Settings:
             filename:
                 name of the settings.xml
         """
+        if not os.path.exists(constants.SETTINGS_DIR):
+            os.mkdir(constants.SETTINGS_DIR)
         if not os.path.exists(constants.DEFAULT_WORKSPACE_PATH):
             os.mkdir(constants.DEFAULT_WORKSPACE_PATH)
         self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
@@ -59,6 +61,8 @@ class Settings:
         self.app_launch = 1
         self.dir_settings: str = dir_settings
         self.filename: str = filename
+        self.wsl_install: int = 0
+        self.local_colabfold: int = 0
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object
@@ -114,6 +118,14 @@ class Settings:
         if not safeguard.Safeguard.check_filepath(settings_dict.get("dir_settings")):
             raise ValueError
         if not settings_dict.get("filename") == "settings.json":
+            raise ValueError
+        if int(settings_dict.get("wsl_install")) == 0 or int(settings_dict.get("wsl_install")) == 1:
+            tmp_settings.wsl_install = int(settings_dict.get("wsl_install"))
+        else:
+            raise ValueError
+        if int(settings_dict.get("local_colabfold")) == 0 or int(settings_dict.get("local_colabfold")) == 1:
+            tmp_settings.local_colabfold = int(settings_dict.get("local_colabfold"))
+        else:
             raise ValueError
         return tmp_settings
 
@@ -191,11 +203,13 @@ class Settings:
         """This function resets the settings to the default values
 
         """
-        self.workspace_path = pathlib.Path(f"{os.path.expanduser('~')}/Documents")
+        self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self.prediction_path = pathlib.Path(f"{os.path.expanduser('~')}/Downloads")
         self.cycles: int = 0
         self.cutoff: float = 1.0
         self.app_launch = 1
         self.dir_settings: str = dir_settings
         self.filename: str = filename
+        self.wsl_install: int = 0
+        self.local_colabfold: int = 0
         self.serialize_settings()

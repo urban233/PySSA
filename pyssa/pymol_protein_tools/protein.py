@@ -105,7 +105,6 @@ class Protein:
             path = pathlib.Path(f"{filepath}/{self.filename}")
             raise FileNotFoundError(f"Path {path} does not exists")
 
-
     def set_selection(self, selection: str) -> None:
         """This function sets a selection for the Protein object.
 

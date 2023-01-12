@@ -51,6 +51,15 @@ def installation_local_colabfold_accept() -> bool:
         return False
 
 
+def installation_local_colabfold_failed(message):
+    msg = QMessageBox()
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText(message)
+    msg.setWindowTitle("Local Colabfold installation")
+    msg.setStandardButtons(QMessageBox.Ok)
+    msg.exec_()
+
+
 def installation_local_colabfold_end() -> bool:
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)

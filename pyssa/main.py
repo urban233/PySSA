@@ -1351,7 +1351,7 @@ class MainWindow(QMainWindow):
         with the default values.
 
         """
-        out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?", "")
+        out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?")
         if out:
             tools.restore_default_settings(self.app_settings)
             self.status_bar.showMessage("Settings were successfully restored.")
