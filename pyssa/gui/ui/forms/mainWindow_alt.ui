@@ -4380,6 +4380,30 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_68">
                 <item>
+                 <widget class="QLabel" name="lbl_hotspots_resi_hide">
+                  <property name="text">
+                   <string>Residue as balls and sticks</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_hotspots_resi_hide">
+                  <property name="maximumSize">
+                   <size>
+                    <width>121</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Hide</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_70">
+                <item>
                  <widget class="QLabel" name="lbl_hotspots_resi_zoom">
                   <property name="text">
                    <string>Residue position</string>
@@ -4409,7 +4433,7 @@
                 <property name="sizeHint" stdset="0">
                  <size>
                   <width>20</width>
-                  <height>617</height>
+                  <height>587</height>
                  </size>
                 </property>
                </spacer>

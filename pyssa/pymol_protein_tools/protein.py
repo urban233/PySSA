@@ -207,15 +207,14 @@ class Protein:
             raise FileNotFoundError
         cmd.load(f"{self.filepath}/{self.filename}", object=self.molecule_object)
 
-    def choose_resi_no_protein(self) -> None:
-        pass
+    def show_resi_as_balls_and_sticks(self) -> None:
+        cmd.show(representation="sticks", selection=self.selection)
 
-    def show_resi_in_balls_and_sticks(self) -> None:
-        cmd.show(representation="sticks", selection=self.selection) # Is it possible, because selection must be a string, but the object is no string
-        # Do selection as an input, that is uniform, for a string
+    def hide_resi_as_balls_and_sticks(self) -> None:
+        cmd.hide(representation="sticks", selection=self.selection)
 
     def zoom_resi_protein_position(self) -> None:
-        cmd.zoom(selection="sticks", buffer=0.0, state=0, complete=0)
+        cmd.zoom(selection=self.selection, buffer=8.0, state=0, complete=0)
 
     def serialize_protein(self, filepath, filename) -> None:
         """This function serialize the protein object

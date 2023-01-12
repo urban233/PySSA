@@ -113,6 +113,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.ui.lbl_page_title.setText("Home")
         self.setMinimumWidth(550)
+        self.setMinimumHeight(200)
 
         self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
@@ -628,6 +629,8 @@ class MainWindow(QMainWindow):
         # hotspots page
         self.ui.list_hotspots_choose_protein.currentItemChanged.connect(self.open_protein)
         self.ui.btn_hotspots_resi_show.clicked.connect(self.show_resi_sticks)
+        self.ui.btn_hotspots_resi_hide.clicked.connect(self.hide_resi_sticks)
+        self.ui.btn_hotspots_resi_zoom.clicked.connect(self.zoom_resi_position)
 
     def _create_all_tooltips(self):
         # menu
@@ -3491,30 +3494,38 @@ class MainWindow(QMainWindow):
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.load_protein()
+            tmp_sequence = cmd.get_fastastr('all')
+            self.ui.sp_hotspots_resi_no.setMaximum(len(tmp_sequence))
         else:
             # protein pair is selected
             tmp_protein_pair = self.app_project.get_specific_protein_pair(input)
             tmp_protein_pair.load_protein_pair()
 
-    def choose_resi_no(self):
-
-        pass
-
     def show_resi_sticks(self):
-        # for protein
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
         if input.find(".pdb") != -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
-            tmp_protein.show_resi_in_balls_and_sticks()
-        # for protein pair/ if and else
-        pass
+            tmp_protein.show_resi_as_balls_and_sticks()
+        # protein pair is selected
+
+    def hide_resi_sticks(self):
+        input = self.ui.list_hotspots_choose_protein.currentItem().text()
+        if input.find(".pdb") != -1:
+            # one protein is selected
+            tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
+            tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
+            tmp_protein.hide_resi_as_balls_and_sticks()
 
     def zoom_resi_position(self):
-        # for protein
-        protein.Protein.zoom_resi_protein_position(self.choose_resi_no())
-        pass
+        input = self.ui.list_hotspots_choose_protein.currentItem().text()
+        if input.find(".pdb") != -1:
+            # one protein is selected
+            tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
+            tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
+            tmp_protein.zoom_resi_protein_position()
+
 
 
 if __name__ == '__main__':
