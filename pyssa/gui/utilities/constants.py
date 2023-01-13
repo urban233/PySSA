@@ -26,7 +26,7 @@ import pathlib
 from pathlib import Path
 
 
-VERSION_NUMBER = "v0.9.2"
+VERSION_NUMBER = "v0.9.3"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
@@ -46,12 +46,9 @@ OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alpha
 NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
 NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
 
-# linux, macOS, Windows path
-path_list = [
-    f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
-    f"{os.path.expanduser('~')}/opt/anaconda3/envs/pyssa/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
-    f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\pyssa\\",
-]
+# Windows plugin path
+PLUGIN_PATH = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\tmpPySSA")
+PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 chain_dict = {
     0: "A",

@@ -20,8 +20,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all message boxes which occur in the settings dialog."""
-
+import PyQt5
 from PyQt5.QtWidgets import QMessageBox
+from pyssa.gui.utilities import constants
 
 
 def yes_or_no(window_title, text_message, icon) -> bool:
@@ -33,6 +34,7 @@ def yes_or_no(window_title, text_message, icon) -> bool:
     """
     msg = QMessageBox()
     msg.setIcon(icon)
+    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setWindowTitle(window_title)
     msg.setText(text_message)
     btn_yes = msg.addButton("Yes", QMessageBox.ActionRole)
@@ -53,6 +55,7 @@ def ok(window_title, text_message, icon):
     msg = QMessageBox()
     msg.setIcon(icon)
     msg.setWindowTitle(window_title)
+    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setText(text_message)
     msg.setStandardButtons(QMessageBox.Ok)
     msg.exec_()

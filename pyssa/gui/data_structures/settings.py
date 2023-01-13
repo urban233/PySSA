@@ -63,6 +63,7 @@ class Settings:
         self.filename: str = filename
         self.wsl_install: int = 0
         self.local_colabfold: int = 0
+        self.wsl_username: str = "no_user_name"
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object
@@ -127,6 +128,7 @@ class Settings:
             tmp_settings.local_colabfold = int(settings_dict.get("local_colabfold"))
         else:
             raise ValueError
+        tmp_settings.wsl_username = settings_dict.get("wsl_username")
         return tmp_settings
 
     def get_workspace_path(self) -> pathlib.Path:

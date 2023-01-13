@@ -30,8 +30,9 @@ from pyssa.gui.data_structures import settings
 from pyssa.gui.utilities import constants
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
+import PyQt5
 from pyssa.gui.ui.messageboxes import basic_boxes
-
+from pyssa.gui.ui.messageboxes import settings_boxes
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -90,9 +91,24 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         if self.settings.local_colabfold == 0:
             # wsl is not installed
             self.ui.btn_install_local_prediction.setText("Install")
+            gui_elements_to_hide = [
+                self.ui.line_wsl_config,
+                self.ui.lbl_wsl_config,
+                self.ui.lbl_wsl_username,
+                self.ui.box_wsl_username,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
         elif self.settings.local_colabfold == 1:
-            # wsl is not installed
+            # wsl is installed
             self.ui.btn_install_local_prediction.setText("Uninstall")
+            gui_elements_to_show = [
+                self.ui.line_wsl_config,
+                self.ui.lbl_wsl_config,
+                self.ui.lbl_wsl_username,
+                self.ui.box_wsl_username,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_show)
+            # TODO: implement the username selection through the combobox
         else:
             gui_utils.error_dialog_settings("The settings are corrupted, please restore the settings!", "", self.settings)
         # connect elements with function
@@ -102,6 +118,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.btn_ok.clicked.connect(self.okDialog)
         self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
         self.ui.btn_install_wsl2.clicked.connect(self.install_wsl)
+        self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("Global Settings")
 
     # @SLOT()
@@ -125,9 +142,9 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
     def install_local_colabfold(self):
         # TODO: check if "Ubuntu" needs to be changed
-        home_path_wsl = r"\\wsl$\Ubuntu\home"
+        home_path_wsl = r"\\" + "wsl$\\" + self.settings.wsl_username + "\\home"
         try:
-            colabfold_username = os.listdir(r"\\wsl$\Ubuntu\home")
+            colabfold_username = os.listdir(home_path_wsl)
         except FileNotFoundError:
             basic_boxes.ok("Local Colabfold installation", "The WSL2 is not installed!", QMessageBox.Critical)
             return
@@ -194,7 +211,8 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
                     return
                 self.ui.btn_install_local_prediction.setText("Uninstall")
                 self.settings.wsl_install = 1
-                basic_boxes.ok("WSL2 installation", "Installation is finished!", QMessageBox.Information)
+                if settings_boxes.restart_now_later():
+                    os.system("shutdown /r")
             else:
                 # the user does NOT want to install WSL
                 basic_boxes.ok("WSL2 installation", "Installation process aborted.", QMessageBox.Information)

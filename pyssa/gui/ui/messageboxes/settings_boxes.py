@@ -20,62 +20,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all message boxes which occur in the settings dialog."""
-
+import PyQt5
 from PyQt5.QtWidgets import QMessageBox
+from pyssa.gui.utilities import constants
 
 
-def installation_local_colabfold_accept() -> bool:
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Question)
-    msg.setText("Are you sure that you want to install Local Colabfold?")
-    msg.setWindowTitle("Local Colabfold installation")
-    btn_installation_local_colabfold_accept_yes = msg.addButton("Yes", QMessageBox.ActionRole)
-    btn_installation_local_colabfold_accept_no = msg.addButton("No", QMessageBox.ActionRole)
-    msg.exec_()
+def restart_now_later() -> bool:
+    """This is a function which creates a basic QMessageBox with the buttons yes or no.
 
-    if msg.clickedButton() == btn_installation_local_colabfold_accept_yes:
-        return True
-        # you can better return a True, which gets evaluated in the dialog_settings_global.py through an
-    else:
-        msg.close()
-        return False
-
-
-def installation_local_colabfold_failed(message):
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Critical)
-    msg.setText(message)
-    msg.setWindowTitle("Local Colabfold installation")
-    msg.setStandardButtons(QMessageBox.Ok)
-    msg.exec_()
-
-
-def installation_local_colabfold_end() -> bool:
+    Returns:
+        True if "yes" is clicked
+        False if "no" is clicked
+    """
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
-    msg.setText("Installation is finished!")
-    msg.setWindowTitle("Local Colabfold installation")
-    msg.setStandardButtons(QMessageBox.Ok)
-
-    if msg.clickedButton() == msg.setStandardButtons(QMessageBox.Ok):
-        return True
-    else:
-        msg.close()
-        return False
-
-
-def installation_local_colabfold_remove() -> bool:
-    msg = QMessageBox()
-    msg.setIcon(QMessageBox.Question)
-    msg.setText("Are you sure that you want to remove Local Colabfold from your system?")
-    msg.setWindowTitle("Remove Local Colabfold")
-    btn_installation_local_colabfold_accept_yes = msg.addButton("Yes", QMessageBox.ActionRole)
-    btn_installation_local_colabfold_accept_no = msg.addButton("No", QMessageBox.ActionRole)
+    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowTitle("WSL2 installation")
+    msg.setText("Installation is finished! Restart is necessary.")
+    btn_later = msg.addButton("Restart later", QMessageBox.ActionRole)
+    btn_now = msg.addButton("Restart now", QMessageBox.ActionRole)
     msg.exec_()
 
-    if msg.clickedButton() == btn_installation_local_colabfold_accept_yes:
-
+    if msg.clickedButton() == btn_now:
         return True
-    else:
+    elif msg.clickedButton() == btn_later:
         msg.close()
         return False
+    else:
+        print("Unexpected Error.")
+        msg.close()

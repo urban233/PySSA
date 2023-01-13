@@ -32,6 +32,7 @@ import numpy as np
 import pymol
 import pyqtgraph as pg
 
+from pyssa.gui.ui.dialogs import dialog_sequence_viewer
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.utilities import global_variables
 from pyssa.gui.ui.dialogs import dialog_startup
@@ -183,7 +184,7 @@ class MainWindow(QMainWindow):
         self._create_all_tooltips()
         self._project_watcher.show_valid_options(self.ui)
         # setting additional parameters
-        self.setWindowIcon(QIcon("..\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
 
     # ----- Functions for GuiPageManagement obj creation
@@ -1008,6 +1009,7 @@ class MainWindow(QMainWindow):
         """This function displays the new project work area
 
         """
+        self._init_new_page()
         self.ui.list_new_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
@@ -1957,10 +1959,13 @@ class MainWindow(QMainWindow):
     # ----- Functions for View project page
     def view_sequence(self):
         project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
-        protein = self.ui.list_view_project_proteins.currentItem().text()
-        sequence = tools.get_sequence_from_pdb_file(f"{project_path}/pdb/{protein}")
+        tmp_protein_filename = self.ui.list_view_project_proteins.currentItem().text()
+        sequence = tools.get_sequence_from_pdb_file(f"{project_path}/pdb/{tmp_protein_filename}")
         self.ui.txtedit_view_sequence.clear()
         self.ui.txtedit_view_sequence.append(sequence)
+        # fixme: experimental sequence viewer gui
+        dialog = dialog_sequence_viewer.SequenceViewer(sequence, tmp_protein_filename)
+        dialog.exec_()
 
     def view_structure(self):
         protein_name = self.ui.list_view_project_proteins.currentItem().text()
@@ -3525,7 +3530,6 @@ class MainWindow(QMainWindow):
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
             tmp_protein.zoom_resi_protein_position()
-
 
 
 if __name__ == '__main__':

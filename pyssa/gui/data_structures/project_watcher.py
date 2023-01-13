@@ -128,9 +128,6 @@ class ProjectWatcher:
                 ui.btn_use_page,
                 ui.btn_edit_page,
                 ui.btn_view_page,
-                ui.lbl_pred_cloud,
-                ui.btn_pred_cloud_monomer_vs_pdb_page,
-                ui.btn_pred_cloud_multimer_vs_pdb_page,
                 ui.lbl_pred_local,
                 ui.btn_pred_local_monomer_vs_pdb_page,
                 ui.btn_pred_local_multimer_vs_pdb_page,
@@ -150,6 +147,9 @@ class ProjectWatcher:
                 ui.btn_single_analysis_page,
                 ui.btn_batch_analysis_page,
                 ui.btn_results_page,
+                ui.lbl_pred_cloud,
+                ui.btn_pred_cloud_monomer_vs_pdb_page,
+                ui.btn_pred_cloud_multimer_vs_pdb_page,
             ]
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
         # elif self.no_of_pdb_files == 2:
