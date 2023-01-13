@@ -50,6 +50,10 @@ NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
 PLUGIN_PATH = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\tmpPySSA")
 PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
+WSL_DISTRO_NAME = "UbuntuColabfold"
+WSL_STORAGE_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/{WSL_DISTRO_NAME}")
+WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
+
 chain_dict = {
     0: "A",
     1: "B",

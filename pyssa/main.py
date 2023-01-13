@@ -2524,6 +2524,8 @@ class MainWindow(QMainWindow):
         pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
 
         try:
+            subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
+                f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
             subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
                             fasta_path, pdb_path])
         except OSError:
