@@ -320,12 +320,22 @@ class StructureAnalysis:
                 msg = "Finished creating distance histogram. | Take image of structure alignment ..."
                 tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
                 graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon", "structure_alignment")
-
                 # take image of interesting regions
                 msg = f"Finished taking image of structure alignment. | Take images "\
                       f"of interesting regions (within {self._cutoff} angstrom)"
                 tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
                 graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1)
+            else:
+                # take image of whole structure alignment
+                msg = "Finished creating distance histogram. | Create scene of structure alignment ..."
+                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+                graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon",
+                                                             "structure_alignment", take_images=False)
+                # take image of interesting regions
+                msg = f"Finished creating scene of structure alignment. | Create scenes " \
+                      f"of interesting regions (within {self._cutoff} angstrom)"
+                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+                graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1, take_images=False)
 
             # NOT THIS
             # # color residues by distance

@@ -1668,6 +1668,7 @@ class MainWindow(QMainWindow):
 
         """
         # checkbox is checked
+        test = self.ui.cb_new_add_reference.checkState()
         if self.ui.cb_new_add_reference.checkState() == 2:
             self.ui.txt_new_choose_reference.clear()
             self.ui.txt_new_choose_reference.setStyleSheet("background-color: white")
@@ -1815,6 +1816,7 @@ class MainWindow(QMainWindow):
             tmp_ref_protein.serialize_protein(self.app_project.get_objects_proteins_path(), pdb_id)
             for chain in chains:
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
+        self.ui.cb_new_add_reference.setCheckState(0)
         self.app_project.serialize_project(self.app_project.project_path, "project")
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
@@ -2083,8 +2085,8 @@ class MainWindow(QMainWindow):
         self.ui.txtedit_view_sequence.clear()
         self.ui.txtedit_view_sequence.append(sequence)
         # fixme: experimental sequence viewer gui
-        dialog = dialog_sequence_viewer.SequenceViewer(sequence, tmp_protein_filename)
-        dialog.exec_()
+        #dialog = dialog_sequence_viewer.SequenceViewer(sequence, tmp_protein_filename)
+        #dialog.exec_()
 
     def view_structure(self):
         protein_name = self.ui.list_view_project_proteins.currentItem().text()

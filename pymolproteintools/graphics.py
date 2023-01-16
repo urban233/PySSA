@@ -56,7 +56,8 @@ class Graphics:
                                    filename: str,
                                    selection: str = "",
                                    ray_shadows: bool = False,
-                                   opaque_background: int = 0) -> None:
+                                   opaque_background: int = 0,
+                                   take_images=True) -> None:
         """This function takes an image of the whole Protein/Protein pair.
 
         Note:
@@ -109,24 +110,25 @@ class Graphics:
         cmd.set("antialias", 2)
         cmd.set("ray_shadows", opt_ray_shadows)
         cmd.set('ray_opaque_background', opaque_background)
-        cmd.ray(2400, 2400, renderer=0)
 
         cmd.scene(key=f"{self.protein_pair.ref_obj.molecule_object}-{self.protein_pair.model_obj.molecule_object}", action="store")
 
-        # check if path exists where the data will be exported,
-        # if not the directory will be created
-        if not os.path.exists(f"{self.protein_pair.results_dir}/images"):
-            os.mkdir(f"{self.protein_pair.results_dir}/images")
-
-        # save image as 300 dpi png image
-        cmd.png(f'{self.protein_pair.results_dir}/images/{filename}.png',
-                dpi=300)
+        if take_images is True:
+            # check if path exists where the data will be exported,
+            # if not the directory will be created
+            if not os.path.exists(f"{self.protein_pair.results_dir}/images"):
+                os.mkdir(f"{self.protein_pair.results_dir}/images")
+            # save image as 300 dpi png image
+            cmd.ray(2400, 2400, renderer=0)
+            cmd.png(f'{self.protein_pair.results_dir}/images/{filename}.png',
+                    dpi=300)
 
     def take_image_of_interesting_regions(self,
                                           cutoff: float,
                                           filename: str,
                                           ray_shadows: bool = False,
-                                          opaque_background: int = 0):
+                                          opaque_background: int = 0,
+                                          take_images=True):
         """This function takes images of interesting regions of the alignment
 
         Args:
@@ -196,20 +198,20 @@ class Graphics:
                 cmd.set("antialias", 2)
                 cmd.set("ray_shadows", opt_ray_shadows)
                 cmd.set('ray_opaque_background', opaque_background)
-                cmd.ray(2400, 2400, renderer=0)
 
                 cmd.scene(key=f"{ref_pos}-{model_pos}", action="store")
 
-                # check if path exists where the data will be exported,
-                # if not the directory will be created
-                if not os.path.exists(
-                        f"{self.protein_pair.results_dir}/images"):
-                    os.mkdir(f"{self.protein_pair.results_dir}/images")
-
-                # save image as 300 dpi png image
-                cmd.png(
-                    f'{self.protein_pair.results_dir}/images/interesting_regions/{filename}_{ref_pos}.png',
-                    dpi=300)
+                if take_images is True:
+                    # check if path exists where the data will be exported,
+                    # if not the directory will be created
+                    if not os.path.exists(
+                            f"{self.protein_pair.results_dir}/images"):
+                        os.mkdir(f"{self.protein_pair.results_dir}/images")
+                    # save image as 300 dpi png image
+                    cmd.ray(2400, 2400, renderer=0)
+                    cmd.png(
+                        f'{self.protein_pair.results_dir}/images/interesting_regions/{filename}_{ref_pos}.png',
+                        dpi=300)
                 # hide created labels
                 cmd.hide("labels", atom1)
                 cmd.hide("labels", atom2)
