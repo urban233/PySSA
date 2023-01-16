@@ -20,9 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for structure analysis class"""
-
+import json
 import os
 import logging
+import pathlib
+
 import pymol
 from pymol import Qt
 from matplotlib import pyplot as plt
@@ -260,7 +262,7 @@ class StructureAnalysis:
             msg = "Finished coloring proteins. | Align proteins ..."
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             try:
-                tmp_protein_pair.align_protein_pair(self._cycles, self._cutoff, self._alignment_file_name)
+                align_results = tmp_protein_pair.align_protein_pair(self._cycles, self._cutoff, self._alignment_file_name)
             except pymol.CmdException:
                 if len(self.ref_chains) != 0:
                     tools.quick_log_and_display("critical", "There is a problem with the chain selection!",
@@ -269,6 +271,13 @@ class StructureAnalysis:
                                                "There is a problem with the chain selection!"
                                                "You should check if you have entered the correct chains.")
                 return
+            rmsd_dict = {
+                "rmsd": str(round(align_results[0], 2)),
+                "aligned_residues": str(align_results[1]),
+            }
+            rmsd_file = open(pathlib.Path(f"{self.export_dir}/rmsd.json"), "w", encoding="utf-8")
+            json.dump(rmsd_dict, rmsd_file, indent=4)
+            rmsd_file.close()
 
             # do the distance calculation
             msg = "Finished aligning proteins. | Calculate distances ..."
@@ -281,29 +290,30 @@ class StructureAnalysis:
             tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             graphics_instance: graphics.Graphics = graphics.Graphics(tmp_protein_pair, distance_results, self._figure_size)
 
-            # create distance plot
-            fig = graphics_instance.create_distance_plot(self._distance_label, self._cutoff)
-            # save distance plot
-            if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots"):
-                os.mkdir(f"{tmp_protein_pair.results_dir}/plots")
-            if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots/distance_plot"):
-                os.mkdir(f"{tmp_protein_pair.results_dir}/plots/distance_plot")
-            plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_plot/"
-                        f"distance_plot_{tmp_protein_pair.model_obj.molecule_object}.svg")
-            plt.close(fig)
+            # TODO: is this needed due to the pyqtgraph plots?
+            # # create distance plot
+            # fig = graphics_instance.create_distance_plot(self._distance_label, self._cutoff)
+            # # save distance plot
+            # if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots"):
+            #     os.mkdir(f"{tmp_protein_pair.results_dir}/plots")
+            # if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots/distance_plot"):
+            #     os.mkdir(f"{tmp_protein_pair.results_dir}/plots/distance_plot")
+            # plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_plot/"
+            #             f"distance_plot_{tmp_protein_pair.model_obj.molecule_object}.svg")
+            # plt.close(fig)
 
-            # create distance histogram
-            msg = "Finished creating distance plot. | Create distance histogram ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            graphics_instance.create_distance_histogram()
-            # save distance histogram
-            if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots"):
-                os.mkdir(f"{tmp_protein_pair.results_dir}/plots")
-            if not os.path.exists(
-                    f"{tmp_protein_pair.results_dir}/plots/distance_histogram"):
-                os.mkdir(f"{tmp_protein_pair.results_dir}/plots/distance_histogram")
-            plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_histogram"
-                        f"/distance_histogram_{tmp_protein_pair.model_obj.molecule_object}.svg")
+            # # create distance histogram
+            # msg = "Finished creating distance plot. | Create distance histogram ..."
+            # tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            # graphics_instance.create_distance_histogram()
+            # # save distance histogram
+            # if not os.path.exists(f"{tmp_protein_pair.results_dir}/plots"):
+            #     os.mkdir(f"{tmp_protein_pair.results_dir}/plots")
+            # if not os.path.exists(
+            #         f"{tmp_protein_pair.results_dir}/plots/distance_histogram"):
+            #     os.mkdir(f"{tmp_protein_pair.results_dir}/plots/distance_histogram")
+            # plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_histogram"
+            #             f"/distance_histogram_{tmp_protein_pair.model_obj.molecule_object}.svg")
 
             if self.response_create_images is True:
                 # take image of whole structure alignment

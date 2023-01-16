@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main window of the pyssa plugin"""
+import json
 import logging
 import os
 import shutil
@@ -56,14 +57,18 @@ from pyssa.gui.data_structures import data_transformer
 from pyssa.gui.data_structures import safeguard
 from pyssa.gui.data_structures.data_classes import prediction_configuration
 from pyssa.gui.ui.dialogs import dialog_distance_plot
+from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
 from pyssa.gui.ui.dialogs import dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
+from pyssa.gui.ui.dialogs import dialog_add_sequence_monomer
 from pyssa.gui.utilities import gui_utils
 from pyssa.gui.utilities import tools
 from pyssa.gui.utilities import styles
 from pyssa.gui.utilities import gui_page_management
+from pyssa.gui.utilities import input_validator
+from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.utilities.data_classes import stage
 from pyssa.pymol_protein_tools import protein
 from pyssa.gui.data_structures import settings
@@ -167,6 +172,12 @@ class MainWindow(QMainWindow):
         self._create_batch_analysis_management()
         self._create_results_management()
 
+        # configure gui element properties
+        self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
+        self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.ui.table_pred_mono_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
+        self.ui.table_pred_multi_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
+
         # setup defaults for pages
         self._init_fill_combo_boxes()
         self._init_new_page()
@@ -177,13 +188,14 @@ class MainWindow(QMainWindow):
         self._init_single_analysis_page()
         self._init_batch_analysis_page()
         self.ui.action_toggle_notebook_visibility.setVisible(False)
-
+        self.ui.action_settings_model_w_off_colab_notebook.setVisible(False)
         # connections
         self._connect_all_gui_elements()
         # create tooltips
         self._create_all_tooltips()
         self._project_watcher.show_valid_options(self.ui)
         # setting additional parameters
+        self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
 
@@ -191,120 +203,228 @@ class MainWindow(QMainWindow):
     def _create_local_pred_monomer_management(self):
         # gui element management
         tmp_stages = [
+            # add protein stage
+            stage.Stage(
+                {
+                    "label_proteins_to_predict": self.ui.lbl_pred_mono_prot_to_predict,
+                    "table_proteins_to_predict": self.ui.table_pred_mono_prot_to_predict,
+                 },
+                {
+                    "remove_button": self.ui.btn_pred_mono_seq_to_predict_remove,
+                    "next_button": self.ui.btn_pred_mono_seq_to_predict,
+                }
+            ),
             # protein name stage
             stage.Stage(
                 {
-                    "label_protein_name": self.ui.lbl_local_pred_mono_protein_name,
-                    "text_field_protein_name": self.ui.txt_local_pred_mono_protein_name,
-                    "label_protein_name_status": self.ui.lbl_local_pred_mono_status_protein_name,
-                 },
+                    "label_protein_name": self.ui.lbl_pred_mono_prot_name,
+                    "text_field_protein_name": self.ui.txt_pred_mono_prot_name,
+                    "label_protein_name_status": self.ui.lbl_pred_mono_prot_name_status,
+                },
                 {
-                    "next_button": self.ui.btn_local_pred_mono_next,
+                    "back_button": self.ui.btn_pred_mono_back,
+                    "next_button": self.ui.btn_pred_mono_next,
                 }
             ),
             # protein sequence stage
             stage.Stage(
                 {
-                    "label_protein_sequence": self.ui.lbl_local_pred_mono_prot_seq,
-                    "text_field_protein_sequence": self.ui.txt_local_pred_mono_prot_seq,
-                    "label_protein_sequence_status": self.ui.lbl_local_pred_mono_status_prot_seq,
+                    "label_protein_sequence": self.ui.lbl_pred_mono_seq_name,
+                    "text_field_protein_sequence": self.ui.txt_pred_mono_seq_name,
+                    "label_protein_sequence_status": self.ui.lbl_pred_mono_seq_name_status,
                 },
                 {
-                    "back_button": self.ui.btn_local_pred_mono_back,
-                    "next_button": self.ui.btn_local_pred_mono_next_2,
+                    "back_button": self.ui.btn_pred_mono_back_2,
+                    "next_button": self.ui.btn_pred_mono_add_protein,
                 }
             ),
             # prediction stage (with advanced configurations)
             stage.Stage(
                 {
-                    "label_advanced_config": self.ui.lbl_local_pred_mono_advanced_config,
-                    "button_advanced_config": self.ui.btn_local_pred_mono_advanced_config,
+                    "label_advanced_config": self.ui.lbl_pred_mono_advanced_config,
+                    "button_advanced_config": self.ui.btn_pred_mono_advanced_config,
                 },
                 {
-                    "back_button": self.ui.btn_local_pred_mono_back_2,
-                    "predict_button": self.ui.btn_local_pred_mono_predict,
+                    "predict_button": self.ui.btn_pred_mono_predict,
                 }
             ),
         ]
         self.local_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
 
+    # def _create_local_pred_monomer_management(self):
+    #     # gui element management
+    #     tmp_stages = [
+    #         # protein name stage
+    #         stage.Stage(
+    #             {
+    #                 "label_protein_name": self.ui.lbl_local_pred_mono_protein_name,
+    #                 "text_field_protein_name": self.ui.txt_local_pred_mono_protein_name,
+    #                 "label_protein_name_status": self.ui.lbl_local_pred_mono_status_protein_name,
+    #              },
+    #             {
+    #                 "next_button": self.ui.btn_local_pred_mono_next,
+    #             }
+    #         ),
+    #         # protein sequence stage
+    #         stage.Stage(
+    #             {
+    #                 "label_protein_sequence": self.ui.lbl_local_pred_mono_prot_seq,
+    #                 "text_field_protein_sequence": self.ui.txt_local_pred_mono_prot_seq,
+    #                 "label_protein_sequence_status": self.ui.lbl_local_pred_mono_status_prot_seq,
+    #             },
+    #             {
+    #                 "back_button": self.ui.btn_local_pred_mono_back,
+    #                 "next_button": self.ui.btn_local_pred_mono_next_2,
+    #             }
+    #         ),
+    #         # prediction stage (with advanced configurations)
+    #         stage.Stage(
+    #             {
+    #                 "label_advanced_config": self.ui.lbl_local_pred_mono_advanced_config,
+    #                 "button_advanced_config": self.ui.btn_local_pred_mono_advanced_config,
+    #             },
+    #             {
+    #                 "back_button": self.ui.btn_local_pred_mono_back_2,
+    #                 "predict_button": self.ui.btn_local_pred_mono_predict,
+    #             }
+    #         ),
+    #     ]
+    #     self.local_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
     def _create_local_pred_multimer_management(self):
         # gui element management
         tmp_stages = [
-            # prediction mode: stage 0
+            # add protein stage
             stage.Stage(
                 {
-                    "label_prediction_mode": self.ui.lbl_local_pred_prediction_mode,
-                 },
-                {
-                    "single_button": self.ui.btn_local_pred_multi_single,
-                    "batch_button": self.ui.btn_local_pred_multi_batch,
-                }
-            ),
-            # protein name: stage 1
-            stage.Stage(
-                {
-                    "label_protein_name": self.ui.lbl_local_pred_multi_protein_name,
-                    "text_field_protein_name": self.ui.txt_local_pred_multi_protein_name,
-                    "label_protein_name_status": self.ui.lbl_local_pred_multi_status_protein_name,
-                 },
-                {
-                    "back_button": self.ui.btn_local_pred_multi_back_prediction_mode,
-                    "next_button": self.ui.btn_local_pred_multi_next,
-                }
-            ),
-            # single protein sequence: stage 2
-            stage.Stage(
-                {
-                    "label_protein_sequence": self.ui.lbl_local_pred_multi_prot_seq_single,
-                    "text_field_protein_sequence": self.ui.txt_local_pred_multi_prot_seq,
-                    "label_protein_sequence_status": self.ui.lbl_local_pred_multi_status_prot_seq,
-                    "button_add_sequence": self.ui.btn_local_pred_multi_add_seq_single,
-                    "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
-                    "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
+                    "label_proteins_to_predict": self.ui.lbl_pred_multi_prot_to_predict,
+                    "table_proteins_to_predict": self.ui.table_pred_multi_prot_to_predict,
                 },
                 {
-                    "back_button": self.ui.btn_local_pred_multi_back,
-                    "next_button": self.ui.btn_local_pred_multi_next_2,
+                    "remove_button": self.ui.btn_pred_multi_prot_to_predict_remove,
+                    "next_button": self.ui.btn_pred_multi_prot_to_predict_add,
                 }
             ),
-            # batch protein sequence: stage 3
+            # protein name stage
             stage.Stage(
                 {
-                    "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
-                    "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
-                    "label_protein_sequence_batch": self.ui.lbl_local_pred_multi_prot_seq_batch,
-                    "button_add_sequence_batch": self.ui.btn_local_pred_multi_add_seq_batch
+                    "label_protein_name": self.ui.lbl_pred_multi_prot_name,
+                    "text_field_protein_name": self.ui.txt_pred_multi_prot_name,
+                    "label_protein_name_status": self.ui.lbl_pred_multi_prot_name_status,
                 },
                 {
-                    "back_button": self.ui.btn_local_pred_multi_back,
-                    "next_button": self.ui.btn_local_pred_multi_next_2,
+                    "back_button": self.ui.btn_pred_multi_back,
+                    "next_button": self.ui.btn_pred_multi_next,
                 }
             ),
-            # single prediction: stage 4 (with advanced configurations)
+            # protein sequence stage
             stage.Stage(
                 {
-                    "label_advanced_config": self.ui.lbl_local_pred_multi_advanced_config,
-                    "button_advanced_config": self.ui.btn_local_pred_multi_advanced_config,
+                    "label_protein_sequence": self.ui.lbl_pred_multi_prot_seq,
+                    "text_field_protein_sequence": self.ui.txt_pred_multi_prot_seq,
+                    "label_protein_sequence_status": self.ui.lbl_pred_multi_prot_seq_status,
+                    "label_protein_sequence_add": self.ui.lbl_pred_multi_prot_seq_add,
+                    "button_protein_sequence_add": self.ui.btn_pred_multi_prot_seq_add,
+                    "label_protein_sequence_overview": self.ui.lbl_pred_multi_prot_seq_overview,
+                    "list_protein_sequence_overview": self.ui.list_pred_multi_prot_seq_overview,
+                    "button_protein_sequence_overview_remove": self.ui.btn_pred_multi_prot_seq_overview_remove,
+                    "label_protein_to_predict": self.ui.lbl_pred_multi_prot_to_predict_2,
                 },
                 {
-                    "back_button": self.ui.btn_local_pred_multi_back_2,
-                    "predict_button": self.ui.btn_local_pred_multi_predict,
+                    "back_button": self.ui.btn_pred_multi_back_2,
+                    "next_button": self.ui.btn_pred_multi_prot_to_predict_add_2,
                 }
             ),
-            # batch prediction: stage 5 (with advanced configurations)
+            # prediction stage (with advanced configurations)
             stage.Stage(
                 {
-                    "label_advanced_config_batch": self.ui.lbl_local_pred_multi_advanced_config,
-                    "button_advanced_config_batch": self.ui.btn_local_pred_multi_advanced_config,
+                    "label_advanced_config": self.ui.lbl_pred_multi_advanced_config,
+                    "button_advanced_config": self.ui.btn_pred_multi_advanced_config,
                 },
                 {
-                    "back_button": self.ui.btn_local_pred_multi_back_3,
-                    "predict_button": self.ui.btn_local_pred_multi_predict,
+                    "predict_button": self.ui.btn_pred_multi_predict,
                 }
             ),
         ]
         self.local_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    # def _create_local_pred_multimer_management(self):
+    #     # gui element management
+    #     tmp_stages = [
+    #         # prediction mode: stage 0
+    #         stage.Stage(
+    #             {
+    #                 "label_prediction_mode": self.ui.lbl_local_pred_prediction_mode,
+    #              },
+    #             {
+    #                 "single_button": self.ui.btn_local_pred_multi_single,
+    #                 "batch_button": self.ui.btn_local_pred_multi_batch,
+    #             }
+    #         ),
+    #         # protein name: stage 1
+    #         stage.Stage(
+    #             {
+    #                 "label_protein_name": self.ui.lbl_local_pred_multi_protein_name,
+    #                 "text_field_protein_name": self.ui.txt_local_pred_multi_protein_name,
+    #                 "label_protein_name_status": self.ui.lbl_local_pred_multi_status_protein_name,
+    #              },
+    #             {
+    #                 "back_button": self.ui.btn_local_pred_multi_back_prediction_mode,
+    #                 "next_button": self.ui.btn_local_pred_multi_next,
+    #             }
+    #         ),
+    #         # single protein sequence: stage 2
+    #         stage.Stage(
+    #             {
+    #                 "label_protein_sequence": self.ui.lbl_local_pred_multi_prot_seq_single,
+    #                 "text_field_protein_sequence": self.ui.txt_local_pred_multi_prot_seq,
+    #                 "label_protein_sequence_status": self.ui.lbl_local_pred_multi_status_prot_seq,
+    #                 "button_add_sequence": self.ui.btn_local_pred_multi_add_seq_single,
+    #                 "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
+    #                 "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
+    #             },
+    #             {
+    #                 "back_button": self.ui.btn_local_pred_multi_back,
+    #                 "next_button": self.ui.btn_local_pred_multi_next_2,
+    #             }
+    #         ),
+    #         # batch protein sequence: stage 3
+    #         stage.Stage(
+    #             {
+    #                 "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
+    #                 "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
+    #                 "label_protein_sequence_batch": self.ui.lbl_local_pred_multi_prot_seq_batch,
+    #                 "button_add_sequence_batch": self.ui.btn_local_pred_multi_add_seq_batch
+    #             },
+    #             {
+    #                 "back_button": self.ui.btn_local_pred_multi_back,
+    #                 "next_button": self.ui.btn_local_pred_multi_next_2,
+    #             }
+    #         ),
+    #         # single prediction: stage 4 (with advanced configurations)
+    #         stage.Stage(
+    #             {
+    #                 "label_advanced_config": self.ui.lbl_local_pred_multi_advanced_config,
+    #                 "button_advanced_config": self.ui.btn_local_pred_multi_advanced_config,
+    #             },
+    #             {
+    #                 "back_button": self.ui.btn_local_pred_multi_back_2,
+    #                 "predict_button": self.ui.btn_local_pred_multi_predict,
+    #             }
+    #         ),
+    #         # batch prediction: stage 5 (with advanced configurations)
+    #         stage.Stage(
+    #             {
+    #                 "label_advanced_config_batch": self.ui.lbl_local_pred_multi_advanced_config,
+    #                 "button_advanced_config_batch": self.ui.btn_local_pred_multi_advanced_config,
+    #             },
+    #             {
+    #                 "back_button": self.ui.btn_local_pred_multi_back_3,
+    #                 "predict_button": self.ui.btn_local_pred_multi_predict,
+    #             }
+    #         ),
+    #     ]
+    #     self.local_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
 
     def _create_single_analysis_management(self):
         # gui element management
@@ -428,6 +548,10 @@ class MainWindow(QMainWindow):
             # choose chains from prot structure 1: stage 1
             stage.Stage(
                 {
+                    "label_results_rmsd": self.ui.lbl_results_rmsd,
+                    "text_results_rmsd": self.ui.txt_results_rmsd,
+                    "label_results_aligned_residues": self.ui.lbl_results_aligned_residues,
+                    "text_results_aligned_residues": self.ui.txt_results_aligned_residues,
                     "label_results_distance_plot": self.ui.lbl_results_distance_plot,
                     "button_view_distance_plot": self.ui.btn_view_distance_plot,
                     "label_results_distance_histogram": self.ui.lbl_results_distance_histogram,
@@ -545,6 +669,9 @@ class MainWindow(QMainWindow):
         self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
         # edit project page
         self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
+        self.ui.list_edit_project_proteins.currentItemChanged.connect(self.check_for_cleaning)
+        self.ui.btn_edit_clean_new_prot.clicked.connect(self.clean_protein_new)
+        self.ui.btn_edit_clean_update_prot.clicked.connect(self.clean_protein_update)
         self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
         # view project page
         self.ui.btn_view_project_show.clicked.connect(self.view_sequence)
@@ -563,28 +690,45 @@ class MainWindow(QMainWindow):
         # sequence vs .pdb page
         #self.ui.btn_s_v_p_start.clicked.connect(self.predict)
         # monomer local prediction page
-        self.ui.txt_local_pred_mono_protein_name.textChanged.connect(self.local_pred_mono_validate_protein_name)
-        self.ui.btn_local_pred_mono_next.clicked.connect(self.local_pred_mono_show_protein_sequence)
-        self.ui.btn_local_pred_mono_back.clicked.connect(self.local_pred_mono_hide_protein_sequence)
-        self.ui.txt_local_pred_mono_prot_seq.textChanged.connect(self.local_pred_mono_validate_protein_sequence)
-        self.ui.btn_local_pred_mono_next_2.clicked.connect(self.local_pred_mono_show_advanced_config)
-        self.ui.btn_local_pred_mono_back_2.clicked.connect(self.local_pred_mono_hide_advanced_config)
-        self.ui.btn_local_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
-        self.ui.btn_local_pred_mono_predict.clicked.connect(self.predict_local_monomer)
+        self.ui.btn_pred_mono_seq_to_predict.clicked.connect(self.local_pred_mono_show_protein_name)
+        self.ui.btn_pred_mono_seq_to_predict_remove.clicked.connect(self.local_pred_mono_remove_protein_to_predict)
+        self.ui.btn_pred_mono_next.clicked.connect(self.local_pred_mono_show_protein_sequence)
+        self.ui.btn_pred_mono_back.clicked.connect(self.local_pred_mono_show_protein_overview)
+        self.ui.btn_pred_mono_add_protein.clicked.connect(self.local_pred_mono_add_protein_to_predict)
+        self.ui.btn_pred_mono_back_2.clicked.connect(self.local_pred_mono_show_protein_name)
+        self.ui.txt_pred_mono_prot_name.textChanged.connect(self.local_pred_mono_validate_protein_name)
+        self.ui.txt_pred_mono_seq_name.textChanged.connect(self.local_pred_mono_validate_protein_sequence)
+        self.ui.btn_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
+        # TODO: predict_monomer connection is missing!
+
         # multimer local prediction page
-        self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
-        self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
-        # single connections
-        self.ui.btn_local_pred_multi_next.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
-        self.ui.btn_local_pred_multi_back.clicked.connect(self.show_local_pred_multi_stage_protein_name)
-        self.ui.btn_local_pred_multi_next_2.clicked.connect(self.show_local_pred_multi_stage_prediction_single)
-        self.ui.btn_local_pred_multi_back_2.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
-        # batch connections
-        self.ui.btn_local_pred_multi_batch.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_batch)
-        #self.ui.btn_local_pred_multi_back_3.clicked.connect(self.hide_protein_sequence_stage_batch)
-        # text fields
-        self.ui.txt_local_pred_multi_protein_name.textChanged.connect(self.validate_local_pred_multi)
-        self.ui.txt_local_pred_multi_prot_seq.textChanged.connect(self.validate_local_pred_multi)
+        self.ui.btn_pred_multi_prot_to_predict_add.clicked.connect(self.local_pred_multi_show_protein_name)
+        self.ui.btn_pred_multi_prot_to_predict_remove.clicked.connect(self.local_pred_multi_remove_protein_to_predict)
+        self.ui.btn_pred_multi_next.clicked.connect(self.local_pred_multi_show_protein_sequence)
+        self.ui.btn_pred_multi_back.clicked.connect(self.local_pred_multi_show_protein_overview)
+        self.ui.btn_pred_multi_prot_to_predict_add_2.clicked.connect(self.local_pred_multi_add_protein_to_predict)
+        self.ui.btn_pred_multi_back_2.clicked.connect(self.local_pred_multi_show_protein_name)
+        self.ui.txt_pred_multi_prot_name.textChanged.connect(self.local_pred_multi_validate_protein_name)
+        self.ui.txt_pred_multi_prot_seq.textChanged.connect(self.local_pred_multi_validate_protein_sequence)
+        self.ui.btn_pred_multi_prot_seq_add.clicked.connect(self.local_pred_multi_add_sequence_to_list)
+        self.ui.btn_pred_multi_prot_seq_overview_remove.clicked.connect(self.local_pred_multi_remove_sequence_to_list)
+        self.ui.btn_pred_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
+        # self.ui.btn_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
+
+
+        # self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
+        # self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
+        # # single connections
+        # self.ui.btn_local_pred_multi_next.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
+        # self.ui.btn_local_pred_multi_back.clicked.connect(self.show_local_pred_multi_stage_protein_name)
+        # self.ui.btn_local_pred_multi_next_2.clicked.connect(self.show_local_pred_multi_stage_prediction_single)
+        # self.ui.btn_local_pred_multi_back_2.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
+        # # batch connections
+        # self.ui.btn_local_pred_multi_batch.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_batch)
+        # #self.ui.btn_local_pred_multi_back_3.clicked.connect(self.hide_protein_sequence_stage_batch)
+        # # text fields
+        # self.ui.txt_local_pred_multi_protein_name.textChanged.connect(self.validate_local_pred_multi)
+        # self.ui.txt_local_pred_multi_prot_seq.textChanged.connect(self.validate_local_pred_multi)
         # single analysis page
         self.ui.btn_analysis_next.clicked.connect(self.show_single_analysis_stage_1)
         self.ui.btn_analysis_next_2.clicked.connect(self.show_single_analysis_stage_2)
@@ -759,6 +903,8 @@ class MainWindow(QMainWindow):
         """This function clears all text fields and hides everything which is needed
 
         """
+        self.ui.txt_new_project_name.clear()
+        self.ui.txt_new_choose_reference.clear()
         self.ui.lbl_new_status_project_name.setText("")
         self.ui.lbl_new_status_choose_reference.setText("")
 
@@ -787,34 +933,42 @@ class MainWindow(QMainWindow):
         self.ui.list_use_existing_projects.clear()
         self.ui.btn_use_next.setEnabled(False)
 
+    def _init_edit_page(self):
+        self.ui.list_edit_project_proteins.clear()
+        gui_elements_to_hide = [
+            self.ui.lbl_edit_clean_new_prot,
+            self.ui.btn_edit_clean_new_prot,
+            self.ui.lbl_edit_clean_update_prot,
+            self.ui.btn_edit_clean_update_prot,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+                                              self.ui.list_edit_project_proteins)
+
     def _init_local_pred_mono_page(self):
         # clears everything
-        self.ui.txt_local_pred_mono_protein_name.clear()
-        self.ui.txt_local_pred_mono_prot_seq.clear()
+        self.ui.txt_pred_mono_prot_name.clear()
+        self.ui.txt_pred_mono_seq_name.clear()
         # sets up defaults: Prediction
-        self.ui.btn_local_pred_mono_next_2.setEnabled(False)
-        self.ui.btn_local_pred_mono_predict.setEnabled(False)
-        self.ui.lbl_local_pred_mono_status_protein_name.setText("")
-        self.ui.lbl_local_pred_mono_status_prot_seq.setText("")
-
-        gui_elements = [
-            self.ui.lbl_local_pred_mono_prot_seq,
-            self.ui.txt_local_pred_mono_prot_seq,
-            self.ui.lbl_local_pred_mono_status_prot_seq,
-            self.ui.btn_local_pred_mono_back,
-            self.ui.btn_local_pred_mono_next_2,
-            self.ui.lbl_local_pred_mono_advanced_config,
-            self.ui.btn_local_pred_mono_advanced_config,
-            self.ui.btn_local_pred_mono_back_2,
-            self.ui.btn_local_pred_mono_predict,
-        ]
-        gui_utils.hide_gui_elements(gui_elements)
+        self.ui.btn_pred_mono_next.setEnabled(False)
+        self.ui.btn_pred_mono_add_protein.setEnabled(False)
+        self.ui.lbl_pred_mono_prot_name_status.setText("")
+        self.ui.lbl_pred_mono_seq_name_status.setText("")
 
     def _init_local_pred_multi_page(self):
-        self.local_pred_multimer_management.show_stage_x(0)
-        self.local_pred_multimer_management.disable_all_next_buttons()
-        self.local_pred_multimer_management.clear_all_text_boxes()
-        self.local_pred_multimer_management.set_empty_string_in_label()
+        # clears everything
+        self.ui.txt_pred_multi_prot_name.clear()
+        self.ui.txt_pred_multi_prot_seq.clear()
+        self.ui.list_pred_multi_prot_seq_overview.clear()
+        # sets up defaults: Prediction
+        self.ui.btn_pred_multi_next.setEnabled(False)
+        self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
+        self.ui.lbl_pred_multi_prot_name_status.setText("")
+        self.ui.lbl_pred_multi_prot_seq_status.setText("")
+        # self.local_pred_multimer_management.show_stage_x(0)
+        # self.local_pred_multimer_management.disable_all_next_buttons()
+        # self.local_pred_multimer_management.clear_all_text_boxes()
+        # self.local_pred_multimer_management.set_empty_string_in_label()
 
     def _init_sequence_vs_pdb_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -867,6 +1021,8 @@ class MainWindow(QMainWindow):
         self.single_analysis_management.set_empty_string_in_label()
         self.ui.lbl_analysis_prot_struct_1.setText("Protein structure 1")
         self.ui.lbl_analysis_prot_struct_2.setText("Protein structure 2")
+        self.ui.box_analysis_prot_struct_1.setCurrentIndex(0)
+        self.ui.box_analysis_prot_struct_2.setCurrentIndex(0)
 
     def _init_results_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -874,6 +1030,8 @@ class MainWindow(QMainWindow):
         """
         # stage 1
         self.ui.list_results_interest_regions.clear()
+        self.ui.txt_results_rmsd.clear()
+        self.ui.txt_results_aligned_residues.clear()
 
     def _init_image_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -890,7 +1048,8 @@ class MainWindow(QMainWindow):
 
     def _init_batch_analysis_page(self):
         # sets up defaults: Batch
-        self.show_batch_analysis_stage_0()
+        self.batch_analysis_management.show_stage_x(0)
+        self.ui.list_analysis_batch_overview.clear()
 
     def _init_all_pages(self):
         self._init_local_pred_mono_page()
@@ -954,29 +1113,11 @@ class MainWindow(QMainWindow):
         """This function displays the single analysis work area
 
         """
-        # pre-process
-        # # fill chains list widget
-        # self.ui.list_analysis_ref_chains.clear()
-        # self.ui.list_analysis_model_chains.clear()
-        #
-        # pdb_files = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-        #
-        # # TO-DO: should there be sub-dirs to determine if it is the ref or the model?
-        # cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[0]}", object="reference_protein")
-        # cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{pdb_files[1]}", object="model_protein")
-        # ref_chains = cmd.get_chains("reference_protein")
-        # model_chains = cmd.get_chains("model_protein")
-        # for chain in ref_chains:
-        #     self.ui.list_analysis_ref_chains.addItem(chain)
-        # for chain in model_chains:
-        #     self.ui.list_analysis_model_chains.addItem(chain)
-        # styles.color_button_ready(self.ui.btn_analysis_start)
-        # cmd.reinitialize()
-
         self.fill_protein_structure_boxes()
         self.ui.list_analysis_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
         self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
         # regular work area opening
+        self._init_single_analysis_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 3, "Single Analysis")
 
     def display_job_analysis_page(self):
@@ -985,8 +1126,9 @@ class MainWindow(QMainWindow):
         """
         self.ui.list_analysis_batch_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
         self.ui.list_analysis_batch_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.batch_analysis_management.show_stage_x(0)
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Batch Analysis")
+        # regular work area opening
+        self._init_batch_analysis_page()
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Structure Analysis")
 
     def display_results_page(self):
         """This function displays the results work area
@@ -1012,6 +1154,12 @@ class MainWindow(QMainWindow):
         self._init_new_page()
         self.ui.list_new_projects.clear()
         # pre-process
+        gui_elements_to_hide = [
+            self.ui.lbl_new_choose_reference,
+            self.ui.txt_new_choose_reference,
+            self.ui.btn_new_choose_reference,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
         self.status_bar.showMessage(self.workspace.text())
         tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_new_projects)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 7, "Create new project")
@@ -1051,14 +1199,10 @@ class MainWindow(QMainWindow):
         """This function displays the edit project page
 
         """
-        self.ui.list_edit_project_proteins.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
+        self._init_edit_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
-
-        # list all proteins from pdb directory
-        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                              self.ui.list_edit_project_proteins)
 
     def display_view_page(self):
         """This function displays the edit project page
@@ -1075,10 +1219,12 @@ class MainWindow(QMainWindow):
                                               self.ui.list_view_project_proteins)
 
     def display_local_pred_mono(self):
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 15, "Local Monomer Prediction")
+        self.local_pred_monomer_management.show_stage_x(0)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 19, "Local Monomer Prediction")
 
     def display_local_pred_multi(self):
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 16, "Local Multimer Prediction")
+        self.local_pred_multimer_management.show_stage_x(0)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 20, "Local Multimer Prediction")
 
     def display_use_page(self):
         self._init_use_page()
@@ -1619,9 +1765,11 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-        tools.validate_project_name(self.ui.list_new_projects, self.ui.txt_new_project_name,
-                                    self.ui.lbl_new_status_project_name, self.ui.btn_new_create_project,
-                                    self.ui.cb_new_add_reference)
+        input_validator.InputValidator.validate_project_name(
+            self.ui.list_new_projects, self.ui.txt_new_project_name,
+            self.ui.lbl_new_status_project_name, self.ui.btn_new_create_project,
+            self.ui.cb_new_add_reference
+        )
 
     def create_new_project(self):
         """This function creates a new project based on the plugin New ... page
@@ -1668,7 +1816,6 @@ class MainWindow(QMainWindow):
             for chain in chains:
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
         self.app_project.serialize_project(self.app_project.project_path, "project")
-        self.app_project = project.Project.deserialize_project(self.app_project.project_path)
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
@@ -1682,51 +1829,10 @@ class MainWindow(QMainWindow):
         if self.ui.list_open_projects.currentItem() is not None:
             self.ui.list_open_projects.currentItem().setSelected(False)
         # set color for lineEdit
-        self.ui.txt_open_search.setStyleSheet("background-color: white")
-        if len(self.ui.txt_open_search.text()) == 0:
-            self.ui.lbl_open_status_search.setText("")
-            self.ui.txt_open_selected_project.setText("")
-            return
-        else:
-            # regex = Qt.QtCore.QRegularExpression()
-            # regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            # validator = QtGui.QRegularExpressionValidator(regex)
-            # for i in range(len(self.ui.txt_open_search.text())):
-            #     result = validator.validate(self.ui.txt_open_search.text(), i)
-            #     if result[0] > 0:
-            #         self.ui.txt_open_search.setStyleSheet("background-color: #33C065")
-            #         self.ui.lbl_new_status_project_name.setText("")
-            #         self.ui.cb_new_add_reference.setCheckable(True)
-            #         self.ui.cb_new_add_reference.setStyleSheet("color: black;")
-            #         self.ui.btn_new_create_project.setEnabled(True)
-            #         styles.color_button_ready(self.ui.btn_new_create_project)
-            #     else:
-            #         self.ui.txt_open_search.setStyleSheet("background-color: #FC5457")
-            #         self.ui.lbl_new_status_project_name.setText("Invalid character.")
-            #         self.ui.cb_new_add_reference.setCheckable(False)
-            #         self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
-            #         self.ui.btn_new_create_project.setEnabled(False)
-            #         styles.color_button_not_ready(self.ui.btn_new_create_project)
-            #         return
-            item = self.ui.list_open_projects.findItems(self.ui.txt_open_search.text(),
-                                                          Qt.QtCore.Qt.MatchContains |
-                                                          Qt.QtCore.Qt.MatchExactly
-                                                          )
-            if len(item) != 0:
-                self.ui.list_open_projects.setCurrentItem(item[0])
-                self.ui.txt_open_selected_project.setText(self.ui.list_open_projects.currentItem().text())
-                self.ui.lbl_open_status_search.setText("")
-            else:
-                self.ui.txt_open_selected_project.setText("")
-                self.ui.txt_open_search.setStyleSheet("background-color: #FC5457")
-                self.ui.lbl_open_status_search.setText("Project name does not exists.")
-
-            # else:
-            #     self.ui.list_widget_projects.currentItem().setSelected(False)
-            #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
-            #     self.ui.btn_prediction_next_1.setEnabled(True)
-            #     styles.color_button_ready(self.ui.btn_prediction_next_1)
-            print("Check successful.")
+        input_validator.InputValidator.validate_search_input(
+            self.ui.list_open_projects, self.ui.txt_open_search,
+            self.ui.lbl_open_status_search, self.ui.txt_open_selected_project
+        )
 
     def select_project_from_open_list(self):
         try:
@@ -1849,51 +1955,10 @@ class MainWindow(QMainWindow):
         if self.ui.list_delete_projects.currentItem() is not None:
             self.ui.list_delete_projects.currentItem().setSelected(False)
         # set color for lineEdit
-        self.ui.txt_delete_search.setStyleSheet("background-color: white")
-        if len(self.ui.txt_delete_search.text()) == 0:
-            self.ui.lbl_delete_status_search.setText("")
-            self.ui.txt_delete_selected_projects.setText("")
-            return
-        else:
-            # regex = Qt.QtCore.QRegularExpression()
-            # regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
-            # validator = QtGui.QRegularExpressionValidator(regex)
-            # for i in range(len(self.ui.txt_delete_search.text())):
-            #     result = validator.validate(self.ui.txt_delete_search.text(), i)
-            #     if result[0] > 0:
-            #         self.ui.txt_delete_search.setStyleSheet("background-color: #33C065")
-            #         self.ui.lbl_new_status_project_name.setText("")
-            #         self.ui.cb_new_add_reference.setCheckable(True)
-            #         self.ui.cb_new_add_reference.setStyleSheet("color: black;")
-            #         self.ui.btn_new_create_project.setEnabled(True)
-            #         styles.color_button_ready(self.ui.btn_new_create_project)
-            #     else:
-            #         self.ui.txt_delete_search.setStyleSheet("background-color: #FC5457")
-            #         self.ui.lbl_new_status_project_name.setText("Invalid character.")
-            #         self.ui.cb_new_add_reference.setCheckable(False)
-            #         self.ui.cb_new_add_reference.setStyleSheet("color: #E1E1E1;")
-            #         self.ui.btn_new_create_project.setEnabled(False)
-            #         styles.color_button_not_ready(self.ui.btn_new_create_project)
-            #         return
-            item = self.ui.list_delete_projects.findItems(self.ui.txt_delete_search.text(),
-                                                          Qt.QtCore.Qt.MatchContains |
-                                                          Qt.QtCore.Qt.MatchExactly
-                                                          )
-            if len(item) != 0:
-                self.ui.list_delete_projects.setCurrentItem(item[0])
-                self.ui.txt_delete_selected_projects.setText(self.ui.list_delete_projects.currentItem().text())
-                self.ui.lbl_delete_status_search.setText("")
-            else:
-                self.ui.txt_delete_selected_projects.setText("")
-                self.ui.txt_delete_search.setStyleSheet("background-color: #FC5457")
-                self.ui.lbl_delete_status_search.setText("Project name does not exists.")
-
-            # else:
-            #     self.ui.list_widget_projects.currentItem().setSelected(False)
-            #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: green")
-            #     self.ui.btn_prediction_next_1.setEnabled(True)
-            #     styles.color_button_ready(self.ui.btn_prediction_next_1)
-            print("Check successful.")
+        input_validator.InputValidator.validate_search_input(
+            self.ui.list_delete_projects, self.ui.txt_delete_search,
+            self.ui.lbl_delete_status_search, self.ui.txt_delete_selected_projects
+        )
 
     def delete_project(self):
         """This function deletes an existing project
@@ -1922,8 +1987,18 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
-        sequence = "MAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRMAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR"
-        print(subprocess.run(["wsl", "curl", "-X", "POST", "--data", f"{sequence}", "https://api.esmatlas.com/foldSequence/v1/pdb/", "-OutFile", "protein.pdb"]))
+        pass
+        # if not os.path.exists(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/")):
+        #     os.mkdir(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/"))
+        # if not os.path.exists(constants.WSL_STORAGE_PATH):
+        #     os.mkdir(constants.WSL_STORAGE_PATH)
+        # print(subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH),
+        #                       str(constants.WSL_DISTRO_IMPORT_PATH)]))
+        # print(subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
+        #     f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/install_wsl_env.ps1")]))
+
+        # sequence = "MAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRMAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR"
+        # print(subprocess.run(["wsl", "curl", "-X", "POST", "--data", f"{sequence}", "https://api.esmatlas.com/foldSequence/v1/pdb/", "-OutFile", "protein.pdb"]))
 
         # new_project = project.Project(self.ui.txt_use_project_name.text(), pathlib.Path(self.workspace_path))
         # new_project.serialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA", "testproject")
@@ -1942,6 +2017,50 @@ class MainWindow(QMainWindow):
         #     self.status_bar.showMessage("Saved project successfully.")
 
     # ----- Functions for Edit project page
+    def check_for_cleaning(self):
+        try:
+            self.ui.list_edit_project_proteins.currentItem().text()
+        except AttributeError:
+            return
+        cmd.reinitialize()
+        tmp_protein = self.app_project.search_protein(
+            self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
+        tmp_protein.load_protein()
+        if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
+            gui_elements_to_show = [
+                self.ui.lbl_edit_clean_new_prot,
+                self.ui.btn_edit_clean_new_prot,
+                self.ui.lbl_edit_clean_update_prot,
+                self.ui.btn_edit_clean_update_prot,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+        else:
+            gui_elements_to_hide = [
+                self.ui.lbl_edit_clean_new_prot,
+                self.ui.btn_edit_clean_new_prot,
+                self.ui.lbl_edit_clean_update_prot,
+                self.ui.btn_edit_clean_update_prot,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def clean_protein_new(self):
+        tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
+        clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
+        self.app_project.add_existing_protein(clean_tmp_protein)
+        self.app_project.serialize_project(self.app_project.project_path, "project")
+        self._init_edit_page()
+
+    def clean_protein_update(self):
+        tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
+        if basic_boxes.yes_or_no("Clean protein",
+                                 "Are you sure you want to clean this protein?\n"
+                                 "This will remove all organic and solvent components!",
+                                 QMessageBox.Information):
+            tmp_protein.clean_protein()
+            self._init_edit_page()
+        else:
+            return
+
     def delete_protein(self):
         protein_name = self.ui.list_edit_project_proteins.currentItem().text()
         project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
@@ -1982,16 +2101,20 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-        tools.validate_project_name(self.ui.list_use_existing_projects, self.ui.txt_use_project_name,
-                                    self.ui.lbl_use_status_project_name, self.ui.btn_use_next)
+        input_validator.InputValidator.validate_project_name(
+            self.ui.list_use_existing_projects, self.ui.txt_use_project_name,
+            self.ui.lbl_use_status_project_name, self.ui.btn_use_next
+        )
 
     def validate_use_search(self):
         """This function validates the input of the project name in real-time
 
         """
         message = "Protein structure does not exists."
-        tools.validate_search_input(self.ui.list_use_available_protein_structures, self.ui.txt_use_search,
-                                    self.ui.lbl_use_status_search, message)
+        input_validator.InputValidator.validate_search_input(
+            self.ui.list_use_available_protein_structures, self.ui.txt_use_search,
+            self.ui.lbl_use_status_search, status_message=message
+        )
 
     def add_protein_structure_to_new_project(self):
         prot_to_add = self.ui.list_use_available_protein_structures.currentItem().text()
@@ -2074,7 +2197,6 @@ class MainWindow(QMainWindow):
             new_protein.serialize_protein(self.app_project.get_objects_proteins_path(), tmp_protein)
             self.app_project.add_existing_protein(new_protein)
         self.app_project.serialize_project(self.app_project.project_path, "project")
-        self.app_project = project.Project.deserialize_project(self.app_project.project_path)
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
@@ -2423,11 +2545,15 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-        tools.validate_protein_name(self.ui.txt_local_pred_mono_protein_name,
-                                    self.ui.lbl_local_pred_mono_status_protein_name,
-                                    self.ui.btn_local_pred_mono_next)
+        # TODO: does not work as expected
+        if not safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_mono_prot_name.text(),
+                                                                       self.ui.table_pred_mono_prot_to_predict):
+            self.ui.lbl_pred_mono_prot_name_status.setText("Protein name already used.")
+        tools.validate_protein_name(self.ui.txt_pred_mono_prot_name,
+                                    self.ui.lbl_pred_mono_prot_name_status,
+                                    self.ui.btn_pred_mono_next)
 
-    def local_pred_mono_show_prediction_configuration(self):
+    def show_prediction_configuration(self):
         config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(self.prediction_configuration)
         config.exec_()
         self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
@@ -2437,73 +2563,156 @@ class MainWindow(QMainWindow):
         """This function validates the input of the protein sequence in real-time
 
         """
-        tools.validate_protein_sequence(self.ui.txt_local_pred_mono_prot_seq,
-                                        self.ui.lbl_local_pred_mono_status_prot_seq,
-                                        self.ui.btn_local_pred_mono_next_2)
+        tools.validate_protein_sequence(self.ui.txt_pred_mono_seq_name,
+                                        self.ui.lbl_pred_mono_seq_name_status,
+                                        self.ui.btn_pred_mono_add_protein)
+
+    def local_pred_mono_show_protein_overview(self):
+        if self.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
+            self.local_pred_monomer_management.show_stage_x(0)
+        else:
+            gui_elements_to_show = [
+                self.ui.btn_pred_mono_seq_to_predict,
+                self.ui.btn_pred_mono_seq_to_predict_remove,
+            ]
+            self.local_pred_monomer_management.show_gui_elements_stage_x(
+                [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
+            )
+
+    def local_pred_mono_show_protein_name(self):
+        gui_elements_to_hide = [
+            self.ui.btn_pred_mono_seq_to_predict,
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+        ]
+        self.local_pred_monomer_management.show_gui_elements_stage_x(
+            [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name,
+                                  self.ui.lbl_pred_mono_prot_name)
 
     def local_pred_mono_show_protein_sequence(self):
-        gui_elements_hide = [
-            self.ui.btn_local_pred_mono_next,
+        gui_elements_to_hide = [
+            self.ui.btn_pred_mono_seq_to_predict,
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.btn_pred_mono_back,
+            self.ui.btn_pred_mono_next,
         ]
-        gui_elements_show = [
-            self.ui.lbl_local_pred_mono_prot_seq,
-            self.ui.lbl_local_pred_mono_status_prot_seq,
-            self.ui.txt_local_pred_mono_prot_seq,
-            self.ui.btn_local_pred_mono_back,
-            self.ui.btn_local_pred_mono_next_2,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.disable_text_box(self.ui.txt_local_pred_mono_protein_name,
-                                   self.ui.lbl_local_pred_mono_protein_name)
+        self.local_pred_monomer_management.show_gui_elements_stage_x(
+            [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
+        gui_utils.disable_text_box(self.ui.txt_pred_mono_prot_name,
+                                   self.ui.lbl_pred_mono_prot_name)
 
-    def local_pred_mono_hide_protein_sequence(self):
-        gui_elements_hide = [
-            self.ui.lbl_local_pred_mono_prot_seq,
-            self.ui.lbl_local_pred_mono_status_prot_seq,
-            self.ui.txt_local_pred_mono_prot_seq,
-            self.ui.btn_local_pred_mono_back,
-            self.ui.btn_local_pred_mono_next_2,
-        ]
-        gui_elements_show = [
-            self.ui.btn_local_pred_mono_next,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.enable_text_box(self.ui.txt_local_pred_mono_protein_name,
-                                  self.ui.lbl_local_pred_mono_protein_name)
+    def local_pred_mono_check_if_table_is_empty(self):
+        if self.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self.ui.btn_pred_mono_predict)
+            self.ui.btn_pred_mono_predict.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_mono_predict)
+            self.ui.btn_pred_mono_predict.setEnabled(True)
 
-    def local_pred_mono_show_advanced_config(self):
-        gui_elements_show = [
-            self.ui.btn_local_pred_mono_back_2,
-            self.ui.btn_local_pred_mono_predict,
-            self.ui.lbl_local_pred_mono_advanced_config,
-            self.ui.btn_local_pred_mono_advanced_config,
-        ]
-        gui_elements_hide = [
-            self.ui.btn_local_pred_mono_back,
-            self.ui.btn_local_pred_mono_next_2,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.disable_text_box(self.ui.txt_local_pred_mono_prot_seq,
-                                   self.ui.lbl_local_pred_mono_prot_seq)
-        self.ui.btn_local_pred_mono_predict.setEnabled(True)
-        styles.color_button_ready(self.ui.btn_local_pred_mono_predict)
+    def local_pred_mono_add_protein_to_predict(self):
+        self.ui.table_pred_mono_prot_to_predict.setRowCount(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
+        self.ui.table_pred_mono_prot_to_predict.insertRow(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
+        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0,
+                                                        QTableWidgetItem("A"))
+        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1, 1,
+                                                        QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
+        self.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1,
+                                                                      QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
+        self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
+        self.local_pred_mono_check_if_table_is_empty()
+        self.local_pred_mono_show_protein_overview()
+        self._init_local_pred_mono_page()
 
-    def local_pred_mono_hide_advanced_config(self):
-        gui_elements_hide = [
-            self.ui.btn_local_pred_mono_back_2,
-            self.ui.btn_local_pred_mono_predict,
-            self.ui.lbl_local_pred_mono_advanced_config,
-            self.ui.btn_local_pred_mono_advanced_config,
-        ]
-        gui_elements_show = [
-            self.ui.btn_local_pred_mono_back,
-            self.ui.btn_local_pred_mono_next_2,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        gui_utils.enable_text_box(self.ui.txt_local_pred_mono_prot_seq,
-                                  self.ui.lbl_local_pred_mono_prot_seq)
-        self.ui.btn_local_pred_mono_predict.setEnabled(False)
-        styles.color_button_not_ready(self.ui.btn_local_pred_mono_predict)
+    def local_pred_mono_remove_protein_to_predict(self):
+        self.ui.table_pred_mono_prot_to_predict.removeRow(self.ui.table_pred_mono_prot_to_predict.currentRow())
+        self.local_pred_mono_check_if_table_is_empty()
+        self.local_pred_mono_show_protein_overview()
+
+    # def local_pred_mono_validate_protein_name(self):
+    #     """This function validates the input of the project name in real-time
+    #
+    #     """
+    #     tools.validate_protein_name(self.ui.txt_local_pred_mono_protein_name,
+    #                                 self.ui.lbl_local_pred_mono_status_protein_name,
+    #                                 self.ui.btn_local_pred_mono_next)
+    #
+    # def local_pred_mono_show_prediction_configuration(self):
+    #     config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(self.prediction_configuration)
+    #     config.exec_()
+    #     self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
+    #     self.prediction_configuration.templates = config.prediction_config.templates
+    #
+    # def local_pred_mono_validate_protein_sequence(self):
+    #     """This function validates the input of the protein sequence in real-time
+    #
+    #     """
+    #     tools.validate_protein_sequence(self.ui.txt_local_pred_mono_prot_seq,
+    #                                     self.ui.lbl_local_pred_mono_status_prot_seq,
+    #                                     self.ui.btn_local_pred_mono_next_2)
+    #
+    # def local_pred_mono_show_protein_sequence(self):
+    #     gui_elements_hide = [
+    #         self.ui.btn_local_pred_mono_next,
+    #     ]
+    #     gui_elements_show = [
+    #         self.ui.lbl_local_pred_mono_prot_seq,
+    #         self.ui.lbl_local_pred_mono_status_prot_seq,
+    #         self.ui.txt_local_pred_mono_prot_seq,
+    #         self.ui.btn_local_pred_mono_back,
+    #         self.ui.btn_local_pred_mono_next_2,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.disable_text_box(self.ui.txt_local_pred_mono_protein_name,
+    #                                self.ui.lbl_local_pred_mono_protein_name)
+    #
+    # def local_pred_mono_hide_protein_sequence(self):
+    #     gui_elements_hide = [
+    #         self.ui.lbl_local_pred_mono_prot_seq,
+    #         self.ui.lbl_local_pred_mono_status_prot_seq,
+    #         self.ui.txt_local_pred_mono_prot_seq,
+    #         self.ui.btn_local_pred_mono_back,
+    #         self.ui.btn_local_pred_mono_next_2,
+    #     ]
+    #     gui_elements_show = [
+    #         self.ui.btn_local_pred_mono_next,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.enable_text_box(self.ui.txt_local_pred_mono_protein_name,
+    #                               self.ui.lbl_local_pred_mono_protein_name)
+    #
+    # def local_pred_mono_show_advanced_config(self):
+    #     gui_elements_show = [
+    #         self.ui.btn_local_pred_mono_back_2,
+    #         self.ui.btn_local_pred_mono_predict,
+    #         self.ui.lbl_local_pred_mono_advanced_config,
+    #         self.ui.btn_local_pred_mono_advanced_config,
+    #     ]
+    #     gui_elements_hide = [
+    #         self.ui.btn_local_pred_mono_back,
+    #         self.ui.btn_local_pred_mono_next_2,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.disable_text_box(self.ui.txt_local_pred_mono_prot_seq,
+    #                                self.ui.lbl_local_pred_mono_prot_seq)
+    #     self.ui.btn_local_pred_mono_predict.setEnabled(True)
+    #     styles.color_button_ready(self.ui.btn_local_pred_mono_predict)
+    #
+    # def local_pred_mono_hide_advanced_config(self):
+    #     gui_elements_hide = [
+    #         self.ui.btn_local_pred_mono_back_2,
+    #         self.ui.btn_local_pred_mono_predict,
+    #         self.ui.lbl_local_pred_mono_advanced_config,
+    #         self.ui.btn_local_pred_mono_advanced_config,
+    #     ]
+    #     gui_elements_show = [
+    #         self.ui.btn_local_pred_mono_back,
+    #         self.ui.btn_local_pred_mono_next_2,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     gui_utils.enable_text_box(self.ui.txt_local_pred_mono_prot_seq,
+    #                               self.ui.lbl_local_pred_mono_prot_seq)
+    #     self.ui.btn_local_pred_mono_predict.setEnabled(False)
+    #     styles.color_button_not_ready(self.ui.btn_local_pred_mono_predict)
 
     def predict_local_monomer(self):
         # creating tmp directories in scratch folder to organize prediction inputs and outputs
@@ -2528,6 +2737,7 @@ class MainWindow(QMainWindow):
                 f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
             subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
                             fasta_path, pdb_path])
+            subprocess.run(["wsl", "--shutdown"])
         except OSError:
             shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
             return
@@ -2557,44 +2767,146 @@ class MainWindow(QMainWindow):
         # self.display_view_page()
 
     # ----- Functions for Multimer Local Prediction
-    def validate_local_pred_multi(self):
-        self.local_pred_multimer_management.create_validation()
+    def local_pred_multi_validate_protein_name(self):
+        """This function validates the input of the project name in real-time
 
-    def show_local_pred_multi_stage_prediction_mode(self):
-        self.local_pred_multimer_management.show_stage_x(0)
+        """
+        tools.validate_protein_name(self.ui.txt_pred_multi_prot_name,
+                                    self.ui.lbl_pred_multi_prot_name_status,
+                                    self.ui.btn_pred_multi_next)
 
-    # --- single prediction
-    def show_local_pred_multi_stage_protein_name(self):
-        if self.ui.table_local_pred_multi_prot_overview.isVisible():
+    def local_pred_multi_validate_protein_sequence(self):
+        """This function validates the input of the protein sequence in real-time
+
+        """
+        tools.validate_protein_sequence(self.ui.txt_pred_multi_prot_seq,
+                                        self.ui.lbl_pred_multi_prot_seq_status,
+                                        self.ui.btn_pred_multi_prot_seq_add)
+
+    def local_pred_multi_show_protein_overview(self):
+        if self.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
             self.local_pred_multimer_management.show_stage_x(0)
         else:
-            self.local_pred_multimer_management.show_stage_x(1)
+            gui_elements_to_show = [
+                self.ui.btn_pred_multi_prot_to_predict_add,
+                self.ui.btn_pred_multi_prot_to_predict_remove,
+            ]
+            self.local_pred_multimer_management.show_gui_elements_stage_x(
+                [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
+            )
 
-    def show_local_pred_multi_stage_protein_sequence_single(self):
-        gui_elements_to_show = [
-            self.ui.btn_local_pred_multi_add_seq_single
-        ]
+    def local_pred_multi_show_protein_name(self):
         gui_elements_to_hide = [
-            self.ui.btn_local_pred_multi_next,
-            self.ui.btn_local_pred_multi_back_prediction_mode,
+            self.ui.btn_pred_multi_prot_to_predict_add,
+            self.ui.btn_pred_multi_prot_to_predict_remove,
         ]
-        self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2], [0, 3, 4, 5],
-                                                                      hide_specific_elements=gui_elements_to_hide,
-                                                                      show_specific_elements=gui_elements_to_show)
-        self.local_pred_multimer_management.disable_text_boxes_stage_x([1])
-        self.local_pred_multimer_management.enable_text_boxes_stage_x([2])
+        self.local_pred_multimer_management.show_gui_elements_stage_x(
+            [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_multi_prot_name,
+                                  self.ui.lbl_pred_multi_prot_name)
 
-    def show_local_pred_multi_stage_prediction_single(self):
+    def local_pred_multi_show_protein_sequence(self):
         gui_elements_to_hide = [
-            self.ui.btn_local_pred_multi_add_seq_single
+            self.ui.btn_pred_multi_prot_to_predict_add,
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
         ]
-        self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2, 4], [0, 3, 5], hide_specific_elements=gui_elements_to_hide)
-        self.local_pred_multimer_management.disable_text_boxes_stage_x([1, 2])
-        self.local_pred_multimer_management.activate_specific_button(self.ui.btn_local_pred_multi_predict)
+        self.local_pred_multimer_management.show_gui_elements_stage_x(
+            [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
+        gui_utils.disable_text_box(self.ui.txt_pred_multi_prot_name,
+                                   self.ui.lbl_pred_multi_prot_name)
 
-    # --- batch prediction
-    def show_local_pred_multi_stage_protein_sequence_batch(self):
-        self.local_pred_multimer_management.show_gui_elements_stage_x([3], [0, 1, 2, 4, 5])
+    def local_pred_multi_add_sequence_to_list(self):
+        self.ui.list_pred_multi_prot_seq_overview.addItem(QListWidgetItem(self.ui.txt_pred_multi_prot_seq.toPlainText()))
+        self.local_pred_multi_check_if_list_is_empty()
+
+    def local_pred_multi_remove_sequence_to_list(self):
+        self.ui.list_pred_multi_prot_seq_overview.takeItem(self.ui.list_pred_multi_prot_seq_overview.currentRow())
+        self.local_pred_multi_check_if_list_is_empty()
+
+    def local_pred_multi_check_if_list_is_empty(self):
+        if self.ui.list_pred_multi_prot_seq_overview.count() == 0:
+            styles.color_button_not_ready(self.ui.btn_pred_multi_prot_to_predict_add_2)
+            self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_multi_prot_to_predict_add_2)
+            self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(True)
+
+    def local_pred_multi_check_if_table_is_empty(self):
+        if self.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self.ui.btn_pred_multi_predict)
+            self.ui.btn_pred_multi_predict.setEnabled(False)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_multi_predict)
+            self.ui.btn_pred_multi_predict.setEnabled(True)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
+
+    def local_pred_multi_add_protein_to_predict(self):
+        for i in range(self.ui.list_pred_multi_prot_seq_overview.count()):
+            self.ui.table_pred_multi_prot_to_predict.setRowCount(
+                self.ui.table_pred_multi_prot_to_predict.rowCount() + 1)
+            self.ui.table_pred_multi_prot_to_predict.insertRow(self.ui.table_pred_multi_prot_to_predict.rowCount() + 1)
+            tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_multi_prot_seq_overview.item(i).text())
+            self.ui.table_pred_multi_prot_to_predict.setItem(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 0,
+                                                             QTableWidgetItem(tmp_chain_seq[0]))
+            self.ui.table_pred_multi_prot_to_predict.setItem(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 1,
+                                                             QTableWidgetItem(tmp_chain_seq[1]))
+            name_item = QTableWidgetItem(self.ui.txt_pred_multi_prot_name.text())
+            self.ui.table_pred_multi_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.rowCount()-1, name_item)
+        self.ui.table_pred_multi_prot_to_predict.resizeColumnsToContents()
+        self.local_pred_multi_check_if_table_is_empty()
+        self.local_pred_multi_show_protein_overview()
+        self._init_local_pred_multi_page()
+
+    def local_pred_multi_remove_protein_to_predict(self):
+        self.ui.table_pred_multi_prot_to_predict.removeRow(self.ui.table_pred_multi_prot_to_predict.currentRow())
+        prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.currentRow()).text()
+        for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount()):
+            if self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
+                self.ui.table_pred_multi_prot_to_predict.setItem(i, 0, QTableWidgetItem(constants.chain_dict.get(i)))
+        self.local_pred_multi_check_if_table_is_empty()
+        self.local_pred_multi_show_protein_overview()
+
+    # def validate_local_pred_multi(self):
+    #     self.local_pred_multimer_management.create_validation()
+    #
+    # def show_local_pred_multi_stage_prediction_mode(self):
+    #     self.local_pred_multimer_management.show_stage_x(0)
+    #
+    # # --- single prediction
+    # def show_local_pred_multi_stage_protein_name(self):
+    #     if self.ui.table_local_pred_multi_prot_overview.isVisible():
+    #         self.local_pred_multimer_management.show_stage_x(0)
+    #     else:
+    #         self.local_pred_multimer_management.show_stage_x(1)
+    #
+    # def show_local_pred_multi_stage_protein_sequence_single(self):
+    #     gui_elements_to_show = [
+    #         self.ui.btn_local_pred_multi_add_seq_single
+    #     ]
+    #     gui_elements_to_hide = [
+    #         self.ui.btn_local_pred_multi_next,
+    #         self.ui.btn_local_pred_multi_back_prediction_mode,
+    #     ]
+    #     self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2], [0, 3, 4, 5],
+    #                                                                   hide_specific_elements=gui_elements_to_hide,
+    #                                                                   show_specific_elements=gui_elements_to_show)
+    #     self.local_pred_multimer_management.disable_text_boxes_stage_x([1])
+    #     self.local_pred_multimer_management.enable_text_boxes_stage_x([2])
+    #
+    # def show_local_pred_multi_stage_prediction_single(self):
+    #     gui_elements_to_hide = [
+    #         self.ui.btn_local_pred_multi_add_seq_single
+    #     ]
+    #     self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2, 4], [0, 3, 5], hide_specific_elements=gui_elements_to_hide)
+    #     self.local_pred_multimer_management.disable_text_boxes_stage_x([1, 2])
+    #     self.local_pred_multimer_management.activate_specific_button(self.ui.btn_local_pred_multi_predict)
+    #
+    # # --- batch prediction
+    # def show_local_pred_multi_stage_protein_sequence_batch(self):
+    #     self.local_pred_multimer_management.show_gui_elements_stage_x([3], [0, 1, 2, 4, 5])
 
     # ----- Functions for Single Analysis
     def show_single_analysis_stage_0(self):
@@ -2685,8 +2997,9 @@ class MainWindow(QMainWindow):
         if not os.path.exists(transformed_analysis_data[2]):
             os.mkdir(transformed_analysis_data[2])
         else:
-            # TODO: talk about what should happen if an analysis result already exists
-            print("A analysis already exists")
+            basic_boxes.ok("Single Analysis", "A structure analysis already exists!", QMessageBox.Critical)
+            self._init_single_analysis_page()
+            return
 
         structure_analysis_obj = structure_analysis.StructureAnalysis(
             reference_protein=[transformed_analysis_data[0]], model_proteins=[transformed_analysis_data[1]],
@@ -2711,52 +3024,7 @@ class MainWindow(QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
         self._init_single_analysis_page()
 
-    # def load_reference_for_analysis(self):
-    #     """This function opens a file dialog to choose a .pdb file as
-    #     reference and displays the path in a text box
-    #
-    #     """
-    #     try:
-    #         # open file dialog
-    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-    #                                                              Qt.QtCore.QDir.homePath(),
-    #                                                              "PDB Files (*.pdb)")
-    #         # display path in text box
-    #         if file_name == ("", ""):
-    #             raise ValueError
-    #         # display path in text box
-    #         self.ui.txt_analysis_load_reference.setText(str(file_name[0]))
-    #         self.status_bar.showMessage("Loading the reference was successful.")
-    #         self.__check_start_possibility_prediction()
-    #     except FileNotFoundError:
-    #         self.status_bar.showMessage("Loading the reference failed!")
-    #     except ValueError:
-    #         print("No file has been selected.")
-    #         self.__check_start_possibility()
-    #
-    # def load_model_for_analysis(self):
-    #     """This function opens a file dialog to choose a .pdb file as
-    #     model and displays the path in a text box
-    #
-    #     """
-    #     try:
-    #         # open file dialog
-    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Model",
-    #                                                              Qt.QtCore.QDir.homePath(),
-    #                                                              "PDB Files (*.pdb)")
-    #         if file_name == ("", ""):
-    #             raise ValueError
-    #         # display path in text box
-    #         self.ui.txt_analysis_load_model.setText(str(file_name[0]))
-    #         self.status_bar.showMessage("Loading the model was successful.")
-    #         self.__check_start_possibility()
-    #     except FileNotFoundError:
-    #         self.status_bar.showMessage("Loading the model failed!")
-    #     except ValueError:
-    #         print("No file has been selected.")
-
     # ----- Functions for Batch
-
     def show_batch_analysis_stage_0(self):
         if self.ui.lbl_analysis_batch_prot_struct_1.text() != "Protein structure 1":
             prot_1_name = self.ui.lbl_analysis_batch_prot_struct_1.text().replace(".pdb", "")
@@ -2892,14 +3160,14 @@ class MainWindow(QMainWindow):
             tmp_batch_analysis = self.ui.list_analysis_batch_overview.item(row_no).text()
             separator_index = tmp_batch_analysis.find("_vs_")
             prot_1 = tmp_batch_analysis[:separator_index]
-            if prot_1.find(";"):
+            if prot_1.find(";") != -1:
                 prot_1_name = prot_1[:prot_1.find(";")]
                 prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
             else:
                 prot_1_name = prot_1
                 prot_1_chains = None
             prot_2 = tmp_batch_analysis[separator_index + 4:]
-            if prot_2.find(";"):
+            if prot_2.find(";") != -1:
                 prot_2_name = prot_2[:prot_2.find(";")]
                 prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
             else:
@@ -2908,10 +3176,8 @@ class MainWindow(QMainWindow):
 
             tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
             tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
-            print(tmp_batch_analysis)
             batch_analysis.append((tmp_prot_1, tmp_prot_2))
 
-        print(batch_analysis)
         transformer = data_transformer.DataTransformer(self.ui)
         # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir), ...)
         batch_data = transformer.transform_data_for_analysis(self.app_project, batch_analysis)
@@ -2920,8 +3186,9 @@ class MainWindow(QMainWindow):
             if not os.path.exists(analysis_data[2]):
                 os.mkdir(analysis_data[2])
             else:
-                # TODO: talk about what should happen if an analysis result already exists
-                print("A analysis already exists")
+                basic_boxes.ok("Single Analysis", f"The structure analysis: {analysis_data[3]} already exists!", QMessageBox.Critical)
+                self._init_batch_analysis_page()
+                return
 
             cmd.reinitialize()
             structure_analysis_obj = structure_analysis.StructureAnalysis(
@@ -2938,7 +3205,13 @@ class MainWindow(QMainWindow):
                                                                  structure_analysis_obj.model_proteins)
             protein_pairs = structure_analysis_obj.create_protein_pairs()
             structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
+            protein_pairs[0].name = analysis_data[3]
+            protein_pairs[0].cutoff = self.app_settings.cutoff
+            self.app_project.add_protein_pair(protein_pairs[0])
+            protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
+            self.app_project.serialize_project(self.app_project.project_path, "project")
             self._project_watcher.show_valid_options(self.ui)
+            self._init_batch_analysis_page()
 
         # self.ui.btn_analysis_start.setEnabled(False)
         # self.status_bar.showMessage("Protein structure analysis started ...")
@@ -3003,7 +3276,7 @@ class MainWindow(QMainWindow):
         #                                             self.status_bar, self.ui.progress_bar_batch)
         # job.create_xml_file()
 
-    # Results
+    # ----- Functions for Results
     def show_analysis_results_options(self):
         self.results_management.show_stage_x(0)
 
@@ -3071,6 +3344,15 @@ class MainWindow(QMainWindow):
             self.show_results_interactions(gui_elements_to_hide=gui_elements_to_hide)
         else:
             self.show_results_interactions()
+
+        try:
+            rmsd_file = open(pathlib.Path(f"{current_results_path}/rmsd.json"), "r", encoding="utf-8")
+        except FileNotFoundError:
+            print(f"There is no valid protein pair json file under: {pathlib.Path(f'{current_results_path}')}")
+            return
+        rmsd_dict = json.load(rmsd_file)
+        self.ui.txt_results_rmsd.setText(str(rmsd_dict.get("rmsd")))
+        self.ui.txt_results_aligned_residues.setText(str(rmsd_dict.get("aligned_residues")))
         session_filepath = pathlib.Path(f"{current_results_path}/sessions/session_file_model_s.pse")
         cmd.reinitialize()
         cmd.load(str(session_filepath))
@@ -3123,24 +3405,6 @@ class MainWindow(QMainWindow):
         png_dialog.setLayout(png_dialog_layout)
         png_dialog.setWindowTitle("Image of: structure alignment")
         png_dialog.show()
-
-    def update_distance_plot(self):
-        """This function updates the distance plot
-
-        """
-        from_aa = int(self.ui.sp_distance_plot_from.text())
-        to_aa = int(self.ui.sp_distance_plot_to.text())
-        from_range = float(self.ui.dsp_distance_plot_from_range.text())
-        to_range = float(self.ui.dsp_distance_plot_to_range.text())
-        self.view_box.setRange(xRange=[from_aa, to_aa], yRange=[from_range, to_range])
-        # if self.ui.cb_sync_with_pymol.isChecked():
-        #     print("Sync is active.")
-        #     # TO-DO: handle objects better
-        #     pdb_list = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-        #     pdb_name = pdb_list[0].replace(".pdb", "")
-        #     zoom_selection = f"/{pdb_name}///{from_aa}-{to_aa}/CA"
-        #     cmd.select("zoom_sele", zoom_selection)
-        #     cmd.zoom("zoom_sele")
 
     def display_distance_plot(self):
         """This function opens a window which displays the distance plot.
@@ -3200,69 +3464,77 @@ class MainWindow(QMainWindow):
         #     raise ValueError
         protein_pair_of_analysis = self.app_project.get_specific_protein_pair(
             self.ui.cb_results_analysis_options.currentText())
+        dialog = dialog_distance_histogram.DialogDistanceHistogram(protein_pair_of_analysis)
+        dialog.exec_()
 
-        plot_dialog = Qt.QtWidgets.QDialog(self)
-        plot_dialog_layout = QHBoxLayout()
-        graph_widget = pg.PlotWidget()
-
-        # read csv file
-        path = pathlib.Path(f"{protein_pair_of_analysis.results_dir}/distance_csv/distances.csv")
-        distance_list = []
-        with open(path, 'r', encoding="utf-8") as csv_file:
-            i = 0
-            for line in csv_file:
-                cleaned_line = line.replace("\n", "")
-                if cleaned_line.split(",")[8] != 'distance':
-                    distance_list.append(float(cleaned_line.split(",")[8]))
-        distance_list.sort()
-        length = len(distance_list)
-        max_distance = distance_list[length-1]
-        x, y = np.histogram(distance_list, bins=np.arange(0, max_distance, 0.25))
-
-        if x.size != y.size:
-            x = np.resize(x, (1, y.size))
-        # this conversion is needed for the pyqtgraph library!
-        x = x.tolist()
-        try:
-            x = x[0]
-        except IndexError:
-            # Error got raised where the distances where all 0
-            tools.quick_log_and_display("error", "The histogram could not be created.",
-                                        self.status_bar, "The histogram could not be created. "
-                                                         " Check the distance table!")
-            return
-
-        y = y.tolist()
-        color = Qt.QtGui.QColor.fromRgb(255, 128, 128)
-        # creates bar chart item
-        graph_bar_item = pg.BarGraphItem(x0=0, y=y, height=0.2, width=x,
-                                         pen=pg.mkPen(color="#4B91F7"), brush=pg.mkBrush(color="#4B91F7"))
-        # creates y-labels for bar chart
-        y_labels = []
-        # TODO: last histogram bar has no label
-        for i in range((len(y)-1)):
-            label = f"{y[i]} - {y[i+1]}"
-            y_labels.append(label)
-        y_values = y
-        ticks = []
-        for i, item in enumerate(y_labels):
-            ticks.append((y_values[i], item))
-        ticks = [ticks]
-
-        # styling the plot
-        graph_widget.setBackground('w')
-        graph_widget.setTitle(f"Distance Histogram of {protein_pair_of_analysis.name}", size="23pt")
-        styles = {'font-size': '14px'}
-        ax_label_x = "Distance in angstrom"
-        graph_widget.setLabel('left', ax_label_x, **styles)
-        graph_widget.setLabel('bottom', "Frequency of α-C atoms distance", **styles)
-        graph_widget.addItem(graph_bar_item)
-        bar_ax = graph_widget.getAxis('left')
-        bar_ax.setTicks(ticks)
-        plot_dialog_layout.addWidget(graph_widget)
-        plot_dialog.setLayout(plot_dialog_layout)
-        plot_dialog.setWindowTitle("Distance Histogram")
-        plot_dialog.show()
+        # plot_dialog = Qt.QtWidgets.QDialog(self)
+        # plot_dialog_layout = QHBoxLayout()
+        # graph_widget = pg.PlotWidget()
+        # view_box = graph_widget.plotItem.getViewBox()
+        # # read csv file
+        # path = pathlib.Path(f"{protein_pair_of_analysis.results_dir}/distance_csv/distances.csv")
+        # distance_list = []
+        # with open(path, 'r', encoding="utf-8") as csv_file:
+        #     i = 0
+        #     for line in csv_file:
+        #         cleaned_line = line.replace("\n", "")
+        #         if cleaned_line.split(",")[8] != 'distance':
+        #             distance_list.append(float(cleaned_line.split(",")[8]))
+        # distance_list.sort()
+        # length = len(distance_list)
+        # max_distance = distance_list[length-1]
+        # x, y = np.histogram(distance_list, bins=np.arange(0, max_distance, 0.25))
+        #
+        # if x.size != y.size:
+        #     x = np.resize(x, (1, y.size))
+        # # this conversion is needed for the pyqtgraph library!
+        # x = x.tolist()
+        # try:
+        #     x = x[0]
+        # except IndexError:
+        #     # Error got raised where the distances where all 0
+        #     tools.quick_log_and_display("error", "The histogram could not be created.",
+        #                                 self.status_bar, "The histogram could not be created. "
+        #                                                  " Check the distance table!")
+        #     return
+        #
+        # y = y.tolist()
+        # color = Qt.QtGui.QColor.fromRgb(255, 128, 128)
+        # # creates bar chart item
+        # graph_bar_item = pg.BarGraphItem(x0=0, y=y, height=0.2, width=x,
+        #                                  pen=pg.mkPen(color="#4B91F7"), brush=pg.mkBrush(color="#4B91F7"))
+        # # creates y-labels for bar chart
+        # y_labels = []
+        # for i in range(len(y)):
+        #     try:
+        #         label = f"{y[i]} - {y[i+1]}"
+        #     except IndexError:
+        #         # detects if a last label is necessary
+        #         label = f"{y[i]} - {y[i]+0.25}"
+        #     y_labels.append(label)
+        # y_values = y
+        # ticks = []
+        # for i, item in enumerate(y_labels):
+        #     ticks.append((y_values[i], item))
+        # ticks = [ticks]
+        #
+        # # styling the plot
+        # graph_widget.setBackground('w')
+        # graph_widget.setTitle(f"Distance Histogram of {protein_pair_of_analysis.name}", size="23pt")
+        # styles = {'font-size': '14px'}
+        # ax_label_x = "Distance in Å"
+        # graph_widget.setLabel('left', ax_label_x, **styles)
+        # graph_widget.setLabel('bottom', "Frequency of α-C atoms distance", **styles)
+        # graph_widget.addItem(graph_bar_item)
+        # bar_ax = graph_widget.getAxis('left')
+        # bar_ax.setTicks(ticks)
+        # view_box.invertY(True)
+        # text = pg.TextItem(text='', border='w', fill=(0, 0, 255, 100), anchor=(0, 0))
+        # graph_widget.addItem(text)
+        # plot_dialog_layout.addWidget(graph_widget)
+        # plot_dialog.setLayout(plot_dialog_layout)
+        # plot_dialog.setWindowTitle("Distance Histogram")
+        # plot_dialog.show()
 
     def display_interesting_region(self):
         """This function displays an image of an interesting region.
@@ -3293,7 +3565,7 @@ class MainWindow(QMainWindow):
         csv_model = Qt.QtGui.QStandardItemModel()
         csv_model.setColumnCount(7)
         labels = ["Residue pair no.", "Reference Chain", "Reference Position", "Reference Residue",
-                  "Model Chain", "Model Pos", "Model Residue", "Distance",
+                  "Model Chain", "Model Position", "Model Residue", "Distance",
                   ]
         csv_model.setHorizontalHeaderLabels(labels)
         table_dialog = Qt.QtWidgets.QDialog(self)
@@ -3303,15 +3575,42 @@ class MainWindow(QMainWindow):
         file_path = pathlib.Path(
             f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         path = f"{file_path}/distance_csv/distances.csv"
+
         with open(path, 'r', encoding="utf-8") as csv_file:
             i = 0
             for line in csv_file:
                 tmp_list = line.split(",")
                 tmp_list.pop(0)
                 standard_item_list = []
-                for tmp in tmp_list:
-                    tmp_item = Qt.QtGui.QStandardItem(tmp)
-                    standard_item_list.append(tmp_item)
+                if i == 0:
+                    for tmp in tmp_list:
+                        tmp_item = Qt.QtGui.QStandardItem(tmp)
+                        standard_item_list.append(tmp_item)
+                else:
+                    pair_no_item = Qt.QtGui.QStandardItem()
+                    pair_no_item.setData(int(tmp_list[0]), role=QtCore.Qt.DisplayRole)
+                    ref_chain_item = Qt.QtGui.QStandardItem()
+                    ref_chain_item.setData(str(tmp_list[1]), role=QtCore.Qt.DisplayRole)
+                    ref_pos_item = Qt.QtGui.QStandardItem()
+                    ref_pos_item.setData(int(tmp_list[2]), role=QtCore.Qt.DisplayRole)
+                    ref_resi_item = Qt.QtGui.QStandardItem()
+                    ref_resi_item.setData(str(tmp_list[3]), role=QtCore.Qt.DisplayRole)
+                    model_chain_item = Qt.QtGui.QStandardItem()
+                    model_chain_item.setData(str(tmp_list[4]), role=QtCore.Qt.DisplayRole)
+                    model_pos_item = Qt.QtGui.QStandardItem()
+                    model_pos_item.setData(int(tmp_list[5]), role=QtCore.Qt.DisplayRole)
+                    model_resi_item = Qt.QtGui.QStandardItem()
+                    model_resi_item.setData(str(tmp_list[6]), role=QtCore.Qt.DisplayRole)
+                    distance_item = Qt.QtGui.QStandardItem()
+                    distance_item.setData(float(tmp_list[7]), role=QtCore.Qt.DisplayRole)
+                    standard_item_list.append(pair_no_item)
+                    standard_item_list.append(ref_chain_item)
+                    standard_item_list.append(ref_pos_item)
+                    standard_item_list.append(ref_resi_item)
+                    standard_item_list.append(model_chain_item)
+                    standard_item_list.append(model_pos_item)
+                    standard_item_list.append(model_resi_item)
+                    standard_item_list.append(distance_item)
                 csv_model.insertRow(i, standard_item_list)
                 i += 1
             csv_file.close()
@@ -3319,10 +3618,21 @@ class MainWindow(QMainWindow):
         table_view.setAlternatingRowColors(True)
         table_view.resizeColumnsToContents()
         table_view.verticalHeader().setVisible(False)
-
+        table_view.setSortingEnabled(True)
+        table_view.sortByColumn(0, QtCore.Qt.AscendingOrder)
         table_dialog_layout = QHBoxLayout()
         table_dialog_layout.addWidget(table_view)
         table_dialog.setLayout(table_dialog_layout)
+        # styles
+        stylesheet = """
+        QDialog {background-color: #F6F4F8;}
+        QTableView {background-color: white;}
+        """
+        table_dialog.setStyleSheet(stylesheet)
+
+        table_dialog.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
+        table_dialog.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
+        table_dialog.setModal(True)
         table_dialog.setWindowTitle("Distances of Structure Alignment")
         table_dialog.show()
 
@@ -3536,10 +3846,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    with open(pathlib.Path(os.path.join(global_variables.global_var_root_dir, "gui", "styles", "styles.css")), 'r', encoding="utf-8") as file:
-        style = file.read()
-        # Set the stylesheet of the application
-        app.setStyleSheet(style)
+    styles.set_stylesheet(app)
     ex = MainWindow()
     ex.show()
     sys.exit(app.exec_())

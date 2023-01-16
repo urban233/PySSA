@@ -23,8 +23,10 @@ import pathlib
 import subprocess
 import os
 import logging
+import time
 
 from pyssa.gui.utilities import gui_utils
+from pyssa.gui.utilities import styles
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 from pyssa.gui.data_structures import settings
 from pyssa.gui.utilities import constants
@@ -82,23 +84,9 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
         if self.settings.wsl_install == 0:
             # wsl is not installed
-            gui_elements_to_hide = [
-                self.ui.line_wsl_config,
-                self.ui.lbl_wsl_config,
-                self.ui.lbl_wsl_username,
-                self.ui.box_wsl_username,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
             self.ui.btn_install_wsl2.setText("Install")
         elif self.settings.wsl_install == 1:
             # wsl is installed
-            gui_elements_to_show = [
-                self.ui.line_wsl_config,
-                self.ui.lbl_wsl_config,
-                self.ui.lbl_wsl_username,
-                self.ui.box_wsl_username,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
             self.ui.btn_install_wsl2.setText("Uninstall")
         else:
             gui_utils.error_dialog_settings("The settings are corrupted, please restore the settings!", "", self.settings)
@@ -108,9 +96,9 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         elif self.settings.local_colabfold == 1:
             # local colabfold is installed
             self.ui.btn_install_local_prediction.setText("Uninstall")
-            # TODO: implement the username selection through the combobox
         else:
             gui_utils.error_dialog_settings("The settings are corrupted, please restore the settings!", "", self.settings)
+
         # connect elements with function
         self.ui.btn_workspace_dir.clicked.connect(self.chooseWorkspaceDir)
         self.ui.btn_zip_storage_dir.clicked.connect(self.chooseZipStorageDir)
@@ -118,6 +106,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.ui.btn_ok.clicked.connect(self.okDialog)
         self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
         self.ui.btn_install_wsl2.clicked.connect(self.install_wsl)
+        styles.set_stylesheet(self)
         self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("Global Settings")
 
@@ -141,19 +130,12 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         self.close()
 
     def install_local_colabfold(self):
-        # home_path_wsl = r"\\" + "wsl$\\" + self.settings.t + "\\home"
-        # try:
-        #     colabfold_username = os.listdir(home_path_wsl)
-        # except FileNotFoundError:
-        #     basic_boxes.ok("Local Colabfold installation", "The WSL2 is not installed!", QMessageBox.Critical)
-        #     return
-        # colabbatch_path = r"\.pyssa\colabfold_batch\bin\colabfold_batch"
-        # path_colabfold = home_path_wsl + "\\" + colabfold_username[0] + colabbatch_path
         if self.settings.local_colabfold == 1:
             # colabfold installed on system, user wants to uninstall local colabfold
             if basic_boxes.yes_or_no("Remove Local Colabfold", "Are you sure that you want to remove Local Colabfold from your system?", QMessageBox.Question):
                 try:
-                    subprocess.run(["wsl", "rm", "-r", "/home/$USER/.pyssa"])
+                    subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
+                        f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/remove_wsl_env.ps1")])
                 except:
                     basic_boxes.ok("Local Colabfold removal", "The uninstallation failed. Please re-run the process or consult the documentation.",
                                    QMessageBox.Critical)
@@ -167,9 +149,20 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
                 # logical message: the user wants to install local colabfold
                 user_name = os.getlogin()
                 try:
-                    subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, constants.WSL_STORAGE_PATH, constants.WSL_DISTRO_IMPORT_PATH])
+                    if not os.path.exists(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/")):
+                        os.mkdir(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/"))
+                    if not os.path.exists(constants.WSL_STORAGE_PATH):
+                        os.mkdir(constants.WSL_STORAGE_PATH)
+                    subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
+                        f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
+                    subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH), str(constants.WSL_DISTRO_IMPORT_PATH)])
                     subprocess.run(["wsl", "-s", constants.WSL_DISTRO_NAME])
-                    subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
+                    subprocess.run(
+                        ["wsl",
+                         "cp", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/wsl_extras/wsl.conf", "/etc"])
+                    subprocess.run(["wsl", "--shutdown"])
+                    print("Shutting down all WSL distros ...")
+                    time.sleep(10)
                     subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"])
                     subprocess.run(
                         ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"])
@@ -210,7 +203,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
                 except:
                     basic_boxes.ok("WSL2 installation", "Installation failed. Please re-run the process or look in the documentation.", QMessageBox.Critical)
                     return
-                self.ui.btn_install_local_prediction.setText("Uninstall")
+                self.ui.btn_install_wsl2.setText("Uninstall")
                 self.settings.wsl_install = 1
                 if settings_boxes.restart_now_later():
                     os.system("shutdown /r")

@@ -23,6 +23,7 @@ import os
 import sys
 
 import PyQt5.QtWidgets
+from PyQt5 import QtCore
 from pymol import Qt
 
 from pyssa.gui.utilities import constants
@@ -66,7 +67,7 @@ class DialogStartup(Qt.QtWidgets.QDialog):
         elif sys.platform.startswith("win32"):
             # Windows path
             self.ui.txt_workspace.setText(str(constants.DEFAULT_WORKSPACE_PATH))
-
+        self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
         self.setWindowTitle("PySSA Launch")
 
     # @SLOT

@@ -92,10 +92,14 @@ class Protein:
             # PDB ID is given
             self.filename = f"{self.molecule_object}.pdb"
 
+        if filepath == "None":
+            filepath = None
         if filepath is not None:
             if not os.path.exists(f"{self.filepath}"):
                 raise NotADirectoryError(f"The path {filepath} was not "
                                          f"found.")
+        if export_data_dir == "None":
+            export_data_dir = None
         if export_data_dir is not None:
             export_data_dir = pathlib.Path(export_data_dir)
             if not os.path.exists(f"{self.export_data_dir}"):
@@ -201,6 +205,28 @@ class Protein:
             os.mkdir(f"{self.export_data_dir}")
         # save the pdb file under the path (export_data_dir)
         cmd.save(f"{self.export_data_dir}/{self.molecule_object}.pdb")
+
+    def clean_protein(self, new_protein=False):
+        cmd.reinitialize()
+        self.load_protein()
+        if new_protein is False:
+            try:
+                cmd.remove("solvent")
+                cmd.remove("organic")
+            except pymol.CmdException:
+                return
+            os.remove(f"{self.filepath}/{self.filename}")
+            cmd.save(f"{self.filepath}/{self.filename}")
+        else:
+            clean_prot = self.duplicate_protein()
+            cmd.reinitialize()
+            clean_prot.load_protein()
+            cmd.remove("solvent")
+            cmd.remove("organic")
+            clean_prot.molecule_object = f"{clean_prot.molecule_object}_cleaned"
+            clean_prot.filename = f"{clean_prot.molecule_object}.pdb"
+            cmd.save(f"{clean_prot.filepath}/{clean_prot.filename}")
+            return clean_prot
 
     def load_protein(self) -> None:
         if not safeguard.Safeguard.check_filepath(f"{self.filepath}/{self.filename}"):

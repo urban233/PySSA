@@ -679,6 +679,7 @@ class ProteinPair:
 
         protein_file = open(pathlib.Path(f"{filepath}/{self.name}.json"), "w", encoding="utf-8")
         json.dump(protein_structures_dict, protein_file, indent=4)
+        protein_file.close()
 
     @staticmethod
     def deserialize_protein_pair(protein_obj_json_file):

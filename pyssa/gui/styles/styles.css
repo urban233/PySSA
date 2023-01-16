@@ -807,8 +807,25 @@ QLabel#lbl_analysis {
 }
 
 /* last code for lbls and btns are below */
+QLabel#lbl_pred_mono_prot_name_status {
+    color: #FC5457;
+    font-size: 10px;
+}
 
+QLabel#lbl_pred_mono_seq_name_status {
+    color: #FC5457;
+    font-size: 10px;
+}
 
+QLabel#lbl_pred_multi_prot_name_status {
+    color: #FC5457;
+    font-size: 10px;
+}
+
+QLabel#lbl_pred_multi_prot_seq_status {
+    color: #FC5457;
+    font-size: 10px;
+}
 
 
 /* Button for "Prediction" */

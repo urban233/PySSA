@@ -213,24 +213,29 @@ class Project:
             print(f"The filepath: {filepath} does not exists!")
             return
         # self._folder_paths.__str__()
-        project_dict = self.__dict__
+        # project_dict = self.__dict__
         # protein_names = []
         # for tmp_protein in self.proteins:
         #     protein_names.append(tmp_protein.molecule_object)
         # protein_pair_names = []
         # for tmp_protein_pair in self.protein_pairs:
         #     protein_pair_names.append(tmp_protein_pair.name)
-        update = {
+        json_dict = {
+            '_project_name': str(self._project_name),
             '_workspace': str(self._workspace),
             'project_path': str(self.project_path),
+            '_date': str(self._date),
+            '_operating_system': str(self._operating_system),
             '_folder_paths': [str(self._folder_paths[0]), str(self._folder_paths[1]), str(self._folder_paths[2]), str(self._folder_paths[3]), str(self._folder_paths[4]), str(self._folder_paths[5])],
+            '_session_file_name': str(self._session_file_name),
         }
-        project_dict.update(update)
-        project_dict.pop('proteins')
-        project_dict.pop('protein_pairs')
-        print(project_dict)
+        # project_dict.update(update)
+        #
+        # project_dict.pop('proteins')
+        # project_dict.pop('protein_pairs')
+        print(json_dict)
         project_file = open(f"{filepath}\\{filename}.json", "w", encoding="utf-8")
-        json.dump(project_dict, project_file, indent=4)
+        json.dump(json_dict, project_file, indent=4)
 
     @staticmethod
     def deserialize_project(filepath):

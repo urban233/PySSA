@@ -99,7 +99,14 @@ class Safeguard:
 
     @staticmethod
     def check_if_dict_is_empty(value: dict) -> bool:
-        if len(value) is not 0:
+        if len(value) != 0:
             return True
         else:
             return False
+
+    @staticmethod
+    def check_if_value_is_in_table_v_header(value, table):
+        for i in range(table.rowCount()):
+            if table.verticalHeaderItem(i).text() == value:
+                return False
+        return True

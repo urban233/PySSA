@@ -21,6 +21,9 @@
 #
 """Module for all styles related functions"""
 import os
+import pathlib
+
+from pyssa.gui.utilities import constants
 from pyssa.gui.utilities import global_variables
 
 
@@ -48,3 +51,11 @@ def color_button_not_ready(button):
         button_style = style_sheet_file.read()
         # Set the stylesheet of the application
         button.setStyleSheet(button_style)
+
+
+def set_stylesheet(self):
+    with open(pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/styles/styles.css"), 'r',
+              encoding="utf-8") as file:
+        style = file.read()
+        # Set the stylesheet of the application
+        self.setStyleSheet(style)

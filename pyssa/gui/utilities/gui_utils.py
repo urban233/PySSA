@@ -28,6 +28,7 @@ from pathlib import Path
 
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5 import QtCore
 from pyssa.gui.utilities import tools
 
 
@@ -135,6 +136,7 @@ def error_dialog_settings(message, message_detail, settings_obj):
     msg.setText(message)
     msg.setInformativeText(message_detail)
     #msg.setDetailedText()
+    msg.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
     msg.setWindowTitle("Error")
 
     #open_global_settings_button = msg.addButton("Open Settings", QMessageBox.ActionRole)

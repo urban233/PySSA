@@ -52,7 +52,7 @@ class InputValidator:
         if list_of_projects.currentItem() is not None:
             list_of_projects.currentItem().setSelected(False)
         # set color for lineEdit
-        txt_for_project_name.setStyleSheet("background-color: #FC5457")
+        txt_for_project_name.setStyleSheet("color: #f44336")
         if len(txt_for_project_name.text()) == 0:
             lbl_for_status_project_name.setText("")
             if cb_for_add_reference is not None:
@@ -73,7 +73,7 @@ class InputValidator:
             for i in range(len(txt_for_project_name.text())):
                 result = validator.validate(txt_for_project_name.text(), i)
                 if result[0] > 0:
-                    txt_for_project_name.setStyleSheet("background-color: #33C065")
+                    txt_for_project_name.setStyleSheet("color: #000000")
                     lbl_for_status_project_name.setText("")
                     if cb_for_add_reference is not None:
                         cb_for_add_reference.setCheckable(True)
@@ -81,7 +81,7 @@ class InputValidator:
                     btn_for_next_step.setEnabled(True)
                     styles.color_button_ready(btn_for_next_step)
                 else:
-                    txt_for_project_name.setStyleSheet("background-color: #FC5457")
+                    txt_for_project_name.setStyleSheet("color: #f44336")
                     lbl_for_status_project_name.setText("Invalid character.")
                     if cb_for_add_reference is not None:
                         cb_for_add_reference.setCheckable(False)
@@ -94,7 +94,7 @@ class InputValidator:
                                               Qt.QtCore.Qt.MatchExactly)
             if len(item) != 0:
                 list_of_projects.setCurrentItem(item[0])
-                txt_for_project_name.setStyleSheet("background-color: #FC5457")
+                txt_for_project_name.setStyleSheet("color: #f44336")
                 lbl_for_status_project_name.setText("Project name already exists.")
                 if cb_for_add_reference is not None:
                     cb_for_add_reference.setCheckable(False)
@@ -103,7 +103,7 @@ class InputValidator:
                 styles.color_button_not_ready(btn_for_next_step)
 
     @staticmethod
-    def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_search, txt_for_selected_project=None):
+    def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_search, txt_for_selected_project=None, status_message=None):
         """This function validates the input of the project name in real-time
 
         Args:
@@ -136,14 +136,17 @@ class InputValidator:
                 if txt_for_selected_project is not None:
                     txt_for_selected_project.setText(list_for_projects.currentItem().text())
             else:
-                txt_for_search.setStyleSheet("background-color: #FC5457")
-                lbl_for_status_search.setText("Project name does not exists.")
+                txt_for_search.setStyleSheet("color: #f44336")
+                if status_message is None:
+                    lbl_for_status_search.setText("Project name does not exists.")
+                else:
+                    lbl_for_status_search.setText(status_message)
                 if txt_for_selected_project is not None:
                     txt_for_selected_project.setText("")
 
     @staticmethod
     def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
-                              btn_next):
+                              btn_next=None):
         """This function validates the input of the protein name in real-time
 
         Args:
@@ -156,16 +159,18 @@ class InputValidator:
 
         """
         # set color for lineEdit
-        txt_for_protein_name.setStyleSheet("background-color: #FC5457")
+        txt_for_protein_name.setStyleSheet("color: #f44336")
         if len(txt_for_protein_name.text()) == 0:
             lbl_for_status_protein_name.setText("")
-            btn_next.setEnabled(False)
-            styles.color_button_not_ready(btn_next)
+            if btn_next is not None:
+                btn_next.setEnabled(False)
+                styles.color_button_not_ready(btn_next)
             return
         elif len(txt_for_protein_name.text()) > 20:
             lbl_for_status_protein_name.setText("Project name is too long (max. 20 characters).")
-            btn_next.setEnabled(False)
-            styles.color_button_not_ready(btn_next)
+            if btn_next is not None:
+                btn_next.setEnabled(False)
+                styles.color_button_not_ready(btn_next)
             return
         else:
             regex = Qt.QtCore.QRegularExpression()
@@ -174,15 +179,17 @@ class InputValidator:
             for i in range(len(txt_for_protein_name.text())):
                 result = validator.validate(txt_for_protein_name.text(), i)
                 if result[0] > 0:
-                    txt_for_protein_name.setStyleSheet("background-color: #33C065")
+                    txt_for_protein_name.setStyleSheet("color: #000000")
                     lbl_for_status_protein_name.setText("")
-                    btn_next.setEnabled(True)
-                    styles.color_button_ready(btn_next)
+                    if btn_next is not None:
+                        btn_next.setEnabled(True)
+                        styles.color_button_ready(btn_next)
                 else:
-                    txt_for_protein_name.setStyleSheet("background-color: #FC5457")
+                    txt_for_protein_name.setStyleSheet("color: #f44336")
                     lbl_for_status_protein_name.setText("Invalid character.")
-                    btn_next.setEnabled(False)
-                    styles.color_button_not_ready(btn_next)
+                    if btn_next is not None:
+                        btn_next.setEnabled(False)
+                        styles.color_button_not_ready(btn_next)
                     return
 
     @staticmethod
@@ -200,8 +207,8 @@ class InputValidator:
 
         """
         # set color for lineEdit
-        txt_protein_sequence.setStyleSheet("background-color: #FC5457")
-        if len(txt_protein_sequence.text()) == 0:
+        txt_protein_sequence.setStyleSheet("color: #f44336")
+        if len(txt_protein_sequence.toPlainText()) == 0:
             lbl_status_protein_sequence.setText("")
             btn_next.setEnabled(False)
             styles.color_button_not_ready(btn_next)
@@ -210,15 +217,15 @@ class InputValidator:
             regex = Qt.QtCore.QRegularExpression()
             regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
             validator = QtGui.QRegularExpressionValidator(regex)
-            for i in range(len(txt_protein_sequence.text())):
-                result = validator.validate(txt_protein_sequence.text(), i)
+            for i in range(len(txt_protein_sequence.toPlainText())):
+                result = validator.validate(txt_protein_sequence.toPlainText(), i)
                 if result[0] > 0:
-                    txt_protein_sequence.setStyleSheet("background-color: #33C065")
+                    txt_protein_sequence.setStyleSheet("color: #000000")
                     lbl_status_protein_sequence.setText("")
                     btn_next.setEnabled(True)
                     styles.color_button_ready(btn_next)
                 else:
-                    txt_protein_sequence.setStyleSheet("background-color: #FC5457")
+                    txt_protein_sequence.setStyleSheet("color: #f44336")
                     lbl_status_protein_sequence.setText("Invalid character.")
                     btn_next.setEnabled(False)
                     styles.color_button_not_ready(btn_next)

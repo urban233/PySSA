@@ -19,15 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import os.path
 import pathlib
 
+from PyQt5.QtGui import QIcon
 from pymol import Qt
+from pymol import cmd
 import pyqtgraph as pg
 import pyqtgraph.exporters
+from PyQt5 import QtCore
 from pyssa.pymol_protein_tools import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialog
-from pyssa.gui.utilities import global_variables
+from pyssa.gui.utilities import constants
 
 
 class DialogDistancePlot(Qt.QtWidgets.QDialog):
@@ -71,9 +75,18 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         self.graph_widget.plotItem.showGrid(x=True, y=True)
         self.ui.main_Layout.addWidget(self.graph_widget)
 
+        # styles
+        stylesheet = """
+        QDialog {background-color: #F6F4F8;}
+        QTableWidget {background-color: white;}
+        """
+        self.setStyleSheet(stylesheet)
+
         self.ui.btn_distance_plot_update.clicked.connect(self.update_distance_plot)
         self.ui.btn_distance_plot_save.clicked.connect(self.save_plot_to_file)
-
+        self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
+        self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
+        self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("Distance Plot")
 
     def update_distance_plot(self):
@@ -85,14 +98,11 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         from_range = float(self.ui.dsp_distance_plot_from_range.text().replace(",", "."))
         to_range = float(self.ui.dsp_distance_plot_to_range.text().replace(",", "."))
         self.view_box.setRange(xRange=[from_aa, to_aa], yRange=[from_range, to_range])
-        # if self.ui.cb_sync_with_pymol.isChecked():
-        #     print("Sync is active.")
-        #     # TODO: handle objects better
-        #     pdb_list = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-        #     pdb_name = pdb_list[0].replace(".pdb", "")
-        #     zoom_selection = f"/{pdb_name}///{from_aa}-{to_aa}/CA"
-        #     cmd.select("zoom_sele", zoom_selection)
-        #     cmd.zoom("zoom_sele")
+        if self.ui.cb_sync_with_pymol.isChecked():
+            print("Sync is active.")
+            zoom_selection = f"/{self.protein_pair_for_analysis.ref_obj.molecule_object}///{from_aa}-{to_aa}/CA"
+            cmd.select("zoom_sele", zoom_selection)
+            cmd.zoom("zoom_sele")
 
     def save_plot_to_file(self):
         # create an exporter instance, as an argument give it
@@ -107,7 +117,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
             f"{self.protein_pair_for_analysis.results_dir}/user_images")
         if not os.path.exists(results_image_path):
             os.mkdir(results_image_path)
-        file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self,"Save Plot as Image", str(results_image_path), "Portable Network Graphic (.png)")
+        file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self, "Save Plot as Image", str(results_image_path), "Portable Network Graphic (.png)")
         if file_path == ("", ""):
             return
         exporter.export(f'{file_path[0]}.png')
