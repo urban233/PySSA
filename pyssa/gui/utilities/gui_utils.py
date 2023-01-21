@@ -459,3 +459,25 @@ def enable_text_box(text_box, text_box_label):
     text_box_label.setStyleSheet("color: black")
     text_box.setStyleSheet("background-color: white")
     text_box.setEnabled(True)
+
+
+def get_prediction_name_and_seq_from_table(table) -> list[tuple[str, str]]:
+    """This function gets the names and sequences of the table which stores the predictions to run
+
+    Args:
+        table:
+
+    Returns:
+        list of tuples with name and sequence
+    """
+    # list which consists of tuples of the protein name and protein sequence
+    predictions: list[tuple[str, str]] = []
+    for i in range(table.rowCount()):
+        tmp_name = table.verticalHeaderItem(i).text()
+        tmp_seq = table.item(i, 1).text()
+        predictions.append((tmp_name, tmp_seq))
+    return predictions
+
+
+def write_fasta_file_from_table():
+    pass

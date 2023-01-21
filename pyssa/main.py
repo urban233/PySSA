@@ -33,7 +33,7 @@ import numpy as np
 import pymol
 import pyqtgraph as pg
 
-from pyssa.gui.ui.dialogs import dialog_sequence_viewer
+from pyssa.gui.ui.dialogs import chart_test
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.utilities import global_variables
 from pyssa.gui.ui.dialogs import dialog_startup
@@ -56,6 +56,7 @@ from pyssa.gui.data_structures import project_watcher
 from pyssa.gui.data_structures import data_transformer
 from pyssa.gui.data_structures import safeguard
 from pyssa.gui.data_structures.data_classes import prediction_configuration
+from pyssa.gui.data_structures.data_classes import prediction_list
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
@@ -699,7 +700,7 @@ class MainWindow(QMainWindow):
         self.ui.txt_pred_mono_prot_name.textChanged.connect(self.local_pred_mono_validate_protein_name)
         self.ui.txt_pred_mono_seq_name.textChanged.connect(self.local_pred_mono_validate_protein_sequence)
         self.ui.btn_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
-        # TODO: predict_monomer connection is missing!
+        self.ui.btn_pred_mono_predict.clicked.connect(self.predict_local_monomer)
 
         # multimer local prediction page
         self.ui.btn_pred_multi_prot_to_predict_add.clicked.connect(self.local_pred_multi_show_protein_name)
@@ -1989,7 +1990,8 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
-        pass
+        dialog = chart_test.DistanceHistogram()
+        dialog.exec_()
         # if not os.path.exists(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/")):
         #     os.mkdir(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/"))
         # if not os.path.exists(constants.WSL_STORAGE_PATH):
@@ -2725,48 +2727,90 @@ class MainWindow(QMainWindow):
             os.mkdir(constants.PREDICTION_FASTA_DIR)
         if not os.path.exists(constants.PREDICTION_PDB_DIR):
             os.mkdir(constants.PREDICTION_PDB_DIR)
-        # create fasta file and move to scratch fasta dir
-        fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{self.ui.txt_local_pred_mono_protein_name.text()}.fasta", "w")
-        fasta_file.write(f">{self.ui.txt_local_pred_mono_protein_name.text()}\n")
-        fasta_file.write(self.ui.txt_local_pred_mono_prot_seq.toPlainText())
-        fasta_file.close()
+        predictions = gui_utils.get_prediction_name_and_seq_from_table(self.ui.table_pred_mono_prot_to_predict)
+
+        prot_entries = []
+        last_header = predictions[0]
+        pred_list = prediction_list.PredictionList("", [])
+        for tmp_prediction in predictions:
+            current_header = tmp_prediction[0]
+            if last_header == current_header:
+                pred_list.protein_name = tmp_prediction[0]
+                pred_list.protein_sequence.append(tmp_prediction[1])
+            else:
+                prot_entries.append(pred_list)
+                pred_list = prediction_list.PredictionList("", [])
+                last_header = current_header
+
+        for tmp_prot_to_predict in prot_entries:
+            # create fasta file and move to scratch fasta dir
+            fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{tmp_prediction[0]}.fasta", "w")
+            fasta_file.write(f">{tmp_prediction[0]}\n")
+            fasta_file.write(tmp_prediction[1])
+            fasta_file.close()
+
+
+
+
+            prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(
+                self.ui.table_pred_multi_prot_to_predict.currentRow()).text()
+            for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount()):
+                if self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
+                    self.ui.table_pred_multi_prot_to_predict.setItem(i, 0,
+                                                                     QTableWidgetItem(constants.chain_dict.get(i)))
+            # create fasta file and move to scratch fasta dir
+            fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{tmp_prediction[0]}.fasta", "w")
+            fasta_file.write(f">{tmp_prediction[0]}\n")
+            fasta_file.write(tmp_prediction[1])
+            fasta_file.close()
         user_name = os.getlogin()
         fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
         pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
+        if self.prediction_configuration.templates == "none":
+            try:
+                subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
+                    f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
+                subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict_no_templates.sh",
+                                fasta_path, pdb_path])
+                subprocess.run(["wsl", "--shutdown"])
+            except OSError:
+                shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+                return
+        else:
+            try:
+                subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
+                    f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
+                subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
+                                fasta_path, pdb_path])
+                subprocess.run(["wsl", "--shutdown"])
+            except OSError:
+                shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+                return
 
+        prediction_results: list[str] = os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR))
+        for tmp_prediction in predictions:
+            for filename in prediction_results:
+                check = filename.find(f"{tmp_prediction[0]}_relaxed_rank_1")
+                if check != -1:
+                    src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{filename}")
+                    dest = pathlib.Path(
+                        f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
+                    shutil.copy(src, dest)
+                    os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
+                              f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_prediction[0]}.pdb")
+                    tmp_protein = protein.Protein(tmp_prediction[0], pathlib.Path(self.app_project.get_pdb_path()))
+                    self.app_project.add_existing_protein(tmp_protein)
+                    break
+        shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
         try:
-            subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
-                f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
-            subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
-                            fasta_path, pdb_path])
-            subprocess.run(["wsl", "--shutdown"])
-        except OSError:
-            shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+            tmp_first_prediction = predictions[0]
+            cmd.load(
+                f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_first_prediction[0]}.pdb")
+        except pymol.CmdException:
+            print("Loading the model failed.")
             return
-        # shutil.unpack_archive(f"{self.scratch_path}/{archive}",
-        #                       f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}", "zip")
-        # prediction_results: list[str] = os.listdir(
-        #     pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}"))
-        # for filename in prediction_results:
-        #     check = filename.find("_relaxed_rank_1")
-        #     if check != -1:
-        #         src = pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}/{filename}")
-        #         dest = pathlib.Path(
-        #             f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
-        #         shutil.copy(src, dest)
-        #         os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
-        #                   f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
-        #         break
-        # shutil.rmtree(f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}")
-        # os.remove(f"{self.scratch_path}/{archive}")
-        # try:
-        #     cmd.load(
-        #         f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
-        # except pymol.CmdException:
-        #     print("Loading the model failed.")
-        #     return
-        # self._project_watcher.show_valid_options(self.ui)
-        # self.display_view_page()
+        self._project_watcher.show_valid_options(self.ui)
+        self.display_view_page()
 
     # ----- Functions for Multimer Local Prediction
     def local_pred_multi_validate_protein_name(self):
