@@ -660,14 +660,14 @@ class ProteinPair:
         protein_structures_dict = {
             "prot_1_molecule_object": self.ref_obj.molecule_object,
             "prot_1_import_data_dir": str(self.ref_obj.filepath),
-            "prot_1_export_data_dir": str(self.ref_obj.export_data_dir),
+            "prot_1_export_data_dir": str(self.ref_obj.export_filepath),
             "prot_1_filename": str(self.ref_obj.filename),
             "prot_1_selection": self.ref_obj.selection,
             "prot_1_sequence": self.ref_obj.sequence,
             "prot_1_chains": self.ref_obj.chains,
             "prot_2_molecule_object": self.model_obj.molecule_object,
             "prot_2_import_data_dir": str(self.model_obj.filepath),
-            "prot_2_export_data_dir": str(self.model_obj.export_data_dir),
+            "prot_2_export_data_dir": str(self.model_obj.export_filepath),
             "prot_2_filename": str(self.model_obj.filename),
             "prot_2_selection": self.model_obj.selection,
             "prot_2_sequence": self.model_obj.sequence,
@@ -709,7 +709,7 @@ class ProteinPair:
             export_data_dir = protein_dict.get("prot_1_export_data_dir")
         tmp_protein_1 = protein.Protein(protein_dict.get("prot_1_filename"),
                                         protein_dict.get("prot_1_import_data_dir"),
-                                        export_data_dir=export_data_dir,
+                                        export_filepath=export_data_dir,
                                         )
         tmp_protein_1.molecule_object = protein_dict.get("prot_1_molecule_object")
         tmp_protein_1.set_sequence(protein_dict.get("prot_1_sequence"))
@@ -723,7 +723,7 @@ class ProteinPair:
             export_data_dir = protein_dict.get("prot_2_export_data_dir")
         tmp_protein_2 = protein.Protein(protein_dict.get("prot_2_filename"),
                                         protein_dict.get("prot_2_import_data_dir"),
-                                        export_data_dir=export_data_dir,
+                                        export_filepath=export_data_dir,
                                         )
         tmp_protein_2.molecule_object = protein_dict.get("prot_2_molecule_object")
         tmp_protein_2.set_sequence(protein_dict.get("prot_2_sequence"))

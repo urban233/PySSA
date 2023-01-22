@@ -19,21 +19,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for graphic operations in pymol"""
+"""Module for protein operations in pymol"""
 import pymol
 from pymol import cmd
-from pyssa.internal.portal import pymol_safeguard
+from pyssa.io_pyssa import safeguard
 from pyssa.internal.data_structures import protein
+from pyssa.internal.portal import pymol_safeguard
 
-def show_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
-    """This function show the protein as balls and sticks in representation mode.
+
+def remove_solvent_molecules_in_protein():
+    """This function removes solvent molecules in a protein.
 
     """
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
-        cmd.show(representation="sticks", selection=protein_obj.selection)
+        cmd.remove("solvent")
     except pymol.CmdException:
-        print("No stick and balls ca be shown in protein.")
+        print("No solvent molecules needs to be removed.")
 
-# TODO: function for hide and zoom
+
+def remove_organic_molecules_in_protein():
+    """This function removes organic molecules in a protein.
+
+    """
+    if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
+        raise pymol.CmdException("No protein is in pymol session.")
+    try:
+        cmd.remove("organic")
+    except pymol.CmdException:
+        print("No organic molecules needs to be removed.")

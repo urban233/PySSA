@@ -1155,22 +1155,27 @@ class MainWindow(QMainWindow):
         """This function displays the open project work area
 
         """
-        if safeguard.Safeguard.check_filepath(self.workspace_path):
-            self.ui.list_open_projects.clear()
-            # pre-process
-            self.status_bar.showMessage(self.workspace.text())
-            try:
-                tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
-            except PermissionError:
-                gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
-                                                self.app_settings)
-                self.display_home_page()
-                return
-            tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
-        else:
-            gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
-                                            self.app_settings)
-            self.display_home_page()
+
+        #cmd.fetch("3BMP")
+        print(cmd.get_model())
+        print(cmd.get_chains())
+
+        # if safeguard.Safeguard.check_filepath(self.workspace_path):
+        #     self.ui.list_open_projects.clear()
+        #     # pre-process
+        #     self.status_bar.showMessage(self.workspace.text())
+        #     try:
+        #         tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
+        #     except PermissionError:
+        #         gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
+        #                                         self.app_settings)
+        #         self.display_home_page()
+        #         return
+        #     tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
+        # else:
+        #     gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
+        #                                     self.app_settings)
+        #     self.display_home_page()
 
     def display_delete_page(self):
         """This function displays the "delete" project work area
@@ -1784,7 +1789,7 @@ class MainWindow(QMainWindow):
                 shutil.move(f"{self.scratch_path}/{pdb_id}.pdb", self.app_project.get_pdb_path())
                 tmp_ref_protein = protein.Protein(pdb_id,
                                                   filepath=pathlib.Path(self.app_project.get_pdb_path()),
-                                                  export_data_dir=self.scratch_path)
+                                                  export_filepath=self.scratch_path)
                 tmp_ref_protein.clean_pdb_file()
             else:
                 # local pdb file as input
@@ -1793,7 +1798,7 @@ class MainWindow(QMainWindow):
                 pdb_id = protein_file_info.baseName()
                 tmp_ref_protein = protein.Protein(pdb_id,
                                                   filepath=pathlib.Path(self.app_project.get_pdb_path()),
-                                                  export_data_dir=self.scratch_path)
+                                                  export_filepath=self.scratch_path)
                 cmd.load(self.ui.txt_new_choose_reference.text(), object=pdb_id)
             tmp_ref_protein.set_chains()
             tmp_ref_protein.set_sequence()
@@ -1846,6 +1851,7 @@ class MainWindow(QMainWindow):
         """
         # show project management options in side menu
         # self._init_project_management()
+
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
         self.app_project = project.Project.deserialize_project(tmp_project_path)
         self._project_watcher.current_project = self.app_project
