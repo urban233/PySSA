@@ -237,10 +237,10 @@ class Protein:
         graphic_operations.show_protein_selection_as_balls_and_sticks(self)
 
     def hide_resi_as_balls_and_sticks(self) -> None:
-        cmd.hide(representation="sticks", selection=self.selection)
+        graphic_operations.hide_protein_selection_as_balls_and_sticks(self)
 
     def zoom_resi_protein_position(self) -> None:
-        cmd.zoom(selection=self.selection, buffer=8.0, state=0, complete=0)
+        graphic_operations.zoom_to_residue_in_protein_position(self)
 
     def serialize_protein(self, filepath, filename) -> None:
         """This function serialize the protein object
