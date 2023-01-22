@@ -1,12 +1,7 @@
-
-import datetime
 from pymol import Qt
-from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout,
-                             QPushButton, QLabel)
+from PyQt5.QtWidgets import (QHBoxLayout)
 from PyQt5 import QtCore
-from PyQt5.QtCore import QUrl
-from pyssa.gui.utilities import constants
-from pyssa.gui.utilities import gui_utils
+from util import constants
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_sequence_viewer import Ui_Dialog
 from PyQt5.QtWidgets import *
 import PyQt5

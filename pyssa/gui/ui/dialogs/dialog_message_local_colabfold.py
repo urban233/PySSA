@@ -19,19 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import pathlib
 
-import PyQt5.QtWidgets
-from pymol import Qt
-from datetime import datetime
-from pyssa.gui.ui.forms.auto_generated.auto_dialog_message_local_colabfold import Ui_Dialog
-from pyssa.gui.utilities import gui_utils
-import subprocess
-import os
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QMessageBox
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QMessageBox
 
 
 def installation_local_colabfold_accept() -> bool:

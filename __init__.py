@@ -25,7 +25,7 @@ import os
 
 # appending the plugin path to the python search path
 # this is necessary to be able to use import (submodules) statements
-# sys.path.append("/home/matt/snap/pymol-oss/107/.pymol/startup/pymol_plugin")
+# sys.path.append("/home/matt/snap/pymol-oss/107/.pymol/startup/pyssa")
 
 # linux, macOS, Windows path
 path_list = [

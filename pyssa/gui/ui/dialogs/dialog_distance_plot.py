@@ -29,9 +29,9 @@ from pymol import cmd
 import pyqtgraph as pg
 import pyqtgraph.exporters
 from PyQt5 import QtCore
-from pyssa.pymol_protein_tools import protein_pair
+from internal.data_structures import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialog
-from pyssa.gui.utilities import constants
+from util import constants
 
 
 class DialogDistancePlot(Qt.QtWidgets.QDialog):

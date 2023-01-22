@@ -31,13 +31,11 @@ import subprocess
 import PyQt5.QtCore
 import numpy as np
 import pymol
-import pyqtgraph as pg
 
-from pyssa.gui.ui.dialogs import chart_test
 from pyssa.gui.ui.dialogs import dialog_settings_global
-from pyssa.gui.utilities import global_variables
 from pyssa.gui.ui.dialogs import dialog_startup
-from pyssa.gui.utilities import constants
+from util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
+from gui.ui.styles import styles
 
 from PyQt5.QtGui import QIcon
 from pymol import Qt
@@ -49,30 +47,18 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.gui.data_structures import project
-from pyssa.gui.data_structures import structure_analysis
-from pyssa.gui.data_structures.data_classes import protein_analysis_info
-from pyssa.gui.data_structures import project_watcher
-from pyssa.gui.data_structures import data_transformer
-from pyssa.gui.data_structures import safeguard
-from pyssa.gui.data_structures.data_classes import prediction_configuration
-from pyssa.gui.data_structures.data_classes import prediction_list
+from internal.data_structures.data_classes import protein_analysis_info, prediction_list, prediction_configuration, \
+    stage
+from internal.data_processing import data_transformer
+from pyssa.io_pyssa import safeguard
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
 from pyssa.gui.ui.dialogs import dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.dialogs import dialog_add_sequence_monomer
-from pyssa.gui.utilities import gui_utils
-from pyssa.gui.utilities import tools
-from pyssa.gui.utilities import styles
-from pyssa.gui.utilities import gui_page_management
-from pyssa.gui.utilities import input_validator
 from pyssa.gui.ui.messageboxes import basic_boxes
-from pyssa.gui.utilities.data_classes import stage
-from pyssa.pymol_protein_tools import protein
-from pyssa.gui.data_structures import settings
+from internal.data_structures import protein, project, project_watcher, settings, structure_analysis
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -1574,7 +1560,7 @@ class MainWindow(QMainWindow):
         """This function opens the official plugin documentation as HTML page.
 
         """
-        #webbrowser.open_new(f"file://{os.getcwd()}/docs/pymol_plugin/build/html/index.html")
+        #webbrowser.open_new(f"file://{os.getcwd()}/docs/pyssa/build/html/index.html")
         # opens the documentation of the os
         if sys.platform.startswith("darwin"):
             # macOS path
@@ -1592,7 +1578,7 @@ class MainWindow(QMainWindow):
 
         """
         # webbrowser.open_new(
-        #     f"file://{os.getcwd()}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+        #     f"file://{os.getcwd()}/docs/pyssa/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
         # opens the documentation of the os
         if sys.platform.startswith("darwin"):
             # macOS path
@@ -1990,8 +1976,8 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
-        dialog = chart_test.DistanceHistogram()
-        dialog.exec_()
+        # dialog = chart_test.DistanceHistogram()
+        # dialog.exec_()
         # if not os.path.exists(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/")):
         #     os.mkdir(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/"))
         # if not os.path.exists(constants.WSL_STORAGE_PATH):
@@ -2768,9 +2754,8 @@ class MainWindow(QMainWindow):
         pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
         if self.prediction_configuration.templates == "none":
             try:
-                subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
-                    f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
-                subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict_no_templates.sh",
+                subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
                                 fasta_path, pdb_path])
                 subprocess.run(["wsl", "--shutdown"])
             except OSError:
@@ -2778,9 +2763,8 @@ class MainWindow(QMainWindow):
                 return
         else:
             try:
-                subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
-                    f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
-                subprocess.run(["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/colabfold_predict.sh",
+                subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
                                 fasta_path, pdb_path])
                 subprocess.run(["wsl", "--shutdown"])
             except OSError:

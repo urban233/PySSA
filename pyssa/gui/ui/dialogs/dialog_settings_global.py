@@ -25,11 +25,10 @@ import os
 import logging
 import time
 
-from pyssa.gui.utilities import gui_utils
-from pyssa.gui.utilities import styles
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
-from pyssa.gui.data_structures import settings
-from pyssa.gui.utilities import constants
+from internal.data_structures import settings
+from util import constants, gui_utils
+from gui.ui.styles import styles
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 import PyQt5
@@ -134,8 +133,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             # colabfold installed on system, user wants to uninstall local colabfold
             if basic_boxes.yes_or_no("Remove Local Colabfold", "Are you sure that you want to remove Local Colabfold from your system?", QMessageBox.Question):
                 try:
-                    subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
-                        f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/remove_wsl_env.ps1")])
+                    subprocess.run([constants.POWERSHELL_EXE, constants.REMOVE_WSL_POWERSHELL])
                 except:
                     basic_boxes.ok("Local Colabfold removal", "The uninstallation failed. Please re-run the process or consult the documentation.",
                                    QMessageBox.Critical)
@@ -153,19 +151,19 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
                         os.mkdir(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/"))
                     if not os.path.exists(constants.WSL_STORAGE_PATH):
                         os.mkdir(constants.WSL_STORAGE_PATH)
-                    subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
-                        f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/convert_dos_to_unix.ps1")])
-                    subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH), str(constants.WSL_DISTRO_IMPORT_PATH)])
+                    subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+                    subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH), str(
+                        constants.WSL_DISTRO_IMPORT_PATH)])
                     subprocess.run(["wsl", "-s", constants.WSL_DISTRO_NAME])
                     subprocess.run(
                         ["wsl",
-                         "cp", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/wsl_extras/wsl.conf", "/etc"])
+                         "cp", constants.WSL_CONF_PATH, "/etc"])
                     subprocess.run(["wsl", "--shutdown"])
                     print("Shutting down all WSL distros ...")
                     time.sleep(10)
                     subprocess.run(["wsl", "mkdir", "/home/$USER/.pyssa"])
                     subprocess.run(
-                        ["wsl", f"/mnt/c/Users/{user_name}/github_repos/tmpPySSA/pyssa/scripts/installation_colabfold.sh"])
+                        ["wsl", constants.INSTALLATION_COLABFOLD_SCRIPT])
                     subprocess.run(
                         ["wsl", "cd", "/home/$USER/.pyssa", "&&", "wget", "-q", "-P", ".",
                          "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"])

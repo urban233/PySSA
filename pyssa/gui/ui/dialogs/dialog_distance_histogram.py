@@ -19,16 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import os.path
 import pathlib
 import numpy as np
 from PyQt5.QtGui import QIcon
 from pymol import Qt
 import pyqtgraph as pg
-import pyqtgraph.exporters
-from pyssa.pymol_protein_tools import protein_pair
+from internal.data_structures import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_histogram import Ui_Dialog
-from pyssa.gui.utilities import constants
+from util import constants
 from PyQt5 import QtCore
 
 

@@ -22,7 +22,7 @@
 """Module for all message boxes which occur in the settings dialog."""
 import PyQt5
 from PyQt5.QtWidgets import QMessageBox
-from pyssa.gui.utilities import constants
+from util import constants
 
 
 def yes_or_no(window_title, text_message, icon) -> bool:

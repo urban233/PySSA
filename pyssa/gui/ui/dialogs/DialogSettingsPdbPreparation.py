@@ -22,7 +22,7 @@
 
 from pymol import Qt
 
-import pyssa.gui.data_structures.settings
+import internal.data_structures.settings
 from pyssa.gui.ui.forms.auto_generated.auto_DialogSettingsPdbPreparation import Ui_Dialog
 
 
@@ -48,7 +48,7 @@ class DialogSettingsPdbPreparation(Qt.QtWidgets.QDialog):
         self.ui.txtZipStorageDir.setEnabled(False)
         # sets default values
 
-        self.xmlObj = pyssa.gui.data_structures.settings.SettingsXml(self.SETTINGS_FULL_FILENAME)
+        self.xmlObj = internal.data_structures.settings.SettingsXml(self.SETTINGS_FULL_FILENAME)
         self.xmlFile = self.xmlObj.load_xml_in_memory()
         self.ui.txtPdbStorageDir.setText(self.xmlObj.get_path(self.xmlFile,
                                                               self.PDB_STORAGE_PATH_NODE,

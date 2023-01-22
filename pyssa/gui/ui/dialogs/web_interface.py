@@ -2,10 +2,8 @@ import datetime
 from pymol import Qt
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout,
                              QPushButton, QLabel)
-from PyQt5 import QtCore
 from PyQt5.QtCore import QUrl
-from pyssa.gui.utilities import constants
-from pyssa.gui.utilities import gui_utils
+from util import constants, gui_utils
 from pyssa.gui.ui.dialogs import dialog_notebook_managment
 try:
     from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineDownloadItem
