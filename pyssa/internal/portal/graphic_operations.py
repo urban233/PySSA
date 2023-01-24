@@ -23,10 +23,10 @@
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
-import pyssa.internal.data_structures as protein
-# from pyssa.internal.data_structures import protein
+from pyssa.util import types
 
-def show_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
+
+def show_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN_TYPE):
     """This function shows the protein as balls and sticks in representation mode.
 
     Args:
@@ -40,7 +40,8 @@ def show_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
     except pymol.CmdException:
         print("No sticks and balls can be shown in protein.")
 
-def hide_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
+
+def hide_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN_TYPE):
     """This function hides the protein from balls and sticks.
 
     Args:
@@ -56,7 +57,8 @@ def hide_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
     except pymol.CmdException:
         print("No sticks and balls can be hidden in protein.")
 
-def zoom_to_residue_in_protein_position(protein_obj: protein.Protein):
+
+def zoom_to_residue_in_protein_position(protein_obj: types.PROTEIN_TYPE):
     """This function zooms to the residue in protein.
 
     Args:

@@ -176,6 +176,8 @@ class MainWindow(QMainWindow):
         self._init_batch_analysis_page()
         self.ui.action_toggle_notebook_visibility.setVisible(False)
         self.ui.action_settings_model_w_off_colab_notebook.setVisible(False)
+        self.last_sidebar_button = PyQt5.QtWidgets.QPushButton()
+
         # connections
         self._connect_all_gui_elements()
         # create tooltips
@@ -1089,12 +1091,14 @@ class MainWindow(QMainWindow):
 
         # regular opening of work area
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 2, "Sequence vs .pdb")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_prediction_analysis_page)
 
     def display_sequence_vs_pdb_page(self):
         """This function displays the sequence vs .pdb page
 
         """
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 10, "Sequence vs .pdb")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_prediction_analysis_page)
 
     def display_single_analysis_page(self):
         """This function displays the single analysis work area
@@ -1106,6 +1110,8 @@ class MainWindow(QMainWindow):
         # regular work area opening
         self._init_single_analysis_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 3, "Single Analysis")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_single_analysis_page)
 
     def display_job_analysis_page(self):
         """This function displays the job analysis work area
@@ -1116,6 +1122,8 @@ class MainWindow(QMainWindow):
         # regular work area opening
         self._init_batch_analysis_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Structure Analysis")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_batch_analysis_page)
 
     def display_results_page(self):
         """This function displays the results work area
@@ -1126,12 +1134,16 @@ class MainWindow(QMainWindow):
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 5, "Results")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_results_page)
         self.show_analysis_results_options()
 
     def display_image_page(self):
         """This function displays the image work area
 
         """
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_image_page)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 6, "Image")
 
     def display_new_page(self):
@@ -1150,32 +1162,30 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(self.workspace.text())
         tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_new_projects)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 7, "Create new project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_new_page)
 
     def display_open_page(self):
         """This function displays the open project work area
 
         """
 
-        #cmd.fetch("3BMP")
-        print(cmd.get_model())
-        print(cmd.get_chains())
-
-        # if safeguard.Safeguard.check_filepath(self.workspace_path):
-        #     self.ui.list_open_projects.clear()
-        #     # pre-process
-        #     self.status_bar.showMessage(self.workspace.text())
-        #     try:
-        #         tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
-        #     except PermissionError:
-        #         gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
-        #                                         self.app_settings)
-        #         self.display_home_page()
-        #         return
-        #     tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
-        # else:
-        #     gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
-        #                                     self.app_settings)
-        #     self.display_home_page()
+        if safeguard.Safeguard.check_filepath(self.workspace_path):
+            self.ui.list_open_projects.clear()
+            # pre-process
+            self.status_bar.showMessage(self.workspace.text())
+            try:
+                tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
+            except PermissionError:
+                gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
+                                                self.app_settings)
+                self.display_home_page()
+                return
+            tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
+            self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_open_page)
+        else:
+            gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
+                                            self.app_settings)
+            self.display_home_page()
 
     def display_delete_page(self):
         """This function displays the "delete" project work area
@@ -1186,6 +1196,7 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(self.workspace.text())
         tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_delete_projects)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 9, "Delete existing project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_delete_page)
 
     def display_edit_page(self):
         """This function displays the edit project page
@@ -1195,6 +1206,8 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(self.workspace.text())
         self._init_edit_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_edit_page)
 
     def display_view_page(self):
         """This function displays the edit project page
@@ -1204,19 +1217,25 @@ class MainWindow(QMainWindow):
         self.ui.txtedit_view_sequence.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
-
         # list all proteins from pdb directory
         tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
                                               self.ui.list_view_project_proteins)
 
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_view_page)
+
     def display_local_pred_mono(self):
         self.local_pred_monomer_management.show_stage_x(0)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 19, "Local Monomer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_local_monomer_page)
 
     def display_local_pred_multi(self):
         self.local_pred_multimer_management.show_stage_x(0)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 20, "Local Multimer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_local_multimer_page)
 
     def display_use_page(self):
         self._init_use_page()
@@ -1240,11 +1259,15 @@ class MainWindow(QMainWindow):
                 protein_names.remove(tmp_prot_name)
         self.ui.list_use_available_protein_structures.addItems(protein_names)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_use_page)
 
     def display_hotspots_page(self):
         self.ui.list_hotspots_choose_protein.clear()
         tools.scan_project_for_valid_proteins(self.app_project.project_path, self.ui.list_hotspots_choose_protein)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_hotspots_page)
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be

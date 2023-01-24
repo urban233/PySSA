@@ -282,9 +282,9 @@ class StructureAnalysis:
             tmp_protein_pair.export_distance_between_ca_atoms(distance_results)
 
             # create an instance of the Graphics class
-            msg = "Finished calculating distances. | Create distance plot ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-            graphics_instance: graphics.Graphics = graphics.Graphics(tmp_protein_pair, distance_results, self._figure_size)
+            # msg = "Finished calculating distances. | Create distance plot ..."
+            # tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            # graphics_instance: graphics.Graphics = graphics.Graphics(tmp_protein_pair, distance_results, self._figure_size)
 
             # TODO: is this needed due to the pyqtgraph plots?
             # # create distance plot
@@ -311,27 +311,27 @@ class StructureAnalysis:
             # plt.savefig(f"{tmp_protein_pair.results_dir}/plots/distance_histogram"
             #             f"/distance_histogram_{tmp_protein_pair.model_obj.molecule_object}.svg")
 
-            if self.response_create_images is True:
-                # take image of whole structure alignment
-                msg = "Finished creating distance histogram. | Take image of structure alignment ..."
-                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-                graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon", "structure_alignment")
-                # take image of interesting regions
-                msg = f"Finished taking image of structure alignment. | Take images "\
-                      f"of interesting regions (within {self._cutoff} angstrom)"
-                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-                graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1)
-            else:
-                # take image of whole structure alignment
-                msg = "Finished creating distance histogram. | Create scene of structure alignment ..."
-                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-                graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon",
-                                                             "structure_alignment", take_images=False)
-                # take image of interesting regions
-                msg = f"Finished creating scene of structure alignment. | Create scenes " \
-                      f"of interesting regions (within {self._cutoff} angstrom)"
-                tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
-                graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1, take_images=False)
+            # if self.response_create_images is True:
+            #     # take image of whole structure alignment
+            #     msg = "Finished creating distance histogram. | Take image of structure alignment ..."
+            #     tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            #     graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon", "structure_alignment")
+            #     # take image of interesting regions
+            #     msg = f"Finished taking image of structure alignment. | Take images "\
+            #           f"of interesting regions (within {self._cutoff} angstrom)"
+            #     tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            #     graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1)
+            # else:
+            #     # take image of whole structure alignment
+            #     msg = "Finished creating distance histogram. | Create scene of structure alignment ..."
+            #     tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            #     graphics_instance.take_image_of_protein_pair(self._alignment_file_name, "cartoon",
+            #                                                  "structure_alignment", take_images=False)
+            #     # take image of interesting regions
+            #     msg = f"Finished creating scene of structure alignment. | Create scenes " \
+            #           f"of interesting regions (within {self._cutoff} angstrom)"
+            #     tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
+            #     graphics_instance.take_image_of_interesting_regions(3.0, "interesting_region", opaque_background=1, take_images=False)
 
             # NOT THIS
             # # color residues by distance
