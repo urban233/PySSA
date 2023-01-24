@@ -29,7 +29,8 @@ from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
-from pyssa.internal.portal import graphic_operations
+import pyssa.internal.portal as graphic_operations
+# from pyssa.internal.portal import graphic_operations
 
 
 class Protein:

@@ -23,7 +23,8 @@
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
-from pyssa.internal.data_structures import protein
+import pyssa.internal.data_structures as protein
+# from pyssa.internal.data_structures import protein
 
 def show_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
     """This function shows the protein as balls and sticks in representation mode.

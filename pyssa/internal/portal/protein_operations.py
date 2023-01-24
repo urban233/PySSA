@@ -22,8 +22,6 @@
 """Module for protein operations in pymol"""
 import pymol
 from pymol import cmd
-from pyssa.io_pyssa import safeguard
-from pyssa.internal.data_structures import protein
 from pyssa.internal.portal import pymol_safeguard
 
 

@@ -20,17 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for safeguards in pymol"""
-import json
-import os
-import logging
-import pathlib
-
-import pymol
 from pymol import cmd
-from pyssa.io_pyssa import safeguard
-from pyssa.internal.portal import pymol_io
-from pyssa.internal.portal import protein_operations
-from pyssa.internal.portal import graphic_operations
 
 
 class PymolSafeguard:
