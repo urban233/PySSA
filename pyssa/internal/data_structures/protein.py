@@ -29,8 +29,7 @@ from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
-import pyssa.internal.portal as graphic_operations
-# from pyssa.internal.portal import graphic_operations
+from pyssa.internal.portal import graphic_operations
 
 
 class Protein:
@@ -229,19 +228,19 @@ class Protein:
             return clean_prot
 
     def load_protein(self) -> None:
-        pymol_io.load_protein(self)
+        pymol_io.load_protein(self.filepath, self.filename, self.molecule_object)
         # if not safeguard.Safeguard.check_filepath(f"{self.filepath}/{self.filename}"):
         #     raise FileNotFoundError
         # cmd.load(f"{self.filepath}/{self.filename}", object=self.molecule_object)
 
     def show_resi_as_balls_and_sticks(self) -> None:
-        graphic_operations.show_protein_selection_as_balls_and_sticks(self)
+        graphic_operations.show_protein_selection_as_balls_and_sticks(self.selection)
 
     def hide_resi_as_balls_and_sticks(self) -> None:
-        graphic_operations.hide_protein_selection_as_balls_and_sticks(self)
+        graphic_operations.hide_protein_selection_as_balls_and_sticks(self.selection)
 
     def zoom_resi_protein_position(self) -> None:
-        graphic_operations.zoom_to_residue_in_protein_position(self)
+        graphic_operations.zoom_to_residue_in_protein_position(self.selection)
 
     def serialize_protein(self, filepath, filename) -> None:
         """This function serialize the protein object

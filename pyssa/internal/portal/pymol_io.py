@@ -20,13 +20,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for in- and output processes in pymol"""
+import pathlib
+
 import pymol
 from pymol import cmd
 from pyssa.io_pyssa import safeguard
-from pyssa.internal.data_structures import protein
 
 
-def load_protein(protein_obj: protein.Protein) -> None:
+def load_protein(filepath: pathlib.Path, filename: str, molecule_object: str) -> None:
     """This function loads a protein in pymol through a protein object.
 
     Args:
@@ -34,12 +35,12 @@ def load_protein(protein_obj: protein.Protein) -> None:
             object which is in instance of the protein class
 
     """
-    if not safeguard.Safeguard.check_filepath(f"{protein_obj.filepath}/{protein_obj.filename}"):
+    if not safeguard.Safeguard.check_filepath(f"{filepath}/{filename}"):
         raise FileNotFoundError
-    cmd.load(f"{protein_obj.filepath}/{protein_obj.filename}", object=protein_obj.molecule_object)
+    cmd.load(f"{filepath}/{filename}", object=molecule_object)
 
 
-def fetch_protein_from_pdb(protein_obj: protein.Protein) -> None:
+def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_object: str) -> None:
     """This function fetches a protein in pymol from the PDB.
 
     Args:
@@ -50,15 +51,15 @@ def fetch_protein_from_pdb(protein_obj: protein.Protein) -> None:
         ValueError: If PDB ID couldn't be found in PDB.
 
     """
-    if not safeguard.Safeguard.check_filepath(f"{protein_obj.filepath}/{protein_obj.filename}"):
+    if not safeguard.Safeguard.check_filepath(f"{filepath}/{filename}"):
         raise FileNotFoundError
     try:
-        cmd.fetch(code=protein_obj.molecule_object, type="pdb", path=protein_obj.filepath, file=protein_obj.filename)
+        cmd.fetch(code=molecule_object, type="pdb", path=filepath, file=filename)
     except pymol.CmdException:
         raise ValueError("PDB ID is invalid.")
 
 
-def save_protein_to_pdb_file(protein_obj: protein.Protein) -> None:
+def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str) -> None:
     """This function saves a protein from the current pymol session as a .pdb file.
 
     Args:
@@ -68,7 +69,7 @@ def save_protein_to_pdb_file(protein_obj: protein.Protein) -> None:
         NotADirectoryError: If directory is not found.
 
     """
-    if not safeguard.Safeguard.check_filepath(f"{protein_obj.export_filepath}"):
-        raise NotADirectoryError(f"The filepath {protein_obj.export_filepath} does not exists.")
+    if not safeguard.Safeguard.check_filepath(f"{export_filepath}"):
+        raise NotADirectoryError(f"The filepath {export_filepath} does not exists.")
     # save the pdb file under the path (export_data_dir)
-    cmd.save(f"{protein_obj.export_filepath}/{protein_obj.molecule_object}.pdb")
+    cmd.save(f"{export_filepath}/{molecule_object}.pdb")

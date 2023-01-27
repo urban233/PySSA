@@ -23,10 +23,8 @@
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
-import pyssa.internal.data_structures as protein
-# from pyssa.internal.data_structures import protein
 
-def show_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
+def show_protein_selection_as_balls_and_sticks(selection: str):
     """This function shows the protein as balls and sticks in representation mode.
 
     Args:
@@ -36,11 +34,11 @@ def show_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
-        cmd.show(representation="sticks", selection=protein_obj.selection)
+        cmd.show(representation="sticks", selection=selection)
     except pymol.CmdException:
         print("No sticks and balls can be shown in protein.")
 
-def hide_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
+def hide_protein_selection_as_balls_and_sticks(selection: str):
     """This function hides the protein from balls and sticks.
 
     Args:
@@ -52,11 +50,11 @@ def hide_protein_selection_as_balls_and_sticks(protein_obj: protein.Protein):
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
-        cmd.hide(representation="sticks", selection=protein_obj.selection)
+        cmd.hide(representation="sticks", selection=selection)
     except pymol.CmdException:
         print("No sticks and balls can be hidden in protein.")
 
-def zoom_to_residue_in_protein_position(protein_obj: protein.Protein):
+def zoom_to_residue_in_protein_position(selection: str):
     """This function zooms to the residue in protein.
 
     Args:
@@ -68,6 +66,6 @@ def zoom_to_residue_in_protein_position(protein_obj: protein.Protein):
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
-        cmd.zoom(selection=protein_obj.selection, buffer=8.0, state=0, complete=0)
+        cmd.zoom(selection=selection, buffer=8.0, state=0, complete=0)
     except pymol.CmdException:
         print("No residue can be shown in protein.")
