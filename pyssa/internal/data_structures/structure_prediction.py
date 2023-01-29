@@ -26,7 +26,6 @@ import pathlib
 import subprocess
 import shutil
 import pymol
-import logging
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_list
@@ -34,7 +33,6 @@ from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.portal import pymol_io
 from pyssa.util import constants
 from pyssa.logging_pyssa import loggers
-from pyssa.logging_pyssa import generic_messages
 
 
 class StructurePrediction:
@@ -46,11 +44,9 @@ class StructurePrediction:
         self.predictions = predictions
         self.prediction_configuration = prediction_config
         self.project = current_project
-        messages = generic_messages.get_variables_values(__file__,
-                                                         "constructor", [("predictions", self.predictions),
+        loggers.log_multiple_variable_values(constants.PREDICTION_WORKER_LOGGER, "Constructor", [("predictions", self.predictions),
                                                                          ("prediction_configuration", self.prediction_configuration),
                                                                          ("project", self.project)])
-        loggers.log_multiple_messages(loggers.prediction_worker, logging.DEBUG, messages)
 
     @staticmethod
     def create_tmp_directories():
@@ -86,21 +82,20 @@ class StructurePrediction:
                     prot_entries.append(pred_list)
                     pred_list = prediction_list.PredictionList("", [])
                     last_header = current_header
-        loggers.prediction_worker.debug(generic_messages.get_basic_variable_value(__file__,
-                                                                                  "create_fasta_files_for_prediction",
-                                                                                  "pred_list", pred_list))
-        loggers.prediction_worker.debug(generic_messages.get_basic_variable_value(__file__,
-                                                                                  "create_fasta_files_for_prediction",
-                                                                                  "prot_entries", prot_entries))
+        loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER, "create_fasta_files_for_prediction",
+                                          "pred_list", pred_list)
+        loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER, "create_fasta_files_for_prediction",
+                                          "prot_entries", prot_entries)
         for tmp_prot_to_predict in prot_entries:
             tmp_prot_to_predict.write_fasta_file()
         if len(os.listdir(constants.PREDICTION_FASTA_DIR)) == 0:
-            loggers.prediction_worker.critical("No fasta files were created!!!")
+            constants.PREDICTION_WORKER_LOGGER.critical("No fasta files were created!!!")
             raise FileNotFoundError
         else:
             for tmp_file in os.listdir(constants.PREDICTION_FASTA_DIR):
-                loggers.prediction_worker.debug(generic_messages.get_basic_variable_value(__file__, "create_fasta_files_for_prediction",
-                                                                                          "filename", tmp_file))
+                loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER,
+                                                  "create_fasta_files_for_prediction",
+                                                  "filename", tmp_file)
 
     def run_prediction(self):
         user_name = os.getlogin()
@@ -146,7 +141,8 @@ class StructurePrediction:
                     break
         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
         try:
-            pymol_io.load_protein(self.project.proteins[0])
+            pymol_io.load_protein(self.project.proteins[0].filepath, self.project.proteins[0].filename,
+                                  self.project.proteins[0].molecule_object)
         except pymol.CmdException:
             print("Loading the model failed.")
             return

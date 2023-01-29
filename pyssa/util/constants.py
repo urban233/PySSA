@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for storing project-wide constants"""
-
+import logging
 import os
 import pathlib
 from pathlib import Path
@@ -71,6 +71,11 @@ WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DIS
 # thread main tasks
 PREDICTION_TASK = "Structure Prediction"
 ANALYSIS_TASK = "Structure Analysis"
+
+# all loggers used in the pyssa project
+PYSSA_LOGGER = logging.getLogger("PySSA-Logger")
+PREDICTION_WORKER_LOGGER = logging.getLogger("PredictionWorker")
+ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 
 chain_dict = {
     0: "A",

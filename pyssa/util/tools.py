@@ -344,10 +344,21 @@ def remove_pdb_file(file_path):
 def add_chains_from_pdb_file_to_list(project_path, protein_filename, list_widget=None) -> list:
     cmd.load(f"{project_path}/pdb/{protein_filename}", object="tmp_protein")
     tmp_chains: list = cmd.get_chains("tmp_protein")
+    d3to1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
+             'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
+             'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
+             'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
     if list_widget is not None:
         list_widget.clear()
-        for chain in tmp_chains:
+    for chain in tmp_chains:
+        atoms_of_chain = cmd.get_model(f"chain {chain}")
+        first_aa = atoms_of_chain.atom[0].resn
+        if first_aa in d3to1:
             list_widget.addItem(chain)
+            print("Protein chain")
+        else:
+            print("No protein chain")
+
     cmd.reinitialize()
     return tmp_chains
 

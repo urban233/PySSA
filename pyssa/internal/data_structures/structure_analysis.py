@@ -26,9 +26,11 @@ import pathlib
 
 import pymol
 from pymol import Qt
+from pymol import cmd
 # from pymolproteintools import graphics
 from util import tools, gui_utils
 from internal.data_structures import protein, protein_pair
+from pyssa.internal.portal import pymol_io
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -202,6 +204,19 @@ class StructureAnalysis:
             proteins:
                 list which contains the Protein objects
         """
+        pymol_io.load_protein(proteins[0].filepath, proteins[0].filename, proteins[0].molecule_object)
+        d3to1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
+                 'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
+                 'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
+                 'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+        i = 0
+        for chain in chains:
+            atoms_of_chain = cmd.get_model(f"chain {chain}")
+            first_aa = atoms_of_chain.atom[0].resn
+            if first_aa not in d3to1:
+                chains.pop(i)
+            i += 1
+
         # sets selection for any chain combination of reference
         selection = ""
         seperator = ", "

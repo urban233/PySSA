@@ -113,6 +113,13 @@ QLabel#lbl_analysis {
     font: bold;
 }
 
+QLabel#lbl_pred_analysis {
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
+    color: #878787;
+    font: bold;
+}
+
 QLabel#lbl_handle_pymol_session {
     /*background: #E9E9F0;*/ /*OLD BACKGROUND COLOR*/
     /*background: #F6F4F8;*/
@@ -1092,6 +1099,82 @@ QPushButton::pressed#btn_single_analysis_page {
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
 }
 
+/* Button for "Monomer prediction analysis" */
+QPushButton#btn_pred_analysis_monomer_page {
+    background-color: #F6F4F8;
+    border-width: 0px;
+    border-radius: 6px;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_analysis_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_analysis_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_analysis_monomer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+QLabel#lbl_pred_analysis_mono_prot_name_status {
+    color: #FC5457;
+    font-size: 10px;
+}
+
+/* Button for "Multimer prediction analysis" */
+QPushButton#btn_pred_analysis_multimer_page {
+    background-color: #F6F4F8;
+    border-width: 0px;
+    border-radius: 6px;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_pred_analysis_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_pred_analysis_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_pred_analysis_multimer_page {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
+QLabel#lbl_pred_analysis_multi_prot_name_status {
+    color: #FC5457;
+    font-size: 10px;
+}
+
+QLabel#lbl_pred_analysis_multi_prot_seq_status {
+    color: #FC5457;
+    font-size: 10px;
+}
 
 /* Button for "Batch analysis" */
 QPushButton#btn_batch_analysis_page {

@@ -57,8 +57,6 @@ from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
-from pyssa.internal.thread import thread_worker_pair
-from pyssa.internal.thread import thread_controller
 from internal.thread import workers
 from internal.data_processing import data_transformer
 from pyssa.io_pyssa import safeguard
@@ -196,33 +194,13 @@ class MainWindow(QMainWindow):
         self._create_all_tooltips()
         self._project_watcher.show_valid_options(self.ui)
 
-        # setting threads
+        # sets threadpool
         self.threadpool = QtCore.QThreadPool()
-        self.prediction_thread = QThread()
-        self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
-                                                          self.prediction_configuration, self.app_project)
-        # self.analysis_thread = QThread()
-        # self.analysis_worker = workers.AnalysisWorker(self.ui.list_analysis_batch_overview,
-        #                                               self.ui.cb_analysis_images,
-        #                                               self.status_bar,
-        #                                               self.app_project,
-        #                                               self.app_settings,
-        #                                               self._init_batch_analysis_page)
-
-        self._thread_worker_pairs = {
-            constants.PREDICTION_TASK: thread_worker_pair.ThreadWorkerPair(constants.PREDICTION_TASK,
-                                                                           self.prediction_thread,
-                                                                           self.prediction_worker),
-            # constants.ANALYSIS_TASK: thread_worker_pair.ThreadWorkerPair(constants.ANALYSIS_TASK,
-            #                                                              self.analysis_thread,
-            #                                                              self.analysis_worker)
-        }
-        self._thread_controller = thread_controller.ThreadController(self._thread_worker_pairs)
-        # setting additional parameters
+        # sets additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
-        loggers.pyssa.info("PySSA started.")
+        constants.PYSSA_LOGGER.info("PySSA started.")
 
     # ----- Functions for GuiPageManagement obj creation
     def _create_local_pred_monomer_management(self):
@@ -1871,11 +1849,11 @@ class MainWindow(QMainWindow):
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
         self.ui.cb_new_add_reference.setCheckState(0)
         self.app_project.serialize_project(self.app_project.project_path, "project")
-        loggers.pyssa.info(f"Created the project {self.app_project.get_project_name()}.")
-        loggers.pyssa.debug(f"These are the proteins {self.app_project.proteins}.")
+        constants.PYSSA_LOGGER.info(f"Created the project {self.app_project.get_project_name()}.")
+        constants.PYSSA_LOGGER.debug(f"These are the proteins {self.app_project.proteins}.")
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
-        loggers.pyssa.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
+        constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
 
@@ -1918,9 +1896,9 @@ class MainWindow(QMainWindow):
 
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
         self.app_project = project.Project.deserialize_project(tmp_project_path)
-        loggers.pyssa.info(f"Opening the project {self.app_project.get_project_name()}.")
+        constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
         self._project_watcher.current_project = self.app_project
-        loggers.pyssa.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
+        constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
         # if self.app_project.get_number_of_proteins() > 0:
         #     tmp_proteins = os.listdir(self.app_project.get_pdb_path())
         #     self.app_project.proteins.clear()
@@ -2040,9 +2018,9 @@ class MainWindow(QMainWindow):
             self.ui.list_delete_projects.clear()
             self.status_bar.showMessage(self.workspace.text())
             tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_delete_projects)
-            loggers.pyssa.info(f"The project {tmp_project_name} was successfully deleted.")
+            constants.PYSSA_LOGGER.info(f"The project {tmp_project_name} was successfully deleted.")
         else:
-            loggers.pyssa.info("No project has been deleted. No changes were made.")
+            constants.PYSSA_LOGGER.info("No project has been deleted. No changes were made.")
             return
 
     # ----- Functions for Save project
@@ -2265,7 +2243,7 @@ class MainWindow(QMainWindow):
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
         self._init_use_page()
-        loggers.pyssa.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
+        constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
 
     # ----- Functions for Close project
@@ -2274,7 +2252,7 @@ class MainWindow(QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText("")
         self._init_all_pages()
-        loggers.pyssa.info(f"The project {self.app_project.get_project_name()} was closed")
+        constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was closed")
         self.display_home_page()
 
     # Prediction + Analysis
@@ -2783,7 +2761,7 @@ class MainWindow(QMainWindow):
     def post_prediction_process(self):
         basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
                        QMessageBox.Information)
-        loggers.pyssa.info("All structure predictions are done.")
+        constants.PYSSA_LOGGER.info("All structure predictions are done.")
         self._project_watcher.show_valid_options(self.ui)
         self._init_local_pred_mono_page()
 
@@ -2857,11 +2835,11 @@ class MainWindow(QMainWindow):
         # except pymol.CmdException:
         #     print("Loading the model failed.")
         #     return
-        loggers.pyssa.info("Begin prediction process.")
+        constants.PYSSA_LOGGER.info("Begin prediction process.")
         worker = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
                                               self.prediction_configuration, self.app_project)
         worker.signals.finished.connect(self.post_prediction_process)
-        loggers.pyssa.info("Thread started for prediction process.")
+        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
         self.threadpool.start(worker)
         gui_elements_to_show = [
             self.ui.btn_prediction_abort,
@@ -2873,12 +2851,12 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_local_multimer_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        # loggers.pyssa.info("Begin prediction process.")
+        # constants.PYSSA_LOGGER.info("Begin prediction process.")
         # self.prediction_thread = QThread()
-        # loggers.pyssa.info("Created a new prediction thread.")
+        # constants.PYSSA_LOGGER.info("Created a new prediction thread.")
         # self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
         #                                                   self.prediction_configuration, self.app_project)
-        # loggers.pyssa.info("Created a new prediction worker.")
+        # constants.PYSSA_LOGGER.info("Created a new prediction worker.")
         # self._thread_controller.thread_worker_pairs.get(constants.PREDICTION_TASK).setup_and_run_thread(display_msg_box2)
         # gui_elements_to_show = [
         #     self.ui.btn_prediction_abort,
@@ -2892,11 +2870,11 @@ class MainWindow(QMainWindow):
         self.display_view_page()
 
     def abort_prediction(self):
-        loggers.pyssa.info("Structure prediction process was aborted manually.")
+        constants.PYSSA_LOGGER.info("Structure prediction process was aborted manually.")
         subprocess.run(["wsl", "--shutdown"])
-        loggers.pyssa.info("Shutdown of wsl environment.")
+        constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
         filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
-        loggers.pyssa.info("Cleaned scratch directory.")
+        constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
         basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QMessageBox.Information)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_prediction_abort)
@@ -3289,7 +3267,7 @@ class MainWindow(QMainWindow):
     def post_analysis_process(self):
         basic_boxes.ok("Structure analysis", "All structure analysis' are done. Go to results to check the new results.",
                        QMessageBox.Information)
-        loggers.pyssa.info("All structure analysis' are done.")
+        constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._project_watcher.show_valid_options(self.ui)
         self._init_batch_analysis_page()
 
@@ -3353,12 +3331,12 @@ class MainWindow(QMainWindow):
         #     self.app_project.add_protein_pair(protein_pairs[0])
         #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
         #     self.app_project.serialize_project(self.app_project.project_path, "project")
-        loggers.pyssa.info("Begin analysis process.")
+        constants.PYSSA_LOGGER.info("Begin analysis process.")
         worker = workers.AnalysisWorkerPool(
             self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
             self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
         worker.signals.finished.connect(self.post_analysis_process)
-        loggers.pyssa.info("Thread started for analysis process.")
+        constants.PYSSA_LOGGER.info("Thread started for analysis process.")
         self.threadpool.start(worker)
 
         gui_elements_to_show = [
@@ -3371,24 +3349,24 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-        # loggers.pyssa.info("Begin analysis process.")
+        # constants.PYSSA_LOGGER.info("Begin analysis process.")
         # analysis_thread = QThread()
-        # loggers.pyssa.info("Created a new analysis thread.")
+        # constants.PYSSA_LOGGER.info("Created a new analysis thread.")
         # analysis_worker = workers.AnalysisWorker(self.ui.list_analysis_batch_overview,
         #                                               self.ui.cb_analysis_images,
         #                                               self.status_bar,
         #                                               self.app_project,
         #                                               self.app_settings,
         #                                               self._init_batch_analysis_page)
-        # loggers.pyssa.info("Created a new analysis worker.")
+        # constants.PYSSA_LOGGER.info("Created a new analysis worker.")
         # try:
         #     self._thread_controller.create_and_add_new_thread_worker_pair(constants.ANALYSIS_TASK,
         #                                                                   analysis_thread,
         #                                                                   analysis_worker)
         # except ValueError:
-        #     loggers.pyssa.info("A valid thread_worker_pair already exists.")
+        #     constants.PYSSA_LOGGER.info("A valid thread_worker_pair already exists.")
         # for key in self._thread_controller.thread_worker_pairs:
-        #     loggers.pyssa.debug(f"The main task {key} is currently controlled by the _thread_controller.")
+        #     constants.PYSSA_LOGGER.debug(f"The main task {key} is currently controlled by the _thread_controller.")
 
         # self._thread_controller.thread_worker_pairs.get(constants.ANALYSIS_TASK).worker.update_attributes(
         #     self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
