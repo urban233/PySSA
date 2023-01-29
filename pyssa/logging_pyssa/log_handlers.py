@@ -19,8 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pyssa.internal.data_structures import protein
-from internal.data_structures.data_classes import protein_analysis_info
+"""This module contains the handlers used by the loggers."""
+import logging
+import datetime
 
-PROTEIN = protein.Protein
-PROTEIN_ANALYSIS_INFO = protein_analysis_info.ProteinAnalysisInfo
+current_time = datetime.datetime.now()
+filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"
+
+log_formatter = logging.Formatter("%(asctime)s: %(name)s %(levelname)s - %(message)s")
+log_file_handler = logging.FileHandler(filename)
+log_file_handler.setLevel(logging.DEBUG)
+log_file_handler.setFormatter(log_formatter)

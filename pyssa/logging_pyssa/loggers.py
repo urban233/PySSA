@@ -19,8 +19,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pyssa.internal.data_structures import protein
-from internal.data_structures.data_classes import protein_analysis_info
+"""This module contains all loggers used in the pyssa project."""
+import logging
+from pyssa.logging_pyssa import log_handlers
 
-PROTEIN = protein.Protein
-PROTEIN_ANALYSIS_INFO = protein_analysis_info.ProteinAnalysisInfo
+# all loggers used in the pyssa project
+pyssa = logging.getLogger("PySSA-Logger")
+prediction_worker = logging.getLogger("PredictionWorker")
+analysis_worker = logging.getLogger("AnalysisWorker")
+
+# adding necessary handlers
+pyssa.addHandler(log_handlers.log_file_handler)
+prediction_worker.addHandler(log_handlers.log_file_handler)
+analysis_worker.addHandler(log_handlers.log_file_handler)
+
+
+def log_multiple_messages(logger, level, messages: list[str]):
+    for message in messages:
+        logger.log(level=level, msg=message)

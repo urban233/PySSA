@@ -24,11 +24,13 @@ import json
 import logging
 import os
 import shutil
+import subprocess
 import sys
+import time
 import webbrowser
 import pathlib
-import subprocess
 import PyQt5.QtCore
+from PyQt5.QtCore import QThread
 import numpy as np
 import pymol
 
@@ -47,10 +49,20 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from internal.data_structures.data_classes import protein_analysis_info, prediction_list, prediction_configuration, \
-    stage
+from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import project
+from pyssa.internal.data_structures import project_watcher
+from pyssa.internal.data_structures import settings
+from pyssa.internal.data_structures import structure_analysis
+from pyssa.internal.data_structures.data_classes import protein_analysis_info
+from pyssa.internal.data_structures.data_classes import prediction_configuration
+from pyssa.internal.data_structures.data_classes import stage
+from pyssa.internal.thread import thread_worker_pair
+from pyssa.internal.thread import thread_controller
+from internal.thread import workers
 from internal.data_processing import data_transformer
 from pyssa.io_pyssa import safeguard
+from pyssa.io_pyssa import filesystem_io
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
@@ -58,10 +70,10 @@ from pyssa.gui.ui.dialogs import dialog_add_models
 from pyssa.gui.ui.dialogs import dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
-from internal.data_structures import protein, project, project_watcher, settings, structure_analysis
+from pyssa.logging_pyssa import loggers
 
 # setup logger
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 # global variables
 global_var_project_dict = {0: project.Project("", pathlib.Path(""))}
 global_var_list_widget_row = 0
@@ -183,10 +195,34 @@ class MainWindow(QMainWindow):
         # create tooltips
         self._create_all_tooltips()
         self._project_watcher.show_valid_options(self.ui)
+
+        # setting threads
+        self.threadpool = QtCore.QThreadPool()
+        self.prediction_thread = QThread()
+        self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
+                                                          self.prediction_configuration, self.app_project)
+        # self.analysis_thread = QThread()
+        # self.analysis_worker = workers.AnalysisWorker(self.ui.list_analysis_batch_overview,
+        #                                               self.ui.cb_analysis_images,
+        #                                               self.status_bar,
+        #                                               self.app_project,
+        #                                               self.app_settings,
+        #                                               self._init_batch_analysis_page)
+
+        self._thread_worker_pairs = {
+            constants.PREDICTION_TASK: thread_worker_pair.ThreadWorkerPair(constants.PREDICTION_TASK,
+                                                                           self.prediction_thread,
+                                                                           self.prediction_worker),
+            # constants.ANALYSIS_TASK: thread_worker_pair.ThreadWorkerPair(constants.ANALYSIS_TASK,
+            #                                                              self.analysis_thread,
+            #                                                              self.analysis_worker)
+        }
+        self._thread_controller = thread_controller.ThreadController(self._thread_worker_pairs)
         # setting additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
+        loggers.pyssa.info("PySSA started.")
 
     # ----- Functions for GuiPageManagement obj creation
     def _create_local_pred_monomer_management(self):
@@ -633,10 +669,12 @@ class MainWindow(QMainWindow):
         self.ui.btn_close_project.clicked.connect(self.close_project)
         self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
         self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
+        self.ui.btn_prediction_abort.clicked.connect(self.abort_prediction)
         #self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
         self.ui.btn_batch_analysis_page.clicked.connect(self.display_job_analysis_page)
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
+        self.ui.btn_analysis_abort.clicked.connect(self.abort_analysis)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
         self.ui.btn_hotspots_page.clicked.connect(self.display_hotspots_page)
         # new project page
@@ -1833,8 +1871,11 @@ class MainWindow(QMainWindow):
                 self.ui.list_s_v_p_ref_chains.addItem(chain)
         self.ui.cb_new_add_reference.setCheckState(0)
         self.app_project.serialize_project(self.app_project.project_path, "project")
+        loggers.pyssa.info(f"Created the project {self.app_project.get_project_name()}.")
+        loggers.pyssa.debug(f"These are the proteins {self.app_project.proteins}.")
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
+        loggers.pyssa.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
 
@@ -1877,7 +1918,9 @@ class MainWindow(QMainWindow):
 
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
         self.app_project = project.Project.deserialize_project(tmp_project_path)
+        loggers.pyssa.info(f"Opening the project {self.app_project.get_project_name()}.")
         self._project_watcher.current_project = self.app_project
+        loggers.pyssa.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
         # if self.app_project.get_number_of_proteins() > 0:
         #     tmp_proteins = os.listdir(self.app_project.get_pdb_path())
         #     self.app_project.proteins.clear()
@@ -1984,7 +2027,7 @@ class MainWindow(QMainWindow):
         """
         # popup message which warns the user that the selected project gets deleted
         response: bool = gui_utils.warning_message_project_gets_deleted()
-
+        tmp_project_name = self.ui.txt_delete_selected_projects.text()
         if response is True:
             shutil.rmtree(pathlib.Path(f"{self.workspace_path}/{self.ui.txt_delete_selected_projects.text()}"))
             if self.ui.txt_delete_selected_projects.text() == self.ui.lbl_current_project_name.text():
@@ -1997,7 +2040,9 @@ class MainWindow(QMainWindow):
             self.ui.list_delete_projects.clear()
             self.status_bar.showMessage(self.workspace.text())
             tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_delete_projects)
+            loggers.pyssa.info(f"The project {tmp_project_name} was successfully deleted.")
         else:
+            loggers.pyssa.info("No project has been deleted. No changes were made.")
             return
 
     # ----- Functions for Save project
@@ -2220,6 +2265,7 @@ class MainWindow(QMainWindow):
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
         self._init_use_page()
+        loggers.pyssa.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
 
     # ----- Functions for Close project
@@ -2228,6 +2274,7 @@ class MainWindow(QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText("")
         self._init_all_pages()
+        loggers.pyssa.info(f"The project {self.app_project.get_project_name()} was closed")
         self.display_home_page()
 
     # Prediction + Analysis
@@ -2733,97 +2780,127 @@ class MainWindow(QMainWindow):
     #     self.ui.btn_local_pred_mono_predict.setEnabled(False)
     #     styles.color_button_not_ready(self.ui.btn_local_pred_mono_predict)
 
-    def predict_local_monomer(self):
-        # creating tmp directories in scratch folder to organize prediction inputs and outputs
-        # TODO: is there a more elegant way to do it?
-        if not os.path.exists(pathlib.Path(f"{self.scratch_path}/local_predictions")):
-            os.mkdir(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        if not os.path.exists(constants.PREDICTION_FASTA_DIR):
-            os.mkdir(constants.PREDICTION_FASTA_DIR)
-        if not os.path.exists(constants.PREDICTION_PDB_DIR):
-            os.mkdir(constants.PREDICTION_PDB_DIR)
-        predictions = gui_utils.get_prediction_name_and_seq_from_table(self.ui.table_pred_mono_prot_to_predict)
-
-        prot_entries = []
-        last_header = predictions[0]
-        pred_list = prediction_list.PredictionList("", [])
-        for tmp_prediction in predictions:
-            current_header = tmp_prediction[0]
-            if last_header == current_header:
-                pred_list.protein_name = tmp_prediction[0]
-                pred_list.protein_sequence.append(tmp_prediction[1])
-            else:
-                prot_entries.append(pred_list)
-                pred_list = prediction_list.PredictionList("", [])
-                last_header = current_header
-
-        for tmp_prot_to_predict in prot_entries:
-            # create fasta file and move to scratch fasta dir
-            fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{tmp_prediction[0]}.fasta", "w")
-            fasta_file.write(f">{tmp_prediction[0]}\n")
-            fasta_file.write(tmp_prediction[1])
-            fasta_file.close()
-
-
-
-
-            prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(
-                self.ui.table_pred_multi_prot_to_predict.currentRow()).text()
-            for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount()):
-                if self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                    self.ui.table_pred_multi_prot_to_predict.setItem(i, 0,
-                                                                     QTableWidgetItem(constants.chain_dict.get(i)))
-            # create fasta file and move to scratch fasta dir
-            fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{tmp_prediction[0]}.fasta", "w")
-            fasta_file.write(f">{tmp_prediction[0]}\n")
-            fasta_file.write(tmp_prediction[1])
-            fasta_file.close()
-        user_name = os.getlogin()
-        fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
-        pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
-        if self.prediction_configuration.templates == "none":
-            try:
-                subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
-                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
-                                fasta_path, pdb_path])
-                subprocess.run(["wsl", "--shutdown"])
-            except OSError:
-                shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-                return
-        else:
-            try:
-                subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
-                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
-                                fasta_path, pdb_path])
-                subprocess.run(["wsl", "--shutdown"])
-            except OSError:
-                shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-                return
-
-        prediction_results: list[str] = os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR))
-        for tmp_prediction in predictions:
-            for filename in prediction_results:
-                check = filename.find(f"{tmp_prediction[0]}_relaxed_rank_1")
-                if check != -1:
-                    src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{filename}")
-                    dest = pathlib.Path(
-                        f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
-                    shutil.copy(src, dest)
-                    os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
-                              f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_prediction[0]}.pdb")
-                    tmp_protein = protein.Protein(tmp_prediction[0], pathlib.Path(self.app_project.get_pdb_path()))
-                    self.app_project.add_existing_protein(tmp_protein)
-                    break
-        shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        try:
-            tmp_first_prediction = predictions[0]
-            cmd.load(
-                f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_first_prediction[0]}.pdb")
-        except pymol.CmdException:
-            print("Loading the model failed.")
-            return
+    def post_prediction_process(self):
+        basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
+                       QMessageBox.Information)
+        loggers.pyssa.info("All structure predictions are done.")
         self._project_watcher.show_valid_options(self.ui)
+        self._init_local_pred_mono_page()
+
+    def predict_local_monomer(self):
+        # # creating tmp directories in scratch folder to organize prediction inputs and outputs
+        # # TODO: is there a more elegant way to do it?
+        # if not os.path.exists(pathlib.Path(f"{self.scratch_path}/local_predictions")):
+        #     os.mkdir(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        # if not os.path.exists(constants.PREDICTION_FASTA_DIR):
+        #     os.mkdir(constants.PREDICTION_FASTA_DIR)
+        # if not os.path.exists(constants.PREDICTION_PDB_DIR):
+        #     os.mkdir(constants.PREDICTION_PDB_DIR)
+        # # creating fasta file
+        # predictions: list[tuple[str, str]] = gui_utils.get_prediction_name_and_seq_from_table(self.ui.table_pred_mono_prot_to_predict)
+        # prot_entries = []
+        # last_header = predictions[0][0]
+        # pred_list = prediction_list.PredictionList("", [])
+        # for tmp_prediction in predictions:
+        #     current_header = tmp_prediction[0]
+        #     if last_header == current_header:
+        #         pred_list.protein_name = tmp_prediction[0]
+        #         pred_list.protein_sequence.append(tmp_prediction[1])
+        #     else:
+        #         prot_entries.append(pred_list)
+        #         pred_list = prediction_list.PredictionList("", [])
+        #         last_header = current_header
+        # for tmp_prot_to_predict in prot_entries:
+        #     tmp_prot_to_predict.write_fasta_file()
+        # user_name = os.getlogin()
+        # fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
+        # pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
+        # # running prediction script
+        # if self.prediction_configuration.templates == "none":
+        #     try:
+        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
+        #                         fasta_path, pdb_path])
+        #         subprocess.run(["wsl", "--shutdown"])
+        #     except OSError:
+        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        #         return
+        # else:
+        #     try:
+        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
+        #                         fasta_path, pdb_path])
+        #         subprocess.run(["wsl", "--shutdown"])
+        #     except OSError:
+        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        #         return
+        # # moving best prediction model
+        # prediction_results: list[str] = os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR))
+        # for tmp_prediction in predictions:
+        #     for filename in prediction_results:
+        #         check = filename.find(f"{tmp_prediction[0]}_relaxed_rank_1")
+        #         if check != -1:
+        #             src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{filename}")
+        #             dest = pathlib.Path(
+        #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
+        #             shutil.copy(src, dest)
+        #             os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
+        #                       f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_prediction[0]}.pdb")
+        #             tmp_protein = protein.Protein(tmp_prediction[0], pathlib.Path(self.app_project.get_pdb_path()))
+        #             self.app_project.add_existing_protein(tmp_protein)
+        #             break
+        # shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        # try:
+        #     tmp_first_prediction = predictions[0]
+        #     cmd.load(
+        #         f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_first_prediction[0]}.pdb")
+        # except pymol.CmdException:
+        #     print("Loading the model failed.")
+        #     return
+        loggers.pyssa.info("Begin prediction process.")
+        worker = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
+                                              self.prediction_configuration, self.app_project)
+        worker.signals.finished.connect(self.post_prediction_process)
+        loggers.pyssa.info("Thread started for prediction process.")
+        self.threadpool.start(worker)
+        gui_elements_to_show = [
+            self.ui.btn_prediction_abort,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_use_page,
+            self.ui.btn_close_project,
+            self.ui.btn_pred_local_monomer_page,
+            self.ui.btn_pred_local_multimer_page,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        # loggers.pyssa.info("Begin prediction process.")
+        # self.prediction_thread = QThread()
+        # loggers.pyssa.info("Created a new prediction thread.")
+        # self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
+        #                                                   self.prediction_configuration, self.app_project)
+        # loggers.pyssa.info("Created a new prediction worker.")
+        # self._thread_controller.thread_worker_pairs.get(constants.PREDICTION_TASK).setup_and_run_thread(display_msg_box2)
+        # gui_elements_to_show = [
+        #     self.ui.btn_prediction_abort,
+        # ]
+        # gui_elements_to_hide = [
+        #     self.ui.btn_use_page,
+        #     self.ui.btn_close_project,
+        # ]
+        # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        # #self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
+
+    def abort_prediction(self):
+        loggers.pyssa.info("Structure prediction process was aborted manually.")
+        subprocess.run(["wsl", "--shutdown"])
+        loggers.pyssa.info("Shutdown of wsl environment.")
+        filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+        loggers.pyssa.info("Cleaned scratch directory.")
+        basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QMessageBox.Information)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_prediction_abort)
+        self._project_watcher.show_valid_options(self.ui)
 
     # ----- Functions for Multimer Local Prediction
     def local_pred_multi_validate_protein_name(self):
@@ -3209,68 +3286,116 @@ class MainWindow(QMainWindow):
         else:
             self.ui.btn_analysis_batch_next.setEnabled(False)
 
+    def post_analysis_process(self):
+        basic_boxes.ok("Structure analysis", "All structure analysis' are done. Go to results to check the new results.",
+                       QMessageBox.Information)
+        loggers.pyssa.info("All structure analysis' are done.")
+        self._project_watcher.show_valid_options(self.ui)
+        self._init_batch_analysis_page()
+
     def start_process_batch(self):
         """This function contains the main analysis algorithm for the
         Protein structure comparison.
 
         """
-        batch_analysis = []
-        for row_no in range(self.ui.list_analysis_batch_overview.count()):
-            tmp_batch_analysis = self.ui.list_analysis_batch_overview.item(row_no).text()
-            separator_index = tmp_batch_analysis.find("_vs_")
-            prot_1 = tmp_batch_analysis[:separator_index]
-            if prot_1.find(";") != -1:
-                prot_1_name = prot_1[:prot_1.find(";")]
-                prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
-            else:
-                prot_1_name = prot_1
-                prot_1_chains = None
-            prot_2 = tmp_batch_analysis[separator_index + 4:]
-            if prot_2.find(";") != -1:
-                prot_2_name = prot_2[:prot_2.find(";")]
-                prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
-            else:
-                prot_2_name = prot_2
-                prot_2_chains = None
+        # batch_analysis = []
+        # for row_no in range(self.ui.list_analysis_batch_overview.count()):
+        #     tmp_batch_analysis = self.ui.list_analysis_batch_overview.item(row_no).text()
+        #     separator_index = tmp_batch_analysis.find("_vs_")
+        #     prot_1 = tmp_batch_analysis[:separator_index]
+        #     if prot_1.find(";") != -1:
+        #         prot_1_name = prot_1[:prot_1.find(";")]
+        #         prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
+        #     else:
+        #         prot_1_name = prot_1
+        #         prot_1_chains = None
+        #     prot_2 = tmp_batch_analysis[separator_index + 4:]
+        #     if prot_2.find(";") != -1:
+        #         prot_2_name = prot_2[:prot_2.find(";")]
+        #         prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
+        #     else:
+        #         prot_2_name = prot_2
+        #         prot_2_chains = None
+        #
+        #     tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
+        #     tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
+        #     batch_analysis.append((tmp_prot_1, tmp_prot_2))
+        #
+        # transformer = data_transformer.DataTransformer(self.ui)
+        # # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir), ...)
+        # batch_data = transformer.transform_data_for_analysis(self.app_project, batch_analysis)
+        #
+        # for analysis_data in batch_data:
+        #     if not os.path.exists(analysis_data[2]):
+        #         os.mkdir(analysis_data[2])
+        #     else:
+        #         basic_boxes.ok("Single Analysis", f"The structure analysis: {analysis_data[3]} already exists!", QMessageBox.Critical)
+        #         self._init_batch_analysis_page()
+        #         return
+        #
+        #     cmd.reinitialize()
+        #     structure_analysis_obj = structure_analysis.StructureAnalysis(
+        #         reference_protein=[analysis_data[0]], model_proteins=[analysis_data[1]],
+        #         ref_chains=analysis_data[0].chains, model_chains=analysis_data[1].chains,
+        #         export_dir=analysis_data[2], cycles=self.app_settings.get_cycles(),
+        #         cutoff=self.app_settings.get_cutoff(),
+        #     )
+        #     if self.ui.cb_analysis_images.isChecked():
+        #         structure_analysis_obj.response_create_images = True
+        #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+        #                                                          structure_analysis_obj.reference_protein)
+        #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+        #                                                          structure_analysis_obj.model_proteins)
+        #     protein_pairs = structure_analysis_obj.create_protein_pairs()
+        #     structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
+        #     protein_pairs[0].name = analysis_data[3]
+        #     protein_pairs[0].cutoff = self.app_settings.cutoff
+        #     self.app_project.add_protein_pair(protein_pairs[0])
+        #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
+        #     self.app_project.serialize_project(self.app_project.project_path, "project")
+        loggers.pyssa.info("Begin analysis process.")
+        worker = workers.AnalysisWorkerPool(
+            self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
+            self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
+        worker.signals.finished.connect(self.post_analysis_process)
+        loggers.pyssa.info("Thread started for analysis process.")
+        self.threadpool.start(worker)
 
-            tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
-            tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
-            batch_analysis.append((tmp_prot_1, tmp_prot_2))
+        gui_elements_to_show = [
+            self.ui.btn_analysis_abort,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_use_page,
+            self.ui.btn_close_project,
+            self.ui.btn_batch_analysis_page,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-        transformer = data_transformer.DataTransformer(self.ui)
-        # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir), ...)
-        batch_data = transformer.transform_data_for_analysis(self.app_project, batch_analysis)
+        # loggers.pyssa.info("Begin analysis process.")
+        # analysis_thread = QThread()
+        # loggers.pyssa.info("Created a new analysis thread.")
+        # analysis_worker = workers.AnalysisWorker(self.ui.list_analysis_batch_overview,
+        #                                               self.ui.cb_analysis_images,
+        #                                               self.status_bar,
+        #                                               self.app_project,
+        #                                               self.app_settings,
+        #                                               self._init_batch_analysis_page)
+        # loggers.pyssa.info("Created a new analysis worker.")
+        # try:
+        #     self._thread_controller.create_and_add_new_thread_worker_pair(constants.ANALYSIS_TASK,
+        #                                                                   analysis_thread,
+        #                                                                   analysis_worker)
+        # except ValueError:
+        #     loggers.pyssa.info("A valid thread_worker_pair already exists.")
+        # for key in self._thread_controller.thread_worker_pairs:
+        #     loggers.pyssa.debug(f"The main task {key} is currently controlled by the _thread_controller.")
 
-        for analysis_data in batch_data:
-            if not os.path.exists(analysis_data[2]):
-                os.mkdir(analysis_data[2])
-            else:
-                basic_boxes.ok("Single Analysis", f"The structure analysis: {analysis_data[3]} already exists!", QMessageBox.Critical)
-                self._init_batch_analysis_page()
-                return
-
-            cmd.reinitialize()
-            structure_analysis_obj = structure_analysis.StructureAnalysis(
-                reference_protein=[analysis_data[0]], model_proteins=[analysis_data[1]],
-                ref_chains=analysis_data[0].chains, model_chains=analysis_data[1].chains,
-                export_dir=analysis_data[2], cycles=self.app_settings.get_cycles(),
-                cutoff=self.app_settings.get_cutoff(),
-            )
-            if self.ui.cb_analysis_images.isChecked():
-                structure_analysis_obj.response_create_images = True
-            structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-                                                                 structure_analysis_obj.reference_protein)
-            structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-                                                                 structure_analysis_obj.model_proteins)
-            protein_pairs = structure_analysis_obj.create_protein_pairs()
-            structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
-            protein_pairs[0].name = analysis_data[3]
-            protein_pairs[0].cutoff = self.app_settings.cutoff
-            self.app_project.add_protein_pair(protein_pairs[0])
-            protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-            self.app_project.serialize_project(self.app_project.project_path, "project")
-            self._project_watcher.show_valid_options(self.ui)
-            self._init_batch_analysis_page()
+        # self._thread_controller.thread_worker_pairs.get(constants.ANALYSIS_TASK).worker.update_attributes(
+        #     self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
+        #     self.status_bar, self.app_project, self.app_settings,
+        # )
+        # self._thread_controller.thread_worker_pairs.get(constants.ANALYSIS_TASK).setup_and_run_thread(self.post_analysis_process)
+        self.display_view_page()
 
         # self.ui.btn_analysis_start.setEnabled(False)
         # self.status_bar.showMessage("Protein structure analysis started ...")
@@ -3334,6 +3459,11 @@ class MainWindow(QMainWindow):
         #     structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
         #                                             self.status_bar, self.ui.progress_bar_batch)
         # job.create_xml_file()
+
+    def abort_analysis(self):
+        print(self._thread_controller.get_all_running_threads()[0].main_task)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_analysis_abort)
 
     # ----- Functions for Results
     def show_analysis_results_options(self):
@@ -3901,6 +4031,17 @@ class MainWindow(QMainWindow):
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
             tmp_protein.zoom_resi_protein_position()
+
+
+def display_msg_box():
+    print(basic_boxes.ok("Prediction", "Running a prediction", QMessageBox.Information))
+    # i = 0
+    # while i < 5:
+    #     print("Prediction is running")
+    #     time.sleep(2)
+    #     i += 1
+def display_msg_box2():
+    basic_boxes.ok("Prediction", "Successfully ran a prediction", QMessageBox.Information)
 
 
 if __name__ == '__main__':
