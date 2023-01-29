@@ -45,21 +45,32 @@ PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
 POWERSHELL_EXE = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 # Constants for structure prediction
 CONVERT_DOS_TO_UNIX = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/convert_dos_to_unix.ps1")
-COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
-COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
-INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
+# TODO: original paths, please uncomment before deployment!!!
+# COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
+# COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
+# INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
+COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
+COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
+INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
 NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
+
 # OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
 # OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
 # NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
 REMOVE_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/remove_wsl_env.ps1")
 
 # Constants for config file
-WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
+# TODO: uncomment constant below before deployment
+# WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
+WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/config/wsl/wsl.conf"
 
 WSL_DISTRO_NAME = "UbuntuColabfold"
 WSL_STORAGE_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/{WSL_DISTRO_NAME}")
 WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
+
+# thread main tasks
+PREDICTION_TASK = "Structure Prediction"
+ANALYSIS_TASK = "Structure Analysis"
 
 chain_dict = {
     0: "A",

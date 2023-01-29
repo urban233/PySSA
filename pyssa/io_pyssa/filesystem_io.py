@@ -23,14 +23,17 @@ import fnmatch
 import os
 import json
 import pathlib
-
-from internal.data_structures.protein import Protein
+import shutil
+from PyQt5 import QtWidgets
+from pyssa.internal.data_structures.data_classes import protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import settings
 from pyssa.io_pyssa import safeguard
 from pyssa.util import types
+from pyssa.util import constants
+from pyssa.util import tools
 
 
 class ObjectSerializer:
@@ -73,7 +76,7 @@ class ObjectDeserializer:
         tmp_object_file = open(f"{filepath}/{filename}.json", "r", encoding="utf-8")
         self.object_dict = json.load(tmp_object_file)
     
-    def deserialize_protein(self) -> types.PROTEIN_TYPE:
+    def deserialize_protein(self) -> types.PROTEIN:
         if self.object_dict.get("export_data_dir") == "None":
             update = {"export_data_dir": None}
             self.object_dict.update(update)
@@ -207,16 +210,16 @@ class ProjectScanner:
 
 class WorkspaceScanner:
 
-    def __init__(self):
-        pass
+    def __init__(self, workspace_path):
+        self.workspace_path = workspace_path
 
-    def scan_workspace_for_valid_projects(self, workspace_path, list_new_projects):
-        workspace_projects: list[str] = os.listdir(workspace_path)
+    def scan_workspace_for_valid_projects(self, list_new_projects):
+        workspace_projects: list[str] = os.listdir(self.workspace_path)
         valid_directories = []
         # iterates over possible project directories
         for directory in workspace_projects:
             try:
-                directory_content = os.listdir(f"{workspace_path}/{directory}")
+                directory_content = os.listdir(f"{self.workspace_path}/{directory}")
                 # iterates over the content in a single project directory
                 for content in directory_content:
                     if content == "project.json":
@@ -230,8 +233,7 @@ class WorkspaceScanner:
         return valid_directories
 
     def scan_workspace_for_non_duplicate_proteins(self, valid_projects: list, current_project_name: str,
-                                                  workspace_path: pathlib.Path,
-                                                  list_widget: Qt.QtWidgets.QListWidget) -> tuple[dict, list]:
+                                                  list_widget: QtWidgets.QListWidget) -> tuple[dict, list]:
         """This function scans the workspace directory for protein structures and eliminates all duplicates
 
         Args:
@@ -239,8 +241,6 @@ class WorkspaceScanner:
                 a list of all projects within the workspace
             current_project_name (str):
                 name of the currently loaded project
-            workspace_path (str):
-                path of the current workspace
             list_widget (Qt.QtWidgets.QListWidget)
                 list widget which is needed to temporarily store the results from the function "scan_project_for_valid_proteins"
 
@@ -254,12 +254,12 @@ class WorkspaceScanner:
         for valid_project in valid_projects:
             # if valid_project != current_project_name: # I don't know why this if-statement should be important
             """Var: project_proteins is a list which contains all proteins from a single project"""
-            project_proteins = scan_project_for_valid_proteins(pathlib.Path(f"{workspace_path}/{valid_project}"),
-                                                               list_widget)
+            project_proteins = tools.scan_project_for_valid_proteins(pathlib.Path(f"{self.workspace_path}/{valid_project}"),
+                                                                     list_widget)
             list_widget.clear()
             for protein in project_proteins:
                 tmp_protein = protein_info.ProteinInfo(protein,
-                                                       pathlib.Path(f"{workspace_path}/{valid_project}/pdb/{protein}"))
+                                                       pathlib.Path(f"{self.workspace_path}/{valid_project}/pdb/{protein}"))
                 workspace_proteins.append(tmp_protein)
                 if tmp_protein.name not in protein_names:
                     protein_names.append(tmp_protein.name)
@@ -268,3 +268,16 @@ class WorkspaceScanner:
             protein_tuples_notation.append(protein.get_tuple_notation())
         protein_dict = dict(protein_tuples_notation)
         return protein_dict, protein_names
+
+
+class FilesystemCleaner:
+
+    def __int__(self):
+        pass
+
+    @staticmethod
+    def clean_prediction_scratch_folder():
+        shutil.rmtree(constants.PREDICTION_FASTA_DIR)
+        os.mkdir(constants.PREDICTION_FASTA_DIR)
+        shutil.rmtree(constants.PREDICTION_PDB_DIR)
+        os.mkdir(constants.PREDICTION_PDB_DIR)

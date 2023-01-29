@@ -21,6 +21,7 @@
 #
 from dataclasses import dataclass
 from util import constants
+from pyssa.logging_pyssa import loggers
 
 
 @dataclass
@@ -35,6 +36,13 @@ class PredictionList:
     def write_fasta_file(self):
         fasta_file = open(f"{constants.PREDICTION_FASTA_DIR}/{self.protein_name}.fasta", "w")
         fasta_file.write(f">{self.protein_name}\n")
-        # TODO: loop through self.protein_sequence
-        fasta_file.write(tmp_prediction[1])
+        i = 0
+        for sequence in self.protein_sequence:
+            if i == len(self.protein_sequence) - 1:
+                # should be the last entry
+                fasta_file.write(sequence)
+            else:
+                fasta_file.write(f"{sequence}:")
+            i += 1
+
         fasta_file.close()

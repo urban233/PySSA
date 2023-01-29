@@ -23,10 +23,9 @@
 import pymol
 from pymol import cmd
 from pyssa.io_pyssa import safeguard
-from pyssa.internal.data_structures import protein
 
 
-def load_protein(protein_obj: protein.Protein) -> None:
+def load_protein(protein_obj) -> None:
     """This function loads a protein in pymol through a protein object.
 
     Args:
@@ -39,7 +38,7 @@ def load_protein(protein_obj: protein.Protein) -> None:
     cmd.load(f"{protein_obj.filepath}/{protein_obj.filename}", object=protein_obj.molecule_object)
 
 
-def fetch_protein_from_pdb(protein_obj: protein.Protein) -> None:
+def fetch_protein_from_pdb(protein_obj) -> None:
     """This function fetches a protein in pymol from the PDB.
 
     Args:
@@ -58,7 +57,7 @@ def fetch_protein_from_pdb(protein_obj: protein.Protein) -> None:
         raise ValueError("PDB ID is invalid.")
 
 
-def save_protein_to_pdb_file(protein_obj: protein.Protein) -> None:
+def save_protein_to_pdb_file(protein_obj) -> None:
     """This function saves a protein from the current pymol session as a .pdb file.
 
     Args:

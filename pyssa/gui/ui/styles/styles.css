@@ -39,7 +39,8 @@ QFrame#content {
 }
 
 QStackedWidget#stackedWidget {
-    background: #ffffff;
+    /*background: #ffffff;*/
+    background: #fcfcfc;
 }
 
 QToolTip {
@@ -80,37 +81,42 @@ QLabel#lbl_current_project_name {
 }
 
 QFrame#side_menu {
-    /*background: #E9E9F0;*/
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
 }
 
 QWidget#scrollAreaWidgetContents {
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
+
 }
 
 QLabel#lbl_project {
-    /*background: #E9E9F0;*/
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
     color: #878787;
     font: bold;
     font-size: 14px;
 }
 
 QLabel#lbl_prediction {
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
     color: #696969;
     font: bold;
 }
 
 QLabel#lbl_analysis {
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
     color: #878787;
     font: bold;
 }
 
 QLabel#lbl_handle_pymol_session {
     /*background: #E9E9F0;*/ /*OLD BACKGROUND COLOR*/
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
     color: #878787;
     font: bold;
     font-size: 14px;
@@ -514,7 +520,8 @@ QPushButton::pressed#btn_close_project {
 
 /* Label for "Cloud Prediction" */
 QLabel#lbl_pred_cloud {
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
     color: #878787;
     font: bold;
     font-size: 14px;
@@ -655,7 +662,8 @@ QPushButton::pressed#btn_pred_cloud_multimer_vs_pdb_page {
 
 /* Label for "Local Prediction" */
 QLabel#lbl_pred_local {
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
     color: #878787;
     font: bold;
     font-size: 14px;
@@ -798,9 +806,42 @@ QPushButton::pressed#btn_pred_local_multimer_vs_pdb_page {
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
 }
 
+QPushButton#btn_prediction_abort {
+    background-color: #F6F4F8;
+    border-style: outset;
+    border-width: 0px;
+    border-radius: 6px;
+    border-color: #E9E9F0;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_prediction_abort {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_prediction_abort {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_prediction_abort {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
+
 /* Label for "Analysis" */
 QLabel#lbl_analysis {
-    background: #F6F4F8;
+    /*background: #F6F4F8;*/
+    background: #f6f6f6;
     color: #878787;
     font: bold;
     font-size: 14px;
@@ -1083,6 +1124,35 @@ QPushButton::pressed#btn_batch_analysis_page {
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
 }
 
+QPushButton#btn_analysis_abort {
+    background-color: #F6F4F8;
+    border-width: 0px;
+    border-radius: 6px;
+    max-width: 8.9em;
+    min-width: 6em;
+    padding: 5px;
+    text-align: left;
+}
+
+QPushButton::hover#btn_analysis_abort {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::focus#btn_analysis_abort {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    color: white;
+}
+
+QPushButton::pressed#btn_analysis_abort {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+}
 
 /* Button for "Results" */
 QPushButton#btn_results_page {
@@ -1225,7 +1295,8 @@ QPushButton {
     border-style: outset;
     border-width: 2px;
     border-radius: 6px;
-    border-color: #f7f7f7;
+    border-color: #DCDCDC;
+    /*border-color: #f7f7f7;*/
     min-width: 6em;
     padding: 2px;
 }

@@ -26,7 +26,7 @@ from pyssa.internal.portal import pymol_safeguard
 from pyssa.util import types
 
 
-def show_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN_TYPE):
+def show_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN):
     """This function shows the protein as balls and sticks in representation mode.
 
     Args:
@@ -41,7 +41,7 @@ def show_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN_TYPE):
         print("No sticks and balls can be shown in protein.")
 
 
-def hide_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN_TYPE):
+def hide_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN):
     """This function hides the protein from balls and sticks.
 
     Args:
@@ -58,7 +58,7 @@ def hide_protein_selection_as_balls_and_sticks(protein_obj: types.PROTEIN_TYPE):
         print("No sticks and balls can be hidden in protein.")
 
 
-def zoom_to_residue_in_protein_position(protein_obj: types.PROTEIN_TYPE):
+def zoom_to_residue_in_protein_position(protein_obj: types.PROTEIN):
     """This function zooms to the residue in protein.
 
     Args:

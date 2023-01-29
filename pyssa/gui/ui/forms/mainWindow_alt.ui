@@ -393,6 +393,13 @@
                      </property>
                     </widget>
                    </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_prediction_abort">
+                     <property name="text">
+                      <string>Abort</string>
+                     </property>
+                    </widget>
+                   </item>
                   </layout>
                  </item>
                  <item>
@@ -446,6 +453,13 @@
                      </property>
                      <property name="text">
                       <string>Results</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_analysis_abort">
+                     <property name="text">
+                      <string>Abort</string>
                      </property>
                     </widget>
                    </item>
