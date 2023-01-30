@@ -29,7 +29,7 @@ from pyssa.internal.data_structures import structure_prediction
 from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_processing import data_transformer
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
-from pyssa.util import gui_utils
+from pyssa.util import prediction_util
 from pyssa.util import constants
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.logging_pyssa import loggers
@@ -84,7 +84,7 @@ class PredictionWorkerPool(QtCore.QRunnable):
         """This function is a reimplementation of the QRunnable run method. It does the structure prediction.
 
         """
-        predictions: list[tuple[str, str]] = gui_utils.get_prediction_name_and_seq_from_table(self.table)
+        predictions: list[tuple[str, str]] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
         loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER, "run", "predictions", predictions)
         structure_prediction_obj = structure_prediction.StructurePrediction(predictions, self.prediction_configuration,
                                                                             self.app_project)

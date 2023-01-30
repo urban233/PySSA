@@ -20,7 +20,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import project
 from internal.data_structures.data_classes import protein_analysis_info
+from internal.data_structures.data_classes import prediction_configuration
+from pyssa.internal.data_structures import sequence
 
 PROTEIN = protein.Protein
 PROTEIN_ANALYSIS_INFO = protein_analysis_info.ProteinAnalysisInfo
+PROTEIN_SEQUENCE = sequence.ProteinSequence
+
+PREDICTION_CONFIG = prediction_configuration.PredictionConfiguration
+
+PROJECT = project.Project

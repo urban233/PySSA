@@ -19,11 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import logging
 import fnmatch
 import os
 import pathlib
 from PyQt5 import QtCore
 from pyssa.io_pyssa import safeguard
+from pyssa.logging_pyssa import log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 def get_file_path_and_name(full_filepath) -> tuple[pathlib.Path, str]:
@@ -99,3 +104,28 @@ def filter_directory_for_filetype(path, filetype: str) -> list[str]:
         if fnmatch.fnmatch(tmp_file, pattern):
             valid_files.append(tmp_file)
     return valid_files
+
+
+def create_generic_dictionary_from_directory(path) -> dict:
+    """This function creates a dictionary which is based on the content of a directory. This should increase
+    search speed.
+
+    Args:
+        path:
+            full path of the directory
+
+    Raises:
+        NotADirectoryError: if directory does not exist
+
+    Returns:
+        dictionary which consists of a generic key (token_x) and a file or directory as value
+    """
+    if not safeguard.Safeguard.check_filepath(path):
+        logger.error("The directory does not exists!")
+        raise NotADirectoryError("The directory does not exist!")
+    i = 0
+    tmp_generic_dict: dict = {}
+    for item in os.listdir(path):
+        tmp_generic_dict.update({f"token_{i}": item})
+        i += 1
+    return tmp_generic_dict

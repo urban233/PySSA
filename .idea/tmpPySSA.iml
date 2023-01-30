@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/pyssa" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/testing_area" />
       <excludeFolder url="file://$MODULE_DIR$/tmp_storage" />
+      <excludeFolder url="file://$MODULE_DIR$/code_inspection" />
     </content>
     <orderEntry type="jdk" jdkName="pyssa" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

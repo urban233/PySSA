@@ -77,6 +77,11 @@ PYSSA_LOGGER = logging.getLogger("PySSA-Logger")
 PREDICTION_WORKER_LOGGER = logging.getLogger("PredictionWorker")
 ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 
+AMINO_ACID_CODE = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
+                   'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
+                   'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
+                   'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+
 chain_dict = {
     0: "A",
     1: "B",

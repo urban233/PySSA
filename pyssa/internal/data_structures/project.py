@@ -180,17 +180,17 @@ class Project:
     def get_objects_proteins_path(self):
         """This function returns the objects path of the project
 
-                Returns:
-                    the object path
-                """
+        Returns:
+            the object path
+        """
         return str(self._folder_paths[4])
 
     def get_objects_protein_pairs_path(self):
         """This function returns the objects path of the project
 
-                Returns:
-                    the object path
-                """
+        Returns:
+            the object path
+        """
         return str(self._folder_paths[5])
 
     def get_number_of_proteins(self):

@@ -30,6 +30,7 @@ from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import settings
+from pyssa.internal.data_structures import sequence
 from pyssa.io_pyssa import safeguard
 from pyssa.util import types
 from pyssa.util import constants
@@ -58,7 +59,7 @@ class ObjectSerializer:
     def create_standard_object_dict(self):
         self.object_dict = self.object.__dict__
     
-    def create_custom_object_dict(self, custom_dict: dict):
+    def set_custom_object_dict(self, custom_dict: dict):
         self.object_dict = custom_dict
     
     def update_object_dict(self, dict_with_updates: dict):
@@ -182,6 +183,14 @@ class ObjectDeserializer:
             raise ValueError
         tmp_settings.wsl_username = self.object_dict.get("wsl_username")
         return tmp_settings
+
+    def deserialize_sequence(self):
+        """This function deserializes the sequence object from a .json file.
+
+        Returns:
+            a ProteinSequence object
+        """
+        return sequence.ProteinSequence(self.object_dict.get("name"), self.object_dict.get("sequence"))
 
 
 class ProjectScanner:

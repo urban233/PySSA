@@ -19,8 +19,55 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import logging
 import pathlib
 from pyssa.util import types
+from pyssa.internal.data_structures import sequence
+from pyssa.logging_pyssa import log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+
+
+def transform_protein_name_seq_tuple_to_sequence_obj(protein_name_seq_tuples: list[tuple[str, str]]) -> list:
+    """
+
+    Args:
+        protein_name_seq_tuples:
+            list of tuples which consists of the protein name and sequence
+    Raises:
+        ValueError: raised if an argument is illegal
+    Returns:
+
+    """
+    # <editor-fold desc="Checks">
+    if protein_name_seq_tuples[0][0] == "":
+        logger.error("An argument is illegal.")
+        raise ValueError("An argument is illegal.")
+    if protein_name_seq_tuples[0][1] == "":
+        logger.error("An argument is illegal.")
+        raise ValueError("An argument is illegal.")
+
+    # </editor-fold>
+
+    sequence_objects = []
+    last_protein_name = protein_name_seq_tuples[0][0]
+    protein_sequence = sequence.ProteinSequence("", [""])
+    if len(protein_name_seq_tuples) == 1:
+        protein_sequence.name = protein_name_seq_tuples[0][0]
+        protein_sequence.sequence.append(protein_name_seq_tuples[0][1])
+        sequence_objects.append(protein_sequence)
+    else:
+        for tmp_protein_name_seq_tuple in protein_name_seq_tuples:
+            current_protein_name = tmp_protein_name_seq_tuple[0]
+            if last_protein_name == current_protein_name:
+                protein_sequence.name = tmp_protein_name_seq_tuple[0]
+                protein_sequence.sequence.append(tmp_protein_name_seq_tuple[1])
+            else:
+                sequence_objects.append(protein_sequence)
+                protein_sequence = sequence.ProteinSequence("", [""])
+                last_protein_name = current_protein_name
+    return sequence_objects
 
 
 class DataTransformer:

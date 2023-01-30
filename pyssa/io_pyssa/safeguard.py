@@ -22,6 +22,7 @@
 import logging
 import os
 from pymol import cmd
+from pyssa.util import constants
 
 
 class Safeguard:
@@ -35,6 +36,20 @@ class Safeguard:
         pass
 
     @staticmethod
+    def check_if_protein_sequence_is_valid_one_letter(protein_sequence) -> bool:
+        for tmp_amino_acid in protein_sequence:
+            if tmp_amino_acid not in constants.AMINO_ACID_CODE.values():
+                return False
+        return True
+
+    @staticmethod
+    def check_if_protein_sequence_is_valid_three_letter(protein_sequence) -> bool:
+        for tmp_amino_acid in protein_sequence:
+            if tmp_amino_acid not in constants.AMINO_ACID_CODE.keys():
+                return False
+        return True
+
+    @staticmethod
     def check_filepath(filepath) -> bool:
         """This function checks if the filepath exists or not.
 
@@ -43,10 +58,8 @@ class Safeguard:
             False: if path does NOT exist
         """
         if not os.path.exists(filepath):
-            logging.critical(f"The path {filepath} does NOT exist!")
             return False
-        elif os.path.exists(filepath):
-            # logging.info(f"The path {filepath} does exist!")
+        else:
             return True
 
     @staticmethod

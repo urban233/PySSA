@@ -21,6 +21,8 @@
 
 import os
 import json
+import pathlib
+
 
 class Protein:
     """This class stores one protein in a PyMOL compatible form
@@ -85,24 +87,14 @@ class Protein:
         """
         self.selection = selection
 
+def create_generic_dictionary_from_directory(path):
+    i = 0
+    tmp_generic_dict = {}
+    for item in os.listdir(path):
+        tmp_generic_dict.update({f"token_{i}": item})
+        i += 1
+    return tmp_generic_dict
+
 
 if __name__ == '__main__':
-    new_protein = Protein("3bmp")
-    # creates a dict from the object
-    protein_dict = new_protein.__dict__
-    f = open("data.json", "w", encoding="utf-8")
-    json.dump(protein_dict, f)
-
-if __name__ == '__main__':
-    f = open("data.json", "r", encoding="utf-8")
-    protein_dict = json.load(f)
-    print(f"Dict from loaded json:      {protein_dict}")
-    new_protein = Protein(protein_dict.get("molecule_object"), protein_dict.get("import_data_dir"),
-                          protein_dict.get("export_data_dir"))
-    print(f"Name of the protein object: {new_protein.molecule_object}")
-    print(f"Import data directory:      {new_protein.import_data_dir}")
-    print(f"Export data directory:      {new_protein.export_data_dir}")
-
-if __name__ == '__main__':
-    string = r"\\wsl$\Ubuntu\home"
-    print(string)
+    print(create_generic_dictionary_from_directory(pathlib.Path("C:\\Users\\martin\\github_repos\\tmpPySSA\\pyssa\\util")))
