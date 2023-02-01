@@ -22,6 +22,7 @@
 """This module contains worker classes for all processes done in the threadpool"""
 import os
 import subprocess
+import logging
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pymol import cmd
@@ -29,29 +30,40 @@ from pyssa.internal.data_structures import structure_prediction
 from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_processing import data_transformer
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
+from pyssa.io_pyssa import safeguard
 from pyssa.util import prediction_util
 from pyssa.util import constants
+from pyssa.util import types
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.logging_pyssa import loggers
+from pyssa.logging_pyssa import log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class WorkerSignals(QtCore.QObject):
-    """This class is used to define signals for all worker classes
+    """This class is used to define signals for all worker classes"""
 
-    Available signals:
-        finished:
-            No data
-        error:
-            tuple (exctype, value, traceback.format_exc() )
-        result:
-            object data returned from processing, anything
-        progress:
-            int indicating % progress
+    # <editor-fold desc="Class attributes">
+    """
+    signal which returns no data, and should be emitted if process has successfully finished
     """
     finished = QtCore.pyqtSignal()
+    """
+    signal which returns tuple (exctype, value, traceback.format_exc()), and should be emitted if an error occurs
+    """
     error = QtCore.pyqtSignal(tuple)
+    """
+    signal which returns object data returned from processing, and should be emitted if results are generated
+    """
     result = QtCore.pyqtSignal(object)
+    """
+    signal which returns int progress, and should be emitted if the progress should get displayed
+    """
     progress = QtCore.pyqtSignal(int)
+
+    # </editor-fold>
 
 
 class PredictionWorkerPool(QtCore.QRunnable):
@@ -60,10 +72,31 @@ class PredictionWorkerPool(QtCore.QRunnable):
     Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
 
     """
+
+    # <editor-fold desc="Class attributes">
+    """
+    pyqt table which contains the proteins to predict
+    """
+    table: types.TABLE_WIDGET
+    """
+    the configuration settings for the prediction
+    """
+    prediction_configuration: types.PREDICTION_CONFIG
+    """
+    the current project in use
+    """
+    app_project: types.PROJECT
+    """
+    the signals to use, for the worker
+    """
+    signals = WorkerSignals()
+
+    # </editor-fold>
+
     def __init__(self,
-                 table_prot_to_predict,
-                 prediction_configuration,
-                 app_project):
+                 table_prot_to_predict: types.TABLE_WIDGET,
+                 prediction_configuration: types.PREDICTION_CONFIG,
+                 app_project: types.PROJECT) -> None:
         """Constructor.
 
         Args:
@@ -73,12 +106,27 @@ class PredictionWorkerPool(QtCore.QRunnable):
                 the prediction_config object
             app_project:
                 current project
+
+        Raises:
+            ValueError: raised if an argument is illegal
         """
         super(PredictionWorkerPool, self).__init__()
+        # <editor-fold desc="Checks">
+        if not safeguard.Safeguard.check_if_value_is_not_none(table_prot_to_predict):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(prediction_configuration):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+
+        # </editor-fold>
+
         self.table = table_prot_to_predict
         self.prediction_configuration = prediction_configuration
         self.app_project = app_project
-        self.signals = WorkerSignals()
 
     def run(self):
         """This function is a reimplementation of the QRunnable run method. It does the structure prediction.
@@ -97,13 +145,47 @@ class PredictionWorkerPool(QtCore.QRunnable):
 
 
 class AnalysisWorkerPool(QtCore.QRunnable):
+    """This class is a worker class for the analysis process.
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    """
+
+    # <editor-fold desc="Class attributes">
+    """
+    the list where all analysis runs are stored
+    """
+    list_analysis_overview: types.LIST_WIDGET
+    """
+    the checkbox if images should be taken or not
+    """
+    cb_analysis_images: types.CHECKBOX_WIDGET
+    """
+    the status bar of the main window
+    """
+    status_bar: types.STATUS_BAR_WIDGET
+    """
+    the current project in use
+    """
+    app_project: types.PROJECT
+    """
+    the settings of pyssa
+    """
+    app_settings: types.SETTINGS
+    """
+    the signals to use, for the worker
+    """
+    signals = WorkerSignals()
+
+    # </editor-fold>
+
     def __init__(self,
-                 list_analysis_overview,
-                 cb_analysis_images,
-                 status_bar,
-                 app_project,
-                 app_settings,
-                 _init_batch_analysis_page):
+                 list_analysis_overview: types.LIST_WIDGET,
+                 cb_analysis_images: types.CHECKBOX_WIDGET,
+                 status_bar: types.STATUS_BAR_WIDGET,
+                 app_project: types.PROJECT,
+                 app_settings: types.SETTINGS,
+                 _init_batch_analysis_page) -> None:
         """Constructor
 
         Args:
@@ -119,15 +201,36 @@ class AnalysisWorkerPool(QtCore.QRunnable):
                 settings of the main window
             _init_batch_analysis_page:
                 function which clears the page, without parenthesis!!!
+
+        Raises:
+            ValueError: raised if an argument is illegal
         """
         super(AnalysisWorkerPool, self).__init__()
+        # <editor-fold desc="Checks">
+        if not safeguard.Safeguard.check_if_value_is_not_none(list_analysis_overview):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(cb_analysis_images):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(status_bar):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(app_settings):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+
+        # </editor-fold>
+
         self.list_analysis_overview = list_analysis_overview
         self.cb_analysis_images = cb_analysis_images
         self.status_bar = status_bar
         self.app_project = app_project
         self.app_settings = app_settings
         self._init_batch_analysis_page = _init_batch_analysis_page
-        self.signals = WorkerSignals()
 
     def get_analysis_runs(self):
         """This function creates a data format which is used for the analysis
@@ -180,6 +283,9 @@ class AnalysisWorkerPool(QtCore.QRunnable):
             batch_data:
                 data in the analysis-ready format
         """
+        analyzer = structure_analysis.Analysis()
+        analyzer.run_analysis()
+
         loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER, "run_analysis_process",
                                           "batch_data", batch_data)
         for analysis_data in batch_data:

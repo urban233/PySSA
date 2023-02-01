@@ -256,6 +256,7 @@ class ProteinPair:
         # argument test
         if not safeguard.Safeguard.check_if_file_is_readable(pathlib.Path(f"{self.results_dir}/alignment_files/{alignment_filename}.aln")):
             print(f"File not found, in {self.results_dir}.")
+
         cmd.create(f"{self.ref_obj.molecule_object}_CA", f"/{self.ref_obj.molecule_object}////CA")
         ref_ca_obj = cmd.get_model(f"{self.ref_obj.molecule_object}_CA")
         cmd.create(f"{self.model_obj.molecule_object}_CA", f"/{self.model_obj.molecule_object}////CA")
@@ -275,7 +276,6 @@ class ProteinPair:
         j = 0  # j for reference
         k = 0  # k for model
         index = 0
-        #try:
         while i < int(align.get_alignment_length()):
             # gets executed if the reference contains a "-" in the alignment
             if align[0, i] == "-":

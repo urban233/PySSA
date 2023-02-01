@@ -23,47 +23,67 @@
 import json
 import os
 import pathlib
-
+import logging
 import pymol
 from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
+from pyssa.internal.data_structures import selection
+from pyssa.util import protein_util
+from pyssa.util import types
+from pyssa.logging_pyssa import log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class Protein:
-    """This class stores one protein in a PyMOL compatible form
+    """This class stores one protein in a PyMOL compatible form"""
 
-    Attributes:
-        molecule_object:
-            The name of the protein which is also used within pymol.
-        filepath:
-            The filepath where the pdb file is stored.
-        export_filepath:
-            The filepath where results are saved. Default is None.
-        selection:
-            A pymol selection string which needs to conform with the selection algebra
-            from pymol.
-        sequence:
-            The primary sequence of the protein.
-        chains:
-            A list of chains which occur in the protein.
-        filename:
-            The name of the file with extension
+    # <editor-fold desc="Class attributes">
     """
+    the name of the protein which is also used within pymol
+    """
+    molecule_object: str
+    """
+    a pymol conform selection 
+    """
+    selection: types.SELECTION
+    """
+    the primary sequence of the protein
+    """
+    sequence: types.PROTEIN_SEQUENCE
+    """
+    a list of chains which occur in the protein
+    """
+    chains: list[types.CHAIN] = []
+    """
+    the filepath where the pdb file is stored
+    """
+    filepath: pathlib.Path
+    """
+    the name of the file with extension
+    """
+    filename: str
+    """
+    a directory where all results related to the protein will be stored
+    """
+    export_filepath: pathlib.Path
 
-    def __init__(self, molecule_object: str, filepath: pathlib.Path = None,
-                 export_filepath: pathlib.Path = None):
+    # </editor-fold>
+
+    def __init__(self, molecule_object: str, filepath: pathlib.Path = "", export_filepath: pathlib.Path = "") -> None:
         """Constructor.
 
         Args:
             molecule_object (str):
-                name of the reference Protein in the pymol session
-            filepath (str, optional):
+                the name of the protein which is also used within pymol
+            filepath (Path, optional):
                 directory where the pdb files of both model and
                 reference are stored
-            export_filepath (str, optional):
+            export_filepath (Path, optional):
                 directory where all results related to the Protein
                 will be stored.
                 All subdirectories like ``images``, ``alignment_files``
@@ -74,116 +94,49 @@ class Protein:
             NotADirectoryError: If directory not found.
             FileNotFoundError: If file not found.
         """
-        self.molecule_object = molecule_object
-        self.filepath: pathlib.Path = filepath
-        self.export_filepath: pathlib.Path = export_filepath
-        self.filename = ""
-        self.selection: str = ""
-        self.sequence: str = ""
-        self.chains: list[str] = []
+        # <editor-fold desc="Checks">
+        if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if filepath != "":
+            if not safeguard.Safeguard.check_if_value_is_not_none(filepath):
+                logger.error("An argument is illegal.")
+                raise ValueError("An argument is illegal.")
+            if not safeguard.Safeguard.check_filepath(filepath):
+                logger.error("The directory does not exist.")
+                raise NotADirectoryError("The directory does not exist.")
+        if export_filepath != "":
+            if not safeguard.Safeguard.check_if_value_is_not_none(export_filepath):
+                logger.error("An argument is illegal.")
+                raise ValueError("An argument is illegal.")
+            if not safeguard.Safeguard.check_filepath(export_filepath):
+                logger.error("The directory does not exist.")
+                raise NotADirectoryError("The directory does not exist.")
 
-        # argument test
-        if molecule_object.find(".pdb") != -1:
-            # pdb file is given
-            self.molecule_object = molecule_object.replace(".pdb", "")
-            self.filename = molecule_object
-        else:
-            # PDB ID is given
-            self.filename = f"{self.molecule_object}.pdb"
+        # </editor-fold>
 
-        if filepath == "None":
-            filepath = None
-        if filepath is not None:
-            if not os.path.exists(f"{self.filepath}"):
-                raise NotADirectoryError(f"The path {filepath} was not "
-                                         f"found.")
-        if export_filepath == "None":
-            export_filepath = None
-        if export_filepath is not None:
-            export_filepath = pathlib.Path(export_filepath)
-            if not os.path.exists(f"{self.export_filepath}"):
-                raise NotADirectoryError(f"The path {export_filepath} was not "
-                                         f"found.")
-        if not os.path.exists(pathlib.Path(f"{filepath}/{self.filename}")):
-            path = pathlib.Path(f"{filepath}/{self.filename}")
-            raise FileNotFoundError(f"Path {path} does not exists")
+        self.molecule_object, self.filename = protein_util.check_if_protein_is_from_file_or_id(molecule_object)
+        # check if pdb file exists
+        if not safeguard.Safeguard.check_filepath(pathlib.Path(f"{filepath}/{self.filename}")):
+            logger.error("PDB file was not found.")
+            raise FileNotFoundError("PDB file was not found.")
+        self.filepath = filepath
+        self.export_filepath = export_filepath
+        self.chains = protein_operations.get_protein_chains(self.molecule_object, self.filepath, self.filename)
+        self.sequence = protein_operations.get_protein_sequences_from_protein(self.molecule_object, self.chains)
+        self.selection = selection.Selection(self.molecule_object)
 
-    def set_selection(self, selection: str) -> None:
-        """This function sets a selection for the Protein object.
-
-        Args:
-            selection (str):
-                A pymol conform selection as a string.
-
-        Example:
-            This is a pymol conform selection::
-
-                "pymol_6omn////CA"
-        """
-        self.selection = selection
-
-    def set_sequence(self, sequence=None):
-        """This function sets the sequence for the protein, either automatically with the help
-        of the get_fastastr method from PyMOL or directly through a function argument
-
-        Args:
-            sequence:
-                string of the sequence which gets set for the protein
-        """
-        if sequence is None:
-            cmd.reinitialize()
-            if self.filepath is None:
-                # this means a PDB ID was given
-                pymol_io.fetch_protein_from_pdb(self)
-                self.sequence = cmd.get_fastastr('all')
-            else:
-                # a .pdb file was given
-                pymol_io.load_protein(self)
-                self.sequence = cmd.get_fastastr('all')
-        else:
-            self.sequence = sequence
-
-    def set_chains(self, chains=None):
-        """This function sets the chains for the protein, either automatically with the help
-        of the get_chains method from PyMOL or directly through a function argument
+    def set_selections_from_chains_ca(self):
+        """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
 
         """
-        if chains is None:
-            cmd.reinitialize()
-            if self.filepath is None:
-                # this means a PDB ID was given
-                pymol_io.fetch_protein_from_pdb(self)
-                self.chains = cmd.get_chains(self.molecule_object)
-            else:
-                # a .pdb file was given
-                pymol_io.load_protein(self)
-                self.chains = cmd.get_chains(self.molecule_object)
-        else:
-            self.chains = chains
+        self.selection.set_selections_from_chains_ca(protein_util.filter_chains_for_protein_chains(self.chains))
 
-    def create_selection_from_chains(self) -> str:
-        """This function creates a selection with given chains
+    def set_selection_without_chains_ca(self):
+        """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's.
 
-        Returns:
-            selection (str):
-                the selection string for pymol
-
-        Raises:
-            ValueError: If there is an empty chains list.
-            ValueError: If the selection remains empty.
         """
-        if len(self.chains) == 0:
-            raise ValueError("No chains were added to the protein!")
-        selection = ""
-        seperator = ", "
-        tmp_list = []
-        for chain in self.chains:
-            tmp_selection = f"/{self.molecule_object}//{chain}//CA"
-            tmp_list.append(tmp_selection)
-            selection = seperator.join(tmp_list)
-        if selection == "":
-            raise ValueError("The selection is still empty!")
-        return selection
+        self.selection.set_selections_without_chains_ca()
 
     def clean_pdb_file(self) -> None:
         """This function cleans a pdb file from the PDB
@@ -229,9 +182,6 @@ class Protein:
 
     def load_protein(self) -> None:
         pymol_io.load_protein(self.filepath, self.filename, self.molecule_object)
-        # if not safeguard.Safeguard.check_filepath(f"{self.filepath}/{self.filename}"):
-        #     raise FileNotFoundError
-        # cmd.load(f"{self.filepath}/{self.filename}", object=self.molecule_object)
 
     def show_resi_as_balls_and_sticks(self) -> None:
         graphic_operations.show_protein_selection_as_balls_and_sticks(self.selection)

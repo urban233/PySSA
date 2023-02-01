@@ -82,6 +82,9 @@ AMINO_ACID_CODE = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
                    'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
                    'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
 
+CHAIN_TYPE_PROTEIN = "protein_chain"
+CHAIN_TYPE_NON_PROTEIN = "non_protein_chain"
+
 chain_dict = {
     0: "A",
     1: "B",

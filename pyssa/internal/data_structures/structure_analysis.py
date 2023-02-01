@@ -27,14 +27,28 @@ import pathlib
 import pymol
 from pymol import Qt
 from pymol import cmd
-# from pymolproteintools import graphics
 from util import tools, gui_utils
 from internal.data_structures import protein, protein_pair
 from pyssa.internal.portal import pymol_io
+from pyssa.util import types
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
 GLOBAL_VAR_LOG_TYPE = "info"
+
+
+class Analysis:
+    """This class contains information about the type of analysis"""
+
+    analysis_list: list[types.DISTANCE_ANALYSIS] = []
+
+    def __init__(self):
+        pass
+
+    def run_analysis(self):
+        for distance_analysis in self.analysis_list:
+            distance_analysis.do_analysis_in_pymol()
+
 
 
 class StructureAnalysis:

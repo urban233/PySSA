@@ -117,8 +117,31 @@ class Safeguard:
             return False
 
     @staticmethod
+    def check_if_list_is_empty(value: list) -> bool:
+        if len(value) != 0:
+            return True
+        else:
+            return False
+
+    @staticmethod
     def check_if_value_is_in_table_v_header(value, table):
         for i in range(table.rowCount()):
             if table.verticalHeaderItem(i).text() == value:
                 return False
         return True
+
+    @staticmethod
+    def check_if_value_is_not_none(value) -> bool:
+        """This function checks if a value is None or not
+
+        Args:
+            value:
+                any kind of variable
+        Returns:
+            True: if NOT None
+            False: if None
+        """
+        if value is None:
+            return False
+        else:
+            return True
