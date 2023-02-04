@@ -30,13 +30,18 @@ from pyssa.internal.data_structures import structure_prediction
 from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_processing import data_transformer
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
+from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.io_pyssa import safeguard
 from pyssa.util import prediction_util
 from pyssa.util import constants
-from pyssa.util import types
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.logging_pyssa import loggers
 from pyssa.logging_pyssa import log_handlers
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import project
+    from pyssa.internal.data_structures import settings
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -77,15 +82,15 @@ class PredictionWorkerPool(QtCore.QRunnable):
     """
     pyqt table which contains the proteins to predict
     """
-    table: types.TABLE_WIDGET
+    table: QtWidgets.QTableWidget
     """
     the configuration settings for the prediction
     """
-    prediction_configuration: types.PREDICTION_CONFIG
+    prediction_config: prediction_configuration.PredictionConfiguration
     """
     the current project in use
     """
-    app_project: types.PROJECT
+    app_project: project.Project
     """
     the signals to use, for the worker
     """
@@ -94,15 +99,15 @@ class PredictionWorkerPool(QtCore.QRunnable):
     # </editor-fold>
 
     def __init__(self,
-                 table_prot_to_predict: types.TABLE_WIDGET,
-                 prediction_configuration: types.PREDICTION_CONFIG,
-                 app_project: types.PROJECT) -> None:
+                 table_prot_to_predict: QtWidgets.QTableWidget,
+                 prediction_config: prediction_configuration.PredictionConfiguration,
+                 app_project: 'project.Project') -> None:
         """Constructor.
 
         Args:
             table_prot_to_predict:
                 pyqt table which contains the proteins to predict
-            prediction_configuration:
+            prediction_config:
                 the prediction_config object
             app_project:
                 current project
@@ -115,7 +120,7 @@ class PredictionWorkerPool(QtCore.QRunnable):
         if not safeguard.Safeguard.check_if_value_is_not_none(table_prot_to_predict):
             logger.error("An argument is illegal.")
             raise ValueError("An argument is illegal.")
-        if not safeguard.Safeguard.check_if_value_is_not_none(prediction_configuration):
+        if not safeguard.Safeguard.check_if_value_is_not_none(prediction_config):
             logger.error("An argument is illegal.")
             raise ValueError("An argument is illegal.")
         if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
@@ -125,7 +130,7 @@ class PredictionWorkerPool(QtCore.QRunnable):
         # </editor-fold>
 
         self.table = table_prot_to_predict
-        self.prediction_configuration = prediction_configuration
+        self.prediction_configuration = prediction_config
         self.app_project = app_project
 
     def run(self):
@@ -155,23 +160,23 @@ class AnalysisWorkerPool(QtCore.QRunnable):
     """
     the list where all analysis runs are stored
     """
-    list_analysis_overview: types.LIST_WIDGET
+    list_analysis_overview: QtWidgets.QListWidget
     """
     the checkbox if images should be taken or not
     """
-    cb_analysis_images: types.CHECKBOX_WIDGET
+    cb_analysis_images: QtWidgets.QCheckBox
     """
     the status bar of the main window
     """
-    status_bar: types.STATUS_BAR_WIDGET
+    status_bar: QtWidgets.QStatusBar
     """
     the current project in use
     """
-    app_project: types.PROJECT
+    app_project: project.Project
     """
     the settings of pyssa
     """
-    app_settings: types.SETTINGS
+    app_settings: settings.Settings
     """
     the signals to use, for the worker
     """
@@ -180,11 +185,11 @@ class AnalysisWorkerPool(QtCore.QRunnable):
     # </editor-fold>
 
     def __init__(self,
-                 list_analysis_overview: types.LIST_WIDGET,
-                 cb_analysis_images: types.CHECKBOX_WIDGET,
-                 status_bar: types.STATUS_BAR_WIDGET,
-                 app_project: types.PROJECT,
-                 app_settings: types.SETTINGS,
+                 list_analysis_overview: QtWidgets.QListWidget,
+                 cb_analysis_images: QtWidgets.QCheckBox,
+                 status_bar: QtWidgets.QStatusBar,
+                 app_project: 'project.Project',
+                 app_settings: 'settings.Settings',
                  _init_batch_analysis_page) -> None:
         """Constructor
 

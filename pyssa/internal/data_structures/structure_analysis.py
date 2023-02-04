@@ -23,24 +23,30 @@
 import json
 import logging
 import pathlib
-
 import pymol
 from pymol import Qt
 from pymol import cmd
-from util import tools, gui_utils
-from internal.data_structures import protein, protein_pair
+from typing import TYPE_CHECKING
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import tools
+from pyssa.util import gui_utils
+from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import protein_pair
+from pyssa.internal.analysis_types import distance_analysis
 from pyssa.internal.portal import pymol_io
-from pyssa.util import types
 
-# setup logger
-logging.basicConfig(level=logging.DEBUG)
-GLOBAL_VAR_LOG_TYPE = "info"
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import protein_pair
+
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class Analysis:
     """This class contains information about the type of analysis"""
 
-    analysis_list: list[types.DISTANCE_ANALYSIS] = []
+    analysis_list: list[distance_analysis.DistanceAnalysis] = []
 
     def __init__(self):
         pass
@@ -246,7 +252,7 @@ class StructureAnalysis:
                 selection = f"/{tmp_protein.molecule_object}////CA"
             tmp_protein.set_selection(selection)
 
-    def create_protein_pairs(self) -> list[protein_pair.ProteinPair]:
+    def create_protein_pairs(self) -> list['protein_pair.ProteinPair']:
         """This function creates Protein pairs based on the proteins in the object
 
         Returns:
@@ -258,7 +264,7 @@ class StructureAnalysis:
             tmp_protein_pairs.append(tmp_protein_pair)
         return tmp_protein_pairs
 
-    def do_analysis_in_pymol(self, protein_pairs: list[protein_pair.ProteinPair],
+    def do_analysis_in_pymol(self, protein_pairs: list['protein_pair.ProteinPair'],
                              status_bar_obj: Qt.QtWidgets.QStatusBar) -> None:
         """This function does the actual structure analysis in pymol based on the Protein pairs
 
@@ -271,21 +277,17 @@ class StructureAnalysis:
         for tmp_protein_pair in protein_pairs:
             # reinitialize pymol session
             msg = "Reinitialize pymol session ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
 
             # load both proteins in the pymol session
             msg = "Finished reinitializing pymol session. | Load proteins ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             tmp_protein_pair.load_protein_pair()
 
             # color Protein with default colors; ref: green, model: blue
             msg = "Finished loading proteins. | Color proteins ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             tmp_protein_pair.color_protein_pair()
 
             # do the structure alignment
             msg = "Finished coloring proteins. | Align proteins ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             try:
                 align_results = tmp_protein_pair.align_protein_pair(self._cycles, self._cutoff, self._alignment_file_name)
             except pymol.CmdException:
@@ -306,7 +308,6 @@ class StructureAnalysis:
 
             # do the distance calculation
             msg = "Finished aligning proteins. | Calculate distances ..."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             distance_results = tmp_protein_pair.calculate_distance_between_ca_atoms(self._alignment_file_name)
             tmp_protein_pair.export_distance_between_ca_atoms(distance_results)
 
@@ -374,8 +375,6 @@ class StructureAnalysis:
 
             # save pymol session
             msg = "Finished taking images of interesting regions. | Save PyMOL session"
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)
             tmp_protein_pair.save_session_of_protein_pair(self._session_file_name)
 
             msg = "Finished saving PyMOL session. | Protein structure analysis has successfully finished."
-            tools.quick_log_and_display(GLOBAL_VAR_LOG_TYPE, msg, status_bar_obj, msg)

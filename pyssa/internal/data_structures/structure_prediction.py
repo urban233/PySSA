@@ -26,14 +26,20 @@ import shutil
 import pymol
 import logging
 from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import project
+from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_processing import data_transformer
 from pyssa.internal.prediction_engines import colabbatch
 from pyssa.util import constants
-from pyssa.util import types
 from pyssa.util import prediction_util
+from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
 from pyssa.logging_pyssa import loggers
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import project
+    from pyssa.internal.data_structures import sequence
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -50,18 +56,18 @@ class StructurePrediction:
     """
     the configuration settings for the prediction
     """
-    prediction_configuration: types.PREDICTION_CONFIG
+    prediction_config: prediction_configuration.PredictionConfiguration
     """
     the current project in use 
     """
-    project: types.PROJECT
+    current_project: project.Project
 
     # </editor-fold>
 
     def __init__(self,
                  predictions: list[tuple[str, str]],
-                 prediction_config: types.PREDICTION_CONFIG,
-                 current_project: types.PROJECT) -> None:
+                 prediction_config: prediction_configuration.PredictionConfiguration,
+                 current_project: 'project.Project') -> None:
         self.predictions = predictions
         self.prediction_configuration = prediction_config
         self.project = current_project
@@ -86,7 +92,7 @@ class StructurePrediction:
         """This function creates fasta file based on the predictions in the object
 
         """
-        protein_sequences: list[types.PROTEIN_SEQUENCE] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
+        protein_sequences: list[sequence.ProteinSequence] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
         logger.debug(f"Variable: protein_sequences; Value: {protein_sequences} in function create_fasta_files_for_prediction")
         for tmp_seq_to_predict in protein_sequences:
             tmp_seq_to_predict.write_fasta_file(constants.PREDICTION_FASTA_DIR)

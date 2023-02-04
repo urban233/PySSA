@@ -24,7 +24,10 @@ import logging
 from pyssa.io_pyssa import safeguard
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
-from pyssa.util import types
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import chain
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -58,7 +61,7 @@ def check_if_protein_is_from_file_or_id(molecule_object) -> tuple:
     return tmp_molecule_object, tmp_filename
 
 
-def filter_chains_for_protein_chains(chains: list[types.CHAIN]) -> list[types.CHAIN]:
+def filter_chains_for_protein_chains(chains: list['chain.Chain']) -> list['chain.Chain']:
     """This function filters the chains for protein chains only
 
     Args:

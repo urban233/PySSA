@@ -31,8 +31,9 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.data_structures import selection
+from pyssa.internal.data_structures import sequence
+from pyssa.internal.data_structures import chain
 from pyssa.util import protein_util
-from pyssa.util import types
 from pyssa.logging_pyssa import log_handlers
 
 logger = logging.getLogger(__file__)
@@ -50,15 +51,15 @@ class Protein:
     """
     a pymol conform selection 
     """
-    selection: types.SELECTION
+    selection: selection.Selection
     """
     the primary sequence of the protein
     """
-    sequence: types.PROTEIN_SEQUENCE
+    sequence: sequence.ProteinSequence
     """
     a list of chains which occur in the protein
     """
-    chains: list[types.CHAIN] = []
+    chains: list[chain.Chain] = []
     """
     the filepath where the pdb file is stored
     """
@@ -148,7 +149,7 @@ class Protein:
         if self.export_filepath == "":
             raise AttributeError("A export directory must be defined!")
 
-        pymol_io.fetch_protein_from_pdb(self)
+        pymol_io.fetch_protein_from_pdb(self.filepath, self.filename, self.molecule_object)
         protein_operations.remove_solvent_molecules_in_protein()
         protein_operations.remove_organic_molecules_in_protein()
         # check if path exists where the data will be exported,

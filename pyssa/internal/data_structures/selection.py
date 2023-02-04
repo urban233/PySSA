@@ -26,7 +26,7 @@ from pyssa.logging_pyssa import log_handlers
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pyssa.util import types
+    from pyssa.internal.data_structures import chain
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -63,7 +63,7 @@ class Selection:
 
         self.molecule_object = molecule_object
 
-    def set_selections_from_chains_ca(self, chains: list[types.CHAIN]) -> None:
+    def set_selections_from_chains_ca(self, chains: list['chain.Chain']) -> None:
         """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
 
         Args:

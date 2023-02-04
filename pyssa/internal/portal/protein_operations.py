@@ -22,7 +22,6 @@
 """Module for protein operations in pymol"""
 import logging
 import pathlib
-
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
@@ -31,7 +30,6 @@ from pyssa.internal.data_structures import chain
 from pyssa.internal.data_structures import sequence
 from pyssa.io_pyssa import safeguard
 from pyssa.util import constants
-from pyssa.util import types
 from pyssa.util import protein_util
 from pyssa.logging_pyssa import log_handlers
 
@@ -63,7 +61,7 @@ def remove_organic_molecules_in_protein():
         print("No organic molecules needs to be removed.")
 
 
-def get_protein_chains(molecule_object: str, filepath: pathlib.Path, filename: str) -> list[types.CHAIN]:
+def get_protein_chains(molecule_object: str, filepath: pathlib.Path, filename: str) -> list[chain.Chain]:
     """This function divides the chains from a protein, into protein and non-protein chains.
 
     Args:
@@ -96,7 +94,7 @@ def get_protein_chains(molecule_object: str, filepath: pathlib.Path, filename: s
     pymol_io.load_protein(filepath, filename, molecule_object)
     tmp_chains: list[str] = cmd.get_chains()
     i = 0
-    chains_of_protein: list[types.CHAIN] = []
+    chains_of_protein: list[chain.Chain] = []
     for tmp_chain in tmp_chains:
         molecules_of_chain = cmd.get_model(f"chain {tmp_chain}")
         if molecules_of_chain.atom[0].resn in constants.AMINO_ACID_CODE:
@@ -107,7 +105,7 @@ def get_protein_chains(molecule_object: str, filepath: pathlib.Path, filename: s
     return chains_of_protein
 
 
-def get_protein_sequences_from_protein(molecule_object, chains: list[types.CHAIN]) -> types.PROTEIN_SEQUENCE:
+def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> sequence.ProteinSequence:
     """This function gets all sequences from protein chains only.
 
     Args:

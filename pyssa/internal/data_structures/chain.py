@@ -24,7 +24,6 @@ import logging
 import pathlib
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
-from pyssa.util import types
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

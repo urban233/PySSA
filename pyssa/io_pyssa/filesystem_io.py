@@ -24,7 +24,9 @@ import os
 import json
 import pathlib
 import shutil
+import logging
 from PyQt5 import QtWidgets
+from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
@@ -32,9 +34,11 @@ from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures import sequence
 from pyssa.io_pyssa import safeguard
-from pyssa.util import types
 from pyssa.util import constants
 from pyssa.util import tools
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class ObjectSerializer:
@@ -77,7 +81,7 @@ class ObjectDeserializer:
         tmp_object_file = open(f"{filepath}/{filename}.json", "r", encoding="utf-8")
         self.object_dict = json.load(tmp_object_file)
     
-    def deserialize_protein(self) -> types.PROTEIN:
+    def deserialize_protein(self) -> protein.Protein:
         if self.object_dict.get("export_data_dir") == "None":
             update = {"export_data_dir": None}
             self.object_dict.update(update)
