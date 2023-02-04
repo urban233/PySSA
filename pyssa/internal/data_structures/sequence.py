@@ -45,34 +45,34 @@ class ProteinSequence:
 
     # </editor-fold>
 
-    def __init__(self, protein_name: str, protein_sequences: list[str]) -> None:
+    def __init__(self, protein_name: str, protein_sequence: str) -> None:
         """Constructor
 
         Args:
             protein_name:
                 the name of the protein
-            protein_sequences:
-                a list of sequences of the protein
+            protein_sequence:
+                a sequences as string of the protein
         Raises:
             ValueError: raised if an argument is illegal
         """
         # <editor-fold desc="Checks">
-        if len(protein_sequences[0]) == 1:
-            if not safeguard.Safeguard.check_if_protein_sequence_is_valid_one_letter(protein_sequences):
-                logger.error("An argument is illegal.")
-                raise ValueError("An argument is illegal.")
-        elif len(protein_sequences[0]) == 3:
-            if not safeguard.Safeguard.check_if_protein_sequence_is_valid_three_letter(protein_sequences):
-                logger.error("An argument is illegal.")
-                raise ValueError("An argument is illegal.")
-        else:
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+        # if len(protein_sequence[0]) == 1:
+        #     if not safeguard.Safeguard.check_if_protein_sequence_is_valid_one_letter(protein_sequence):
+        #         logger.error("An argument is illegal.")
+        #         raise ValueError("An argument is illegal.")
+        # elif len(protein_sequence[0]) == 3:
+        #     if not safeguard.Safeguard.check_if_protein_sequence_is_valid_three_letter(protein_sequence):
+        #         logger.error("An argument is illegal.")
+        #         raise ValueError("An argument is illegal.")
+        # else:
+        #     logger.error("An argument is illegal.")
+        #     raise ValueError("An argument is illegal.")
 
         # </editor-fold>
 
         self.name = protein_name
-        self.sequences: list[str] = protein_sequences
+        self.sequence: str = protein_sequence
 
     def write_fasta_file(self, filepath: pathlib.Path) -> None:
         """This function writes a colabbatch compatible fasta file.
@@ -93,8 +93,8 @@ class ProteinSequence:
         fasta_file = open(f"{filepath}/{self.name}.fasta", "w")
         fasta_file.write(f">{self.name}\n")
         i = 0
-        for tmp_sequence in self.sequences:
-            if i == len(self.sequences) - 1:
+        for tmp_sequence in self.sequence:
+            if i == len(self.sequence) - 1:
                 # should be the last entry
                 fasta_file.write(tmp_sequence)
             else:
@@ -120,7 +120,7 @@ class ProteinSequence:
         # </editor-fold>
 
         sequence_serializer = filesystem_io.ObjectSerializer(self, filepath, filename)
-        sequence_attribute_dict = {"name": self.name, "sequence": self.sequences}
+        sequence_attribute_dict = {"name": self.name, "sequence": self.sequence}
         sequence_serializer.set_custom_object_dict(sequence_attribute_dict)
         sequence_serializer.serialize_object()
         logger.info(f"Sequence {self.name} was serialized.")

@@ -40,7 +40,7 @@ def check_if_protein_is_from_file_or_id(molecule_object) -> tuple:
         molecule_object:
             the name of the protein which is also used within pymol
     Returns:
-        a tuple with the molecule object and the filename
+        a tuple with the molecule object and the basename
     """
     # <editor-fold desc="Checks">
     if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
@@ -52,13 +52,13 @@ def check_if_protein_is_from_file_or_id(molecule_object) -> tuple:
     if molecule_object.find(".pdb") != -1:
         # pdb file is given
         tmp_molecule_object = molecule_object.replace(".pdb", "")
-        tmp_filename = molecule_object
+        tmp_basename = molecule_object
     else:
         # PDB ID is given
-        tmp_filename = f"{molecule_object}.pdb"
+        tmp_basename = f"{molecule_object}.pdb"
         tmp_molecule_object = molecule_object
 
-    return tmp_molecule_object, tmp_filename
+    return tmp_molecule_object, tmp_basename
 
 
 def filter_chains_for_protein_chains(chains: list['chain.Chain']) -> list['chain.Chain']:

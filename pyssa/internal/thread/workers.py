@@ -90,7 +90,7 @@ class PredictionWorkerPool(QtCore.QRunnable):
     """
     the current project in use
     """
-    app_project: project.Project
+    app_project: 'project.Project'
     """
     the signals to use, for the worker
     """
@@ -172,11 +172,11 @@ class AnalysisWorkerPool(QtCore.QRunnable):
     """
     the current project in use
     """
-    app_project: project.Project
+    app_project: 'project.Project'
     """
     the settings of pyssa
     """
-    app_settings: settings.Settings
+    app_settings: 'settings.Settings'
     """
     the signals to use, for the worker
     """

@@ -22,16 +22,20 @@
 """Module for protein operations in pymol"""
 import logging
 import pathlib
+
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_structures import chain
-from pyssa.internal.data_structures import sequence
 from pyssa.io_pyssa import safeguard
 from pyssa.util import constants
 from pyssa.util import protein_util
 from pyssa.logging_pyssa import log_handlers
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import sequence
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -61,15 +65,15 @@ def remove_organic_molecules_in_protein():
         print("No organic molecules needs to be removed.")
 
 
-def get_protein_chains(molecule_object: str, filepath: pathlib.Path, filename: str) -> list[chain.Chain]:
+def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: str) -> list[chain.Chain]:
     """This function divides the chains from a protein, into protein and non-protein chains.
 
     Args:
         molecule_object:
             the name of the protein which is also used within pymol
-        filepath:
+        dirname:
              the filepath where the pdb file is stored
-        filename:
+        basename:
              the name of the file with extension
 
     Returns:
@@ -79,33 +83,33 @@ def get_protein_chains(molecule_object: str, filepath: pathlib.Path, filename: s
     if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(filepath):
+    if not safeguard.Safeguard.check_if_value_is_not_none(dirname):
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
-    if not safeguard.Safeguard.check_filepath(filepath):
+    if not safeguard.Safeguard.check_filepath(dirname):
         logger.error("The directory does not exist.")
         raise NotADirectoryError("The directory does not exist.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(filename) or filename == "":
+    if not safeguard.Safeguard.check_if_value_is_not_none(basename) or basename == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
 
     # </editor-fold>
 
-    pymol_io.load_protein(filepath, filename, molecule_object)
+    pymol_io.load_protein(dirname, basename, molecule_object)
     tmp_chains: list[str] = cmd.get_chains()
     i = 0
     chains_of_protein: list[chain.Chain] = []
     for tmp_chain in tmp_chains:
-        molecules_of_chain = cmd.get_model(f"chain {tmp_chain}")
-        if molecules_of_chain.atom[0].resn in constants.AMINO_ACID_CODE:
-            chains_of_protein.append(chain.Chain(tmp_chain, molecules_of_chain, constants.CHAIN_TYPE_PROTEIN))
+        sequence_of_chain = cmd.get_model(f"chain {tmp_chain}")
+        if sequence_of_chain.atom[0].resn in constants.AMINO_ACID_CODE:
+            chains_of_protein.append(chain.Chain(tmp_chain, sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
         else:
-            chains_of_protein.append(chain.Chain(tmp_chain, molecules_of_chain, constants.CHAIN_TYPE_NON_PROTEIN))
+            chains_of_protein.append(chain.Chain(tmp_chain, sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN))
         i += 1
     return chains_of_protein
 
 
-def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> sequence.ProteinSequence:
+def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> list['sequence.ProteinSequence']:
     """This function gets all sequences from protein chains only.
 
     Args:
@@ -126,7 +130,7 @@ def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain
         raise ValueError("An argument is illegal.")
 
     # </editor-fold>
-    protein_sequences = []
+    protein_sequences: list[sequence.ProteinSequence] = []
     for tmp_chain in protein_util.filter_chains_for_protein_chains(chains):
-        protein_sequences.append(tmp_chain.sequence)
-    return sequence.ProteinSequence(molecule_object, protein_sequences)
+        protein_sequences.append(tmp_chain.chain_sequence)
+    return protein_sequences

@@ -30,8 +30,11 @@ import numpy as np
 from pymol import cmd
 from Bio import AlignIO
 from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.data_structures import protein
 from pyssa.io_pyssa import safeguard
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import protein
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -44,16 +47,16 @@ class ProteinPair:
     """
     the first protein of the protein pair
     """
-    protein_1: protein.Protein
+    protein_1: 'protein.Protein'
     """
     the second protein of the protein pair
     """
-    protein_2: protein.Protein
+    protein_2: 'protein.Protein'
     """
     
     """
 
-    def __init__(self, reference_obj: protein.Protein, model_obj: protein.Protein,
+    def __init__(self, reference_obj: 'protein.Protein', model_obj: 'protein.Protein',
                  results_dir: pathlib.Path) -> None:
         """Constructor.
 

@@ -81,7 +81,7 @@ class ObjectDeserializer:
         tmp_object_file = open(f"{filepath}/{filename}.json", "r", encoding="utf-8")
         self.object_dict = json.load(tmp_object_file)
     
-    def deserialize_protein(self) -> protein.Protein:
+    def deserialize_protein(self) -> 'protein.Protein':
         if self.object_dict.get("export_data_dir") == "None":
             update = {"export_data_dir": None}
             self.object_dict.update(update)
@@ -95,7 +95,7 @@ class ObjectDeserializer:
         tmp_protein.set_chains(self.object_dict.get("chains"))
         return tmp_protein
     
-    def deserialize_protein_pair(self):
+    def deserialize_protein_pair(self) -> 'protein_pair.ProteinPair':
         tmp_protein_pair = protein_pair.ProteinPair(self.object_dict.get("prot_1_molecule_object"),
                                                     self.object_dict.get("prot_2_molecule_object"),
                                                     pathlib.Path(self.object_dict.get("results_dir")),
@@ -133,7 +133,7 @@ class ObjectDeserializer:
 
         return tmp_protein_pair
     
-    def deserialize_project(self):
+    def deserialize_project(self) -> 'project.Project':
         tmp_project: project.Project = project.Project(self.object_dict.get("_project_name"), self.object_dict.get("_workspace"))
         tmp_project.set_folder_paths(self.object_dict.get("_folder_paths"))
         tmp_project.project_path = self.object_dict.get("project_path")
@@ -151,7 +151,7 @@ class ObjectDeserializer:
                 tmp_project.add_protein_pair(tmp_protein_pair)
         return tmp_project
     
-    def deserialize_settings(self):
+    def deserialize_settings(self) -> 'settings.Settings':
         tmp_settings: settings.Settings = settings.Settings(self.object_dict.get("dir_settings"), self.object_dict.get("filename"))
         if safeguard.Safeguard.check_filepath(self.object_dict.get("workspace_path")):
             tmp_settings.workspace_path = self.object_dict.get("workspace_path")
@@ -188,7 +188,7 @@ class ObjectDeserializer:
         tmp_settings.wsl_username = self.object_dict.get("wsl_username")
         return tmp_settings
 
-    def deserialize_sequence(self):
+    def deserialize_sequence(self) -> 'sequence.ProteinSequence':
         """This function deserializes the sequence object from a .json file.
 
         Returns:

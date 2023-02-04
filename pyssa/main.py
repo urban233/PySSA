@@ -49,14 +49,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.internal.data_structures import protein
-from pyssa.internal.data_structures import project
-from pyssa.internal.data_structures import project_watcher
-from pyssa.internal.data_structures import settings
-from pyssa.internal.data_structures import structure_analysis
-from pyssa.internal.data_structures.data_classes import protein_analysis_info
-from pyssa.internal.data_structures.data_classes import prediction_configuration
-from pyssa.internal.data_structures.data_classes import stage
 from internal.thread import workers
 from internal.data_processing import data_transformer
 from pyssa.io_pyssa import safeguard
@@ -68,6 +60,14 @@ from pyssa.gui.ui.dialogs import dialog_add_models
 from pyssa.gui.ui.dialogs import dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
+from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import project
+from pyssa.internal.data_structures import project_watcher
+from pyssa.internal.data_structures import settings
+from pyssa.internal.data_structures import structure_analysis
+from pyssa.internal.data_structures.data_classes import protein_analysis_info
+from pyssa.internal.data_structures.data_classes import prediction_configuration
+from pyssa.internal.data_structures.data_classes import stage
 from pyssa.logging_pyssa import loggers
 
 # setup logger

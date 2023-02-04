@@ -45,7 +45,7 @@ class DistanceAnalysis:
     """
     a pair of proteins which get analyzed 
     """
-    protein_pair_for_analysis: protein_pair.ProteinPair
+    protein_pair_for_analysis: 'protein_pair.ProteinPair'
     """
     the number of refinement cycles for the align command from PyMOL
     """
@@ -65,7 +65,7 @@ class DistanceAnalysis:
     """
     the settings from pyssa
     """
-    app_settings: settings.Settings
+    app_settings: 'settings.Settings'
 
     # </editor-fold>
 

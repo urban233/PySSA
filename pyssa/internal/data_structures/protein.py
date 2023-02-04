@@ -31,10 +31,16 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.data_structures import selection
-from pyssa.internal.data_structures import sequence
-from pyssa.internal.data_structures import chain
 from pyssa.util import protein_util
+from pyssa.util import constants
 from pyssa.logging_pyssa import log_handlers
+from pyssa.io_pyssa import path_util
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import sequence
+    from pyssa.internal.data_structures import chain
+
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -47,44 +53,40 @@ class Protein:
     """
     the name of the protein which is also used within pymol
     """
-    molecule_object: str
+    _pymol_molecule_object: str
     """
     a pymol conform selection 
     """
-    selection: selection.Selection
-    """
-    the primary sequence of the protein
-    """
-    sequence: sequence.ProteinSequence
+    pymol_selection: selection.Selection
     """
     a list of chains which occur in the protein
     """
-    chains: list[chain.Chain] = []
+    chains: list['chain.Chain']
     """
-    the filepath where the pdb file is stored
+    the full filepath where the pdb file is stored
     """
-    filepath: pathlib.Path
-    """
-    the name of the file with extension
-    """
-    filename: str
+    pdb_filepath: path_util.FilePath
     """
     a directory where all results related to the protein will be stored
     """
-    export_filepath: pathlib.Path
+    export_dirname: pathlib.Path
+    """
+    the full filepath where the session file is stored
+    """
+    pymol_session_file: path_util.FilePath
 
     # </editor-fold>
 
-    def __init__(self, molecule_object: str, filepath: pathlib.Path = "", export_filepath: pathlib.Path = "") -> None:
+    def __init__(self, molecule_object: str, pdb_dirname: pathlib.Path = "", export_dirname: pathlib.Path = "") -> None:
         """Constructor.
 
         Args:
             molecule_object (str):
                 the name of the protein which is also used within pymol
-            filepath (Path, optional):
+            pdb_dirname (Path, optional):
                 directory where the pdb files of both model and
                 reference are stored
-            export_filepath (Path, optional):
+            export_dirname (Path, optional):
                 directory where all results related to the Protein
                 will be stored.
                 All subdirectories like ``images``, ``alignment_files``
@@ -99,45 +101,84 @@ class Protein:
         if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
             logger.error("An argument is illegal.")
             raise ValueError("An argument is illegal.")
-        if filepath != "":
-            if not safeguard.Safeguard.check_if_value_is_not_none(filepath):
+        if pdb_dirname != "":
+            if not safeguard.Safeguard.check_if_value_is_not_none(pdb_dirname):
                 logger.error("An argument is illegal.")
                 raise ValueError("An argument is illegal.")
-            if not safeguard.Safeguard.check_filepath(filepath):
+            if not safeguard.Safeguard.check_filepath(pdb_dirname):
                 logger.error("The directory does not exist.")
                 raise NotADirectoryError("The directory does not exist.")
-        if export_filepath != "":
-            if not safeguard.Safeguard.check_if_value_is_not_none(export_filepath):
+        if export_dirname != "":
+            if not safeguard.Safeguard.check_if_value_is_not_none(export_dirname):
                 logger.error("An argument is illegal.")
                 raise ValueError("An argument is illegal.")
-            if not safeguard.Safeguard.check_filepath(export_filepath):
+            if not safeguard.Safeguard.check_filepath(export_dirname):
                 logger.error("The directory does not exist.")
                 raise NotADirectoryError("The directory does not exist.")
 
         # </editor-fold>
 
-        self.molecule_object, self.filename = protein_util.check_if_protein_is_from_file_or_id(molecule_object)
+        self._pymol_molecule_object, basename = protein_util.check_if_protein_is_from_file_or_id(molecule_object)
         # check if pdb file exists
-        if not safeguard.Safeguard.check_filepath(pathlib.Path(f"{filepath}/{self.filename}")):
+        self.pdb_filepath = path_util.FilePath(pathlib.Path(f"{pdb_dirname}/{basename}"))
+        if not self.pdb_filepath.check_if_path_exists():
             logger.error("PDB file was not found.")
             raise FileNotFoundError("PDB file was not found.")
-        self.filepath = filepath
-        self.export_filepath = export_filepath
-        self.chains = protein_operations.get_protein_chains(self.molecule_object, self.filepath, self.filename)
-        self.sequence = protein_operations.get_protein_sequences_from_protein(self.molecule_object, self.chains)
-        self.selection = selection.Selection(self.molecule_object)
 
-    def set_selections_from_chains_ca(self):
+        self.export_dirname = pathlib.Path(export_dirname)
+        self.chains = protein_operations.get_protein_chains(self._pymol_molecule_object,
+                                                            self.pdb_filepath.get_dirname(),
+                                                            self.pdb_filepath.get_basename())
+        self.pymol_selection = selection.Selection(self._pymol_molecule_object)
+        self.pymol_session_file = path_util.FilePath()  # TODO: a more specific path is needed
+
+    def get_molecule_object(self) -> str:
+        """This function gets the molecule object.
+
+        Returns:
+            the pymol_molecule_object
+        """
+        return self._pymol_molecule_object
+
+    def set_molecule_object(self, value) -> None:
+        """This function sets the molecule object.
+
+        Args:
+            value:
+                a new molecule object
+        """
+        self._pymol_molecule_object = value
+        for tmp_chain in self.chains:
+            tmp_chain.chain_sequence.name = value
+        self.pymol_selection.molecule_object = value
+
+    def get_all_sequences(self) -> list['sequence.ProteinSequence']:
+        tmp_sequences = []
+        for tmp_chain in self.chains:
+            tmp_sequences.append(tmp_chain.chain_sequence)
+        return tmp_sequences
+
+    def get_protein_sequences(self) -> list['sequence.ProteinSequence']:
+        return protein_operations.get_protein_sequences_from_protein(self._pymol_molecule_object, self.chains)
+
+    def load_protein_in_pymol(self) -> None:
+        pymol_io.load_protein(self.pdb_filepath.get_dirname(), self.pdb_filepath.get_filename(), self._pymol_molecule_object)
+
+    def color_protein_in_pymol(self) -> None:
+        # TODO: needs to be implemented
+        pass
+
+    def set_selections_from_chains_ca(self) -> None:
         """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
 
         """
-        self.selection.set_selections_from_chains_ca(protein_util.filter_chains_for_protein_chains(self.chains))
+        self.pymol_selection.set_selections_from_chains_ca(protein_util.filter_chains_for_protein_chains(self.chains))
 
-    def set_selection_without_chains_ca(self):
+    def set_selection_without_chains_ca(self) -> None:
         """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's.
 
         """
-        self.selection.set_selections_without_chains_ca()
+        self.pymol_selection.set_selections_without_chains_ca()
 
     def clean_pdb_file(self) -> None:
         """This function cleans a pdb file from the PDB
@@ -146,52 +187,49 @@ class Protein:
             AttributeError: If no export directory is given
         """
         # argument test
-        if self.export_filepath == "":
+        if self.export_dirname == "":
             raise AttributeError("A export directory must be defined!")
 
-        pymol_io.fetch_protein_from_pdb(self.filepath, self.filename, self.molecule_object)
+        pymol_io.fetch_protein_from_pdb(self.pdb_filepath.get_dirname(), self.pdb_filepath.get_filename(), self._pymol_molecule_object)
         protein_operations.remove_solvent_molecules_in_protein()
         protein_operations.remove_organic_molecules_in_protein()
         # check if path exists where the data will be exported,
         # if not the directory will be created
-        if not os.path.exists(f"{self.export_filepath}"):
-            os.mkdir(f"{self.export_filepath}")
+        if not os.path.exists(f"{self.export_dirname}"):
+            os.mkdir(f"{self.export_dirname}")
         # save the pdb file under the path (export_data_dir)
-        pymol_io.save_protein_to_pdb_file(self)
+        pymol_io.save_protein_to_pdb_file(self.export_dirname, self._pymol_molecule_object)
 
     def clean_protein(self, new_protein=False):
         cmd.reinitialize()
-        self.load_protein()
+        self.load_protein_in_pymol()
         if new_protein is False:
             try:
                 protein_operations.remove_solvent_molecules_in_protein()
                 protein_operations.remove_organic_molecules_in_protein()
             except pymol.CmdException:
                 return
-            os.remove(f"{self.filepath}/{self.filename}")
-            pymol_io.save_protein_to_pdb_file(self)
+            os.remove(self.pdb_filepath.get_filepath())
+            pymol_io.save_protein_to_pdb_file(self.export_dirname, self._pymol_molecule_object)
         else:
             clean_prot = self.duplicate_protein()
             cmd.reinitialize()
-            clean_prot.load_protein()
+            clean_prot.load_protein_in_pymol()
             protein_operations.remove_solvent_molecules_in_protein()
             protein_operations.remove_organic_molecules_in_protein()
             clean_prot.molecule_object = f"{clean_prot.molecule_object}_cleaned"
             clean_prot.filename = f"{clean_prot.molecule_object}.pdb"
-            pymol_io.save_protein_to_pdb_file(self)
+            pymol_io.save_protein_to_pdb_file(clean_prot.export_dirname, clean_prot._pymol_molecule_object)
             return clean_prot
 
-    def load_protein(self) -> None:
-        pymol_io.load_protein(self.filepath, self.filename, self.molecule_object)
-
     def show_resi_as_balls_and_sticks(self) -> None:
-        graphic_operations.show_protein_selection_as_balls_and_sticks(self.selection)
+        graphic_operations.show_protein_selection_as_balls_and_sticks(self.pymol_selection.selection_string)
 
     def hide_resi_as_balls_and_sticks(self) -> None:
-        graphic_operations.hide_protein_selection_as_balls_and_sticks(self.selection)
+        graphic_operations.hide_protein_selection_as_balls_and_sticks(self.pymol_selection.selection_string)
 
     def zoom_resi_protein_position(self) -> None:
-        graphic_operations.zoom_to_residue_in_protein_position(self.selection)
+        graphic_operations.zoom_to_residue_in_protein_position(self.pymol_selection.selection_string)
 
     def serialize_protein(self, filepath, filename) -> None:
         """This function serialize the protein object
@@ -204,8 +242,8 @@ class Protein:
             filename = filename.replace(".pdb", "")
         protein_dict = self.__dict__
         update = {
-            "filepath": str(self.filepath),
-            "export_data_dir": str(self.export_filepath),
+            "filepath": str(self.pdb_filepath.get_filepath()),
+            "export_data_dir": str(self.export_dirname),
         }
         protein_dict.update(update)
         protein_file = open(pathlib.Path(f"{filepath}/{filename}.json"), "w", encoding="utf-8")
@@ -238,8 +276,7 @@ class Protein:
         return tmp_protein
 
     def duplicate_protein(self):
-        tmp_protein = Protein(self.molecule_object, self.filepath, self.export_filepath)
-        tmp_protein.set_sequence(self.sequence)
-        tmp_protein.set_selection(self.selection)
-        tmp_protein.set_chains(self.chains)
+        tmp_protein = Protein(self._pymol_molecule_object, self.pdb_filepath.get_filepath(), self.export_dirname)
+        tmp_protein.pymol_selection.selection_string = self.pymol_selection.selection_string
+        tmp_protein.chains = self.chains
         return tmp_protein

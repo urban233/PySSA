@@ -95,6 +95,11 @@ def create_generic_dictionary_from_directory(path):
         i += 1
     return tmp_generic_dict
 
+def split_file_extension_from_name(basename: str):
+    index = basename.find(".")
+    ext = basename[:index]
+    return ext
+
 
 if __name__ == '__main__':
-    print(create_generic_dictionary_from_directory(pathlib.Path("C:\\Users\\martin\\github_repos\\tmpPySSA\\pyssa\\util")))
+    print(split_file_extension_from_name("test.json"))

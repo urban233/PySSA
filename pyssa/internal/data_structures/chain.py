@@ -23,6 +23,7 @@
 import logging
 import pathlib
 from pyssa.logging_pyssa import log_handlers
+from pyssa.internal.data_structures import sequence
 from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
@@ -36,19 +37,19 @@ class Chain:
     """
     letter of the chain
     """
-    chain: str = ""
+    chain: str
     """
     sequence of the chain
     """
-    sequence: str = ""
+    chain_sequence: sequence.ProteinSequence
     """
     type of the chain, whether it is a protein, or nuclein acid chain or something different
     """
-    chain_type: str = ""
+    chain_type: str
 
     # </editor-fold>
 
-    def __init__(self, chain: str, sequence: str, chain_type: str) -> None:
+    def __init__(self, chain: str, chain_sequence: sequence.ProteinSequence, chain_type: str) -> None:
         """Constructor
 
         Args:
@@ -60,5 +61,5 @@ class Chain:
                 type of the chain, whether it is a protein, or nuclein acid chain or something different
         """
         self.chain = chain
-        self.sequence = sequence
+        self.chain_sequence = chain_sequence
         self.chain_type = chain_type
