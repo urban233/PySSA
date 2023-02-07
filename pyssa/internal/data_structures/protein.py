@@ -117,6 +117,7 @@ class Protein:
         self._pymol_molecule_object = pdb_filepath.get_filename()
         protein_dirname = pathlib.Path(f"{proteins_dirname}/{self._pymol_molecule_object}")
         self.protein_subdirs = {
+            pyssa_keys.PROTEINS_SUBDIR: pathlib.Path(proteins_dirname),
             pyssa_keys.PROTEIN_SUBDIR: pathlib.Path(f"{protein_dirname}"),
             pyssa_keys.PROTEIN_SEQUENCE_SUBDIR: pathlib.Path(f"{protein_dirname}/sequence"),
             pyssa_keys.PROTEIN_PDB_SUBDIR: pathlib.Path(f"{protein_dirname}/pdb"),
@@ -251,7 +252,7 @@ class Protein:
         protein_serializer = filesystem_io.ObjectSerializer(self, self.protein_subdirs.get(pyssa_keys.PROTEIN_OBJECTS_SUBDIR), self._pymol_molecule_object)
         protein_dict = {
             "molecule_object": self.get_molecule_object(),
-            "proteins_dirname": str(self.protein_subdirs.get(pyssa_keys.PROTEIN_SUBDIR)),
+            "proteins_dirname": str(self.protein_subdirs.get(pyssa_keys.PROTEINS_SUBDIR)),
             "import_data_dir": str(self.pdb_filepath.get_filepath()),
             "export_data_dir": str(self.export_dirname),
             "filename": str(self.pdb_filepath.get_filename()),

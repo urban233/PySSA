@@ -46,7 +46,7 @@ class ProjectWatcher:
         self.current_project: project.Project = current_project
         self.no_of_pdb_files: int = no_of_pdb_files
         self.no_of_results: int = no_of_results
-        self.app_start: bool = False
+        self.on_home_page: bool = True
 
     def show_valid_options(self, ui):
         """This function shows all valid options based on the number of pdb files and results in the project
@@ -249,7 +249,7 @@ class ProjectWatcher:
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!
         """
-        if self.app_start:
+        if not self.on_home_page:
             self.no_of_pdb_files = len(project_util.get_all_pdb_filepaths_from_project(self.current_project))
         else:
             self.no_of_pdb_files = None

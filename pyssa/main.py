@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
         constants.PYSSA_LOGGER.info("PySSA started.")
-        self._project_watcher.app_start = True
+        self._project_watcher.on_home_page = True
 
     # ----- Functions for GuiPageManagement obj creation
     def _create_local_pred_monomer_management(self):
@@ -1885,6 +1885,7 @@ class MainWindow(QMainWindow):
         self.app_project = project.Project.deserialize_project(tmp_project_path, self.app_settings)
         constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
         self._project_watcher.current_project = self.app_project
+        self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
         # if self.app_project.get_number_of_proteins() > 0:
         #     tmp_proteins = os.listdir(self.app_project.get_pdb_path())
@@ -1895,6 +1896,7 @@ class MainWindow(QMainWindow):
         #         json_path = pathlib.Path(f"{self.app_project.get_objects_proteins_path()}/{tmp_protein_name}.json")
         #         self.app_project.add_existing_protein(protein.Protein.deserialize_protein(json_path))
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
+        self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
         # check if directory in empty
@@ -2232,7 +2234,7 @@ class MainWindow(QMainWindow):
 
     # ----- Functions for Close project
     def close_project(self):
-        self._project_watcher.app_start = False
+        self._project_watcher.on_home_page = True
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
         self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText("")

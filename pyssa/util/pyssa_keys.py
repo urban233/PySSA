@@ -25,6 +25,7 @@ import os
 import pathlib
 
 
+PROTEINS_SUBDIR = "proteins_subdir"
 PROTEIN_SUBDIR = "protein_subdir"
 PROTEIN_SEQUENCE_SUBDIR = "protein_sequence_subdir"
 PROTEIN_PDB_SUBDIR = "protein_pdb_subdir"
