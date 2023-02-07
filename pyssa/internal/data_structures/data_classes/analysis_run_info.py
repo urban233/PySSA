@@ -18,23 +18,26 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-import os
-import json
-import pathlib
+#
+from dataclasses import dataclass
 
 
+@dataclass
+class AnalysisRunInfo:
+    _protein_name_1: str
+    protein_chains_1: list
+    _protein_name_2: str
+    protein_chains_2: list
+    analysis_name: str
 
-if __name__ == '__main__':
-    dict_te = {
-        "list": [1,2,3,455,5]
-    }
-    tmp_object_file = open(("test.json"), "w", encoding="utf-8")
-    json.dump(dict_te, tmp_object_file, indent=4)
-    tmp_object_file.close()
+    def get_protein_name_1(self):
+        return self._protein_name_1.replace(".pdb", "")
 
-    tmp_object_file = open("test.json", "r", encoding="utf-8")
-    object_dict = json.load(tmp_object_file)
-    tmp_object_file.close()
+    def get_protein_name_2(self):
+        return self._protein_name_2.replace(".pdb", "")
 
-    print(object_dict.get("list")[4])
+    def are_protein_names_identical(self) -> bool:
+        if self._protein_name_1 == self._protein_name_2:
+            return True
+        else:
+            return False

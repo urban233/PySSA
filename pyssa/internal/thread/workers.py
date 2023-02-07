@@ -29,10 +29,14 @@ from pymol import cmd
 from pyssa.internal.data_structures import structure_prediction
 from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_processing import data_transformer
+from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import protein_pair
+from pyssa.internal.analysis_types import distance_analysis
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.io_pyssa import safeguard
 from pyssa.util import prediction_util
+from pyssa.util import analysis_util
 from pyssa.util import constants
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.logging_pyssa import loggers
@@ -237,96 +241,129 @@ class AnalysisWorkerPool(QtCore.QRunnable):
         self.app_settings = app_settings
         self._init_batch_analysis_page = _init_batch_analysis_page
 
-    def get_analysis_runs(self):
-        """This function creates a data format which is used for the analysis
+    # def get_analysis_runs(self):
+    #     """This function creates a data format which is used for the analysis
+    #
+    #     """
+    #     loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER,
+    #                                       "get_analysis_runs",
+    #                                       "self.app_project.proteins", self.app_project.proteins)
+    #     loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER,
+    #                                       "get_analysis_runs",
+    #                                       "self.list_analysis_overview", self.list_analysis_overview)
+    #     batch_analysis = []
+    #     for row_no in range(self.list_analysis_overview.count()):
+    #         batch_analysis.append(analysis_util.create_protein_analysis_info_objects(self.list_analysis_overview.item(row_no).text()))
+    #         # tmp_batch_analysis = self.list_analysis_overview.item(row_no).text()
+    #         # separator_index = tmp_batch_analysis.find("_vs_")
+    #         # prot_1 = tmp_batch_analysis[:separator_index]
+    #         #
+    #         # if prot_1.find(";") != -1:
+    #         #     prot_1_name = prot_1[:prot_1.find(";")]
+    #         #     prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
+    #         # else:
+    #         #     prot_1_name = prot_1
+    #         #     prot_1_chains = None
+    #         # prot_2 = tmp_batch_analysis[separator_index + 4:]
+    #         # if prot_2.find(";") != -1:
+    #         #     prot_2_name = prot_2[:prot_2.find(";")]
+    #         #     prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
+    #         # else:
+    #         #     prot_2_name = prot_2
+    #         #     prot_2_chains = None
+    #
+    #         # loggers.log_multiple_variable_values(constants.PREDICTION_WORKER_LOGGER, "get_analysis_runs", [
+    #         #     ("prot_1_name", prot_1_name),
+    #         #     ("prot_2_name", prot_2_name),
+    #         #     ("prot_1_chains", prot_1_chains),
+    #         #     ("prot_2_chains", prot_2_chains),
+    #         # ])
+    #         # tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
+    #         # tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
+    #         # batch_analysis.append((tmp_prot_1, tmp_prot_2))
+    #
+    #     transformer = data_transformer.DataTransformer(self.app_project, batch_analysis)
+    #     # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir, name), ...)
+    #     return transformer.transform_data_for_analysis()
+    #
+    # def run_analysis_process(self, batch_data):
+    #     """This function runs the analysis process.
+    #
+    #     Args:
+    #         batch_data:
+    #             data in the analysis-ready format
+    #     """
+    #     analyzer = structure_analysis.Analysis()
+    #     analyzer.run_analysis()
+    #
+    #     loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER, "run_analysis_process",
+    #                                       "batch_data", batch_data)
+    #     for analysis_data in batch_data:
+    #         if not os.path.exists(analysis_data[2]):
+    #             os.mkdir(analysis_data[2])
+    #         else:
+    #             basic_boxes.ok("Structure Analysis", f"The structure analysis: {analysis_data[3]} already exists!",
+    #                            QtWidgets.QMessageBox.Critical)
+    #             constants.PREDICTION_WORKER_LOGGER.warning(f"The structure analysis: {analysis_data[3]} already exists!")
+    #             self._init_batch_analysis_page()
+    #             return
+    #
+    #         cmd.reinitialize()
+    #         structure_analysis_obj = structure_analysis.StructureAnalysis(
+    #             reference_protein=[analysis_data[0]], model_proteins=[analysis_data[1]],
+    #             ref_chains=analysis_data[0].chains, model_chains=analysis_data[1].chains,
+    #             export_dir=analysis_data[2], cycles=self.app_settings.get_cycles(),
+    #             cutoff=self.app_settings.get_cutoff(),
+    #         )
+    #         if self.cb_analysis_images.isChecked():
+    #             structure_analysis_obj.response_create_images = True
+    #         structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+    #                                                              structure_analysis_obj.reference_protein)
+    #         structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+    #                                                              structure_analysis_obj.model_proteins)
+    #         protein_pairs = structure_analysis_obj.create_protein_pairs()
+    #         structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
+    #         protein_pairs[0].name = analysis_data[3]
+    #         protein_pairs[0].cutoff = self.app_settings.cutoff
+    #         self.app_project.add_protein_pair(protein_pairs[0])
+    #         protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
+    #         self.app_project.serialize_project(self.app_project.project_path, "project")
+
+    def transform_gui_input_to_practical_data(self) -> None:
+        """This function transforms the input from the gui to a practical data basis which can be used to setup
+        analysis runs
 
         """
-        loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER,
-                                          "get_analysis_runs",
-                                          "self.app_project.proteins", self.app_project.proteins)
-        loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER,
-                                          "get_analysis_runs",
-                                          "self.list_analysis_overview", self.list_analysis_overview)
-        batch_analysis = []
+        self.distance_analysis_runs = []
         for row_no in range(self.list_analysis_overview.count()):
-            tmp_batch_analysis = self.list_analysis_overview.item(row_no).text()
-            separator_index = tmp_batch_analysis.find("_vs_")
-            prot_1 = tmp_batch_analysis[:separator_index]
-
-            if prot_1.find(";") != -1:
-                prot_1_name = prot_1[:prot_1.find(";")]
-                prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
-            else:
-                prot_1_name = prot_1
-                prot_1_chains = None
-            prot_2 = tmp_batch_analysis[separator_index + 4:]
-            if prot_2.find(";") != -1:
-                prot_2_name = prot_2[:prot_2.find(";")]
-                prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
-            else:
-                prot_2_name = prot_2
-                prot_2_chains = None
-
-            loggers.log_multiple_variable_values(constants.PREDICTION_WORKER_LOGGER, "get_analysis_runs", [
-                ("prot_1_name", prot_1_name),
-                ("prot_2_name", prot_2_name),
-                ("prot_1_chains", prot_1_chains),
-                ("prot_2_chains", prot_2_chains),
-            ])
-            tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
-            tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
-            batch_analysis.append((tmp_prot_1, tmp_prot_2))
-
-        transformer = data_transformer.DataTransformer(self.app_project, batch_analysis)
-        # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir, name), ...)
-        return transformer.transform_data_for_analysis()
-
-    def run_analysis_process(self, batch_data):
-        """This function runs the analysis process.
-
-        Args:
-            batch_data:
-                data in the analysis-ready format
-        """
-        analyzer = structure_analysis.Analysis()
-        analyzer.run_analysis()
-
-        loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER, "run_analysis_process",
-                                          "batch_data", batch_data)
-        for analysis_data in batch_data:
-            if not os.path.exists(analysis_data[2]):
-                os.mkdir(analysis_data[2])
-            else:
-                basic_boxes.ok("Structure Analysis", f"The structure analysis: {analysis_data[3]} already exists!",
-                               QtWidgets.QMessageBox.Critical)
-                constants.PREDICTION_WORKER_LOGGER.warning(f"The structure analysis: {analysis_data[3]} already exists!")
-                self._init_batch_analysis_page()
-                return
-
-            cmd.reinitialize()
-            structure_analysis_obj = structure_analysis.StructureAnalysis(
-                reference_protein=[analysis_data[0]], model_proteins=[analysis_data[1]],
-                ref_chains=analysis_data[0].chains, model_chains=analysis_data[1].chains,
-                export_dir=analysis_data[2], cycles=self.app_settings.get_cycles(),
-                cutoff=self.app_settings.get_cutoff(),
+            self.distance_analysis_runs.append(
+                data_transformer.DistanceAnalysisDataTransformer(
+                    self.list_analysis_overview.item(row_no).text(),
+                    self.app_project,
+                    self.app_settings
+                ).transform_gui_input_to_distance_analysis_object()
             )
-            if self.cb_analysis_images.isChecked():
-                structure_analysis_obj.response_create_images = True
-            structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-                                                                 structure_analysis_obj.reference_protein)
-            structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-                                                                 structure_analysis_obj.model_proteins)
-            protein_pairs = structure_analysis_obj.create_protein_pairs()
-            structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
-            protein_pairs[0].name = analysis_data[3]
-            protein_pairs[0].cutoff = self.app_settings.cutoff
-            self.app_project.add_protein_pair(protein_pairs[0])
-            protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-            self.app_project.serialize_project(self.app_project.project_path, "project")
+
+    def set_up_analysis_runs(self) -> None:
+        """This function creates protein pairs and distance analysis objects for the analysis runs.
+
+        """
+        self.analysis_runs = structure_analysis.Analysis()
+        for tmp_distance_analysis in self.distance_analysis_runs:
+            self.analysis_runs.analysis_list.append(tmp_distance_analysis[0])
+
+    def run_analysis(self) -> None:
+        self.analysis_runs.run_analysis()
 
     def run(self):
         """This function is a reimplementation of the QRunnable run method.
 
         """
-        self.run_analysis_process(self.get_analysis_runs())
+        # transform raw data: get data in a form to create protein pair and analysis objects
+        self.transform_gui_input_to_practical_data()
+        # setup data for analysis: create protein_pair and distance analysis objects
+        self.set_up_analysis_runs()
+        # do the analysis runs
+        self.run_analysis()
+        # emit finish signal
         self.signals.finished.emit()

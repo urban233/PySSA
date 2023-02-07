@@ -20,13 +20,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for protein_pair operations in pymol"""
+import os
 import pymol
 import logging
+import pathlib
 from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import filesystem_io
 from pyssa.util import constants
+from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
+
+if TYPE_CHECKING:
+    from pyssa.io_pyssa import path_util
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -66,3 +72,53 @@ def align_protein_pair(target_selection, mobile_selection, alignment_filename) -
     return results
 
 
+def color_protein_pair(pymol_molecule_object_ref, pymol_molecule_object_model, color_ref="green", color_model="blue") -> None:
+    """This function colors both the reference and the model Protein.
+
+    Note:
+        Only the official colors from PyMOL are supported. These can
+        be looked up under the `color values`_ page.
+
+    Args:
+        color_ref (str, optional):
+            defines color for the reference Protein
+        color_model (str, optional):
+            defines color for the model Protein
+
+    Raises:
+        pymol.CmdException:
+            Exception is raised if one or both proteins
+            does not exist as pymol objects.
+
+    .. _color values:
+        https://pymolwiki.org/index.php/Color_Values
+    """
+    # argument test
+    # checks if either the reference or the model is an actual object in the memory
+    if not safeguard.Safeguard.check_if_protein_is_in_pymol(pymol_molecule_object_ref):
+        raise pymol.CmdException(f"The reference is not in the pymol session as an object.")
+    if not safeguard.Safeguard.check_if_protein_is_in_pymol(pymol_molecule_object_model):
+        raise pymol.CmdException(f"The model is not in the pymol session as an object.")
+    # actual color cmd command
+    cmd.color(color_ref, pymol_molecule_object_ref)
+    cmd.color(color_model, pymol_molecule_object_model)
+
+
+def save_session_of_protein_pair(session_filepath: 'path_util.FilePath') -> None:
+    """This function saves the pymol session of the Protein pair.
+
+    Note:
+        The pse file will be saved under the relative path
+        (if export_data_dir = "data/results"):
+        ``data/results/sessions``
+
+        The file name (filename) MUST NOT have the file extension .pse!
+
+    Args:
+        filename (str):
+            name of the session file
+
+    """
+    if not os.path.exists(session_filepath.get_dirname()):
+        os.mkdir(session_filepath.get_dirname())
+    cmd.save(session_filepath.get_filepath())

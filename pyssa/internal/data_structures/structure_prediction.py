@@ -113,11 +113,11 @@ class StructurePrediction:
         best_prediction_models: list[tuple] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
         for tmp_prediction in best_prediction_models:
             src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
-            dest = pathlib.Path(f"{self.project.get_pdb_path()}/{tmp_prediction[1]}")
+            dest = pathlib.Path(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}")
             shutil.copy(src, dest)
-            os.rename(f"{self.project.get_pdb_path()}/{tmp_prediction[1]}",
-                      f"{self.project.get_pdb_path()}/{tmp_prediction[0]}.pdb")
-            self.project.add_existing_protein(protein.Protein(tmp_prediction[0], pathlib.Path(self.project.get_pdb_path())))
+            os.rename(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}",
+                      f"{self.project.get_proteins_path()}/{tmp_prediction[0]}.pdb")
+            self.project.add_existing_protein(protein.Protein(tmp_prediction[0], pathlib.Path(self.project.get_proteins_path())))
         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
         try:
             pymol_io.load_protein(self.project.proteins[0].filepath, self.project.proteins[0].filename,

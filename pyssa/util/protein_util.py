@@ -22,12 +22,15 @@
 """This module contains helper function for the protein class."""
 import logging
 from pyssa.io_pyssa import safeguard
+from pyssa.internal.data_structures import chain
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pyssa.internal.data_structures import chain
+    from pyssa.internal.data_structures import sequence
+    from pyssa.internal.data_structures import protein
+
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -81,3 +84,27 @@ def filter_chains_for_protein_chains(chains: list['chain.Chain']) -> list['chain
         if tmp_chain.chain_type == constants.CHAIN_TYPE_PROTEIN:
             protein_chains.append(tmp_chain)
     return protein_chains
+
+
+def get_chains_as_list_of_tuples(chains: list['chain.Chain']) -> list[tuple[str, 'sequence.ProteinSequence', str]]:
+    chains_information = []
+    for tmp_chain in chains:
+        chains_information.append((tmp_chain.chain, tmp_chain.chain_sequence, tmp_chain.chain_type))
+    return chains_information
+
+
+def create_chains_from_list_of_tuples(chains_as_list_of_tuples: list[tuple[str, 'sequence.ProteinSequence', str]]) -> list['chain.Chain']:
+    chains: list['chain.Chain'] = []
+    for tmp_chain_information in chains_as_list_of_tuples:
+        chains.append(chain.Chain(tmp_chain_information[0], tmp_chain_information[1], tmp_chain_information[2]))
+    return chains
+
+
+def get_chains_from_list_of_chain_names(protein: 'protein.Protein', chain_names: list):
+    chains: list['chain.Chain'] = []
+    for tmp_chain in protein.chains:
+        for tmp_chain_name in chain_names:
+            if tmp_chain.chain == tmp_chain_name:
+                chains.append(tmp_chain)
+                break
+    return chains

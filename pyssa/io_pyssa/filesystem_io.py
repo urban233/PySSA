@@ -33,9 +33,13 @@ from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures import sequence
+from pyssa.internal.analysis_types import distance_analysis
 from pyssa.io_pyssa import safeguard
 from pyssa.util import constants
 from pyssa.util import tools
+from pyssa.util import protein_util
+from pyssa.util import project_util
+from pyssa.io_pyssa import path_util
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -78,79 +82,93 @@ class ObjectSerializer:
 class ObjectDeserializer:
     
     def __init__(self, filepath, filename):
-        tmp_object_file = open(f"{filepath}/{filename}.json", "r", encoding="utf-8")
+        tmp_object_file = open(pathlib.Path(f"{filepath}/{filename}.json"), "r", encoding="utf-8")
         self.object_dict = json.load(tmp_object_file)
     
     def deserialize_protein(self) -> 'protein.Protein':
         if self.object_dict.get("export_data_dir") == "None":
             update = {"export_data_dir": None}
             self.object_dict.update(update)
-        tmp_protein = protein.Protein(self.object_dict.get("molecule_object"),
-                                      self.object_dict.get("filepath"),
-                                      self.object_dict.get("export_data_dir")
-                                      )
-        tmp_protein.filename = self.object_dict.get("filename")
-        tmp_protein.set_sequence(self.object_dict.get("sequence"))
-        tmp_protein.set_selection(self.object_dict.get("selection"))
-        tmp_protein.set_chains(self.object_dict.get("chains"))
+        tmp_protein = protein.Protein(molecule_object=self.object_dict.get("filename"), # important for duplicated proteins
+                                      proteins_dirname=self.object_dict.get("proteins_dirname"),
+                                      pdb_filepath=path_util.FilePath(self.object_dict.get("import_data_dir")))
+        tmp_protein.molecule_object = self.object_dict.get("molecule_object")
+        tmp_protein.pymol_selection.selection_string = self.object_dict.get("selection")
+        tmp_protein.chains = protein_util.create_chains_from_list_of_tuples(self.object_dict.get("chains"))
+        tmp_protein.pymol_session_file = self.object_dict.get("pymol_session_file")
         return tmp_protein
     
     def deserialize_protein_pair(self) -> 'protein_pair.ProteinPair':
         tmp_protein_pair = protein_pair.ProteinPair(self.object_dict.get("prot_1_molecule_object"),
                                                     self.object_dict.get("prot_2_molecule_object"),
-                                                    pathlib.Path(self.object_dict.get("results_dir")),
-                                                    )
-        tmp_protein_pair.cutoff = self.object_dict.get("cutoff")
+                                                    pathlib.Path(self.object_dict.get("export_dirname")))
+        tmp_protein_pair.pymol_session_file = self.object_dict.get("pymol_session_file")
         tmp_protein_pair.name = self.object_dict.get("name")
 
         if self.object_dict.get("prot_1_export_data_dir") == "None":
             export_data_dir = None
         else:
             export_data_dir = self.object_dict.get("prot_1_export_data_dir")
-        tmp_protein_1 = protein.Protein(self.object_dict.get("prot_1_filename"),
-                                        self.object_dict.get("prot_1_import_data_dir"),
-                                        export_data_dir=export_data_dir,
-                                        )
+
+        tmp_protein_1 = protein.Protein(molecule_object=self.object_dict.get("prot_1_filename"), # important for duplicated proteins
+                                        proteins_dirname=self.object_dict.get("proteins_dirname"),
+                                        pdb_filepath=self.object_dict.get("prot_1_import_data_dir"))
         tmp_protein_1.molecule_object = self.object_dict.get("prot_1_molecule_object")
-        tmp_protein_1.set_sequence(self.object_dict.get("prot_1_sequence"))
-        tmp_protein_1.set_selection(self.object_dict.get("prot_1_selection"))
-        tmp_protein_1.set_chains(self.object_dict.get("prot_1_chains"))
+        tmp_protein_1.pymol_selection.selection_string = self.object_dict.get("prot_1_selection")
+        tmp_protein_1.chains = protein_util.create_chains_from_list_of_tuples(self.object_dict.get("prot_1_chains"))
         tmp_protein_pair.ref_obj = tmp_protein_1
 
         if self.object_dict.get("prot_2_export_data_dir") == "None":
             export_data_dir = None
         else:
             export_data_dir = self.object_dict.get("prot_2_export_data_dir")
-        tmp_protein_2 = protein.Protein(self.object_dict.get("prot_2_filename"),
-                                        self.object_dict.get("prot_2_import_data_dir"),
-                                        export_data_dir=export_data_dir,
-                                        )
+        tmp_protein_2 = protein.Protein(molecule_object=self.object_dict.get("prot_2_filename"),
+                                        # important for duplicated proteins
+                                        proteins_dirname=self.object_dict.get("proteins_dirname"),
+                                        pdb_filepath=self.object_dict.get("prot_2_import_data_dir"))
         tmp_protein_2.molecule_object = self.object_dict.get("prot_2_molecule_object")
-        tmp_protein_2.set_sequence(self.object_dict.get("prot_2_sequence"))
-        tmp_protein_2.set_selection(self.object_dict.get("prot_2_selection"))
-        tmp_protein_2.set_chains(self.object_dict.get("prot_2_chains"))
+        tmp_protein_2.pymol_selection.selection_string = self.object_dict.get("prot_2_selection")
+        tmp_protein_2.chains = protein_util.create_chains_from_list_of_tuples(self.object_dict.get("prot_2_chains"))
         tmp_protein_pair.model_obj = tmp_protein_2
 
         return tmp_protein_pair
     
-    def deserialize_project(self) -> 'project.Project':
+    def deserialize_project(self, app_settings: 'settings.Settings') -> 'project.Project':
         tmp_project: project.Project = project.Project(self.object_dict.get("_project_name"), self.object_dict.get("_workspace"))
         tmp_project.set_folder_paths(self.object_dict.get("_folder_paths"))
         tmp_project.project_path = self.object_dict.get("project_path")
-        # adding proteins to projects object
-        if len(os.listdir(tmp_project.get_objects_proteins_path())) > 0:
-            for tmp_protein_file in os.listdir(tmp_project.get_objects_proteins_path()):
-                tmp_protein = protein.Protein.deserialize_protein(
-                    pathlib.Path(f"{tmp_project.get_objects_proteins_path()}/{tmp_protein_file}"))
-                tmp_project.add_existing_protein(tmp_protein)
-        # adding protein pairs to projects object
-        if len(os.listdir(tmp_project.get_objects_protein_pairs_path())) > 0:
-            for tmp_protein_pair_file in os.listdir(tmp_project.get_objects_protein_pairs_path()):
-                tmp_protein_pair = protein_pair.ProteinPair.deserialize_protein_pair(
-                    pathlib.Path(f"{tmp_project.get_objects_protein_pairs_path()}/{tmp_protein_pair_file}"))
-                tmp_project.add_protein_pair(tmp_protein_pair)
+        for tmp_protein_json_filepath in project_util.get_all_protein_json_filepaths_from_project(tmp_project):
+            tmp_project.add_existing_protein(
+                ObjectDeserializer(
+                    tmp_protein_json_filepath.get_dirname(),
+                    tmp_protein_json_filepath.get_filename()
+                ).deserialize_protein()
+            )
+        for tmp_protein_pair_json_filepath in project_util.get_all_protein_pair_json_filepaths_from_project(tmp_project):
+            tmp_project.add_protein_pair(
+                ObjectDeserializer(
+                    tmp_protein_pair_json_filepath.get_dirname(),
+                    tmp_protein_pair_json_filepath.get_filename()
+                ).deserialize_protein_pair()
+            )
+        for tmp_distance_analysis_json_filepath in project_util.get_all_distance_analysis_json_filepaths_from_project(tmp_project):
+            tmp_project.add_distance_analysis(
+                ObjectDeserializer(
+                    tmp_distance_analysis_json_filepath.get_dirname(),
+                    tmp_distance_analysis_json_filepath.get_filename()
+                ).deserialize_distance_analysis(app_settings=app_settings, app_project=tmp_project)
+            )
         return tmp_project
-    
+
+    def deserialize_distance_analysis(self, app_settings: 'settings.Settings', app_project: 'project.Project') -> 'distance_analysis.DistanceAnalysis':
+        tmp_protein_pair = app_project.get_specific_protein_pair(self.object_dict.get("protein_pair_for_analysis_name"))
+        tmp_distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair, app_settings, self.object_dict.get("distance_analysis_dirname"))
+        tmp_distance_analysis.cutoff = self.object_dict.get("cutoff")
+        tmp_distance_analysis.cycles = self.object_dict.get("cycles")
+        tmp_distance_analysis.export_dirname = self.object_dict.get("export_dirname")
+        tmp_distance_analysis.pymol_session_filepath = self.object_dict.get("pymol_session_filepath")
+        return tmp_distance_analysis
+
     def deserialize_settings(self) -> 'settings.Settings':
         tmp_settings: settings.Settings = settings.Settings(self.object_dict.get("dir_settings"), self.object_dict.get("filename"))
         if safeguard.Safeguard.check_filepath(self.object_dict.get("workspace_path")):
@@ -199,7 +217,7 @@ class ObjectDeserializer:
 
 class ProjectScanner:
 
-    def __init__(self, project_obj: project.Project):
+    def __init__(self, project_obj: 'project.Project'):
         self.project = project_obj
 
     def scan_project_for_valid_proteins(self, list_view_project_proteins=None) -> list[str]:
@@ -211,14 +229,20 @@ class ProjectScanner:
         Returns:
 
         """
-        project_proteins: list[str] = os.listdir(self.project.get_pdb_path())
         pattern = "*.pdb"
+        protein_basenames = []
         # iterates over possible project directories
         if list_view_project_proteins is not None:
-            for tmp_protein in project_proteins:
-                if fnmatch.fnmatch(tmp_protein, pattern):
-                    list_view_project_proteins.addItem(tmp_protein)
-        return project_proteins
+            for tmp_protein_dir in os.listdir(self.project.get_proteins_path()):
+                path = pathlib.Path(f"{self.project.get_proteins_path()}/{tmp_protein_dir}")
+                if len(os.listdir(pathlib.Path(f"{path}/pdb"))) > 1:
+                    logger.error("Too many pdb files in one directory.")
+                    raise ValueError("Too many pdb files in one directory.")
+                if fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern) and list_view_project_proteins is not None:
+                    list_view_project_proteins.addItem(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]))
+                elif fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern) and list_view_project_proteins is None:
+                    protein_basenames.append(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]))
+        return protein_basenames
 
 
 class WorkspaceScanner:

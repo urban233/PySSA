@@ -27,7 +27,7 @@ from pymol import cmd
 from pyssa.io_pyssa import safeguard
 
 
-def load_protein(filepath: pathlib.Path, filename: str, molecule_object: str) -> None:
+def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
     """This function loads a protein in pymol through a protein object.
 
     Args:
@@ -35,9 +35,9 @@ def load_protein(filepath: pathlib.Path, filename: str, molecule_object: str) ->
             object which is in instance of the protein class
 
     """
-    if not safeguard.Safeguard.check_filepath(f"{filepath}/{filename}"):
+    if not safeguard.Safeguard.check_filepath(f"{filepath}/{basename}"):
         raise FileNotFoundError
-    cmd.load(f"{filepath}/{filename}", object=molecule_object)
+    cmd.load(f"{filepath}/{basename}", object=molecule_object)
 
 
 def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_object: str) -> None:
@@ -73,3 +73,18 @@ def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str
         raise NotADirectoryError(f"The filepath {export_filepath} does not exists.")
     # save the pdb file under the path (export_data_dir)
     cmd.save(f"{export_filepath}/{molecule_object}.pdb")
+
+
+def load_pymol_session(pymol_session_file):
+    """This function loads a pymol session file into the current pymol session.
+
+    Args:
+        pymol_session_file:
+            filepath of the session file
+    Raises:
+        FileNotFoundError: If file not found.
+
+    """
+    if not safeguard.Safeguard.check_filepath(f"{pymol_session_file}"):
+        raise FileNotFoundError
+    cmd.load(pymol_session_file)

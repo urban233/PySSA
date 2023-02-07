@@ -562,7 +562,6 @@ def clean_scratch_folder():
     shutil.rmtree(constants.SCRATCH_DIR)
     os.mkdir(constants.SCRATCH_DIR)
 
-
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")
 #

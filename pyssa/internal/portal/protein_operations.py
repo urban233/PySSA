@@ -22,7 +22,7 @@
 """Module for protein operations in pymol"""
 import logging
 import pathlib
-
+import os
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
@@ -102,9 +102,17 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
     for tmp_chain in tmp_chains:
         sequence_of_chain = cmd.get_model(f"chain {tmp_chain}")
         if sequence_of_chain.atom[0].resn in constants.AMINO_ACID_CODE:
-            chains_of_protein.append(chain.Chain(tmp_chain, sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
+            # TODO: can this be better?
+            fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
+            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n"):]
+            complete_sequence_of_chain = fasta_sequence_of_chain_without_header.replace("\n", "")
+            chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
         else:
-            chains_of_protein.append(chain.Chain(tmp_chain, sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN))
+            # TODO: this should produce a sequence with the non-protein atoms
+            fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
+            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n"):]
+            complete_sequence_of_chain = fasta_sequence_of_chain_without_header.replace("\n", "")
+            chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN))
         i += 1
     return chains_of_protein
 

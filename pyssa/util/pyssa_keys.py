@@ -18,23 +18,27 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+#
+"""Module for storing project-wide constants"""
+import logging
 import os
-import json
 import pathlib
 
 
+PROTEIN_SUBDIR = "protein_subdir"
+PROTEIN_SEQUENCE_SUBDIR = "protein_sequence_subdir"
+PROTEIN_PDB_SUBDIR = "protein_pdb_subdir"
+PROTEIN_SESSION_SUBDIR = "protein_session_subdir"
+PROTEIN_RESULTS_SUBDIR = "protein_results_subdir"
+PROTEIN_OBJECTS_SUBDIR = "protein_objects_subdir"
 
-if __name__ == '__main__':
-    dict_te = {
-        "list": [1,2,3,455,5]
-    }
-    tmp_object_file = open(("test.json"), "w", encoding="utf-8")
-    json.dump(dict_te, tmp_object_file, indent=4)
-    tmp_object_file.close()
+PROTEIN_PAIR_SUBDIR = "protein_pair_subdir"
+PROTEIN_PAIR_SESSION_SUBDIR = "protein_pair_session_subdir"
+PROTEIN_PAIR_RESULTS_SUBDIR = "protein_pair_results_subdir"
+PROTEIN_PAIR_OBJECTS_SUBDIR = "protein_pair_objects_subdir"
 
-    tmp_object_file = open("test.json", "r", encoding="utf-8")
-    object_dict = json.load(tmp_object_file)
-    tmp_object_file.close()
+DISTANCE_ANALYSIS_SUBDIR = "distance_analysis_subdir"
+DISTANCE_ANALYSIS_SESSION_SUBDIR = "distance_analysis_session_subdir"
+DISTANCE_ANALYSIS_RESULTS_SUBDIR = "distance_analysis_results_subdir"
+DISTANCE_ANALYSIS_OBJECTS_SUBDIR = "distance_analysis_objects_subdir"
 
-    print(object_dict.get("list")[4])

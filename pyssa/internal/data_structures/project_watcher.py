@@ -23,6 +23,7 @@
 import os
 from internal.data_structures import project
 from util import gui_utils
+from pyssa.util import project_util
 
 
 class ProjectWatcher:
@@ -45,6 +46,7 @@ class ProjectWatcher:
         self.current_project: project.Project = current_project
         self.no_of_pdb_files: int = no_of_pdb_files
         self.no_of_results: int = no_of_results
+        self.app_start: bool = False
 
     def show_valid_options(self, ui):
         """This function shows all valid options based on the number of pdb files and results in the project
@@ -247,12 +249,10 @@ class ProjectWatcher:
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!
         """
-        if self.current_project.get_pdb_path() == "pdb":
-            self.no_of_pdb_files = None
-        elif not os.path.exists(self.current_project.get_pdb_path()):
-            raise ValueError(f"The pdb path {self.current_project.get_pdb_path()} does not exist!")
+        if self.app_start:
+            self.no_of_pdb_files = len(project_util.get_all_pdb_filepaths_from_project(self.current_project))
         else:
-            self.no_of_pdb_files = len(os.listdir(self.current_project.get_pdb_path()))
+            self.no_of_pdb_files = None
 
     def count_results(self):
         """This function counts the number of results in the project
@@ -260,9 +260,7 @@ class ProjectWatcher:
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!
         """
-        if self.current_project.get_results_path() == "results":
-            print("Empty project.")
-        elif not os.path.exists(self.current_project.get_results_path()):
-            raise ValueError(f"The results path {self.current_project.get_results_path()} does not exist!")
-        else:
-            self.no_of_results = len(os.listdir(self.current_project.get_results_path()))
+        try:
+            self.no_of_results = len(project_util.get_all_distance_analysis_json_filepaths_from_project(self.current_project))
+        except FileNotFoundError:
+            print("")

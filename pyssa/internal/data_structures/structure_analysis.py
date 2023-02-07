@@ -52,8 +52,8 @@ class Analysis:
         pass
 
     def run_analysis(self):
-        for distance_analysis in self.analysis_list:
-            distance_analysis.do_analysis_in_pymol()
+        for tmp_distance_analysis in self.analysis_list:
+            tmp_distance_analysis.do_analysis_in_pymol()
 
 
 

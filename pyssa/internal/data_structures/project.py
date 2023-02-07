@@ -28,6 +28,8 @@ from datetime import datetime
 from pathlib import Path
 from util import gui_utils
 from internal.data_structures import protein, protein_pair
+from pyssa.internal.analysis_types import distance_analysis
+from pyssa.io_pyssa import filesystem_io
 
 
 class Project:
@@ -65,26 +67,15 @@ class Project:
         """
         self._project_name: str = project_name
         self._workspace: pathlib.Path = workspace_path
-
         self.project_path: pathlib.Path = Path(f"{workspace_path}/{project_name}")
         self._date = str(datetime.now())
         self._operating_system = platform.system()
-        # self._workspace_path: pathlib.Path = ""
         self._folder_paths: list[Path] = []
-        self._session_file_name: str = "session_file_model_s.pse"
+        # self._session_file_name: str = "session_file_model_s.pse"
         self.proteins: list[protein.Protein] = []
         self.protein_pairs: list[protein_pair.ProteinPair] = []
+        self.distance_analysis: list[distance_analysis.DistanceAnalysis] = []
         self.create_folder_paths()
-
-    def add_new_protein(self, protein_name) -> None:
-        """This function adds a new protein to the project.
-
-        Args:
-            protein_name:
-                name of the protein
-        """
-        new_protein = protein.Protein(protein_name)
-        self.proteins.append(new_protein)
 
     def add_existing_protein(self, value_protein: protein.Protein) -> None:
         """This function adds an existing protein object to the project.
@@ -104,29 +95,36 @@ class Project:
         """
         self.protein_pairs.append(value_protein_pair)
 
-    def create_project_tree(self) -> bool:
-        """This function creates the directory structure for a new project.
+    def add_distance_analysis(self, value_distance_analysis: 'distance_analysis.DistanceAnalysis') -> None:
+        self.distance_analysis.append(value_distance_analysis)
 
-        """
-        # check if the project folder already exists
-        if os.path.exists(self.get_project_path()):
-            detailed_message = f"The project is located under: {self.get_project_path()}."
-            flag = gui_utils.warning_message_project_exists(self._project_name, detailed_message,
-                                                            self.get_project_path())
-            if flag is False:
-                return False
-
-        for folder in self._folder_paths:
-            os.mkdir(folder)
+    # def create_project_tree(self) -> bool:
+    #     """This function creates the directory structure for a new project.
+    #
+    #     """
+    #     # check if the project folder already exists
+    #     if os.path.exists(self.get_project_path()):
+    #         detailed_message = f"The project is located under: {self.get_project_path()}."
+    #         flag = gui_utils.warning_message_project_exists(self._project_name, detailed_message,
+    #                                                         self.get_project_path())
+    #         if flag is False:
+    #             return False
+    #
+    #     for folder in self._folder_paths:
+    #         os.mkdir(folder)
 
     def create_folder_paths(self):
         self._folder_paths = [
             Path(f"{self._workspace}/{self._project_name}"),
-            Path(f"{self._workspace}/{self._project_name}/pdb"),
-            Path(f"{self._workspace}/{self._project_name}/results"),
-            Path(f"{self._workspace}/{self._project_name}/.objects/"),
-            Path(f"{self._workspace}/{self._project_name}/.objects/proteins"),
-            Path(f"{self._workspace}/{self._project_name}/.objects/protein_pairs"),
+            # Path(f"{self._workspace}/{self._project_name}/pdb"),
+            # Path(f"{self._workspace}/{self._project_name}/results"),
+            # Path(f"{self._workspace}/{self._project_name}/.objects/"),
+            # Path(f"{self._workspace}/{self._project_name}/.objects/proteins"),
+            # Path(f"{self._workspace}/{self._project_name}/.objects/protein_pairs"),
+            Path(f"{self._workspace}/{self._project_name}/proteins"),
+            Path(f"{self._workspace}/{self._project_name}/protein_pairs"),
+            Path(f"{self._workspace}/{self._project_name}/analysis"),
+            Path(f"{self._workspace}/{self._project_name}/analysis/distance_analysis")
             # Path(f"{workspace_path}/{self._project_name}/results/alignment_files"),
             # Path(f"{workspace_path}/{self._project_name}/results/distance_csv"),
             # Path(f"{workspace_path}/{self._project_name}/results/images"),
@@ -137,13 +135,10 @@ class Project:
             # Path(f"{workspace_path}/{self._project_name}/results/sessions/"),
         ]
 
-    def get_session_file(self) -> str:
-        """This function gets the value of the session_file variable
-
-        Returns (str):
-            session_file as complete path with file name
-        """
-        return f"{self._folder_paths[10]}/{self._session_file_name}"
+    def create_project_tree(self):
+        for folder_path in self._folder_paths:
+            if not os.path.exists(folder_path):
+                os.mkdir(folder_path)
 
     def get_project_path(self) -> str:
         """This function returns the project path of the project
@@ -153,7 +148,7 @@ class Project:
         """
         return str(self._folder_paths[0])
 
-    def get_pdb_path(self) -> str:
+    def get_proteins_path(self) -> str:
         """This function returns the pdb path of the project
 
         Returns:
@@ -161,7 +156,7 @@ class Project:
         """
         return str(self._folder_paths[1])
 
-    def get_results_path(self):
+    def get_protein_pairs_path(self):
         """This function returns the results path of the project
 
         Returns:
@@ -169,29 +164,13 @@ class Project:
         """
         return str(self._folder_paths[2])
 
-    def get_objects_path(self):
+    def get_analysis_path(self):
         """This function returns the objects path of the project
 
         Returns:
             the object path
         """
         return str(self._folder_paths[3])
-
-    def get_objects_proteins_path(self):
-        """This function returns the objects path of the project
-
-        Returns:
-            the object path
-        """
-        return str(self._folder_paths[4])
-
-    def get_objects_protein_pairs_path(self):
-        """This function returns the objects path of the project
-
-        Returns:
-            the object path
-        """
-        return str(self._folder_paths[5])
 
     def get_number_of_proteins(self):
         return len(self.proteins)
@@ -206,66 +185,63 @@ class Project:
         """This function serialize the protein object
 
         """
-        if not os.path.exists(filepath):
-            print(f"The filepath: {filepath} does not exists!")
-            return
-        # self._folder_paths.__str__()
-        # project_dict = self.__dict__
-        # protein_names = []
-        # for tmp_protein in self.proteins:
-        #     protein_names.append(tmp_protein.molecule_object)
-        # protein_pair_names = []
-        # for tmp_protein_pair in self.protein_pairs:
-        #     protein_pair_names.append(tmp_protein_pair.name)
-        json_dict = {
+        project_serializer = filesystem_io.ObjectSerializer(self, filepath, filename)
+        converted_paths = []
+        for tmp_folder_path in self._folder_paths:
+            converted_paths.append(str(tmp_folder_path))
+
+        project_dict = {
             '_project_name': str(self._project_name),
             '_workspace': str(self._workspace),
             'project_path': str(self.project_path),
             '_date': str(self._date),
             '_operating_system': str(self._operating_system),
-            '_folder_paths': [str(self._folder_paths[0]), str(self._folder_paths[1]), str(self._folder_paths[2]), str(self._folder_paths[3]), str(self._folder_paths[4]), str(self._folder_paths[5])],
-            '_session_file_name': str(self._session_file_name),
+            '_folder_paths': converted_paths,
+            # '_session_file_name': str(self._session_file_name),
         }
-        # project_dict.update(update)
-        #
-        # project_dict.pop('proteins')
-        # project_dict.pop('protein_pairs')
-        print(json_dict)
-        project_file = open(f"{filepath}\\{filename}.json", "w", encoding="utf-8")
-        json.dump(json_dict, project_file, indent=4)
+        project_serializer.set_custom_object_dict(project_dict)
+        project_serializer.serialize_object()
+
+        for tmp_protein in self.proteins:
+            tmp_protein.serialize_protein()
+        for tmp_protein_pair in self.protein_pairs:
+            tmp_protein_pair.serialize_protein_pair()
+        for tmp_distance_analysis in self.distance_analysis:
+            pass
 
     @staticmethod
-    def deserialize_project(filepath):
+    def deserialize_project(filepath, app_settings):
         """This function constructs the protein object from
         the json file
 
         Returns:
             a complete project object deserialized from a json file
         """
-        try:
-            project_obj_file = open(pathlib.Path(f"{filepath}/project.json"), "r", encoding="utf-8")
-        except FileNotFoundError:
-            print(f"There is no valid json file under: {filepath}")
-            return
-        project_dict = json.load(project_obj_file)
-        tmp_project: Project = Project(project_dict.get("_project_name"), project_dict.get("_workspace"))
-        tmp_project.set_folder_paths(project_dict.get("_folder_paths"))
-        tmp_project.project_path = project_dict.get("project_path")
-        # adding proteins to projects object
-        if len(os.listdir(tmp_project.get_objects_proteins_path())) > 0:
-            for tmp_protein_file in os.listdir(tmp_project.get_objects_proteins_path()):
-                tmp_protein = protein.Protein.deserialize_protein(pathlib.Path(f"{tmp_project.get_objects_proteins_path()}/{tmp_protein_file}"))
-                tmp_project.add_existing_protein(tmp_protein)
-        # adding protein pairs to projects object
-        if len(os.listdir(tmp_project.get_objects_protein_pairs_path())) > 0:
-            for tmp_protein_pair_file in os.listdir(tmp_project.get_objects_protein_pairs_path()):
-                tmp_protein_pair = protein_pair.ProteinPair.deserialize_protein_pair(pathlib.Path(f"{tmp_project.get_objects_protein_pairs_path()}/{tmp_protein_pair_file}"))
-                tmp_project.add_protein_pair(tmp_protein_pair)
-        return tmp_project
+        return filesystem_io.ObjectDeserializer(filepath, "project").deserialize_project(app_settings)
+        # try:
+        #     project_obj_file = open(pathlib.Path(f"{filepath}/project.json"), "r", encoding="utf-8")
+        # except FileNotFoundError:
+        #     print(f"There is no valid json file under: {filepath}")
+        #     return
+        # project_dict = json.load(project_obj_file)
+        # tmp_project: Project = Project(project_dict.get("_project_name"), project_dict.get("_workspace"))
+        # tmp_project.set_folder_paths(project_dict.get("_folder_paths"))
+        # tmp_project.project_path = project_dict.get("project_path")
+        # # adding proteins to projects object
+        # if len(os.listdir(tmp_project.get_objects_proteins_path())) > 0:
+        #     for tmp_protein_file in os.listdir(tmp_project.get_objects_proteins_path()):
+        #         tmp_protein = protein.Protein.deserialize_protein(pathlib.Path(f"{tmp_project.get_objects_proteins_path()}/{tmp_protein_file}"))
+        #         tmp_project.add_existing_protein(tmp_protein)
+        # # adding protein pairs to projects object
+        # if len(os.listdir(tmp_project.get_objects_protein_pairs_path())) > 0:
+        #     for tmp_protein_pair_file in os.listdir(tmp_project.get_objects_protein_pairs_path()):
+        #         tmp_protein_pair = protein_pair.ProteinPair.deserialize_protein_pair(pathlib.Path(f"{tmp_project.get_objects_protein_pairs_path()}/{tmp_protein_pair_file}"))
+        #         tmp_project.add_protein_pair(tmp_protein_pair)
+        # return tmp_project
 
     def search_protein(self, protein_name):
         for tmp_protein in self.proteins:
-            if tmp_protein.molecule_object == protein_name:
+            if tmp_protein.get_molecule_object() == protein_name:
                 return tmp_protein
         print(f"No matching protein with the name {protein_name} found.")
 

@@ -56,21 +56,27 @@ class FilePath:
 
     # </editor-fold>
 
-    def __init__(self, filepath=pathlib.Path("")):
-        if filepath != pathlib.Path(""):
+    def __init__(self, filepath):
+        if os.path.exists(filepath):
             # complete file path was given
             self._filepath = filepath
             self._dirname, self._basename = self.split_filepath()
             self._filename, self._extension = self.split_file_extension_from_name()
+        else:
+            raise FileNotFoundError("You need to pass an existing filepath!")
 
-    def split_filepath(self) -> tuple[pathlib.Path, pathlib.Path]:
-        return pathlib.Path(QtCore.QFileInfo(str(self._filepath)).canonicalPath()), pathlib.Path(QtCore.QFileInfo(str(self._filepath)).baseName())
+    def split_filepath(self) -> tuple[pathlib.Path, str]:
+        string_version = str(self._filepath)
+        file_info = QtCore.QFileInfo(string_version)
+        src = pathlib.Path(file_info.canonicalPath())
+        return pathlib.Path(file_info.canonicalPath()), f"{file_info.baseName()}.{file_info.suffix()}"
 
     def merge_filepath_to_filename(self) -> pathlib.Path:
         return pathlib.Path(str(self._filepath)+str(self._filename))
 
     def split_file_extension_from_name(self) -> tuple[str, str]:
-        return self._basename[:self._basename.find(".")], self._basename[self._basename.find("."):]
+        file_info = QtCore.QFileInfo(str(self._filepath))
+        return file_info.baseName(), f".{file_info.suffix()}"
 
     def get_filepath(self):
         return self._filepath

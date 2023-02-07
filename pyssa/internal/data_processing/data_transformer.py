@@ -21,8 +21,21 @@
 #
 """This module contains helper functions for specific data transformations."""
 import logging
+import pathlib
+
 from pyssa.internal.data_structures import sequence
 from pyssa.logging_pyssa import log_handlers
+from pyssa.internal.data_structures.data_classes import analysis_run_info
+from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import protein_pair
+from pyssa.internal.analysis_types import distance_analysis
+from pyssa.util import analysis_util
+from pyssa.util import protein_util
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import project
+    from pyssa.internal.data_structures import settings
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -113,55 +126,98 @@ def transform_protein_name_seq_tuple_to_sequence_obj(protein_name_seq_tuples: li
 #     #         f"{project.get_results_path()}/{analysis_name}")
 #     #     return prot_1, prot_2, export_dir, analysis_name
 #
-#     def transform_data_for_analysis(self) -> list[tuple[types.PROTEIN, types.PROTEIN, pathlib.Path, str]]:
-#         """This function transforms the data from a protein list to a usable format for the analysis algorithm
-#
-#         Returns:
-#             a list which consists of the two proteins, the export path for the results and the name of the analysis run
-#         """
-#         tmp_data = []
-#         for protein_pair_tuple in self.proteins_for_analysis:
-#             prot_1_name = protein_pair_tuple[0].protein_name.replace(".pdb", "")
-#             prot_2_name = protein_pair_tuple[1].protein_name.replace(".pdb", "")
-#
-#             prot_1: types.PROTEIN = self.project.search_protein(prot_1_name)
-#             if prot_1_name == prot_2_name:
-#                 prot_2: protein.Protein = prot_1.duplicate_protein()
-#                 prot_1: protein.Protein = prot_2.duplicate_protein()
-#                 prot_1.molecule_object = f"{prot_1.molecule_object}_1"
-#                 prot_2.molecule_object = f"{prot_2.molecule_object}_2"
-#             else:
-#                 prot_2: types.PROTEIN = self.project.search_protein(prot_2_name)
-#
-#             prot_1_chains_selected = protein_pair_tuple[0].protein_chains
-#             if prot_1_chains_selected is not None:
-#                 prot_1_chains = []
-#                 for tmp_chain in prot_1_chains_selected:
-#                     prot_1_chains.append(tmp_chain)
-#                 prot_1.set_chains(prot_1_chains)
-#             else:
-#                 prot_1_chains = []
-#
-#             prot_2_chains_selected = protein_pair_tuple[1].protein_chains
-#             if prot_2_chains_selected is not None:
-#                 prot_2_chains = []
-#                 for tmp_chain in prot_2_chains_selected:
-#                     prot_2_chains.append(tmp_chain)
-#                 prot_2.set_chains(prot_2_chains)
-#             else:
-#                 prot_2_chains = []
-#
-#             if len(prot_1.chains) != 0:
-#                 analysis_name = f"{prot_1.molecule_object};{prot_1_chains}_vs_{prot_2.molecule_object};{prot_2_chains}"
-#                 analysis_name = analysis_name.replace(";", "_")
-#                 analysis_name = analysis_name.replace(",", "_")
-#                 analysis_name = analysis_name.replace("[", "")
-#                 analysis_name = analysis_name.replace("]", "")
-#                 analysis_name = analysis_name.replace("'", "")
-#             else:
-#                 analysis_name = f"{prot_1.molecule_object}_vs_{prot_2.molecule_object}"
-#             export_dir = pathlib.Path(
-#                 f"{self.project.get_results_path()}/{analysis_name}")
-#             transformed_data: tuple = prot_1, prot_2, export_dir, analysis_name
-#             tmp_data.append(transformed_data)
-#         return tmp_data
+
+
+class DistanceAnalysisDataTransformer:
+    """This class is used to transform data from the gui to a manageable format."""
+
+    # <editor-fold desc="Class attributes">
+    """
+    the name of a single analysis run
+    """
+    analysis_run_name: str
+    """
+    the current project of the main window
+    """
+    current_project: 'project.Project'
+    """
+    the settings of pyssa
+    """
+    app_settings: 'settings.Settings'
+    """
+    the information about the analysis run, includes the names and chains and analysis name
+    """
+    analysis_run: 'analysis_run_info.AnalysisRunInfo'
+    """
+    a tuple of two proteins
+    """
+    proteins: tuple['protein.Protein', 'protein.Protein']
+    """
+    the protein pair for the distance analysis
+    """
+    analysis_protein_pair: 'protein_pair.ProteinPair'
+    """
+    the distance analysis object
+    """
+    analysis_distance: 'distance_analysis.DistanceAnalysis'
+
+    # </editor-fold>
+
+    def __init__(self, analysis_run_name: str, app_project: 'project.Project', app_settings: 'settings.Settings'):
+        self.analysis_run_name = analysis_run_name
+        self.current_project = app_project
+        self.settings = app_settings
+
+    def _create_analysis_run_info(self):
+        tmp_analysis_run_infos: list = analysis_util.split_analysis_run_name_in_protein_name_and_chain(self.analysis_run_name)
+        self.analysis_run = analysis_run_info.AnalysisRunInfo(tmp_analysis_run_infos[0], tmp_analysis_run_infos[1],
+                                                              tmp_analysis_run_infos[2], tmp_analysis_run_infos[3],
+                                                              self.analysis_run_name)
+
+    def _create_proteins_for_analysis(self):
+        protein_1: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_1())
+
+        if self.analysis_run.are_protein_names_identical():
+            protein_2: protein.Protein = protein_1.duplicate_protein()
+            protein_1: protein.Protein = protein_2.duplicate_protein()
+            protein_1.molecule_object = f"{protein_1.molecule_object}_1"
+            protein_2.molecule_object = f"{protein_2.molecule_object}_2"
+        else:
+            protein_2: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_2())
+        self.proteins = (protein_1, protein_2)
+
+    def _create_analysis_name(self):
+        if len(self.proteins[0].chains) != 0:
+            analysis_name = f"{self.proteins[0].get_molecule_object()};{self.analysis_run.protein_chains_1}_vs_{self.proteins[1].get_molecule_object()};{self.analysis_run.protein_chains_1}"
+            analysis_name = analysis_name.replace(";", "_")
+            analysis_name = analysis_name.replace(",", "_")
+            analysis_name = analysis_name.replace("[", "")
+            analysis_name = analysis_name.replace("]", "")
+            analysis_name = analysis_name.replace("'", "")
+        else:
+            analysis_name = f"{self.proteins[0].get_molecule_object()}_vs_{self.proteins[1].get_molecule_object()}"
+        return analysis_name
+
+    def _create_protein_pair(self):
+        self.analysis_protein_pair = protein_pair.ProteinPair(self.proteins[0], self.proteins[1],
+                                                              pathlib.Path(f"{self.current_project.get_protein_pairs_path()}/protein_pairs/{self._create_analysis_name()}"))
+
+    def _create_distance_analysis(self):
+        self.analysis_distance = distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.app_settings,
+                                                                    pathlib.Path(f"{self.current_project.get_protein_pairs_path()}/distance_analysis/{self._create_analysis_name()}"))
+
+    def _set_selection_for_analysis(self):
+        self.analysis_distance.create_align_selections(
+            analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_1,
+                                                                           self.analysis_run.protein_chains_1),
+            analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_2,
+                                                                           self.analysis_run.protein_chains_2))
+
+    def transform_gui_input_to_distance_analysis_object(self):
+        self._create_analysis_run_info()
+        self._create_proteins_for_analysis()
+        self._create_analysis_name()
+        self._create_protein_pair()
+        self._create_distance_analysis()
+        self._set_selection_for_analysis()
+        return self.analysis_distance, self.analysis_protein_pair

@@ -20,17 +20,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the protein pair class"""
-import json
 import os
 import pathlib
-import pymol
 import logging
-import pandas as pd
-import numpy as np
-from pymol import cmd
-from Bio import AlignIO
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import safeguard
+from pyssa.io_pyssa import path_util
+from pyssa.internal.portal import pymol_io
+from pyssa.internal.portal import protein_pair_operations
+from pyssa.io_pyssa import filesystem_io
+from pyssa.util import protein_util
+from pyssa.util import pyssa_keys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -53,19 +53,24 @@ class ProteinPair:
     """
     protein_2: 'protein.Protein'
     """
-    
+    a directory where all results related to the protein will be stored
     """
+    export_dirname: pathlib.Path
+    """
+    the full filepath where the session file is stored
+    """
+    pymol_session_filepath: path_util.FilePath
 
-    def __init__(self, reference_obj: 'protein.Protein', model_obj: 'protein.Protein',
-                 results_dir: pathlib.Path) -> None:
+    def __init__(self, protein_1: 'protein.Protein', protein_2: 'protein.Protein',
+                 protein_pairs_dirname: pathlib.Path) -> None:
         """Constructor.
 
         Args:
-            reference_obj (core.protein.Protein):
+            protein_1 (core.protein.Protein):
                 reference Protein object
-            model_obj (core.Protein):
+            protein_2 (core.Protein):
                 model Protein object
-            results_dir (str):
+            protein_pairs_dirname (str):
                 directory where all results will be stored.
                 All subdirectories like ``images``, ``alignment_files``
                 and ``distances`` will be created automatically.
@@ -74,43 +79,37 @@ class ProteinPair:
         Raises:
             NotADirectoryError: If directory not found.
         """
-        # argument test
-        if not safeguard.Safeguard.check_filepath(results_dir):
-            raise NotADirectoryError
-        self.ref_obj: protein.Protein = reference_obj
-        self.model_obj: protein.Protein = model_obj
-        self.results_dir: pathlib.Path = results_dir
-        self.name = "generic"
+        self.protein_1: protein.Protein = protein_1
+        self.protein_2: protein.Protein = protein_2
+        self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
+        protein_pair_dirname = f"{protein_pairs_dirname}/{self.name}"
 
-    def load_protein_pair(self) -> None:
-        """This function loads to proteins with the `load`_ command from
-        PyMOL. The first one is the reference which comes from the constructor.
-        The second one is the model. This text will be automatically synced.
+        self.protein_pair_subdirs = {
+            pyssa_keys.PROTEIN_PAIR_SUBDIR: pathlib.Path(f"{protein_pair_dirname}"),
+            pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/session"),
+            pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/results"),
+            pyssa_keys.PROTEIN_PAIR_OBJECTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/.objects"),
+        }
+        for key in self.protein_pair_subdirs:
+            if not os.path.exists(self.protein_pair_subdirs.get(key)):
+                os.mkdir(self.protein_pair_subdirs.get(key))
+        self.export_dirname = self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR)
+        self.pymol_session_filepath = path_util.FilePath(f"{self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR)}/{self.name}_session.pse")
 
-        Raises:
-            pymol.CmdException:
-                Exception is raised if load command fails.
+    def load_protein_pair_in_pymol(self):
+        """This function loads to proteins into a NEW pymol session.
 
-        .. _load:
-            https://pymolwiki.org/index.php/Load
         """
-        # check if the protein is a duplicate
-        if self.ref_obj.molecule_object.find("_1"):
-            tmp_ref_molecule_object = self.ref_obj.molecule_object.replace("_1", "")
-        else:
-            tmp_ref_molecule_object = self.ref_obj.molecule_object
-        if self.model_obj.molecule_object.find("_2"):
-            tmp_model_molecule_object = self.model_obj.molecule_object.replace("_2", "")
-        else:
-            tmp_model_molecule_object = self.model_obj.molecule_object
-        # loading the reference in the active PyMol session
-        cmd.load(f"{self.ref_obj.filepath}/"
-                 f"{tmp_ref_molecule_object}.pdb", object=self.ref_obj.molecule_object)
-        # loading the model in the active PyMol session
-        cmd.load(f"{self.model_obj.filepath}/"
-                 f"{tmp_model_molecule_object}.pdb", object=self.model_obj.molecule_object)
+        self.protein_1.load_protein_in_pymol()
+        self.protein_2.load_protein_in_pymol()
 
-    def color_protein_pair(self, color_ref="green", color_model="blue") -> None:
+    def load_pymol_session(self):
+        """This function loads the existing pymol session of the pair.
+
+        """
+        pymol_io.load_pymol_session(self.pymol_session_filepath.get_filepath())
+
+    def color_protein_pair(self) -> None:
         """This function colors both the reference and the model Protein.
 
         Note:
@@ -128,20 +127,11 @@ class ProteinPair:
                 Exception is raised if one or both proteins
                 does not exist as pymol objects.
 
-        .. _color values:
-            https://pymolwiki.org/index.php/Color_Values
         """
-        # argument test
-        # checks if either the reference or the model is an actual object in the memory
-        if not safeguard.Safeguard.check_if_protein_is_in_pymol(self.ref_obj.molecule_object):
-            raise pymol.CmdException(f"The reference is not in the pymol session as an object.")
-        if not safeguard.Safeguard.check_if_protein_is_in_pymol(self.model_obj.molecule_object):
-            raise pymol.CmdException(f"The model is not in the pymol session as an object.")
-        # actual color cmd command
-        cmd.color(color_ref, self.ref_obj.molecule_object)
-        cmd.color(color_model, self.model_obj.molecule_object)
+        protein_pair_operations.color_protein_pair(self.protein_1.get_molecule_object(),
+                                                   self.protein_2.get_molecule_object())
 
-    def save_session_of_protein_pair(self, filename: str) -> None:
+    def save_session_of_protein_pair(self) -> None:
         """This function saves the pymol session of the Protein pair.
 
         Note:
@@ -151,27 +141,8 @@ class ProteinPair:
 
             The file name (filename) MUST NOT have the file extension .pse!
 
-        Args:
-            filename (str):
-                name of the session file
-
-        Example:
-            The ``filename`` variable should be as follows::
-
-                Yes:
-                    # This is a correct file name, because it has NO
-                    # file extension
-                    f"Bmp2_0_CA_session"
-
-                No:
-                    # This file name is wrong, because it has a
-                    # trailing .pse which is not compatible with
-                    # the function
-                    f"Bmp2_0_CA_session.pse"
         """
-        if not os.path.exists(f"{self.results_dir}/sessions"):
-            os.mkdir(f"{self.results_dir}/sessions")
-        cmd.save(f"{self.results_dir}/sessions/{filename}.pse")
+        protein_pair_operations.save_session_of_protein_pair(self.pymol_session_filepath)
 
     # def align_protein_pair(self, cycle_number: int, cutoff_value: float,
     #                        alignment_filename: str = None) -> tuple[float, int]:
@@ -666,86 +637,38 @@ class ProteinPair:
     #     # save image as 300 dpi png image
     #     cmd.png(f'{self.results_dir}/images/{filename}.png', dpi=300)
 
-    def serialize_protein_pair(self, filepath) -> None:
+    def serialize_protein_pair(self) -> None:
         """This function serialize the protein pair object
 
         """
-        if not safeguard.Safeguard.check_filepath(filepath):
-            print(f"The filepath: {filepath} does not exists!")
-            return
-
-        protein_structures_dict = {
-            "prot_1_molecule_object": self.ref_obj.molecule_object,
-            "prot_1_import_data_dir": str(self.ref_obj.filepath),
-            "prot_1_export_data_dir": str(self.ref_obj.export_filepath),
-            "prot_1_filename": str(self.ref_obj.filename),
-            "prot_1_selection": self.ref_obj.selection,
-            "prot_1_sequence": self.ref_obj.sequence,
-            "prot_1_chains": self.ref_obj.chains,
-            "prot_2_molecule_object": self.model_obj.molecule_object,
-            "prot_2_import_data_dir": str(self.model_obj.filepath),
-            "prot_2_export_data_dir": str(self.model_obj.export_filepath),
-            "prot_2_filename": str(self.model_obj.filename),
-            "prot_2_selection": self.model_obj.selection,
-            "prot_2_sequence": self.model_obj.sequence,
-            "prot_2_chains": self.model_obj.chains,
-            "results_dir": str(self.results_dir),
-            "cutoff": self.cutoff,
+        protein_pair_serializer = filesystem_io.ObjectSerializer(self, self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_OBJECTS_SUBDIR), self.name)
+        protein_pair_dict = {
+            "prot_1_molecule_object": self.protein_1.get_molecule_object(),
+            "prot_1_import_data_dir": str(self.protein_1.pdb_filepath.get_filepath()),
+            "prot_1_export_data_dir": str(self.protein_1.export_dirname),
+            "prot_1_filename": str(self.protein_1.pdb_filepath.get_filename()),
+            "prot_1_selection": self.protein_1.pymol_selection.selection_string,
+            "prot_1_chains": protein_util.get_chains_as_list_of_tuples(self.protein_1.chains),
+            "prot_2_molecule_object": self.protein_2.get_molecule_object(),
+            "prot_2_import_data_dir": str(self.protein_2.pdb_filepath.get_filepath()),
+            "prot_2_export_data_dir": str(self.protein_2.export_dirname),
+            "prot_2_filename": str(self.protein_2.pdb_filepath.get_filename()),
+            "prot_2_selection": self.protein_2.pymol_selection.selection_string,
+            "prot_2_chains": protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
+            "export_dirname": str(self.export_dirname),
+            "pymol_session_file": str(self.pymol_session_filepath.get_filepath()),
             "name": self.name,
+            "protein_pairs_dirname": str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
         }
-
-        protein_file = open(pathlib.Path(f"{filepath}/{self.name}.json"), "w", encoding="utf-8")
-        json.dump(protein_structures_dict, protein_file, indent=4)
-        protein_file.close()
+        protein_pair_serializer.set_custom_object_dict(protein_pair_dict)
+        protein_pair_serializer.serialize_object()
 
     @staticmethod
-    def deserialize_protein_pair(protein_obj_json_file):
+    def deserialize_protein_pair(protein_obj_json_file: path_util.FilePath):
         """This function constructs the protein pair object from
         the json file
 
         Returns:
             two complete protein objects and a protein pair object deserialized from a json file
         """
-        try:
-            protein_obj_file = open(protein_obj_json_file, "r", encoding="utf-8")
-        except FileNotFoundError:
-            print(f"There is no valid protein pair json file under: {protein_obj_json_file}")
-            return
-        protein_dict = json.load(protein_obj_file)
-
-        tmp_protein_pair = ProteinPair(protein_dict.get("prot_1_molecule_object"),
-                                       protein_dict.get("prot_2_molecule_object"),
-                                       pathlib.Path(protein_dict.get("results_dir")),
-                                       )
-        tmp_protein_pair.cutoff = protein_dict.get("cutoff")
-        tmp_protein_pair.name = protein_dict.get("name")
-
-        if protein_dict.get("prot_1_export_data_dir") == "None":
-            export_data_dir = None
-        else:
-            export_data_dir = protein_dict.get("prot_1_export_data_dir")
-        tmp_protein_1 = protein.Protein(protein_dict.get("prot_1_filename"),
-                                        protein_dict.get("prot_1_import_data_dir"),
-                                        export_filepath=export_data_dir,
-                                        )
-        tmp_protein_1.molecule_object = protein_dict.get("prot_1_molecule_object")
-        tmp_protein_1.set_sequence(protein_dict.get("prot_1_sequence"))
-        tmp_protein_1.set_selection(protein_dict.get("prot_1_selection"))
-        tmp_protein_1.set_chains(protein_dict.get("prot_1_chains"))
-        tmp_protein_pair.ref_obj = tmp_protein_1
-
-        if protein_dict.get("prot_2_export_data_dir") == "None":
-            export_data_dir = None
-        else:
-            export_data_dir = protein_dict.get("prot_2_export_data_dir")
-        tmp_protein_2 = protein.Protein(protein_dict.get("prot_2_filename"),
-                                        protein_dict.get("prot_2_import_data_dir"),
-                                        export_filepath=export_data_dir,
-                                        )
-        tmp_protein_2.molecule_object = protein_dict.get("prot_2_molecule_object")
-        tmp_protein_2.set_sequence(protein_dict.get("prot_2_sequence"))
-        tmp_protein_2.set_selection(protein_dict.get("prot_2_selection"))
-        tmp_protein_2.set_chains(protein_dict.get("prot_2_chains"))
-        tmp_protein_pair.model_obj = tmp_protein_2
-
-        return tmp_protein_pair
+        return filesystem_io.ObjectDeserializer(protein_obj_json_file.get_dirname(), protein_obj_json_file.get_filename()).deserialize_protein_pair()

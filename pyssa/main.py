@@ -68,6 +68,7 @@ from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
+from pyssa.io_pyssa import path_util
 from pyssa.logging_pyssa import loggers
 
 # setup logger
@@ -193,7 +194,7 @@ class MainWindow(QMainWindow):
         # create tooltips
         self._create_all_tooltips()
         self._project_watcher.show_valid_options(self.ui)
-
+        self.project_scanner = filesystem_io.ProjectScanner(self.app_project)
         # sets threadpool
         self.threadpool = QtCore.QThreadPool()
         # sets additional parameters
@@ -201,6 +202,7 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
         constants.PYSSA_LOGGER.info("PySSA started.")
+        self._project_watcher.app_start = True
 
     # ----- Functions for GuiPageManagement obj creation
     def _create_local_pred_monomer_management(self):
@@ -947,8 +949,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_edit_clean_update_prot,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
-        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                              self.ui.list_edit_project_proteins)
+        self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
 
     def _init_local_pred_mono_page(self):
         # clears everything
@@ -1145,7 +1146,7 @@ class MainWindow(QMainWindow):
         """This function displays the results work area
 
         """
-        results = os.listdir(self.app_project.get_results_path())
+        results = os.listdir(self.app_project.get_protein_pairs_path())
         results.insert(0, "")
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
@@ -1234,8 +1235,7 @@ class MainWindow(QMainWindow):
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
         # list all proteins from pdb directory
-        tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                              self.ui.list_view_project_proteins)
+        self.project_scanner.scan_project_for_valid_proteins(list_view_project_proteins=self.ui.list_view_project_proteins)
 
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -1259,8 +1259,7 @@ class MainWindow(QMainWindow):
         self.ui.list_use_selected_protein_structures.clear()
         valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
         # filesystem operations
-        tools.scan_project_for_valid_proteins(pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"),
-                                              self.ui.list_use_selected_protein_structures)
+        self.project_scanner.scan_project_for_valid_proteins(self.ui.list_use_selected_protein_structures)
         protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(valid_projects,
                                                                                       self.ui.lbl_current_project_name.text(),
                                                                                       self.workspace_path,
@@ -1280,7 +1279,7 @@ class MainWindow(QMainWindow):
 
     def display_hotspots_page(self):
         self.ui.list_hotspots_choose_protein.clear()
-        tools.scan_project_for_valid_proteins(self.app_project.project_path, self.ui.list_hotspots_choose_protein)
+        self.project_scanner.scan_project_for_valid_proteins(self.ui.list_hotspots_choose_protein)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_hotspots_page)
@@ -1825,34 +1824,23 @@ class MainWindow(QMainWindow):
                     # TODO: add message that fetching the reference failed
                     return
 
-                shutil.move(f"{self.scratch_path}/{pdb_id}.pdb", self.app_project.get_pdb_path())
-                tmp_ref_protein = protein.Protein(pdb_id,
-                                                  filepath=pathlib.Path(self.app_project.get_pdb_path()),
-                                                  export_filepath=self.scratch_path)
-                tmp_ref_protein.clean_pdb_file()
+                tmp_ref_protein = protein.Protein(molecule_object=pdb_id,
+                                                  proteins_dirname=pathlib.Path(self.app_project.get_proteins_path()),
+                                                  pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")))
             else:
                 # local pdb file as input
-                shutil.copy(self.ui.txt_new_choose_reference.text(), self.app_project.get_pdb_path())
-                protein_file_info = QtCore.QFileInfo(self.ui.txt_new_choose_reference.text())
-                pdb_id = protein_file_info.baseName()
-                tmp_ref_protein = protein.Protein(pdb_id,
-                                                  filepath=pathlib.Path(self.app_project.get_pdb_path()),
-                                                  export_filepath=self.scratch_path)
-                cmd.load(self.ui.txt_new_choose_reference.text(), object=pdb_id)
-            tmp_ref_protein.set_chains()
-            tmp_ref_protein.set_sequence()
-            chains = cmd.get_chains(pdb_id)
-            cmd.reinitialize()
+                pdb_filepath = path_util.FilePath(pathlib.Path(self.ui.txt_new_choose_reference.text()))
+                tmp_ref_protein = protein.Protein(molecule_object=pdb_filepath.get_filename(),
+                                                  proteins_dirname=pathlib.Path(self.app_project.get_proteins_path()),
+                                                  pdb_filepath=pdb_filepath)
             self.app_project.add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.serialize_protein(self.app_project.get_objects_proteins_path(), pdb_id)
-            for chain in chains:
-                self.ui.list_s_v_p_ref_chains.addItem(chain)
         self.ui.cb_new_add_reference.setCheckState(0)
         self.app_project.serialize_project(self.app_project.project_path, "project")
         constants.PYSSA_LOGGER.info(f"Created the project {self.app_project.get_project_name()}.")
         constants.PYSSA_LOGGER.debug(f"These are the proteins {self.app_project.proteins}.")
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
+        self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
@@ -1893,9 +1881,8 @@ class MainWindow(QMainWindow):
         """
         # show project management options in side menu
         # self._init_project_management()
-
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
-        self.app_project = project.Project.deserialize_project(tmp_project_path)
+        self.app_project = project.Project.deserialize_project(tmp_project_path, self.app_settings)
         constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
         self._project_watcher.current_project = self.app_project
         constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
@@ -2110,31 +2097,28 @@ class MainWindow(QMainWindow):
         if response:
             tools.remove_pdb_file(f"{project_path}/pdb/{protein_name}")
             self.ui.list_edit_project_proteins.clear()
-            tools.scan_project_for_valid_proteins(
-                pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"),
-                self.ui.list_edit_project_proteins)
+            self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
             self._project_watcher.show_valid_options(self.ui)
         else:
             print("Nothing happened.")
 
     # ----- Functions for View project page
     def view_sequence(self):
-        project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
-        tmp_protein_filename = self.ui.list_view_project_proteins.currentItem().text()
-        sequence = tools.get_sequence_from_pdb_file(f"{project_path}/pdb/{tmp_protein_filename}")
+        tmp_protein_basename = self.ui.list_view_project_proteins.currentItem().text()
+        tmp_protein_filename = tmp_protein_basename.replace(".pdb", "")
+        tmp_protein_sequences = self.app_project.search_protein(tmp_protein_filename).get_protein_sequences()
         self.ui.txtedit_view_sequence.clear()
-        self.ui.txtedit_view_sequence.append(sequence)
+        self.ui.txtedit_view_sequence.append("".join(tmp_protein_sequences))
         # fixme: experimental sequence viewer gui
-        #dialog = dialog_sequence_viewer.SequenceViewer(sequence, tmp_protein_filename)
-        #dialog.exec_()
+        # dialog = dialog_sequence_viewer.SequenceViewer(tmp_protein_sequences, tmp_protein_filename)
+        # dialog.exec_()
 
     def view_structure(self):
         protein_name = self.ui.list_view_project_proteins.currentItem().text()
-        protein_path = pathlib.Path(f"{self.app_project.get_pdb_path()}/{protein_name}")
         # TODO: ask if the session should be saved
         cmd.reinitialize()
         try:
-            cmd.load(protein_path)
+            cmd.load(self.app_project.search_protein(protein_name.replace(".pdb", "")).pymol_session_filepath.get_filepath())
         except pymol.CmdException:
             print("Error while loading protein in PyMOL!")
 
@@ -2234,8 +2218,8 @@ class MainWindow(QMainWindow):
             prots_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
         for tmp_protein in prots_to_copy:
             protein_path = global_variables.global_var_workspace_proteins[tmp_protein]
-            shutil.copy(protein_path, f"{self.app_project.get_pdb_path()}/{tmp_protein}")
-            new_protein = protein.Protein(tmp_protein, filepath=pathlib.Path(self.app_project.get_pdb_path()))
+            shutil.copy(protein_path, f"{self.app_project.get_proteins_path()}/{tmp_protein}")
+            new_protein = protein.Protein(tmp_protein, filepath=pathlib.Path(self.app_project.get_proteins_path()))
             new_protein.serialize_protein(self.app_project.get_objects_proteins_path(), tmp_protein)
             self.app_project.add_existing_protein(new_protein)
         self.app_project.serialize_project(self.app_project.project_path, "project")
@@ -2248,6 +2232,7 @@ class MainWindow(QMainWindow):
 
     # ----- Functions for Close project
     def close_project(self):
+        self._project_watcher.app_start = False
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
         self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText("")
@@ -3071,7 +3056,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_analysis_start.setEnabled(True)
 
     def fill_protein_structure_boxes(self):
-        proteins = tools.scan_project_for_valid_proteins(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}")
+        proteins = self.project_scanner.scan_project_for_valid_proteins()
         proteins.insert(0, "")
         self.ui.box_analysis_prot_struct_1.clear()
         self.ui.box_analysis_prot_struct_2.clear()
@@ -3236,8 +3221,7 @@ class MainWindow(QMainWindow):
             self.ui.list_analysis_batch_overview.addItem(item)
 
     def fill_protein_boxes_batch(self):
-        proteins = tools.scan_project_for_valid_proteins(
-            f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}")
+        proteins = self.project_scanner.scan_project_for_valid_proteins()
         proteins.insert(0, "")
         self.ui.box_analysis_batch_prot_struct_1.clear()
         self.ui.box_analysis_batch_prot_struct_2.clear()
@@ -3464,7 +3448,7 @@ class MainWindow(QMainWindow):
         if self.results_name == "":
             self.show_analysis_results_options()
             return
-        current_results_path = pathlib.Path(f"{self.app_project.get_results_path()}/{self.results_name}")
+        current_results_path = pathlib.Path(f"{self.app_project.get_protein_pairs_path()}/{self.results_name}")
         gui_elements_to_hide = []
         if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
             # no images where made
@@ -3533,7 +3517,7 @@ class MainWindow(QMainWindow):
 
         if gui_utils.warning_switch_pymol_session("") is True:
             try:
-                file_path = global_var_project_dict[global_var_list_widget_row].get_results_path()
+                file_path = global_var_project_dict[global_var_list_widget_row].get_protein_pairs_path()
                 cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
                 tools.quick_log_and_display("info", "Saving the pymol session was successful.",
                                             self.status_bar, "Saving was successful.")
@@ -3547,7 +3531,7 @@ class MainWindow(QMainWindow):
 
         current_row = self.ui.project_list.currentRow()
         global_var_list_widget_row = current_row
-        results_path = global_var_project_dict[current_row].get_results_path()
+        results_path = global_var_project_dict[current_row].get_protein_pairs_path()
         dir_content = os.listdir(f"{results_path}/images/interesting_regions")
         self.ui.cb_interesting_regions.clear()
         for tmp_file in dir_content:
@@ -4009,17 +3993,6 @@ class MainWindow(QMainWindow):
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
             tmp_protein.zoom_resi_protein_position()
-
-
-def display_msg_box():
-    print(basic_boxes.ok("Prediction", "Running a prediction", QMessageBox.Information))
-    # i = 0
-    # while i < 5:
-    #     print("Prediction is running")
-    #     time.sleep(2)
-    #     i += 1
-def display_msg_box2():
-    basic_boxes.ok("Prediction", "Successfully ran a prediction", QMessageBox.Information)
 
 
 if __name__ == '__main__':

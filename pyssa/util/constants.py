@@ -113,3 +113,7 @@ chain_dict = {
     24: "Y",
     25: "Z",
 }
+
+# Protein subdir dict keys
+
+
