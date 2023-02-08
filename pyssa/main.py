@@ -202,7 +202,6 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
         constants.PYSSA_LOGGER.info("PySSA started.")
-        self._project_watcher.on_home_page = True
 
     # ----- Functions for GuiPageManagement obj creation
     def _create_local_pred_monomer_management(self):
@@ -1806,6 +1805,7 @@ class MainWindow(QMainWindow):
         """This function creates a new project based on the plugin New ... page
 
         """
+        self._project_watcher.on_home_page = False
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
         # save project folder in current workspace
