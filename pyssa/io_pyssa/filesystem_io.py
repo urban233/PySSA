@@ -269,42 +269,44 @@ class WorkspaceScanner:
             list_new_projects.addItem(project)
         return valid_directories
 
-    def scan_workspace_for_non_duplicate_proteins(self, valid_projects: list, current_project_name: str,
-                                                  list_widget: QtWidgets.QListWidget) -> tuple[dict, list]:
+    def scan_workspace_for_non_duplicate_proteins(self) -> dict:
         """This function scans the workspace directory for protein structures and eliminates all duplicates
 
         Args:
-            valid_projects (list):
-                a list of all projects within the workspace
-            current_project_name (str):
-                name of the currently loaded project
-            list_widget (Qt.QtWidgets.QListWidget)
-                list widget which is needed to temporarily store the results from the function "scan_project_for_valid_proteins"
-
-        Returns:
-            dict which contains all proteins without duplicates
+            workspace_path:
+                the path of the workspace
         """
-        """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
-        workspace_proteins = []
-        protein_names = []
-        protein_tuples_notation = []
-        for valid_project in valid_projects:
-            # if valid_project != current_project_name: # I don't know why this if-statement should be important
-            """Var: project_proteins is a list which contains all proteins from a single project"""
-            project_proteins = tools.scan_project_for_valid_proteins(pathlib.Path(f"{self.workspace_path}/{valid_project}"),
-                                                                     list_widget)
-            list_widget.clear()
-            for protein in project_proteins:
-                tmp_protein = protein_info.ProteinInfo(protein,
-                                                       pathlib.Path(f"{self.workspace_path}/{valid_project}/pdb/{protein}"))
-                workspace_proteins.append(tmp_protein)
-                if tmp_protein.name not in protein_names:
-                    protein_names.append(tmp_protein.name)
-        # this for-loop is necessary for the creation of the protein dictionary
-        for protein in workspace_proteins:
-            protein_tuples_notation.append(protein.get_tuple_notation())
-        protein_dict = dict(protein_tuples_notation)
-        return protein_dict, protein_names
+        pdb_basenames_filepaths = []
+        for tmp_project_name in os.listdir(self.workspace_path):
+            for tmp_protein_name in os.listdir(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins")):
+                pdb_basename = os.listdir(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb"))
+                if len(pdb_basename) > 1:
+                    logger.error("Too many pdb files in one directory.")
+                    raise ValueError("Too many pdb files in one directory.")
+                pdb_filepath = path_util.FilePath(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb/{pdb_basename[0]}"))
+                pdb_basenames_filepaths.append((pdb_basename[0], pdb_filepath))
+        return dict(list(set(pdb_basenames_filepaths)))
+        # """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
+        # workspace_proteins = []
+        # protein_names = []
+        # protein_tuples_notation = []
+        # for valid_project in valid_projects:
+        #     # if valid_project != current_project_name: # I don't know why this if-statement should be important
+        #     """Var: project_proteins is a list which contains all proteins from a single project"""
+        #     project_proteins = tools.scan_project_for_valid_proteins(pathlib.Path(f"{self.workspace_path}/{valid_project}"),
+        #                                                              list_widget)
+        #     list_widget.clear()
+        #     for protein in project_proteins:
+        #         tmp_protein = protein_info.ProteinInfo(protein,
+        #                                                pathlib.Path(f"{self.workspace_path}/{valid_project}/pdb/{protein}"))
+        #         workspace_proteins.append(tmp_protein)
+        #         if tmp_protein.name not in protein_names:
+        #             protein_names.append(tmp_protein.name)
+        # # this for-loop is necessary for the creation of the protein dictionary
+        # for protein in workspace_proteins:
+        #     protein_tuples_notation.append(protein.get_tuple_notation())
+        # protein_dict = dict(protein_tuples_notation)
+        # return protein_dict, protein_names
 
 
 class FilesystemCleaner:

@@ -2209,20 +2209,23 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(
             f"Current project path: {self.workspace_path}/{self.ui.txt_use_project_name.text()}")
         # save project folder in current workspace
-        existing_project = self.app_project
+        # existing_project = self.app_project
         new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
         new_project.create_project_tree()
         self.app_project = new_project
         # copy proteins in new project
-        prots_to_copy = []
+        proteins_to_copy = []
         for i in range(self.ui.list_use_selected_protein_structures.count()):
             self.ui.list_use_selected_protein_structures.setCurrentRow(i)
-            prots_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
-        for tmp_protein in prots_to_copy:
-            protein_path = global_variables.global_var_workspace_proteins[tmp_protein]
-            shutil.copy(protein_path, f"{self.app_project.get_proteins_path()}/{tmp_protein}")
-            new_protein = protein.Protein(tmp_protein, filepath=pathlib.Path(self.app_project.get_proteins_path()))
-            new_protein.serialize_protein(self.app_project.get_objects_proteins_path(), tmp_protein)
+            proteins_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
+        for tmp_protein in proteins_to_copy:
+            # protein_path = global_variables.global_var_workspace_proteins[tmp_protein] # TODO: global_var away
+            # shutil.copy(protein_path, f"{self.app_project.get_proteins_path()}/{tmp_protein}")
+            workspace_scanner = filesystem_io.WorkspaceScanner(self.workspace_path)
+            new_protein = protein.Protein(molecule_object=tmp_protein,
+                                          proteins_dirname=pathlib.Path(self.app_project.get_project_path()),
+                                          pdb_filepath=path_util.FilePath(workspace_scanner.scan_workspace_for_non_duplicate_proteins().get(tmp_protein)))
+            new_protein.serialize_protein()
             self.app_project.add_existing_protein(new_protein)
         self.app_project.serialize_project(self.app_project.project_path, "project")
         # shows options which can be done with the data in the project folder

@@ -1010,7 +1010,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_13.addLayout(self.horizontalLayout_29)
         self.verticalLayout_51.addLayout(self.verticalLayout_13)
         self.stackedWidget.addWidget(self.image_page)
-        self.create_new_project = QtWidgets.QWidget()
+        self.                          create_new_project = QtWidgets.QWidget()
         self.create_new_project.setObjectName("create_new_project")
         self.verticalLayout_38 = QtWidgets.QVBoxLayout(self.create_new_project)
         self.verticalLayout_38.setContentsMargins(10, 5, 10, 5)
