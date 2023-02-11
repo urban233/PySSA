@@ -120,8 +120,7 @@ class StructurePrediction:
             self.project.add_existing_protein(protein.Protein(tmp_prediction[0], pathlib.Path(self.project.get_proteins_path())))
         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
         try:
-            pymol_io.load_protein(self.project.proteins[0].filepath, self.project.proteins[0].filename,
-                                  self.project.proteins[0].molecule_object)
+            self.project.proteins[0].load_protein_in_pymol()
         except pymol.CmdException:
             print("Loading the model failed.")
             return

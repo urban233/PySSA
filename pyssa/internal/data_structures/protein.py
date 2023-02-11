@@ -70,6 +70,10 @@ class Protein:
     """
     pdb_filepath: path_util.FilePath
     """
+    the path where the fasta file is stored
+    """
+    fasta_filepath: path_util.FilePath
+    """
     a directory where all results related to the protein will be stored
     """
     export_dirname: pathlib.Path
@@ -80,7 +84,7 @@ class Protein:
 
     # </editor-fold>
 
-    def __init__(self, molecule_object: str, proteins_dirname: pathlib.Path, pdb_filepath: path_util.FilePath) -> None:
+    def __init__(self, molecule_object: str, proteins_dirname: pathlib.Path, pdb_filepath: path_util.FilePath = "") -> None:
         """Constructor.
 
         Args:
@@ -114,30 +118,43 @@ class Protein:
 
         # </editor-fold>
 
-        self._pymol_molecule_object = pdb_filepath.get_filename()
-        protein_dirname = pathlib.Path(f"{proteins_dirname}/{self._pymol_molecule_object}")
-        self.protein_subdirs = {
-            pyssa_keys.PROTEINS_SUBDIR: pathlib.Path(proteins_dirname),
-            pyssa_keys.PROTEIN_SUBDIR: pathlib.Path(f"{protein_dirname}"),
-            pyssa_keys.PROTEIN_SEQUENCE_SUBDIR: pathlib.Path(f"{protein_dirname}/sequence"),
-            pyssa_keys.PROTEIN_PDB_SUBDIR: pathlib.Path(f"{protein_dirname}/pdb"),
-            pyssa_keys.PROTEIN_SESSION_SUBDIR: pathlib.Path(f"{protein_dirname}/session"),
-            pyssa_keys.PROTEIN_RESULTS_SUBDIR: pathlib.Path(f"{protein_dirname}/results"),
-            pyssa_keys.PROTEIN_OBJECTS_SUBDIR: pathlib.Path(f"{protein_dirname}/.objects"),
-        }
-        for key in self.protein_subdirs:
-            if not os.path.exists(self.protein_subdirs.get(key)):
-                os.mkdir(self.protein_subdirs.get(key))
-        self.export_dirname = self.protein_subdirs.get(pyssa_keys.PROTEIN_RESULTS_SUBDIR)
-        try:
+        if pdb_filepath == "":
+            self._pymol_molecule_object = molecule_object
+            protein_dirname = pathlib.Path(f"{proteins_dirname}/{self._pymol_molecule_object}")
+            self.protein_subdirs = {
+                pyssa_keys.PROTEINS_SUBDIR: pathlib.Path(proteins_dirname),
+                pyssa_keys.PROTEIN_SUBDIR: pathlib.Path(f"{protein_dirname}"),
+                pyssa_keys.PROTEIN_SEQUENCE_SUBDIR: pathlib.Path(f"{protein_dirname}/sequence"),
+                pyssa_keys.PROTEIN_PDB_SUBDIR: pathlib.Path(f"{protein_dirname}/pdb"),
+                pyssa_keys.PROTEIN_SESSION_SUBDIR: pathlib.Path(f"{protein_dirname}/session"),
+                pyssa_keys.PROTEIN_RESULTS_SUBDIR: pathlib.Path(f"{protein_dirname}/results"),
+                pyssa_keys.PROTEIN_OBJECTS_SUBDIR: pathlib.Path(f"{protein_dirname}/.objects"),
+            }
+            for key in self.protein_subdirs:
+                if not os.path.exists(self.protein_subdirs.get(key)):
+                    os.mkdir(self.protein_subdirs.get(key))
+        else:
+            self._pymol_molecule_object = pdb_filepath.get_filename()
+            protein_dirname = pathlib.Path(f"{proteins_dirname}/{self._pymol_molecule_object}")
+            self.protein_subdirs = {
+                pyssa_keys.PROTEINS_SUBDIR: pathlib.Path(proteins_dirname),
+                pyssa_keys.PROTEIN_SUBDIR: pathlib.Path(f"{protein_dirname}"),
+                pyssa_keys.PROTEIN_SEQUENCE_SUBDIR: pathlib.Path(f"{protein_dirname}/sequence"),
+                pyssa_keys.PROTEIN_PDB_SUBDIR: pathlib.Path(f"{protein_dirname}/pdb"),
+                pyssa_keys.PROTEIN_SESSION_SUBDIR: pathlib.Path(f"{protein_dirname}/session"),
+                pyssa_keys.PROTEIN_RESULTS_SUBDIR: pathlib.Path(f"{protein_dirname}/results"),
+                pyssa_keys.PROTEIN_OBJECTS_SUBDIR: pathlib.Path(f"{protein_dirname}/.objects"),
+            }
+            for key in self.protein_subdirs:
+                if not os.path.exists(self.protein_subdirs.get(key)):
+                    os.mkdir(self.protein_subdirs.get(key))
             shutil.move(src=pdb_filepath.get_filepath(), dst=self.protein_subdirs.get(pyssa_keys.PROTEIN_PDB_SUBDIR))
-        except shutil.Error as e:
-            print(f"An error occurred while moving the file: {e}")
-
-        self.pdb_filepath = path_util.FilePath(pathlib.Path(f"{self.protein_subdirs.get(pyssa_keys.PROTEIN_PDB_SUBDIR)}/{pdb_filepath.get_basename()}"))
-        self.chains = protein_operations.get_protein_chains(self._pymol_molecule_object,
-                                                            self.pdb_filepath.get_dirname(),
-                                                            self.pdb_filepath.get_basename())
+            self.pdb_filepath = path_util.FilePath(pathlib.Path(
+                f"{self.protein_subdirs.get(pyssa_keys.PROTEIN_PDB_SUBDIR)}/{pdb_filepath.get_basename()}"))
+            self.chains = protein_operations.get_protein_chains(self._pymol_molecule_object,
+                                                                self.pdb_filepath.get_dirname(),
+                                                                self.pdb_filepath.get_basename())
+        self.export_dirname = self.protein_subdirs.get(pyssa_keys.PROTEIN_RESULTS_SUBDIR)
         self.pymol_selection = selection.Selection(self._pymol_molecule_object)
         self.pymol_selection.selection_string = ""
         self.load_protein_in_pymol()
@@ -194,6 +211,24 @@ class Protein:
         """
         self.pymol_selection.set_selections_without_chains_ca()
 
+    def write_fasta_file(self) -> None:
+        """This function writes a colabbatch compatible fasta file.
+
+        """
+        self.fasta_filepath = path_util.FilePath(pathlib.Path(f"{self.protein_subdirs.get(pyssa_keys.PROTEIN_SEQUENCE_SUBDIR)}/{self._pymol_molecule_object}.fasta"))
+        fasta_file = open(self.fasta_filepath.get_filepath(), "w")
+        fasta_file.write(f">{self._pymol_molecule_object}\n")
+        i = 0
+        for tmp_sequence in self.get_protein_sequences():
+            if i == len(self.get_protein_sequences()) - 1:
+                # should be the last entry
+                fasta_file.write(tmp_sequence.sequence)
+            else:
+                fasta_file.write(f"{tmp_sequence}:")
+            i += 1
+        logger.info(f"Fasta file for sequence {self._pymol_molecule_object} written.")
+        fasta_file.close()
+        
     def clean_pdb_file(self) -> None:
         """This function cleans a pdb file from the PDB
 

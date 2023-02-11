@@ -1388,7 +1388,9 @@ QPushButton::hover {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0 #4B91F7, stop: 0.4 #367AF6,
                                 stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
     color: white;
+    color: #4B91F7;
     border: 2px solid #4B91F7;
 }
 
@@ -1396,7 +1398,9 @@ QPushButton::pressed {
     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0 #276cea, stop: 0.4 #0047c8,
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    background: white;
     border-color: #276cea;
+    color: #276cea;
 }
 
 
