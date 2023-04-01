@@ -25,7 +25,11 @@ import json
 import pathlib
 import shutil
 import logging
+from xml.etree import ElementTree
+
 from PyQt5 import QtWidgets
+
+from io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import protein_info
 from pyssa.internal.data_structures import protein
@@ -43,6 +47,50 @@ from pyssa.io_pyssa import path_util
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+
+
+class XmlDeserializer:
+    """"""
+    """
+    
+    """
+    xml_root: ElementTree.Element
+
+    def __init__(self, filepath):
+        # Read the XML file
+        xml_file = open(filepath, "r")
+        xml_contents = xml_file.read()
+        self.xml_root = ElementTree.fromstring(xml_contents)
+
+    def create_all_proteins_from_xml(self):
+        proteins = []
+        for tmp_protein in self.xml_root.iter(element_names.PROTEIN):
+            basic_information = tmp_protein.attrib
+            pdb_lines = []
+            session_data_base64 = ""
+            for tmp_data in tmp_protein:
+                if tmp_data.tag == "pdb_data":
+                    for tmp_atom in tmp_data.findall("atom"):
+                        pdb_lines.append(tmp_atom.text)
+                elif tmp_data.tag == "session_data":
+                    session_data_base64 = tmp_data.attrib[attribute_names.PROTEIN_SESSION]
+                else:
+                    raise ValueError
+            tmp_protein_obj = protein.Protein(molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
+                                              pdb_xml_string=tmp_protein)
+            tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
+            proteins.append(tmp_protein_obj)
+        return proteins
+
+    def deserialize_project(self):
+        project_dict = {}
+        for info in self.xml_root.iter(element_names.PROJECT_INFO):
+            project_dict = info.attrib
+        tmp_project = project.Project(project_dict[attribute_names.PROJECT_NAME], pathlib.Path(project_dict[attribute_names.PROJECT_WORKSPACE_PATH]))
+        protein_objs = self.create_all_proteins_from_xml()
+        for tmp_protein_obj in protein_objs:
+            tmp_project.add_existing_protein(tmp_protein_obj)
+        return tmp_project
 
 
 class ObjectSerializer:
@@ -233,8 +281,8 @@ class ProjectScanner:
         protein_basenames = []
         # iterates over possible project directories
         if list_view_project_proteins is not None:
-            for tmp_protein_dir in os.listdir(self.project.get_proteins_path()):
-                path = pathlib.Path(f"{self.project.get_proteins_path()}/{tmp_protein_dir}")
+            for tmp_protein_dir in os.listdir(self.project.folder_paths["project"]):
+                path = pathlib.Path(f"{self.project.folder_paths['project']}/{tmp_protein_dir}")
                 if len(os.listdir(pathlib.Path(f"{path}/pdb"))) > 1:
                     logger.error("Too many pdb files in one directory.")
                     raise ValueError("Too many pdb files in one directory.")
@@ -250,7 +298,7 @@ class WorkspaceScanner:
     def __init__(self, workspace_path):
         self.workspace_path = workspace_path
 
-    def scan_workspace_for_valid_projects(self, list_new_projects):
+    def scan_workspace_for_valid_projects(self, list_new_projects) -> list:
         workspace_projects: list[str] = os.listdir(self.workspace_path)
         valid_directories = []
         # iterates over possible project directories

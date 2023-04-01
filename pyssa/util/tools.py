@@ -37,6 +37,10 @@ from internal.data_structures import settings
 from util import constants
 from gui.ui.styles import styles
 from internal.data_structures.data_classes import protein_info
+from internal.data_structures.data_classes import basic_protein_info
+from pyssa.io_pyssa import filesystem_io
+from pyssa.io_pyssa.xml_pyssa import element_names
+from pyssa.io_pyssa.xml_pyssa import attribute_names
 
 
 def create_directory(parent_path, dir_name) -> None:
@@ -227,24 +231,69 @@ def check_results_for_integrity(workspace_path, project_name) -> (bool, Path):
 def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
     workspace_projects: list[str] = os.listdir(workspace_path)
     valid_directories = []
-    # iterates over possible project directories
-    for directory in workspace_projects:
-        try:
-            directory_content = os.listdir(f"{workspace_path}/{directory}")
-            # iterates over the content in a single project directory
-            for content in directory_content:
-                if content == "project.json":
-                    valid_directories.append(directory)
-        except NotADirectoryError:
-            print(f"This: {directory} is not a directory.")
+    directory_content = os.listdir(workspace_path)
 
-    valid_directories.sort()
-    for project in valid_directories:
+    # # iterates over possible project directories
+    # for directory in workspace_projects:
+    #     try:
+    #         directory_content = os.listdir(f"{workspace_path}/{directory}")
+    #         # iterates over the content in a single project directory
+    #         for content in directory_content:
+    #             if content == "project.json":
+    #                 valid_directories.append(directory)
+    #     except NotADirectoryError:
+    #         print(f"This: {directory} is not a directory.")
+
+    directory_content.sort()
+    for project in directory_content:
         list_new_projects.addItem(project)
-    return valid_directories
+    return directory_content
 
 
-def scan_workspace_for_non_duplicate_proteins(valid_projects: list, current_project_name: str,
+def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> tuple[list[basic_protein_info], list[str]]:
+    """This function scans the workspace directory for protein structures and eliminates all duplicates
+
+    Args:
+        workspace_path (str):
+            path of the current workspace
+
+    Returns:
+        dict which contains all proteins without duplicates
+    """
+    """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
+    workspace_proteins = []
+    protein_names = []
+    protein_tuples_notation = []
+    protein_infos: list[basic_protein_info] = []
+
+    for tmp_project_file in os.listdir(workspace_path):
+        """Var: project_proteins is a list which contains all proteins from a single project"""
+        xml_deserializer = filesystem_io.XmlDeserializer(pathlib.Path(f"{workspace_path}/{tmp_project_file}"))
+        project_name = str(tmp_project_file).replace(".xml", "")
+        for tmp_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
+            molecule_object = tmp_protein.attrib[attribute_names.PROTEIN_MOLECULE_OBJECT]
+            if molecule_object not in protein_names:
+                protein_names.append(molecule_object)
+                protein_infos.append(basic_protein_info.BasicProteinInfo(molecule_object, tmp_protein.attrib[attribute_names.ID], project_name))
+
+    #
+    #
+    #     project_proteins = scan_project_for_valid_proteins(pathlib.Path(f"{workspace_path}/{valid_project}"), list_widget)
+    #     list_widget.clear()
+    #     for protein in project_proteins:
+    #         tmp_protein = protein_info.ProteinInfo(protein, pathlib.Path(f"{workspace_path}/{valid_project}/pdb/{protein}"))
+    #         workspace_proteins.append(tmp_protein)
+    #         if tmp_protein.name not in protein_names:
+    #             protein_names.append(tmp_protein.name)
+    # # this for-loop is necessary for the creation of the protein dictionary
+    # for protein in workspace_proteins:
+    #     protein_tuples_notation.append(protein.get_tuple_notation())
+    # protein_dict = dict(protein_tuples_notation)
+
+    return protein_infos, protein_names
+
+
+def OLD_scan_workspace_for_non_duplicate_proteins(valid_projects: list, current_project_name: str,
                                               workspace_path: pathlib.Path,
                                               list_widget: Qt.QtWidgets.QListWidget) -> tuple[dict, list]:
     """This function scans the workspace directory for protein structures and eliminates all duplicates

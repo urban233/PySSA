@@ -34,6 +34,7 @@ from PyQt5.QtCore import QThread
 import numpy as np
 import pymol
 
+from internal.data_structures.data_classes import basic_protein_info
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.dialogs import dialog_startup
 from util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
@@ -68,6 +69,8 @@ from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
+from pyssa.io_pyssa.xml_pyssa import element_names
+from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import path_util
 from pyssa.logging_pyssa import loggers
 
@@ -197,6 +200,11 @@ class MainWindow(QMainWindow):
         self.project_scanner = filesystem_io.ProjectScanner(self.app_project)
         # sets threadpool
         self.threadpool = QtCore.QThreadPool()
+        # create scratch and cache dir
+        if not os.path.exists(constants.SCRATCH_DIR):
+            os.mkdir(constants.SCRATCH_DIR)
+        if not os.path.exists(constants.CACHE_DIR):
+            os.mkdir(constants.CACHE_DIR)
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
@@ -948,7 +956,8 @@ class MainWindow(QMainWindow):
             self.ui.btn_edit_clean_update_prot,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
+        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
+        # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
 
     def _init_local_pred_mono_page(self):
         # clears everything
@@ -1234,7 +1243,8 @@ class MainWindow(QMainWindow):
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
         # list all proteins from pdb directory
-        self.project_scanner.scan_project_for_valid_proteins(list_view_project_proteins=self.ui.list_view_project_proteins)
+        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_view_project_proteins)
+        # self.project_scanner.scan_project_for_valid_proteins(list_view_project_proteins=self.ui.list_view_project_proteins)
 
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -1258,11 +1268,9 @@ class MainWindow(QMainWindow):
         self.ui.list_use_selected_protein_structures.clear()
         valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
         # filesystem operations
-        self.project_scanner.scan_project_for_valid_proteins(self.ui.list_use_selected_protein_structures)
-        protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(valid_projects,
-                                                                                      self.ui.lbl_current_project_name.text(),
-                                                                                      self.workspace_path,
-                                                                                      self.ui.list_use_available_protein_structures)
+        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
+        # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_use_selected_protein_structures)
+        protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path)
         global_variables.global_var_workspace_proteins = protein_dict
         # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
         # are available
@@ -1271,6 +1279,7 @@ class MainWindow(QMainWindow):
             tmp_prot_name = self.ui.list_use_selected_protein_structures.currentItem().text()
             if tmp_prot_name in protein_names:
                 protein_names.remove(tmp_prot_name)
+
         self.ui.list_use_available_protein_structures.addItems(protein_names)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -1278,7 +1287,8 @@ class MainWindow(QMainWindow):
 
     def display_hotspots_page(self):
         self.ui.list_hotspots_choose_protein.clear()
-        self.project_scanner.scan_project_for_valid_proteins(self.ui.list_hotspots_choose_protein)
+        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_hotspots_choose_protein)
+        # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_hotspots_choose_protein)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_hotspots_page)
@@ -1810,7 +1820,7 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
         # save project folder in current workspace
         self.app_project = project.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
-        self.app_project.create_project_tree()
+        # self.app_project.create_project_tree()
         # save reference .pdb
         if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() is True:
             if len(self.ui.txt_new_choose_reference.text()) == 4:
@@ -1825,19 +1835,21 @@ class MainWindow(QMainWindow):
                     return
 
                 tmp_ref_protein = protein.Protein(molecule_object=pdb_id,
-                                                  proteins_dirname=pathlib.Path(self.app_project.get_proteins_path()),
                                                   pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")))
             else:
                 # local pdb file as input
                 pdb_filepath = path_util.FilePath(pathlib.Path(self.ui.txt_new_choose_reference.text()))
                 tmp_ref_protein = protein.Protein(molecule_object=pdb_filepath.get_filename(),
-                                                  proteins_dirname=pathlib.Path(self.app_project.get_proteins_path()),
                                                   pdb_filepath=pdb_filepath)
             self.app_project.add_existing_protein(tmp_ref_protein)
         self.ui.cb_new_add_reference.setCheckState(0)
-        self.app_project.serialize_project(self.app_project.project_path, "project")
+
+        self.app_project.serialize_project(pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"))
         constants.PYSSA_LOGGER.info(f"Created the project {self.app_project.get_project_name()}.")
-        constants.PYSSA_LOGGER.debug(f"These are the proteins {self.app_project.proteins}.")
+        protein_names = []
+        for tmp_protein in self.app_project.proteins:
+            protein_names.append(tmp_protein.get_molecule_object())
+        constants.PYSSA_LOGGER.debug(f"These are the proteins {protein_names}.")
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self.project_scanner.project = self.app_project
@@ -2078,7 +2090,7 @@ class MainWindow(QMainWindow):
         tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
         clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
         self.app_project.add_existing_protein(clean_tmp_protein)
-        self.app_project.serialize_project(self.app_project.project_path, "project")
+        self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
         self._init_edit_page()
 
     def clean_protein_update(self):
@@ -2099,7 +2111,8 @@ class MainWindow(QMainWindow):
         if response:
             tools.remove_pdb_file(f"{project_path}/pdb/{protein_name}")
             self.ui.list_edit_project_proteins.clear()
-            self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
+            gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
+            # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
             self._project_watcher.show_valid_options(self.ui)
         else:
             print("Nothing happened.")
@@ -2211,7 +2224,7 @@ class MainWindow(QMainWindow):
         # save project folder in current workspace
         # existing_project = self.app_project
         new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
-        new_project.create_project_tree()
+        # new_project.create_project_tree()
         self.app_project = new_project
         # copy proteins in new project
         proteins_to_copy = []
@@ -2219,15 +2232,39 @@ class MainWindow(QMainWindow):
             self.ui.list_use_selected_protein_structures.setCurrentRow(i)
             proteins_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
         for tmp_protein in proteins_to_copy:
-            # protein_path = global_variables.global_var_workspace_proteins[tmp_protein] # TODO: global_var away
-            # shutil.copy(protein_path, f"{self.app_project.get_proteins_path()}/{tmp_protein}")
-            workspace_scanner = filesystem_io.WorkspaceScanner(self.workspace_path)
-            new_protein = protein.Protein(molecule_object=tmp_protein,
-                                          proteins_dirname=pathlib.Path(self.app_project.get_project_path()),
-                                          pdb_filepath=path_util.FilePath(workspace_scanner.scan_workspace_for_non_duplicate_proteins().get(tmp_protein)))
-            new_protein.serialize_protein()
-            self.app_project.add_existing_protein(new_protein)
-        self.app_project.serialize_project(self.app_project.project_path, "project")
+            # protein_path = global_variables.global_var_workspace_proteins[tmp_protein] # TODO: global_var needs to be removed
+            # shutil.copy(protein_path, f"{self.app_project.folder_paths["proteins"]}/{tmp_protein}")
+            protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path))[0]
+            for tmp_protein_info in protein_infos:
+                if tmp_protein_info.name == tmp_protein:
+                    """Var: project_proteins is a list which contains all proteins from a single project"""
+                    xml_deserializer = filesystem_io.XmlDeserializer(
+                        pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml"))
+                    for xml_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
+                        if xml_protein.attrib[attribute_names.ID] == tmp_protein_info.id:
+                            basic_information = xml_protein.attrib
+                            pdb_lines = []
+                            session_data_base64 = ""
+                            for tmp_data in xml_protein:
+                                if tmp_data.tag == "pdb_data":
+                                    for tmp_atom in tmp_data.findall("atom"):
+                                        pdb_lines.append(tmp_atom.text)
+                                elif tmp_data.tag == "session_data":
+                                    session_data_base64 = tmp_data.attrib[attribute_names.PROTEIN_SESSION]
+                                else:
+                                    raise ValueError
+                            tmp_protein_obj = protein.Protein(
+                                molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
+                                pdb_xml_string=xml_protein)
+                            tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
+
+
+            #
+            # new_protein = protein.Protein(molecule_object=tmp_protein,
+            #                               pdb_filepath=path_util.FilePath(workspace_scanner.scan_workspace_for_non_duplicate_proteins().get(tmp_protein)))
+            #new_protein.serialize_protein()
+            self.app_project.add_existing_protein(tmp_protein_obj)
+        self.app_project.serialize_project(pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"))
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.show_valid_options(self.ui)
@@ -3123,8 +3160,8 @@ class MainWindow(QMainWindow):
         protein_pairs[0].cutoff = self.app_settings.cutoff
         self.app_project.add_protein_pair(protein_pairs[0])
         protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-        self.app_project.serialize_project(self.app_project.project_path, "project")
-        self.app_project = project.Project.deserialize_project(self.app_project.project_path)
+        self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
+        self.app_project = project.Project.deserialize_project(self.app_project.folder_paths["project"])
         self._project_watcher.show_valid_options(self.ui)
         self._init_single_analysis_page()
 
@@ -3319,7 +3356,7 @@ class MainWindow(QMainWindow):
         #     protein_pairs[0].cutoff = self.app_settings.cutoff
         #     self.app_project.add_protein_pair(protein_pairs[0])
         #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-        #     self.app_project.serialize_project(self.app_project.project_path, "project")
+        #     self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
         constants.PYSSA_LOGGER.info("Begin analysis process.")
         worker = workers.AnalysisWorkerPool(
             self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,

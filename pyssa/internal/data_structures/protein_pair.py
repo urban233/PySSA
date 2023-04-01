@@ -672,3 +672,24 @@ class ProteinPair:
             two complete protein objects and a protein pair object deserialized from a json file
         """
         return filesystem_io.ObjectDeserializer(protein_obj_json_file.get_dirname(), protein_obj_json_file.get_filename()).deserialize_protein_pair()
+
+    def create_plain_text_memory_mirror(self):
+        mirror = [
+            self.protein_1.get_molecule_object(),
+            str(self.protein_1.pdb_filepath.get_filepath()),
+            str(self.protein_1.export_dirname),
+            str(self.protein_1.pdb_filepath.get_filename()),
+            self.protein_1.pymol_selection.selection_string,
+            protein_util.get_chains_as_list_of_tuples(self.protein_1.chains),
+            self.protein_2.get_molecule_object(),
+            str(self.protein_2.pdb_filepath.get_filepath()),
+            str(self.protein_2.export_dirname),
+            str(self.protein_2.pdb_filepath.get_filename()),
+            self.protein_2.pymol_selection.selection_string,
+            protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
+            str(self.export_dirname),
+            str(self.pymol_session_filepath.get_filepath()),
+            self.name,
+            str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
+        ]
+        return mirror

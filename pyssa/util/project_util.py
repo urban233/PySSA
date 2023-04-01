@@ -37,7 +37,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 def get_all_filepaths_from_project(app_project: 'project.Project', subfolder, extension):
     tmp_dirnames = []
-    folder = os.path.join(app_project.get_project_path(), subfolder)
+    folder = os.path.join(app_project.folder_paths["project"], subfolder)
     if len(os.listdir(folder)) > 0:
         for tmp_folder in os.listdir(folder):
             tmp_dirnames.append(pathlib.Path(f"{folder}/{tmp_folder}"))

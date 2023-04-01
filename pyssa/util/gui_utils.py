@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for functions which reduce code duplicates in the main module"""
-
+import typing
 import os
 import pathlib
 import shutil
@@ -30,6 +30,9 @@ from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
 from util import tools
+
+if typing.TYPE_CHECKING:
+    from pyssa.internal.data_structures import project
 
 
 def fill_combo_box(combo_box, item_list):
@@ -481,3 +484,8 @@ def get_prediction_name_and_seq_from_table(table) -> list[tuple[str, str]]:
 
 def write_fasta_file_from_table():
     pass
+
+
+def fill_list_view_with_protein_names(app_project: 'project.Project', list_view_project_proteins):
+    for tmp_protein in app_project.proteins:
+        list_view_project_proteins.addItem(tmp_protein.get_molecule_object())

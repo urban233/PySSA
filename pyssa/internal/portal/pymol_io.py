@@ -21,10 +21,13 @@
 #
 """Module for in- and output processes in pymol"""
 import pathlib
-
 import pymol
+import os
 from pymol import cmd
 from pyssa.io_pyssa import safeguard
+from pyssa.io_pyssa import binary_data
+from pyssa.io_pyssa import path_util
+from pyssa.util import constants
 
 
 def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
@@ -88,3 +91,11 @@ def load_pymol_session(pymol_session_file):
     if not safeguard.Safeguard.check_filepath(f"{pymol_session_file}"):
         raise FileNotFoundError
     cmd.load(pymol_session_file)
+
+
+def convert_pymol_session_to_base64_string(pymol_molecule_object):
+    session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{pymol_molecule_object}_session.pse")
+    cmd.save(session_filepath)
+    base64_string = binary_data.create_base64_string_from_file(path_util.FilePath(session_filepath))
+    os.remove(session_filepath)
+    return base64_string

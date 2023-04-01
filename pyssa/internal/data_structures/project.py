@@ -30,32 +30,58 @@ from util import gui_utils
 from internal.data_structures import protein, protein_pair
 from pyssa.internal.analysis_types import distance_analysis
 from pyssa.io_pyssa import filesystem_io
+from pyssa.io_pyssa.xml_pyssa import element_names
+from pyssa.io_pyssa.xml_pyssa import attribute_names
+from pyssa.util import constants
+from xml.etree import ElementTree
+from xml.dom import minidom
+from pyssa.io_pyssa import binary_data
 
 
 class Project:
-    """This class is for the projects used in the plugin
+    """This class is for the projects used in the plugin"""
 
-    Attributes:
-        _project_name:
-            The name of the project.
-        _workspace:
-            The path of the projects' workspace.
-        project_path:
-            The path where the project is located.
-        _date:
-            The creation date of the project.
-        _operating_system:
-            The operating system, where the project was created on.
-        _folder_paths:
-            A list of all major paths of the project.
-        _session_file_name:
-            The name of the pymol session.
-        proteins:
-            A list of protein.Protein objects which are used within the project.
-        protein_pairs:
-            A list of protein_pair.ProteinPair objects which are used within the project.
-
+    # <editor-fold desc="Class attributes">
     """
+    the name of the project
+    """
+    _project_name: str
+    """
+    the absolute path of the current workspace
+    """
+    _workspace: pathlib.Path
+    """
+    the current date
+    """
+    _date = str(datetime.now())
+    """
+    the used OS
+    """
+    _operating_system = platform.system()
+    """
+    a list which contains all ATOM and HETATM lines of the .pdb file
+    """
+    _pdb_data: list[str]
+    """
+    all top layer folder paths of the project
+    """
+    folder_paths: dict[str, pathlib.Path]
+    # _session_file_name: str = "session_file_model_s.pse"
+    """
+    a list of all protein objects of the project
+    """
+    proteins: list[protein.Protein]
+    """
+    a list of all protein_pair objects of the project
+    """
+    protein_pairs: list[protein_pair.ProteinPair]
+    """
+    a list of all distance_analysis objects of the project
+    """
+    distance_analysis: list[distance_analysis.DistanceAnalysis]
+
+    # </editor-fold>
+
     def __init__(self, project_name: str, workspace_path: pathlib.Path) -> None:
         """Constructor
 
@@ -67,11 +93,6 @@ class Project:
         """
         self._project_name: str = project_name
         self._workspace: pathlib.Path = workspace_path
-        self.project_path: pathlib.Path = Path(f"{workspace_path}/{project_name}")
-        self._date = str(datetime.now())
-        self._operating_system = platform.system()
-        self._folder_paths: list[Path] = []
-        # self._session_file_name: str = "session_file_model_s.pse"
         self.proteins: list[protein.Protein] = []
         self.protein_pairs: list[protein_pair.ProteinPair] = []
         self.distance_analysis: list[distance_analysis.DistanceAnalysis] = []
@@ -81,7 +102,7 @@ class Project:
         """This function adds an existing protein object to the project.
 
         Args:
-            protein:
+            value_protein:
                 name of the existing protein object
         """
         self.proteins.append(value_protein)
@@ -90,87 +111,48 @@ class Project:
         """This function adds an existing protein_pair object to the project.
 
         Args:
-            protein_pair:
+            value_protein_pair:
                 name of the existing protein_pairs object
         """
         self.protein_pairs.append(value_protein_pair)
 
     def add_distance_analysis(self, value_distance_analysis: 'distance_analysis.DistanceAnalysis') -> None:
+        """This function adds an existing protein_pair object to the project.
+
+        Args:
+            value_distance_analysis:
+                name of the existing distance_analysis object
+        """
         self.distance_analysis.append(value_distance_analysis)
 
-    # def create_project_tree(self) -> bool:
-    #     """This function creates the directory structure for a new project.
-    #
-    #     """
-    #     # check if the project folder already exists
-    #     if os.path.exists(self.get_project_path()):
-    #         detailed_message = f"The project is located under: {self.get_project_path()}."
-    #         flag = gui_utils.warning_message_project_exists(self._project_name, detailed_message,
-    #                                                         self.get_project_path())
-    #         if flag is False:
-    #             return False
-    #
-    #     for folder in self._folder_paths:
-    #         os.mkdir(folder)
-
     def create_folder_paths(self):
-        self._folder_paths = [
-            Path(f"{self._workspace}/{self._project_name}"),
-            # Path(f"{self._workspace}/{self._project_name}/pdb"),
-            # Path(f"{self._workspace}/{self._project_name}/results"),
-            # Path(f"{self._workspace}/{self._project_name}/.objects/"),
-            # Path(f"{self._workspace}/{self._project_name}/.objects/proteins"),
-            # Path(f"{self._workspace}/{self._project_name}/.objects/protein_pairs"),
-            Path(f"{self._workspace}/{self._project_name}/proteins"),
-            Path(f"{self._workspace}/{self._project_name}/protein_pairs"),
-            Path(f"{self._workspace}/{self._project_name}/analysis"),
-            Path(f"{self._workspace}/{self._project_name}/analysis/distance_analysis")
-            # Path(f"{workspace_path}/{self._project_name}/results/alignment_files"),
-            # Path(f"{workspace_path}/{self._project_name}/results/distance_csv"),
-            # Path(f"{workspace_path}/{self._project_name}/results/images"),
-            # Path(f"{workspace_path}/{self._project_name}/results/images/interesting_regions"),
-            # Path(f"{workspace_path}/{self._project_name}/results/plots"),
-            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_histogram"),
-            # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_plot"),
-            # Path(f"{workspace_path}/{self._project_name}/results/sessions/"),
-        ]
+        self.folder_paths = {
+            "project": Path(f"{self._workspace}/{self._project_name}"),
+            "proteins": Path(f"{self._workspace}/{self._project_name}/proteins"),
+            "protein_pairs": Path(f"{self._workspace}/{self._project_name}/protein_pairs"),
+            "analysis": Path(f"{self._workspace}/{self._project_name}/protein_pairs/analysis"),
+            "distance_analysis": Path(f"{self._workspace}/{self._project_name}/protein_pairs/analysis/distance_analysis"),
+        }
+        # Path(f"{self._workspace}/{self._project_name}/pdb"),
+        # Path(f"{self._workspace}/{self._project_name}/results"),
+        # Path(f"{self._workspace}/{self._project_name}/.objects/"),
+        # Path(f"{self._workspace}/{self._project_name}/.objects/proteins"),
+        # Path(f"{self._workspace}/{self._project_name}/.objects/protein_pairs"),
+        # Path(f"{workspace_path}/{self._project_name}/results/alignment_files"),
+        # Path(f"{workspace_path}/{self._project_name}/results/distance_csv"),
+        # Path(f"{workspace_path}/{self._project_name}/results/images"),
+        # Path(f"{workspace_path}/{self._project_name}/results/images/interesting_regions"),
+        # Path(f"{workspace_path}/{self._project_name}/results/plots"),
+        # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_histogram"),
+        # Path(f"{workspace_path}/{self._project_name}/results/plots/distance_plot"),
+        # Path(f"{workspace_path}/{self._project_name}/results/sessions/"),
 
     def create_project_tree(self):
-        for folder_path in self._folder_paths:
-            if not os.path.exists(folder_path):
-                os.mkdir(folder_path)
-
-    def get_project_path(self) -> str:
-        """This function returns the project path of the project
-
-        Returns:
-            the project path
-        """
-        return str(self._folder_paths[0])
-
-    def get_proteins_path(self) -> str:
-        """This function returns the pdb path of the project
-
-        Returns:
-            the pdb path
-        """
-        return str(self._folder_paths[1])
-
-    def get_protein_pairs_path(self):
-        """This function returns the results path of the project
-
-        Returns:
-            the results path
-        """
-        return str(self._folder_paths[2])
-
-    def get_analysis_path(self):
-        """This function returns the objects path of the project
-
-        Returns:
-            the object path
-        """
-        return str(self._folder_paths[3])
+        for key in self.folder_paths:
+            if not os.path.exists(self.folder_paths[key]):
+                os.mkdir(self.folder_paths[key])
+            else:
+                raise IsADirectoryError
 
     def get_number_of_proteins(self):
         return len(self.proteins)
@@ -178,36 +160,49 @@ class Project:
     def get_project_name(self):
         return self._project_name
 
-    def set_folder_paths(self, value):
-        self._folder_paths = value
+    # def serialize_project(self, filepath, filename) -> None:
+    #     """This function serialize the protein object
+    #
+    #     """
+    #     project_serializer = filesystem_io.ObjectSerializer(self, filepath, filename)
+    #     project_dict = {
+    #         '_project_name': str(self._project_name),
+    #         '_workspace': str(self._workspace),
+    #         '_date': str(self._date),
+    #         '_operating_system': str(self._operating_system),
+    #     }
+    #     project_serializer.set_custom_object_dict(project_dict)
+    #     project_serializer.serialize_object()
+    #
+    #     for tmp_protein in self.proteins:
+    #         tmp_protein.serialize_protein()
+    #     for tmp_protein_pair in self.protein_pairs:
+    #         tmp_protein_pair.serialize_protein_pair()
+    #     for tmp_distance_analysis in self.distance_analysis:
+    #         tmp_distance_analysis.serialize_distance_analysis()
 
-    def serialize_project(self, filepath, filename) -> None:
-        """This function serialize the protein object
+    def serialize_project(self, filepath) -> None:
+        project_root = ElementTree.Element(element_names.PROJECT)
+        # setup project information tree
+        project_info = ElementTree.SubElement(project_root, element_names.PROJECT_INFO)
+        project_info.set(attribute_names.PROJECT_NAME, self._project_name)
+        project_info.set(attribute_names.PROJECT_WORKSPACE_PATH, str(self._workspace))
+        project_info.set(attribute_names.PROJECT_CREATION_DATE, self._date)
+        project_info.set(attribute_names.PROJECT_OS, self._operating_system)
 
-        """
-        project_serializer = filesystem_io.ObjectSerializer(self, filepath, filename)
-        converted_paths = []
-        for tmp_folder_path in self._folder_paths:
-            converted_paths.append(str(tmp_folder_path))
-
-        project_dict = {
-            '_project_name': str(self._project_name),
-            '_workspace': str(self._workspace),
-            'project_path': str(self.project_path),
-            '_date': str(self._date),
-            '_operating_system': str(self._operating_system),
-            '_folder_paths': converted_paths,
-            # '_session_file_name': str(self._session_file_name),
-        }
-        project_serializer.set_custom_object_dict(project_dict)
-        project_serializer.serialize_object()
-
+        xml_proteins_element = ElementTree.SubElement(project_root, element_names.PROTEINS)
         for tmp_protein in self.proteins:
-            tmp_protein.serialize_protein()
+            tmp_protein.serialize_protein(xml_proteins_element)
+        xml_protein_pairs_element = ElementTree.SubElement(project_root, element_names.PROTEIN_PAIRS)
         for tmp_protein_pair in self.protein_pairs:
             tmp_protein_pair.serialize_protein_pair()
+
         for tmp_distance_analysis in self.distance_analysis:
-            pass
+            tmp_distance_analysis.serialize_distance_analysis()
+
+        xmlstr = minidom.parseString(ElementTree.tostring(project_root)).toprettyxml(indent="   ")
+        with open(filepath, "w") as f:
+            f.write(xmlstr)
 
     @staticmethod
     def deserialize_project(filepath, app_settings):
@@ -217,27 +212,8 @@ class Project:
         Returns:
             a complete project object deserialized from a json file
         """
-        return filesystem_io.ObjectDeserializer(filepath, "project").deserialize_project(app_settings)
-        # try:
-        #     project_obj_file = open(pathlib.Path(f"{filepath}/project.json"), "r", encoding="utf-8")
-        # except FileNotFoundError:
-        #     print(f"There is no valid json file under: {filepath}")
-        #     return
-        # project_dict = json.load(project_obj_file)
-        # tmp_project: Project = Project(project_dict.get("_project_name"), project_dict.get("_workspace"))
-        # tmp_project.set_folder_paths(project_dict.get("_folder_paths"))
-        # tmp_project.project_path = project_dict.get("project_path")
-        # # adding proteins to projects object
-        # if len(os.listdir(tmp_project.get_objects_proteins_path())) > 0:
-        #     for tmp_protein_file in os.listdir(tmp_project.get_objects_proteins_path()):
-        #         tmp_protein = protein.Protein.deserialize_protein(pathlib.Path(f"{tmp_project.get_objects_proteins_path()}/{tmp_protein_file}"))
-        #         tmp_project.add_existing_protein(tmp_protein)
-        # # adding protein pairs to projects object
-        # if len(os.listdir(tmp_project.get_objects_protein_pairs_path())) > 0:
-        #     for tmp_protein_pair_file in os.listdir(tmp_project.get_objects_protein_pairs_path()):
-        #         tmp_protein_pair = protein_pair.ProteinPair.deserialize_protein_pair(pathlib.Path(f"{tmp_project.get_objects_protein_pairs_path()}/{tmp_protein_pair_file}"))
-        #         tmp_project.add_protein_pair(tmp_protein_pair)
-        # return tmp_project
+        return filesystem_io.XmlDeserializer(filepath).deserialize_project()
+        #return filesystem_io.ObjectDeserializer(filepath, "project").deserialize_project(app_settings)
 
     def search_protein(self, protein_name):
         for tmp_protein in self.proteins:
@@ -288,3 +264,28 @@ class Project:
             if tmp_protein_pair[2].name == protein_pair_name:
                 return tmp_protein_pair
         print(f"No matching protein with the name {protein_pair_name} found.")
+
+    def dump_project_to_file(self):
+        current_time = datetime.now()
+        filename = f"project_dump-{self._project_name}-{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.ascii"
+        memory_dump_file = open(f"{constants.SCRATCH_DIR}/{filename}", "w")
+        memory_dump_file.write("----- Project information \n")
+        memory_dump_file.write(f"_project_name: {self._project_name} \n")
+        memory_dump_file.write(f"_workspace: {self._workspace} \n")
+        memory_dump_file.write(f"_date: {self._date} \n")
+        memory_dump_file.write(f"_operating_system: {self._operating_system} \n")
+        for tmp_path in self.folder_paths:
+            memory_dump_file.write(f"folder_paths: {tmp_path} \n")
+
+        memory_dump_file.write("----- ----- ----- ----- \n")
+        memory_dump_file.write("----- Protein information \n")
+        for tmp_protein in self.proteins:
+            for tmp_info in tmp_protein.create_plain_text_memory_mirror():
+                memory_dump_file.write(f"{tmp_info} \n")
+
+        memory_dump_file.write("----- ----- ----- ----- \n")
+        memory_dump_file.write("----- Protein pair information \n")
+        for tmp_protein_pair in self.protein_pairs:
+            for tmp_info in tmp_protein_pair.create_plain_text_memory_mirror():
+                memory_dump_file.write(f"{tmp_info} \n")
+        memory_dump_file.close()

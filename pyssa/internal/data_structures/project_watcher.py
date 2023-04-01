@@ -58,7 +58,7 @@ class ProjectWatcher:
         Notes:
             This function counts the pdb files and results automatically!
         """
-        self.count_pdb_files()
+        self.count_proteins_in_project()
         self.count_results()
 
         if self.no_of_pdb_files is None:
@@ -243,14 +243,15 @@ class ProjectWatcher:
                 gui_elements_to_hide.append(ui.btn_results_page)
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-    def count_pdb_files(self):
+    def count_proteins_in_project(self):
         """This function counts the number of pdb files in the project pdb directory
 
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!
         """
         if not self.on_home_page:
-            self.no_of_pdb_files = len(project_util.get_all_pdb_filepaths_from_project(self.current_project))
+            self.no_of_pdb_files = len(self.current_project.proteins)
+            #self.no_of_pdb_files = len(project_util.get_all_pdb_filepaths_from_project(self.current_project))
         else:
             self.no_of_pdb_files = None
 
