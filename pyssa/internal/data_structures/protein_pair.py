@@ -61,8 +61,7 @@ class ProteinPair:
     """
     pymol_session_filepath: path_util.FilePath
 
-    def __init__(self, protein_1: 'protein.Protein', protein_2: 'protein.Protein',
-                 protein_pairs_dirname: pathlib.Path) -> None:
+    def __init__(self, protein_1: 'protein.Protein', protein_2: 'protein.Protein') -> None:
         """Constructor.
 
         Args:
@@ -82,19 +81,19 @@ class ProteinPair:
         self.protein_1: protein.Protein = protein_1
         self.protein_2: protein.Protein = protein_2
         self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
-        protein_pair_dirname = f"{protein_pairs_dirname}/{self.name}"
-
-        self.protein_pair_subdirs = {
-            pyssa_keys.PROTEIN_PAIR_SUBDIR: pathlib.Path(f"{protein_pair_dirname}"),
-            pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/session"),
-            pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/results"),
-            pyssa_keys.PROTEIN_PAIR_OBJECTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/.objects"),
-        }
-        for key in self.protein_pair_subdirs:
-            if not os.path.exists(self.protein_pair_subdirs.get(key)):
-                os.mkdir(self.protein_pair_subdirs.get(key))
-        self.export_dirname = self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR)
-        self.pymol_session_filepath = path_util.FilePath(f"{self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR)}/{self.name}_session.pse")
+        # protein_pair_dirname = f"{protein_pairs_dirname}/{self.name}"
+        #
+        # self.protein_pair_subdirs = {
+        #     pyssa_keys.PROTEIN_PAIR_SUBDIR: pathlib.Path(f"{protein_pair_dirname}"),
+        #     pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/session"),
+        #     pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/results"),
+        #     pyssa_keys.PROTEIN_PAIR_OBJECTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/.objects"),
+        # }
+        # for key in self.protein_pair_subdirs:
+        #     if not os.path.exists(self.protein_pair_subdirs.get(key)):
+        #         os.mkdir(self.protein_pair_subdirs.get(key))
+        # self.export_dirname = self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR)
+        # self.pymol_session_filepath = path_util.FilePath(f"{self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR)}/{self.name}_session.pse")
 
     def load_protein_pair_in_pymol(self):
         """This function loads to proteins into a NEW pymol session.

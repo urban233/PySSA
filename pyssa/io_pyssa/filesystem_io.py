@@ -79,6 +79,7 @@ class XmlDeserializer:
             tmp_protein_obj = protein.Protein(molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
                                               pdb_xml_string=tmp_protein)
             tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
+
             proteins.append(tmp_protein_obj)
         return proteins
 

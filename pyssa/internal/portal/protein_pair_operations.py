@@ -65,7 +65,7 @@ def align_protein_pair(target_selection, mobile_selection, alignment_filename) -
 
     # </editor-fold>
 
-    tmp_settings = filesystem_io.ObjectDeserializer(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME).deserialize_settings()
+    tmp_settings = filesystem_io.ObjectDeserializer(constants.SETTINGS_DIR, constants.SETTINGS_FILE_NAME).deserialize_settings()
     results = cmd.align(target=target_selection, mobile=mobile_selection,
                         cutoff=tmp_settings.cutoff, cycles=tmp_settings.cycles,
                         object=alignment_filename, quiet=0)

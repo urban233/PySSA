@@ -144,7 +144,7 @@ class DistanceAnalysisDataTransformer:
     """
     the settings of pyssa
     """
-    app_settings: 'settings.Settings'
+    settings: 'settings.Settings'
     """
     the information about the analysis run, includes the names and chains and analysis name
     """
@@ -200,12 +200,10 @@ class DistanceAnalysisDataTransformer:
         return analysis_name
 
     def _create_protein_pair(self):
-        self.analysis_protein_pair = protein_pair.ProteinPair(self.proteins[0], self.proteins[1],
-                                                              pathlib.Path(f"{self.current_project.get_protein_pairs_path()}/protein_pairs/{self._create_analysis_name()}"))
+        self.analysis_protein_pair = protein_pair.ProteinPair(self.proteins[0], self.proteins[1])
 
     def _create_distance_analysis(self):
-        self.analysis_distance = distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.app_settings,
-                                                                    pathlib.Path(f"{self.current_project.get_protein_pairs_path()}/distance_analysis/{self._create_analysis_name()}"))
+        self.analysis_distance = distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings)
 
     def _set_selection_for_analysis(self):
         self.analysis_distance.create_align_selections(

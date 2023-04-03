@@ -32,7 +32,7 @@ VERSION_NUMBER = "v0.9.3"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
-SETTINGS_FILE = "settings.xml"
+SETTINGS_FILE_NAME = "settings"
 SETTINGS_FILENAME = "settings.json"
 SETTINGS_FULL_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/{SETTINGS_FILENAME}")
 

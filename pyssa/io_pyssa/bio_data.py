@@ -71,7 +71,7 @@ def convert_xml_string_to_pdb_file(xml_contents: 'ElementTree.ElementTree', path
 def convert_pdb_xml_string_to_list(root):
     # TODO: write checks for function arguments
     pdb_lines = []
-    for tmp_atom in root.findall("atom"):
+    for tmp_atom in root.iter("atom"):
         pdb_lines.append(tmp_atom.text)
     return pdb_lines
 

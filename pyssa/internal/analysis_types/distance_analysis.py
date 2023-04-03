@@ -78,8 +78,7 @@ class DistanceAnalysis:
 
     # </editor-fold>
 
-    def __init__(self, protein_pair_for_analysis: 'protein_pair.ProteinPair', app_settings: 'settings.Settings',
-                 distance_analysis_dirname: pathlib.Path):
+    def __init__(self, protein_pair_for_analysis: 'protein_pair.ProteinPair', app_settings: 'settings.Settings'):
         """Constructor
 
         Args:
@@ -94,19 +93,19 @@ class DistanceAnalysis:
         self.app_settings: settings.Settings = app_settings
         self.cutoff: float = app_settings.cutoff
         self.cycles: int = app_settings.cycles
-
-        self.distance_analysis_subdirs = {
-            pyssa_keys.DISTANCE_ANALYSIS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}"),
-            pyssa_keys.DISTANCE_ANALYSIS_SESSION_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/session"),
-            pyssa_keys.DISTANCE_ANALYSIS_RESULTS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/results"),
-            pyssa_keys.DISTANCE_ANALYSIS_OBJECTS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/.objects"),
-        }
-        for key in self.distance_analysis_subdirs:
-            if not os.path.exists(self.distance_analysis_subdirs.get(key)):
-                os.mkdir(self.distance_analysis_subdirs.get(key))
-
-        self.export_dirname = self.distance_analysis_subdirs.get(pyssa_keys.DISTANCE_ANALYSIS_RESULTS_SUBDIR)
-        self.pymol_session_filepath = path_util.FilePath(f"{self.distance_analysis_subdirs.get(pyssa_keys.DISTANCE_ANALYSIS_SESSION_SUBDIR)}/{self.protein_pair_for_analysis.name}_analysis_session.pse")
+        self.alignment_file_name = f"{self.protein_pair_for_analysis.name}_alignment"
+        # self.distance_analysis_subdirs = {
+        #     pyssa_keys.DISTANCE_ANALYSIS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}"),
+        #     pyssa_keys.DISTANCE_ANALYSIS_SESSION_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/session"),
+        #     pyssa_keys.DISTANCE_ANALYSIS_RESULTS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/results"),
+        #     pyssa_keys.DISTANCE_ANALYSIS_OBJECTS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/.objects"),
+        # }
+        # for key in self.distance_analysis_subdirs:
+        #     if not os.path.exists(self.distance_analysis_subdirs.get(key)):
+        #         os.mkdir(self.distance_analysis_subdirs.get(key))
+        #
+        # self.export_dirname = self.distance_analysis_subdirs.get(pyssa_keys.DISTANCE_ANALYSIS_RESULTS_SUBDIR)
+        # self.pymol_session_filepath = path_util.FilePath(f"{self.distance_analysis_subdirs.get(pyssa_keys.DISTANCE_ANALYSIS_SESSION_SUBDIR)}/{self.protein_pair_for_analysis.name}_analysis_session.pse")
 
     def save_distance_analysis_session(self) -> None:
         """This function saves the pymol session of the Protein pair distance analysis.

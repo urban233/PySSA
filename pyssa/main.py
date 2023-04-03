@@ -2009,7 +2009,7 @@ class MainWindow(QMainWindow):
         response: bool = gui_utils.warning_message_project_gets_deleted()
         tmp_project_name = self.ui.txt_delete_selected_projects.text()
         if response is True:
-            shutil.rmtree(pathlib.Path(f"{self.workspace_path}/{self.ui.txt_delete_selected_projects.text()}"))
+            os.remove(pathlib.Path(f"{self.workspace_path}/{self.ui.txt_delete_selected_projects.text()}"))
             if self.ui.txt_delete_selected_projects.text() == self.ui.lbl_current_project_name.text():
                 self.ui.lbl_current_project_name.clear()
             self.ui.txt_delete_selected_projects.clear()
@@ -3213,17 +3213,25 @@ class MainWindow(QMainWindow):
         )
         self.ui.lbl_analysis_batch_prot_struct_1.setText(self.ui.box_analysis_batch_prot_struct_1.currentText())
         self.ui.lbl_analysis_batch_prot_struct_2.setText(self.ui.box_analysis_batch_prot_struct_2.currentText())
-        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                               self.ui.box_analysis_batch_prot_struct_1.currentText(),
-                                               self.ui.list_analysis_batch_ref_chains)
+        self.ui.list_analysis_batch_ref_chains.clear()
+        tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_1.currentText())
+        for tmp_chain in tmp_protein.chains:
+            if tmp_chain.chain_type == "protein_chain":
+                self.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain)
+
+        # tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+        #                                        self.ui.box_analysis_batch_prot_struct_1.currentText(),
+        #                                        self.ui.list_analysis_batch_ref_chains)
         self.ui.lbl_analysis_batch_ref_chains.setText(
             f"Select chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
 
     def show_batch_analysis_stage_3(self):
         self.ui.btn_analysis_batch_next_3.setEnabled(False)
-        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                               self.ui.box_analysis_batch_prot_struct_2.currentText(),
-                                               self.ui.list_analysis_batch_model_chains)
+        self.ui.list_analysis_batch_model_chains.clear()
+        tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_2.currentText())
+        for tmp_chain in tmp_protein.chains:
+            if tmp_chain.chain_type == "protein_chain":
+                self.ui.list_analysis_batch_model_chains.addItem(tmp_chain.chain)
         gui_elements_to_hide = [
             self.ui.box_analysis_batch_prot_struct_1,
             self.ui.box_analysis_batch_prot_struct_2,
@@ -3264,7 +3272,10 @@ class MainWindow(QMainWindow):
             self.ui.list_analysis_batch_overview.addItem(item)
 
     def fill_protein_boxes_batch(self):
-        proteins = self.project_scanner.scan_project_for_valid_proteins()
+        #proteins = self.project_scanner.scan_project_for_valid_proteins()
+        proteins = []
+        for tmp_protein in self.app_project.proteins:
+            proteins.append(tmp_protein.get_molecule_object())
         proteins.insert(0, "")
         self.ui.box_analysis_batch_prot_struct_1.clear()
         self.ui.box_analysis_batch_prot_struct_2.clear()

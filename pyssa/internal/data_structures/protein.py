@@ -142,19 +142,6 @@ class Protein:
             self.chains = protein_operations.get_protein_chains(molecule_object, constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb")
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(pdb_xml_string)
             os.remove(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
-            # protein_dirname = pathlib.Path(f"{proteins_dirname}/{self._pymol_molecule_object}")
-            # self.protein_subdirs = {
-            #     pyssa_keys.PROTEINS_SUBDIR: pathlib.Path(proteins_dirname),
-            #     pyssa_keys.PROTEIN_SUBDIR: pathlib.Path(f"{protein_dirname}"),
-            #     pyssa_keys.PROTEIN_SEQUENCE_SUBDIR: pathlib.Path(f"{protein_dirname}/sequence"),
-            #     pyssa_keys.PROTEIN_PDB_SUBDIR: pathlib.Path(f"{protein_dirname}/pdb"),
-            #     pyssa_keys.PROTEIN_SESSION_SUBDIR: pathlib.Path(f"{protein_dirname}/session"),
-            #     pyssa_keys.PROTEIN_RESULTS_SUBDIR: pathlib.Path(f"{protein_dirname}/results"),
-            #     pyssa_keys.PROTEIN_OBJECTS_SUBDIR: pathlib.Path(f"{protein_dirname}/.objects"),
-            # }
-            # for key in self.protein_subdirs:
-            #     if not os.path.exists(self.protein_subdirs.get(key)):
-            #         os.mkdir(self.protein_subdirs.get(key))
         elif pdb_filepath != "" and pdb_xml_string == "":
             self._pymol_molecule_object = pdb_filepath.get_filename()
             self.chains = protein_operations.get_protein_chains(molecule_object, pdb_filepath.get_dirname(), pdb_filepath.get_basename())
@@ -299,7 +286,6 @@ class Protein:
         tmp_protein.append(bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data))
         tmp_session_data = ElementTree.SubElement(tmp_protein, element_names.PROTEIN_SESSION)
         tmp_session_data.set(attribute_names.PROTEIN_SESSION, self.pymol_session)
-        #tmp_protein.set(attribute_names.PROTEIN_RESULTS_PATH, str(self.export_dirname))
 
     @staticmethod
     def deserialize_protein(protein_obj_json_file: path_util.FilePath):
