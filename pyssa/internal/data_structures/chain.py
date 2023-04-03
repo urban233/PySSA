@@ -41,7 +41,7 @@ class Chain:
     """
     sequence of the chain
     """
-    chain_sequence: sequence.ProteinSequence
+    chain_sequence: sequence.Sequence
     """
     type of the chain, whether it is a protein, or nuclein acid chain or something different
     """
@@ -49,7 +49,7 @@ class Chain:
 
     # </editor-fold>
 
-    def __init__(self, chain: str, chain_sequence: sequence.ProteinSequence, chain_type: str) -> None:
+    def __init__(self, chain: str, chain_sequence: sequence.Sequence, chain_type: str) -> None:
         """Constructor
 
         Args:

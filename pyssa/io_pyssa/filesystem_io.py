@@ -254,13 +254,13 @@ class ObjectDeserializer:
         tmp_settings.wsl_username = self.object_dict.get("wsl_username")
         return tmp_settings
 
-    def deserialize_sequence(self) -> 'sequence.ProteinSequence':
+    def deserialize_sequence(self) -> 'sequence.Sequence':
         """This function deserializes the sequence object from a .json file.
 
         Returns:
             a ProteinSequence object
         """
-        return sequence.ProteinSequence(self.object_dict.get("name"), self.object_dict.get("sequence"))
+        return sequence.Sequence(self.object_dict.get("name"), self.object_dict.get("sequence"))
 
 
 class ProjectScanner:

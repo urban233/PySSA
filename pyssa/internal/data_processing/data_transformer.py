@@ -41,7 +41,7 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def transform_protein_name_seq_tuple_to_sequence_obj(protein_name_seq_tuples: list[tuple[str, str]]) -> list[sequence.ProteinSequence]:
+def transform_protein_name_seq_tuple_to_sequence_obj(protein_name_seq_tuples: list[tuple[str, str]]) -> list[sequence.Sequence]:
     """
 
     Args:
@@ -62,22 +62,23 @@ def transform_protein_name_seq_tuple_to_sequence_obj(protein_name_seq_tuples: li
 
     # </editor-fold>
 
-    sequence_objects: list[sequence.ProteinSequence] = []
+    sequence_objects: list[sequence.Sequence] = []
     last_protein_name = protein_name_seq_tuples[0][0]
-    protein_sequence = sequence.ProteinSequence("", [""])
+    protein_sequence = sequence.Sequence("", "")
     if len(protein_name_seq_tuples) == 1:
         protein_sequence.name = protein_name_seq_tuples[0][0]
-        protein_sequence.sequence.append(protein_name_seq_tuples[0][1])
+        protein_sequence.sequence = protein_name_seq_tuples[0][1]
+        logger.debug(f"protein_sequence.sequence: {protein_sequence.sequence}")
         sequence_objects.append(protein_sequence)
     else:
         for tmp_protein_name_seq_tuple in protein_name_seq_tuples:
             current_protein_name = tmp_protein_name_seq_tuple[0]
             if last_protein_name == current_protein_name:
                 protein_sequence.name = tmp_protein_name_seq_tuple[0]
-                protein_sequence.sequence.append(tmp_protein_name_seq_tuple[1])
+                protein_sequence.sequence = tmp_protein_name_seq_tuple[1]
             else:
                 sequence_objects.append(protein_sequence)
-                protein_sequence = sequence.ProteinSequence("", [""])
+                protein_sequence = sequence.Sequence("", "")
                 last_protein_name = current_protein_name
     return sequence_objects
 

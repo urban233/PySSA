@@ -117,7 +117,7 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
     return chains_of_protein
 
 
-def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> list['sequence.ProteinSequence']:
+def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> list['sequence.Sequence']:
     """This function gets all sequences from protein chains only.
 
     Args:
@@ -138,7 +138,7 @@ def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain
         raise ValueError("An argument is illegal.")
 
     # </editor-fold>
-    protein_sequences: list[sequence.ProteinSequence] = []
+    protein_sequences: list[sequence.Sequence] = []
     for tmp_chain in protein_util.filter_chains_for_protein_chains(chains):
         protein_sequences.append(tmp_chain.chain_sequence)
     return protein_sequences

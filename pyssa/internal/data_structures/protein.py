@@ -190,13 +190,13 @@ class Protein:
             tmp_chain.chain_sequence.name = value
         self.pymol_selection.molecule_object = value
 
-    def get_all_sequences(self) -> list['sequence.ProteinSequence']:
+    def get_all_sequences(self) -> list['sequence.Sequence']:
         tmp_sequences = []
         for tmp_chain in self.chains:
             tmp_sequences.append(tmp_chain.chain_sequence)
         return tmp_sequences
 
-    def get_protein_sequences(self) -> list['sequence.ProteinSequence']:
+    def get_protein_sequences(self) -> list['sequence.Sequence']:
         return protein_operations.get_protein_sequences_from_protein(self._pymol_molecule_object, self.chains)
 
     def load_protein_in_pymol(self) -> None:

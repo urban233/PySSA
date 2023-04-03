@@ -30,7 +30,7 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-class ProteinSequence:
+class Sequence:
     """This class contains information about a protein sequence."""
 
     # <editor-fold desc="Class attributes">
@@ -45,14 +45,14 @@ class ProteinSequence:
 
     # </editor-fold>
 
-    def __init__(self, protein_name: str, protein_sequence: str) -> None:
+    def __init__(self, protein_name: str, single_sequence: str) -> None:
         """Constructor
 
         Args:
             protein_name:
                 the name of the protein
-            protein_sequence:
-                a sequences as string of the protein
+            single_sequence:
+                a sequence as string of the protein
         Raises:
             ValueError: raised if an argument is illegal
         """
@@ -72,7 +72,7 @@ class ProteinSequence:
         # </editor-fold>
 
         self.name = protein_name
-        self.sequence: str = protein_sequence
+        self.sequence: str = single_sequence
 
     def write_fasta_file(self, filepath: pathlib.Path) -> None:
         """This function writes a colabbatch compatible fasta file.
