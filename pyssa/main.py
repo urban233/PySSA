@@ -1760,14 +1760,15 @@ class MainWindow(QMainWindow):
 
         """
         if len(self.ui.txt_new_choose_reference.text()) == 0:
-            self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+            self.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
             self.ui.lbl_new_status_choose_reference.setText("")
             self.ui.btn_new_create_project.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_new_create_project)
         elif len(self.ui.txt_new_choose_reference.text()) < 4:
-            self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+            self.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
             styles.color_button_not_ready(self.ui.btn_new_create_project)
             self.ui.btn_new_create_project.setEnabled(False)
+            self.ui.lbl_new_status_choose_reference.setText("")
         # checks if a pdb id was entered
         elif len(self.ui.txt_new_choose_reference.text()) == 4:
             pdb_id = self.ui.txt_new_choose_reference.text().upper()
@@ -1776,28 +1777,28 @@ class MainWindow(QMainWindow):
                 cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
                 os.remove(f"{self.scratch_path}/{pdb_id}.pdb")
                 cmd.reinitialize()
-                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #33C065")
+                self.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
                 self.ui.btn_new_create_project.setEnabled(True)
                 styles.color_button_ready(self.ui.btn_new_create_project)
             # if the id does not exist an exception gets raised
             except pymol.CmdException:
-                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 styles.color_button_not_ready(self.ui.btn_new_create_project)
                 return
             except FileNotFoundError:
-                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
                 self.ui.btn_new_create_project.setEnabled(False)
                 styles.color_button_not_ready(self.ui.btn_new_create_project)
                 return
         else:
             if self.ui.txt_new_choose_reference.text().find("/") == -1:
-                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self.ui.btn_new_create_project.setEnabled(False)
                 styles.color_button_not_ready(self.ui.btn_new_create_project)
 
             elif self.ui.txt_new_choose_reference.text().find("\\") == -1:
-                self.ui.txt_new_choose_reference.setStyleSheet("background-color: #FC5457")
+                self.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self.ui.btn_new_create_project.setEnabled(False)
                 styles.color_button_not_ready(self.ui.btn_new_create_project)
 
