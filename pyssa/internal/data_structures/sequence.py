@@ -74,34 +74,34 @@ class Sequence:
         self.name = protein_name
         self.sequence: str = single_sequence
 
-    def write_fasta_file(self, filepath: pathlib.Path) -> None:
-        """This function writes a colabbatch compatible fasta file.
-
-        Args:
-            filepath:
-                path where the fasta file should be saved
-        Raises:
-
-        """
-        # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_filepath(filepath):
-            logger.error("The directory does not exists!")
-            raise NotADirectoryError("The directory does not exists!")
-
-        # </editor-fold>
-
-        fasta_file = open(f"{filepath}/{self.name}.fasta", "w")
-        fasta_file.write(f">{self.name}\n")
-        i = 0
-        for tmp_sequence in self.sequence:
-            if i == len(self.sequence) - 1:
-                # should be the last entry
-                fasta_file.write(tmp_sequence)
-            else:
-                fasta_file.write(f"{tmp_sequence}:")
-            i += 1
-        logger.info(f"Fasta file for sequence {self.name} written.")
-        fasta_file.close()
+    # def write_fasta_file(self, filepath: pathlib.Path) -> None:
+    #     """This function writes a colabbatch compatible fasta file.
+    #
+    #     Args:
+    #         filepath:
+    #             path where the fasta file should be saved
+    #     Raises:
+    #
+    #     """
+    #     # <editor-fold desc="Checks">
+    #     if not safeguard.Safeguard.check_filepath(filepath):
+    #         logger.error("The directory does not exists!")
+    #         raise NotADirectoryError("The directory does not exists!")
+    #
+    #     # </editor-fold>
+    #
+    #     fasta_file = open(f"{filepath}/{self.name}.fasta", "w")
+    #     fasta_file.write(f">{self.name}\n")
+    #     i = 0
+    #     for tmp_sequence in self.sequence:
+    #         if i == len(self.sequence) - 1:
+    #             # should be the last entry
+    #             fasta_file.write(tmp_sequence)
+    #         else:
+    #             fasta_file.write(f"{tmp_sequence}:")
+    #         i += 1
+    #     logger.info(f"Fasta file for sequence {self.name} written.")
+    #     fasta_file.close()
 
     def serialize(self, filepath: pathlib.Path, filename: str) -> None:
         """This function serializes the sequence object.

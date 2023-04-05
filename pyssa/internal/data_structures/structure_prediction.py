@@ -92,10 +92,10 @@ class StructurePrediction:
         """This function creates fasta file based on the predictions in the object
 
         """
-        protein_sequences: list[sequence.Sequence] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
-        logger.debug(f"Variable: protein_sequences; Value: {protein_sequences} in function create_fasta_files_for_prediction")
-        for tmp_seq_to_predict in protein_sequences:
-            tmp_seq_to_predict.write_fasta_file(constants.PREDICTION_FASTA_DIR)
+        protein_objects: list[protein.Protein] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
+        logger.debug(f"Variable: protein_sequences; Value: {protein_objects} in function create_fasta_files_for_prediction")
+        for tmp_protein_to_predict in protein_objects:
+            tmp_protein_to_predict.write_fasta_file(constants.PREDICTION_FASTA_DIR)
         if len(os.listdir(constants.PREDICTION_FASTA_DIR)) == 0:
             logger.error("No fasta files were created!")
             raise FileNotFoundError

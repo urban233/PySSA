@@ -46,11 +46,12 @@ from pyssa.util import constants
 from pyssa.io_pyssa import path_util
 from typing import TYPE_CHECKING
 from xml.etree import ElementTree
+from pyssa.internal.data_structures import chain
 
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import sequence
-    from pyssa.internal.data_structures import chain
+
 
 
 logger = logging.getLogger(__file__)
@@ -142,20 +143,31 @@ class Protein:
             self.chains = protein_operations.get_protein_chains(molecule_object, constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb")
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(pdb_xml_string)
             os.remove(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
+            self.pymol_selection = selection.Selection(self._pymol_molecule_object)
+            self.pymol_selection.selection_string = ""
+            self.load_protein_in_pymol()
+            # saves pymol session into a base64 string
+            self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
+
         elif pdb_filepath != "" and pdb_xml_string == "":
             self._pymol_molecule_object = pdb_filepath.get_filename()
             self.chains = protein_operations.get_protein_chains(molecule_object, pdb_filepath.get_dirname(), pdb_filepath.get_basename())
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
                 bio_data.convert_pdb_file_into_xml_element(pdb_filepath)
             )
-        else:
-            raise ValueError("An argument is missing.")
+            self.pymol_selection = selection.Selection(self._pymol_molecule_object)
+            self.pymol_selection.selection_string = ""
+            self.load_protein_in_pymol()
+            # saves pymol session into a base64 string
+            self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
 
-        self.pymol_selection = selection.Selection(self._pymol_molecule_object)
-        self.pymol_selection.selection_string = ""
-        self.load_protein_in_pymol()
-        # saves pymol session into a base64 string
-        self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
+        elif pdb_filepath == "" and pdb_xml_string == "":
+            self._pymol_molecule_object = molecule_object
+            self.pymol_selection = selection.Selection(self._pymol_molecule_object)
+            self.pymol_selection.selection_string = ""
+
+        else:
+            raise ValueError("Function has too many arguments.")
 
     def get_molecule_object(self) -> str:
         """This function gets the molecule object.
@@ -186,6 +198,34 @@ class Protein:
     def get_protein_sequences(self) -> list['sequence.Sequence']:
         return protein_operations.get_protein_sequences_from_protein(self._pymol_molecule_object, self.chains)
 
+    def write_fasta_file(self, filepath: pathlib.Path):
+        fasta_file = open(f"{filepath}/{self._pymol_molecule_object}.fasta", "w")
+        fasta_file.write(f">{self._pymol_molecule_object}\n")
+        i = 0
+        seq_objs = self.get_protein_sequences()
+        for tmp_sequence in seq_objs:
+            if i == len(self.get_protein_sequences()) - 1:
+                # should be the last entry
+                fasta_file.write(tmp_sequence.sequence)
+            else:
+                fasta_file.write(f"{tmp_sequence.sequence}:")
+            i += 1
+        logger.info(f"Fasta file for sequence {self._pymol_molecule_object} written.")
+        fasta_file.close()
+
+    def append_chain(self, chain_name, chain_sequence, chain_type):
+        # TODO: add check if chain or any type of chain information already exists
+        self.chains.append(chain.Chain(chain=chain_name, chain_sequence=chain_sequence, chain_type=chain_type))
+
+    def add_chain_names_to_chains(self):
+        i = 0
+        for tmp_chain in self.chains:
+            if tmp_chain.chain == "":
+                tmp_chain.chain = constants.chain_dict[i]
+                i += 1
+            else:
+                raise ValueError("Chain name exists.")
+
     def load_protein_in_pymol(self) -> None:
         pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
         if not os.path.exists(constants.CACHE_PROTEIN_DIR):
@@ -209,23 +249,23 @@ class Protein:
         """
         self.pymol_selection.set_selections_without_chains_ca()
 
-    def write_fasta_file(self) -> None:
-        """This function writes a colabbatch compatible fasta file.
-
-        """
-        self.fasta_filepath = path_util.FilePath(pathlib.Path(f"{self.protein_subdirs.get(pyssa_keys.PROTEIN_SEQUENCE_SUBDIR)}/{self._pymol_molecule_object}.fasta"))
-        fasta_file = open(self.fasta_filepath.get_filepath(), "w")
-        fasta_file.write(f">{self._pymol_molecule_object}\n")
-        i = 0
-        for tmp_sequence in self.get_protein_sequences():
-            if i == len(self.get_protein_sequences()) - 1:
-                # should be the last entry
-                fasta_file.write(tmp_sequence.sequence)
-            else:
-                fasta_file.write(f"{tmp_sequence}:")
-            i += 1
-        logger.info(f"Fasta file for sequence {self._pymol_molecule_object} written.")
-        fasta_file.close()
+    # def write_fasta_file(self) -> None:
+    #     """This function writes a colabbatch compatible fasta file.
+    #
+    #     """
+    #     self.fasta_filepath = path_util.FilePath(pathlib.Path(f"{self.protein_subdirs.get(pyssa_keys.PROTEIN_SEQUENCE_SUBDIR)}/{self._pymol_molecule_object}.fasta"))
+    #     fasta_file = open(self.fasta_filepath.get_filepath(), "w")
+    #     fasta_file.write(f">{self._pymol_molecule_object}\n")
+    #     i = 0
+    #     for tmp_sequence in self.get_protein_sequences():
+    #         if i == len(self.get_protein_sequences()) - 1:
+    #             # should be the last entry
+    #             fasta_file.write(tmp_sequence.sequence)
+    #         else:
+    #             fasta_file.write(f"{tmp_sequence}:")
+    #         i += 1
+    #     logger.info(f"Fasta file for sequence {self._pymol_molecule_object} written.")
+    #     fasta_file.close()
 
     def clean_pdb_file(self) -> None:
         """This function cleans a pdb file from the PDB
