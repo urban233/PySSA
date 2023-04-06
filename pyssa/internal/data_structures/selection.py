@@ -73,7 +73,7 @@ class Selection:
         seperator = ", "
         tmp_list = []
         for tmp_chain in chains:
-            tmp_selection = f"/{self.molecule_object}//{tmp_chain}//CA"
+            tmp_selection = f"/{self.molecule_object}//{tmp_chain.chain_letter}//CA"
             tmp_list.append(tmp_selection)
             self.selection_string = (seperator.join(tmp_list))
 

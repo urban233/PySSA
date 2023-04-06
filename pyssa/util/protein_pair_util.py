@@ -79,15 +79,15 @@ def calculate_distance_between_ca_atoms(protein_pair: 'protein_pair.ProteinPair'
     """
     # argument test
     if not safeguard.Safeguard.check_if_file_is_readable(
-            pathlib.Path(f"{protein_pair.results_dir}/alignment_files/{alignment_filename}.aln")):
-        print(f"File not found, in {protein_pair.results_dir}.")
+            pathlib.Path(f"{protein_pair.analysis_results}/alignment_files/{alignment_filename}.aln")):
+        print(f"File not found, in {protein_pair.analysis_results}.")
 
-    cmd.create(f"{protein_pair.ref_obj.molecule_object}_CA", f"/{protein_pair.ref_obj.molecule_object}////CA")
-    ref_ca_obj = cmd.get_model(f"{protein_pair.ref_obj.molecule_object}_CA")
-    cmd.create(f"{protein_pair.model_obj.molecule_object}_CA", f"/{protein_pair.model_obj.molecule_object}////CA")
-    model_ca_obj = cmd.get_model(f"{protein_pair.model_obj.molecule_object}_CA")
+    cmd.create(f"{protein_pair.protein_1.get_molecule_object()}_CA", f"/{protein_pair.protein_1.get_molecule_object()}////CA")
+    ref_ca_obj = cmd.get_model(f"{protein_pair.protein_1.get_molecule_object()}_CA")
+    cmd.create(f"{protein_pair.protein_2.get_molecule_object()}_CA", f"/{protein_pair.protein_2.get_molecule_object()}////CA")
+    model_ca_obj = cmd.get_model(f"{protein_pair.protein_2.get_molecule_object()}_CA")
     # read in alignment file from alignProteinPair function
-    align = AlignIO.read(pathlib.Path(f"{protein_pair.results_dir}/alignment_files/{alignment_filename}.aln"), "clustal")
+    align = AlignIO.read(pathlib.Path(f"{protein_pair.analysis_results}/alignment_files/{alignment_filename}.aln"), "clustal")
     index_list: [int] = []
     ref_chain_list: [str] = []
     ref_pos_list: [int] = []
@@ -98,8 +98,8 @@ def calculate_distance_between_ca_atoms(protein_pair: 'protein_pair.ProteinPair'
     distance_list: [float] = []
 
     i = 0  # i for alignment file
-    j = 0  # j for reference
-    k = 0  # k for model
+    j = 0  # j for reference seq position
+    k = 0  # k for model seq position
     index = 0
     while i < int(align.get_alignment_length()):
         # gets executed if the reference contains a "-" in the alignment
@@ -127,8 +127,8 @@ def calculate_distance_between_ca_atoms(protein_pair: 'protein_pair.ProteinPair'
             resi_model: str = model_ca_obj.atom[k].resn
 
             # calculate the distance between the alpha-C atoms
-            atom1 = f"/{protein_pair.ref_obj.molecule_object}_CA//{chain_ref}/{pos_ref}/"
-            atom2 = f"/{protein_pair.model_obj.molecule_object}_CA//{chain_model}/{pos_model}/"
+            atom1 = f"/{protein_pair.protein_1.get_molecule_object()}_CA//{chain_ref}/{pos_ref}/"
+            atom2 = f"/{protein_pair.protein_2.get_molecule_object()}_CA//{chain_model}/{pos_model}/"
             distance = round(cmd.get_distance(atom1, atom2), 2)
 
             # TODO: should there be a cutoff?

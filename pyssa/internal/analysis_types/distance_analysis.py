@@ -142,9 +142,9 @@ class DistanceAnalysis:
                                                              self.protein_pair_for_analysis.protein_2.pymol_selection.selection_string,
                                                              self.alignment_file_name)
         # save the align object from pymol as alignment file
-        if not os.path.exists(pathlib.Path(f"{self.protein_pair_for_analysis.export_dirname}/alignment_files")):
-            os.mkdir(pathlib.Path(f"{self.protein_pair_for_analysis.export_dirname}/alignment_files"))
-        cmd.save(pathlib.Path(f"{self.protein_pair_for_analysis.export_dirname}/alignment_files/{self.alignment_file_name}.aln"))
+        if not os.path.exists(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files")):
+            os.mkdir(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files"))
+        cmd.save(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files/{self.alignment_file_name}.aln"))
         return results[0], results[1]
 
     def do_analysis_in_pymol(self) -> None:
@@ -158,7 +158,7 @@ class DistanceAnalysis:
             "rmsd": str(round(align_results[0], 2)),
             "aligned_residues": str(align_results[1]),
         }
-        rmsd_file = open(pathlib.Path(f"{self.protein_pair_for_analysis.export_dirname}/rmsd.json"), "w", encoding="utf-8")
+        rmsd_file = open(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/rmsd.json"), "w", encoding="utf-8")
         json.dump(rmsd_dict, rmsd_file, indent=4)
         rmsd_file.close()
         protein_pair_util.calculate_distance_between_ca_atoms(self.protein_pair_for_analysis, self.alignment_file_name)

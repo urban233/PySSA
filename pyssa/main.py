@@ -3217,7 +3217,7 @@ class MainWindow(QMainWindow):
         tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_1.currentText())
         for tmp_chain in tmp_protein.chains:
             if tmp_chain.chain_type == "protein_chain":
-                self.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain)
+                self.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
 
         # tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
         #                                        self.ui.box_analysis_batch_prot_struct_1.currentText(),
@@ -3231,7 +3231,7 @@ class MainWindow(QMainWindow):
         tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_2.currentText())
         for tmp_chain in tmp_protein.chains:
             if tmp_chain.chain_type == "protein_chain":
-                self.ui.list_analysis_batch_model_chains.addItem(tmp_chain.chain)
+                self.ui.list_analysis_batch_model_chains.addItem(tmp_chain.chain_letter)
         gui_elements_to_hide = [
             self.ui.box_analysis_batch_prot_struct_1,
             self.ui.box_analysis_batch_prot_struct_2,
@@ -3376,6 +3376,8 @@ class MainWindow(QMainWindow):
         worker.signals.finished.connect(self.post_analysis_process)
         constants.PYSSA_LOGGER.info("Thread started for analysis process.")
         self.threadpool.start(worker)
+        if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+            os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
         gui_elements_to_show = [
             self.ui.btn_analysis_abort,

@@ -37,7 +37,7 @@ class Chain:
     """
     letter of the chain
     """
-    chain: str
+    chain_letter: str
     """
     sequence of the chain
     """
@@ -60,6 +60,6 @@ class Chain:
             chain_type:
                 type of the chain, whether it is a protein, or nuclein acid chain or something different
         """
-        self.chain = chain
+        self.chain_letter = chain
         self.chain_sequence = chain_sequence
         self.chain_type = chain_type

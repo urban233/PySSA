@@ -95,6 +95,7 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
 
     # </editor-fold>
 
+    cmd.reinitialize()
     pymol_io.load_protein(dirname, basename, molecule_object)
     tmp_chains: list[str] = cmd.get_chains()
     i = 0

@@ -50,6 +50,7 @@ class DialogDistanceHistogram(Qt.QtWidgets.QDialog):
         self.graph_widget = pg.PlotWidget()
         self.view_box = self.graph_widget.plotItem.getViewBox()
         # read csv file
+        # TODO: Needs correction for xml model
         path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
         distance_list = []
         with open(path, 'r', encoding="utf-8") as csv_file:

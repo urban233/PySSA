@@ -89,7 +89,7 @@ def filter_chains_for_protein_chains(chains: list['chain.Chain']) -> list['chain
 def get_chains_as_list_of_tuples(chains: list['chain.Chain']) -> list[tuple[str, 'sequence.Sequence', str]]:
     chains_information = []
     for tmp_chain in chains:
-        chains_information.append((tmp_chain.chain, tmp_chain.chain_sequence, tmp_chain.chain_type))
+        chains_information.append((tmp_chain.chain_letter, tmp_chain.chain_sequence, tmp_chain.chain_type))
     return chains_information
 
 
@@ -104,7 +104,7 @@ def get_chains_from_list_of_chain_names(protein: 'protein.Protein', chain_names:
     chains: list['chain.Chain'] = []
     for tmp_chain in protein.chains:
         for tmp_chain_name in chain_names:
-            if tmp_chain.chain == tmp_chain_name:
+            if tmp_chain.chain_letter == tmp_chain_name:
                 chains.append(tmp_chain)
                 break
     return chains

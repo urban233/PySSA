@@ -220,8 +220,8 @@ class Protein:
     def add_chain_names_to_chains(self):
         i = 0
         for tmp_chain in self.chains:
-            if tmp_chain.chain == "":
-                tmp_chain.chain = constants.chain_dict[i]
+            if tmp_chain.chain_letter == "":
+                tmp_chain.chain_letter = constants.chain_dict[i]
                 i += 1
             else:
                 raise ValueError("Chain name exists.")
@@ -363,7 +363,7 @@ class Protein:
             ("pymol_selection.selection_string", str(self.pymol_selection.selection_string)),
         ]
         for tmp_chain in self.chains:
-            mirror.append(("tmp_chain.chain", str(tmp_chain.chain)))
+            mirror.append(("tmp_chain.chain", str(tmp_chain.chain_letter)))
             mirror.append(("tmp_chain.chain_type", str(tmp_chain.chain_type)))
             mirror.append(("tmp_chain.chain_sequence", str(tmp_chain.chain_sequence)))
 

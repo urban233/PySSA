@@ -32,6 +32,7 @@ from pyssa.io_pyssa import filesystem_io
 from pyssa.util import protein_util
 from pyssa.util import pyssa_keys
 from typing import TYPE_CHECKING
+from pyssa.util import constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein
@@ -55,7 +56,7 @@ class ProteinPair:
     """
     a directory where all results related to the protein will be stored
     """
-    export_dirname: pathlib.Path
+    analysis_results: pathlib.Path = constants.SCRATCH_DIR_ANALYSIS
     """
     the full filepath where the session file is stored
     """
@@ -69,11 +70,6 @@ class ProteinPair:
                 reference Protein object
             protein_2 (core.Protein):
                 model Protein object
-            protein_pairs_dirname (str):
-                directory where all results will be stored.
-                All subdirectories like ``images``, ``alignment_files``
-                and ``distances`` will be created automatically.
-                The results_dir will then function as parent directory.
 
         Raises:
             NotADirectoryError: If directory not found.
@@ -654,7 +650,7 @@ class ProteinPair:
             "prot_2_filename": str(self.protein_2.pdb_filepath.get_filename()),
             "prot_2_selection": self.protein_2.pymol_selection.selection_string,
             "prot_2_chains": protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
-            "export_dirname": str(self.export_dirname),
+            "export_dirname": str(self.SCRATCH_DIR),
             "pymol_session_file": str(self.pymol_session_filepath.get_filepath()),
             "name": self.name,
             "protein_pairs_dirname": str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
@@ -686,7 +682,7 @@ class ProteinPair:
             str(self.protein_2.pdb_filepath.get_filename()),
             self.protein_2.pymol_selection.selection_string,
             protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
-            str(self.export_dirname),
+            str(self.SCRATCH_DIR),
             str(self.pymol_session_filepath.get_filepath()),
             self.name,
             str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),

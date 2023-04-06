@@ -39,6 +39,7 @@ SETTINGS_FULL_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/{SETTINGS_FILENAME}")
 DEFAULT_WORKSPACE_PATH = pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/default_workspace")
 
 SCRATCH_DIR = Path(f"{SETTINGS_DIR}/scratch")
+SCRATCH_DIR_ANALYSIS = Path(f"{SCRATCH_DIR}/analysis")
 CACHE_DIR = Path(f"{SETTINGS_DIR}/.cache")
 CACHE_PROTEIN_DIR = Path(f"{CACHE_DIR}/pdb_files")
 PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")
