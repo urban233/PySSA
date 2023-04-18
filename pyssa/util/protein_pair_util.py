@@ -81,13 +81,19 @@ def calculate_distance_between_ca_atoms(protein_pair: 'protein_pair.ProteinPair'
     if not safeguard.Safeguard.check_if_file_is_readable(
             pathlib.Path(f"{protein_pair.analysis_results}/alignment_files/{alignment_filename}.aln")):
         print(f"File not found, in {protein_pair.analysis_results}.")
-
-    cmd.create(f"{protein_pair.protein_1.get_molecule_object()}_CA", f"/{protein_pair.protein_1.get_molecule_object()}////CA")
+    for tmp_chain in protein_pair.protein_2.chains:
+        logger.debug(f"chain of protein 2: {tmp_chain.chain_sequence}")
+    for tmp_chain in protein_pair.protein_1.chains:
+        logger.debug(f"chain of protein 1: {tmp_chain.chain_sequence}")
+    cmd.create(f"{protein_pair.protein_1.get_molecule_object()}_CA",
+               f"/{protein_pair.protein_1.get_molecule_object()}////CA")
     ref_ca_obj = cmd.get_model(f"{protein_pair.protein_1.get_molecule_object()}_CA")
-    cmd.create(f"{protein_pair.protein_2.get_molecule_object()}_CA", f"/{protein_pair.protein_2.get_molecule_object()}////CA")
+    cmd.create(f"{protein_pair.protein_2.get_molecule_object()}_CA",
+               f"/{protein_pair.protein_2.get_molecule_object()}////CA")
     model_ca_obj = cmd.get_model(f"{protein_pair.protein_2.get_molecule_object()}_CA")
     # read in alignment file from alignProteinPair function
-    align = AlignIO.read(pathlib.Path(f"{protein_pair.analysis_results}/alignment_files/{alignment_filename}.aln"), "clustal")
+    align = AlignIO.read(pathlib.Path(f"{protein_pair.analysis_results}/alignment_files/{alignment_filename}.aln"),
+                         "clustal")
     index_list: [int] = []
     ref_chain_list: [str] = []
     ref_pos_list: [int] = []
@@ -97,7 +103,7 @@ def calculate_distance_between_ca_atoms(protein_pair: 'protein_pair.ProteinPair'
     model_resi_list: [str] = []
     distance_list: [float] = []
 
-    i = 0  # i for alignment file
+    i = 0  # i for alignment file; amino acid position
     j = 0  # j for reference seq position
     k = 0  # k for model seq position
     index = 0
@@ -107,11 +113,16 @@ def calculate_distance_between_ca_atoms(protein_pair: 'protein_pair.ProteinPair'
             i += 1
             k += 1
             j = j
+            logger.debug(f"gets executed if the reference contains a '-' in the alignment")
+            logger.debug(f"i:{i}, j:{j}, k:{k}")
         # gets executed if the model contains a "-" in the alignment
         elif align[1, i] == "-":
             i += 1
             j += 1
             k = k
+            logger.debug(f"gets executed if the model contains a ' - ' in the alignment")
+            logger.debug(f"i:{i}, j:{j}, k:{k}")
+
         # gets executed if no "-" is found in the alignment
         else:
             # create var for chain, position and residue name for
@@ -168,6 +179,8 @@ def calculate_distance_between_ca_atoms(protein_pair: 'protein_pair.ProteinPair'
             j += 1
             k += 1
             index += 1
+            logger.debug(f"increment all indices")
+            logger.debug(f"i:{i}, j:{j}, k:{k}")
 
     index_array: np.ndarray = np.array(index_list)
     ref_chain_array: np.ndarray = np.array(ref_chain_list)
