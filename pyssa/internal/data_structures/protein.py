@@ -53,7 +53,6 @@ if TYPE_CHECKING:
     from pyssa.internal.data_structures import sequence
 
 
-
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
@@ -186,7 +185,8 @@ class Protein:
         """
         self._pymol_molecule_object = value
         for tmp_chain in self.chains:
-            tmp_chain.chain_sequence.name = value
+            if tmp_chain.chain_type != "non_protein_chain":
+                tmp_chain.chain_sequence.name = value
         self.pymol_selection.molecule_object = value
 
     def get_all_sequences(self) -> list['sequence.Sequence']:
@@ -203,6 +203,9 @@ class Protein:
             if chain_letter == tmp_chain.chain_letter:
                 return tmp_chain.chain_sequence
         return None
+
+    def get_id(self):
+        return self._id
 
     def write_fasta_file(self, filepath: pathlib.Path):
         fasta_file = open(f"{filepath}/{self._pymol_molecule_object}.fasta", "w")
@@ -345,7 +348,8 @@ class Protein:
                                                 protein_obj_json_file.get_filename()).deserialize_protein()
 
     def duplicate_protein(self):
-        tmp_protein = Protein(molecule_object=self._pymol_molecule_object, proteins_dirname=self.protein_subdirs.get(pyssa_keys.PROTEIN_SUBDIR), pdb_filepath=self.pdb_filepath.get_filepath())
+        tmp_protein = Protein(molecule_object=self._pymol_molecule_object, pdb_xml_string=bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data))
+        logger.debug(tmp_protein.chains[0])
         # tmp_protein.pymol_selection.selection_string = self.pymol_selection.selection_string
         # tmp_protein.chains = self.chains
         # # TODO: create new session file for duplicate

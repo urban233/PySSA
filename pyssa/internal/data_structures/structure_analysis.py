@@ -37,7 +37,7 @@ from pyssa.internal.portal import pymol_io
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
-
+    from pyssa.internal.data_structures import project
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -46,15 +46,22 @@ logger.addHandler(log_handlers.log_file_handler)
 class Analysis:
     """This class contains information about the type of analysis"""
 
-    analysis_list: list[distance_analysis.DistanceAnalysis] = []
+    analysis_list: list[protein_pair.ProteinPair] = []
+    app_project: 'project.Project'
 
-    def __init__(self):
-        pass
+    def __init__(self, app_project):
+        self.app_project = app_project
 
     def run_analysis(self):
         for tmp_distance_analysis in self.analysis_list:
-            tmp_distance_analysis.do_analysis_in_pymol()
-
+            current_protein_pair = tmp_distance_analysis.distance_analysis.do_analysis_in_pymol(self.app_project)
+            self.app_project.add_protein_pair(current_protein_pair)
+            #self.app_project.add_distance_analysis(tmp_distance_analysis)
+            logger.debug(self.app_project.get_project_name())
+            logger.debug(self.app_project.get_project_xml_path())
+            logger.debug(tmp_distance_analysis.name)
+            logger.debug(self.app_project.protein_pairs)
+            self.app_project.serialize_project(self.app_project.get_project_xml_path())
 
 
 class StructureAnalysis:

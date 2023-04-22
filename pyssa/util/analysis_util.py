@@ -103,7 +103,11 @@ def create_selection_strings_for_structure_alignment(protein, selected_chains: l
         protein_selection.set_selections_from_chains_ca(
             protein_util.get_chains_from_list_of_chain_names(protein, protein_chains))
     else:
-        protein_selection.set_selections_without_chains_ca()
+        all_protein_chains = []
+        for tmp_chain in protein.chains:
+            if tmp_chain.chain_type != "non_protein_chain":
+                all_protein_chains.append(tmp_chain)
+        protein_selection.set_selections_from_chains_ca(all_protein_chains)
     return protein_selection
 
 

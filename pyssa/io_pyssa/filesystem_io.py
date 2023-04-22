@@ -25,6 +25,7 @@ import json
 import pathlib
 import shutil
 import logging
+import numpy as np
 from xml.etree import ElementTree
 
 from PyQt5 import QtWidgets
@@ -38,6 +39,7 @@ from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures import sequence
 from pyssa.internal.analysis_types import distance_analysis
+from pyssa.internal.data_structures import results
 from pyssa.io_pyssa import safeguard
 from pyssa.util import constants
 from pyssa.util import tools
@@ -83,7 +85,89 @@ class XmlDeserializer:
             proteins.append(tmp_protein_obj)
         return proteins
 
-    def deserialize_project(self):
+    def create_all_protein_pairs(self, tmp_project: 'project.Project', app_settings: 'settings.Settings'):
+        protein_pairs = []
+        if len(self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}")) == 0:
+            return
+        for tmp_protein_pair in self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}"):
+            basic_information = tmp_protein_pair.attrib
+            prot_1_molecule_object = basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT]
+            if prot_1_molecule_object.find("_1") != -1:
+                org_prot_1_molecule_object = prot_1_molecule_object[:prot_1_molecule_object.find("_1")]
+                protein_2: protein.Protein = tmp_project.search_protein(org_prot_1_molecule_object).duplicate_protein()
+                protein_1: protein.Protein = protein_2.duplicate_protein()
+                protein_1.set_molecule_object(f"{protein_1.get_molecule_object()}_1")
+                protein_2.set_molecule_object(f"{protein_2.get_molecule_object()}_2")
+            else:
+                protein_1 = tmp_project.search_protein(basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT])
+                protein_2 = tmp_project.search_protein(basic_information[attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT])
+
+            tmp_protein_pair_obj = protein_pair.ProteinPair(protein_1=protein_1, protein_2=protein_2)
+
+            pymol_session = tmp_protein_pair.find(element_names.PROTEIN_PAIR_SESSION).attrib
+            tag_distance_analysis = tmp_protein_pair.find(element_names.DISTANCE_ANALYSIS)
+            distance_analysis_settings = tag_distance_analysis.attrib
+            tag_results = tag_distance_analysis.find(element_names.DISTANCE_ANALYSIS_RESULTS)
+            rmsd_aligned_aa = tag_results.attrib
+            distance_results = []
+            for tmp_tag_results_distance in tag_results.findall(f".//{element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS}"):
+                indexes = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_INDEX_LIST).text
+                prot_1_chains = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST).text
+                prot_1_positions = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST).text
+                prot_1_residues = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST).text
+
+                prot_2_chains = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST).text
+                prot_2_positions = tmp_tag_results_distance.find(
+                    element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST).text
+                prot_2_residues = tmp_tag_results_distance.find(
+                    element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST).text
+
+                distances = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_DISTANCES_LIST).text
+                index_array: np.ndarray = np.array(indexes)
+                ref_chain_array: np.ndarray = np.array(prot_1_chains)
+                ref_pos_array: np.ndarray = np.array(prot_1_positions)
+                ref_resi_array: np.ndarray = np.array(prot_1_residues)
+                model_chain_array: np.ndarray = np.array(prot_2_chains)
+                model_pos_array: np.ndarray = np.array(prot_2_positions)
+                model_resi_array: np.ndarray = np.array(prot_2_residues)
+                distance_array: np.ndarray = np.array(distances)
+
+                result_hashtable: dict[str, np.ndarray] = {'index': index_array,
+                                                           'ref_chain': ref_chain_array,
+                                                           'ref_pos': ref_pos_array,
+                                                           'ref_resi': ref_resi_array,
+                                                           'model_chain': model_chain_array,
+                                                           'model_pos': model_pos_array,
+                                                           'model_resi': model_resi_array,
+                                                           'distance': distance_array
+                                                           }
+                distance_results.append(result_hashtable)
+
+            # for tmp_data in tmp_protein_pair:
+            #     if tmp_data.tag == element_names.PROTEIN_PAIR_SESSION:
+            #         tmp_protein_pair_obj.pymol_session = tmp_data.attrib
+            #     elif tmp_data.tag == element_names.DISTANCE_ANALYSIS:
+            #         for tmp_results_data in tmp_data:
+            #             if tmp_results_data.tag == element_names.DISTANCE_ANALYSIS_RESULTS:
+            #                 for tmp_distance_analysis_results in tmp_results_data:
+            #
+            #             rmsd_aligned_aa = tmp_results_data.attrib
+
+            tmp_protein_pair_obj.analysis_results = results.DistanceAnalysisResults(distance_data=distance_results,
+                                                                                    pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
+                                                                                    rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
+                                                                                    aligned_aa=int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
+            tmp_protein_pair_obj.set_distance_analysis(distance_analysis.DistanceAnalysis(tmp_protein_pair_obj, app_settings))
+            tmp_protein_pair_obj.distance_analysis.cutoff = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF]
+            tmp_protein_pair_obj.distance_analysis.cycles = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CYCLES]
+            tmp_protein_pair_obj.distance_analysis.name = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_NAME]
+            tmp_protein_pair_obj.distance_analysis.rmsd_dict['rmsd'] = float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD])
+            tmp_protein_pair_obj.distance_analysis.rmsd_dict['aligned_residues'] = int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA])
+            protein_pairs.append(tmp_protein_pair_obj)
+
+        return protein_pairs
+
+    def deserialize_project(self, app_settings):
         project_dict = {}
         for info in self.xml_root.iter(element_names.PROJECT_INFO):
             project_dict = info.attrib
@@ -91,7 +175,13 @@ class XmlDeserializer:
         protein_objs = self.create_all_proteins_from_xml()
         for tmp_protein_obj in protein_objs:
             tmp_project.add_existing_protein(tmp_protein_obj)
-        return tmp_project
+        protein_pair_objs = self.create_all_protein_pairs(tmp_project, app_settings)
+        if protein_pair_objs is None:
+            return tmp_project
+        else:
+            for tmp_protein_pair_obj in protein_pair_objs:
+                tmp_project.add_protein_pair(tmp_protein_pair_obj)
+            return tmp_project
 
 
 class ObjectSerializer:

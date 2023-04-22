@@ -255,7 +255,9 @@ def calculate_distance_between_ca_atoms_2(protein_pair: 'protein_pair.ProteinPai
     # return the hast table with all results
     return result_hashtable
 
+
 def calculate_distance_between_ca_atoms(a_count, a_ref_prot_ca, a_model_prot_ca, a_gap_ref, a_gap_model, ref_prot_name, model_prot_name):
+    index_list = []
     ref_chain_list: [str] = []
     ref_pos_list: [int] = []
     ref_resi_list: [str] = []
@@ -288,7 +290,10 @@ def calculate_distance_between_ca_atoms(a_count, a_ref_prot_ca, a_model_prot_ca,
         model_pos_list.append(pos_model)
         model_resi_list.append(resi_model)
         distance_list.append(distance)
-
+        index_list.append(i)
+        # ONLY FOR DEBUG PURPOSE!
+        # TODO: Remove if everything is stable
+        print(index_list)
         print(ref_chain_list)
         print(ref_pos_list)
         print(ref_resi_list)
@@ -308,3 +313,25 @@ def calculate_distance_between_ca_atoms(a_count, a_ref_prot_ca, a_model_prot_ca,
         file.write(f"{str(model_resi_list)}\n")
         file.write(f"{str(distance_list)}\n")
         file.close()
+
+    index_array: np.ndarray = np.array(index_list)
+    ref_chain_array: np.ndarray = np.array(ref_chain_list)
+    ref_pos_array: np.ndarray = np.array(ref_pos_list)
+    ref_resi_array: np.ndarray = np.array(ref_resi_list)
+    model_chain_array: np.ndarray = np.array(model_chain_list)
+    model_pos_array: np.ndarray = np.array(model_pos_list)
+    model_resi_array: np.ndarray = np.array(model_resi_list)
+    distance_array: np.ndarray = np.array(distance_list)
+
+    result_hashtable: dict[str, np.ndarray] = {'index': index_array,
+                                               'ref_chain': ref_chain_array,
+                                               'ref_pos': ref_pos_array,
+                                               'ref_resi': ref_resi_array,
+                                               'model_chain': model_chain_array,
+                                               'model_pos': model_pos_array,
+                                               'model_resi': model_resi_array,
+                                               'distance': distance_array
+                                               }
+
+    # return the hast table with all results
+    return result_hashtable

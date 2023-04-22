@@ -1154,7 +1154,9 @@ class MainWindow(QMainWindow):
         """This function displays the results work area
 
         """
-        results = os.listdir(self.app_project.get_protein_pairs_path())
+        results = []
+        for tmp_protein_pair in self.app_project.protein_pairs:
+            results.append(tmp_protein_pair.name)
         results.insert(0, "")
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)

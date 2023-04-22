@@ -30,6 +30,7 @@ from pyssa.io_pyssa import filesystem_io
 from pyssa.util import constants
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
+from pyssa.internal.portal import pymol_io
 
 if TYPE_CHECKING:
     from pyssa.io_pyssa import path_util
@@ -104,7 +105,7 @@ def color_protein_pair(pymol_molecule_object_ref, pymol_molecule_object_model, c
     cmd.color(color_model, pymol_molecule_object_model)
 
 
-def save_session_of_protein_pair(session_filepath: 'path_util.FilePath') -> None:
+def save_session_of_protein_pair(name_of_protein_pair: str) -> None:
     """This function saves the pymol session of the Protein pair.
 
     Note:
@@ -119,6 +120,8 @@ def save_session_of_protein_pair(session_filepath: 'path_util.FilePath') -> None
             name of the session file
 
     """
-    if not os.path.exists(session_filepath.get_dirname()):
-        os.mkdir(session_filepath.get_dirname())
-    cmd.save(session_filepath.get_filepath())
+    pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
+
+    # if not os.path.exists(session_filepath.get_dirname()):
+    #     os.mkdir(session_filepath.get_dirname())
+    # cmd.save(session_filepath.get_filepath())

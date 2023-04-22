@@ -261,7 +261,7 @@ class ProjectWatcher:
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!
         """
-        try:
-            self.no_of_results = len(project_util.get_all_distance_analysis_json_filepaths_from_project(self.current_project))
-        except FileNotFoundError:
-            print("")
+        if not self.on_home_page:
+            self.no_of_results = len(self.current_project.protein_pairs)
+        else:
+            self.no_of_results = None

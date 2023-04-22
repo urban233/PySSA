@@ -5,3 +5,21 @@ PROTEINS = "proteins"
 PROTEIN_PAIRS = "protein_pairs"
 PROTEIN = "protein"
 PROTEIN_SESSION = "session_data"
+
+PROTEIN_PAIR = "protein_pair"
+PROTEIN_PAIR_SESSION = "session_data"
+
+DISTANCE_ANALYSIS = "distance_analysis"
+DISTANCE_ANALYSIS_RESULTS = "results"
+DISTANCE_ANALYSIS_DISTANCE_RESULTS = "results_distance"
+
+DISTANCE_ANALYSIS_INDEX_LIST = "index"
+DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST = "protein_1_chains"
+DISTANCE_ANALYSIS_PROT_1_POSITION_LIST = "protein_1_positions"
+DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST = "protein_1_residues"
+DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST = "protein_2_chains"
+DISTANCE_ANALYSIS_PROT_2_POSITION_LIST = "protein_2_positions"
+DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST = "protein_2_residues"
+DISTANCE_ANALYSIS_DISTANCES_LIST = "distances"
+
+DISTANCE_ANALYSIS_SESSION = "session_data"

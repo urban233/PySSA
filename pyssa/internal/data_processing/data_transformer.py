@@ -193,8 +193,8 @@ class DistanceAnalysisDataTransformer:
         if self.analysis_run.are_protein_names_identical():
             protein_2: protein.Protein = protein_1.duplicate_protein()
             protein_1: protein.Protein = protein_2.duplicate_protein()
-            protein_1.molecule_object = f"{protein_1.molecule_object}_1"
-            protein_2.molecule_object = f"{protein_2.molecule_object}_2"
+            protein_1.set_molecule_object(f"{protein_1.get_molecule_object()}_1")
+            protein_2.set_molecule_object(f"{protein_2.get_molecule_object()}_2")
         else:
             protein_2: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_2())
         self.proteins = (protein_1, protein_2)
@@ -215,14 +215,15 @@ class DistanceAnalysisDataTransformer:
         self.analysis_protein_pair = protein_pair.ProteinPair(self.proteins[0], self.proteins[1])
 
     def _create_distance_analysis(self):
-        self.analysis_distance = distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings)
+        self.analysis_protein_pair.set_distance_analysis(distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings))
 
     def _set_selection_for_analysis(self):
-        self.analysis_distance.create_align_selections(
+        self.analysis_protein_pair.distance_analysis.create_align_selections(
             analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_1,
                                                                            self.analysis_run.protein_chains_1),
             analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_2,
-                                                                           self.analysis_run.protein_chains_2))
+                                                                           self.analysis_run.protein_chains_2)
+        )
 
     def transform_gui_input_to_distance_analysis_object(self):
         self._create_analysis_run_info()
@@ -231,4 +232,4 @@ class DistanceAnalysisDataTransformer:
         self._create_protein_pair()
         self._create_distance_analysis()
         self._set_selection_for_analysis()
-        return self.analysis_distance, self.analysis_protein_pair
+        return self.analysis_protein_pair

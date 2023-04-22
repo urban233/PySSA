@@ -348,9 +348,9 @@ class AnalysisWorkerPool(QtCore.QRunnable):
         """This function creates protein pairs and distance analysis objects for the analysis runs.
 
         """
-        self.analysis_runs = structure_analysis.Analysis()
+        self.analysis_runs = structure_analysis.Analysis(self.app_project)
         for tmp_distance_analysis in self.distance_analysis_runs:
-            self.analysis_runs.analysis_list.append(tmp_distance_analysis[0])
+            self.analysis_runs.analysis_list.append(tmp_distance_analysis)
 
     def run_analysis(self) -> None:
         self.analysis_runs.run_analysis()

@@ -21,6 +21,7 @@
 #
 """Module for the project class"""
 import json
+import logging
 import os
 import pathlib
 import platform
@@ -29,6 +30,7 @@ from pathlib import Path
 from util import gui_utils
 from internal.data_structures import protein, protein_pair
 from pyssa.internal.analysis_types import distance_analysis
+from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
@@ -36,6 +38,10 @@ from pyssa.util import constants
 from xml.etree import ElementTree
 from xml.dom import minidom
 from pyssa.io_pyssa import binary_data
+
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class Project:
@@ -160,6 +166,9 @@ class Project:
     def get_project_name(self):
         return self._project_name
 
+    def get_project_xml_path(self):
+        return pathlib.Path(f"{self._workspace}/{self.get_project_name()}.xml")
+
     # def serialize_project(self, filepath, filename) -> None:
     #     """This function serialize the protein object
     #
@@ -195,10 +204,20 @@ class Project:
             tmp_protein.serialize_protein(xml_proteins_element)
         xml_protein_pairs_element = ElementTree.SubElement(project_root, element_names.PROTEIN_PAIRS)
         for tmp_protein_pair in self.protein_pairs:
-            tmp_protein_pair.serialize_protein_pair()
+            tmp_protein_pair.serialize_protein_pair(xml_protein_pairs_element)
+        # for i in range(len(self.protein_pairs)):
+        #     logger.debug(i)
+        #     logger.debug(self.distance_analysis)
+        #     tmp_protein_pair = self.protein_pairs[i]
+        #     xml_distance_analysis_element = tmp_protein_pair.serialize_protein_pair(xml_protein_pairs_element)
+        #     self.distance_analysis[i].serialize_distance_analysis(xml_distance_analysis_element)
 
-        for tmp_distance_analysis in self.distance_analysis:
-            tmp_distance_analysis.serialize_distance_analysis()
+        # for tmp_protein_pair in self.protein_pairs:
+        #     xml_distance_analysis_element = tmp_protein_pair.serialize_protein_pair(xml_protein_pairs_element)
+
+        # xml_distance_analysis_element = ElementTree.SubElement()
+        # for tmp_distance_analysis in self.distance_analysis:
+        #     tmp_distance_analysis.serialize_distance_analysis()
 
         xmlstr = minidom.parseString(ElementTree.tostring(project_root)).toprettyxml(indent="   ")
         with open(filepath, "w") as f:
@@ -212,7 +231,7 @@ class Project:
         Returns:
             a complete project object deserialized from a json file
         """
-        return filesystem_io.XmlDeserializer(filepath).deserialize_project()
+        return filesystem_io.XmlDeserializer(filepath).deserialize_project(app_settings)
         #return filesystem_io.ObjectDeserializer(filepath, "project").deserialize_project(app_settings)
 
     def search_protein(self, protein_name):

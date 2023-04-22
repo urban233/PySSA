@@ -21,6 +21,7 @@
 #
 """Module for the protein pair class"""
 import os
+import base64
 import pathlib
 import logging
 from pyssa.logging_pyssa import log_handlers
@@ -28,14 +29,19 @@ from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_pair_operations
+from pyssa.internal.data_structures import results
 from pyssa.io_pyssa import filesystem_io
 from pyssa.util import protein_util
 from pyssa.util import pyssa_keys
+from xml.etree import ElementTree
+from pyssa.io_pyssa.xml_pyssa import element_names
+from pyssa.io_pyssa.xml_pyssa import attribute_names
 from typing import TYPE_CHECKING
 from pyssa.util import constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein
+    from pyssa.internal.analysis_types import distance_analysis
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -56,11 +62,16 @@ class ProteinPair:
     """
     a directory where all results related to the protein will be stored
     """
-    analysis_results: pathlib.Path = constants.SCRATCH_DIR_ANALYSIS
+    analysis_results: 'results.DistanceAnalysisResults' = None
+    distance_analysis: 'distance_analysis.DistanceAnalysis' = None
     """
     the full filepath where the session file is stored
     """
     pymol_session_filepath: path_util.FilePath
+    """
+    a base64 string of the pymol session
+    """
+    pymol_session: str
 
     def __init__(self, protein_1: 'protein.Protein', protein_2: 'protein.Protein') -> None:
         """Constructor.
@@ -77,6 +88,7 @@ class ProteinPair:
         self.protein_1: protein.Protein = protein_1
         self.protein_2: protein.Protein = protein_2
         self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
+        self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self.name)
         # protein_pair_dirname = f"{protein_pairs_dirname}/{self.name}"
         #
         # self.protein_pair_subdirs = {
@@ -138,6 +150,9 @@ class ProteinPair:
 
         """
         protein_pair_operations.save_session_of_protein_pair(self.pymol_session_filepath)
+
+    def set_distance_analysis(self, value):
+        self.distance_analysis = value
 
     # def align_protein_pair(self, cycle_number: int, cutoff_value: float,
     #                        alignment_filename: str = None) -> tuple[float, int]:
@@ -632,31 +647,50 @@ class ProteinPair:
     #     # save image as 300 dpi png image
     #     cmd.png(f'{self.results_dir}/images/{filename}.png', dpi=300)
 
-    def serialize_protein_pair(self) -> None:
+    def serialize_protein_pair(self, xml_protein_pairs_element: ElementTree.Element):
         """This function serialize the protein pair object
 
         """
-        protein_pair_serializer = filesystem_io.ObjectSerializer(self, self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_OBJECTS_SUBDIR), self.name)
-        protein_pair_dict = {
-            "prot_1_molecule_object": self.protein_1.get_molecule_object(),
-            "prot_1_import_data_dir": str(self.protein_1.pdb_filepath.get_filepath()),
-            "prot_1_export_data_dir": str(self.protein_1.export_dirname),
-            "prot_1_filename": str(self.protein_1.pdb_filepath.get_filename()),
-            "prot_1_selection": self.protein_1.pymol_selection.selection_string,
-            "prot_1_chains": protein_util.get_chains_as_list_of_tuples(self.protein_1.chains),
-            "prot_2_molecule_object": self.protein_2.get_molecule_object(),
-            "prot_2_import_data_dir": str(self.protein_2.pdb_filepath.get_filepath()),
-            "prot_2_export_data_dir": str(self.protein_2.export_dirname),
-            "prot_2_filename": str(self.protein_2.pdb_filepath.get_filename()),
-            "prot_2_selection": self.protein_2.pymol_selection.selection_string,
-            "prot_2_chains": protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
-            "export_dirname": str(self.SCRATCH_DIR),
-            "pymol_session_file": str(self.pymol_session_filepath.get_filepath()),
-            "name": self.name,
-            "protein_pairs_dirname": str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
-        }
-        protein_pair_serializer.set_custom_object_dict(protein_pair_dict)
-        protein_pair_serializer.serialize_object()
+        tmp_protein_pair = ElementTree.SubElement(xml_protein_pairs_element, element_names.PROTEIN_PAIR)
+        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_NAME, str(self.name))
+        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT,
+                             str(self.protein_1.get_molecule_object()))
+        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_1_ID, str(self.protein_1.get_id()))
+        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT,
+                             str(self.protein_2.get_molecule_object()))
+        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_2_ID, str(self.protein_2.get_id()))
+        tmp_session_data = ElementTree.SubElement(tmp_protein_pair, element_names.PROTEIN_PAIR_SESSION)
+        tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, self.pymol_session)
+        if self.distance_analysis is not None:
+            self.distance_analysis.serialize_distance_analysis(tmp_protein_pair)
+        # tmp_protein.set(attribute_names.ID, str(self._id))
+        # tmp_protein.set(attribute_names.PROTEIN_MOLECULE_OBJECT, self._pymol_molecule_object)
+        # tmp_protein.set(attribute_names.PROTEIN_SELECTION, self.pymol_selection.selection_string)
+        # tmp_protein.append(bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data))
+        # tmp_session_data = ElementTree.SubElement(tmp_protein, element_names.PROTEIN_SESSION)
+        # tmp_session_data.set(attribute_names.PROTEIN_SESSION, self.pymol_session)
+        #
+        # protein_pair_serializer = filesystem_io.ObjectSerializer(self, self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_OBJECTS_SUBDIR), self.name)
+        # protein_pair_dict = {
+        #     "prot_1_molecule_object": self.protein_1.get_molecule_object(),
+        #     "prot_1_import_data_dir": str(self.protein_1.pdb_filepath.get_filepath()),
+        #     "prot_1_export_data_dir": str(self.protein_1.export_dirname),
+        #     "prot_1_filename": str(self.protein_1.pdb_filepath.get_filename()),
+        #     "prot_1_selection": self.protein_1.pymol_selection.selection_string,
+        #     "prot_1_chains": protein_util.get_chains_as_list_of_tuples(self.protein_1.chains),
+        #     "prot_2_molecule_object": self.protein_2.get_molecule_object(),
+        #     "prot_2_import_data_dir": str(self.protein_2.pdb_filepath.get_filepath()),
+        #     "prot_2_export_data_dir": str(self.protein_2.export_dirname),
+        #     "prot_2_filename": str(self.protein_2.pdb_filepath.get_filename()),
+        #     "prot_2_selection": self.protein_2.pymol_selection.selection_string,
+        #     "prot_2_chains": protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
+        #     "export_dirname": str(self.SCRATCH_DIR),
+        #     "pymol_session_file": str(self.pymol_session_filepath.get_filepath()),
+        #     "name": self.name,
+        #     "protein_pairs_dirname": str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
+        # }
+        # protein_pair_serializer.set_custom_object_dict(protein_pair_dict)
+        # protein_pair_serializer.serialize_object()
 
     @staticmethod
     def deserialize_protein_pair(protein_obj_json_file: path_util.FilePath):

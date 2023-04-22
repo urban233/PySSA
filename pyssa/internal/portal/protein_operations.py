@@ -32,10 +32,8 @@ from pyssa.io_pyssa import safeguard
 from pyssa.util import constants
 from pyssa.util import protein_util
 from pyssa.logging_pyssa import log_handlers
-from typing import TYPE_CHECKING
+from pyssa.internal.data_structures import sequence
 
-if TYPE_CHECKING:
-    from pyssa.internal.data_structures import sequence
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -106,13 +104,13 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
             # TODO: can this be better?
             fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
             fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n"):]
-            complete_sequence_of_chain = fasta_sequence_of_chain_without_header.replace("\n", "")
+            complete_sequence_of_chain = sequence.Sequence(molecule_object, fasta_sequence_of_chain_without_header.replace("\n", ""))
             chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
         else:
             # TODO: this should produce a sequence with the non-protein atoms
             fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
             fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n"):]
-            complete_sequence_of_chain = fasta_sequence_of_chain_without_header.replace("\n", "")
+            complete_sequence_of_chain = sequence.Sequence(molecule_object, fasta_sequence_of_chain_without_header.replace("\n", ""))
             chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN))
         i += 1
     return chains_of_protein
