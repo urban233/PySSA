@@ -33,6 +33,7 @@ from pyssa.util import protein_pair_util
 from pyssa.internal.portal import protein_pair_operations
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
+from pyssa.util import analysis_util
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
@@ -161,7 +162,36 @@ class DistanceAnalysis:
         rmsd_file = open(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/rmsd.json"), "w", encoding="utf-8")
         json.dump(rmsd_dict, rmsd_file, indent=4)
         rmsd_file.close()
-        protein_pair_util.calculate_distance_between_ca_atoms(self.protein_pair_for_analysis, self.alignment_file_name)
+        # extract single chain selections into a list
+        protein_1_chain_selections = self.protein_pair_for_analysis.protein_1.pymol_selection.selection_string.split(",")
+        protein_2_chain_selections = self.protein_pair_for_analysis.protein_2.pymol_selection.selection_string.split(",")
+        # get the pymol chempy objects of the selections
+        protein_1_ca_pymol_objects = []
+        for tmp_selection_string in protein_1_chain_selections:
+            protein_1_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
+        protein_2_ca_pymol_objects = []
+        for tmp_selection_string in protein_2_chain_selections:
+            protein_2_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
+        # create list which consists of a tuple (prot_1_ca, prot_2_ca)
+        pymol_ca_object_pairs = []
+        for i in range(len(protein_1_ca_pymol_objects)):
+            pymol_ca_object_pairs.append((protein_1_ca_pymol_objects[i], protein_2_ca_pymol_objects[i]))
+        for tmp_pair in pymol_ca_object_pairs:
+            prot_ref_ca = tmp_pair[0]
+            prot_model_ca = tmp_pair[1]
+
+            ref_count, ref_start_index = analysis_util.count_atoms_in_selection(prot_ref_ca)
+            model_count, model_start_index = analysis_util.count_atoms_in_selection(prot_model_ca)
+
+            start_index = analysis_util.get_highest_start_index(ref_start_index, model_start_index)
+            count = analysis_util.get_lowest_count(ref_count, model_count)
+            protein_pair_util.calculate_distance_between_ca_atoms(
+                count, prot_ref_ca, prot_model_ca,
+                analysis_util.get_ref_gap(ref_start_index, model_start_index),
+                analysis_util.get_model_gap(ref_start_index, model_start_index),
+                self.protein_pair_for_analysis.protein_1.get_molecule_object(),
+                self.protein_pair_for_analysis.protein_2.get_molecule_object())
+        #protein_pair_util.calculate_distance_between_ca_atoms(self.protein_pair_for_analysis, self.alignment_file_name)
         self.save_distance_analysis_session()
 
     def serialize_distance_analysis(self):

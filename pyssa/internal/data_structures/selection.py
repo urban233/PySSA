@@ -44,6 +44,10 @@ class Selection:
     the name of the protein which is also used within pymol
     """
     molecule_object: str
+    """
+    a list of all current chains from the selection 
+    """
+    selection_chain_letters: list[str]
 
     # </editor-fold>
 
@@ -72,8 +76,10 @@ class Selection:
         """
         seperator = ", "
         tmp_list = []
+        self.selection_chain_letters = []
         for tmp_chain in chains:
             tmp_selection = f"/{self.molecule_object}//{tmp_chain.chain_letter}//CA"
+            self.selection_chain_letters.append(tmp_chain.chain_letter)
             tmp_list.append(tmp_selection)
             self.selection_string = (seperator.join(tmp_list))
 

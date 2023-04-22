@@ -198,6 +198,12 @@ class Protein:
     def get_protein_sequences(self) -> list['sequence.Sequence']:
         return protein_operations.get_protein_sequences_from_protein(self._pymol_molecule_object, self.chains)
 
+    def get_sequences_based_on_chain_letter(self, chain_letter):
+        for tmp_chain in self.chains:
+            if chain_letter == tmp_chain.chain_letter:
+                return tmp_chain.chain_sequence
+        return None
+
     def write_fasta_file(self, filepath: pathlib.Path):
         fasta_file = open(f"{filepath}/{self._pymol_molecule_object}.fasta", "w")
         fasta_file.write(f">{self._pymol_molecule_object}\n")

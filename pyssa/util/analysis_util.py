@@ -166,3 +166,43 @@ def transform_data_for_analysis(proteins_for_analysis, project) -> list[tuple['p
         transformed_data: tuple = prot_1, prot_2, export_dir, analysis_name
         tmp_data.append(transformed_data)
     return tmp_data
+
+def count_atoms_in_selection(pymol_obj):
+    """This function counts the atoms within a pymol molecule object."""
+    count = 0
+    first_seq_index = 0
+    for atom in pymol_obj.atom:
+        if count == 0:
+            first_seq_index = atom.resi
+        count += 1
+    return count, int(first_seq_index)
+
+
+def get_highest_start_index(ref_index, model_index):
+    if ref_index > model_index:
+        return ref_index
+    if ref_index < model_index:
+        return model_index
+    if ref_index == model_index:
+        return ref_index
+    else:
+        raise ValueError
+
+
+def get_ref_gap(a_ref_index, a_model_index):
+    return get_highest_start_index(a_ref_index, a_model_index) - a_ref_index
+
+
+def get_model_gap(a_ref_index, a_model_index):
+    return get_highest_start_index(a_ref_index, a_model_index) - a_model_index
+
+
+def get_lowest_count(a_ref_count, a_model_count):
+    if a_ref_count > a_model_count:
+        return a_model_count
+    if a_ref_count < a_model_count:
+        return a_ref_count
+    if a_ref_count == a_model_count:
+        return a_ref_count
+    else:
+        raise ValueError
