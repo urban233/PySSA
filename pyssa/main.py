@@ -3307,6 +3307,7 @@ class MainWindow(QMainWindow):
     def post_analysis_process(self):
         basic_boxes.ok("Structure analysis", "All structure analysis' are done. Go to results to check the new results.",
                        QMessageBox.Information)
+        self.app_project.serialize_project(self.app_project.get_project_xml_path())
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._project_watcher.show_valid_options(self.ui)
         self._init_batch_analysis_page()

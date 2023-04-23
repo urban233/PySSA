@@ -39,6 +39,7 @@ from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.util import pyssa_keys
 from pyssa.util import analysis_util
+from pyssa.internal.data_structures import results
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
@@ -57,7 +58,7 @@ class DistanceAnalysis:
     """
     a pair of proteins which get analyzed 
     """
-    protein_pair_for_analysis: 'protein_pair.ProteinPair'
+    _protein_pair_for_analysis: 'protein_pair.ProteinPair'
     """
     the settings from pyssa
     """
@@ -83,6 +84,10 @@ class DistanceAnalysis:
     """
     pymol_session_filepath: path_util.FilePath
     """
+    
+    """
+    analysis_results: 'results.DistanceAnalysisResults' = None
+    """
     """
     rmsd_dict: dict = {
         'rmsd': 0.0,
@@ -103,12 +108,12 @@ class DistanceAnalysis:
                 a directory where all results will be stored
         """
         self.distance_analysis_data = []
-        self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_for_analysis
-        self.name = f"dist_analysis_{self.protein_pair_for_analysis.name}"
+        self._protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_for_analysis
+        self.name = f"dist_analysis_{self._protein_pair_for_analysis.name}"
         self.app_settings: settings.Settings = app_settings
         self.cutoff: float = app_settings.cutoff
         self.cycles: int = app_settings.cycles
-        self.alignment_file_name = f"{self.protein_pair_for_analysis.name}_alignment"
+        self.alignment_file_name = f"{self._protein_pair_for_analysis.name}_alignment"
         # self.distance_analysis_subdirs = {
         #     pyssa_keys.DISTANCE_ANALYSIS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}"),
         #     pyssa_keys.DISTANCE_ANALYSIS_SESSION_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/session"),
@@ -126,7 +131,7 @@ class DistanceAnalysis:
         """This function saves the pymol session of the Protein pair distance analysis.
 
         """
-        protein_pair_operations.save_session_of_protein_pair(self.protein_pair_for_analysis.name)
+        protein_pair_operations.save_session_of_protein_pair(self._protein_pair_for_analysis.name)
 
     def create_align_selections(self,
                                 protein_1_selection: 'selection.Selection',
@@ -135,17 +140,17 @@ class DistanceAnalysis:
 
         """
         # <editor-fold desc="Checks">
-        if protein_1_selection.molecule_object != self.protein_pair_for_analysis.protein_1.get_molecule_object():
+        if protein_1_selection.molecule_object != self._protein_pair_for_analysis.protein_1.get_molecule_object():
             logger.error("Selection is illegal.")
             raise ValueError("Selection is illegal.")
-        if protein_2_selection.molecule_object != self.protein_pair_for_analysis.protein_2.get_molecule_object():
+        if protein_2_selection.molecule_object != self._protein_pair_for_analysis.protein_2.get_molecule_object():
             logger.error("Selection is illegal.")
             raise ValueError("Selection is illegal.")
 
         # </editor-fold>
 
-        self.protein_pair_for_analysis.protein_1.pymol_selection = protein_1_selection
-        self.protein_pair_for_analysis.protein_2.pymol_selection = protein_2_selection
+        self._protein_pair_for_analysis.protein_1.pymol_selection = protein_1_selection
+        self._protein_pair_for_analysis.protein_2.pymol_selection = protein_2_selection
 
     def align_protein_pair_for_analysis(self) -> tuple:
         """This function aligns the protein pair with the PyMOL align command.
@@ -153,8 +158,8 @@ class DistanceAnalysis:
         Returns:
             a tuple with the rmsd and aligned amino acids
         """
-        results = protein_pair_operations.align_protein_pair(self.protein_pair_for_analysis.protein_1.pymol_selection.selection_string,
-                                                             self.protein_pair_for_analysis.protein_2.pymol_selection.selection_string,
+        results = protein_pair_operations.align_protein_pair(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string,
+                                                             self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string,
                                                              self.alignment_file_name)
         # save the align object from pymol as alignment file
         # if not os.path.exists(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files")):
@@ -166,8 +171,8 @@ class DistanceAnalysis:
         """This function does the distance analysis of the protein pair.
 
         """
-        self.protein_pair_for_analysis.load_protein_pair_in_pymol() # This creates a new pymol session
-        self.protein_pair_for_analysis.color_protein_pair()
+        self._protein_pair_for_analysis.load_protein_pair_in_pymol() # This creates a new pymol session
+        self._protein_pair_for_analysis.color_protein_pair()
         align_results = self.align_protein_pair_for_analysis()
         self.rmsd_dict = {
             "rmsd": str(round(align_results[0], 2)),
@@ -177,8 +182,8 @@ class DistanceAnalysis:
         # json.dump(rmsd_dict, rmsd_file, indent=4)
         # rmsd_file.close()
         # extract single chain selections into a list
-        protein_1_chain_selections = self.protein_pair_for_analysis.protein_1.pymol_selection.selection_string.split(",")
-        protein_2_chain_selections = self.protein_pair_for_analysis.protein_2.pymol_selection.selection_string.split(",")
+        protein_1_chain_selections = self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string.split(",")
+        protein_2_chain_selections = self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string.split(",")
         # get the pymol chempy objects of the selections
         protein_1_ca_pymol_objects = []
         for tmp_selection_string in protein_1_chain_selections:
@@ -208,12 +213,18 @@ class DistanceAnalysis:
                 count, prot_ref_ca, prot_model_ca,
                 analysis_util.get_ref_gap(ref_start_index, model_start_index),
                 analysis_util.get_model_gap(ref_start_index, model_start_index),
-                self.protein_pair_for_analysis.protein_1.get_molecule_object(),
-                self.protein_pair_for_analysis.protein_2.get_molecule_object(),
+                self._protein_pair_for_analysis.protein_1.get_molecule_object(),
+                self._protein_pair_for_analysis.protein_2.get_molecule_object(),
             )
             self.distance_analysis_data.append(distances)
-        self.save_distance_analysis_session()
-        return self.protein_pair_for_analysis
+        #self.save_distance_analysis_session()
+        self.analysis_results = results.DistanceAnalysisResults(
+            self.distance_analysis_data,
+            pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
+            self.rmsd_dict['rmsd'],
+            self.rmsd_dict['aligned_residues']
+        )
+        #return self._protein_pair_for_analysis
 
     def serialize_distance_analysis(self, xml_distance_analysis_element):
         """This function serialize the protein pair object
@@ -224,8 +235,10 @@ class DistanceAnalysis:
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CUTOFF, str(self.cutoff))
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CYCLES, str(self.cycles))
 
+        logger.debug(self.name)
+        logger.debug(self.analysis_results)
         if len(self.distance_analysis_data) == 0:
-            self.protein_pair_for_analysis.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
+            self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
         else:
             tmp_results_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_RESULTS)
             tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_RMSD, str(self.rmsd_dict['rmsd']))

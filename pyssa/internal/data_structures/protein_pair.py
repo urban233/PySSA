@@ -62,7 +62,6 @@ class ProteinPair:
     """
     a directory where all results related to the protein will be stored
     """
-    analysis_results: 'results.DistanceAnalysisResults' = None
     distance_analysis: 'distance_analysis.DistanceAnalysis' = None
     """
     the full filepath where the session file is stored

@@ -143,21 +143,11 @@ class XmlDeserializer:
                                                            }
                 distance_results.append(result_hashtable)
 
-            # for tmp_data in tmp_protein_pair:
-            #     if tmp_data.tag == element_names.PROTEIN_PAIR_SESSION:
-            #         tmp_protein_pair_obj.pymol_session = tmp_data.attrib
-            #     elif tmp_data.tag == element_names.DISTANCE_ANALYSIS:
-            #         for tmp_results_data in tmp_data:
-            #             if tmp_results_data.tag == element_names.DISTANCE_ANALYSIS_RESULTS:
-            #                 for tmp_distance_analysis_results in tmp_results_data:
-            #
-            #             rmsd_aligned_aa = tmp_results_data.attrib
-
-            tmp_protein_pair_obj.analysis_results = results.DistanceAnalysisResults(distance_data=distance_results,
-                                                                                    pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
-                                                                                    rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
-                                                                                    aligned_aa=int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
-            tmp_protein_pair_obj.set_distance_analysis(distance_analysis.DistanceAnalysis(tmp_protein_pair_obj, app_settings))
+            tmp_protein_pair_obj.distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair_obj, app_settings)
+            tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(distance_data=distance_results,
+                                                                                                      pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
+                                                                                                      rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
+                                                                                                      aligned_aa=int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
             tmp_protein_pair_obj.distance_analysis.cutoff = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF]
             tmp_protein_pair_obj.distance_analysis.cycles = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CYCLES]
             tmp_protein_pair_obj.distance_analysis.name = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_NAME]

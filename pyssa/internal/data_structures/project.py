@@ -81,10 +81,6 @@ class Project:
     a list of all protein_pair objects of the project
     """
     protein_pairs: list[protein_pair.ProteinPair]
-    """
-    a list of all distance_analysis objects of the project
-    """
-    distance_analysis: list[distance_analysis.DistanceAnalysis]
 
     # </editor-fold>
 
@@ -101,7 +97,6 @@ class Project:
         self._workspace: pathlib.Path = workspace_path
         self.proteins: list[protein.Protein] = []
         self.protein_pairs: list[protein_pair.ProteinPair] = []
-        self.distance_analysis: list[distance_analysis.DistanceAnalysis] = []
         self.create_folder_paths()
 
     def add_existing_protein(self, value_protein: protein.Protein) -> None:
@@ -121,15 +116,6 @@ class Project:
                 name of the existing protein_pairs object
         """
         self.protein_pairs.append(value_protein_pair)
-
-    def add_distance_analysis(self, value_distance_analysis: 'distance_analysis.DistanceAnalysis') -> None:
-        """This function adds an existing protein_pair object to the project.
-
-        Args:
-            value_distance_analysis:
-                name of the existing distance_analysis object
-        """
-        self.distance_analysis.append(value_distance_analysis)
 
     def create_folder_paths(self):
         self.folder_paths = {
@@ -232,7 +218,6 @@ class Project:
             a complete project object deserialized from a json file
         """
         return filesystem_io.XmlDeserializer(filepath).deserialize_project(app_settings)
-        #return filesystem_io.ObjectDeserializer(filepath, "project").deserialize_project(app_settings)
 
     def search_protein(self, protein_name):
         for tmp_protein in self.proteins:
