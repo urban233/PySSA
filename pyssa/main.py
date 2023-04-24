@@ -72,6 +72,7 @@ from pyssa.internal.data_structures.data_classes import stage
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import path_util
+from pyssa.util import pyssa_keys
 from pyssa.logging_pyssa import loggers
 
 # setup logger
@@ -3507,36 +3508,47 @@ class MainWindow(QMainWindow):
         if self.results_name == "":
             self.show_analysis_results_options()
             return
-        current_results_path = pathlib.Path(f"{self.app_project.get_protein_pairs_path()}/{self.results_name}")
+        #current_results_path = pathlib.Path(f"{self.app_project.get_protein_pairs_path()}/{self.results_name}")
         gui_elements_to_hide = []
-        if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
-            # no images where made
-            gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
-            gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
-            gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
-            gui_elements_to_hide.append(self.ui.list_results_interest_regions)
-            gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
-        elif os.path.exists(pathlib.Path(f"{current_results_path}/images")):
-            if not os.path.exists(pathlib.Path(f"{current_results_path}/images/structure_alignment.png")):
-                gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
-                gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
-            elif not os.path.exists(pathlib.Path(f"{current_results_path}/images/interesting_")):
-                gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
-                gui_elements_to_hide.append(self.ui.list_results_interest_regions)
-                gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+        # TODO: implement image check for xml format
+        # if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
+        #     # no images where made
+        #     gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
+        #     gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
+        #     gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+        #     gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+        #     gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+        # elif os.path.exists(pathlib.Path(f"{current_results_path}/images")):
+        #     if not os.path.exists(pathlib.Path(f"{current_results_path}/images/structure_alignment.png")):
+        #         gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
+        #         gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
+        #     elif not os.path.exists(pathlib.Path(f"{current_results_path}/images/interesting_")):
+        #         gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+        #         gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+        #         gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+
+        tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
+        distance_data = tmp_protein_pair.distance_analysis.analysis_results.distance_data[0]
+        distance_data_array = np.array([distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
+                                        distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
+                                        distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
+                                        distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI], distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]])
+        distance_data_array_transpose = distance_data_array.transpose()
+        distance_list = []
+        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()
+
 
         # check if histogram can be created
-        # read csv file
-        file_path = pathlib.Path(
-            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
-        path = f"{file_path}/distance_csv/distances.csv"
-        distance_list = []
-        with open(path, 'r', encoding="utf-8") as csv_file:
-            i = 0
-            for line in csv_file:
-                cleaned_line = line.replace("\n", "")
-                if cleaned_line.split(",")[8] != 'distance':
-                    distance_list.append(float(cleaned_line.split(",")[8]))
+        # # read csv file
+        # file_path = pathlib.Path(
+        #     f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
+        # path = f"{file_path}/distance_csv/distances.csv"
+        # with open(path, 'r', encoding="utf-8") as csv_file:
+        #     i = 0
+        #     for line in csv_file:
+        #         cleaned_line = line.replace("\n", "")
+        #         if cleaned_line.split(",")[8] != 'distance':
+        #             distance_list.append(float(cleaned_line.split(",")[8]))
         distance_list.sort()
         x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
         if x.size != y.size:
@@ -3555,17 +3567,16 @@ class MainWindow(QMainWindow):
         else:
             self.show_results_interactions()
 
-        try:
-            rmsd_file = open(pathlib.Path(f"{current_results_path}/rmsd.json"), "r", encoding="utf-8")
-        except FileNotFoundError:
-            print(f"There is no valid protein pair json file under: {pathlib.Path(f'{current_results_path}')}")
-            return
-        rmsd_dict = json.load(rmsd_file)
-        self.ui.txt_results_rmsd.setText(str(rmsd_dict.get("rmsd")))
-        self.ui.txt_results_aligned_residues.setText(str(rmsd_dict.get("aligned_residues")))
-        session_filepath = pathlib.Path(f"{current_results_path}/sessions/session_file_model_s.pse")
+        # try:
+        #     rmsd_file = open(pathlib.Path(f"{current_results_path}/rmsd.json"), "r", encoding="utf-8")
+        # except FileNotFoundError:
+        #     print(f"There is no valid protein pair json file under: {pathlib.Path(f'{current_results_path}')}")
+        #     return
+        # rmsd_dict = json.load(rmsd_file)
+        self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
+        self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
         cmd.reinitialize()
-        cmd.load(str(session_filepath))
+        tmp_protein_pair.load_pymol_session()
 
     def change_interesting_regions(self):
         """This function is used to switch between projects within a job.

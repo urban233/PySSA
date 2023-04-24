@@ -225,7 +225,7 @@ class Project:
                 return tmp_protein
         print(f"No matching protein with the name {protein_name} found.")
 
-    def search_protein_pair(self, protein_pair_name):
+    def search_protein_pair(self, protein_pair_name) -> 'protein_pair.ProteinPair':
         """This function searches all protein_pairs within the project and returns true if the project contains the pair
 
         Args:
@@ -237,9 +237,8 @@ class Project:
         """
         for tmp_protein_pair in self.protein_pairs:
             if tmp_protein_pair.name == protein_pair_name:
-                return True
+                return tmp_protein_pair
         print(f"No matching protein with the name {protein_pair_name} found.")
-        return False
 
     def get_specific_protein_pair(self, protein_pair_name):
         """This function gets a specific protein_pair by name from the project

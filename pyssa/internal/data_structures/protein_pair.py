@@ -38,6 +38,7 @@ from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from typing import TYPE_CHECKING
 from pyssa.util import constants
+from pyssa.io_pyssa import binary_data
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein
@@ -113,7 +114,11 @@ class ProteinPair:
         """This function loads the existing pymol session of the pair.
 
         """
-        pymol_io.load_pymol_session(self.pymol_session_filepath.get_filepath())
+        session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}.pse")
+        if not os.path.exists(constants.CACHE_PYMOL_SESSION_DIR):
+            os.mkdir(constants.CACHE_PYMOL_SESSION_DIR)
+        binary_data.write_binary_file_from_base64_string(filepath=session_filepath, base64_data=self.pymol_session)
+        pymol_io.load_pymol_session(session_filepath)
 
     def color_protein_pair(self) -> None:
         """This function colors both the reference and the model Protein.

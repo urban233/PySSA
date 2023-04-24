@@ -25,6 +25,7 @@ import json
 import pathlib
 import shutil
 import logging
+import ast
 import numpy as np
 from xml.etree import ElementTree
 
@@ -123,14 +124,14 @@ class XmlDeserializer:
                     element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST).text
 
                 distances = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_DISTANCES_LIST).text
-                index_array: np.ndarray = np.array(indexes)
-                ref_chain_array: np.ndarray = np.array(prot_1_chains)
-                ref_pos_array: np.ndarray = np.array(prot_1_positions)
-                ref_resi_array: np.ndarray = np.array(prot_1_residues)
-                model_chain_array: np.ndarray = np.array(prot_2_chains)
-                model_pos_array: np.ndarray = np.array(prot_2_positions)
-                model_resi_array: np.ndarray = np.array(prot_2_residues)
-                distance_array: np.ndarray = np.array(distances)
+                index_array: np.ndarray = np.array(ast.literal_eval(indexes))
+                ref_chain_array: np.ndarray = np.array(ast.literal_eval(prot_1_chains))
+                ref_pos_array: np.ndarray = np.array(ast.literal_eval(prot_1_positions))
+                ref_resi_array: np.ndarray = np.array(ast.literal_eval(prot_1_residues))
+                model_chain_array: np.ndarray = np.array(ast.literal_eval(prot_2_chains))
+                model_pos_array: np.ndarray = np.array(ast.literal_eval(prot_2_positions))
+                model_resi_array: np.ndarray = np.array(ast.literal_eval(prot_2_residues))
+                distance_array: np.ndarray = np.array(ast.literal_eval(distances))
 
                 result_hashtable: dict[str, np.ndarray] = {'index': index_array,
                                                            'ref_chain': ref_chain_array,

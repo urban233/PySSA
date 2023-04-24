@@ -25,6 +25,15 @@ import os
 import pathlib
 
 
+ARRAY_DISTANCE_INDEX = "index"
+ARRAY_DISTANCE_PROT_1_CHAIN = "ref_chain"
+ARRAY_DISTANCE_PROT_1_POSITION = "ref_pos"
+ARRAY_DISTANCE_PROT_1_RESI = "ref_resi"
+ARRAY_DISTANCE_PROT_2_CHAIN = "model_chain"
+ARRAY_DISTANCE_PROT_2_POSITION = "model_pos"
+ARRAY_DISTANCE_PROT_2_RESI = "model_resi"
+ARRAY_DISTANCE_DISTANCES = "distance"
+
 PROTEINS_SUBDIR = "proteins_subdir"
 PROTEIN_SUBDIR = "protein_subdir"
 PROTEIN_SEQUENCE_SUBDIR = "protein_sequence_subdir"
