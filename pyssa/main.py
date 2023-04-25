@@ -33,6 +33,7 @@ import PyQt5.QtCore
 from PyQt5.QtCore import QThread
 import numpy as np
 import pymol
+import csv
 
 from internal.data_structures.data_classes import basic_protein_info
 from pyssa.gui.ui.dialogs import dialog_settings_global
@@ -3631,7 +3632,7 @@ class MainWindow(QMainWindow):
         """This function opens a window which displays the distance plot.
 
         """
-        protein_pair_of_analysis = self.app_project.get_specific_protein_pair(self.ui.cb_results_analysis_options.currentText())
+        protein_pair_of_analysis = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
         dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
         dialog.exec_()
 
@@ -3683,7 +3684,7 @@ class MainWindow(QMainWindow):
         # item = self.ui.project_list.selectedItems()
         # if item is None:
         #     raise ValueError
-        protein_pair_of_analysis = self.app_project.get_specific_protein_pair(
+        protein_pair_of_analysis = self.app_project.search_protein_pair(
             self.ui.cb_results_analysis_options.currentText())
         dialog = dialog_distance_histogram.DialogDistanceHistogram(protein_pair_of_analysis)
         dialog.exec_()
@@ -3793,48 +3794,64 @@ class MainWindow(QMainWindow):
         table_view = Qt.QtWidgets.QTableView()
         table_view.setModel(csv_model)
 
-        file_path = pathlib.Path(
-            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
-        path = f"{file_path}/distance_csv/distances.csv"
+        # file_path = pathlib.Path(
+        #     f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
+        # path = f"{file_path}/distance_csv/distances.csv"
 
-        with open(path, 'r', encoding="utf-8") as csv_file:
+        tmp_protein_pair = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
+        csv_filepath = pathlib.Path(f"{constants.CACHE_CSV_DIR}/{tmp_protein_pair.name}.csv")
+        if not os.path.exists(constants.CACHE_CSV_DIR):
+            os.mkdir(constants.CACHE_CSV_DIR)
+        tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
+
+        distance_data = tmp_protein_pair.distance_analysis.analysis_results.distance_data[0]
+        distance_data_array = np.array(
+            [distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
+             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION],
+             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
+             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN],
+             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
+             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI], distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]])
+        distance_data_array_transpose = distance_data_array.transpose()
+        with open(csv_filepath, mode='w', newline='') as file:
+            writer = csv.writer(file, delimiter=',')
+            writer.writerows(distance_data_array_transpose)
+
+        file.close()
+
+        with open(csv_filepath, 'r', encoding="utf-8") as csv_file:
             i = 0
             for line in csv_file:
                 tmp_list = line.split(",")
-                tmp_list.pop(0)
+               # tmp_list.pop(0)
                 standard_item_list = []
-                if i == 0:
-                    for tmp in tmp_list:
-                        tmp_item = Qt.QtGui.QStandardItem(tmp)
-                        standard_item_list.append(tmp_item)
-                else:
-                    pair_no_item = Qt.QtGui.QStandardItem()
-                    pair_no_item.setData(int(tmp_list[0]), role=QtCore.Qt.DisplayRole)
-                    ref_chain_item = Qt.QtGui.QStandardItem()
-                    ref_chain_item.setData(str(tmp_list[1]), role=QtCore.Qt.DisplayRole)
-                    ref_pos_item = Qt.QtGui.QStandardItem()
-                    ref_pos_item.setData(int(tmp_list[2]), role=QtCore.Qt.DisplayRole)
-                    ref_resi_item = Qt.QtGui.QStandardItem()
-                    ref_resi_item.setData(str(tmp_list[3]), role=QtCore.Qt.DisplayRole)
-                    model_chain_item = Qt.QtGui.QStandardItem()
-                    model_chain_item.setData(str(tmp_list[4]), role=QtCore.Qt.DisplayRole)
-                    model_pos_item = Qt.QtGui.QStandardItem()
-                    model_pos_item.setData(int(tmp_list[5]), role=QtCore.Qt.DisplayRole)
-                    model_resi_item = Qt.QtGui.QStandardItem()
-                    model_resi_item.setData(str(tmp_list[6]), role=QtCore.Qt.DisplayRole)
-                    distance_item = Qt.QtGui.QStandardItem()
-                    distance_item.setData(float(tmp_list[7]), role=QtCore.Qt.DisplayRole)
-                    standard_item_list.append(pair_no_item)
-                    standard_item_list.append(ref_chain_item)
-                    standard_item_list.append(ref_pos_item)
-                    standard_item_list.append(ref_resi_item)
-                    standard_item_list.append(model_chain_item)
-                    standard_item_list.append(model_pos_item)
-                    standard_item_list.append(model_resi_item)
-                    standard_item_list.append(distance_item)
+                pair_no_item = Qt.QtGui.QStandardItem()
+                pair_no_item.setData(int(tmp_list[0]), role=QtCore.Qt.DisplayRole)
+                ref_chain_item = Qt.QtGui.QStandardItem()
+                ref_chain_item.setData(str(tmp_list[1]), role=QtCore.Qt.DisplayRole)
+                ref_pos_item = Qt.QtGui.QStandardItem()
+                ref_pos_item.setData(int(tmp_list[2]), role=QtCore.Qt.DisplayRole)
+                ref_resi_item = Qt.QtGui.QStandardItem()
+                ref_resi_item.setData(str(tmp_list[3]), role=QtCore.Qt.DisplayRole)
+                model_chain_item = Qt.QtGui.QStandardItem()
+                model_chain_item.setData(str(tmp_list[4]), role=QtCore.Qt.DisplayRole)
+                model_pos_item = Qt.QtGui.QStandardItem()
+                model_pos_item.setData(int(tmp_list[5]), role=QtCore.Qt.DisplayRole)
+                model_resi_item = Qt.QtGui.QStandardItem()
+                model_resi_item.setData(str(tmp_list[6]), role=QtCore.Qt.DisplayRole)
+                distance_item = Qt.QtGui.QStandardItem()
+                distance_item.setData(float(tmp_list[7]), role=QtCore.Qt.DisplayRole)
+                standard_item_list.append(pair_no_item)
+                standard_item_list.append(ref_chain_item)
+                standard_item_list.append(ref_pos_item)
+                standard_item_list.append(ref_resi_item)
+                standard_item_list.append(model_chain_item)
+                standard_item_list.append(model_pos_item)
+                standard_item_list.append(model_resi_item)
+                standard_item_list.append(distance_item)
                 csv_model.insertRow(i, standard_item_list)
-                i += 1
-            csv_file.close()
+            i += 1
+        csv_file.close()
         csv_model.removeRow(0)
         table_view.setAlternatingRowColors(True)
         table_view.resizeColumnsToContents()

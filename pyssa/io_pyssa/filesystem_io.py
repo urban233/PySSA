@@ -149,7 +149,7 @@ class XmlDeserializer:
                                                                                                       pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
                                                                                                       rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
                                                                                                       aligned_aa=int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
-            tmp_protein_pair_obj.distance_analysis.cutoff = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF]
+            tmp_protein_pair_obj.distance_analysis.cutoff = float(distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF])
             tmp_protein_pair_obj.distance_analysis.cycles = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CYCLES]
             tmp_protein_pair_obj.distance_analysis.name = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_NAME]
             tmp_protein_pair_obj.distance_analysis.rmsd_dict['rmsd'] = float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD])

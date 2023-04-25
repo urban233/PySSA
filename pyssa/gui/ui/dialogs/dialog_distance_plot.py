@@ -30,6 +30,7 @@ import pyqtgraph as pg
 import pyqtgraph.exporters
 from PyQt5 import QtCore
 from internal.data_structures import protein_pair
+from pyssa.util import pyssa_keys
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialog
 from util import constants
 
@@ -50,20 +51,25 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         self.graph_widget = pg.PlotWidget()
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         # read csv file
-        path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
-        distance_list = []
-        cutoff_line = []
-        with open(path, 'r', encoding="utf-8") as csv_file:
-            for line in csv_file:
-                cleaned_line = line.replace("\n", "")
-                if cleaned_line.split(",")[8] != 'distance':
-                    distance_list.append(float(cleaned_line.split(",")[8]))
-                    cutoff_line.append(float(self.protein_pair_for_analysis.cutoff))
+        # path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
+        # distance_list = []
+        # cutoff_line = []
+        # with open(path, 'r', encoding="utf-8") as csv_file:
+        #     for line in csv_file:
+        #         cleaned_line = line.replace("\n", "")
+        #         if cleaned_line.split(",")[8] != 'distance':
+        #             distance_list.append(float(cleaned_line.split(",")[8]))
+        #             cutoff_line.append(float(self.protein_pair_for_analysis.cutoff))
         # creates actual distance plot line
+        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data[0]
+        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()
         self.graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
                                    symbol="o", symbolSize=10, symbolBrush=('b'))
         self.view_box = self.graph_widget.plotItem.getViewBox()
         # creates cutoff line
+        cutoff_line = []
+        for i in range(len(distance_list)):
+            cutoff_line.append(self.protein_pair_for_analysis.distance_analysis.cutoff)
         self.graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
         # styling the plot
         self.graph_widget.setBackground('w')

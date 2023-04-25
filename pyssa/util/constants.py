@@ -43,6 +43,7 @@ SCRATCH_DIR_ANALYSIS = Path(f"{SCRATCH_DIR}/analysis")
 CACHE_DIR = Path(f"{SETTINGS_DIR}/.cache")
 CACHE_PROTEIN_DIR = Path(f"{CACHE_DIR}/pdb_files")
 CACHE_PYMOL_SESSION_DIR = Path(f"{CACHE_DIR}/sessions")
+CACHE_CSV_DIR = Path(f"{CACHE_DIR}/csv")
 PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")
 PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
 

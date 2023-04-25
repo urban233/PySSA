@@ -26,6 +26,7 @@ from pymol import Qt
 import pyqtgraph as pg
 from internal.data_structures import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_histogram import Ui_Dialog
+from pyssa.util import pyssa_keys
 from util import constants
 from PyQt5 import QtCore
 
@@ -51,14 +52,16 @@ class DialogDistanceHistogram(Qt.QtWidgets.QDialog):
         self.view_box = self.graph_widget.plotItem.getViewBox()
         # read csv file
         # TODO: Needs correction for xml model
-        path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
-        distance_list = []
-        with open(path, 'r', encoding="utf-8") as csv_file:
-            i = 0
-            for line in csv_file:
-                cleaned_line = line.replace("\n", "")
-                if cleaned_line.split(",")[8] != 'distance':
-                    distance_list.append(float(cleaned_line.split(",")[8]))
+        # path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
+        # distance_list = []
+        # with open(path, 'r', encoding="utf-8") as csv_file:
+        #     i = 0
+        #     for line in csv_file:
+        #         cleaned_line = line.replace("\n", "")
+        #         if cleaned_line.split(",")[8] != 'distance':
+        #             distance_list.append(float(cleaned_line.split(",")[8]))
+        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data[0]
+        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()
         distance_list.sort()
         length = len(distance_list)
         max_distance = distance_list[length - 1]
