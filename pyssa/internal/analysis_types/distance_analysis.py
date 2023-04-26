@@ -39,6 +39,7 @@ from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.util import pyssa_keys
 from pyssa.util import analysis_util
+from pyssa.util import constants
 from pyssa.internal.data_structures import results
 
 if TYPE_CHECKING:
@@ -72,6 +73,9 @@ class DistanceAnalysis:
     """
     cycles: int
     """
+    """
+    figure_size: tuple[float, float]
+    """
     the filename of the alignement file which gets created during the align command
     """
     alignment_file_name: str
@@ -84,7 +88,6 @@ class DistanceAnalysis:
     """
     pymol_session_filepath: path_util.FilePath
     """
-    
     """
     analysis_results: 'results.DistanceAnalysisResults' = None
     """
@@ -113,6 +116,7 @@ class DistanceAnalysis:
         self.app_settings: settings.Settings = app_settings
         self.cutoff: float = app_settings.cutoff
         self.cycles: int = app_settings.cycles
+        self.figure_size = (11.0, 6.0)
         self.alignment_file_name = f"{self._protein_pair_for_analysis.name}_alignment"
 
     def save_distance_analysis_session(self) -> None:
@@ -207,6 +211,80 @@ class DistanceAnalysis:
             self.rmsd_dict['rmsd'],
             self.rmsd_dict['aligned_residues']
         )
+
+    def take_image_of_protein_pair(self,
+                                   representation: str,
+                                   filename: str,
+                                   selection: str = "",
+                                   ray_shadows: bool = False,
+                                   opaque_background: int = 0,
+                                   take_images=True) -> None:
+        """This function takes an image of the whole Protein/Protein pair.
+
+        Note:
+            The png file will be saved under the relative path
+            (if export_data_dir = "data/results"):
+            ``data/results/images``
+
+        Args:
+            alignment_filename (str):
+                name of the alignment file from the structure alignment
+            representation (str):
+                defines the type of molecular representation
+                like cartoon or ribbon
+            filename (str):
+                name of the png image file
+            selection (str, optional):
+                the atoms which MUST NOT displayed in the image
+            ray_shadows (bool, optional):
+                false if no shadows, true if shadows should be displayed
+            opaque_background (int, optional):
+                0 for a transparent background and 1 for a white background
+
+        Raises:
+            ValueError: If opaque_background is not 0 or 1.
+        """
+        # argument test
+        # if opaque_background != 0 or opaque_background != 1:
+        #     raise Exception(
+        #         "ValueError: The value for opaque_background MUST be 0 or 1!")
+
+        # determine the option for ray_shadows
+        if not ray_shadows:
+            opt_ray_shadows: str = "off"
+        else:
+            opt_ray_shadows: str = "on"
+
+        REPRESENTATION: str = "cartoon"
+        cmd.show(REPRESENTATION)
+
+        if selection != "":
+            cmd.hide(representation, selection)
+
+        aln_obj_representation: str = "cgo"
+        cmd.hide(aln_obj_representation, self.alignment_file_name)
+        cmd.orient()
+        cmd.center()
+        # set image parameters
+        cmd.bg_color("white")
+        cmd.set("ray_trace_mode", 3)
+        cmd.set("antialias", 2)
+        cmd.set("ray_shadows", opt_ray_shadows)
+        cmd.set('ray_opaque_background', opaque_background)
+
+        cmd.scene(key=f"{self._protein_pair_for_analysis.protein_1.get_molecule_object()}-"
+                      f"{self._protein_pair_for_analysis.protein_2.get_molecule_object()}",
+                  action="store")
+
+        if take_images is True:
+            # check if path exists where the data will be exported,
+            # if not the directory will be created
+            if not os.path.exists(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}"):
+                os.mkdir(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}")
+            # save image as 300 dpi png image
+            cmd.ray(2400, 2400, renderer=0)
+            cmd.png(f'{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png',
+                    dpi=300)
 
     def serialize_distance_analysis(self, xml_distance_analysis_element):
         """This function serialize the protein pair object
