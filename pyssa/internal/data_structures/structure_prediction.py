@@ -25,6 +25,9 @@ import pathlib
 import shutil
 import pymol
 import logging
+
+from PyQt5.QtWidgets import QMessageBox
+
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_configuration
@@ -33,6 +36,8 @@ from pyssa.internal.data_processing import data_transformer
 from pyssa.internal.prediction_engines import colabbatch
 from pyssa.util import constants
 from pyssa.util import prediction_util
+from pyssa.io_pyssa import path_util
+from pyssa.gui.ui.messageboxes import basic_boxes
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
 from pyssa.logging_pyssa import loggers
@@ -112,18 +117,25 @@ class StructurePrediction:
         """
         best_prediction_models: list[tuple] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
         for tmp_prediction in best_prediction_models:
-            src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
-            dest = pathlib.Path(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}")
-            shutil.copy(src, dest)
-            os.rename(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}",
-                      f"{self.project.get_proteins_path()}/{tmp_prediction[0]}.pdb")
-            self.project.add_existing_protein(protein.Protein(tmp_prediction[0], pathlib.Path(self.project.get_proteins_path())))
+            logger.debug(tmp_prediction)
+            logger.debug(tmp_prediction[1])
+            src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
+            dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0][0]}.pdb")
+            os.rename(src.get_filepath(), dest)
+            logger.debug(tmp_prediction[0][0])
+            self.project.add_existing_protein(protein.Protein(tmp_prediction[0][0], pdb_filepath=path_util.FilePath(dest)))
+            logger.debug(self.project.proteins)
+            # dest = pathlib.Path(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}")
+            # shutil.copy(src, dest)
+            # os.rename(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}",
+            #           f"{self.project.get_proteins_path()}/{tmp_prediction[0]}.pdb")
+            # self.project.add_existing_protein(protein.Protein(tmp_prediction[0], pathlib.Path(self.project.get_proteins_path())))
         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-        try:
-            self.project.proteins[0].load_protein_in_pymol()
-        except pymol.CmdException:
-            print("Loading the model failed.")
-            return
-        except FileNotFoundError:
-            print("Prediction was unsuccessful")
-            return
+        # try:
+        #     self.project.proteins[0].load_protein_in_pymol()
+        # except pymol.CmdException:
+        #     print("Loading the model failed.")
+        #     return
+        # except FileNotFoundError:
+        #     print("Prediction was unsuccessful")
+        #     return

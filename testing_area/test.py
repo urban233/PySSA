@@ -24,56 +24,19 @@ import json
 import pathlib
 
 
+def search_filesystem(protein_name_seq_tuples):
+    filenames = []
+    filename = []
+    for tmp_prediction in protein_name_seq_tuples:
+        for tmp_filename in os.listdir(pathlib.Path("C:/Users/martin/.pyssa/scratch/local_predictions/pdb")):
+            test = tmp_filename.find(f"{tmp_prediction[0]}_relaxed_rank_001")
+            if tmp_filename.find(f"{tmp_prediction[0]}_relaxed_rank_001") != -1:
+                filename.append(tmp_filename)
+        if len(filename) == 1:
+            filenames.append((tmp_prediction, filename[0]))
+    return filenames
+
+
 if __name__ == '__main__':
-    import xml.etree.ElementTree as ET
-
-
-    # Load XML file
-    tree = ET.parse('tmp.xml')
-    root = tree.getroot()
-
-    for protein_pair in root.findall(".//protein_pair"):
-        session_data = protein_pair.find("session_data")
-        print(session_data.attrib)
-        distance_analysis = protein_pair.find("distance_analysis")
-        print(distance_analysis.attrib)
-        results = distance_analysis.find("results")
-        print(results.attrib)
-        results_distance = results.findall("results_distance")
-        for tmp_results_distance in results_distance:
-            index = tmp_results_distance.find("index").text
-            print(tmp_results_distance.find("protein_1_residues").text)
-            print(index)
-
-
-    # # iterate over all distance_analysis elements
-    # for distance_analysis in root.findall(".//distance_analysis"):
-    #     # get the attributes of the distance_analysis element
-    #     name = distance_analysis.get("name")
-    #     cutoff = distance_analysis.get("cutoff")
-    #     cycles = distance_analysis.get("cycles")
-    #
-    #     # get the results of the distance_analysis element
-    #     results = distance_analysis.find("results")
-    #
-    #     # get the attributes of the results element
-    #     rmsd = results.get("rmsd")
-    #     aligned_amino_acids = results.get("aligned_amino_acids")
-    #
-    #     # get the results_distance element
-    #     results_distance = results.find("results_distance")
-    #
-    #     # get the elements of the results_distance element
-    #     index = results_distance.find("index").text
-    #
-    #     # process the data as needed
-    #     print("name:", name)
-    #     print("cutoff:", cutoff)
-    #     print("cycles:", cycles)
-    #     print("rmsd:", rmsd)
-    #     print("aligned_amino_acids:", aligned_amino_acids)
-    #     print("index:", index)
-
-
-
-
+    prot = [('re2', 'GFGGFTAGT')]
+    print(search_filesystem(prot))

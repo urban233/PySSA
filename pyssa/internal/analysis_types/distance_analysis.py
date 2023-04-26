@@ -114,18 +114,6 @@ class DistanceAnalysis:
         self.cutoff: float = app_settings.cutoff
         self.cycles: int = app_settings.cycles
         self.alignment_file_name = f"{self._protein_pair_for_analysis.name}_alignment"
-        # self.distance_analysis_subdirs = {
-        #     pyssa_keys.DISTANCE_ANALYSIS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}"),
-        #     pyssa_keys.DISTANCE_ANALYSIS_SESSION_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/session"),
-        #     pyssa_keys.DISTANCE_ANALYSIS_RESULTS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/results"),
-        #     pyssa_keys.DISTANCE_ANALYSIS_OBJECTS_SUBDIR: pathlib.Path(f"{distance_analysis_dirname}/.objects"),
-        # }
-        # for key in self.distance_analysis_subdirs:
-        #     if not os.path.exists(self.distance_analysis_subdirs.get(key)):
-        #         os.mkdir(self.distance_analysis_subdirs.get(key))
-        #
-        # self.export_dirname = self.distance_analysis_subdirs.get(pyssa_keys.DISTANCE_ANALYSIS_RESULTS_SUBDIR)
-        # self.pymol_session_filepath = path_util.FilePath(f"{self.distance_analysis_subdirs.get(pyssa_keys.DISTANCE_ANALYSIS_SESSION_SUBDIR)}/{self.protein_pair_for_analysis.name}_analysis_session.pse")
 
     def save_distance_analysis_session(self) -> None:
         """This function saves the pymol session of the Protein pair distance analysis.
@@ -178,9 +166,6 @@ class DistanceAnalysis:
             "rmsd": str(round(align_results[0], 2)),
             "aligned_residues": str(align_results[1]),
         }
-        # rmsd_file = open(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/rmsd.json"), "w", encoding="utf-8")
-        # json.dump(rmsd_dict, rmsd_file, indent=4)
-        # rmsd_file.close()
         # extract single chain selections into a list
         protein_1_chain_selections = self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string.split(",")
         protein_2_chain_selections = self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string.split(",")
@@ -188,16 +173,15 @@ class DistanceAnalysis:
         protein_1_ca_pymol_objects = []
         for tmp_selection_string in protein_1_chain_selections:
             protein_1_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
-            logger.debug("Prot1")
-            logger.debug(tmp_selection_string)
+            logger.debug(f"Prot1: selection {tmp_selection_string}")
         protein_2_ca_pymol_objects = []
         for tmp_selection_string in protein_2_chain_selections:
             protein_2_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
-            logger.debug("Prot2")
-            logger.debug(tmp_selection_string)
+            logger.debug(f"Prot2: selection {tmp_selection_string}")
 
         # create list which consists of a tuple (prot_1_ca, prot_2_ca)
         pymol_ca_object_pairs = []
+        logger.debug(pymol_ca_object_pairs)
         for i in range(len(protein_1_ca_pymol_objects)):
             pymol_ca_object_pairs.append((protein_1_ca_pymol_objects[i], protein_2_ca_pymol_objects[i]))
         self.distance_analysis_data = []
@@ -217,14 +201,12 @@ class DistanceAnalysis:
                 self._protein_pair_for_analysis.protein_2.get_molecule_object(),
             )
             self.distance_analysis_data.append(distances)
-        #self.save_distance_analysis_session()
         self.analysis_results = results.DistanceAnalysisResults(
             self.distance_analysis_data,
             pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
             self.rmsd_dict['rmsd'],
             self.rmsd_dict['aligned_residues']
         )
-        #return self._protein_pair_for_analysis
 
     def serialize_distance_analysis(self, xml_distance_analysis_element):
         """This function serialize the protein pair object
@@ -235,7 +217,7 @@ class DistanceAnalysis:
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CUTOFF, str(self.cutoff))
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CYCLES, str(self.cycles))
 
-        logger.debug(self.name)
+        logger.debug(f"Serialization of: {self.name}")
         logger.debug(self.analysis_results)
         if len(self.distance_analysis_data) == 0:
             self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)

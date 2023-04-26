@@ -2791,6 +2791,8 @@ class MainWindow(QMainWindow):
     #     styles.color_button_not_ready(self.ui.btn_local_pred_mono_predict)
 
     def post_prediction_process(self):
+        self.app_project.serialize_project(self.app_project.get_project_xml_path())
+        constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
         basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
                        QMessageBox.Information)
         constants.PYSSA_LOGGER.info("All structure predictions are done.")
@@ -3307,9 +3309,10 @@ class MainWindow(QMainWindow):
             self.ui.btn_analysis_batch_next.setEnabled(False)
 
     def post_analysis_process(self):
+        self.app_project.serialize_project(self.app_project.get_project_xml_path())
+        constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
         basic_boxes.ok("Structure analysis", "All structure analysis' are done. Go to results to check the new results.",
                        QMessageBox.Information)
-        self.app_project.serialize_project(self.app_project.get_project_xml_path())
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._project_watcher.show_valid_options(self.ui)
         self._init_batch_analysis_page()
@@ -3381,6 +3384,7 @@ class MainWindow(QMainWindow):
         worker.signals.finished.connect(self.post_analysis_process)
         constants.PYSSA_LOGGER.info("Thread started for analysis process.")
         self.threadpool.start(worker)
+        worker.setAutoDelete(True)
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 

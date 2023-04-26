@@ -142,14 +142,18 @@ class PredictionWorkerPool(QtCore.QRunnable):
 
         """
         predictions: list[tuple[str, str]] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
-        loggers.log_single_variable_value(constants.PREDICTION_WORKER_LOGGER, "run", "predictions", predictions)
         structure_prediction_obj = structure_prediction.StructurePrediction(predictions, self.prediction_configuration,
                                                                             self.app_project)
         structure_prediction_obj.create_tmp_directories()
+        logger.info("Tmp directories were created.")
         structure_prediction_obj.create_fasta_files_for_prediction()
+        logger.info("Fasta files were created.")
         structure_prediction_obj.run_prediction()
+        logger.info("Prediction ran successfully.")
         structure_prediction_obj.move_best_prediction_models()
+        logger.info("Saved predicted pdb file into XML file.")
         subprocess.run(["wsl", "--shutdown"])
+        logger.info("WSL gets shutdown.")
         self.signals.finished.emit()
 
 
@@ -329,41 +333,47 @@ class AnalysisWorkerPool(QtCore.QRunnable):
     #         protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
     #         self.app_project.serialize_project(self.app_project.project_path, "project")
 
-    def transform_gui_input_to_practical_data(self) -> None:
+    def transform_gui_input_to_practical_data(self) -> list:
         """This function transforms the input from the gui to a practical data basis which can be used to setup
         analysis runs
 
         """
-        self.distance_analysis_runs = []
+        distance_analysis_runs = []
         for row_no in range(self.list_analysis_overview.count()):
-            self.distance_analysis_runs.append(
+            distance_analysis_runs.append(
                 data_transformer.DistanceAnalysisDataTransformer(
                     self.list_analysis_overview.item(row_no).text(),
                     self.app_project,
                     self.app_settings
                 ).transform_gui_input_to_distance_analysis_object()
             )
+        return distance_analysis_runs
 
-    def set_up_analysis_runs(self) -> None:
+    def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':
         """This function creates protein pairs and distance analysis objects for the analysis runs.
 
         """
-        self.analysis_runs = structure_analysis.Analysis(self.app_project)
-        for tmp_distance_analysis in self.distance_analysis_runs:
-            self.analysis_runs.analysis_list.append(tmp_distance_analysis)
+        analysis_runs = structure_analysis.Analysis(self.app_project)
+        for tmp_distance_analysis in self.transform_gui_input_to_practical_data():
+            analysis_runs.analysis_list.append(tmp_distance_analysis)
+        return analysis_runs
 
     def run_analysis(self) -> None:
-        self.analysis_runs.run_analysis()
+        self.set_up_analysis_runs().run_analysis()
 
     def run(self):
         """This function is a reimplementation of the QRunnable run method.
 
         """
-        # transform raw data: get data in a form to create protein pair and analysis objects
-        self.transform_gui_input_to_practical_data()
-        # setup data for analysis: create protein_pair and distance analysis objects
-        self.set_up_analysis_runs()
+        # # transform raw data: get data in a form to create protein pair and analysis objects
+        # self.transform_gui_input_to_practical_data()
+        # # setup data for analysis: create protein_pair and distance analysis objects
+        # self.set_up_analysis_runs()
+        logger.debug(f"Memory address of worker {self}")
         # do the analysis runs
         self.run_analysis()
         # emit finish signal
         self.signals.finished.emit()
+
+    def __del__(self):
+        logger.debug("Worker has been destroyed!")

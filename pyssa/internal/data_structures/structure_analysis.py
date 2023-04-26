@@ -53,17 +53,17 @@ class Analysis:
         self.app_project = app_project
 
     def run_analysis(self):
+        logger.debug(self.analysis_list)
         for tmp_protein_pair in self.analysis_list:
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
-            logger.debug(tmp_protein_pair.distance_analysis.analysis_results)
+            # logger.debug(tmp_protein_pair.distance_analysis.analysis_results)
             self.app_project.add_protein_pair(tmp_protein_pair)
-            #logger.debug(self.app_project.protein_pairs[1].distance_analysis.analysis_results)
-            logger.debug(self.app_project.get_project_name())
-            logger.debug(self.app_project.get_project_xml_path())
-            logger.debug(tmp_protein_pair.name)
-            logger.debug(self.app_project.protein_pairs)
-            #self.app_project.serialize_project(self.app_project.get_project_xml_path())
-
+            # logger.debug(self.app_project.protein_pairs[1].distance_analysis.analysis_results)
+            # logger.debug(self.app_project.get_project_name())
+            # logger.debug(self.app_project.get_project_xml_path())
+            # logger.debug(tmp_protein_pair.name)
+            # logger.debug(self.app_project.protein_pairs)
+        self.analysis_list.clear()
 
 # class StructureAnalysis:
 #     """This class is used for the structure analysis
