@@ -25,6 +25,8 @@ import base64
 import logging
 import pathlib
 import json
+
+import numpy as np
 from pymol import cmd
 from typing import TYPE_CHECKING
 
@@ -285,6 +287,105 @@ class DistanceAnalysis:
             cmd.ray(2400, 2400, renderer=0)
             cmd.png(f'{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png',
                     dpi=300)
+
+    def take_image_of_interesting_regions(self,
+                                          cutoff: float,
+                                          filename: str,
+                                          ray_shadows: bool = False,
+                                          opaque_background: int = 0,
+                                          take_images=True):
+        """This function takes images of interesting regions of the alignment
+
+        Args:
+            cutoff (float):
+                defines a border of which the specific regions begin,
+                if the distance is greater than the cutoff, the amino acid is
+                categorized as "interesting"
+            filename (str):
+                name of the png image file
+            ray_shadows (bool, optional):
+                false if no shadows, true if shadows should be displayed
+            opaque_background (int, optional):
+                0 for a transparent background and 1 for a white background
+
+        """
+
+        # set default parameters
+        cmd.set("label_size", 14)
+        cmd.set("label_font_id", 13)
+        cmd.set("label_color", "hotpink")
+        cmd.set("depth_cue", 0)
+        # cmd.set("fog_start", 0.6)
+        cmd.bg_color("white")
+
+        j: int = 0
+        measurement_obj: str = f"measure{j}"
+        REPRESENTATION: str = "ribbon"
+
+        cmd.hide("cartoon", "all")
+        cmd.show(REPRESENTATION, "all")
+
+        i: int = 0
+        for distance_value in self.analysis_results.distance_data[0].get("distance"):
+            if float(distance_value) > float(cutoff):
+                # here algorithm for image
+                ref_pos_array: np.ndarray = self.analysis_results.distance_data[0].get("ref_pos")
+                ref_pos: int = ref_pos_array[i]
+                ref_chain_array: np.ndarray = self.analysis_results.distance_data[0].get("ref_chain")
+                ref_chain: str = ref_chain_array[i]
+                model_pos_array: np.ndarray = self.analysis_results.distance_data[0].get("model_pos")
+                model_pos: int = model_pos_array[i]
+                model_chain_array: np.ndarray = self.analysis_results.distance_data[0].get("model_chain")
+                model_chain: str = model_chain_array[i]
+
+                measurement_obj: str = f"measure{j}"
+                # create two atoms for the get_distance command
+                atom1: str = f"/{self._protein_pair_for_analysis.protein_1.get_molecule_object()}//" \
+                             f"{ref_chain}/{ref_pos}/CA"
+                atom2: str = f"/{self._protein_pair_for_analysis.protein_2.get_molecule_object()}//" \
+                             f"{model_chain}/{model_pos}/CA"
+                # zoom to reference amino acid
+                cmd.zoom(f"/{self._protein_pair_for_analysis.protein_1.get_molecule_object()}//"
+                         f"{ref_chain}/{ref_pos}", 10)
+                # create distance object with get_distance command
+                cmd.distance(measurement_obj, atom1, atom2)
+                cmd.label(atom1, "'%s-%s' % (resn, resi)")
+                cmd.label(atom2, "'%s-%s' % (resn, resi)")
+                cmd.set("label_position", (0, 0, 10))
+                # determine the option for ray_shadows
+                if ray_shadows == False:
+                    opt_ray_shadows: str = "off"
+                else:
+                    opt_ray_shadows: str = "on"
+                # set image parameters
+                cmd.bg_color("white")
+                cmd.set("ray_trace_mode", 3)
+                cmd.set("antialias", 2)
+                cmd.set("ray_shadows", opt_ray_shadows)
+                cmd.set('ray_opaque_background', opaque_background)
+
+                cmd.scene(key=f"{ref_pos}-{model_pos}", action="store")
+
+                if take_images is True:
+                    # check if path exists where the data will be exported,
+                    # if not the directory will be created
+                    if not os.path.exists(
+                           constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                        os.mkdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+                    # save image as 300 dpi png image
+                    cmd.ray(2400, 2400, renderer=0)
+                    cmd.png(
+                        f'{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{filename}_{ref_pos}.png',
+                        dpi=300)
+                # hide created labels
+                cmd.hide("labels", atom1)
+                cmd.hide("labels", atom2)
+                cmd.hide("labels", measurement_obj)
+                cmd.hide("dashes", measurement_obj)
+                i += 1
+                j += 1
+            else:
+                i += 1
 
     def serialize_distance_analysis(self, xml_distance_analysis_element):
         """This function serialize the protein pair object

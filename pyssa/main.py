@@ -774,7 +774,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
         self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
         self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
-        # self.ui.btn_view_interesting_region.clicked.connect(self.tmp_dialog_change)
+        self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
         self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
         # image page
         self.ui.btn_update_scene.clicked.connect(self.update_scene)
@@ -3572,6 +3572,10 @@ class MainWindow(QMainWindow):
         else:
             self.show_results_interactions()
 
+        self.ui.list_results_interest_regions.clear()
+        for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+            self.ui.list_results_interest_regions.addItem(tmp_filename)
+
         # try:
         #     rmsd_file = open(pathlib.Path(f"{current_results_path}/rmsd.json"), "r", encoding="utf-8")
         # except FileNotFoundError:
@@ -3770,11 +3774,10 @@ class MainWindow(QMainWindow):
         png_dialog = Qt.QtWidgets.QDialog(self)
         label = Qt.QtWidgets.QLabel(self)
         global global_var_project_dict
-        file_path = pathlib.Path(
-            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
+        file_path = constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR
         #file_name = self.ui.cb_interesting_regions.currentText()
-        file_name = ""
-        pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/interesting_regions/{file_name}")
+        file_name = self.ui.list_results_interest_regions.currentItem().text()
+        pixmap = Qt.QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{file_name}")
         # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)

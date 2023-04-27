@@ -45,6 +45,7 @@ CACHE_PROTEIN_DIR = Path(f"{CACHE_DIR}/pdb_files")
 CACHE_PYMOL_SESSION_DIR = Path(f"{CACHE_DIR}/sessions")
 CACHE_CSV_DIR = Path(f"{CACHE_DIR}/csv")
 CACHE_STRUCTURE_ALN_IMAGES_DIR = Path(f"{CACHE_DIR}/images")
+CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = Path(f"{CACHE_STRUCTURE_ALN_IMAGES_DIR}/interesting_regions")
 PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")
 PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
 
