@@ -3621,7 +3621,8 @@ class MainWindow(QMainWindow):
         label = Qt.QtWidgets.QLabel(self)
         file_path = pathlib.Path(
             f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
-        pixmap = Qt.QtGui.QPixmap(f"{file_path}/images/structure_alignment.png")
+        self.ui.cb_results_analysis_options.currentText()
+        pixmap = Qt.QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{self.ui.cb_results_analysis_options.currentText()}")
         # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
