@@ -115,27 +115,20 @@ class StructurePrediction:
         """This function moves the best prediction model(s) to the project directory
 
         """
+        logger.debug(self.predictions)
         best_prediction_models: list[tuple] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
+        logger.debug(best_prediction_models)
         for tmp_prediction in best_prediction_models:
             logger.debug(tmp_prediction)
             logger.debug(tmp_prediction[1])
-            src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
+            try:
+                src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
+            except FileNotFoundError:
+                logger.error("This path does not exists: %s", path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}").get_filepath())
+                return
             dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0][0]}.pdb")
             os.rename(src.get_filepath(), dest)
             logger.debug(tmp_prediction[0][0])
             self.project.add_existing_protein(protein.Protein(tmp_prediction[0][0], pdb_filepath=path_util.FilePath(dest)))
             logger.debug(self.project.proteins)
-            # dest = pathlib.Path(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}")
-            # shutil.copy(src, dest)
-            # os.rename(f"{self.project.get_proteins_path()}/{tmp_prediction[1]}",
-            #           f"{self.project.get_proteins_path()}/{tmp_prediction[0]}.pdb")
-            # self.project.add_existing_protein(protein.Protein(tmp_prediction[0], pathlib.Path(self.project.get_proteins_path())))
         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-        # try:
-        #     self.project.proteins[0].load_protein_in_pymol()
-        # except pymol.CmdException:
-        #     print("Loading the model failed.")
-        #     return
-        # except FileNotFoundError:
-        #     print("Prediction was unsuccessful")
-        #     return

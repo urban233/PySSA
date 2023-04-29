@@ -63,43 +63,79 @@ def transform_protein_name_seq_tuple_to_sequence_obj(protein_name_seq_tuples: li
     # </editor-fold>
 
     protein_objects: list[protein.Protein] = []
-    last_protein_name = protein_name_seq_tuples[0][0]
-    protein_sequence = sequence.Sequence("", "")
-    protein_with_sequence = protein.Protein("generic")
-    if len(protein_name_seq_tuples) == 1:
-        # single prediction
-        protein_sequence.name = protein_name_seq_tuples[0][0]
-        protein_sequence.sequence = protein_name_seq_tuples[0][1]
-        logger.debug("protein_sequence.sequence: %s", protein_sequence.sequence)
-        protein_with_sequence.set_molecule_object(protein_sequence.name)
-        protein_seq = sequence.Sequence(protein_sequence.name, protein_sequence.sequence)
-        protein_with_sequence.append_chain(chain_name="", chain_sequence=protein_seq, chain_type="protein_chain")
+
+    # create an empty dictionary
+    groups = {}
+
+    # loop over the tuples in the list
+    for t in protein_name_seq_tuples:
+        key = t[0]
+        value = t[1]
+        # if the key is not already in the dictionary, add it with an empty list
+        if key not in groups:
+            groups[key] = []
+        # add the tuple's second element to the list associated with the key
+        groups[key].append(value)
+
+    for tmp_prot_name, tmp_seqs in groups.items():
+        logger.debug("tmp_prot_name: %s, tmp_seqs: %r", tmp_prot_name, tmp_seqs)
+        protein_with_sequence = protein.Protein(tmp_prot_name)
+        protein_with_sequence.chains = []
+        logger.debug("Chains of protein_with_sequence: %r", protein_with_sequence.chains)
+        logger.debug("Name of protein_with_sequence: %s", protein_with_sequence.get_molecule_object())
+        logger.debug("Memory address of protein_with_sequence: %r", protein_with_sequence)
+        for tmp_seq in tmp_seqs:
+            logger.debug("tmp_seq: %s, tmp_seqs: %r", tmp_seq, tmp_seqs)
+            protein_seq = sequence.Sequence(tmp_prot_name, tmp_seq)
+            protein_with_sequence.append_chain(chain_name="", chain_sequence=protein_seq, chain_type="protein_chain")
+        logger.debug("Chains of protein_with_sequence after seq loop: %r", protein_with_sequence.chains)
         protein_with_sequence.add_chain_names_to_chains()
         protein_objects.append(protein_with_sequence)
-    else:
-        # batch prediction
-        for tmp_protein_name_seq_tuple in protein_name_seq_tuples:
-            current_protein_name = tmp_protein_name_seq_tuple[0]
-            if last_protein_name == current_protein_name:
-                protein_sequence.name = tmp_protein_name_seq_tuple[0]
-                protein_sequence.sequence = tmp_protein_name_seq_tuple[1]
+    logger.debug(protein_objects)
 
-                protein_with_sequence.set_molecule_object(protein_sequence.name)
-                logger.debug(protein_with_sequence.get_molecule_object())
-                logger.debug(protein_name_seq_tuples)
-                protein_seq = sequence.Sequence(tmp_protein_name_seq_tuple[0], tmp_protein_name_seq_tuple[1])
-                protein_with_sequence.append_chain("", protein_seq, "protein_chain")
-
-                # protein_with_sequence.set_molecule_object(protein_name_seq_tuples[0])
-                # logger.debug(protein_with_sequence.get_molecule_object())
-                # logger.debug(protein_name_seq_tuples)
-                # protein_seq = sequence.Sequence(protein_name_seq_tuples[0][0], protein_name_seq_tuples[0][1])
-                # protein_with_sequence.append_chain("", protein_seq, "protein_chain")
-            else:
-                protein_with_sequence.add_chain_names_to_chains()
-                protein_objects.append(protein_with_sequence)
-                protein_sequence = sequence.Sequence("", "")
-                last_protein_name = current_protein_name
+    # last_protein_name = protein_name_seq_tuples[0][0]
+    # protein_sequence = sequence.Sequence("", "")
+    # protein_with_sequence = protein.Protein("generic")
+    # if len(protein_name_seq_tuples) == 1:
+    #     # single prediction
+    #     logger.debug("Create protein object for single prediction.")
+    #     protein_sequence.name = protein_name_seq_tuples[0][0]
+    #     protein_sequence.sequence = protein_name_seq_tuples[0][1]
+    #     logger.debug("protein_sequence.sequence: %s", protein_sequence.sequence)
+    #     protein_with_sequence.set_molecule_object(protein_sequence.name)
+    #     protein_seq = sequence.Sequence(protein_sequence.name, protein_sequence.sequence)
+    #     protein_with_sequence.append_chain(chain_name="", chain_sequence=protein_seq, chain_type="protein_chain")
+    #     protein_with_sequence.add_chain_names_to_chains()
+    #     protein_objects.append(protein_with_sequence)
+    # else:
+    #     # batch prediction
+    #     logger.debug("Create protein objects for batch prediction.")
+    #     for tmp_protein_name_seq_tuple in protein_name_seq_tuples:
+    #         logger.debug("tmp_protein_name_seq_tuple: %r", tmp_protein_name_seq_tuple)
+    #         logger.debug("protein_name_seq_tuples: %r", protein_name_seq_tuples)
+    #         current_protein_name = tmp_protein_name_seq_tuple[0]
+    #         if last_protein_name == current_protein_name:
+    #             protein_sequence.name = tmp_protein_name_seq_tuple[0]
+    #             protein_sequence.sequence = tmp_protein_name_seq_tuple[1]
+    #             protein_with_sequence = protein.Protein(protein_sequence.name)
+    #             #protein_with_sequence.set_molecule_object(protein_sequence.name)
+    #             logger.debug(protein_with_sequence.get_molecule_object())
+    #             logger.debug(protein_name_seq_tuples)
+    #             protein_seq = sequence.Sequence(protein_sequence.name, protein_sequence.sequence)
+    #             protein_with_sequence.append_chain("", protein_seq, "protein_chain")
+    #
+    #             # protein_with_sequence.set_molecule_object(protein_name_seq_tuples[0])
+    #             # logger.debug(protein_with_sequence.get_molecule_object())
+    #             # logger.debug(protein_name_seq_tuples)
+    #             # protein_seq = sequence.Sequence(protein_name_seq_tuples[0][0], protein_name_seq_tuples[0][1])
+    #             # protein_with_sequence.append_chain("", protein_seq, "protein_chain")
+    #         else:
+    #             protein_with_sequence.add_chain_names_to_chains()
+    #             protein_objects.append(protein_with_sequence)
+    #             protein_sequence = sequence.Sequence("", "")
+    #             protein_with_sequence = protein.Protein("generic")
+    #             last_protein_name = current_protein_name
+    # logger.debug(protein_objects)
     return protein_objects
 
 

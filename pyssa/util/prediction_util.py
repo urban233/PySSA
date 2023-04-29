@@ -68,16 +68,13 @@ def get_relaxed_rank_1_pdb_file(protein_name_seq_tuples) -> list[tuple]:
 
     # </editor-fold>
 
-    prediction_results = filesystem_helpers.create_generic_dictionary_from_directory(pathlib.Path(constants.PREDICTION_PDB_DIR))
     filenames = []
-    filename = []
+    logger.debug(protein_name_seq_tuples)
     for tmp_prediction in protein_name_seq_tuples:
+        logger.debug(tmp_prediction)
         for tmp_filename in os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR)):
-            logger.debug(tmp_filename)
             if tmp_filename.find(f"{tmp_prediction[0]}_relaxed_rank_001") != -1:
-                filename.append(tmp_filename)
-        # filename = [key for key, value in prediction_results.items() if value == f"{tmp_prediction[0]}_relaxed_rank_1"]
-        # logger.debug(filename)
-        if len(filename) == 1:
-            filenames.append((tmp_prediction, filename[0]))
+                filenames.append((tmp_prediction, tmp_filename))
+                logger.debug(tmp_filename)
+    logger.debug(filenames)
     return filenames
