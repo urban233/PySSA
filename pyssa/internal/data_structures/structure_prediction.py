@@ -28,6 +28,7 @@ import logging
 
 from PyQt5.QtWidgets import QMessageBox
 
+from internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_configuration
@@ -57,7 +58,7 @@ class StructurePrediction:
     """
     a list of tuples of protein name and sequence 
     """
-    predictions: list[tuple[str, str]]
+    predictions: list[prediction_protein_info.PredictionProteinInfo]
     """
     the configuration settings for the prediction
     """
@@ -70,10 +71,10 @@ class StructurePrediction:
     # </editor-fold>
 
     def __init__(self,
-                 predictions: list[tuple[str, str]],
+                 predictions: list[prediction_protein_info.PredictionProteinInfo],
                  prediction_config: prediction_configuration.PredictionConfiguration,
                  current_project: 'project.Project') -> None:
-        self.predictions = predictions
+        self.predictions: list[prediction_protein_info.PredictionProteinInfo] = predictions
         self.prediction_configuration = prediction_config
         self.project = current_project
         loggers.log_multiple_variable_values(logger, "Constructor", [("predictions", self.predictions),
@@ -116,7 +117,7 @@ class StructurePrediction:
 
         """
         logger.debug(self.predictions)
-        best_prediction_models: list[tuple] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
+        best_prediction_models: list[tuple[prediction_protein_info.PredictionProteinInfo, str]] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
         logger.debug(best_prediction_models)
         for tmp_prediction in best_prediction_models:
             logger.debug(tmp_prediction)
@@ -126,9 +127,9 @@ class StructurePrediction:
             except FileNotFoundError:
                 logger.error("This path does not exists: %s", path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}").get_filepath())
                 return
-            dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0][0]}.pdb")
+            dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
             os.rename(src.get_filepath(), dest)
-            logger.debug(tmp_prediction[0][0])
-            self.project.add_existing_protein(protein.Protein(tmp_prediction[0][0], pdb_filepath=path_util.FilePath(dest)))
+            logger.debug(tmp_prediction[0].name)
+            self.project.add_existing_protein(protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)))
             logger.debug(self.project.proteins)
         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))

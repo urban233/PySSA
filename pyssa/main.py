@@ -730,7 +730,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_multi_prot_seq_overview_remove.clicked.connect(self.local_pred_multi_remove_sequence_to_list)
         self.ui.btn_pred_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
         # self.ui.btn_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
-
+        self.ui.btn_pred_multi_predict.clicked.connect(self.predict_local_multimer)
 
         # self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
         # self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
@@ -3016,6 +3016,25 @@ class MainWindow(QMainWindow):
                 self.ui.table_pred_multi_prot_to_predict.setItem(i, 0, QTableWidgetItem(constants.chain_dict.get(i)))
         self.local_pred_multi_check_if_table_is_empty()
         self.local_pred_multi_show_protein_overview()
+
+    def predict_local_multimer(self):
+        constants.PYSSA_LOGGER.info("Begin multimer prediction process.")
+        worker = workers.PredictionWorkerPool(self.ui.table_pred_multi_prot_to_predict,
+                                              self.prediction_configuration, self.app_project)
+        worker.signals.finished.connect(self.post_prediction_process)
+        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
+        self.threadpool.start(worker)
+        gui_elements_to_show = [
+            self.ui.btn_prediction_abort,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_use_page,
+            self.ui.btn_close_project,
+            self.ui.btn_pred_local_monomer_page,
+            self.ui.btn_pred_local_multimer_page,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        self.display_view_page()
 
     # def validate_local_pred_multi(self):
     #     self.local_pred_multimer_management.create_validation()

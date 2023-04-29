@@ -26,6 +26,8 @@ import logging
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pymol import cmd
+
+from internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import structure_prediction
 from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_processing import data_transformer
@@ -141,7 +143,7 @@ class PredictionWorkerPool(QtCore.QRunnable):
         """This function is a reimplementation of the QRunnable run method. It does the structure prediction.
 
         """
-        predictions: list[tuple[str, str]] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
+        predictions: list[prediction_protein_info.PredictionProteinInfo] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
         structure_prediction_obj = structure_prediction.StructurePrediction(predictions, self.prediction_configuration,
                                                                             self.app_project)
         structure_prediction_obj.create_tmp_directories()

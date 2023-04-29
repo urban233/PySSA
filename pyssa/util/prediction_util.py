@@ -25,13 +25,14 @@ import pathlib
 import logging
 from pyssa.util import constants
 from pyssa.io_pyssa import filesystem_helpers
+from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.logging_pyssa import log_handlers
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def get_prediction_name_and_seq_from_table(table) -> list[tuple[str, str]]:
+def get_prediction_name_and_seq_from_table(table) -> list[prediction_protein_info.PredictionProteinInfo]:
     """This function gets the names and sequences of the table which stores the predictions to run
 
     Args:
@@ -46,35 +47,50 @@ def get_prediction_name_and_seq_from_table(table) -> list[tuple[str, str]]:
         tmp_name = table.verticalHeaderItem(i).text()
         tmp_seq = table.item(i, 1).text()
         predictions.append((tmp_name, tmp_seq))
-    return predictions
+    # create an empty dictionary
+    groups = {}
+
+    # loop over the tuples in the list
+    for t in predictions:
+        key = t[0]
+        value = t[1]
+        # if the key is not already in the dictionary, add it with an empty list
+        if key not in groups:
+            groups[key] = []
+        # add the tuple's second element to the list associated with the key
+        groups[key].append(value)
+    prediction_runs = []
+    for tmp_prot_name, tmp_seqs in groups.items():
+        prediction_runs.append(prediction_protein_info.PredictionProteinInfo(tmp_prot_name, tmp_seqs))
+    return prediction_runs
 
 
-def get_relaxed_rank_1_pdb_file(protein_name_seq_tuples) -> list[tuple]:
+def get_relaxed_rank_1_pdb_file(proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo]) -> list[tuple]:
     """This function gets the prediction models which were relaxed and ranked number one
 
     Args:
-        protein_name_seq_tuples:
+        proteins_to_predict:
             list of tuples which consists of the protein name and sequence
     Returns:
         a list of tuples with the name of the modelled protein and the actual filename
     """
     # <editor-fold desc="Checks">
-    if protein_name_seq_tuples[0][0] == "":
+    if proteins_to_predict[0].name == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
-    if protein_name_seq_tuples[0][1] == "":
+    if not proteins_to_predict[0].sequences:
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
 
     # </editor-fold>
 
     filenames = []
-    logger.debug(protein_name_seq_tuples)
-    for tmp_prediction in protein_name_seq_tuples:
-        logger.debug(tmp_prediction)
+    logger.debug(proteins_to_predict)
+    for tmp_protein_to_predict in proteins_to_predict:
+        logger.debug(tmp_protein_to_predict)
         for tmp_filename in os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR)):
-            if tmp_filename.find(f"{tmp_prediction[0]}_relaxed_rank_001") != -1:
-                filenames.append((tmp_prediction, tmp_filename))
+            if tmp_filename.find(f"{tmp_protein_to_predict.name}_relaxed_rank_001") != -1:
+                filenames.append((tmp_protein_to_predict, tmp_filename))
                 logger.debug(tmp_filename)
     logger.debug(filenames)
     return filenames
