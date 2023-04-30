@@ -57,10 +57,11 @@ class Analysis:
         logger.debug(self.analysis_list)
         for tmp_protein_pair in self.analysis_list:
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
-            tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
-                                                                          representation="cartoon")
-            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
-                                                                                 f"interesting_reg_{tmp_protein_pair.name}")
+            # TODO: Comment back in!!!
+            #tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
+            #                                                              representation="cartoon")
+            #tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
+            #                                                                     f"interesting_reg_{tmp_protein_pair.name}")
 
             # logger.debug(tmp_protein_pair.distance_analysis.analysis_results)
             self.app_project.add_protein_pair(tmp_protein_pair)

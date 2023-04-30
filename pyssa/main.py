@@ -2073,7 +2073,7 @@ class MainWindow(QMainWindow):
         cmd.reinitialize()
         tmp_protein = self.app_project.search_protein(
             self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
-        tmp_protein.load_protein()
+        tmp_protein.load_protein_in_pymol()
         if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
             gui_elements_to_show = [
                 self.ui.lbl_edit_clean_new_prot,
@@ -2095,7 +2095,7 @@ class MainWindow(QMainWindow):
         tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
         clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
         self.app_project.add_existing_protein(clean_tmp_protein)
-        self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
+        self.app_project.serialize_project(self.app_project.get_project_xml_path())
         self._init_edit_page()
 
     def clean_protein_update(self):
@@ -2125,10 +2125,11 @@ class MainWindow(QMainWindow):
     # ----- Functions for View project page
     def view_sequence(self):
         tmp_protein_basename = self.ui.list_view_project_proteins.currentItem().text()
-        tmp_protein_filename = tmp_protein_basename.replace(".pdb", "")
-        tmp_protein_sequences = self.app_project.search_protein(tmp_protein_filename).get_protein_sequences()
+        tmp_protein_filename = tmp_protein_basename
+        tmp_protein_sequences = self.app_project.search_protein(tmp_protein_basename).get_protein_sequences()
         self.ui.txtedit_view_sequence.clear()
-        self.ui.txtedit_view_sequence.append("".join(tmp_protein_sequences))
+        for tmp_sequence in tmp_protein_sequences:
+            self.ui.txtedit_view_sequence.append("".join(tmp_sequence.sequence))
         # fixme: experimental sequence viewer gui
         # dialog = dialog_sequence_viewer.SequenceViewer(tmp_protein_sequences, tmp_protein_filename)
         # dialog.exec_()
@@ -2138,7 +2139,7 @@ class MainWindow(QMainWindow):
         # TODO: ask if the session should be saved
         cmd.reinitialize()
         try:
-            cmd.load(self.app_project.search_protein(protein_name.replace(".pdb", "")).pymol_session_filepath.get_filepath())
+            self.app_project.search_protein(protein_name).load_protein_in_pymol()
         except pymol.CmdException:
             print("Error while loading protein in PyMOL!")
 
