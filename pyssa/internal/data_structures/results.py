@@ -22,18 +22,21 @@
 """Module for the results class"""
 
 from xml.etree import ElementTree
+
+import numpy as np
+
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 
 
 class DistanceAnalysisResults:
 
-    distance_data = []
+    distance_data: dict[str, np.ndarray]
     pymol_session: str
     rmsd: float
     aligned_aa: int
 
-    def __init__(self, distance_data: list, pymol_session: str, rmsd: float, aligned_aa: int):
+    def __init__(self, distance_data: dict, pymol_session: str, rmsd: float, aligned_aa: int):
         self.distance_data = distance_data
         self.pymol_session = pymol_session
         self.rmsd = rmsd
@@ -44,7 +47,7 @@ class DistanceAnalysisResults:
         tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_RMSD, str(self.rmsd))
         tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA, str(self.aligned_aa))
 
-        for distances in self.distance_data:
+        for distances in self.distance_data.values():
             tmp_distance_data = ElementTree.SubElement(tmp_results_data,
                                                        element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS)
             tmp_index_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_INDEX_LIST)
