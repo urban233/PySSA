@@ -613,7 +613,6 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
         # self.ui.btn_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
         self.ui.btn_pred_multi_predict.clicked.connect(self.predict_local_multimer)
-
         # self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
         # self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
         # # single connections
@@ -628,15 +627,15 @@ class MainWindow(QMainWindow):
         # self.ui.txt_local_pred_multi_protein_name.textChanged.connect(self.validate_local_pred_multi)
         # self.ui.txt_local_pred_multi_prot_seq.textChanged.connect(self.validate_local_pred_multi)
         # single analysis page
-        self.ui.btn_analysis_next.clicked.connect(self.show_single_analysis_stage_1)
-        self.ui.btn_analysis_next_2.clicked.connect(self.show_single_analysis_stage_2)
-        self.ui.btn_analysis_back.clicked.connect(self.show_single_analysis_stage_0)
-        self.ui.btn_analysis_back_2.clicked.connect(self.show_single_analysis_stage_1)
-        self.ui.btn_analysis_start.clicked.connect(self.start_process)
-        self.ui.box_analysis_prot_struct_1.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
-        self.ui.box_analysis_prot_struct_2.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
-        self.ui.list_analysis_ref_chains.itemSelectionChanged.connect(self.count_selected_chains_for_prot_struct_1)
-        self.ui.list_analysis_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected)
+        # self.ui.btn_analysis_next.clicked.connect(self.show_single_analysis_stage_1)
+        # self.ui.btn_analysis_next_2.clicked.connect(self.show_single_analysis_stage_2)
+        # self.ui.btn_analysis_back.clicked.connect(self.show_single_analysis_stage_0)
+        # self.ui.btn_analysis_back_2.clicked.connect(self.show_single_analysis_stage_1)
+        # self.ui.btn_analysis_start.clicked.connect(self.start_process)
+        # self.ui.box_analysis_prot_struct_1.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
+        # self.ui.box_analysis_prot_struct_2.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
+        # self.ui.list_analysis_ref_chains.itemSelectionChanged.connect(self.count_selected_chains_for_prot_struct_1)
+        # self.ui.list_analysis_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected)
         # batch analysis page
         self.ui.btn_analysis_batch_add.clicked.connect(self.show_batch_analysis_stage_1)
         self.ui.btn_analysis_batch_remove.clicked.connect(self.remove_analysis_run)
@@ -2642,9 +2641,6 @@ class MainWindow(QMainWindow):
     #     gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_1, proteins)
     #     gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_2, proteins)
     #
-    # def count_batch_selected_chains_for_prot_struct_1(self):
-    #     self.no_of_selected_chains = len(self.ui.list_analysis_batch_ref_chains.selectedItems())
-    #
     # def check_if_prot_structs_are_filled(self):
     #     prot_1 = self.ui.box_analysis_prot_struct_1.itemText(self.ui.box_analysis_prot_struct_1.currentIndex())
     #     prot_2 = self.ui.box_analysis_prot_struct_2.itemText(self.ui.box_analysis_prot_struct_2.currentIndex())
@@ -2837,6 +2833,9 @@ class MainWindow(QMainWindow):
             self.ui.btn_analysis_batch_next.setEnabled(True)
         else:
             self.ui.btn_analysis_batch_next.setEnabled(False)
+
+    def count_batch_selected_chains_for_prot_struct_1(self):
+        self.no_of_selected_chains = len(self.ui.list_analysis_batch_ref_chains.selectedItems())
 
     def post_analysis_process(self):
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
