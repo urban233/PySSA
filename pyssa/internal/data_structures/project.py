@@ -268,6 +268,15 @@ class Project:
                 return tmp_protein_pair
         print(f"No matching protein with the name {protein_pair_name} found.")
 
+    def check_if_protein_is_in_any_protein_pair(self, protein_name):
+        protein_obj = self.search_protein(protein_name)
+        for tmp_protein_pair in self.protein_pairs:
+            if protein_obj == tmp_protein_pair.protein_1 or tmp_protein_pair.protein_2:
+                return True
+            elif protein_obj.get_molecule_object() == tmp_protein_pair.protein_1.get_molecule_object().replace("_1", ""):
+                return True
+        return False
+
     def delete_specific_protein(self, protein_name):
         protein_obj = self.search_protein(protein_name)
         if protein_obj in self.proteins:

@@ -652,7 +652,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_open_page.clicked.connect(self.display_open_page)
         self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
         self.ui.btn_save_project.clicked.connect(self.save_project)
-        self.ui.btn_edit_page.clicked.connect(self.display_view_page)
+        self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self.ui.btn_view_page.clicked.connect(self.display_view_page)
         self.ui.btn_use_page.clicked.connect(self.display_use_page)
         self.ui.btn_close_project.clicked.connect(self.close_project)
@@ -956,6 +956,8 @@ class MainWindow(QMainWindow):
             self.ui.btn_edit_clean_new_prot,
             self.ui.lbl_edit_clean_update_prot,
             self.ui.btn_edit_clean_update_prot,
+            self.ui.label_12,
+            self.ui.btn_edit_project_delete,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
@@ -2067,12 +2069,12 @@ class MainWindow(QMainWindow):
     # ----- Functions for Edit project page
     def check_for_cleaning(self):
         try:
-            self.ui.list_edit_project_proteins.currentItem().text()
+            protein_name = self.ui.list_edit_project_proteins.currentItem().text()
         except AttributeError:
             return
         cmd.reinitialize()
         tmp_protein = self.app_project.search_protein(
-            self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
+            protein_name.replace(".pdb", ""))
         tmp_protein.load_protein_in_pymol()
         if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
             gui_elements_to_show = [
@@ -2090,6 +2092,18 @@ class MainWindow(QMainWindow):
                 self.ui.btn_edit_clean_update_prot,
             ]
             gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self.app_project.check_if_protein_is_in_any_protein_pair(protein_name) is True:
+            gui_elements_to_hide = [
+                self.ui.label_12,
+                self.ui.btn_edit_project_delete,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            gui_elements_to_show = [
+                self.ui.label_12,
+                self.ui.btn_edit_project_delete,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
 
     def clean_protein_new(self):
         tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
