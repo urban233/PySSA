@@ -2111,21 +2111,21 @@ class MainWindow(QMainWindow):
 
     def delete_protein(self):
         protein_name = self.ui.list_edit_project_proteins.currentItem().text()
-        project_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}"
         response = gui_utils.warning_message_protein_gets_deleted()
         if response:
-            tools.remove_pdb_file(f"{project_path}/pdb/{protein_name}")
+            try:
+                self.app_project.delete_specific_protein(protein_name)
+            except ValueError:
+                constants.PYSSA_LOGGER.error("The protein %s could not be deleted, because it is not in the project.", protein_name)
             self.ui.list_edit_project_proteins.clear()
             gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
-            # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
             self._project_watcher.show_valid_options(self.ui)
         else:
-            print("Nothing happened.")
+            constants.PYSSA_LOGGER.info("No protein was deleted.")
 
     # ----- Functions for View project page
     def view_sequence(self):
         tmp_protein_basename = self.ui.list_view_project_proteins.currentItem().text()
-        tmp_protein_filename = tmp_protein_basename
         tmp_protein_sequences = self.app_project.search_protein(tmp_protein_basename).get_protein_sequences()
         self.ui.txtedit_view_sequence.clear()
         for tmp_sequence in tmp_protein_sequences:
@@ -2139,9 +2139,10 @@ class MainWindow(QMainWindow):
         # TODO: ask if the session should be saved
         cmd.reinitialize()
         try:
-            self.app_project.search_protein(protein_name).load_protein_in_pymol()
+            self.app_project.search_protein(protein_name).load_protein_pymol_session()
+            constants.PYSSA_LOGGER.info("Loaded PyMOL session of protein %s", protein_name)
         except pymol.CmdException:
-            print("Error while loading protein in PyMOL!")
+            constants.PYSSA_LOGGER.error("Error while loading protein in PyMOL!")
 
     # ----- Functions for Use project page
     def validate_use_project_name(self):

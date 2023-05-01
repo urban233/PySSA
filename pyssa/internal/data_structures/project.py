@@ -268,6 +268,14 @@ class Project:
                 return tmp_protein_pair
         print(f"No matching protein with the name {protein_pair_name} found.")
 
+    def delete_specific_protein(self, protein_name):
+        protein_obj = self.search_protein(protein_name)
+        if protein_obj in self.proteins:
+            self.proteins.remove(protein_obj)
+            self.serialize_project(self.get_project_xml_path())
+        else:
+            raise ValueError("An argument is not in the list.")
+
     def dump_project_to_file(self):
         current_time = datetime.now()
         filename = f"project_dump-{self._project_name}-{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.ascii"

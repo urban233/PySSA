@@ -242,6 +242,11 @@ class Protein:
         bio_data.convert_pdb_data_list_to_pdb_file(pdb_filepath, self._pdb_data)
         pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb", self._pymol_molecule_object)
 
+    def load_protein_pymol_session(self):
+        tmp_session_path = f"{constants.CACHE_PYMOL_SESSION_DIR}/{self._id}.pse"
+        binary_data.write_binary_file_from_base64_string(tmp_session_path, self.pymol_session)
+        pymol_io.load_pymol_session(tmp_session_path)
+
     def color_protein_in_pymol(self) -> None:
         # TODO: needs to be implemented
         pass
