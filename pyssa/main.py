@@ -116,6 +116,7 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(550)
         self.setMinimumHeight(200)
 
+        # <editor-fold desc="Setup app settings">
         self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
             dialog = dialog_startup.DialogStartup()
@@ -133,6 +134,7 @@ class MainWindow(QMainWindow):
             print("The settings file is corrupted. Please restore the settings!")
             gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
                                             self.app_settings)
+        # </editor-fold>
 
         # <editor-fold desc="Class attributes">
         self.app_project = project.Project("", pathlib.Path(""))
@@ -142,14 +144,19 @@ class MainWindow(QMainWindow):
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar = Qt.QtWidgets.QStatusBar()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
-
-        # </editor-fold>
-
         self.results_name = ""
         self.no_of_selected_chains = 0
         self.plot_dialog = Qt.QtWidgets.QDialog(self)
         self.view_box = None
 
+        # </editor-fold>
+
+        # sets up the status bar
+        self._setup_statusbar()
+        tools.create_directory(constants.SETTINGS_DIR, "scratch")
+        self._setup_default_configuration()
+
+        # <editor-fold desc="GUI page management">
         # -- Gui page management vars
         self.local_pred_monomer_management: gui_page_management.GuiPageManagement
         self.local_pred_multimer_management: gui_page_management.GuiPageManagement
@@ -157,17 +164,14 @@ class MainWindow(QMainWindow):
         self.batch_analysis_management: gui_page_management.GuiPageManagement
         self.results_management: gui_page_management.GuiPageManagement
 
-        # sets up the status bar
-        self._setup_statusbar()
-        tools.create_directory(constants.SETTINGS_DIR, "scratch")
-        self._setup_default_configuration()
-
         # management
         self._create_local_pred_monomer_management()
         self._create_local_pred_multimer_management()
         self._create_single_analysis_management()
         self._create_batch_analysis_management()
         self._create_results_management()
+
+        # </editor-fold>
 
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
@@ -207,7 +211,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
         constants.PYSSA_LOGGER.info("PySSA started.")
 
-    # ----- Functions for GuiPageManagement obj creation
+    # <editor-fold desc="GUI page management functions">
     def _create_local_pred_monomer_management(self):
         # gui element management
         tmp_stages = [
@@ -258,46 +262,6 @@ class MainWindow(QMainWindow):
             ),
         ]
         self.local_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    # def _create_local_pred_monomer_management(self):
-    #     # gui element management
-    #     tmp_stages = [
-    #         # protein name stage
-    #         stage.Stage(
-    #             {
-    #                 "label_protein_name": self.ui.lbl_local_pred_mono_protein_name,
-    #                 "text_field_protein_name": self.ui.txt_local_pred_mono_protein_name,
-    #                 "label_protein_name_status": self.ui.lbl_local_pred_mono_status_protein_name,
-    #              },
-    #             {
-    #                 "next_button": self.ui.btn_local_pred_mono_next,
-    #             }
-    #         ),
-    #         # protein sequence stage
-    #         stage.Stage(
-    #             {
-    #                 "label_protein_sequence": self.ui.lbl_local_pred_mono_prot_seq,
-    #                 "text_field_protein_sequence": self.ui.txt_local_pred_mono_prot_seq,
-    #                 "label_protein_sequence_status": self.ui.lbl_local_pred_mono_status_prot_seq,
-    #             },
-    #             {
-    #                 "back_button": self.ui.btn_local_pred_mono_back,
-    #                 "next_button": self.ui.btn_local_pred_mono_next_2,
-    #             }
-    #         ),
-    #         # prediction stage (with advanced configurations)
-    #         stage.Stage(
-    #             {
-    #                 "label_advanced_config": self.ui.lbl_local_pred_mono_advanced_config,
-    #                 "button_advanced_config": self.ui.btn_local_pred_mono_advanced_config,
-    #             },
-    #             {
-    #                 "back_button": self.ui.btn_local_pred_mono_back_2,
-    #                 "predict_button": self.ui.btn_local_pred_mono_predict,
-    #             }
-    #         ),
-    #     ]
-    #     self.local_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
 
     def _create_local_pred_multimer_management(self):
         # gui element management
@@ -355,84 +319,6 @@ class MainWindow(QMainWindow):
             ),
         ]
         self.local_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    # def _create_local_pred_multimer_management(self):
-    #     # gui element management
-    #     tmp_stages = [
-    #         # prediction mode: stage 0
-    #         stage.Stage(
-    #             {
-    #                 "label_prediction_mode": self.ui.lbl_local_pred_prediction_mode,
-    #              },
-    #             {
-    #                 "single_button": self.ui.btn_local_pred_multi_single,
-    #                 "batch_button": self.ui.btn_local_pred_multi_batch,
-    #             }
-    #         ),
-    #         # protein name: stage 1
-    #         stage.Stage(
-    #             {
-    #                 "label_protein_name": self.ui.lbl_local_pred_multi_protein_name,
-    #                 "text_field_protein_name": self.ui.txt_local_pred_multi_protein_name,
-    #                 "label_protein_name_status": self.ui.lbl_local_pred_multi_status_protein_name,
-    #              },
-    #             {
-    #                 "back_button": self.ui.btn_local_pred_multi_back_prediction_mode,
-    #                 "next_button": self.ui.btn_local_pred_multi_next,
-    #             }
-    #         ),
-    #         # single protein sequence: stage 2
-    #         stage.Stage(
-    #             {
-    #                 "label_protein_sequence": self.ui.lbl_local_pred_multi_prot_seq_single,
-    #                 "text_field_protein_sequence": self.ui.txt_local_pred_multi_prot_seq,
-    #                 "label_protein_sequence_status": self.ui.lbl_local_pred_multi_status_prot_seq,
-    #                 "button_add_sequence": self.ui.btn_local_pred_multi_add_seq_single,
-    #                 "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
-    #                 "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
-    #             },
-    #             {
-    #                 "back_button": self.ui.btn_local_pred_multi_back,
-    #                 "next_button": self.ui.btn_local_pred_multi_next_2,
-    #             }
-    #         ),
-    #         # batch protein sequence: stage 3
-    #         stage.Stage(
-    #             {
-    #                 "label_protein_sequence_overview": self.ui.lbl_local_pred_multi_prot_overview,
-    #                 "table_protein_sequence_overview": self.ui.table_local_pred_multi_prot_overview,
-    #                 "label_protein_sequence_batch": self.ui.lbl_local_pred_multi_prot_seq_batch,
-    #                 "button_add_sequence_batch": self.ui.btn_local_pred_multi_add_seq_batch
-    #             },
-    #             {
-    #                 "back_button": self.ui.btn_local_pred_multi_back,
-    #                 "next_button": self.ui.btn_local_pred_multi_next_2,
-    #             }
-    #         ),
-    #         # single prediction: stage 4 (with advanced configurations)
-    #         stage.Stage(
-    #             {
-    #                 "label_advanced_config": self.ui.lbl_local_pred_multi_advanced_config,
-    #                 "button_advanced_config": self.ui.btn_local_pred_multi_advanced_config,
-    #             },
-    #             {
-    #                 "back_button": self.ui.btn_local_pred_multi_back_2,
-    #                 "predict_button": self.ui.btn_local_pred_multi_predict,
-    #             }
-    #         ),
-    #         # batch prediction: stage 5 (with advanced configurations)
-    #         stage.Stage(
-    #             {
-    #                 "label_advanced_config_batch": self.ui.lbl_local_pred_multi_advanced_config,
-    #                 "button_advanced_config_batch": self.ui.btn_local_pred_multi_advanced_config,
-    #             },
-    #             {
-    #                 "back_button": self.ui.btn_local_pred_multi_back_3,
-    #                 "predict_button": self.ui.btn_local_pred_multi_predict,
-    #             }
-    #         ),
-    #     ]
-    #     self.local_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
 
     def _create_single_analysis_management(self):
         # gui element management
@@ -578,6 +464,8 @@ class MainWindow(QMainWindow):
             ),
         ]
         self.results_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    # </editor-fold>
 
     def _setup_statusbar(self):
         """This function sets up the status bar and fills it with the current workspace
@@ -830,41 +718,6 @@ class MainWindow(QMainWindow):
         self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
         self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
 
-    # def _init_hide_ui_elements(self):
-    #     """This function hides all UI elements which need to be hidden during the
-    #     plugin startup
-    #
-    #     TODO: this function should be obsolete with the introduction of the project_watcher?!
-    #     """
-    #     gui_elements_to_hide = [
-    #         self.ui.lbl_new_choose_reference,
-    #         self.ui.txt_new_choose_reference,
-    #         self.ui.btn_new_choose_reference,
-    #         self.ui.lbl_prediction_load_reference,
-    #         self.ui.txt_prediction_load_reference,
-    #         self.ui.btn_prediction_load_reference,
-    #         self.ui.btn_prediction_next_2,
-    #         self.ui.btn_prediction_back_2,
-    #         # self.ui.lbl_prediction_ref_chains.hide()
-    #         self.ui.lbl_prediction_model_chains,
-    #         self.ui.txt_prediction_chain_model,
-    #         self.ui.btn_prediction_back_3,
-    #         # self.ui.btn_prediction_start.hide()
-    #         self.ui.btn_hotspots_page,
-    #         # sidebar elements
-    #         # self.ui.lbl_prediction.hide()
-    #         self.ui.lbl_analysis,
-    #         self.ui.lbl_handle_pymol_session,
-    #         self.ui.btn_save_project,
-    #         # self.ui.btn_prediction_only_page.hide()
-    #         # self.ui.btn_prediction_page.hide()
-    #         self.ui.btn_single_analysis_page,
-    #         self.ui.btn_batch_analysis_page,
-    #         self.ui.btn_results_page,
-    #         self.ui.btn_image_page,
-    #     ]
-    #     gui_utils.hide_gui_elements(gui_elements_to_hide)
-
     # <editor-fold desc="Page init functions">
     def _init_fill_combo_boxes(self):
         """This function fills all combo boxes of the plugin
@@ -1075,28 +928,6 @@ class MainWindow(QMainWindow):
 
     # </editor-fold>
 
-    # Slots
-    # def handle_side_menu(self):
-    #     """This function is used to hide and show the side menu
-    #
-    #     """
-    #     width = self.ui.side_menu_container.width()
-    #     if width == 0:
-    #         # runs if sidebar will be opened (current status: closed)
-    #         new_width = 170
-    #         self.setMinimumWidth(650)
-    #         self.setMaximumWidth(12000)
-    #         self.ui.btn_side_menu.setText("<-")
-    #     else:
-    #         # runs if sidebar will be closed (current status: open)
-    #         new_width = 0
-    #         # self.setFixedWidth(650 - 170)
-    #         self.setMinimumWidth(650-170)
-    #         self.setMaximumWidth(480)
-    #         # self.ui.main_body.setMinimumWidth(650-170)
-    #         self.ui.btn_side_menu.setText("->")
-    #         self.ui.btn_side_menu.setToolTip("Expand")
-    #     self.ui.side_menu_container.setFixedWidth(new_width)
     # <editor-fold desc="Display page functions">
     def display_home_page(self):
         """This function displays the homepage of the plugin
@@ -1299,250 +1130,6 @@ class MainWindow(QMainWindow):
 
     # </editor-fold>
 
-
-    # def __check_start_possibility(self):
-    #     """This function is used to determine if the Start button can be
-    #     enabled for the single analysis.
-    #
-    #     """
-    #     i = 0
-    #     j = 0
-    #     if len(str(self.ui.txt_analysis_project_name.text())) > 0:
-    #         i += 1
-    #     if len(str(self.ui.txt_analysis_load_reference.text())) > 0:
-    #         i += 1
-    #     if len(str(self.ui.txt_analysis_load_model.toPlainText())) > 0:
-    #         i += 1
-    #     if self.ui.cb_analysis_chain_info.isChecked() and len(self.ui.txt_analysis_chain_ref.text()) > 0 and len(
-    #             self.ui.txt_analysis_chain_model.text()) > 0:
-    #         i += 1
-    #     if self.ui.cb_analysis_chain_info.isChecked():
-    #         j = 4
-    #     else:
-    #         j = 3
-    #     if i == j:
-    #         self.ui.btn_analysis_start.setEnabled(True)
-    #         with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_analysis_start.setStyleSheet(button_style)
-    #     else:
-    #         self.ui.btn_analysis_start.setEnabled(False)
-    #         with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_analysis_start.setStyleSheet(button_style)
-    #
-    # def __check_start_possibility_batch(self):
-    #     """This function is used to determine if the Start button can be
-    #     enabled for the single analysis.
-    #
-    #     """
-    #     i = 0
-    #     j = 0
-    #     if len(str(self.ui.txt_batch_job_name.text())) > 0:
-    #         i += 1
-    #     if len(str(self.ui.txt_batch_load_reference.text())) > 0:
-    #         i += 1
-    #     if len(str(self.ui.txt_batch_load_model.toPlainText())) > 0:
-    #         i += 1
-    #     if self.ui.cb_batch_chain_info.isChecked() and len(self.ui.txt_batch_chain_ref.text()) > 0 and len(
-    #             self.ui.txt_batch_chain_model.text()) > 0:
-    #         i += 1
-    #     if self.ui.cb_batch_chain_info.isChecked():
-    #         j = 4
-    #     else:
-    #         j = 3
-    #     if i == j:
-    #         self.ui.btn_batch_start.setEnabled(True)
-    #         with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_batch_start.setStyleSheet(button_style)
-    #     else:
-    #         self.ui.btn_batch_start.setEnabled(False)
-    #         with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_batch_start.setStyleSheet(button_style)
-    #
-    # def __check_start_possibility_prediction(self):
-    #     """This function is used to determine if the Start button can be
-    #     enabled for the prediction + analysis.
-    #
-    #     """
-    #     # creates path for specific stylesheets
-    #     if sys.platform.startswith("darwin"):
-    #         # macOS path
-    #         styles_path_btn_ready = f"{constants.path_list[1]}/styles/styles_start_button_ready.css"
-    #         styles_path_btn_not_ready = f"{constants.path_list[1]}/styles/styles_start_button_not_ready.css"
-    #     elif sys.platform.startswith("linux"):
-    #         # Linux path
-    #         styles_path_btn_ready = f"{constants.path_list[0]}/styles/styles_start_button_ready.css"
-    #         styles_path_btn_not_ready = f"{constants.path_list[0]}/styles/styles_start_button_not_ready.css"
-    #     elif sys.platform.startswith("win32"):
-    #         # Windows path
-    #         styles_path_btn_ready = f"{constants.path_list[2]}/styles/styles_start_button_ready.css"
-    #         styles_path_btn_not_ready = f"{constants.path_list[2]}/styles/styles_start_button_not_ready.css"
-    #
-    #     i = 0
-    #     j = 0
-    #     if len(str(self.ui.txt_prediction_project_name.text())) > 0:
-    #         i += 1
-    #     if len(str(self.ui.txt_prediction_load_reference.text())) > 0:
-    #         i += 1
-    #     if self.ui.cb_prediction_chain_info.isChecked() and len(self.ui.txt_prediction_chain_ref.text()) > 0 and len(
-    #             self.ui.txt_prediction_chain_model.text()) > 0:
-    #         i += 1
-    #     if self.ui.cb_prediction_chain_info.isChecked():
-    #         j = 3
-    #     else:
-    #         j = 2
-    #     if i == j:
-    #         self.ui.btn_prediction_start.setEnabled(True)
-    #         with open(styles_path_btn_ready, 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_prediction_start.setStyleSheet(button_style)
-    #     else:
-    #         self.ui.btn_prediction_start.setEnabled(False)
-    #         with open(styles_path_btn_not_ready, 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_prediction_start.setStyleSheet(button_style)
-    #
-    # def __check_start_possibility_prediction_only(self):
-    #     """This function is used to determine if the Start button can be
-    #     enabled for the single analysis.
-    #
-    #     """
-    #     if len(str(self.ui.txt_prediction_only_notebook_url.text())) > 0:
-    #         self.ui.btn_prediction_only_start.setEnabled(True)
-    #         with open('styles/styles_start_button_ready.css', 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_prediction_only_start.setStyleSheet(button_style)
-    #     else:
-    #         self.ui.btn_prediction_only_start.setEnabled(False)
-    #         with open('styles/styles_start_button_not_ready.css', 'r') as style_sheet_file:
-    #             button_style = style_sheet_file.read()
-    #
-    #             # Set the stylesheet of the application
-    #             self.ui.btn_prediction_only_start.setStyleSheet(button_style)
-
-    # @SLOT
-    # Menu
-    # def open(self):
-    #     """This function opens a project.xml file and fills the input boxes with the right values
-    #
-    #     """
-    #     # open file dialog
-    #     try:
-    #         global global_var_project_dict
-    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self,
-    #                                                              "Open project file",
-    #                                                              Qt.QtCore.QDir.homePath(),
-    #                                                              "Plugin Project File (*.xml)")
-    #         if file_name == ("", ""):
-    #             tools.quick_log_and_display("info", "No file has been selected.",
-    #                                         self.status_bar, "No file has been selected.")
-    #             return
-    #         # clear current project list and interesting regions
-    #         self.ui.project_list.clear()
-    #         self.ui.cb_interesting_regions.clear()
-    #
-    #         xml_file = minidom.parse(file_name[0])
-    #         element = xml_file.getElementsByTagName('project_name')
-    #         job_file_info = Qt.QtCore.QFileInfo(file_name[0])
-    #         job_name = job_file_info.baseName()
-    #
-    #         if len(element) == 0:
-    #             # job
-    #             i = 0
-    #             loop_element = ["", ""]
-    #             while loop_element != []:
-    #                 loop_element = xml_file.getElementsByTagName(f'project_{i}')
-    #                 if loop_element != []:
-    #                     path = loop_element[0].getAttribute('value')
-    #                     path_split = path.split("/")
-    #                     project_name = path_split[(len(path_split) - 1)]
-    #                     global_var_project_dict[i] = project.Project(project_name,
-    #                                                                              f"{self.workspace_path}/{job_name}")
-    #                     index = len("project_of_")
-    #                     model_name = project_name[index:]
-    #                     # TO-DO: insert modelname
-    #                     global_var_project_dict[i].set_pdb_model(model_name)
-    #                     self.ui.project_list.addItem(global_var_project_dict[i].get_project_name())
-    #                 i += 1
-    #
-    #         else:
-    #             # project
-    #             file_name_file_info = Qt.QtCore.QFileInfo(file_name[0])
-    #             global_var_project_dict[0] = project.Project(file_name_file_info.baseName(),
-    #                                                                                    self.workspace_path)
-    #             global_var_project_dict[0].set_pdb_model(xml_file.getElementsByTagName('pdb_model')[0].getAttribute('value'))
-    #             # add filename to project list (results tab)
-    #             self.ui.project_list.addItem(global_var_project_dict[0].get_project_name())
-    #
-    #         # fill combo box of interesting regions
-    #         results_path = global_var_project_dict[0].get_results_path()
-    #         dir_content = os.listdir(f"{results_path}/images/interesting_regions")
-    #         for tmp_file in dir_content:
-    #             self.ui.cb_interesting_regions.addItem(tmp_file)
-    #         self.ui.project_list.setCurrentRow(0)
-    #
-    #     except FileNotFoundError:
-    #         print("File could not be opened.")
-    #     except ValueError:
-    #         print("No file has been selected.")
-    #
-    # def save_as(self):
-    #     """This function saves the current pymol session.
-    #
-    #     """
-    #     try:
-    #         file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self,
-    #                                                              "Save PyMOL session",
-    #                                                              f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}",
-    #                                                              "PyMOL session file (.pse)")
-    #         if file_path == ("", ""):
-    #             tools.quick_log_and_display("info", "No file has been created.", self.status_bar,
-    #                                         "No file has been created.")
-    #         cmd.save(f"{file_path[0]}.pse")
-    #         tools.quick_log_and_display("info", "Saving the pymol session was successful.",
-    #                                     self.status_bar, "Saving was successful.")
-    #     except FileExistsError:
-    #         tools.quick_log_and_display("warning", "File already exists!", self.status_bar,
-    #                                     "File already exists!")
-    #     except pymol.CmdException:
-    #         tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-    #                                              "current pymol session", self.status_bar,
-    #                                     "Unexpected Error from PyMOL")
-    #
-    # def save(self):
-    #     """This function saves the current pymol session.
-    #
-    #     """
-    #     global global_var_project_dict
-    #     try:
-    #         file_path = global_var_project_dict[self.ui.project_list.currentRow()].get_results_path()
-    #         cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
-    #         tools.quick_log_and_display("info", "Saving the pymol session was successful.",
-    #                                     self.status_bar, "Saving was successful.")
-    #     except KeyError:
-    #         tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-    #                                     "No project has been opened.")
-    #     except pymol.CmdException:
-    #         tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-    #                                              "current pymol session", self.status_bar,
-    #                                     "Unexpected Error from PyMOL")
     def restore_settings(self):
         """This function deletes the old settings.xml and creates a new one,
         with the default values.
@@ -1562,34 +1149,6 @@ class MainWindow(QMainWindow):
 
         """
         self.close()
-
-    # def prepare_model_pdbs(self):
-    #     """This function extracts and moves the .pdb files directly from the
-    #     download directory to another directory
-    #
-    #     """
-    #     try:
-    #         # path to download directory
-    #         tmp_path = f"{os.path.expanduser('~')}/Downloads"
-    #         os.chdir(tmp_path)
-    #         # path to store all pdb files (should be defined in the Settings tab!)
-    #         target_dir = f"{os.path.expanduser('~')}/Documents/data"
-    #
-    #         # tmp_list contains a list with all zips starting with prediction
-    #         tmp_list = tools.filter_prediction_zips(tmp_path)
-    #
-    #         # create temporary dir_settings to handle unzipping
-    #         tmp_dir = f"{tmp_path}/tmp"
-    #         if not os.path.exists(tmp_dir):
-    #             os.mkdir(tmp_dir)
-    #
-    #         for file in tmp_list:
-    #             tools.extract_and_move_model_pdb(tmp_path, tmp_dir, file, target_dir)
-    #
-    #         shutil.rmtree(tmp_dir)
-    #         self.status_bar.showMessage("Preparing the .pdb files was successful.")
-    #     except Exception:
-    #         self.status_bar.showMessage("Preparing the .pdb files failed!")
 
     def open_settings_global(self):
         """This function open the dialog for the global settings.
@@ -1708,7 +1267,7 @@ class MainWindow(QMainWindow):
         else:
             print("No model was added.")
 
-    # ----- Functions for New project page
+    # <editor-fold desc="New project page functions">
     def show_add_reference(self):
         """This function shows the reference input section
 
@@ -1865,7 +1424,9 @@ class MainWindow(QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
 
-    # ----- Functions for Open project page
+    # </editor-fold>
+
+    # <editor-fold desc="Open project page functions">
     def validate_open_search(self):
         """This function validates the input of the project name in real-time
 
@@ -1900,81 +1461,20 @@ class MainWindow(QMainWindow):
 
         """
         # show project management options in side menu
-        # self._init_project_management()
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
         self.app_project = project.Project.deserialize_project(tmp_project_path, self.app_settings)
         constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
         self._project_watcher.current_project = self.app_project
         self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
-        # if self.app_project.get_number_of_proteins() > 0:
-        #     tmp_proteins = os.listdir(self.app_project.get_pdb_path())
-        #     self.app_project.proteins.clear()
-        #     self.app_project.protein_pairs.clear()
-        #     for single_protein in tmp_proteins:
-        #         tmp_protein_name = single_protein.replace(".pdb", "")
-        #         json_path = pathlib.Path(f"{self.app_project.get_objects_proteins_path()}/{tmp_protein_name}.json")
-        #         self.app_project.add_existing_protein(protein.Protein.deserialize_protein(json_path))
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
         self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
-        # check if directory in empty
-        # TO-DO: code below does not work with new project class!
-        # results_paths = ["results/alignment_files"]
-        # dir_content = os.listdir(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}/{results_paths[0]}")
-        # self.ui.lbl_handle_pymol_session.show()
-        # self.ui.btn_image_page.show()
-        # if not dir_content:
-        #     # no analysis was done
-        #     tmp_content = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-        #     if len(tmp_content) == 1:
-        #         # if no model is in the pdb dir
-        #         self.display_image_page()
-        #         self.ui.btn_save_project.show()
-        #         self.ui.action_file_save_as.setVisible(True)
-        #         self.ui.action_add_model.setVisible(True)
-        #         self.ui.action_add_multiple_models.setVisible(True)
-        #     elif len(tmp_content) == 2:
-        #         # if a model is in the pdb dir
-        #         self.display_single_analysis_page()
-        #         self.ui.lbl_analysis.show()
-        #         self.ui.btn_single_analysis_page.show()
-        #         self.ui.btn_save_project.show()
-        #         self.ui.action_file_save_as.setVisible(True)
-        #         self.ui.action_add_model.setVisible(False)
-        #         self.ui.action_add_multiple_models.setVisible(False)
-        #     elif len(tmp_content) == 0:
-        #         # check if data is corrupted
-        #         response = tools.check_results_for_integrity(self.workspace_path,
-        #                                                      self.ui.lbl_current_project_name.text())
-        #         if response[0]:
-        #             self.ui.lbl_handle_pymol_session.hide()
-        #             self.ui.btn_image_page.hide()
-        #             self.display_prediction_only_page()
-        #
-        #     else:
-        #         gui_utils.error_project_data_is_invalid(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-        #     return
-        # else:
-        #     # check if data is corrupted
-        #     response = tools.check_results_for_integrity(self.workspace_path, self.ui.lbl_current_project_name.text())
-        #     if response[0]:
-        #         # an analysis happened
-        #         # show results gui elements
-        #         self.ui.lbl_analysis.show()
-        #         self.ui.btn_results_page.show()
-        #         self.display_results_page()
-        #         self.ui.btn_save_project.show()
-        #         self.ui.action_file_save_as.setVisible(True)
-        #     else:
-        #         gui_utils.error_project_data_is_invalid(response[1])
-        #         self._init_hide_ui_elements()
-        #         self.ui.lbl_current_project_name.clear()
-        #         self.ui.btn_save_project.hide()
-        #     return
 
-    # ----- Functions for Delete project page
+    # </editor-fold>
+
+    # <editor-fold desc="Delete project page functions">
     def select_project_from_delete_list(self):
         """This function selects a project from the project list on the delete page
 
@@ -2032,14 +1532,18 @@ class MainWindow(QMainWindow):
             constants.PYSSA_LOGGER.info("No project has been deleted. No changes were made.")
             return
 
-    # ----- Functions for Save project
+    # </editor-fold>
+
+    # <editor-fold desc="Save project functions">
     def save_project(self):
         """This function saves the "project" which is currently only the pymol session
 
         """
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
 
-    # ----- Functions for Edit project page
+    # </editor-fold>
+
+    # <editor-fold desc="Edit project page functions">
     def check_for_cleaning(self):
         try:
             protein_name = self.ui.list_edit_project_proteins.currentItem().text()
@@ -2116,7 +1620,9 @@ class MainWindow(QMainWindow):
         else:
             constants.PYSSA_LOGGER.info("No protein was deleted.")
 
-    # ----- Functions for View project page
+    # </editor-fold>
+
+    # <editor-fold desc="View project page functions">
     def view_sequence(self):
         tmp_protein_basename = self.ui.list_view_project_proteins.currentItem().text()
         tmp_protein_sequences = self.app_project.search_protein(tmp_protein_basename).get_protein_sequences()
@@ -2137,7 +1643,9 @@ class MainWindow(QMainWindow):
         except pymol.CmdException:
             constants.PYSSA_LOGGER.error("Error while loading protein in PyMOL!")
 
-    # ----- Functions for Use project page
+    # </editor-fold>
+
+    # <editor-fold desc="Use project page functions">
     def validate_use_project_name(self):
         """This function validates the input of the project name in real-time
 
@@ -2272,7 +1780,9 @@ class MainWindow(QMainWindow):
         constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
 
-    # ----- Functions for Close project
+    # </editor-fold>
+
+    # <editor-fold desc="Close project functions">
     def close_project(self):
         self._project_watcher.on_home_page = True
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
@@ -2282,336 +1792,338 @@ class MainWindow(QMainWindow):
         constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was closed")
         self.display_home_page()
 
-    # Prediction + Analysis
-    def show_prediction_load_reference(self):
-        """Shows the text field and tool button for the load reference functionality
+    # </editor-fold>
 
-        """
-        gui_elements_show = [
-            self.ui.lbl_prediction_load_reference,
-            self.ui.txt_prediction_load_reference,
-            self.ui.btn_prediction_load_reference,
-            self.ui.btn_prediction_next_2,
-            self.ui.btn_prediction_back_2,
-        ]
-        gui_elements_hide = [
-            self.ui.btn_prediction_next_1
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        self.ui.txt_prediction_project_name.setEnabled(False)
-        self.ui.list_widget_projects.setEnabled(False)
-        self.ui.btn_prediction_next_2.setEnabled(False)
-        self.ui.txt_prediction_load_reference.setEnabled(True)
-        self.ui.txt_prediction_project_name.setStyleSheet("background-color: white")
-
-    def hide_prediction_load_reference(self):
-        """Hides the text field and tool button for the load reference functionality
-
-        """
-        gui_elements_show = [
-            self.ui.btn_prediction_next_1,
-        ]
-        gui_elements_hide = [
-            self.ui.lbl_prediction_load_reference,
-            self.ui.txt_prediction_load_reference,
-            self.ui.btn_prediction_load_reference,
-            self.ui.btn_prediction_next_2,
-            self.ui.btn_prediction_back_2,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-        self.ui.txt_prediction_project_name.setEnabled(True)
-        self.ui.list_widget_projects.setEnabled(True)
-        self.ui.txt_prediction_load_reference.clear()
-        # color green
-        self.ui.txt_prediction_project_name.setStyleSheet("background-color: #33C065")
-
-    def load_reference_for_prediction(self):
-        """This function loads a reference for the analysis part
-
-        """
-        try:
-            # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
-            if file_name == ("", ""):
-                raise ValueError
-            # display path in text box
-            self.ui.txt_prediction_load_reference.setText(str(file_name[0]))
-            self.ui.txt_prediction_load_reference.setEnabled(False)
-            self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
-            self.ui.btn_prediction_next_2.setEnabled(True)
-            styles.color_button_ready(self.ui.btn_prediction_next_2)
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the reference failed!")
-        except ValueError:
-            print("No file has been selected.")
-
-    def validate_reference_for_prediction(self):
-        """This function checks if the entered reference protein is
-        valid or not.
-
-        """
-        if len(self.ui.txt_prediction_load_reference.text()) == 0:
-            self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-            self.ui.btn_prediction_next_2.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-        elif len(self.ui.txt_prediction_load_reference.text()) < 4:
-            self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-            self.ui.btn_prediction_next_2.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-        # checks if a pdb id was entered
-        elif len(self.ui.txt_prediction_load_reference.text()) == 4:
-            pdb_id = self.ui.txt_prediction_load_reference.text().upper()
-            try:
-                # the pdb file gets saved in a scratch directory where it gets deleted immediately
-                cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
-                os.remove(f"{self.scratch_path}/{pdb_id}.pdb")
-                cmd.reinitialize()
-                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
-                self.ui.btn_prediction_next_2.setEnabled(True)
-                styles.color_button_ready(self.ui.btn_prediction_next_2)
-            # if the id does not exist an exception gets raised
-            except pymol.CmdException:
-                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-                self.ui.btn_prediction_next_2.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-                return
-            except FileNotFoundError:
-                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-                self.ui.btn_prediction_next_2.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-                self.ui.lbl_prediction_status_load_reference.setText("Invalid PDB ID.")
-                return
-        else:
-            if self.ui.txt_prediction_load_reference.text().find("/") == -1:
-                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-                self.ui.btn_prediction_next_2.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-
-            elif self.ui.txt_prediction_load_reference.text().find("\\") == -1:
-                self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-                self.ui.btn_prediction_next_2.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-
-    def enable_chain_information_input_for_prediction(self):
-        """This function enables the text boxes to enter the chains for the
-        reference and the model
-
-        """
-        try:
-            self.ui.txt_prediction_chain_ref.setEnabled(self.ui.cb_prediction_chain_info.checkState())
-            self.ui.txt_prediction_chain_model.setEnabled(self.ui.cb_prediction_chain_info.checkState())
-            self.status_bar.showMessage("Enter the chain information.")
-            self.__check_start_possibility_prediction()
-        except Exception:
-            self.status_bar.showMessage("Unexpected Error.")
-
-    # def show_prediction_chain_info_reference(self):
-    #     """This function shows all gui elements for the chain information
-    #     selection of the reference protein
+    # # Prediction + Analysis
+    # def show_prediction_load_reference(self):
+    #     """Shows the text field and tool button for the load reference functionality
     #
     #     """
-    #     self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
-    #                                                  "border-width: 2px;"
-    #                                                  "border-radius: 8px;"
-    #                                                  "border-color: #DCDBE3;")
-    #     # show and hide relevant gui elements
-    #     self.ui.btn_prediction_back_2.hide()
-    #     self.ui.btn_prediction_next_2.hide()
-    #     self.ui.lbl_prediction_ref_chains.show()
-    #     self.ui.list_widget_ref_chains.show()
-    #     self.ui.btn_prediction_back_3.show()
-    #     self.ui.btn_prediction_start.show()
-    #     # disable important gui elements
-    #     self.ui.txt_prediction_load_reference.setEnabled(False)
-    #     self.ui.btn_prediction_load_reference.setEnabled(False)
-    #     # colors white
-    #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: white")
-    #
-    #     # fill chains list widget
-    #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
-    #         pdb_id = self.ui.txt_prediction_load_reference.text().upper()
-    #         tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
-    #         tmp_ref_protein.clean_pdb_file()
-    #         chains = cmd.get_chains(pdb_id)
-    #     else:
-    #         cmd.load(self.ui.txt_prediction_load_reference.text(), object="reference_protein")
-    #         chains = cmd.get_chains("reference_protein")
-    #     for chain in chains:
-    #         self.ui.list_widget_ref_chains.addItem(chain)
-    #     styles.color_button_ready(self.ui.btn_prediction_start)
-    #     cmd.reinitialize()
-
-    # def hide_prediction_chain_info_reference(self):
-    #     """Hides the gui elements for the reference chains
-    #
-    #     """
-    #     self.ui.list_widget_ref_chains.clear()
-    #     # show and hide relevant gui elements
-    #     self.ui.btn_prediction_back_2.show()
-    #     self.ui.btn_prediction_next_2.show()
-    #     self.ui.lbl_prediction_ref_chains.hide()
-    #     self.ui.list_widget_ref_chains.hide()
-    #     self.ui.btn_prediction_back_3.hide()
-    #     self.ui.btn_prediction_start.hide()
-    #     # disable important gui elements
+    #     gui_elements_show = [
+    #         self.ui.lbl_prediction_load_reference,
+    #         self.ui.txt_prediction_load_reference,
+    #         self.ui.btn_prediction_load_reference,
+    #         self.ui.btn_prediction_next_2,
+    #         self.ui.btn_prediction_back_2,
+    #     ]
+    #     gui_elements_hide = [
+    #         self.ui.btn_prediction_next_1
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     self.ui.txt_prediction_project_name.setEnabled(False)
+    #     self.ui.list_widget_projects.setEnabled(False)
+    #     self.ui.btn_prediction_next_2.setEnabled(False)
     #     self.ui.txt_prediction_load_reference.setEnabled(True)
-    #     self.ui.btn_prediction_load_reference.setEnabled(True)
-    #     # colors green
-    #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
-
-    # def check_prediction_if_txt_prediction_chain_ref_is_filled(self):
-    #     """This function checks if any chains are in the text field for the
-    #     reference.
+    #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: white")
+    #
+    # def hide_prediction_load_reference(self):
+    #     """Hides the text field and tool button for the load reference functionality
     #
     #     """
-    #     self.__check_start_possibility_prediction()
+    #     gui_elements_show = [
+    #         self.ui.btn_prediction_next_1,
+    #     ]
+    #     gui_elements_hide = [
+    #         self.ui.lbl_prediction_load_reference,
+    #         self.ui.txt_prediction_load_reference,
+    #         self.ui.btn_prediction_load_reference,
+    #         self.ui.btn_prediction_next_2,
+    #         self.ui.btn_prediction_back_2,
+    #     ]
+    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
+    #     self.ui.txt_prediction_project_name.setEnabled(True)
+    #     self.ui.list_widget_projects.setEnabled(True)
+    #     self.ui.txt_prediction_load_reference.clear()
+    #     # color green
+    #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: #33C065")
     #
-    # def check_prediction_if_txt_prediction_chain_model_is_filled(self):
-    #     """This function checks if any chains are in the text field for the
-    #     model.
-    #
-    #     """
-    #     self.__check_start_possibility_prediction()
-    #
-    # def check_prediction_if_txt_prediction_project_name_is_filled(self):
-    #     """This function checks if the project name text field is filled.
-    #
-    #     """
-    #     self.__check_start_possibility_prediction()
-    #
-    # def check_prediction_if_txt_prediction_load_reference_is_filled(self):
-    #     """This function checks if a reference pdb file is selected.
-    #
-    #     """
-    #     self.__check_start_possibility_prediction()
-
-    def enable_predict_button(self):
-        self.ui.btn_prediction_only_start.setEnabled(True)
-        styles.color_button_ready(self.ui.btn_prediction_only_start)
-
-    # def predict(self):
-    #     """This function opens a webbrowser with a colab notebook, to run the
-    #     prediction. In addition, it runs the entire analysis after the
-    #     prediction.
+    # def load_reference_for_prediction(self):
+    #     """This function loads a reference for the analysis part
     #
     #     """
-    #     ref_chain_items = self.ui.list_widget_ref_chains.selectedItems()
-    #     ref_chains = []
-    #     for chain in ref_chain_items:
-    #         ref_chains.append(chain.text())
-    #     # global global_var_abort_prediction
-    #     # global_var_abort_prediction = False
-    #     # check if a prediction is already finished
-    #     if os.path.isfile(f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
-    #         self.status_bar.showMessage(
-    #             f"Warning! | Current Workspace: {self.workspace_path}")
-    #         check = gui_utils.warning_message_prediction_exists(
-    #             f"The prediction is here: {global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip ",
-    #             f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip")
-    #         if not check:
+    #     try:
+    #         # open file dialog
+    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
+    #                                                              Qt.QtCore.QDir.homePath(),
+    #                                                              "PDB Files (*.pdb)")
+    #         if file_name == ("", ""):
+    #             raise ValueError
+    #         # display path in text box
+    #         self.ui.txt_prediction_load_reference.setText(str(file_name[0]))
+    #         self.ui.txt_prediction_load_reference.setEnabled(False)
+    #         self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
+    #         self.ui.btn_prediction_next_2.setEnabled(True)
+    #         styles.color_button_ready(self.ui.btn_prediction_next_2)
+    #     except FileNotFoundError:
+    #         self.status_bar.showMessage("Loading the reference failed!")
+    #     except ValueError:
+    #         print("No file has been selected.")
+    #
+    # def validate_reference_for_prediction(self):
+    #     """This function checks if the entered reference protein is
+    #     valid or not.
+    #
+    #     """
+    #     if len(self.ui.txt_prediction_load_reference.text()) == 0:
+    #         self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+    #         self.ui.btn_prediction_next_2.setEnabled(False)
+    #         styles.color_button_not_ready(self.ui.btn_prediction_next_2)
+    #     elif len(self.ui.txt_prediction_load_reference.text()) < 4:
+    #         self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+    #         self.ui.btn_prediction_next_2.setEnabled(False)
+    #         styles.color_button_not_ready(self.ui.btn_prediction_next_2)
+    #     # checks if a pdb id was entered
+    #     elif len(self.ui.txt_prediction_load_reference.text()) == 4:
+    #         pdb_id = self.ui.txt_prediction_load_reference.text().upper()
+    #         try:
+    #             # the pdb file gets saved in a scratch directory where it gets deleted immediately
+    #             cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
+    #             os.remove(f"{self.scratch_path}/{pdb_id}.pdb")
+    #             cmd.reinitialize()
+    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
+    #             self.ui.btn_prediction_next_2.setEnabled(True)
+    #             styles.color_button_ready(self.ui.btn_prediction_next_2)
+    #         # if the id does not exist an exception gets raised
+    #         except pymol.CmdException:
+    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+    #             self.ui.btn_prediction_next_2.setEnabled(False)
+    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
     #             return
-    #     # creates project without xml creation and model adding these come after the prediction
-    #     project_obj = project.Project(self.ui.txt_prediction_project_name.text(),
-    #                                                         self.workspace_path)
-    #     project_obj.create_project_tree()
-    #     project_obj.set_pdb_file(self.ui.txt_prediction_load_reference.text())
-    #     project_obj.set_pdb_id(self.ui.txt_prediction_load_reference.text())
-    #     project_obj.set_ref_chains(ref_chains)
-    #     project_obj.set_model_chains((self.ui.txt_prediction_chain_model.text()))
-    #     # gets reference filename and filepath
-    #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
-    #         tmp_protein = core.Protein(self.ui.txt_prediction_load_reference.text(),
-    #                                    export_data_dir=project_obj.get_pdb_path())
-    #         tmp_protein.clean_pdb_file()
-    #         REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
-    #         REFERENCE_DIR = project_obj.get_pdb_path()
+    #         except FileNotFoundError:
+    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+    #             self.ui.btn_prediction_next_2.setEnabled(False)
+    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
+    #             self.ui.lbl_prediction_status_load_reference.setText("Invalid PDB ID.")
+    #             return
     #     else:
-    #         ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
-    #         REFERENCE_OBJ_NAME = ref_file_info.baseName()
-    #         REFERENCE_DIR = ref_file_info.canonicalPath()
-    #     # starting the default web browser to display the colab notebook
-    #     self.status_bar.showMessage("Opening Google colab notebook ...")
-    #     if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
-    #         webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
-    #     else:
-    #         webbrowser.open_new(constants.NOTEBOOK_URL)
+    #         if self.ui.txt_prediction_load_reference.text().find("/") == -1:
+    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+    #             self.ui.btn_prediction_next_2.setEnabled(False)
+    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
     #
-    #     # # waiting for the colab notebook to finish
-    #     # archive = "prediction.zip"
-    #     # source_path = global_variables.global_var_settings_obj.get_prediction_path()
-    #     # FILE_NAME = f"{source_path}/{archive}"
-    #     # # flag = False
-    #     # # while flag == False:
-    #     # #     print("AlphaFold is still running ...")
-    #     # #     time.sleep(5)
-    #     # #     # time.sleep(120)
-    #     # # TO-DO: loop doesn't work correctly
-    #     # while os.path.isfile(FILE_NAME) is False:
-    #     #     print("AlphaFold is still running ...")
-    #     #     # time.sleep(5)
-    #     #     time.sleep(20)
-    #     #     # time.sleep(120)
-    #     #     # global global_var_abort_prediction
-    #     #     # if global_var_abort_prediction:
-    #     #     #     return
+    #         elif self.ui.txt_prediction_load_reference.text().find("\\") == -1:
+    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
+    #             self.ui.btn_prediction_next_2.setEnabled(False)
+    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
     #
-    #     # alphafold specific process
-    #     archive = "prediction.zip"
-    #     source_path = global_variables.global_var_settings_obj.get_prediction_path()
-    #     filename = f"{source_path}/{archive}"
-    #     while os.path.isfile(filename) is False:
-    #         print("AlphaFold is still running ...")
-    #         time.sleep(20)
-    #     # move prediction.zip in scratch folder
-    #     shutil.copy(filename, f"{self.scratch_path}/{archive}")
-    #     shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
-    #     shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
-    #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-    #     shutil.rmtree(f"{self.scratch_path}/prediction")
-    #     os.remove(f"{self.scratch_path}/{archive}")
+    # def enable_chain_information_input_for_prediction(self):
+    #     """This function enables the text boxes to enter the chains for the
+    #     reference and the model
     #
-    #     # ----------------------------------------------------------------- #
-    #     # start of the analysis algorithm
-    #     self.status_bar.showMessage("Protein structure analysis started ...")
+    #     """
+    #     try:
+    #         self.ui.txt_prediction_chain_ref.setEnabled(self.ui.cb_prediction_chain_info.checkState())
+    #         self.ui.txt_prediction_chain_model.setEnabled(self.ui.cb_prediction_chain_info.checkState())
+    #         self.status_bar.showMessage("Enter the chain information.")
+    #         self.__check_start_possibility_prediction()
+    #     except Exception:
+    #         self.status_bar.showMessage("Unexpected Error.")
     #
-    #     # # extracts and moves the prediction.pdb to the workspace/pdb folder
-    #     # tools.extract_and_move_model_pdb(
-    #     #     str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
+    # # def show_prediction_chain_info_reference(self):
+    # #     """This function shows all gui elements for the chain information
+    # #     selection of the reference protein
+    # #
+    # #     """
+    # #     self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
+    # #                                                  "border-width: 2px;"
+    # #                                                  "border-radius: 8px;"
+    # #                                                  "border-color: #DCDBE3;")
+    # #     # show and hide relevant gui elements
+    # #     self.ui.btn_prediction_back_2.hide()
+    # #     self.ui.btn_prediction_next_2.hide()
+    # #     self.ui.lbl_prediction_ref_chains.show()
+    # #     self.ui.list_widget_ref_chains.show()
+    # #     self.ui.btn_prediction_back_3.show()
+    # #     self.ui.btn_prediction_start.show()
+    # #     # disable important gui elements
+    # #     self.ui.txt_prediction_load_reference.setEnabled(False)
+    # #     self.ui.btn_prediction_load_reference.setEnabled(False)
+    # #     # colors white
+    # #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: white")
+    # #
+    # #     # fill chains list widget
+    # #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
+    # #         pdb_id = self.ui.txt_prediction_load_reference.text().upper()
+    # #         tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
+    # #         tmp_ref_protein.clean_pdb_file()
+    # #         chains = cmd.get_chains(pdb_id)
+    # #     else:
+    # #         cmd.load(self.ui.txt_prediction_load_reference.text(), object="reference_protein")
+    # #         chains = cmd.get_chains("reference_protein")
+    # #     for chain in chains:
+    # #         self.ui.list_widget_ref_chains.addItem(chain)
+    # #     styles.color_button_ready(self.ui.btn_prediction_start)
+    # #     cmd.reinitialize()
     #
-    #     # gets model filename and filepath
-    #     PREDICTION_NAME = tools.get_prediction_file_name(project_obj.get_pdb_path())
-    #     full_model_file_path = f"{project_obj.get_pdb_path()}/{PREDICTION_NAME[0]}"
-    #     model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
-    #     MODEL_OBJ_NAME = model_file_info.baseName()
-    #     MODEL_DIR = model_file_info.canonicalPath()
+    # # def hide_prediction_chain_info_reference(self):
+    # #     """Hides the gui elements for the reference chains
+    # #
+    # #     """
+    # #     self.ui.list_widget_ref_chains.clear()
+    # #     # show and hide relevant gui elements
+    # #     self.ui.btn_prediction_back_2.show()
+    # #     self.ui.btn_prediction_next_2.show()
+    # #     self.ui.lbl_prediction_ref_chains.hide()
+    # #     self.ui.list_widget_ref_chains.hide()
+    # #     self.ui.btn_prediction_back_3.hide()
+    # #     self.ui.btn_prediction_start.hide()
+    # #     # disable important gui elements
+    # #     self.ui.txt_prediction_load_reference.setEnabled(True)
+    # #     self.ui.btn_prediction_load_reference.setEnabled(True)
+    # #     # colors green
+    # #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
     #
-    #     # set model in project object
-    #     project_obj.set_pdb_model(full_model_file_path)
-    #     project_obj.create_xml_file()
+    # # def check_prediction_if_txt_prediction_chain_ref_is_filled(self):
+    # #     """This function checks if any chains are in the text field for the
+    # #     reference.
+    # #
+    # #     """
+    # #     self.__check_start_possibility_prediction()
+    # #
+    # # def check_prediction_if_txt_prediction_chain_model_is_filled(self):
+    # #     """This function checks if any chains are in the text field for the
+    # #     model.
+    # #
+    # #     """
+    # #     self.__check_start_possibility_prediction()
+    # #
+    # # def check_prediction_if_txt_prediction_project_name_is_filled(self):
+    # #     """This function checks if the project name text field is filled.
+    # #
+    # #     """
+    # #     self.__check_start_possibility_prediction()
+    # #
+    # # def check_prediction_if_txt_prediction_load_reference_is_filled(self):
+    # #     """This function checks if a reference pdb file is selected.
+    # #
+    # #     """
+    # #     self.__check_start_possibility_prediction()
     #
-    #     # create the Protein object for the reference
-    #     reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+    # def enable_predict_button(self):
+    #     self.ui.btn_prediction_only_start.setEnabled(True)
+    #     styles.color_button_ready(self.ui.btn_prediction_only_start)
     #
-    #     # create model Protein object
-    #     model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-    #     # sets the filepath of the model in the project xml file
-    #     export_dir = project_obj.get_results_path()
-    #     structure_analysis_obj = structure_analysis.StructureAnalysis(
-    #         reference_protein, model_proteins,
-    #         project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
-    #         export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
-    #         cutoff=global_variables.global_var_settings_obj.get_cutoff(),
-    #     )
-    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-    #                                                      structure_analysis_obj.reference_protein)
-    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-    #                                                      structure_analysis_obj.model_proteins)
-    #     structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
-    #                                             self.status_bar, "2")
+    # # def predict(self):
+    # #     """This function opens a webbrowser with a colab notebook, to run the
+    # #     prediction. In addition, it runs the entire analysis after the
+    # #     prediction.
+    # #
+    # #     """
+    # #     ref_chain_items = self.ui.list_widget_ref_chains.selectedItems()
+    # #     ref_chains = []
+    # #     for chain in ref_chain_items:
+    # #         ref_chains.append(chain.text())
+    # #     # global global_var_abort_prediction
+    # #     # global_var_abort_prediction = False
+    # #     # check if a prediction is already finished
+    # #     if os.path.isfile(f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
+    # #         self.status_bar.showMessage(
+    # #             f"Warning! | Current Workspace: {self.workspace_path}")
+    # #         check = gui_utils.warning_message_prediction_exists(
+    # #             f"The prediction is here: {global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip ",
+    # #             f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip")
+    # #         if not check:
+    # #             return
+    # #     # creates project without xml creation and model adding these come after the prediction
+    # #     project_obj = project.Project(self.ui.txt_prediction_project_name.text(),
+    # #                                                         self.workspace_path)
+    # #     project_obj.create_project_tree()
+    # #     project_obj.set_pdb_file(self.ui.txt_prediction_load_reference.text())
+    # #     project_obj.set_pdb_id(self.ui.txt_prediction_load_reference.text())
+    # #     project_obj.set_ref_chains(ref_chains)
+    # #     project_obj.set_model_chains((self.ui.txt_prediction_chain_model.text()))
+    # #     # gets reference filename and filepath
+    # #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
+    # #         tmp_protein = core.Protein(self.ui.txt_prediction_load_reference.text(),
+    # #                                    export_data_dir=project_obj.get_pdb_path())
+    # #         tmp_protein.clean_pdb_file()
+    # #         REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
+    # #         REFERENCE_DIR = project_obj.get_pdb_path()
+    # #     else:
+    # #         ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
+    # #         REFERENCE_OBJ_NAME = ref_file_info.baseName()
+    # #         REFERENCE_DIR = ref_file_info.canonicalPath()
+    # #     # starting the default web browser to display the colab notebook
+    # #     self.status_bar.showMessage("Opening Google colab notebook ...")
+    # #     if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
+    # #         webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
+    # #     else:
+    # #         webbrowser.open_new(constants.NOTEBOOK_URL)
+    # #
+    # #     # # waiting for the colab notebook to finish
+    # #     # archive = "prediction.zip"
+    # #     # source_path = global_variables.global_var_settings_obj.get_prediction_path()
+    # #     # FILE_NAME = f"{source_path}/{archive}"
+    # #     # # flag = False
+    # #     # # while flag == False:
+    # #     # #     print("AlphaFold is still running ...")
+    # #     # #     time.sleep(5)
+    # #     # #     # time.sleep(120)
+    # #     # # TO-DO: loop doesn't work correctly
+    # #     # while os.path.isfile(FILE_NAME) is False:
+    # #     #     print("AlphaFold is still running ...")
+    # #     #     # time.sleep(5)
+    # #     #     time.sleep(20)
+    # #     #     # time.sleep(120)
+    # #     #     # global global_var_abort_prediction
+    # #     #     # if global_var_abort_prediction:
+    # #     #     #     return
+    # #
+    # #     # alphafold specific process
+    # #     archive = "prediction.zip"
+    # #     source_path = global_variables.global_var_settings_obj.get_prediction_path()
+    # #     filename = f"{source_path}/{archive}"
+    # #     while os.path.isfile(filename) is False:
+    # #         print("AlphaFold is still running ...")
+    # #         time.sleep(20)
+    # #     # move prediction.zip in scratch folder
+    # #     shutil.copy(filename, f"{self.scratch_path}/{archive}")
+    # #     shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
+    # #     shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
+    # #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
+    # #     shutil.rmtree(f"{self.scratch_path}/prediction")
+    # #     os.remove(f"{self.scratch_path}/{archive}")
+    # #
+    # #     # ----------------------------------------------------------------- #
+    # #     # start of the analysis algorithm
+    # #     self.status_bar.showMessage("Protein structure analysis started ...")
+    # #
+    # #     # # extracts and moves the prediction.pdb to the workspace/pdb folder
+    # #     # tools.extract_and_move_model_pdb(
+    # #     #     str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
+    # #
+    # #     # gets model filename and filepath
+    # #     PREDICTION_NAME = tools.get_prediction_file_name(project_obj.get_pdb_path())
+    # #     full_model_file_path = f"{project_obj.get_pdb_path()}/{PREDICTION_NAME[0]}"
+    # #     model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
+    # #     MODEL_OBJ_NAME = model_file_info.baseName()
+    # #     MODEL_DIR = model_file_info.canonicalPath()
+    # #
+    # #     # set model in project object
+    # #     project_obj.set_pdb_model(full_model_file_path)
+    # #     project_obj.create_xml_file()
+    # #
+    # #     # create the Protein object for the reference
+    # #     reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
+    # #
+    # #     # create model Protein object
+    # #     model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
+    # #     # sets the filepath of the model in the project xml file
+    # #     export_dir = project_obj.get_results_path()
+    # #     structure_analysis_obj = structure_analysis.StructureAnalysis(
+    # #         reference_protein, model_proteins,
+    # #         project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
+    # #         export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
+    # #         cutoff=global_variables.global_var_settings_obj.get_cutoff(),
+    # #     )
+    # #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+    # #                                                      structure_analysis_obj.reference_protein)
+    # #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+    # #                                                      structure_analysis_obj.model_proteins)
+    # #     structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
+    # #                                             self.status_bar, "2")
 
-    # ----- Functions for Monomer Local Prediction
+    # <editor-fold desc="Monomer Local Prediction functions">
     def local_pred_mono_validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
@@ -2909,7 +2421,9 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_prediction_abort)
         self._project_watcher.show_valid_options(self.ui)
 
-    # ----- Functions for Multimer Local Prediction
+    # </editor-fold>
+
+    # <editor-fold desc="Multimer Local Prediction functions">
     def local_pred_multi_validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
@@ -3070,123 +2584,125 @@ class MainWindow(QMainWindow):
     # def show_local_pred_multi_stage_protein_sequence_batch(self):
     #     self.local_pred_multimer_management.show_gui_elements_stage_x([3], [0, 1, 2, 4, 5])
 
-    # ----- Functions for Single Analysis
-    def show_single_analysis_stage_0(self):
-        self.single_analysis_management.show_stage_x(0)
-        self.ui.lbl_analysis_prot_struct_1.setText("Protein structure 1")
-        self.ui.lbl_analysis_prot_struct_2.setText("Protein structure 2")
+    # </editor-fold>
 
-    def show_single_analysis_stage_1(self):
-        self.single_analysis_management.show_stage_x(1)
-        self.ui.lbl_analysis_prot_struct_1.setText(self.ui.box_analysis_prot_struct_1.currentText())
-        self.ui.lbl_analysis_prot_struct_2.setText(self.ui.box_analysis_prot_struct_2.currentText())
-        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                               self.ui.box_analysis_prot_struct_1.currentText(),
-                                               self.ui.list_analysis_ref_chains)
-        self.ui.btn_analysis_next_2.setEnabled(True)
-        self.ui.lbl_analysis_ref_chains.setText(
-            f"Select chains in protein structure {self.ui.lbl_analysis_prot_struct_1.text()}.")
+    # # ----- Functions for Single Analysis
+    # def show_single_analysis_stage_0(self):
+    #     self.single_analysis_management.show_stage_x(0)
+    #     self.ui.lbl_analysis_prot_struct_1.setText("Protein structure 1")
+    #     self.ui.lbl_analysis_prot_struct_2.setText("Protein structure 2")
+    #
+    # def show_single_analysis_stage_1(self):
+    #     self.single_analysis_management.show_stage_x(1)
+    #     self.ui.lbl_analysis_prot_struct_1.setText(self.ui.box_analysis_prot_struct_1.currentText())
+    #     self.ui.lbl_analysis_prot_struct_2.setText(self.ui.box_analysis_prot_struct_2.currentText())
+    #     tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+    #                                            self.ui.box_analysis_prot_struct_1.currentText(),
+    #                                            self.ui.list_analysis_ref_chains)
+    #     self.ui.btn_analysis_next_2.setEnabled(True)
+    #     self.ui.lbl_analysis_ref_chains.setText(
+    #         f"Select chains in protein structure {self.ui.lbl_analysis_prot_struct_1.text()}.")
+    #
+    # def show_single_analysis_stage_2(self):
+    #     self.single_analysis_management.show_stage_x(2)
+    #     tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
+    #                                            self.ui.box_analysis_prot_struct_2.currentText(),
+    #                                            self.ui.list_analysis_model_chains)
+    #     gui_elements_to_show = [
+    #         self.ui.lbl_analysis_ref_chains,
+    #         self.ui.list_analysis_ref_chains,
+    #         self.ui.lbl_analysis_model_chains,
+    #         self.ui.list_analysis_model_chains,
+    #     ]
+    #     gui_utils.show_gui_elements(gui_elements_to_show)
+    #     self.ui.btn_analysis_start.setEnabled(False)
+    #     if self.no_of_selected_chains == 1:
+    #         self.ui.lbl_analysis_model_chains.setText(
+    #             f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
+    #         self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
+    #     elif self.no_of_selected_chains > 1:
+    #         self.ui.lbl_analysis_model_chains.setText(
+    #             f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
+    #         self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+    #     else:
+    #         gui_elements_to_hide = [
+    #             self.ui.lbl_analysis_ref_chains,
+    #             self.ui.list_analysis_ref_chains,
+    #             self.ui.lbl_analysis_model_chains,
+    #             self.ui.list_analysis_model_chains,
+    #         ]
+    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
+    #         self.ui.btn_analysis_start.setEnabled(True)
+    #
+    # def fill_protein_structure_boxes(self):
+    #     proteins = self.project_scanner.scan_project_for_valid_proteins()
+    #     proteins.insert(0, "")
+    #     self.ui.box_analysis_prot_struct_1.clear()
+    #     self.ui.box_analysis_prot_struct_2.clear()
+    #     gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_1, proteins)
+    #     gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_2, proteins)
+    #
+    # def count_batch_selected_chains_for_prot_struct_1(self):
+    #     self.no_of_selected_chains = len(self.ui.list_analysis_batch_ref_chains.selectedItems())
+    #
+    # def check_if_prot_structs_are_filled(self):
+    #     prot_1 = self.ui.box_analysis_prot_struct_1.itemText(self.ui.box_analysis_prot_struct_1.currentIndex())
+    #     prot_2 = self.ui.box_analysis_prot_struct_2.itemText(self.ui.box_analysis_prot_struct_2.currentIndex())
+    #     if prot_1 != "" and prot_2 != "":
+    #         self.ui.btn_analysis_next.setEnabled(True)
+    #     else:
+    #         self.ui.btn_analysis_next.setEnabled(False)
+    #
+    # def count_selected_chains_for_prot_struct_1(self):
+    #     self.no_of_selected_chains = len(self.ui.list_analysis_ref_chains.selectedItems())
+    #
+    # def check_if_same_no_of_chains_selected(self):
+    #     self.ui.btn_analysis_start.setEnabled(False)
+    #     if self.no_of_selected_chains == len(self.ui.list_analysis_model_chains.selectedItems()):
+    #         self.ui.btn_analysis_start.setEnabled(True)
+    #
+    # def start_process(self):
+    #     """This function contains the main analysis algorithm for the
+    #     Protein structure comparison.
+    #
+    #     """
+    #     self.ui.btn_analysis_start.setEnabled(False)
+    #     self.status_bar.showMessage("Protein structure analysis started ...")
+    #     cmd.reinitialize()
+    #     data_transformer_analysis = data_transformer.DataTransformer(self.ui)
+    #     transformed_analysis_data = data_transformer_analysis.transform_to_analysis(self.app_project)
+    #
+    #     if not os.path.exists(transformed_analysis_data[2]):
+    #         os.mkdir(transformed_analysis_data[2])
+    #     else:
+    #         basic_boxes.ok("Single Analysis", "A structure analysis already exists!", QMessageBox.Critical)
+    #         self._init_single_analysis_page()
+    #         return
+    #
+    #     structure_analysis_obj = structure_analysis.StructureAnalysis(
+    #         reference_protein=[transformed_analysis_data[0]], model_proteins=[transformed_analysis_data[1]],
+    #         ref_chains=transformed_analysis_data[0].chains, model_chains=transformed_analysis_data[1].chains,
+    #         export_dir=transformed_analysis_data[2], cycles=self.app_settings.get_cycles(),
+    #         cutoff=self.app_settings.get_cutoff(),
+    #     )
+    #     if self.ui.cb_analysis_images.isChecked():
+    #         structure_analysis_obj.response_create_images = True
+    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
+    #                                                          structure_analysis_obj.reference_protein)
+    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
+    #                                                          structure_analysis_obj.model_proteins)
+    #     protein_pairs = structure_analysis_obj.create_protein_pairs()
+    #     structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
+    #     protein_pairs[0].name = transformed_analysis_data[3]
+    #     protein_pairs[0].cutoff = self.app_settings.cutoff
+    #     self.app_project.add_protein_pair(protein_pairs[0])
+    #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
+    #     self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
+    #     self.app_project = project.Project.deserialize_project(self.app_project.folder_paths["project"])
+    #     self._project_watcher.show_valid_options(self.ui)
+    #     self._init_single_analysis_page()
 
-    def show_single_analysis_stage_2(self):
-        self.single_analysis_management.show_stage_x(2)
-        tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-                                               self.ui.box_analysis_prot_struct_2.currentText(),
-                                               self.ui.list_analysis_model_chains)
-        gui_elements_to_show = [
-            self.ui.lbl_analysis_ref_chains,
-            self.ui.list_analysis_ref_chains,
-            self.ui.lbl_analysis_model_chains,
-            self.ui.list_analysis_model_chains,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        self.ui.btn_analysis_start.setEnabled(False)
-        if self.no_of_selected_chains == 1:
-            self.ui.lbl_analysis_model_chains.setText(
-                f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
-            self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
-        elif self.no_of_selected_chains > 1:
-            self.ui.lbl_analysis_model_chains.setText(
-                f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
-            self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        else:
-            gui_elements_to_hide = [
-                self.ui.lbl_analysis_ref_chains,
-                self.ui.list_analysis_ref_chains,
-                self.ui.lbl_analysis_model_chains,
-                self.ui.list_analysis_model_chains,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self.ui.btn_analysis_start.setEnabled(True)
-
-    def fill_protein_structure_boxes(self):
-        proteins = self.project_scanner.scan_project_for_valid_proteins()
-        proteins.insert(0, "")
-        self.ui.box_analysis_prot_struct_1.clear()
-        self.ui.box_analysis_prot_struct_2.clear()
-        gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_1, proteins)
-        gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_2, proteins)
-
-    def count_batch_selected_chains_for_prot_struct_1(self):
-        self.no_of_selected_chains = len(self.ui.list_analysis_batch_ref_chains.selectedItems())
-
-    def check_if_prot_structs_are_filled(self):
-        prot_1 = self.ui.box_analysis_prot_struct_1.itemText(self.ui.box_analysis_prot_struct_1.currentIndex())
-        prot_2 = self.ui.box_analysis_prot_struct_2.itemText(self.ui.box_analysis_prot_struct_2.currentIndex())
-        if prot_1 != "" and prot_2 != "":
-            self.ui.btn_analysis_next.setEnabled(True)
-        else:
-            self.ui.btn_analysis_next.setEnabled(False)
-
-    def count_selected_chains_for_prot_struct_1(self):
-        self.no_of_selected_chains = len(self.ui.list_analysis_ref_chains.selectedItems())
-
-    def check_if_same_no_of_chains_selected(self):
-        self.ui.btn_analysis_start.setEnabled(False)
-        if self.no_of_selected_chains == len(self.ui.list_analysis_model_chains.selectedItems()):
-            self.ui.btn_analysis_start.setEnabled(True)
-
-    def start_process(self):
-        """This function contains the main analysis algorithm for the
-        Protein structure comparison.
-
-        """
-        self.ui.btn_analysis_start.setEnabled(False)
-        self.status_bar.showMessage("Protein structure analysis started ...")
-        cmd.reinitialize()
-        data_transformer_analysis = data_transformer.DataTransformer(self.ui)
-        transformed_analysis_data = data_transformer_analysis.transform_to_analysis(self.app_project)
-
-        if not os.path.exists(transformed_analysis_data[2]):
-            os.mkdir(transformed_analysis_data[2])
-        else:
-            basic_boxes.ok("Single Analysis", "A structure analysis already exists!", QMessageBox.Critical)
-            self._init_single_analysis_page()
-            return
-
-        structure_analysis_obj = structure_analysis.StructureAnalysis(
-            reference_protein=[transformed_analysis_data[0]], model_proteins=[transformed_analysis_data[1]],
-            ref_chains=transformed_analysis_data[0].chains, model_chains=transformed_analysis_data[1].chains,
-            export_dir=transformed_analysis_data[2], cycles=self.app_settings.get_cycles(),
-            cutoff=self.app_settings.get_cutoff(),
-        )
-        if self.ui.cb_analysis_images.isChecked():
-            structure_analysis_obj.response_create_images = True
-        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-                                                             structure_analysis_obj.reference_protein)
-        structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-                                                             structure_analysis_obj.model_proteins)
-        protein_pairs = structure_analysis_obj.create_protein_pairs()
-        structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
-        protein_pairs[0].name = transformed_analysis_data[3]
-        protein_pairs[0].cutoff = self.app_settings.cutoff
-        self.app_project.add_protein_pair(protein_pairs[0])
-        protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-        self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
-        self.app_project = project.Project.deserialize_project(self.app_project.folder_paths["project"])
-        self._project_watcher.show_valid_options(self.ui)
-        self._init_single_analysis_page()
-
-    # ----- Functions for Batch
+    # <editor-fold desc="Structure Analysis functions">
     def show_batch_analysis_stage_0(self):
         if self.ui.lbl_analysis_batch_prot_struct_1.text() != "Protein structure 1":
             prot_1_name = self.ui.lbl_analysis_batch_prot_struct_1.text().replace(".pdb", "")
@@ -3506,7 +3022,9 @@ class MainWindow(QMainWindow):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_analysis_abort)
 
-    # ----- Functions for Results
+    # </editor-fold>
+
+    # <editor-fold desc="Results page functions">
     def show_analysis_results_options(self):
         self.results_management.show_stage_x(0)
 
@@ -3896,7 +3414,9 @@ class MainWindow(QMainWindow):
         table_dialog.setWindowTitle("Distances of Structure Alignment")
         table_dialog.show()
 
-    # ----- Functions for Image page
+    # </editor-fold>
+
+    # <editor-fold desc="Image page functions">
     def show_representation(self):
         """This function sets the representation.
 
@@ -4064,7 +3584,9 @@ class MainWindow(QMainWindow):
                                                      "an image", self.status_bar,
                                             "Unexpected Error from PyMOL")
 
-    # ----- Functions for Hotspots page
+    # </editor-fold>
+
+    # <editor-fold desc="Hotspots page functions">
     def open_protein(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
         if input.find(".pdb") != -1:
@@ -4102,6 +3624,8 @@ class MainWindow(QMainWindow):
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
             tmp_protein.zoom_resi_protein_position()
+
+    # </editor-fold>
 
 
 if __name__ == '__main__':
