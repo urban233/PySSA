@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the input validator class"""
-
 from pymol import Qt
 from PyQt5 import QtGui
 from gui.ui.styles import styles

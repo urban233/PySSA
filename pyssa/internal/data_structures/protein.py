@@ -20,22 +20,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the protein class"""
-import base64
-import json
 import os
 import pathlib
 import logging
-import shutil
 import uuid
 import pymol
-from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.data_structures import selection
 from pyssa.util import protein_util
-from pyssa.util import pyssa_keys
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names

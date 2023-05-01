@@ -20,16 +20,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the project class"""
-import json
 import logging
 import os
 import pathlib
 import platform
 from datetime import datetime
 from pathlib import Path
-from util import gui_utils
 from internal.data_structures import protein, protein_pair
-from pyssa.internal.analysis_types import distance_analysis
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
@@ -37,7 +34,6 @@ from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.util import constants
 from xml.etree import ElementTree
 from xml.dom import minidom
-from pyssa.io_pyssa import binary_data
 
 
 logger = logging.getLogger(__file__)

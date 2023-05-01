@@ -22,14 +22,9 @@
 """This module contains helper function for the protein pair class."""
 import datetime
 import logging
-import pathlib
 import numpy as np
 from typing import TYPE_CHECKING
-from pyssa.io_pyssa import safeguard
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants
-from pyssa.internal.data_structures.data_classes import atom_for_distance_calc
-from Bio import AlignIO
 from pymol import cmd
 
 if TYPE_CHECKING:

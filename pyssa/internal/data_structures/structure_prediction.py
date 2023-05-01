@@ -23,29 +23,22 @@
 import os
 import pathlib
 import shutil
-import pymol
 import logging
-
-from PyQt5.QtWidgets import QMessageBox
-
 from internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_configuration
-from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_processing import data_transformer
 from pyssa.internal.prediction_engines import colabbatch
 from pyssa.util import constants
 from pyssa.util import prediction_util
 from pyssa.io_pyssa import path_util
-from pyssa.gui.ui.messageboxes import basic_boxes
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
 from pyssa.logging_pyssa import loggers
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
-    from pyssa.internal.data_structures import sequence
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

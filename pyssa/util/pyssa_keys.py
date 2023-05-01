@@ -20,10 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for storing project-wide constants"""
-import logging
-import os
-import pathlib
-
 
 ARRAY_DISTANCE_INDEX = "index"
 ARRAY_DISTANCE_PROT_1_CHAIN = "ref_chain"

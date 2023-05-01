@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the gui page management class"""
-
 from util import tools, gui_utils
 from gui.ui.styles import styles
 from internal.data_structures.data_classes import stage

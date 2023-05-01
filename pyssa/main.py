@@ -20,27 +20,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main window of the pyssa plugin"""
-import json
 import logging
 import os
 import shutil
 import subprocess
 import sys
-import time
 import webbrowser
 import pathlib
 import PyQt5.QtCore
-from PyQt5.QtCore import QThread
 import numpy as np
 import pymol
 import csv
-
-from internal.data_structures.data_classes import basic_protein_info
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.dialogs import dialog_startup
 from util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
 from gui.ui.styles import styles
-
 from PyQt5.QtGui import QIcon
 from pymol import Qt
 from pymol import cmd
@@ -67,14 +61,12 @@ from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import project_watcher
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures import structure_analysis
-from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
-from pyssa.logging_pyssa import loggers
 
 # setup logger
 # logging.basicConfig(level=logging.DEBUG)
@@ -142,7 +134,7 @@ class MainWindow(QMainWindow):
             gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
                                             self.app_settings)
 
-        # ----- All class attributes are listed here
+        # <editor-fold desc="Class attributes">
         self.app_project = project.Project("", pathlib.Path(""))
         self._project_watcher = project_watcher.ProjectWatcher(self.app_project, no_of_pdb_files=None)
         self.scratch_path = constants.SCRATCH_DIR
@@ -150,6 +142,8 @@ class MainWindow(QMainWindow):
         self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self.status_bar = Qt.QtWidgets.QStatusBar()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
+
+        # </editor-fold>
 
         self.results_name = ""
         self.no_of_selected_chains = 0
@@ -871,6 +865,7 @@ class MainWindow(QMainWindow):
     #     ]
     #     gui_utils.hide_gui_elements(gui_elements_to_hide)
 
+    # <editor-fold desc="Page init functions">
     def _init_fill_combo_boxes(self):
         """This function fills all combo boxes of the plugin
 
@@ -1078,6 +1073,8 @@ class MainWindow(QMainWindow):
         self._init_results_page()
         self._init_image_page()
 
+    # </editor-fold>
+
     # Slots
     # def handle_side_menu(self):
     #     """This function is used to hide and show the side menu
@@ -1100,6 +1097,7 @@ class MainWindow(QMainWindow):
     #         self.ui.btn_side_menu.setText("->")
     #         self.ui.btn_side_menu.setToolTip("Expand")
     #     self.ui.side_menu_container.setFixedWidth(new_width)
+    # <editor-fold desc="Display page functions">
     def display_home_page(self):
         """This function displays the homepage of the plugin
 
@@ -1298,6 +1296,9 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_hotspots_page)
+
+    # </editor-fold>
+
 
     # def __check_start_possibility(self):
     #     """This function is used to determine if the Start button can be
@@ -2036,35 +2037,7 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
-        # dialog = chart_test.DistanceHistogram()
-        # dialog.exec_()
-        # if not os.path.exists(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/")):
-        #     os.mkdir(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/"))
-        # if not os.path.exists(constants.WSL_STORAGE_PATH):
-        #     os.mkdir(constants.WSL_STORAGE_PATH)
-        # print(subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH),
-        #                       str(constants.WSL_DISTRO_IMPORT_PATH)]))
-        # print(subprocess.run(["C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", pathlib.Path(
-        #     f"{os.path.expanduser('~')}/github_repos/tmpPySSA/pyssa/scripts/install_wsl_env.ps1")]))
-
-        # sequence = "MAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRMAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR"
-        # print(subprocess.run(["wsl", "curl", "-X", "POST", "--data", f"{sequence}", "https://api.esmatlas.com/foldSequence/v1/pdb/", "-OutFile", "protein.pdb"]))
-
-        # new_project = project.Project(self.ui.txt_use_project_name.text(), pathlib.Path(self.workspace_path))
-        # new_project.serialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA", "testproject")
-        #
-        # opened_project = project.Project("", pathlib.Path("")).deserialize_project("C:\\Users\\martin\\github_repos\\tmpPySSA\\testproject.json")
-        # opened_project.create_folder_paths()
-        # # old saving process
-        # session_file = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/")
-        # try:
-        #     cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/{session_file[0]}")
-        #     self.status_bar.showMessage("Saved project successfully.")
-        # except pymol.CmdException:
-        #     self.status_bar.showMessage("PyMOL internal error while saving.")
-        # except IndexError:
-        #     cmd.save(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/sessions/auto_generated_session_file.pse")
-        #     self.status_bar.showMessage("Saved project successfully.")
+        self.app_project.serialize_project(self.app_project.get_project_xml_path())
 
     # ----- Functions for Edit project page
     def check_for_cleaning(self):

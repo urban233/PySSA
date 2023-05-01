@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the results class"""
-
 from xml.etree import ElementTree
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names

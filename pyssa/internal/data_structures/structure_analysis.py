@@ -20,21 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for structure analysis class"""
-import json
 import logging
-import pathlib
-import pymol
-from pymol import Qt
-from pymol import cmd
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import tools
-from pyssa.util import gui_utils
-from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
-from pyssa.internal.analysis_types import distance_analysis
-from pyssa.internal.portal import pymol_io
-from pyssa.util import constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair

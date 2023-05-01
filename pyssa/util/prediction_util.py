@@ -24,7 +24,6 @@ import os
 import pathlib
 import logging
 from pyssa.util import constants
-from pyssa.io_pyssa import filesystem_helpers
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.logging_pyssa import log_handlers
 

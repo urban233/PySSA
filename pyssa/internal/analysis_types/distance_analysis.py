@@ -21,25 +21,19 @@
 #
 """This module contains the distance analysis class."""
 import os
-import base64
 import logging
 import pathlib
-import json
-
 import numpy as np
 from pymol import cmd
 from typing import TYPE_CHECKING
-
 from xml.etree import ElementTree
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
-from io_pyssa import filesystem_io
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import protein_pair_util
 from pyssa.internal.portal import protein_pair_operations
 from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
-from pyssa.util import pyssa_keys
 from pyssa.util import analysis_util
 from pyssa.util import constants
 from pyssa.internal.data_structures import results
