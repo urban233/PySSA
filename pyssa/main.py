@@ -2076,6 +2076,7 @@ class MainWindow(QMainWindow):
         tmp_protein = self.app_project.search_protein(
             protein_name.replace(".pdb", ""))
         tmp_protein.load_protein_in_pymol()
+        # check if selected protein contains any organic or solvent molecules which can be removed
         if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
             gui_elements_to_show = [
                 self.ui.lbl_edit_clean_new_prot,
@@ -2092,6 +2093,7 @@ class MainWindow(QMainWindow):
                 self.ui.btn_edit_clean_update_prot,
             ]
             gui_utils.hide_gui_elements(gui_elements_to_hide)
+        # check if selected protein is in any existing protein pair
         if self.app_project.check_if_protein_is_in_any_protein_pair(protein_name) is True:
             gui_elements_to_hide = [
                 self.ui.label_12,
@@ -2108,6 +2110,7 @@ class MainWindow(QMainWindow):
     def clean_protein_new(self):
         tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
         clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
+        constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", clean_tmp_protein.get_molecule_object())
         self.app_project.add_existing_protein(clean_tmp_protein)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         self._init_edit_page()
@@ -2119,8 +2122,11 @@ class MainWindow(QMainWindow):
                                  "This will remove all organic and solvent components!",
                                  QMessageBox.Information):
             tmp_protein.clean_protein()
+            constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", tmp_protein.get_molecule_object())
+            self.app_project.serialize_project(self.app_project.get_project_xml_path())
             self._init_edit_page()
         else:
+            constants.PYSSA_LOGGER.info("No protein has been cleaned.")
             return
 
     def delete_protein(self):
