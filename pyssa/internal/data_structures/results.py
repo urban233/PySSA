@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the results class"""
-
 from xml.etree import ElementTree
 
 import numpy as np

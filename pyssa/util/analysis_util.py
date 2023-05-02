@@ -22,13 +22,10 @@
 """This module contains helper function for the analysis process."""
 import pathlib
 import logging
-from pyssa.util import constants
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures import protein
-from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.data_structures import selection
-from pyssa.internal.data_structures import chain
 from pyssa.util import protein_util
 
 logger = logging.getLogger(__file__)

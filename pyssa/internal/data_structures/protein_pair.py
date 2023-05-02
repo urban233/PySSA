@@ -21,15 +21,12 @@
 #
 """Module for the protein pair class"""
 import os
-import base64
 import pathlib
 import logging
 from pyssa.logging_pyssa import log_handlers
-from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_pair_operations
-from pyssa.internal.data_structures import results
 from pyssa.io_pyssa import filesystem_io
 from pyssa.util import protein_util
 from pyssa.util import pyssa_keys

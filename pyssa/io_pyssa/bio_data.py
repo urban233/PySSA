@@ -22,7 +22,6 @@
 import typing
 import pathlib
 from xml.etree import ElementTree
-from xml.dom import minidom
 
 if typing.TYPE_CHECKING:
     from pyssa.io_pyssa import path_util

@@ -23,17 +23,12 @@
 import os
 import pymol
 import logging
-import pathlib
 from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import filesystem_io
 from pyssa.util import constants
-from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.portal import pymol_io
-
-if TYPE_CHECKING:
-    from pyssa.io_pyssa import path_util
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

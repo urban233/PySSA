@@ -22,7 +22,6 @@
 """Module for protein operations in pymol"""
 import logging
 import pathlib
-import os
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard

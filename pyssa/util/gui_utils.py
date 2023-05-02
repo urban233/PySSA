@@ -25,7 +25,6 @@ import os
 import pathlib
 import shutil
 from pathlib import Path
-
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore

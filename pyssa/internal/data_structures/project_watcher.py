@@ -20,10 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the project watcher class which is hard coded based on pyssa"""
-import os
 from internal.data_structures import project
 from util import gui_utils
-from pyssa.util import project_util
 
 
 class ProjectWatcher:

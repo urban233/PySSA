@@ -20,21 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for structure analysis class"""
-import json
 import logging
-import pathlib
-import pymol
-from pymol import Qt
-from pymol import cmd
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import tools
-from pyssa.util import gui_utils
-from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
-from pyssa.internal.analysis_types import distance_analysis
-from pyssa.internal.portal import pymol_io
-from pyssa.util import constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
@@ -57,10 +46,11 @@ class Analysis:
         logger.debug(self.analysis_list)
         for tmp_protein_pair in self.analysis_list:
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
-            tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
-                                                                          representation="cartoon")
-            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
-                                                                                 f"interesting_reg_{tmp_protein_pair.name}")
+            # TODO: Comment back in!!!
+            #tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
+            #                                                              representation="cartoon")
+            #tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
+            #                                                                     f"interesting_reg_{tmp_protein_pair.name}")
 
             # logger.debug(tmp_protein_pair.distance_analysis.analysis_results)
             self.app_project.add_protein_pair(tmp_protein_pair)

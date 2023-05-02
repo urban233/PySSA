@@ -20,16 +20,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the project class"""
-import json
 import logging
 import os
 import pathlib
 import platform
 from datetime import datetime
 from pathlib import Path
-from util import gui_utils
 from internal.data_structures import protein, protein_pair
-from pyssa.internal.analysis_types import distance_analysis
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
@@ -37,7 +34,6 @@ from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.util import constants
 from xml.etree import ElementTree
 from xml.dom import minidom
-from pyssa.io_pyssa import binary_data
 
 
 logger = logging.getLogger(__file__)
@@ -267,6 +263,23 @@ class Project:
             if tmp_protein_pair[2].name == protein_pair_name:
                 return tmp_protein_pair
         print(f"No matching protein with the name {protein_pair_name} found.")
+
+    def check_if_protein_is_in_any_protein_pair(self, protein_name):
+        protein_obj = self.search_protein(protein_name)
+        for tmp_protein_pair in self.protein_pairs:
+            if protein_obj == tmp_protein_pair.protein_1 or tmp_protein_pair.protein_2:
+                return True
+            elif protein_obj.get_molecule_object() == tmp_protein_pair.protein_1.get_molecule_object().replace("_1", ""):
+                return True
+        return False
+
+    def delete_specific_protein(self, protein_name):
+        protein_obj = self.search_protein(protein_name)
+        if protein_obj in self.proteins:
+            self.proteins.remove(protein_obj)
+            self.serialize_project(self.get_project_xml_path())
+        else:
+            raise ValueError("An argument is not in the list.")
 
     def dump_project_to_file(self):
         current_time = datetime.now()

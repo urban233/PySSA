@@ -28,12 +28,8 @@ import logging
 import ast
 import numpy as np
 from xml.etree import ElementTree
-
-from PyQt5 import QtWidgets
-
 from io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.data_structures.data_classes import protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.data_structures import project
@@ -43,7 +39,6 @@ from pyssa.internal.analysis_types import distance_analysis
 from pyssa.internal.data_structures import results
 from pyssa.io_pyssa import safeguard
 from pyssa.util import constants
-from pyssa.util import tools
 from pyssa.util import protein_util
 from pyssa.util import project_util
 from pyssa.io_pyssa import path_util

@@ -24,8 +24,5 @@
 import os
 
 global_var_root_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), "../gui", ".."))
-# global_var is used to access the settings project-wide
-#global_var_settings_obj = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILE)
-#global_var_settings_obj.deserialize_settings()
 global_var_tmp_project_info = []
 global_var_workspace_proteins: dict = {}

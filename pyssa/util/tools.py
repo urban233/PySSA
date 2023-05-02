@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for functions which can be used across the entire project"""
-
 import os
 import pathlib
 import shutil
@@ -28,16 +27,14 @@ import logging
 import fnmatch
 from Bio import PDB
 from pathlib import Path
-
 from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtGui
-
-from internal.data_structures import settings
-from util import constants
-from gui.ui.styles import styles
-from internal.data_structures.data_classes import protein_info
-from internal.data_structures.data_classes import basic_protein_info
+from pyssa.internal.data_structures import settings
+from pyssa.util import constants
+from pyssa.gui.ui.styles import styles
+from pyssa.internal.data_structures.data_classes import protein_info
+from pyssa.internal.data_structures.data_classes import basic_protein_info
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names

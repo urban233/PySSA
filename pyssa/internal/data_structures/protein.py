@@ -20,22 +20,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the protein class"""
-import base64
-import json
 import os
 import pathlib
 import logging
-import shutil
 import uuid
 import pymol
-from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.data_structures import selection
 from pyssa.util import protein_util
-from pyssa.util import pyssa_keys
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
@@ -242,6 +237,11 @@ class Protein:
         bio_data.convert_pdb_data_list_to_pdb_file(pdb_filepath, self._pdb_data)
         pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb", self._pymol_molecule_object)
 
+    def load_protein_pymol_session(self):
+        tmp_session_path = f"{constants.CACHE_PYMOL_SESSION_DIR}/{self._id}.pse"
+        binary_data.write_binary_file_from_base64_string(tmp_session_path, self.pymol_session)
+        pymol_io.load_pymol_session(tmp_session_path)
+
     def color_protein_in_pymol(self) -> None:
         # TODO: needs to be implemented
         pass
@@ -297,26 +297,31 @@ class Protein:
         pymol_io.save_protein_to_pdb_file(self.export_dirname, self._pymol_molecule_object)
 
     def clean_protein(self, new_protein=False):
-        cmd.reinitialize()
-        self.load_protein_in_pymol()
+        # cmd.reinitialize()
+        # self.load_protein_in_pymol()
         if new_protein is False:
             try:
+                self.load_protein_pymol_session()
                 protein_operations.remove_solvent_molecules_in_protein()
                 protein_operations.remove_organic_molecules_in_protein()
             except pymol.CmdException:
                 return
-            os.remove(self.pdb_filepath.get_filepath())
-            pymol_io.save_protein_to_pdb_file(self.export_dirname, self._pymol_molecule_object)
+            tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
+            pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(self._id))
+            self._pdb_data.clear()
+            self._pdb_data = bio_data.convert_pdb_xml_string_to_list(bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)))
         else:
             clean_prot = self.duplicate_protein()
-            cmd.reinitialize()
-            clean_prot.load_protein_in_pymol()
+            #clean_prot.load_protein_in_pymol()
+            clean_prot.load_protein_pymol_session()
             protein_operations.remove_solvent_molecules_in_protein()
             protein_operations.remove_organic_molecules_in_protein()
-            clean_prot.molecule_object = f"{clean_prot.molecule_object}_cleaned"
-            clean_prot.filename = f"{clean_prot.molecule_object}.pdb"
-            pymol_io.save_protein_to_pdb_file(clean_prot.export_dirname, clean_prot._pymol_molecule_object)
-            return clean_prot
+            clean_prot_molecule_object = f"{clean_prot.get_molecule_object()}_cleaned"
+            clean_prot.set_molecule_object(clean_prot_molecule_object)
+            tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{clean_prot.get_id()}.pdb")
+            pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(clean_prot.get_id()))
+            cleaned_prot = Protein(molecule_object=clean_prot_molecule_object, pdb_xml_string=bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)))
+            return cleaned_prot
 
     def show_resi_as_balls_and_sticks(self) -> None:
         graphic_operations.show_protein_selection_as_balls_and_sticks(self.pymol_selection.selection_string)

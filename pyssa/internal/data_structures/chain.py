@@ -21,10 +21,8 @@
 #
 """This module contains the chain class."""
 import logging
-import pathlib
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import sequence
-from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
