@@ -63,6 +63,7 @@ class XmlHandler:
         self.pretty_file(self.project_root, filepath)
 
     def build_simple_xml_file(self):
+        # TODO: What is with the path and the name of the project? Is it a test or what ist it? -> Make it by default!
         self.project_root = ElementTree.Element("project")
         # --- Start of project information
         project_info = ElementTree.SubElement(self.project_root, "project_info")

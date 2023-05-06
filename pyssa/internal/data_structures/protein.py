@@ -133,6 +133,8 @@ class Protein:
         self.pdb_cache_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
         if pdb_filepath == "" and pdb_xml_string != "":
             self._pymol_molecule_object = molecule_object
+            if not os.path.exists(constants.CACHE_PROTEIN_DIR):
+                os.mkdir(constants.CACHE_PROTEIN_DIR)
             bio_data.convert_xml_string_to_pdb_file(pdb_xml_string, self.pdb_cache_path)
             self.chains = protein_operations.get_protein_chains(molecule_object, constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb")
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(pdb_xml_string)

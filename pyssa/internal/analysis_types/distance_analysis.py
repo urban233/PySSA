@@ -36,6 +36,7 @@ from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.util import analysis_util
 from pyssa.util import constants
+from pyssa.io_pyssa import binary_data
 from pyssa.internal.data_structures import results
 
 if TYPE_CHECKING:
@@ -184,7 +185,6 @@ class DistanceAnalysis:
         logger.debug(pymol_ca_object_pairs)
         for i in range(len(protein_1_ca_pymol_objects)):
             pymol_ca_object_pairs.append((protein_1_ca_pymol_objects[i], protein_2_ca_pymol_objects[i]))
-        self.distance_analysis_data = []
         for tmp_pair in pymol_ca_object_pairs:
             prot_ref_ca = tmp_pair[0]
             prot_model_ca = tmp_pair[1]
@@ -200,7 +200,7 @@ class DistanceAnalysis:
                 self._protein_pair_for_analysis.protein_1.get_molecule_object(),
                 self._protein_pair_for_analysis.protein_2.get_molecule_object(),
             )
-            self.distance_analysis_data.append(distances)
+            self.distance_analysis_data = distances
         self.analysis_results = results.DistanceAnalysisResults(
             self.distance_analysis_data,
             pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
@@ -320,16 +320,16 @@ class DistanceAnalysis:
         cmd.show(REPRESENTATION, "all")
 
         i: int = 0
-        for distance_value in self.analysis_results.distance_data[0].get("distance"):
+        for distance_value in self.analysis_results.distance_data.get("distance"):
             if float(distance_value) > float(cutoff):
                 # here algorithm for image
-                ref_pos_array: np.ndarray = self.analysis_results.distance_data[0].get("ref_pos")
+                ref_pos_array: np.ndarray = self.analysis_results.distance_data.get("ref_pos")
                 ref_pos: int = ref_pos_array[i]
-                ref_chain_array: np.ndarray = self.analysis_results.distance_data[0].get("ref_chain")
+                ref_chain_array: np.ndarray = self.analysis_results.distance_data.get("ref_chain")
                 ref_chain: str = ref_chain_array[i]
-                model_pos_array: np.ndarray = self.analysis_results.distance_data[0].get("model_pos")
+                model_pos_array: np.ndarray = self.analysis_results.distance_data.get("model_pos")
                 model_pos: int = model_pos_array[i]
-                model_chain_array: np.ndarray = self.analysis_results.distance_data[0].get("model_chain")
+                model_chain_array: np.ndarray = self.analysis_results.distance_data.get("model_chain")
                 model_chain: str = model_chain_array[i]
 
                 measurement_obj: str = f"measure{j}"
@@ -417,6 +417,14 @@ class DistanceAnalysis:
                 tmp_prot_2_residue_data.text = str(distances['model_resi'].tolist())
                 tmp_distances_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_DISTANCES_LIST)
                 tmp_distances_data.text = str(distances['distance'].tolist())
+
+            tmp_image_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_IMAGES)
+            tmp_image_structure_aln = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE)
+            tmp_image_filename = os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_DIR)
+            tmp_image_structure_aln.text = binary_data.create_base64_string_from_file(path_util.FilePath(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{tmp_image_filename[0]}"))
+            tmp_image_interesting_reg = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS)
+            for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                tmp_image_interesting_reg.text = binary_data.create_base64_string_from_file(path_util.FilePath(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}"))
 
         tmp_session_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_SESSION)
         tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, pymol_io.convert_pymol_session_to_base64_string(self.name))

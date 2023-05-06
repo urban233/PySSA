@@ -997,6 +997,7 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_results_page)
         self.show_analysis_results_options()
 
+
     def display_image_page(self):
         """This function displays the image work area
 
@@ -3040,11 +3041,14 @@ class MainWindow(QMainWindow):
                                                                   self.ui.cb_results_analysis_options])
 
     def load_results(self):
+        shutil.rmtree(constants.CACHE_DIR)
+        os.mkdir(constants.CACHE_DIR)
+        os.mkdir(constants.CACHE_IMAGES)
         self.results_name = self.ui.cb_results_analysis_options.currentText()
+
         if self.results_name == "":
             self.show_analysis_results_options()
             return
-        #current_results_path = pathlib.Path(f"{self.app_project.get_protein_pairs_path()}/{self.results_name}")
         gui_elements_to_hide = []
         # TODO: implement image check for xml format
         # if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
@@ -3064,11 +3068,15 @@ class MainWindow(QMainWindow):
         #         gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
 
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
-        distance_data = tmp_protein_pair.distance_analysis.analysis_results.distance_data[0]
-        distance_data_array = np.array([distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
-                                        distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
-                                        distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
-                                        distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI], distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]])
+        distance_data: dict[str, np.ndarray]= tmp_protein_pair.distance_analysis.analysis_results.distance_data
+        distance_data_array = np.array([distance_data["index"], distance_data["ref_chain"], distance_data["ref_pos"],
+                                        distance_data["ref_resi"], distance_data["model_chain"], distance_data["model_pos"],
+                                        distance_data["model_resi"], distance_data["distance"]])
+
+       # distance_data_array = np.array([distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
+        #                                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
+         #                               distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
+          #                              distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI], distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]])
         distance_data_array_transpose = distance_data_array.transpose()
         distance_list = []
         distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()

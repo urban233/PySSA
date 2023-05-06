@@ -21,9 +21,11 @@
 #
 """Module for structure analysis class"""
 import logging
+import os.path
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import protein_pair
+from pyssa.util import constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
@@ -47,10 +49,16 @@ class Analysis:
         for tmp_protein_pair in self.analysis_list:
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
             # TODO: Comment back in!!!
-            #tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
-            #                                                              representation="cartoon")
-            #tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
-            #                                                                     f"interesting_reg_{tmp_protein_pair.name}")
+            if not os.path.exists(constants.CACHE_IMAGES):
+                os.mkdir(constants.CACHE_IMAGES)
+            if not os.path.exists(constants.CACHE_STRUCTURE_ALN_IMAGES_DIR):
+                os.mkdir(constants.CACHE_STRUCTURE_ALN_IMAGES_DIR)
+            if not os.path.exists(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                os.mkdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+            tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
+                                                                         representation="cartoon")
+            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
+                                                                                f"interesting_reg_{tmp_protein_pair.name}")
 
             # logger.debug(tmp_protein_pair.distance_analysis.analysis_results)
             self.app_project.add_protein_pair(tmp_protein_pair)

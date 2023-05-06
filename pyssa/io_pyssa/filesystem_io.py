@@ -105,7 +105,6 @@ class XmlDeserializer:
             distance_analysis_settings = tag_distance_analysis.attrib
             tag_results = tag_distance_analysis.find(element_names.DISTANCE_ANALYSIS_RESULTS)
             rmsd_aligned_aa = tag_results.attrib
-            distance_results = []
             for tmp_tag_results_distance in tag_results.findall(f".//{element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS}"):
                 indexes = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_INDEX_LIST).text
                 prot_1_chains = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST).text
@@ -137,10 +136,9 @@ class XmlDeserializer:
                                                            'model_resi': model_resi_array,
                                                            'distance': distance_array
                                                            }
-                distance_results.append(result_hashtable)
 
             tmp_protein_pair_obj.distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair_obj, app_settings)
-            tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(distance_data=distance_results,
+            tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(distance_data=result_hashtable,
                                                                                                       pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
                                                                                                       rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
                                                                                                       aligned_aa=int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
