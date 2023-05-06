@@ -27,6 +27,8 @@ from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
 from pymol import cmd
 
+from util import pyssa_keys
+
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
 
@@ -318,14 +320,14 @@ def calculate_distance_between_ca_atoms(a_count, a_ref_prot_ca, a_model_prot_ca,
     model_resi_array: np.ndarray = np.array(model_resi_list)
     distance_array: np.ndarray = np.array(distance_list)
 
-    result_hashtable: dict[str, np.ndarray] = {'index': index_array,
-                                               'ref_chain': ref_chain_array,
-                                               'ref_pos': ref_pos_array,
-                                               'ref_resi': ref_resi_array,
-                                               'model_chain': model_chain_array,
-                                               'model_pos': model_pos_array,
-                                               'model_resi': model_resi_array,
-                                               'distance': distance_array
+    result_hashtable: dict[str, np.ndarray] = {pyssa_keys.ARRAY_DISTANCE_INDEX: index_array,
+                                               pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN: ref_chain_array,
+                                               pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION: ref_pos_array,
+                                               pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI: ref_resi_array,
+                                               pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN: model_chain_array,
+                                               pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION: model_pos_array,
+                                               pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI: model_resi_array,
+                                               pyssa_keys.ARRAY_DISTANCE_DISTANCES: distance_array
                                                }
 
     # return the hast table with all results

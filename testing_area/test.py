@@ -22,21 +22,27 @@
 import os
 import json
 import pathlib
+from xml.etree import ElementTree
 
 
-def search_filesystem(protein_name_seq_tuples):
-    filenames = []
-    filename = []
-    for tmp_prediction in protein_name_seq_tuples:
-        for tmp_filename in os.listdir(pathlib.Path("C:/Users/martin/.pyssa/scratch/local_predictions/pdb")):
-            test = tmp_filename.find(f"{tmp_prediction[0]}_relaxed_rank_001")
-            if tmp_filename.find(f"{tmp_prediction[0]}_relaxed_rank_001") != -1:
-                filename.append(tmp_filename)
-        if len(filename) == 1:
-            filenames.append((tmp_prediction, filename[0]))
-    return filenames
+class XMLDeserialzer:
+
+    def __init__(self, filepath):
+        # Read the XML file
+        xml_file = open(filepath, "r")
+        xml_contents = xml_file.read()
+        self.xml_root = ElementTree.fromstring(xml_contents)
+
+    def deserialize_analysis_images(self, analysis_results: 'results.DistanceAnalysisResults'):
+        for tmp_protein_pair in self.xml_root.findall(".//protein_pair"):
+            if tmp_protein_pair.attrib["name"] == "6OMN_1_with_6OMN_2":
+                structure_aln_images = tmp_protein_pair.findall(".//auto_images/structure_aln_image")
+                print(structure_aln_images[0].tag)
+                interesting_reg_images = tmp_protein_pair.findall(".//auto_images/interesting_reg_image")
+                for tmp_image in interesting_reg_images:
+                    print(tmp_image.tag)
 
 
 if __name__ == '__main__':
-    prot = [('re2', 'GFGGFTAGT')]
-    print(search_filesystem(prot))
+    xml_des = XMLDeserialzer("C:\\Users\\martin\\.pyssa\\default_workspace\\analysis_check.xml")
+    xml_des.deserialize_analysis_images(12)

@@ -61,8 +61,8 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         #             distance_list.append(float(cleaned_line.split(",")[8]))
         #             cutoff_line.append(float(self.protein_pair_for_analysis.cutoff))
         # creates actual distance plot line
-        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data[0]
-        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()
+        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
+        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
         self.graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
                                    symbol="o", symbolSize=10, symbolBrush=('b'))
         self.view_box = self.graph_widget.plotItem.getViewBox()
@@ -106,7 +106,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         self.view_box.setRange(xRange=[from_aa, to_aa], yRange=[from_range, to_range])
         if self.ui.cb_sync_with_pymol.isChecked():
             print("Sync is active.")
-            zoom_selection = f"/{self.protein_pair_for_analysis.ref_obj.molecule_object}///{from_aa}-{to_aa}/CA"
+            zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
             cmd.select("zoom_sele", zoom_selection)
             cmd.zoom("zoom_sele")
 
@@ -119,6 +119,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
         exporter.parameters()['width'] = 1000  # (note this also affects height parameter)
         exporter.parameters()['height'] = 1440
         # save to file
+        # TODO: save file into xml or png with file dialog
         results_image_path = pathlib.Path(
             f"{self.protein_pair_for_analysis.results_dir}/user_images")
         if not os.path.exists(results_image_path):

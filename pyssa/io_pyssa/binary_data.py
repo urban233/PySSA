@@ -21,6 +21,7 @@
 #
 import typing
 import base64
+import os
 
 if typing.TYPE_CHECKING:
     from pyssa.io_pyssa import path_util
@@ -37,5 +38,10 @@ def create_base64_string_from_file(filepath: 'path_util.FilePath') -> str:
 def write_binary_file_from_base64_string(filepath, base64_data) -> None:
     # Decode base64 string to binary data
     binary_data_export = base64.b64decode(base64_data)
+    # Ensure that the directory exists
+    directory = os.path.dirname(filepath)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
     with open(filepath, 'wb') as f:
         f.write(binary_data_export)

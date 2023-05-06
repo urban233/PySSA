@@ -3073,6 +3073,8 @@ class MainWindow(QMainWindow):
                                         distance_data["ref_resi"], distance_data["model_chain"], distance_data["model_pos"],
                                         distance_data["model_resi"], distance_data["distance"]])
 
+        filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
+        tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
        # distance_data_array = np.array([distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
         #                                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
          #                               distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
@@ -3114,13 +3116,7 @@ class MainWindow(QMainWindow):
         self.ui.list_results_interest_regions.clear()
         for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
             self.ui.list_results_interest_regions.addItem(tmp_filename)
-
-        # try:
-        #     rmsd_file = open(pathlib.Path(f"{current_results_path}/rmsd.json"), "r", encoding="utf-8")
-        # except FileNotFoundError:
-        #     print(f"There is no valid protein pair json file under: {pathlib.Path(f'{current_results_path}')}")
-        #     return
-        # rmsd_dict = json.load(rmsd_file)
+        self.ui.list_results_interest_regions.sortItems()
         self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
         self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
         cmd.reinitialize()
@@ -3341,17 +3337,13 @@ class MainWindow(QMainWindow):
         table_view = Qt.QtWidgets.QTableView()
         table_view.setModel(csv_model)
 
-        # file_path = pathlib.Path(
-        #     f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
-        # path = f"{file_path}/distance_csv/distances.csv"
-
         tmp_protein_pair = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
         csv_filepath = pathlib.Path(f"{constants.CACHE_CSV_DIR}/{tmp_protein_pair.name}.csv")
         if not os.path.exists(constants.CACHE_CSV_DIR):
             os.mkdir(constants.CACHE_CSV_DIR)
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
 
-        distance_data = tmp_protein_pair.distance_analysis.analysis_results.distance_data[0]
+        distance_data = tmp_protein_pair.distance_analysis.analysis_results.distance_data
         distance_data_array = np.array(
             [distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
              distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION],

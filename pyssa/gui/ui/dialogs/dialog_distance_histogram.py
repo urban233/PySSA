@@ -60,8 +60,8 @@ class DialogDistanceHistogram(Qt.QtWidgets.QDialog):
         #         cleaned_line = line.replace("\n", "")
         #         if cleaned_line.split(",")[8] != 'distance':
         #             distance_list.append(float(cleaned_line.split(",")[8]))
-        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data[0]
-        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()
+        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
+        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
         distance_list.sort()
         length = len(distance_list)
         max_distance = distance_list[length - 1]

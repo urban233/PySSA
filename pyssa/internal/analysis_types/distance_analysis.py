@@ -395,38 +395,53 @@ class DistanceAnalysis:
 
         logger.debug(f"Serialization of: {self.name}")
         logger.debug(self.analysis_results)
-        if len(self.distance_analysis_data) == 0:
-            self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
-        else:
-            tmp_results_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_RESULTS)
-            tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_RMSD, str(self.rmsd_dict['rmsd']))
-            tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA, str(self.rmsd_dict['aligned_residues']))
+        # if len(self.distance_analysis_data) == 0:
+        #     self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
+        # else:
+        # tmp_results_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_RESULTS)
 
-            tmp_distance_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS)
-            tmp_index_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_INDEX_LIST)
-            tmp_index_data.text = str(self.distance_analysis_data['index'].tolist())
-            tmp_prot_1_chain_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST)
-            tmp_prot_1_chain_data.text = str(self.distance_analysis_data['ref_chain'].tolist())
-            tmp_prot_1_position_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST)
-            tmp_prot_1_position_data.text = str(self.distance_analysis_data['ref_pos'].tolist())
-            tmp_prot_1_residue_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST)
-            tmp_prot_1_residue_data.text = str(self.distance_analysis_data['ref_resi'].tolist())
-            tmp_prot_2_chain_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST)
-            tmp_prot_2_chain_data.text = str(self.distance_analysis_data['model_chain'].tolist())
-            tmp_prot_2_position_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST)
-            tmp_prot_2_position_data.text = str(self.distance_analysis_data['model_pos'].tolist())
-            tmp_prot_2_residue_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST)
-            tmp_prot_2_residue_data.text = str(self.distance_analysis_data['model_resi'].tolist())
-            tmp_distances_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_DISTANCES_LIST)
-            tmp_distances_data.text = str(self.distance_analysis_data['distance'].tolist())
-
-            tmp_image_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_IMAGES)
-            tmp_image_structure_aln = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE)
-            tmp_image_filename = os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_DIR)
-            tmp_image_structure_aln.text = binary_data.create_base64_string_from_file(path_util.FilePath(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{tmp_image_filename[1]}")))
-            tmp_image_interesting_reg = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS)
-            for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                tmp_image_interesting_reg.text = binary_data.create_base64_string_from_file(path_util.FilePath(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")))
+        self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
+        #
+        # # <editor-fold desc="RMSD and aligned AA">
+        # tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_RMSD, str(self.analysis_results.rmsd))
+        # tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA, str(self.analysis_results.aligned_aa))
+        #
+        # # </editor-fold>
+        #
+        # # <editor-fold desc="Distance hashtable">
+        # tmp_distance_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS)
+        # tmp_index_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_INDEX_LIST)
+        # tmp_index_data.text = str(self.distance_analysis_data['index'].tolist())
+        # tmp_prot_1_chain_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST)
+        # tmp_prot_1_chain_data.text = str(self.distance_analysis_data['ref_chain'].tolist())
+        # tmp_prot_1_position_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST)
+        # tmp_prot_1_position_data.text = str(self.distance_analysis_data['ref_pos'].tolist())
+        # tmp_prot_1_residue_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST)
+        # tmp_prot_1_residue_data.text = str(self.distance_analysis_data['ref_resi'].tolist())
+        # tmp_prot_2_chain_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST)
+        # tmp_prot_2_chain_data.text = str(self.distance_analysis_data['model_chain'].tolist())
+        # tmp_prot_2_position_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST)
+        # tmp_prot_2_position_data.text = str(self.distance_analysis_data['model_pos'].tolist())
+        # tmp_prot_2_residue_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST)
+        # tmp_prot_2_residue_data.text = str(self.distance_analysis_data['model_resi'].tolist())
+        # tmp_distances_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_DISTANCES_LIST)
+        # tmp_distances_data.text = str(self.distance_analysis_data['distance'].tolist())
+        #
+        # # </editor-fold>
+        #
+        # # <editor-fold desc="Images">
+        # tmp_image_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_IMAGES)
+        # tmp_image_structure_aln = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE)
+        # #tmp_image_filename = os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_DIR)
+        # #tmp_image_structure_aln.text = binary_data.create_base64_string_from_file(path_util.FilePath(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{tmp_image_filename[1]}")))
+        # tmp_image_structure_aln.text = self.analysis_results.structure_aln_image
+        # tmp_image_interesting_reg = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS)
+        # for tmp_base64_image in self.analysis_results.interesting_regions_images:
+        #     tmp_image_interesting_reg.text = tmp_base64_image
+        # #for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+        # #    tmp_image_interesting_reg.text = binary_data.create_base64_string_from_file(path_util.FilePath(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")))
+        #
+        # # </editor-fold>
 
         tmp_session_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_SESSION)
         tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, pymol_io.convert_pymol_session_to_base64_string(self.name))
