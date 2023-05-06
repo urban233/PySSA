@@ -251,7 +251,7 @@ logger.addHandler(log_handlers.log_file_handler)
 #     return result_hashtable
 
 
-def calculate_distance_between_ca_atoms(a_count, a_ref_prot_ca, a_model_prot_ca, a_gap_ref, a_gap_model, ref_prot_name, model_prot_name):
+def calculate_distance_between_ca_atoms(a_count, a_ref_prot_ca, a_model_prot_ca, a_gap_ref, a_gap_model, ref_prot_name, model_prot_name) -> dict[str, np.ndarray]:
     index_list = []
     ref_chain_list: [str] = []
     ref_pos_list: [int] = []

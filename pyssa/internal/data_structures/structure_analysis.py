@@ -56,9 +56,9 @@ class Analysis:
             if not os.path.exists(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 os.mkdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
             tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
-                                                                         representation="cartoon")
+                                                                          representation="cartoon")
             tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
-                                                                                f"interesting_reg_{tmp_protein_pair.name}")
+                                                                                 f"interesting_reg_{tmp_protein_pair.name}")
 
             # logger.debug(tmp_protein_pair.distance_analysis.analysis_results)
             self.app_project.add_protein_pair(tmp_protein_pair)
