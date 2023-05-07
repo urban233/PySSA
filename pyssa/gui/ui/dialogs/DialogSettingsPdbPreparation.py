@@ -19,10 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from pymol import Qt
-
-import internal.data_structures.settings
+import pyssa.internal.data_structures.settings
 from pyssa.gui.ui.forms.auto_generated.auto_DialogSettingsPdbPreparation import Ui_Dialog
 
 

@@ -22,8 +22,7 @@
 """Module for all styles related functions"""
 import os
 import pathlib
-
-from util import constants, global_variables
+from pyssa.util import constants, global_variables
 
 
 def color_button_ready(button):

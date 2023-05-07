@@ -36,7 +36,7 @@ path_list = [
 styles_path_list = [
     f"{path_list[0]}/styles/styles_alt.css",
     f"{path_list[1]}/styles/styles_alt.css",
-    pathlib.Path(f"{path_list[2]}/pyssa/gui/styles/styles.css"),
+    pathlib.Path(f"{path_list[2]}/pyssa/gui/ui/styles/styles.css"),
 ]
 # appends the os specific python path
 if sys.platform.startswith("darwin"):

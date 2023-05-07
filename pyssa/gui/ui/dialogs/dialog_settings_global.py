@@ -24,11 +24,10 @@ import subprocess
 import os
 import logging
 import time
-
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
-from internal.data_structures import settings
-from util import constants, gui_utils
-from gui.ui.styles import styles
+from pyssa.internal.data_structures import settings
+from pyssa.util import constants, gui_utils
+from pyssa.gui.ui.styles import styles
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 import PyQt5

@@ -24,10 +24,10 @@ import numpy as np
 from PyQt5.QtGui import QIcon
 from pymol import Qt
 import pyqtgraph as pg
-from internal.data_structures import protein_pair
+from pyssa.internal.data_structures import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_histogram import Ui_Dialog
 from pyssa.util import pyssa_keys
-from util import constants
+from pyssa.util import constants
 from PyQt5 import QtCore
 
 

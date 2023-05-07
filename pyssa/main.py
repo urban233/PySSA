@@ -171,6 +171,12 @@ class MainWindow(QMainWindow):
 
         # </editor-fold>
 
+        self.worker_analysis = workers.AnalysisWorkerPool(
+            self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
+            self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
+        self.worker_analysis.signals.finished.connect(self.post_analysis_process)
+        self.worker_analysis.setAutoDelete(True)
+
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
         self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -2906,13 +2912,11 @@ class MainWindow(QMainWindow):
         #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
         #     self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
         constants.PYSSA_LOGGER.info("Begin analysis process.")
-        worker = workers.AnalysisWorkerPool(
+        self.worker_analysis = workers.AnalysisWorkerPool(
             self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
             self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
-        worker.signals.finished.connect(self.post_analysis_process)
         constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-        self.threadpool.start(worker)
-        worker.setAutoDelete(True)
+        self.threadpool.start(self.worker_analysis)
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 

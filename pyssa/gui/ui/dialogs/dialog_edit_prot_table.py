@@ -21,7 +21,7 @@
 #
 from PyQt5.QtWidgets import QTableWidgetItem
 from pymol import Qt
-from util import input_validator
+from pyssa.util import input_validator
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_edit_prot_table import Ui_Dialog
 
 

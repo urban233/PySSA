@@ -22,8 +22,8 @@
 from pymol import Qt
 
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_advanced_prediction_configurations import Ui_Dialog
-from util import gui_utils
-from internal.data_structures.data_classes import prediction_configuration
+from pyssa.util import gui_utils
+from pyssa.internal.data_structures.data_classes import prediction_configuration
 
 
 class DialogAdvancedPredictionConfigurations(Qt.QtWidgets.QDialog):

@@ -19,11 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from pymol import Qt
 from datetime import datetime
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_notebook_managment import Ui_Dialog
-from util import gui_utils
+from pyssa.util import gui_utils
 
 global_var_startup_workspace = ""
 global_var_terminate_app = 0

@@ -21,7 +21,7 @@
 #
 from pymol import Qt
 
-from util import input_validator, gui_utils
+from pyssa.util import input_validator, gui_utils
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_sequence_monomer import Ui_Dialog
 
 

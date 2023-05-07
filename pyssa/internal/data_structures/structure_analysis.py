@@ -51,33 +51,33 @@ class Analysis:
         logger.debug(self.analysis_list)
         for tmp_protein_pair in self.analysis_list:
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
-            # TODO: Comment back in!!!
-            if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
-                os.mkdir(constants.SCRATCH_DIR_IMAGES)
-            if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR):
-                os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
-            if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
-            tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
-                                                                          representation="cartoon")
-            tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
-                path_util.FilePath(
-                    pathlib.Path(
-                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
-                )
-            )
-            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
-                                                                                 f"interesting_reg_{tmp_protein_pair.name}")
-            interesting_region_filepaths = []
-            for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                interesting_region_filepaths.append(
-                    path_util.FilePath(
-                        pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
-                    )
-                )
-            tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(interesting_region_filepaths)
+            # # TODO: Comment back in!!!
+            # if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
+            #     os.mkdir(constants.SCRATCH_DIR_IMAGES)
+            # if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR):
+            #     os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
+            # if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+            #     os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+            # tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
+            #                                                               representation="cartoon")
+            # tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
+            #     path_util.FilePath(
+            #         pathlib.Path(
+            #             f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
+            #     )
+            # )
+            # tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
+            #                                                                      f"interesting_reg_{tmp_protein_pair.name}")
+            # interesting_region_filepaths = []
+            # for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+            #     interesting_region_filepaths.append(
+            #         path_util.FilePath(
+            #             pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
+            #         )
+            #     )
+            # tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(interesting_region_filepaths)
+            # shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
             self.app_project.add_protein_pair(tmp_protein_pair)
-            shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
         self.analysis_list.clear()
 
 # class StructureAnalysis:

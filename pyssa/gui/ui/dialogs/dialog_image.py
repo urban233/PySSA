@@ -19,11 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from pymol import Qt
-
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_image import Ui_Dialog
-#from PIL import Image
 
 
 class DialogImage(Qt.QtWidgets.QDialog):
