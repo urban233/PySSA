@@ -26,7 +26,7 @@ import pathlib
 import platform
 from datetime import datetime
 from pathlib import Path
-from internal.data_structures import protein, protein_pair
+from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names

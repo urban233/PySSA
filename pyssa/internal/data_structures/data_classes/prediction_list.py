@@ -20,8 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from dataclasses import dataclass
-from util import constants
-from pyssa.logging_pyssa import loggers
+from pyssa.util import constants
 
 
 @dataclass

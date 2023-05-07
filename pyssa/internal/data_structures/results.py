@@ -25,13 +25,13 @@ from xml.etree import ElementTree
 import logging
 import numpy as np
 
-from io_pyssa import path_util
+from pyssa.io_pyssa import path_util
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.util import pyssa_keys
 from pyssa.logging_pyssa import log_handlers
-from util import constants
+from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

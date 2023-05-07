@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for protein_pair operations in pymol"""
-import os
 import pymol
 import logging
 from pymol import cmd

@@ -22,8 +22,8 @@
 """This module is used to handle the project xml file"""
 from xml.etree import ElementTree
 from xml.dom import minidom
-import element_names
-import attribute_names
+from pyssa.io_pyssa.xml_pyssa import element_names
+from pyssa.io_pyssa.xml_pyssa import attribute_names
 
 
 class XmlHandler:

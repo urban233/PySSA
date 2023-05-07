@@ -28,7 +28,7 @@ from pathlib import Path
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
-from util import tools
+from pyssa.util import tools
 
 if typing.TYPE_CHECKING:
     from pyssa.internal.data_structures import project

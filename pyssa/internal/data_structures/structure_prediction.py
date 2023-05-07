@@ -24,7 +24,7 @@ import os
 import pathlib
 import shutil
 import logging
-from internal.data_structures.data_classes import prediction_protein_info
+from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_configuration

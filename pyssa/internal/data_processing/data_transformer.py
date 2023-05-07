@@ -21,7 +21,7 @@
 #
 """This module contains helper functions for specific data transformations."""
 import logging
-from internal.data_structures.data_classes import prediction_protein_info
+from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import sequence
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import analysis_run_info

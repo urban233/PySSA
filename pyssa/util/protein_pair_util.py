@@ -26,8 +26,7 @@ import numpy as np
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
 from pymol import cmd
-
-from util import pyssa_keys
+from pyssa.util import pyssa_keys
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair

@@ -28,7 +28,7 @@ import logging
 import ast
 import numpy as np
 from xml.etree import ElementTree
-from io_pyssa.xml_pyssa import element_names, attribute_names
+from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair

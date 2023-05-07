@@ -36,7 +36,6 @@ from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.util import analysis_util
 from pyssa.util import constants
-from pyssa.io_pyssa import binary_data
 from pyssa.internal.data_structures import results
 
 if TYPE_CHECKING:
@@ -278,11 +277,11 @@ class DistanceAnalysis:
         if take_images is True:
             # check if path exists where the data will be exported,
             # if not the directory will be created
-            if not os.path.exists(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}"):
-                os.mkdir(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}")
+            if not os.path.exists(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}"):
+                os.mkdir(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}")
             # save image as 300 dpi png image
             cmd.ray(2400, 2400, renderer=0)
-            cmd.png(f'{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png',
+            cmd.png(f'{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png',
                     dpi=300)
 
     def take_image_of_interesting_regions(self,
@@ -367,12 +366,12 @@ class DistanceAnalysis:
                     # check if path exists where the data will be exported,
                     # if not the directory will be created
                     if not os.path.exists(
-                           constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                        os.mkdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+                           constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                        os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
                     # save image as 300 dpi png image
                     cmd.ray(2400, 2400, renderer=0)
                     cmd.png(
-                        f'{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{filename}_{ref_pos}.png',
+                        f'{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{filename}_{ref_pos}.png',
                         dpi=300)
                 # hide created labels
                 cmd.hide("labels", atom1)

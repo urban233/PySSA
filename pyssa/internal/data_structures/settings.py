@@ -23,8 +23,8 @@
 import json
 import os
 import pathlib
-from util import constants
-from io_pyssa import safeguard
+from pyssa.util import constants
+from pyssa.io_pyssa import safeguard
 
 
 class Settings:

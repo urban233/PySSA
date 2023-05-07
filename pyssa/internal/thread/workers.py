@@ -20,11 +20,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains worker classes for all processes done in the threadpool"""
+import os
+import shutil
 import subprocess
 import logging
+from pymol import cmd
+import numpy as np
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-from internal.data_structures.data_classes import prediction_protein_info
+from pyssa.internal.data_structures.data_classes import prediction_protein_info
+from pyssa.io_pyssa import filesystem_io
 from pyssa.internal.data_structures import structure_prediction
 from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_processing import data_transformer
@@ -33,6 +38,7 @@ from pyssa.io_pyssa import safeguard
 from pyssa.util import prediction_util
 from pyssa.logging_pyssa import log_handlers
 from typing import TYPE_CHECKING
+from pyssa.util import constants, pyssa_keys
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
@@ -280,3 +286,99 @@ class AnalysisWorkerPool(QtCore.QRunnable):
 
     def __del__(self):
         logger.debug("Worker has been destroyed!")
+
+
+class ResultsWorkerPool(QtCore.QRunnable):
+
+    """
+    the signals to use, for the worker
+    """
+    signals = WorkerSignals()
+
+    def __init__(self, app_project, ui, show_analysis_results_options, show_results_interactions):
+        """Constructor
+
+                Args:
+
+
+                Raises:
+                    ValueError: raised if an argument is illegal
+                """
+        super(ResultsWorkerPool, self).__init__()
+        self.app_project = app_project
+        self.ui = ui
+        self.show_analysis_results_options = show_analysis_results_options
+        self.show_results_interactions = show_results_interactions
+
+    def load_results(self):
+        shutil.rmtree(constants.CACHE_DIR)
+        os.mkdir(constants.CACHE_DIR)
+        os.mkdir(constants.CACHE_IMAGES)
+        self.results_name = self.ui.cb_results_analysis_options.currentText()
+
+        if self.results_name == "":
+            self.show_analysis_results_options()
+            return
+        gui_elements_to_hide = []
+        # TODO: implement image check for xml format
+        # if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
+        #     # no images where made
+        #     gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
+        #     gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
+        #     gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+        #     gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+        #     gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+        # elif os.path.exists(pathlib.Path(f"{current_results_path}/images")):
+        #     if not os.path.exists(pathlib.Path(f"{current_results_path}/images/structure_alignment.png")):
+        #         gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
+        #         gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
+        #     elif not os.path.exists(pathlib.Path(f"{current_results_path}/images/interesting_")):
+        #         gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+        #         gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+        #         gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+
+        tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
+        distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
+        distance_data_array = np.array([distance_data["index"], distance_data["ref_chain"], distance_data["ref_pos"],
+                                        distance_data["ref_resi"], distance_data["model_chain"],
+                                        distance_data["model_pos"],
+                                        distance_data["model_resi"], distance_data["distance"]])
+
+        filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(
+            tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
+        tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
+
+        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
+
+        # check if histogram can be created
+        distance_list.sort()
+        x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
+        if x.size != y.size:
+            x = np.resize(x, (1, y.size))
+        # this conversion is needed for the pyqtgraph library!
+        x = x.tolist()
+        try:
+            x = x[0]
+        except IndexError:
+            # histogram could not be created
+            gui_elements_to_hide.append(self.ui.lbl_results_distance_histogram)
+            gui_elements_to_hide.append(self.ui.btn_view_distance_histogram)
+
+        if gui_elements_to_hide:
+            self.show_results_interactions(gui_elements_to_hide=gui_elements_to_hide)
+        else:
+            self.show_results_interactions()
+
+        self.ui.list_results_interest_regions.clear()
+        for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+            self.ui.list_results_interest_regions.addItem(tmp_filename)
+        self.ui.list_results_interest_regions.sortItems()
+        self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
+        self.ui.txt_results_aligned_residues.setText(
+            str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
+        cmd.reinitialize()
+        tmp_protein_pair.load_pymol_session()
+
+    def run(self):
+        self.load_results()
+        self.signals.finished.emit()

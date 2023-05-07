@@ -22,7 +22,7 @@
 """Module for the input validator class"""
 from pymol import Qt
 from PyQt5 import QtGui
-from gui.ui.styles import styles
+from pyssa.gui.ui.styles import styles
 
 
 class InputValidator:

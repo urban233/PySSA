@@ -33,8 +33,8 @@ import pymol
 import csv
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.dialogs import dialog_startup
-from util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
-from gui.ui.styles import styles
+from pyssa.util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
+from pyssa.gui.ui.styles import styles
 from PyQt5.QtGui import QIcon
 from pymol import Qt
 from pymol import cmd
@@ -45,8 +45,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from internal.thread import workers
-from internal.data_processing import data_transformer
+from pyssa.internal.thread import workers
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import filesystem_io
 from pyssa.gui.ui.dialogs import dialog_distance_plot
@@ -60,7 +59,6 @@ from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import project_watcher
 from pyssa.internal.data_structures import settings
-from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
 from pyssa.io_pyssa.xml_pyssa import element_names
@@ -3040,15 +3038,29 @@ class MainWindow(QMainWindow):
                                                                   self.ui.lbl_results_analysis_options,
                                                                   self.ui.cb_results_analysis_options])
 
+    def post_load_results(self):
+        print("Results were loaded.")
+
     def load_results(self):
         shutil.rmtree(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_IMAGES)
         self.results_name = self.ui.cb_results_analysis_options.currentText()
-
         if self.results_name == "":
             self.show_analysis_results_options()
             return
+
+        # <editor-fold desc="Worker variant">
+        # worker = workers.ResultsWorkerPool(
+        #    self.app_project, self.ui, self.show_analysis_results_options, self.show_results_interactions
+        # )
+        # worker.signals.finished.connect(self.post_load_results)
+        # self.threadpool.start(worker)
+        # print("Worker started.")
+        #
+        # </editor-fold>
+
+        # <editor-fold desc="Main Thread variant">
         gui_elements_to_hide = []
         # TODO: implement image check for xml format
         # if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
@@ -3068,33 +3080,18 @@ class MainWindow(QMainWindow):
         #         gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
 
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
-        distance_data: dict[str, np.ndarray]= tmp_protein_pair.distance_analysis.analysis_results.distance_data
+        distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
         distance_data_array = np.array([distance_data["index"], distance_data["ref_chain"], distance_data["ref_pos"],
                                         distance_data["ref_resi"], distance_data["model_chain"], distance_data["model_pos"],
                                         distance_data["model_resi"], distance_data["distance"]])
 
         filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
         tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
-       # distance_data_array = np.array([distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
-        #                                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
-         #                               distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
-          #                              distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI], distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]])
-        distance_data_array_transpose = distance_data_array.transpose()
-        distance_list = []
-        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()
+
+        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
 
 
         # check if histogram can be created
-        # # read csv file
-        # file_path = pathlib.Path(
-        #     f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
-        # path = f"{file_path}/distance_csv/distances.csv"
-        # with open(path, 'r', encoding="utf-8") as csv_file:
-        #     i = 0
-        #     for line in csv_file:
-        #         cleaned_line = line.replace("\n", "")
-        #         if cleaned_line.split(",")[8] != 'distance':
-        #             distance_list.append(float(cleaned_line.split(",")[8]))
         distance_list.sort()
         x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
         if x.size != y.size:
@@ -3121,6 +3118,8 @@ class MainWindow(QMainWindow):
         self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
+
+        # </editor-fold>
 
     def change_interesting_regions(self):
         """This function is used to switch between projects within a job.
@@ -3180,47 +3179,6 @@ class MainWindow(QMainWindow):
         dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
         dialog.exec_()
 
-        # item = self.ui.project_list.selectedItems()
-        # if item is None:
-        #     raise ValueError
-
-        # # plot_dialog = Qt.QtWidgets.QDialog(self)
-        # plot_dialog_layout = QHBoxLayout()
-        # graph_widget = pg.PlotWidget()
-        #
-        # # read csv file
-        # file_path = f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results"
-        # model_name = self.ui.lbl_current_project_name.text()
-        #
-        # path = f"{file_path}/distance_csv/distances.csv"
-        # distance_list = []
-        # cutoff_line = []
-        # with open(path, 'r', encoding="utf-8") as csv_file:
-        #     for line in csv_file:
-        #         cleaned_line = line.replace("\n", "")
-        #         if cleaned_line.split(",")[8] != 'distance':
-        #             distance_list.append(float(cleaned_line.split(",")[8]))
-        #             cutoff_line.append(global_variables.global_var_settings_obj.get_cutoff())
-        # # creates actual distance plot line
-        # graph_widget.plotItem.plot(distance_list, pen=pg.mkPen(color="#4B91F7", width=6),
-        #                            symbol="o", symbolSize=10, symbolBrush=('b'))
-        # self.view_box = graph_widget.plotItem.getViewBox()
-        # self.view_box.setRange(xRange=[23, 40])
-        # # creates cutoff line
-        # graph_widget.plotItem.plot(cutoff_line, pen=pg.mkPen(color="#f83021", width=6))
-        # # styling the plot
-        # graph_widget.setBackground('w')
-        # graph_widget.setTitle(f"Distance Plot of {model_name}", size="23pt")
-        # styles = {'font-size': '14px'}
-        # ax_label_y = "Distance in Å"
-        # graph_widget.setLabel('left', ax_label_y, **styles)
-        # graph_widget.setLabel('bottom', "Residue pair no.", **styles)
-        # graph_widget.plotItem.showGrid(x=True, y=True)
-        # plot_dialog_layout.addWidget(graph_widget)
-        # self.plot_dialog.setLayout(plot_dialog_layout)
-        # self.plot_dialog.setWindowTitle("Distance Plot")
-        # self.plot_dialog.show()
-
     def display_distance_histogram(self):
         """This function opens a window which displays the distance histogram.
 
@@ -3232,75 +3190,6 @@ class MainWindow(QMainWindow):
             self.ui.cb_results_analysis_options.currentText())
         dialog = dialog_distance_histogram.DialogDistanceHistogram(protein_pair_of_analysis)
         dialog.exec_()
-
-        # plot_dialog = Qt.QtWidgets.QDialog(self)
-        # plot_dialog_layout = QHBoxLayout()
-        # graph_widget = pg.PlotWidget()
-        # view_box = graph_widget.plotItem.getViewBox()
-        # # read csv file
-        # path = pathlib.Path(f"{protein_pair_of_analysis.results_dir}/distance_csv/distances.csv")
-        # distance_list = []
-        # with open(path, 'r', encoding="utf-8") as csv_file:
-        #     i = 0
-        #     for line in csv_file:
-        #         cleaned_line = line.replace("\n", "")
-        #         if cleaned_line.split(",")[8] != 'distance':
-        #             distance_list.append(float(cleaned_line.split(",")[8]))
-        # distance_list.sort()
-        # length = len(distance_list)
-        # max_distance = distance_list[length-1]
-        # x, y = np.histogram(distance_list, bins=np.arange(0, max_distance, 0.25))
-        #
-        # if x.size != y.size:
-        #     x = np.resize(x, (1, y.size))
-        # # this conversion is needed for the pyqtgraph library!
-        # x = x.tolist()
-        # try:
-        #     x = x[0]
-        # except IndexError:
-        #     # Error got raised where the distances where all 0
-        #     tools.quick_log_and_display("error", "The histogram could not be created.",
-        #                                 self.status_bar, "The histogram could not be created. "
-        #                                                  " Check the distance table!")
-        #     return
-        #
-        # y = y.tolist()
-        # color = Qt.QtGui.QColor.fromRgb(255, 128, 128)
-        # # creates bar chart item
-        # graph_bar_item = pg.BarGraphItem(x0=0, y=y, height=0.2, width=x,
-        #                                  pen=pg.mkPen(color="#4B91F7"), brush=pg.mkBrush(color="#4B91F7"))
-        # # creates y-labels for bar chart
-        # y_labels = []
-        # for i in range(len(y)):
-        #     try:
-        #         label = f"{y[i]} - {y[i+1]}"
-        #     except IndexError:
-        #         # detects if a last label is necessary
-        #         label = f"{y[i]} - {y[i]+0.25}"
-        #     y_labels.append(label)
-        # y_values = y
-        # ticks = []
-        # for i, item in enumerate(y_labels):
-        #     ticks.append((y_values[i], item))
-        # ticks = [ticks]
-        #
-        # # styling the plot
-        # graph_widget.setBackground('w')
-        # graph_widget.setTitle(f"Distance Histogram of {protein_pair_of_analysis.name}", size="23pt")
-        # styles = {'font-size': '14px'}
-        # ax_label_x = "Distance in Å"
-        # graph_widget.setLabel('left', ax_label_x, **styles)
-        # graph_widget.setLabel('bottom', "Frequency of α-C atoms distance", **styles)
-        # graph_widget.addItem(graph_bar_item)
-        # bar_ax = graph_widget.getAxis('left')
-        # bar_ax.setTicks(ticks)
-        # view_box.invertY(True)
-        # text = pg.TextItem(text='', border='w', fill=(0, 0, 255, 100), anchor=(0, 0))
-        # graph_widget.addItem(text)
-        # plot_dialog_layout.addWidget(graph_widget)
-        # plot_dialog.setLayout(plot_dialog_layout)
-        # plot_dialog.setWindowTitle("Distance Histogram")
-        # plot_dialog.show()
 
     def display_interesting_region(self):
         """This function displays an image of an interesting region.
