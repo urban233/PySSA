@@ -31,6 +31,8 @@ import PyQt5.QtCore
 import numpy as np
 import pymol
 import csv
+from pyssa.internal.data_structures.data_classes import current_session
+from pyssa.internal.portal import pymol_io
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
@@ -146,6 +148,8 @@ class MainWindow(QMainWindow):
         self.no_of_selected_chains = 0
         self.plot_dialog = Qt.QtWidgets.QDialog(self)
         self.view_box = None
+        # type, name, session
+        self.current_session = current_session.CurrentSession("", "", "")
 
         # </editor-fold>
 
@@ -1638,14 +1642,21 @@ class MainWindow(QMainWindow):
         # dialog.exec_()
 
     def view_structure(self):
+
         protein_name = self.ui.list_view_project_proteins.currentItem().text()
-        # TODO: ask if the session should be saved
+        session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
+                                            QMessageBox.Information)
+        if session_msg is True:
+            self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
+            self.app_project.save_pymol_session(self.current_session)
         cmd.reinitialize()
         try:
             self.app_project.search_protein(protein_name).load_protein_pymol_session()
             constants.PYSSA_LOGGER.info("Loaded PyMOL session of protein %s", protein_name)
         except pymol.CmdException:
             constants.PYSSA_LOGGER.error("Error while loading protein in PyMOL!")
+            return
+        self.current_session = current_session.CurrentSession("protein", protein_name, self.app_project.search_protein(protein_name).load_protein_pymol_session())
 
     # </editor-fold>
 
@@ -3053,6 +3064,11 @@ class MainWindow(QMainWindow):
         if self.results_name == "":
             self.show_analysis_results_options()
             return
+        session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
+                                            QMessageBox.Information)
+        if session_msg is True:
+            self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
+            self.app_project.save_pymol_session(self.current_session)
 
         # <editor-fold desc="Worker variant">
         # worker = workers.ResultsWorkerPool(
@@ -3122,6 +3138,7 @@ class MainWindow(QMainWindow):
         self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
+        self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
 
         # </editor-fold>
 

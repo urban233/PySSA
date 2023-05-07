@@ -111,7 +111,7 @@ class ProteinPair:
         """This function loads the existing pymol session of the pair.
 
         """
-        session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}.pse")
+        session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}_session.pse")
         if not os.path.exists(constants.CACHE_PYMOL_SESSION_DIR):
             os.mkdir(constants.CACHE_PYMOL_SESSION_DIR)
         binary_data.write_binary_file_from_base64_string(filepath=session_filepath, base64_data=self.pymol_session)

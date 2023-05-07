@@ -34,7 +34,10 @@ from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.util import constants
 from xml.etree import ElementTree
 from xml.dom import minidom
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures.data_classes import current_session
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -235,6 +238,14 @@ class Project:
             if tmp_protein_pair.name == protein_pair_name:
                 return tmp_protein_pair
         print(f"No matching protein with the name {protein_pair_name} found.")
+
+    def save_pymol_session(self, current_session: 'current_session.CurrentSession'):
+        if current_session.type == "protein":
+            tmp_protein = self.search_protein(current_session.name)
+            tmp_protein.pymol_session = current_session.session
+        elif current_session.type == "protein_pair":
+            tmp_protein_pair = self.search_protein_pair(current_session.name)
+            tmp_protein_pair.pymol_session = current_session.session
 
     def get_specific_protein_pair(self, protein_pair_name):
         """This function gets a specific protein_pair by name from the project

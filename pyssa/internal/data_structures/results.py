@@ -101,14 +101,14 @@ class DistanceAnalysisResults:
         # </editor-fold>
 
         # <editor-fold desc="Images">
-        # tmp_image_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_IMAGES)
-        # tmp_image_structure_aln = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE)
-        # tmp_image_structure_aln.set(attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME, self.structure_aln_image[0])
-        # tmp_image_structure_aln.text = self.structure_aln_image[1]
-        # for tmp_base64_image in self.interesting_regions_images:
-        #     tmp_image_interesting_reg = ElementTree.SubElement(tmp_image_data,
-        #                                                        element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS)
-        #     tmp_image_interesting_reg.set(attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME, tmp_base64_image[0])
-        #     tmp_image_interesting_reg.text = tmp_base64_image[1]
+        tmp_image_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_IMAGES)
+        tmp_image_structure_aln = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE)
+        tmp_image_structure_aln.set(attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME, self.structure_aln_image[0])
+        tmp_image_structure_aln.text = self.structure_aln_image[1]
+        for tmp_base64_image in self.interesting_regions_images:
+            tmp_image_interesting_reg = ElementTree.SubElement(tmp_image_data,
+                                                               element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS)
+            tmp_image_interesting_reg.set(attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME, tmp_base64_image[0])
+            tmp_image_interesting_reg.text = tmp_base64_image[1]
 
         # </editor-fold>
