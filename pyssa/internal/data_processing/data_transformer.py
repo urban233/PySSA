@@ -241,7 +241,7 @@ class DistanceAnalysisDataTransformer:
 
     def _create_proteins_for_analysis(self):
         protein_1: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_1())
-
+        logger.debug(protein_1.chains)
         if self.analysis_run.are_protein_names_identical():
             protein_2: protein.Protein = protein_1.duplicate_protein()
             protein_1: protein.Protein = protein_2.duplicate_protein()
@@ -253,7 +253,7 @@ class DistanceAnalysisDataTransformer:
 
     def _create_analysis_name(self):
         if len(self.proteins[0].chains) != 0:
-            analysis_name = f"{self.proteins[0].get_molecule_object()};{self.analysis_run.protein_chains_1}_vs_{self.proteins[1].get_molecule_object()};{self.analysis_run.protein_chains_1}"
+            analysis_name = f"{self.proteins[0].get_molecule_object()};{self.analysis_run.protein_chains_1}_vs_{self.proteins[1].get_molecule_object()};{self.analysis_run.protein_chains_2}"
             analysis_name = analysis_name.replace(";", "_")
             analysis_name = analysis_name.replace(",", "_")
             analysis_name = analysis_name.replace("[", "")
@@ -265,6 +265,7 @@ class DistanceAnalysisDataTransformer:
 
     def _create_protein_pair(self):
         self.analysis_protein_pair = protein_pair.ProteinPair(self.proteins[0], self.proteins[1])
+        self.analysis_protein_pair.name = self._create_analysis_name()
 
     def _create_distance_analysis(self):
         self.analysis_protein_pair.set_distance_analysis(distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings))
@@ -280,7 +281,6 @@ class DistanceAnalysisDataTransformer:
     def transform_gui_input_to_distance_analysis_object(self):
         self._create_analysis_run_info()
         self._create_proteins_for_analysis()
-        self._create_analysis_name()
         self._create_protein_pair()
         self._create_distance_analysis()
         self._set_selection_for_analysis()

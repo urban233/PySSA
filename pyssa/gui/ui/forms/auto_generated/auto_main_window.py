@@ -2890,7 +2890,7 @@ class Ui_MainWindow(object):
         self.btn_analysis_batch_remove.setText(_translate("MainWindow", "Remove"))
         self.btn_analysis_batch_add.setText(_translate("MainWindow", "Add"))
         self.lbl_analysis_batch_prot_struct_1.setText(_translate("MainWindow", "Protein structure 1"))
-        self.lbl_analysis_batch_vs.setText(_translate("MainWindow", "_"))
+        self.lbl_analysis_batch_vs.setText(_translate("MainWindow", "vs."))
         self.lbl_analysis_batch_prot_struct_2.setText(_translate("MainWindow", "Protein structure 2"))
         self.btn_analysis_batch_back.setText(_translate("MainWindow", "Back"))
         self.btn_analysis_batch_next.setText(_translate("MainWindow", "Next"))
