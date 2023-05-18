@@ -268,7 +268,7 @@ class AnalysisWorkerPool(QtCore.QRunnable):
         return analysis_runs
 
     def run_analysis(self) -> None:
-        self.set_up_analysis_runs().run_analysis()
+        self.set_up_analysis_runs().run_analysis(self.cb_analysis_images)
 
     def run(self):
         """This function is a reimplementation of the QRunnable run method.
