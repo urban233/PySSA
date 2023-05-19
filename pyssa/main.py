@@ -549,9 +549,9 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
         self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
         self.ui.btn_prediction_abort.clicked.connect(self.abort_prediction)
-        #self.ui.btn_prediction_page.clicked.connect(self.display_sequence_vs_pdb_page)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
         self.ui.btn_batch_analysis_page.clicked.connect(self.display_job_analysis_page)
+        self.ui.btn_image_analysis_page.clicked.connect(self.display_image_analysis_page)
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
         self.ui.btn_analysis_abort.clicked.connect(self.abort_analysis)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
@@ -1005,6 +1005,13 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_results_page)
         self.show_analysis_results_options()
 
+    def display_image_analysis_page(self):
+        """This function displays the analysis image work area
+
+        """
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_image_analysis_page)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 23, "Analysis Images")
 
     def display_image_page(self):
         """This function displays the image work area
@@ -2938,6 +2945,10 @@ class MainWindow(QMainWindow):
             self.ui.btn_use_page,
             self.ui.btn_close_project,
             self.ui.btn_batch_analysis_page,
+            self.ui.btn_results_page,
+            self.ui.lbl_handle_pymol_session,
+            self.ui.btn_image_page,
+            self.ui.btn_hotspots_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
@@ -3031,11 +3042,17 @@ class MainWindow(QMainWindow):
         # job.create_xml_file()
 
     def abort_analysis(self):
-        print(self._thread_controller.get_all_running_threads()[0].main_task)
+        # TODO: abort analysis does not work!
+        self.worker_analysis.__del__()
+        basic_boxes.ok("Abort structure analysis", "The structure analysis was aborted.", QMessageBox.Information)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_analysis_abort)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_analysis_abort)
 
     # </editor-fold>
+
+
 
     # <editor-fold desc="Results page functions">
     def show_analysis_results_options(self):

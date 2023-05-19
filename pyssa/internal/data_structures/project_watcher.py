@@ -40,10 +40,12 @@ class ProjectWatcher:
                  current_project: project.Project,
                  no_of_pdb_files=0,
                  no_of_results=0,
+                 no_of_images=0
                  ):
         self.current_project: project.Project = current_project
         self.no_of_pdb_files: int = no_of_pdb_files
         self.no_of_results: int = no_of_results
+        self.no_of_images: int = no_of_images
         self.on_home_page: bool = True
 
     def show_valid_options(self, ui):
@@ -58,18 +60,21 @@ class ProjectWatcher:
         """
         self.count_proteins_in_project()
         self.count_results()
+        self.count_images()
 
         if self.no_of_pdb_files is None:
             gui_elements_to_show = [
                 ui.btn_new_page,
                 ui.btn_open_page,
                 ui.btn_delete_page,
+                ui.btn_import_project,
             ]
             gui_elements_to_hide = [
                 ui.btn_close_project,
                 ui.btn_save_project,
                 ui.btn_view_page,
                 ui.btn_use_page,
+                ui.btn_export_project,
                 ui.btn_edit_page,
                 ui.btn_hotspots_page,
                 ui.lbl_pred_cloud,
@@ -86,6 +91,7 @@ class ProjectWatcher:
                 ui.lbl_analysis,
                 ui.btn_single_analysis_page,
                 ui.btn_batch_analysis_page,
+                ui.btn_image_analysis_page,
                 ui.lbl_pred_analysis,
                 ui.btn_pred_analysis_monomer_page,
                 ui.btn_pred_analysis_multimer_page,
@@ -110,6 +116,8 @@ class ProjectWatcher:
                 ui.btn_new_page,
                 ui.btn_open_page,
                 ui.btn_delete_page,
+                ui.btn_import_project,
+                ui.btn_export_project,
                 ui.lbl_pred_cloud,
                 ui.btn_pred_cloud_monomer_page,
                 ui.btn_pred_cloud_multimer_page,
@@ -121,6 +129,7 @@ class ProjectWatcher:
                 ui.lbl_analysis,
                 ui.btn_single_analysis_page,
                 ui.btn_batch_analysis_page,
+                ui.btn_image_analysis_page,
                 ui.btn_results_page,
                 ui.btn_analysis_abort,
                 ui.lbl_pred_analysis,
@@ -136,6 +145,7 @@ class ProjectWatcher:
                 ui.btn_close_project,
                 ui.btn_save_project,
                 ui.btn_use_page,
+                ui.btn_export_project,
                 ui.btn_edit_page,
                 ui.btn_view_page,
                 ui.lbl_pred_analysis,
@@ -149,6 +159,7 @@ class ProjectWatcher:
                 ui.btn_new_page,
                 ui.btn_open_page,
                 ui.btn_delete_page,
+                ui.btn_import_project,
                 ui.btn_pred_cloud_monomer_page,
                 ui.btn_pred_cloud_multimer_page,
                 ui.btn_pred_local_monomer_page,
@@ -157,6 +168,7 @@ class ProjectWatcher:
                 ui.lbl_analysis,
                 ui.btn_single_analysis_page,
                 ui.btn_batch_analysis_page,
+                ui.btn_image_analysis_page,
                 ui.btn_results_page,
                 ui.btn_analysis_abort,
                 ui.lbl_pred_cloud,
@@ -167,45 +179,12 @@ class ProjectWatcher:
                 ui.btn_pred_local_multimer_vs_pdb_page,
             ]
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        # elif self.no_of_pdb_files == 2:
-        #     gui_elements_to_show = [
-        #         ui.btn_close_project,
-        #         ui.btn_save_project,
-        #         ui.btn_use_page,
-        #         ui.btn_edit_page,
-        #         ui.btn_view_page,
-        #         ui.lbl_analysis,
-        #         ui.btn_single_analysis_page,
-        #         ui.lbl_handle_pymol_session,
-        #         ui.btn_image_page,
-        #     ]
-        #     gui_elements_to_hide = [
-        #         ui.btn_new_page,
-        #         ui.btn_open_page,
-        #         ui.btn_delete_page,
-        #         ui.lbl_pred_cloud,
-        #         ui.btn_pred_cloud_monomer_page,
-        #         ui.btn_pred_cloud_monomer_vs_pdb_page,
-        #         ui.btn_pred_cloud_multimer_page,
-        #         ui.btn_pred_cloud_multimer_vs_pdb_page,
-        #         ui.lbl_pred_local,
-        #         ui.btn_pred_local_monomer_vs_pdb_page,
-        #         ui.btn_pred_local_multimer_vs_pdb_page,
-        #         ui.btn_pred_local_monomer_page,
-        #         ui.btn_pred_local_multimer_page,
-        #         ui.btn_batch_analysis_page,
-        #         ui.btn_hotspots_page,
-        #     ]
-        #     if self.no_of_results > 0:
-        #         gui_elements_to_show.append(ui.btn_results_page)
-        #     else:
-        #         gui_elements_to_hide.append(ui.btn_results_page)
-        #     gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
         elif self.no_of_pdb_files >= 2:
             gui_elements_to_show = [
                 ui.btn_close_project,
                 ui.btn_save_project,
                 ui.btn_use_page,
+                ui.btn_export_project,
                 ui.btn_edit_page,
                 ui.btn_view_page,
                 ui.lbl_analysis,
@@ -218,6 +197,7 @@ class ProjectWatcher:
                 ui.btn_new_page,
                 ui.btn_open_page,
                 ui.btn_delete_page,
+                ui.btn_import_project,
                 ui.btn_single_analysis_page,
                 ui.lbl_pred_cloud,
                 ui.btn_pred_cloud_monomer_page,
@@ -239,6 +219,10 @@ class ProjectWatcher:
                 gui_elements_to_show.append(ui.btn_results_page)
             else:
                 gui_elements_to_hide.append(ui.btn_results_page)
+            if self.no_of_images > 0:
+                gui_elements_to_hide.append(ui.btn_image_analysis_page)
+            else:
+                gui_elements_to_show.append(ui.btn_image_analysis_page)
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
     def count_proteins_in_project(self):
@@ -249,7 +233,6 @@ class ProjectWatcher:
         """
         if not self.on_home_page:
             self.no_of_pdb_files = len(self.current_project.proteins)
-            #self.no_of_pdb_files = len(project_util.get_all_pdb_filepaths_from_project(self.current_project))
         else:
             self.no_of_pdb_files = None
 
@@ -263,3 +246,18 @@ class ProjectWatcher:
             self.no_of_results = len(self.current_project.protein_pairs)
         else:
             self.no_of_results = None
+
+    def count_images(self):
+        """This function counts the number of images in the project
+
+        Notes:
+            You do NOT need to use this function before using "show_valid_options"!!
+        """
+        if not self.on_home_page:
+            no_of_protein_pair_with_images = 0
+            for tmp_protein_pair in self.current_project.protein_pairs:
+                if len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) > 0:
+                    no_of_protein_pair_with_images += 1
+            self.no_of_images = no_of_protein_pair_with_images
+        else:
+            self.no_of_images = None

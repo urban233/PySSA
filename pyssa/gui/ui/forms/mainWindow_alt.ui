@@ -182,8 +182,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>163</width>
-                  <height>758</height>
+                  <width>146</width>
+                  <height>770</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_115">
@@ -242,6 +242,13 @@
                     </widget>
                    </item>
                    <item>
+                    <widget class="QPushButton" name="btn_import_project">
+                     <property name="text">
+                      <string>Import</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
                     <widget class="QPushButton" name="btn_save_project">
                      <property name="text">
                       <string>Save</string>
@@ -266,6 +273,13 @@
                     <widget class="QPushButton" name="btn_use_page">
                      <property name="text">
                       <string>Use</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_export_project">
+                     <property name="text">
+                      <string>Export</string>
                      </property>
                     </widget>
                    </item>
@@ -453,6 +467,13 @@
                      </property>
                      <property name="text">
                       <string>Results</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_image_analysis_page">
+                     <property name="text">
+                      <string>Analysis Images</string>
                      </property>
                     </widget>
                    </item>
@@ -6662,6 +6683,125 @@
                  </layout>
                 </widget>
                </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_8">
+             <layout class="QVBoxLayout" name="verticalLayout_140">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_138">
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_139">
+                  <item>
+                   <widget class="QLabel" name="lbl_analysis_images_struct_analysis">
+                    <property name="text">
+                     <string>Protein structure analysis'</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QListWidget" name="list_analysis_images_struct_analysis"/>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_104">
+                  <item>
+                   <spacer name="horizontalSpacer_94">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_add_analysis_images_struct_analysis">
+                    <property name="text">
+                     <string>Add</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_136">
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_137">
+                  <item>
+                   <widget class="QLabel" name="lbl_analysis_images_creation_struct_analysis">
+                    <property name="text">
+                     <string>Protein structure analysis' for image creation</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QListWidget" name="list_analysis_images_creation_struct_analysis"/>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_103">
+                  <item>
+                   <spacer name="horizontalSpacer_93">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_remove_analysis_images_creation_struct_analysis">
+                    <property name="text">
+                     <string>Remove</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_102">
+                <item>
+                 <widget class="QLabel" name="lbl_automatic_image_creation">
+                  <property name="text">
+                   <string>Automatic image creation</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_80">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_start_automatic_image_creation">
+                  <property name="text">
+                   <string>Start</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </widget>
