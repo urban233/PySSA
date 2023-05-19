@@ -24,12 +24,12 @@ import os
 import shutil
 import subprocess
 import logging
+import pathlib
 from pymol import cmd
-import numpy as np
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
-from pyssa.io_pyssa import filesystem_io
+from pyssa.io_pyssa import path_util
 from pyssa.internal.data_structures import structure_prediction
 from pyssa.internal.data_structures import structure_analysis
 from pyssa.internal.data_processing import data_transformer
@@ -38,7 +38,7 @@ from pyssa.io_pyssa import safeguard
 from pyssa.util import prediction_util
 from pyssa.logging_pyssa import log_handlers
 from typing import TYPE_CHECKING
-from pyssa.util import constants, pyssa_keys
+from pyssa.util import constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
@@ -299,11 +299,11 @@ class BatchImageWorkerPool(QtCore.QRunnable):
     """
     the list where all analysis runs are stored
     """
-    list_analysis_overview: QtWidgets.QListWidget
+    list_analysis_images: QtWidgets.QListWidget
     """
-    the checkbox if images should be taken or not
+    the list where all analysis runs are stored for which images should be created
     """
-    cb_analysis_images: QtWidgets.QCheckBox
+    list_analysis_for_image_creation_overview: QtWidgets.QListWidget
     """
     the status bar of the main window
     """
@@ -325,23 +325,20 @@ class BatchImageWorkerPool(QtCore.QRunnable):
 
     def __init__(self,
                  list_analysis_images: QtWidgets.QListWidget,
+                 list_analysis_for_image_creation_overview: QtWidgets.QListWidget,
                  status_bar: QtWidgets.QStatusBar,
                  app_project: 'project.Project') -> None:
         """Constructor
 
         Args:
-            list_analysis_overview:
+            list_analysis_images:
                 list where all analysis runs are stored
-            cb_analysis_images:
-                checkbox which controls whether images should be created or not
             status_bar:
                 status bar object of the main window
             app_project:
                 project of the main window
             app_settings:
                 settings of the main window
-            _init_batch_analysis_page:
-                function which clears the page, without parenthesis!!!
 
         Raises:
             ValueError: raised if an argument is illegal
@@ -358,9 +355,47 @@ class BatchImageWorkerPool(QtCore.QRunnable):
         # </editor-fold>
 
         self.list_analysis_images = list_analysis_images
+        self.list_analysis_for_image_creation_overview = list_analysis_for_image_creation_overview
         self.status_bar = status_bar
         self.app_project = app_project
 
+    def run(self):
+        for i in range(self.list_analysis_for_image_creation_overview.count()):
+            tmp_protein_pair = self.app_project.search_protein_pair(self.list_analysis_for_image_creation_overview.item(i).text())
+            cmd.reinitialize()
+            tmp_protein_pair.load_pymol_session()
+            if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
+                os.mkdir(constants.SCRATCH_DIR_IMAGES)
+            if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR):
+                os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
+            if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+            tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
+                filename=f"structure_aln_{tmp_protein_pair.name}",
+                representation="cartoon")
+            tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
+                path_util.FilePath(
+                    pathlib.Path(
+                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
+                )
+            )
+            logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
+            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
+                tmp_protein_pair.distance_analysis.cutoff,
+                f"interesting_reg_{tmp_protein_pair.name}")
+            interesting_region_filepaths = []
+            for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                interesting_region_filepaths.append(
+                    path_util.FilePath(
+                        pathlib.Path(
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
+                    )
+                )
+            tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
+                interesting_region_filepaths)
+            shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
+            # emit finish signal
+            self.signals.finished.emit()
 
 # class ResultsWorkerPool(QtCore.QRunnable):
 #

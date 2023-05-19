@@ -242,11 +242,6 @@ class DistanceAnalysis:
         Raises:
             ValueError: If opaque_background is not 0 or 1.
         """
-        # argument test
-        # if opaque_background != 0 or opaque_background != 1:
-        #     raise Exception(
-        #         "ValueError: The value for opaque_background MUST be 0 or 1!")
-
         # determine the option for ray_shadows
         if not ray_shadows:
             opt_ray_shadows: str = "off"
@@ -260,7 +255,7 @@ class DistanceAnalysis:
             cmd.hide(representation, selection)
 
         aln_obj_representation: str = "cgo"
-        cmd.hide(aln_obj_representation, self.alignment_file_name)
+        cmd.hide(aln_obj_representation, "all")
         cmd.orient()
         cmd.center()
         # set image parameters

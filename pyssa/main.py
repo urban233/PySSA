@@ -181,6 +181,12 @@ class MainWindow(QMainWindow):
         self.worker_analysis.signals.finished.connect(self.post_analysis_process)
         self.worker_analysis.setAutoDelete(True)
 
+        self.worker_image_creation = workers.BatchImageWorkerPool(
+            self.ui.list_analysis_images_struct_analysis, self.ui.list_analysis_images_creation_struct_analysis,
+            self.status_bar, self.app_project)
+        self.worker_image_creation.signals.finished.connect(self.post_image_creation_process)
+        self.worker_image_creation.setAutoDelete(True)
+
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
         self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -658,6 +664,12 @@ class MainWindow(QMainWindow):
         self.ui.list_analysis_batch_ref_chains.itemSelectionChanged.connect(self.count_batch_selected_chains_for_prot_struct_1)
         self.ui.list_analysis_batch_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected_batch)
         self.ui.btn_analysis_batch_start.clicked.connect(self.start_process_batch)
+        # analysis images
+        self.ui.btn_add_analysis_images_struct_analysis.clicked.connect(self.add_protein_pair_to_image_creation_queue)
+        self.ui.list_analysis_images_struct_analysis.doubleClicked.connect(self.add_protein_pair_to_image_creation_queue)
+        self.ui.btn_remove_analysis_images_creation_struct_analysis.clicked.connect(self.remove_protein_pair_from_image_creation_queue)
+        self.ui.list_analysis_images_creation_struct_analysis.doubleClicked.connect(self.remove_protein_pair_from_image_creation_queue)
+        self.ui.btn_start_automatic_image_creation.clicked.connect(self.start_automatic_image_creation)
         # results page
         self.ui.cb_results_analysis_options.currentIndexChanged.connect(self.load_results)
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
@@ -906,6 +918,11 @@ class MainWindow(QMainWindow):
         self.ui.txt_results_rmsd.clear()
         self.ui.txt_results_aligned_residues.clear()
 
+    def _init_analysis_image_page(self):
+        self.ui.list_analysis_images_struct_analysis.setEnabled(True)
+        self.ui.list_analysis_images_creation_struct_analysis.setEnabled(True)
+        self.display_image_analysis_page()
+
     def _init_image_page(self):
         """This function clears all text fields and hides everything which is needed
 
@@ -930,6 +947,7 @@ class MainWindow(QMainWindow):
         self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_batch_analysis_page()
+        self._init_analysis_image_page()
         self._init_results_page()
         self._init_image_page()
 
@@ -1009,6 +1027,11 @@ class MainWindow(QMainWindow):
         """This function displays the analysis image work area
 
         """
+        # get all protein pairs without images
+        self.ui.list_analysis_images_struct_analysis.clear()
+        for tmp_protein_pair in self.app_project.protein_pairs:
+            if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
+                self.ui.list_analysis_images_struct_analysis.addItem(tmp_protein_pair.name)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_image_analysis_page)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 23, "Analysis Images")
@@ -2827,7 +2850,6 @@ class MainWindow(QMainWindow):
             self.ui.list_analysis_batch_overview.addItem(item)
 
     def fill_protein_boxes_batch(self):
-        #proteins = self.project_scanner.scan_project_for_valid_proteins()
         proteins = []
         for tmp_protein in self.app_project.proteins:
             proteins.append(tmp_protein.get_molecule_object())
@@ -2942,9 +2964,14 @@ class MainWindow(QMainWindow):
             self.ui.btn_analysis_abort,
         ]
         gui_elements_to_hide = [
+            self.ui.btn_save_project,
+            self.ui.btn_edit_page,
+            self.ui.btn_view_page,
             self.ui.btn_use_page,
+            self.ui.btn_export_project,
             self.ui.btn_close_project,
             self.ui.btn_batch_analysis_page,
+            self.ui.btn_image_analysis_page,
             self.ui.btn_results_page,
             self.ui.lbl_handle_pymol_session,
             self.ui.btn_image_page,
@@ -3052,7 +3079,61 @@ class MainWindow(QMainWindow):
 
     # </editor-fold>
 
+    # <editor-fold desc="Analysis Images">
+    def add_protein_pair_to_image_creation_queue(self):
+        protein_pair_to_add = self.ui.list_analysis_images_struct_analysis.currentItem().text()
+        self.ui.list_analysis_images_creation_struct_analysis.addItem(protein_pair_to_add)
+        self.ui.list_analysis_images_struct_analysis.takeItem(self.ui.list_analysis_images_struct_analysis.currentRow())
 
+    def remove_protein_pair_from_image_creation_queue(self):
+        protein_pair_to_remove = self.ui.list_analysis_images_creation_struct_analysis.currentItem()
+        self.ui.list_analysis_images_creation_struct_analysis.takeItem(self.ui.list_analysis_images_creation_struct_analysis.currentRow())
+        self.ui.list_analysis_images_struct_analysis.addItem(protein_pair_to_remove)
+
+    def post_image_creation_process(self):
+        self.app_project.serialize_project(self.app_project.get_project_xml_path())
+        constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+        basic_boxes.ok("Analysis Images",
+                       "All images of all analysis' have been created. Go to results to check the new results.",
+                       QMessageBox.Information)
+        constants.PYSSA_LOGGER.info("All images of all analysis' have been created.")
+        self._init_analysis_image_page()
+        self.display_view_page()
+        self._project_watcher.show_valid_options(self.ui)
+
+    def start_automatic_image_creation(self):
+        constants.PYSSA_LOGGER.info("Begin image creation process.")
+        self.worker_image_creation = workers.BatchImageWorkerPool(
+            self.ui.list_analysis_images_struct_analysis, self.ui.list_analysis_images_creation_struct_analysis,
+            self.status_bar, self.app_project)
+        constants.PYSSA_LOGGER.info("Thread started for image creation process.")
+        self.threadpool.start(self.worker_image_creation)
+        if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+            os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+
+        self.ui.list_analysis_images_struct_analysis.setEnabled(False)
+        self.ui.list_analysis_images_creation_struct_analysis.setEnabled(False)
+
+        gui_elements_to_show = [
+            self.ui.btn_analysis_abort,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_save_project,
+            self.ui.btn_edit_page,
+            self.ui.btn_view_page,
+            self.ui.btn_use_page,
+            self.ui.btn_export_project,
+            self.ui.btn_close_project,
+            self.ui.btn_batch_analysis_page,
+            self.ui.btn_image_analysis_page,
+            self.ui.btn_results_page,
+            self.ui.lbl_handle_pymol_session,
+            self.ui.btn_image_page,
+            self.ui.btn_hotspots_page,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+
+    # </editor-fold>
 
     # <editor-fold desc="Results page functions">
     def show_analysis_results_options(self):
