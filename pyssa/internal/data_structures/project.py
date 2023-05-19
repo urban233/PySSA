@@ -98,6 +98,9 @@ class Project:
         self.protein_pairs: list[protein_pair.ProteinPair] = []
         self.create_folder_paths()
 
+    def set_workspace_path(self, value) -> None:
+        self._workspace = value
+
     def add_existing_protein(self, value_protein: protein.Protein) -> None:
         """This function adds an existing protein object to the project.
 

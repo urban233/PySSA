@@ -551,6 +551,8 @@ class MainWindow(QMainWindow):
         self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self.ui.btn_view_page.clicked.connect(self.display_view_page)
         self.ui.btn_use_page.clicked.connect(self.display_use_page)
+        self.ui.btn_import_project.clicked.connect(self.import_project)
+        self.ui.btn_export_project.clicked.connect(self.export_current_project)
         self.ui.btn_close_project.clicked.connect(self.close_project)
         self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
         self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
@@ -1824,6 +1826,39 @@ class MainWindow(QMainWindow):
         self._init_use_page()
         constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Import, Export functions">
+    def import_project(self):
+        file_dialog = QFileDialog()
+        desktop_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getOpenFileName(self, "Select a project file to import", "", "XML Files (*.xml)")
+        if file_path:
+            tmp_project = project.Project("", self.workspace_path)
+            tmp_project = tmp_project.deserialize_project(file_path, self.app_settings)
+            tmp_project.set_workspace_path(self.workspace_path)
+            new_filepath = pathlib.Path(f"{self.workspace_path}/{tmp_project.get_project_name()}.xml")
+            tmp_project.serialize_project(new_filepath)
+            self.app_project = self.app_project.deserialize_project(new_filepath, self.app_settings)
+            constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
+            self._project_watcher.current_project = self.app_project
+            self.project_scanner.project = self.app_project
+            constants.PYSSA_LOGGER.info(
+                f"{self._project_watcher.current_project.get_project_name()} is the current project.")
+            self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
+            self._project_watcher.on_home_page = False
+            self._project_watcher.show_valid_options(self.ui)
+            self.display_view_page()
+
+    def export_current_project(self):
+        file_dialog = QFileDialog()
+        desktop_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(self, "Save current project", "", "XML Files (*.xml)")
+        if file_path:
+            self.app_project.serialize_project(file_path)
 
     # </editor-fold>
 
