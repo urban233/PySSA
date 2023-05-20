@@ -44,5 +44,4 @@ class XMLDeserialzer:
 
 
 if __name__ == '__main__':
-    xml_des = XMLDeserialzer("C:\\Users\\martin\\.pyssa\\default_workspace\\analysis_check.xml")
-    xml_des.deserialize_analysis_images(12)
+

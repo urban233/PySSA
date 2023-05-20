@@ -84,7 +84,9 @@ class Colabbatch:
         """
         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
         # running prediction script
-        if self.prediction_configuration.templates == "none":
+        logger.debug(f"templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
+        if self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is True:
+            logger.info("Run prediction with no templates and with amber force field correction.")
             try:
                 subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
                                 self.fasta_path, self.pdb_path])
@@ -93,7 +95,28 @@ class Colabbatch:
                 logger.error("Something went wrong during the prediction process.")
                 shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
                 return
-        else:
+        elif self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is False:
+            logger.info("Run prediction with no templates and with no amber force field correction.")
+            try:
+                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT,
+                                self.fasta_path, self.pdb_path])
+                subprocess.run(["wsl", "--shutdown"])
+            except OSError:
+                logger.error("Something went wrong during the prediction process.")
+                shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+                return
+        elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is False:
+            logger.info("Run prediction with default pdb70 templates and with no amber force field correction.")
+            try:
+                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_SCRIPT,
+                                self.fasta_path, self.pdb_path])
+                subprocess.run(["wsl", "--shutdown"])
+            except OSError:
+                logger.error("Something went wrong during the prediction process.")
+                shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+                return
+        elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is True:
+            logger.info("Run prediction with default pdb70 templates and with amber force field correction.")
             try:
                 subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
                                 self.fasta_path, self.pdb_path])
@@ -102,3 +125,6 @@ class Colabbatch:
                 logger.error("Something went wrong during the prediction process.")
                 shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
                 return
+        else:
+            logger.error(f"Invalid prediction configuration. templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
+            raise ValueError("Invalid prediction configuration.")

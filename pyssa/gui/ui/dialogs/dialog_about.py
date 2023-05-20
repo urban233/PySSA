@@ -40,7 +40,7 @@ class DialogAbout(Qt.QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.ui.btn_ok.clicked.connect(self.close_dialog)
-
+        self.ui.label.setText("PySSA")
         self.setWindowTitle("About")
 
     # @SLOT
