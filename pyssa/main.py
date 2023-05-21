@@ -187,6 +187,8 @@ class MainWindow(QMainWindow):
         self.worker_image_creation.signals.finished.connect(self.post_image_creation_process)
         self.worker_image_creation.setAutoDelete(True)
 
+        self.block_box_analysis = basic_boxes.no_buttons("Analysis", "A analysis is currently running, please wait.", QMessageBox.Information)
+        self.block_box_images = basic_boxes.no_buttons("Analysis Images", "Images getting created, please wait.", QMessageBox.Information)
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
         self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -2920,6 +2922,7 @@ class MainWindow(QMainWindow):
     def post_analysis_process(self):
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+        self.block_box_analysis.destroy(True)
         basic_boxes.ok("Structure analysis", "All structure analysis' are done. Go to results to check the new results.",
                        QMessageBox.Information)
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
@@ -2995,24 +2998,24 @@ class MainWindow(QMainWindow):
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
-        gui_elements_to_show = [
-            self.ui.btn_analysis_abort,
-        ]
-        gui_elements_to_hide = [
-            self.ui.btn_save_project,
-            self.ui.btn_edit_page,
-            self.ui.btn_view_page,
-            self.ui.btn_use_page,
-            self.ui.btn_export_project,
-            self.ui.btn_close_project,
-            self.ui.btn_batch_analysis_page,
-            self.ui.btn_image_analysis_page,
-            self.ui.btn_results_page,
-            self.ui.lbl_handle_pymol_session,
-            self.ui.btn_image_page,
-            self.ui.btn_hotspots_page,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        # gui_elements_to_show = [
+        #     self.ui.btn_analysis_abort,
+        # ]
+        # gui_elements_to_hide = [
+        #     self.ui.btn_save_project,
+        #     self.ui.btn_edit_page,
+        #     self.ui.btn_view_page,
+        #     self.ui.btn_use_page,
+        #     self.ui.btn_export_project,
+        #     self.ui.btn_close_project,
+        #     self.ui.btn_batch_analysis_page,
+        #     self.ui.btn_image_analysis_page,
+        #     self.ui.btn_results_page,
+        #     self.ui.lbl_handle_pymol_session,
+        #     self.ui.btn_image_page,
+        #     self.ui.btn_hotspots_page,
+        # ]
+        # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
         # constants.PYSSA_LOGGER.info("Begin analysis process.")
         # analysis_thread = QThread()
@@ -3038,6 +3041,7 @@ class MainWindow(QMainWindow):
         #     self.status_bar, self.app_project, self.app_settings,
         # )
         # self._thread_controller.thread_worker_pairs.get(constants.ANALYSIS_TASK).setup_and_run_thread(self.post_analysis_process)
+        self.block_box_analysis.exec_()
         self.display_view_page()
 
         # self.ui.btn_analysis_start.setEnabled(False)
@@ -3128,6 +3132,7 @@ class MainWindow(QMainWindow):
     def post_image_creation_process(self):
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+        self.block_box_images.destroy(True)
         basic_boxes.ok("Analysis Images",
                        "All images of all analysis' have been created. Go to results to check the new results.",
                        QMessageBox.Information)
@@ -3149,24 +3154,26 @@ class MainWindow(QMainWindow):
         self.ui.list_analysis_images_struct_analysis.setEnabled(False)
         self.ui.list_analysis_images_creation_struct_analysis.setEnabled(False)
 
-        gui_elements_to_show = [
-            self.ui.btn_analysis_abort,
-        ]
-        gui_elements_to_hide = [
-            self.ui.btn_save_project,
-            self.ui.btn_edit_page,
-            self.ui.btn_view_page,
-            self.ui.btn_use_page,
-            self.ui.btn_export_project,
-            self.ui.btn_close_project,
-            self.ui.btn_batch_analysis_page,
-            self.ui.btn_image_analysis_page,
-            self.ui.btn_results_page,
-            self.ui.lbl_handle_pymol_session,
-            self.ui.btn_image_page,
-            self.ui.btn_hotspots_page,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        # gui_elements_to_show = [
+        #     self.ui.btn_analysis_abort,
+        # ]
+        # gui_elements_to_hide = [
+        #     self.ui.btn_save_project,
+        #     self.ui.btn_edit_page,
+        #     self.ui.btn_view_page,
+        #     self.ui.btn_use_page,
+        #     self.ui.btn_export_project,
+        #     self.ui.btn_close_project,
+        #     self.ui.btn_batch_analysis_page,
+        #     self.ui.btn_image_analysis_page,
+        #     self.ui.btn_results_page,
+        #     self.ui.lbl_handle_pymol_session,
+        #     self.ui.btn_image_page,
+        #     self.ui.btn_hotspots_page,
+        # ]
+        # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+
+        self.block_box_images.exec_()
 
     # </editor-fold>
 

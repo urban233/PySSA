@@ -65,3 +65,13 @@ def ok(window_title, text_message, icon):
     else:
         msg.close()
         return False
+
+
+def no_buttons(window_title, text_message, icon):
+    msg = QMessageBox()
+    msg.setIcon(icon)
+    msg.setWindowTitle(window_title)
+    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setText(text_message)
+    msg.setStandardButtons(QMessageBox.NoButton)
+    return msg

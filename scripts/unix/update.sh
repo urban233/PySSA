@@ -1,11 +1,30 @@
-# '/path/to/your/colabfold_batch' should be substituted to your path, e.g. '/home/moriwaki/Desktop/colabfold_batch'
-# install GPU-supported jaxlib
-COLABFOLDDIR="/home/$USER/.pyssa/colabfold_batch/"
-${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip uninstall "colabfold[alphafold] @ git+https://github.com/sokrypton/ColabFold" -y
-${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip uninstall alphafold-colabfold -y
-${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip install "colabfold[alphafold] @ git+https://github.com/sokrypton/ColabFold"
-${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip install https://storage.googleapis.com/jax-releases/cuda11/jaxlib-0.3.25+cuda11.cudnn82-cp37-cp37m-manylinux2014_x86_64.whl
-${COLABFOLDDIR}/colabfold-conda/bin/python3.7 -m pip install jax==0.3.25 biopython==1.79
-# fix jax.tree_(un)flatten warnings (ad hoc)
-sed -i -e "s/jax.tree_flatten/jax.tree_util.tree_flatten/g" ${COLABFOLDDIR}/colabfold-conda/lib/python3.7/site-packages/alphafold/model/mapping.py
-sed -i -e "s/jax.tree_unflatten/jax.tree_util.tree_unflatten/g" ${COLABFOLDDIR}/colabfold-conda/lib/python3.7/site-packages/alphafold/model/mapping.py
+#!/bin/bash
+
+COLABFOLDDIR=$1
+
+if [ ! -d $COLABFOLDDIR/colabfold-conda ]; then
+    echo "Error! colabfold-conda directory is not present in $COLABFOLDDIR."
+    exit 1
+fi
+
+pushd $COLABFOLDDIR || { echo "${COLABFOLDDIR} is not present." ; exit 1 ; }
+
+# get absolute path of COLABFOLDDIR
+COLABFOLDDIR=$(cd $(dirname colabfold_batch); pwd)
+# activate conda in $COLABFOLDDIR/conda
+. ${COLABFOLDDIR}/conda/etc/profile.d/conda.sh
+export PATH="${COLABFOLDDIR}/conda/condabin:${PATH}"
+conda activate $COLABFOLDDIR/colabfold-conda
+# reinstall colabfold and alphafold-colabfold
+python3.10 -m pip uninstall -q "colabfold[alphafold-minus-jax] @ git+https://github.com/sokrypton/ColabFold" -y
+python3.10 -m pip uninstall alphafold-colabfold -y
+python3.10 -m pip install --no-warn-conflicts "colabfold[alphafold-minus-jax] @ git+https://github.com/sokrypton/ColabFold"
+
+# use 'agg' for non-GUI backend
+pushd ${COLABFOLDDIR}/colabfold-conda/lib/python3.10/site-packages/colabfold
+sed -i -e "s#from matplotlib import pyplot as plt#import matplotlib\nmatplotlib.use('Agg')\nimport matplotlib.pyplot as plt#g" plot.py
+sed -i -e "s#appdirs.user_cache_dir(__package__ or \"colabfold\")#\"${COLABFOLDDIR}/colabfold\"#g" download.py
+# remove cache directory
+rm -rf __pycache__
+popd
+popd

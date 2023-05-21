@@ -23,6 +23,7 @@
 import json
 import os
 import pathlib
+import subprocess
 from pyssa.util import constants
 from pyssa.io_pyssa import safeguard
 
@@ -54,6 +55,7 @@ class Settings:
             os.mkdir(constants.SETTINGS_DIR)
         if not os.path.exists(constants.DEFAULT_WORKSPACE_PATH):
             os.mkdir(constants.DEFAULT_WORKSPACE_PATH)
+
         self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self.prediction_path = pathlib.Path(f"{os.path.expanduser('~')}/Downloads")
         self.cycles: int = 0
@@ -61,7 +63,6 @@ class Settings:
         self.app_launch = 1
         self.dir_settings: str = dir_settings
         self.filename: str = filename
-        self.wsl_install: int = 0
         self.local_colabfold: int = 0
         self.wsl_username: str = "no_user_name"
 

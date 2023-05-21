@@ -25,9 +25,14 @@ import shutil
 import subprocess
 import logging
 import pathlib
+import time
+
+import mega
+from PyQt5.QtWidgets import QMessageBox
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.io_pyssa import path_util
 from pyssa.internal.data_structures import structure_prediction
@@ -396,6 +401,89 @@ class BatchImageWorkerPool(QtCore.QRunnable):
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
             # emit finish signal
             self.signals.finished.emit()
+
+
+class ColabfoldInstallerWorkerPool(QtCore.QRunnable):
+    """This class is a worker class for the analysis process.
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    """
+
+    # <editor-fold desc="Class attributes">
+    """
+    the list where all analysis runs are stored
+    """
+    list_analysis_images: QtWidgets.QListWidget
+    """
+    the list where all analysis runs are stored for which images should be created
+    """
+    list_analysis_for_image_creation_overview: QtWidgets.QListWidget
+    """
+    the status bar of the main window
+    """
+    status_bar: QtWidgets.QStatusBar
+    """
+    the current project in use
+    """
+    app_project: 'project.Project'
+    """
+    the settings of pyssa
+    """
+    app_settings: 'settings.Settings'
+    """
+    the signals to use, for the worker
+    """
+    signals = WorkerSignals()
+
+    # </editor-fold>
+
+    def __init__(self, install) -> None:
+        """Constructor
+
+        Args:
+            install:
+                set true if Colabfold should be installed
+
+        Raises:
+            ValueError: raised if an argument is illegal
+        """
+        super(ColabfoldInstallerWorkerPool, self).__init__()
+        self.install = install
+
+    def run(self):
+        if self.install is False:
+            # if localcolab should be uninstalled
+            try:
+                subprocess.run([constants.POWERSHELL_EXE, constants.REMOVE_WSL_POWERSHELL])
+            except:
+                basic_boxes.ok("Local Colabfold removal",
+                               "The uninstallation failed. Please re-run the process or consult the documentation.",
+                               QMessageBox.Critical)
+                return
+        else:
+            # logical message: the user wants to install local colabfold
+            if not os.path.exists(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/")):
+                os.mkdir(pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/"))
+            if not os.path.exists(constants.WSL_STORAGE_PATH):
+                os.mkdir(constants.WSL_STORAGE_PATH)
+
+            def download_file_with_curl(url, destination):
+                mega_handler = mega.Mega()
+                # Download the file
+                user = mega_handler.login()
+                # Download the file
+                user.download_url(url=constants.DISTRO_DOWNLOAD_URL, dest_path=destination)
+
+            # TODO: correct download URL
+            download_file_with_curl(str(constants.WSL_DISTRO_IMPORT_PATH), str(constants.DISTRO_DOWNLOAD_URL))
+            subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+            subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH),
+                            str(constants.WSL_DISTRO_IMPORT_PATH)])
+            subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+
+        # emit finish signal
+        self.signals.finished.emit()
 
 # class ResultsWorkerPool(QtCore.QRunnable):
 #

@@ -31,7 +31,7 @@ PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."
 VERSION_NUMBER = "v0.9.3"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
-SETTINGS_DIR = Path(f"{os.path.expanduser('~')}/.pyssa/")
+SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
 SETTINGS_FILE_NAME = "settings"
 SETTINGS_FILENAME = "settings.json"
 SETTINGS_FULL_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/{SETTINGS_FILENAME}")
@@ -58,21 +58,21 @@ POWERSHELL_EXE = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe
 CONVERT_DOS_TO_UNIX = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/convert_dos_to_unix.ps1")
 PREDICTION_PS1 = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/run_prediction.ps1")
 # TODO: original paths, please uncomment before deployment!!!
-# COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
-# COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
-# INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
-COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
-COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
+COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
+COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
+INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
+#COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
+#COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
 COLABFOLD_PREDICT_NO_AMBER_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber.sh"
 COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
-INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
+#INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
 NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
 
 # OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
 # OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
 # NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
 REMOVE_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/remove_wsl_env.ps1")
-
+ADD_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/add_wsl_env.ps1")
 # Constants for config file
 # TODO: uncomment constant below before deployment
 # WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
@@ -81,6 +81,7 @@ WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/config
 WSL_DISTRO_NAME = "UbuntuColabfold"
 WSL_STORAGE_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/{WSL_DISTRO_NAME}")
 WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
+DISTRO_DOWNLOAD_URL = "https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to"
 
 # thread main tasks
 PREDICTION_TASK = "Structure Prediction"

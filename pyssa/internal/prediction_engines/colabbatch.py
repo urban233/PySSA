@@ -88,6 +88,7 @@ class Colabbatch:
         if self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is True:
             logger.info("Run prediction with no templates and with amber force field correction.")
             try:
+                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
                 subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
                                 self.fasta_path, self.pdb_path])
                 subprocess.run(["wsl", "--shutdown"])
@@ -98,6 +99,7 @@ class Colabbatch:
         elif self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is False:
             logger.info("Run prediction with no templates and with no amber force field correction.")
             try:
+                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
                 subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT,
                                 self.fasta_path, self.pdb_path])
                 subprocess.run(["wsl", "--shutdown"])
@@ -108,6 +110,7 @@ class Colabbatch:
         elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is False:
             logger.info("Run prediction with default pdb70 templates and with no amber force field correction.")
             try:
+                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
                 subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_SCRIPT,
                                 self.fasta_path, self.pdb_path])
                 subprocess.run(["wsl", "--shutdown"])
@@ -118,6 +121,7 @@ class Colabbatch:
         elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is True:
             logger.info("Run prediction with default pdb70 templates and with amber force field correction.")
             try:
+                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
                 subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
                                 self.fasta_path, self.pdb_path])
                 subprocess.run(["wsl", "--shutdown"])
