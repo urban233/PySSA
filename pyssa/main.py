@@ -536,7 +536,7 @@ class MainWindow(QMainWindow):
         """This function connects all gui elements with their corresponding slots
 
         """
-        # menu
+        # <editor-fold desc="Menu">
         self.ui.action_file_quit.triggered.connect(self.quit_app)
         self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
         self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
@@ -545,7 +545,10 @@ class MainWindow(QMainWindow):
         self.ui.action_help_docs.triggered.connect(self.open_documentation)
         self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation_pdf)
         self.ui.action_help_about.triggered.connect(self.open_about)
-        # side menu
+
+        # </editor-fold>
+
+        # <editor-fold desc="Side Menu">
         self.ui.btn_new_page.clicked.connect(self.display_new_page)
         self.ui.btn_open_page.clicked.connect(self.display_open_page)
         self.ui.btn_delete_page.clicked.connect(self.display_delete_page)
@@ -566,34 +569,52 @@ class MainWindow(QMainWindow):
         self.ui.btn_analysis_abort.clicked.connect(self.abort_analysis)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
         self.ui.btn_hotspots_page.clicked.connect(self.display_hotspots_page)
-        # new project page
+
+        # </editor-fold>
+
+        # <editor-fold desc="New project page">
         self.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
         self.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
         self.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
         self.ui.cb_new_add_reference.stateChanged.connect(self.show_add_reference)
         self.ui.btn_new_create_project.clicked.connect(self.create_new_project)
-        # open project page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Open project page">
         self.ui.btn_open_open_project.clicked.connect(self.open_project)
         self.ui.list_open_projects.doubleClicked.connect(self.open_project)
         self.ui.txt_open_search.textChanged.connect(self.validate_open_search)
         self.ui.txt_open_selected_project.textChanged.connect(self.activate_open_button)
         self.ui.list_open_projects.currentItemChanged.connect(self.select_project_from_open_list)
-        # delete project page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Delete project page">
         self.ui.btn_delete_delete_project.clicked.connect(self.delete_project)
         self.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
         self.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
         self.ui.list_delete_projects.currentItemChanged.connect(self.select_project_from_delete_list)
-        # edit project page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Edit project page">
         self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self.ui.list_edit_project_proteins.currentItemChanged.connect(self.check_for_cleaning)
         self.ui.btn_edit_clean_new_prot.clicked.connect(self.clean_protein_new)
         self.ui.btn_edit_clean_update_prot.clicked.connect(self.clean_protein_update)
         self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
-        # view project page
+
+        # </editor-fold>
+
+        # <editor-fold desc="View project page">
         self.ui.btn_view_project_show.clicked.connect(self.view_sequence)
         self.ui.btn_view_project_show_structure.clicked.connect(self.view_structure)
         self.ui.list_view_project_proteins.doubleClicked.connect(self.view_sequence)
-        # use project page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Use project page">
         self.ui.txt_use_project_name.textChanged.connect(self.validate_use_project_name)
         self.ui.btn_use_next.clicked.connect(self.show_protein_selection_for_use)
         self.ui.txt_use_search.textChanged.connect(self.validate_use_search)
@@ -603,9 +624,10 @@ class MainWindow(QMainWindow):
         self.ui.list_use_selected_protein_structures.doubleClicked.connect(self.remove_protein_structure_to_new_project)
         self.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
         self.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
-        # sequence vs .pdb page
-        #self.ui.btn_s_v_p_start.clicked.connect(self.predict)
-        # monomer local prediction page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Monomer local prediction page">
         self.ui.btn_pred_mono_seq_to_predict.clicked.connect(self.local_pred_mono_show_protein_name)
         self.ui.btn_pred_mono_seq_to_predict_remove.clicked.connect(self.local_pred_mono_remove_protein_to_predict)
         self.ui.btn_pred_mono_next.clicked.connect(self.local_pred_mono_show_protein_sequence)
@@ -617,7 +639,9 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_pred_mono_predict.clicked.connect(self.predict_local_monomer)
 
-        # multimer local prediction page
+        # </editor-fold>
+
+        # <editor-fold desc="Multimer prediction page">
         self.ui.btn_pred_multi_prot_to_predict_add.clicked.connect(self.local_pred_multi_show_protein_name)
         self.ui.btn_pred_multi_prot_to_predict_remove.clicked.connect(self.local_pred_multi_remove_protein_to_predict)
         self.ui.btn_pred_multi_next.clicked.connect(self.local_pred_multi_show_protein_sequence)
@@ -654,7 +678,9 @@ class MainWindow(QMainWindow):
         # self.ui.box_analysis_prot_struct_2.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
         # self.ui.list_analysis_ref_chains.itemSelectionChanged.connect(self.count_selected_chains_for_prot_struct_1)
         # self.ui.list_analysis_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected)
-        # batch analysis page
+        # </editor-fold>
+
+        # <editor-fold desc="Batch analysis page">
         self.ui.btn_analysis_batch_add.clicked.connect(self.show_batch_analysis_stage_1)
         self.ui.btn_analysis_batch_remove.clicked.connect(self.remove_analysis_run)
         self.ui.btn_analysis_batch_back.clicked.connect(self.show_batch_analysis_stage_0)
@@ -668,20 +694,29 @@ class MainWindow(QMainWindow):
         self.ui.list_analysis_batch_ref_chains.itemSelectionChanged.connect(self.count_batch_selected_chains_for_prot_struct_1)
         self.ui.list_analysis_batch_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected_batch)
         self.ui.btn_analysis_batch_start.clicked.connect(self.start_process_batch)
-        # analysis images
+
+        # </editor-fold>
+
+        # <editor-fold desc="Analysis images page">
         self.ui.btn_add_analysis_images_struct_analysis.clicked.connect(self.add_protein_pair_to_image_creation_queue)
         self.ui.list_analysis_images_struct_analysis.doubleClicked.connect(self.add_protein_pair_to_image_creation_queue)
         self.ui.btn_remove_analysis_images_creation_struct_analysis.clicked.connect(self.remove_protein_pair_from_image_creation_queue)
         self.ui.list_analysis_images_creation_struct_analysis.doubleClicked.connect(self.remove_protein_pair_from_image_creation_queue)
         self.ui.btn_start_automatic_image_creation.clicked.connect(self.start_automatic_image_creation)
-        # results page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Results page">
         self.ui.cb_results_analysis_options.currentIndexChanged.connect(self.load_results)
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
         self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
         self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
         self.ui.btn_view_interesting_region.clicked.connect(self.display_interesting_region)
         self.ui.btn_view_distance_table.clicked.connect(self.display_distance_table)
-        # image page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Image page">
         self.ui.btn_update_scene.clicked.connect(self.update_scene)
         self.ui.btn_save_scene.clicked.connect(self.save_scene)
         self.ui.btn_save_image.clicked.connect(self.save_image)
@@ -692,11 +727,16 @@ class MainWindow(QMainWindow):
         self.ui.box_ray_trace_mode.activated.connect(self.choose_ray_trace_mode)
         self.ui.box_ray_texture.activated.connect(self.choose_ray_texture)
         self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
-        # hotspots page
+
+        # </editor-fold>
+
+        # <editor-fold desc="Hotspots page">
         self.ui.list_hotspots_choose_protein.currentItemChanged.connect(self.open_protein)
         self.ui.btn_hotspots_resi_show.clicked.connect(self.show_resi_sticks)
         self.ui.btn_hotspots_resi_hide.clicked.connect(self.hide_resi_sticks)
         self.ui.btn_hotspots_resi_zoom.clicked.connect(self.zoom_resi_position)
+
+        # </editor-fold>
 
     def _create_all_tooltips(self):
         # menu
@@ -1515,6 +1555,7 @@ class MainWindow(QMainWindow):
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
         self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
+        cmd.reinitialize()
         self.display_view_page()
 
     # </editor-fold>
@@ -1594,6 +1635,7 @@ class MainWindow(QMainWindow):
             protein_name = self.ui.list_edit_project_proteins.currentItem().text()
         except AttributeError:
             return
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         cmd.reinitialize()
         tmp_protein = self.app_project.search_protein(
             protein_name.replace(".pdb", ""))
@@ -1679,13 +1721,13 @@ class MainWindow(QMainWindow):
         # dialog.exec_()
 
     def view_structure(self):
-
         protein_name = self.ui.list_view_project_proteins.currentItem().text()
-        session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
-                                            QMessageBox.Information)
-        if session_msg is True:
-            self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
-            self.app_project.save_pymol_session(self.current_session)
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        # session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
+        #                                     QMessageBox.Information)
+        # if session_msg is True:
+        #     self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
+        #     self.app_project.save_pymol_session(self.current_session)
         cmd.reinitialize()
         try:
             self.app_project.search_protein(protein_name).load_protein_pymol_session()
@@ -1869,6 +1911,7 @@ class MainWindow(QMainWindow):
 
     # <editor-fold desc="Close project functions">
     def close_project(self):
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         self._project_watcher.on_home_page = True
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
         self._project_watcher.show_valid_options(self.ui)
@@ -3217,11 +3260,13 @@ class MainWindow(QMainWindow):
         if self.results_name == "":
             self.show_analysis_results_options()
             return
-        session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
-                                            QMessageBox.Information)
-        if session_msg is True:
-            self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
-            self.app_project.save_pymol_session(self.current_session)
+        # TODO: check if the function below works correctly
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        # session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
+        #                                     QMessageBox.Information)
+        # if session_msg is True:
+        #     self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
+        #     self.app_project.save_pymol_session(self.current_session)
 
         # <editor-fold desc="Worker variant">
         # worker = workers.ResultsWorkerPool(

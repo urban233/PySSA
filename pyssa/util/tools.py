@@ -27,9 +27,15 @@ import logging
 import fnmatch
 from Bio import PDB
 from pathlib import Path
+
+from PyQt5.QtWidgets import QMessageBox
 from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtGui
+from pyssa.internal.data_structures.data_classes import current_session
+from pyssa.gui.ui.messageboxes import basic_boxes
+from typing import TYPE_CHECKING
+from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_structures import settings
 from pyssa.util import constants
 from pyssa.gui.ui.styles import styles
@@ -38,6 +44,9 @@ from pyssa.internal.data_structures.data_classes import basic_protein_info
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import project
 
 
 def create_directory(parent_path, dir_name) -> None:
@@ -607,6 +616,22 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
 def clean_scratch_folder():
     shutil.rmtree(constants.SCRATCH_DIR)
     os.mkdir(constants.SCRATCH_DIR)
+
+
+def ask_to_save_pymol_session(app_project: 'project.Project', current_session: current_session.CurrentSession):
+    """This function asks to save the current pymol session.
+
+    Args:
+        app_project: the app_project
+        current_session: the current pymol session, as data class object
+
+    """
+    session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
+                                        QMessageBox.Information)
+    if session_msg is True:
+        current_session.session = pymol_io.convert_pymol_session_to_base64_string(current_session.name)
+        app_project.save_pymol_session(current_session)
+
 
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")
