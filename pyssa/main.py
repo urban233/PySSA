@@ -834,6 +834,7 @@ class MainWindow(QMainWindow):
         self.ui.txt_new_choose_reference.clear()
         self.ui.lbl_new_status_project_name.setText("")
         self.ui.lbl_new_status_choose_reference.setText("")
+        self.ui.cb_new_add_reference.setCheckState(0)
 
     def _init_use_page(self):
         gui_elements = [
@@ -1112,7 +1113,8 @@ class MainWindow(QMainWindow):
         """This function displays the open project work area
 
         """
-
+        self.ui.txt_open_search.clear()
+        self.ui.txt_open_selected_project.clear()
         if safeguard.Safeguard.check_filepath(self.workspace_path):
             self.ui.list_open_projects.clear()
             # pre-process
@@ -1135,6 +1137,8 @@ class MainWindow(QMainWindow):
         """This function displays the "delete" project work area
 
         """
+        self.ui.txt_delete_search.clear()
+        self.ui.txt_delete_selected_projects.clear()
         self.ui.list_delete_projects.clear()
         # pre-process
         self.status_bar.showMessage(self.workspace.text())

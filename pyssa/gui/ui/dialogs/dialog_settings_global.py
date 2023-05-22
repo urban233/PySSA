@@ -155,10 +155,12 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         if self.colabfold_installer_worker.install is False:
             self.ui.btn_install_local_prediction.setText("Install")
             self.settings.local_colabfold = 0
+            self.settings.serialize_settings()
             basic_boxes.ok("Local Colabfold", "Removing local colabfold is finished!", QMessageBox.Information)
         else:
             self.ui.btn_install_local_prediction.setText("Uninstall")
             self.settings.local_colabfold = 1
+            self.settings.serialize_settings()
             basic_boxes.ok("Local Colabfold installation", "Installation is finished!", QMessageBox.Information)
 
     def install_local_colabfold(self):
