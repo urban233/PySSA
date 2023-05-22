@@ -235,24 +235,11 @@ def check_results_for_integrity(workspace_path, project_name) -> (bool, Path):
 
 
 def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
-    workspace_projects: list[str] = os.listdir(workspace_path)
-    valid_directories = []
     directory_content = os.listdir(workspace_path)
-
-    # # iterates over possible project directories
-    # for directory in workspace_projects:
-    #     try:
-    #         directory_content = os.listdir(f"{workspace_path}/{directory}")
-    #         # iterates over the content in a single project directory
-    #         for content in directory_content:
-    #             if content == "project.json":
-    #                 valid_directories.append(directory)
-    #     except NotADirectoryError:
-    #         print(f"This: {directory} is not a directory.")
-
     directory_content.sort()
-    for project in directory_content:
-        list_new_projects.addItem(project)
+    for tmp_project in directory_content:
+        if ".xml" in tmp_project:
+            list_new_projects.addItem(tmp_project)
     return directory_content
 
 
