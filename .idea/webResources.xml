@@ -10,6 +10,7 @@
             <path value="file://$PROJECT_DIR$/config" />
             <path value="file://$PROJECT_DIR$/assets" />
             <path value="file://$PROJECT_DIR$/scripts" />
+            <path value="file://$PROJECT_DIR$/logs" />
           </resourceRoots>
         </entryData>
       </entry>

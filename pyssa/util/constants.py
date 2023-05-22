@@ -22,8 +22,10 @@
 """Module for storing project-wide constants"""
 import logging
 import os
+import datetime
 import pathlib
 from pathlib import Path
+
 
 PLUGIN_NAME = "tmpPySSA"
 PLUGIN_PATH = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\{PLUGIN_NAME}")
@@ -67,6 +69,10 @@ COLABFOLD_PREDICT_NO_AMBER_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/
 COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
 #INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
 NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
+
+current_time = datetime.datetime.now()
+LOG_FILENAME = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"
+LOG_FILEPATH = pathlib.Path(f"{PLUGIN_PATH}/logs/{LOG_FILENAME}")
 
 # OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
 # OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
