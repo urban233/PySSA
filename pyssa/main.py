@@ -838,6 +838,8 @@ class MainWindow(QMainWindow):
         # clears everything
         self.ui.txt_pred_mono_prot_name.clear()
         self.ui.txt_pred_mono_seq_name.clear()
+        for i in range(self.ui.table_pred_mono_prot_to_predict.rowCount()):
+            self.ui.table_pred_mono_prot_to_predict.removeRow(i)
         # sets up defaults: Prediction
         self.ui.btn_pred_mono_next.setEnabled(False)
         self.ui.btn_pred_mono_add_protein.setEnabled(False)
@@ -1128,6 +1130,7 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_view_page)
 
     def display_local_pred_mono(self):
+        self._init_local_pred_mono_page()
         self.local_pred_monomer_management.show_stage_x(0)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 19, "Local Monomer Prediction")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -2224,6 +2227,16 @@ class MainWindow(QMainWindow):
         self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
         self.prediction_configuration.templates = config.prediction_config.templates
 
+    def setup_defaults_monomer_prediction(self):
+        # clears everything
+        self.ui.txt_pred_mono_prot_name.clear()
+        self.ui.txt_pred_mono_seq_name.clear()
+        # sets up defaults: Prediction
+        self.ui.btn_pred_mono_next.setEnabled(False)
+        self.ui.btn_pred_mono_add_protein.setEnabled(False)
+        self.ui.lbl_pred_mono_prot_name_status.setText("")
+        self.ui.lbl_pred_mono_seq_name_status.setText("")
+
     def local_pred_mono_validate_protein_sequence(self):
         """This function validates the input of the protein sequence in real-time
 
@@ -2286,7 +2299,7 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
         self.local_pred_mono_check_if_table_is_empty()
         self.local_pred_mono_show_protein_overview()
-        self._init_local_pred_mono_page()
+        self.setup_defaults_monomer_prediction()
 
     def local_pred_mono_remove_protein_to_predict(self):
         self.ui.table_pred_mono_prot_to_predict.removeRow(self.ui.table_pred_mono_prot_to_predict.currentRow())
