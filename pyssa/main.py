@@ -989,6 +989,7 @@ class MainWindow(QMainWindow):
         # sets up defaults: Batch
         self.batch_analysis_management.show_stage_x(0)
         self.ui.list_analysis_batch_overview.clear()
+        self.ui.btn_analysis_batch_remove.hide()
 
     def _init_all_pages(self):
         self._init_local_pred_mono_page()
@@ -2861,6 +2862,7 @@ class MainWindow(QMainWindow):
             self.ui.list_analysis_batch_overview.addItem(item)
         if self.ui.list_analysis_batch_overview.count() == 0:
             self.batch_analysis_management.show_stage_x(0)
+            self.ui.btn_analysis_batch_remove.hide()
         else:
             gui_elements_to_show = [
                 self.ui.btn_analysis_batch_add,
@@ -2963,6 +2965,7 @@ class MainWindow(QMainWindow):
         self.ui.list_analysis_batch_overview.takeItem(self.ui.list_analysis_batch_overview.currentRow())
         if self.ui.list_analysis_batch_overview.count() == 0:
             self.batch_analysis_management.show_stage_x(0)
+            self.ui.btn_analysis_batch_remove.hide()
 
     def check_if_same_no_of_chains_selected_batch(self):
         self.ui.btn_analysis_batch_next_3.setEnabled(False)
