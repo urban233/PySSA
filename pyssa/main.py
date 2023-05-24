@@ -835,6 +835,8 @@ class MainWindow(QMainWindow):
         self.ui.lbl_new_status_project_name.setText("")
         self.ui.lbl_new_status_choose_reference.setText("")
         self.ui.cb_new_add_reference.setCheckState(0)
+        self.ui.btn_new_create_project.setEnabled(False)
+        styles.color_button_not_ready(self.ui.btn_new_create_project)
 
     def _init_use_page(self):
         gui_elements = [

@@ -65,6 +65,7 @@ class Settings:
         self.filename: str = filename
         self.local_colabfold: int = 0
         self.wsl_username: str = "no_user_name"
+        self.wsl_install: int = 0
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object
