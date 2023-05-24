@@ -2896,11 +2896,12 @@ class MainWindow(QMainWindow):
             if tmp_chain.chain_type == "protein_chain":
                 self.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
 
-        # tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-        #                                        self.ui.box_analysis_batch_prot_struct_1.currentText(),
-        #                                        self.ui.list_analysis_batch_ref_chains)
-        self.ui.lbl_analysis_batch_ref_chains.setText(
-            f"Select chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
+        if self.ui.list_analysis_batch_ref_chains.count() == 1:
+            self.ui.lbl_analysis_batch_ref_chains.setText(
+                f"Select chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
+        else:
+            self.ui.lbl_analysis_batch_ref_chains.setText(
+                f"Select chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
 
     def show_batch_analysis_stage_3(self):
         self.ui.btn_analysis_batch_next_3.setEnabled(False)
@@ -2920,7 +2921,7 @@ class MainWindow(QMainWindow):
         if self.no_of_selected_chains == 1:
             # only one chain was selected
             self.ui.lbl_analysis_batch_model_chains.setText(
-                f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.")
+                f"Please select {self.no_of_selected_chains} chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.")
             self.ui.list_analysis_batch_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
             self.batch_analysis_management.show_gui_elements_stage_x(
                 [0, 1, 2, 3], [4], hide_specific_elements=gui_elements_to_hide
@@ -3309,9 +3310,6 @@ class MainWindow(QMainWindow):
                                         distance_data["ref_resi"], distance_data["model_chain"], distance_data["model_pos"],
                                         distance_data["model_resi"], distance_data["distance"]])
 
-        filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
-        tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
-
         distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
 
 
@@ -3329,14 +3327,29 @@ class MainWindow(QMainWindow):
             gui_elements_to_hide.append(self.ui.lbl_results_distance_histogram)
             gui_elements_to_hide.append(self.ui.btn_view_distance_histogram)
 
+        if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0:
+            # if images were made during analysis
+            filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
+            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
+            self.ui.list_results_interest_regions.clear()
+            for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                self.ui.list_results_interest_regions.addItem(tmp_filename)
+        elif len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) == 0:
+            # only struct align image were made
+            gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+            gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+            gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
+        else:
+            # no images were made
+            gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
+            gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
+            gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
+            gui_elements_to_hide.append(self.ui.list_results_interest_regions)
+            gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
         if gui_elements_to_hide:
             self.show_results_interactions(gui_elements_to_hide=gui_elements_to_hide)
         else:
             self.show_results_interactions()
-
-        self.ui.list_results_interest_regions.clear()
-        for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-            self.ui.list_results_interest_regions.addItem(tmp_filename)
         self.ui.list_results_interest_regions.sortItems()
         self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
         self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))

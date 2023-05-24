@@ -63,23 +63,25 @@ class Analysis:
                 os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
             tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
                                                                           representation="cartoon", take_images=take_images)
-            tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
-                path_util.FilePath(
-                    pathlib.Path(
-                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
-                )
-            )
-            logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
-            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
-                                                                                 f"interesting_reg_{tmp_protein_pair.name}", take_images=take_images)
-            interesting_region_filepaths = []
-            for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                interesting_region_filepaths.append(
+            if take_images is True:
+                tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                     path_util.FilePath(
-                        pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
+                        pathlib.Path(
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
                     )
                 )
-            tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(interesting_region_filepaths)
+                logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
+            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
+                                                                                 f"interesting_reg_{tmp_protein_pair.name}", take_images=take_images)
+            if take_images is True:
+                interesting_region_filepaths = []
+                for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                    interesting_region_filepaths.append(
+                        path_util.FilePath(
+                            pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
+                        )
+                    )
+                tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(interesting_region_filepaths)
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
             self.app_project.add_protein_pair(tmp_protein_pair)
         self.analysis_list.clear()

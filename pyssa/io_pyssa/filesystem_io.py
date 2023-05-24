@@ -172,6 +172,7 @@ class XmlDeserializer:
             if tmp_protein_pair.attrib["name"] == protein_pair_name:
                 structure_aln_images = tmp_protein_pair.findall(f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE}")
                 analysis_results.structure_aln_image = (structure_aln_images[0].attrib[attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME], structure_aln_images[0].text)
+
                 interesting_reg_images = tmp_protein_pair.findall(f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS}")
                 for tmp_image in interesting_reg_images:
                     analysis_results.interesting_regions_images.append((tmp_image.attrib[attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME], tmp_image.text))
