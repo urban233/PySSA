@@ -40,12 +40,12 @@ class ProjectWatcher:
                  current_project: project.Project,
                  no_of_pdb_files=0,
                  no_of_results=0,
-                 no_of_images=0
+                 make_images=False
                  ):
         self.current_project: project.Project = current_project
         self.no_of_pdb_files: int = no_of_pdb_files
         self.no_of_results: int = no_of_results
-        self.no_of_images: int = no_of_images
+        self.make_images: bool = make_images
         self.on_home_page: bool = True
 
     def show_valid_options(self, ui):
@@ -60,7 +60,7 @@ class ProjectWatcher:
         """
         self.count_proteins_in_project()
         self.count_results()
-        self.count_images()
+        self.check_images()
 
         if self.no_of_pdb_files is None:
             gui_elements_to_show = [
@@ -219,7 +219,7 @@ class ProjectWatcher:
                 gui_elements_to_show.append(ui.btn_results_page)
             else:
                 gui_elements_to_hide.append(ui.btn_results_page)
-            if self.no_of_images > 0:
+            if self.make_images is False:
                 gui_elements_to_hide.append(ui.btn_image_analysis_page)
             else:
                 gui_elements_to_show.append(ui.btn_image_analysis_page)
@@ -246,6 +246,12 @@ class ProjectWatcher:
             self.no_of_results = len(self.current_project.protein_pairs)
         else:
             self.no_of_results = None
+
+    def check_images(self):
+        for tmp_protein_pair in self.current_project.protein_pairs:
+            if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
+                self.make_images = True
+                break
 
     def count_images(self):
         """This function counts the number of images in the project

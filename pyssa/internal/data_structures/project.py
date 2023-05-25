@@ -157,27 +157,6 @@ class Project:
     def get_project_xml_path(self):
         return pathlib.Path(f"{self._workspace}/{self.get_project_name()}.xml")
 
-    # def serialize_project(self, filepath, filename) -> None:
-    #     """This function serialize the protein object
-    #
-    #     """
-    #     project_serializer = filesystem_io.ObjectSerializer(self, filepath, filename)
-    #     project_dict = {
-    #         '_project_name': str(self._project_name),
-    #         '_workspace': str(self._workspace),
-    #         '_date': str(self._date),
-    #         '_operating_system': str(self._operating_system),
-    #     }
-    #     project_serializer.set_custom_object_dict(project_dict)
-    #     project_serializer.serialize_object()
-    #
-    #     for tmp_protein in self.proteins:
-    #         tmp_protein.serialize_protein()
-    #     for tmp_protein_pair in self.protein_pairs:
-    #         tmp_protein_pair.serialize_protein_pair()
-    #     for tmp_distance_analysis in self.distance_analysis:
-    #         tmp_distance_analysis.serialize_distance_analysis()
-
     def serialize_project(self, filepath) -> None:
         project_root = ElementTree.Element(element_names.PROJECT)
         # setup project information tree

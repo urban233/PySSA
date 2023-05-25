@@ -1079,6 +1079,7 @@ class MainWindow(QMainWindow):
         """
         # get all protein pairs without images
         self.ui.list_analysis_images_struct_analysis.clear()
+        self.ui.list_analysis_images_creation_struct_analysis.clear()
         for tmp_protein_pair in self.app_project.protein_pairs:
             if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
                 self.ui.list_analysis_images_struct_analysis.addItem(tmp_protein_pair.name)
@@ -1090,6 +1091,12 @@ class MainWindow(QMainWindow):
         """This function displays the image work area
 
         """
+        if self.ui.box_renderer.currentText() == "":
+            self.ui.cb_ray_tracing.hide()
+            self.ui.label_26.hide()
+        else:
+            self.ui.cb_ray_tracing.show()
+            self.ui.label_26.show()
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_image_page)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 6, "Image")
@@ -3309,12 +3316,7 @@ class MainWindow(QMainWindow):
 
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
         distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
-        distance_data_array = np.array([distance_data["index"], distance_data["ref_chain"], distance_data["ref_pos"],
-                                        distance_data["ref_resi"], distance_data["model_chain"], distance_data["model_pos"],
-                                        distance_data["model_resi"], distance_data["distance"]])
-
         distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
-
 
         # check if histogram can be created
         distance_list.sort()
@@ -3330,15 +3332,19 @@ class MainWindow(QMainWindow):
             gui_elements_to_hide.append(self.ui.lbl_results_distance_histogram)
             gui_elements_to_hide.append(self.ui.btn_view_distance_histogram)
 
-        if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0:
-            # if images were made during analysis
-            filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
+        filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(
+            tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
+        if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) != 0:
+            # if both image types were made during analysis
             tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
             self.ui.list_results_interest_regions.clear()
             for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 self.ui.list_results_interest_regions.addItem(tmp_filename)
         elif len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) == 0:
             # only struct align image were made
+            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
+            self.ui.lbl_results_structure_alignment.show()
+            self.ui.btn_view_struct_alignment.show()
             gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
             gui_elements_to_hide.append(self.ui.list_results_interest_regions)
             gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
@@ -3581,12 +3587,17 @@ class MainWindow(QMainWindow):
 
         """
         if self.ui.box_renderer.currentIndex() == 0:
-            print("Please select a renderer.")
             self.status_bar.showMessage("Please select a renderer.")
+            self.ui.cb_ray_tracing.hide()
+            self.ui.label_26.hide()
         elif self.ui.box_renderer.currentIndex() == 1:
             self.renderer = "-1"
+            self.ui.cb_ray_tracing.show()
+            self.ui.label_26.show()
         elif self.ui.box_renderer.currentIndex() == 2:
             self.renderer = "0"
+            self.ui.cb_ray_tracing.show()
+            self.ui.label_26.show()
         else:
             print("Missing implementation!")
 

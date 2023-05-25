@@ -279,10 +279,6 @@ class AnalysisWorkerPool(QtCore.QRunnable):
         """This function is a reimplementation of the QRunnable run method.
 
         """
-        # # transform raw data: get data in a form to create protein pair and analysis objects
-        # self.transform_gui_input_to_practical_data()
-        # # setup data for analysis: create protein_pair and distance analysis objects
-        # self.set_up_analysis_runs()
         logger.debug(f"Memory address of worker {self}")
         # do the analysis runs
         self.run_analysis()

@@ -99,7 +99,7 @@ class XmlDeserializer:
                 protein_2 = tmp_project.search_protein(basic_information[attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT])
 
             tmp_protein_pair_obj = protein_pair.ProteinPair(protein_1=protein_1, protein_2=protein_2)
-
+            tmp_protein_pair_obj.name = tmp_protein_pair.attrib['name']
             pymol_session = tmp_protein_pair.find(element_names.PROTEIN_PAIR_SESSION).attrib
             tag_distance_analysis = tmp_protein_pair.find(element_names.DISTANCE_ANALYSIS)
             distance_analysis_settings = tag_distance_analysis.attrib
