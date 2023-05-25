@@ -3728,7 +3728,7 @@ class MainWindow(QMainWindow):
             self.ui.lbl_hotspots_resi_hide.hide()
             self.ui.btn_hotspots_resi_hide.hide()
             self.ui.lbl_hotspots_resi_zoom.hide()
-            self.ui.btn_hotspots_resi_zoom
+            self.ui.btn_hotspots_resi_zoom.hide()
         if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
