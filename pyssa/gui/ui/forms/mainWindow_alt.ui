@@ -747,7 +747,7 @@
                    <string/>
                   </property>
                   <property name="pixmap">
-                   <pixmap>../../../../../../../../.designer/assets/pyssa_logo.png</pixmap>
+                   <pixmap>../../../../../../../../../../../.designer/assets/pyssa_logo.png</pixmap>
                   </property>
                   <property name="scaledContents">
                    <bool>true</bool>
@@ -1874,6 +1874,43 @@
                   </property>
                   <property name="readOnly">
                    <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_99">
+                <item>
+                 <widget class="QLabel" name="lbl_color_rmsd">
+                  <property name="text">
+                   <string>By RMSD</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_77">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_color_rmsd">
+                  <property name="minimumSize">
+                   <size>
+                    <width>131</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Color</string>
                   </property>
                  </widget>
                 </item>

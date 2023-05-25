@@ -32,7 +32,7 @@ import numpy as np
 import pymol
 import csv
 from pyssa.internal.data_structures.data_classes import current_session
-from pyssa.internal.portal import pymol_io
+from pyssa.util import protein_pair_util
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
@@ -67,6 +67,10 @@ from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import protein_pair
 
 # setup logger
 # logging.basicConfig(level=logging.DEBUG)
@@ -460,6 +464,8 @@ class MainWindow(QMainWindow):
                 {
                     "label_results_rmsd": self.ui.lbl_results_rmsd,
                     "text_results_rmsd": self.ui.txt_results_rmsd,
+                    "label_color_rmsd": self.ui.lbl_color_rmsd,
+                    "button_color_rmsd": self.ui.btn_color_rmsd,
                     "label_results_aligned_residues": self.ui.lbl_results_aligned_residues,
                     "text_results_aligned_residues": self.ui.txt_results_aligned_residues,
                     "label_results_distance_plot": self.ui.lbl_results_distance_plot,
@@ -708,6 +714,7 @@ class MainWindow(QMainWindow):
 
         # <editor-fold desc="Results page">
         self.ui.cb_results_analysis_options.currentIndexChanged.connect(self.load_results)
+        self.ui.btn_color_rmsd.clicked.connect(self.color_protein_pair_by_rmsd)
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
         self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
         self.ui.btn_view_distance_histogram.clicked.connect(self.display_distance_histogram)
@@ -1639,6 +1646,7 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
 
     # </editor-fold>
@@ -1883,7 +1891,9 @@ class MainWindow(QMainWindow):
         self.app_project.serialize_project(pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"))
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
+        self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
+        self.project_scanner.project = self.app_project
         self._init_use_page()
         constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
@@ -2900,6 +2910,7 @@ class MainWindow(QMainWindow):
         self.ui.lbl_analysis_batch_prot_struct_1.setText(self.ui.box_analysis_batch_prot_struct_1.currentText())
         self.ui.lbl_analysis_batch_prot_struct_2.setText(self.ui.box_analysis_batch_prot_struct_2.currentText())
         self.ui.list_analysis_batch_ref_chains.clear()
+        self.ui.btn_analysis_batch_next_2.setEnabled(False)
         tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_1.currentText())
         for tmp_chain in tmp_protein.chains:
             if tmp_chain.chain_type == "protein_chain":
@@ -2991,6 +3002,10 @@ class MainWindow(QMainWindow):
 
     def count_batch_selected_chains_for_prot_struct_1(self):
         self.no_of_selected_chains = len(self.ui.list_analysis_batch_ref_chains.selectedItems())
+        if self.no_of_selected_chains > 0:
+            self.ui.btn_analysis_batch_next_2.setEnabled(True)
+        else:
+            self.ui.btn_analysis_batch_next_2.setEnabled(False)
 
     def post_analysis_process(self):
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
@@ -3367,6 +3382,119 @@ class MainWindow(QMainWindow):
         self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
 
         # </editor-fold>
+
+    def color_protein_pair_by_rmsd(self):
+        """This function colors the residues of the reference and the model protein in 5 colors
+                depending on their distance to the reference
+
+        Args:
+            alignment_filename:
+                filename of the alignment_file
+        Returns:
+
+        """
+        tmp_protein_pair: 'protein_pair.ProteinPair' = self.app_project.search_protein_pair(self.results_name)
+
+        cutoff_1 = 0.5
+        cutoff_2 = 1.0
+        cutoff_3 = 2
+        cutoff_4 = 4
+        cutoff_5 = 6
+
+        color_1 = "br0"
+        color_2 = "br2"
+        color_3 = "br4"
+        color_4 = "br6"
+        color_5 = "br8"
+        color_6 = "red"
+
+        cmd.color("hydrogen", tmp_protein_pair.protein_2.get_molecule_object())
+
+        i: int = 0
+        for distance_value in tmp_protein_pair.distance_analysis.analysis_results.distance_data.get("distance"):
+            if distance_value <= cutoff_1:
+                atom_info = protein_pair_util.get_chain_and_position(tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                # create two atoms for the get_distance command
+                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
+                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
+                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                # coloring
+                cmd.color(color_1, atom1)
+                cmd.color(color_1, atom2)
+                # cmd.do(f"color {color_1}, {atom1}")
+                # cmd.do(f"color {color_1}, {atom2}")
+                i += 1
+
+            elif distance_value <= cutoff_2:
+                atom_info = protein_pair_util.get_chain_and_position(
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                # create two atoms for the get_distance command
+                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
+                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
+                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                # coloring
+                cmd.color(color_2, atom1)
+                cmd.color(color_2, atom2)
+                i += 1
+
+            elif distance_value <= cutoff_3:
+                atom_info = protein_pair_util.get_chain_and_position(
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                # create two atoms for the get_distance command
+                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
+                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}/CA"
+                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
+                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
+                # coloring
+                cmd.color(color_3, atom1)
+                cmd.color(color_3, atom2)
+                i += 1
+
+            elif distance_value <= cutoff_4:
+                atom_info = protein_pair_util.get_chain_and_position(
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                # create two atoms for the get_distance command
+                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
+                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
+                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                # coloring
+                cmd.color(color_4, atom1)
+                cmd.color(color_4, atom2)
+                i += 1
+
+            elif distance_value <= cutoff_5:
+                atom_info = protein_pair_util.get_chain_and_position(
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                # create two atoms for the get_distance command
+                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
+                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
+                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                # coloring
+                cmd.color(color_5, atom1)
+                cmd.color(color_5, atom2)
+                i += 1
+
+            elif distance_value > cutoff_5:
+                atom_info = protein_pair_util.get_chain_and_position(
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                # create two atoms for the get_distance command
+                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
+                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
+                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                # coloring
+                cmd.color(color_6, f"({atom1})")
+                cmd.color(color_6, f"({atom2})")
+                i += 1
+
+        # hide unnecessary representations
+        cmd.hide("cartoon", tmp_protein_pair.protein_1.get_molecule_object())
+        cmd.hide("cartoon", f"{self.protein_pair.ref_obj.molecule_object}_CA")
+        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}_CA")
 
     def change_interesting_regions(self):
         """This function is used to switch between projects within a job.

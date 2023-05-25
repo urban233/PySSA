@@ -150,7 +150,7 @@ class ProteinPair:
             The file name (filename) MUST NOT have the file extension .pse!
 
         """
-        protein_pair_operations.save_session_of_protein_pair(constants.CACHE_PYMOL_SESSION_DIR)
+        self.pymol_session = protein_pair_operations.save_session_of_protein_pair(self.name)
 
     def set_distance_analysis(self, value):
         self.distance_analysis = value

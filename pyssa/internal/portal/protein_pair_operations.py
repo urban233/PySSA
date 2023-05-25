@@ -99,7 +99,7 @@ def color_protein_pair(pymol_molecule_object_ref, pymol_molecule_object_model, c
     cmd.color(color_model, pymol_molecule_object_model)
 
 
-def save_session_of_protein_pair(name_of_protein_pair: str) -> None:
+def save_session_of_protein_pair(name_of_protein_pair: str) -> str:
     """This function saves the pymol session of the Protein pair.
 
     Note:
@@ -114,7 +114,7 @@ def save_session_of_protein_pair(name_of_protein_pair: str) -> None:
             name of the session file
 
     """
-    pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
+    return pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
 
     # if not os.path.exists(session_filepath.get_dirname()):
     #     os.mkdir(session_filepath.get_dirname())

@@ -102,6 +102,7 @@ class XmlDeserializer:
             tmp_protein_pair_obj.name = tmp_protein_pair.attrib['name']
             pymol_session = tmp_protein_pair.find(element_names.PROTEIN_PAIR_SESSION).attrib
             tag_distance_analysis = tmp_protein_pair.find(element_names.DISTANCE_ANALYSIS)
+            tmp_protein_pair_obj.pymol_session = pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION]
             distance_analysis_settings = tag_distance_analysis.attrib
             tag_results = tag_distance_analysis.find(element_names.DISTANCE_ANALYSIS_RESULTS)
             rmsd_aligned_aa = tag_results.attrib
@@ -171,8 +172,10 @@ class XmlDeserializer:
         for tmp_protein_pair in self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}"):
             if tmp_protein_pair.attrib["name"] == protein_pair_name:
                 structure_aln_images = tmp_protein_pair.findall(f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE}")
-                analysis_results.structure_aln_image = (structure_aln_images[0].attrib[attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME], structure_aln_images[0].text)
-
+                try:
+                    analysis_results.structure_aln_image = (structure_aln_images[0].attrib[attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME], structure_aln_images[0].text)
+                except IndexError:
+                    analysis_results.structure_aln_image = ()
                 interesting_reg_images = tmp_protein_pair.findall(f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS}")
                 for tmp_image in interesting_reg_images:
                     analysis_results.interesting_regions_images.append((tmp_image.attrib[attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME], tmp_image.text))

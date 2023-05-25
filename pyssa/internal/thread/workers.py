@@ -261,6 +261,7 @@ class AnalysisWorkerPool(QtCore.QRunnable):
                     self.app_settings
                 ).transform_gui_input_to_distance_analysis_object()
             )
+        logger.debug(distance_analysis_runs)
         return distance_analysis_runs
 
     def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':

@@ -83,6 +83,7 @@ class Analysis:
                     )
                 tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(interesting_region_filepaths)
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
+            tmp_protein_pair.save_session_of_protein_pair()
             self.app_project.add_protein_pair(tmp_protein_pair)
         self.analysis_list.clear()
 
