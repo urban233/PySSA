@@ -3718,6 +3718,17 @@ class MainWindow(QMainWindow):
     # <editor-fold desc="Hotspots page functions">
     def open_protein(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
+        # empty list
+        # TODO: TEST IT!!!
+        if input.find(""):
+            self.ui.lbl_hotspots_resi_no.hide()
+            self.ui.sp_hotspots_resi_no.hide()
+            self.ui.lbl_hotspots_resi_show.hide()
+            self.ui.btn_hotspots_resi_show.hide()
+            self.ui.lbl_hotspots_resi_hide.hide()
+            self.ui.btn_hotspots_resi_hide.hide()
+            self.ui.lbl_hotspots_resi_zoom.hide()
+            self.ui.btn_hotspots_resi_zoom
         if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
