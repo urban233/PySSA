@@ -3718,40 +3718,44 @@ class MainWindow(QMainWindow):
     # <editor-fold desc="Hotspots page functions">
     def open_protein(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        if input.find(".pdb") != -1:
+        if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-            tmp_protein.load_protein()
+            tmp_protein.load_protein_pymol_session()
+            tmp_protein.pymol_selection.set_selections_without_chains_ca()
+            tmp_model = cmd.get_model(tmp_protein.pymol_selection.selection_string)
+            first_amoino_acid_no = tmp_model.atom[0].resi
+            self.ui.sp_hotspots_resi_no.setMinimum(int(first_amoino_acid_no))
             tmp_sequence = cmd.get_fastastr('all')
             self.ui.sp_hotspots_resi_no.setMaximum(len(tmp_sequence))
         else:
             # protein pair is selected
             tmp_protein_pair = self.app_project.get_specific_protein_pair(input)
-            tmp_protein_pair.load_protein_pair()
+            tmp_protein_pair.load_pymol_session()
 
     def show_resi_sticks(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        if input.find(".pdb") != -1:
+        if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-            tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
             tmp_protein.show_resi_as_balls_and_sticks()
         # protein pair is selected
 
     def hide_resi_sticks(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        if input.find(".pdb") != -1:
+        if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-            tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
             tmp_protein.hide_resi_as_balls_and_sticks()
 
     def zoom_resi_position(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        if input.find(".pdb") != -1:
+        if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-            tmp_protein.selection = f"/{tmp_protein.molecule_object}///{self.ui.sp_hotspots_resi_no.text()}/"
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
             tmp_protein.zoom_resi_protein_position()
 
     # </editor-fold>

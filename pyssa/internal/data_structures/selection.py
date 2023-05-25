@@ -103,3 +103,6 @@ class Selection:
                 a type of atom
         """
         self.selection_string = f"/{self.molecule_object}/{segi}/{chain}/{resi}/{atom_name}"
+
+    def set_custom_selection(self, sele_string):
+        self.selection_string = sele_string
