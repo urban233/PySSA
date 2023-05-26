@@ -204,6 +204,14 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_mono_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
         self.ui.table_pred_multi_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
 
+
+        self.pymol_session_specs = {
+            pyssa_keys.SESSION_SPEC_PROTEIN: [0, ""],
+            pyssa_keys.SESSION_SPEC_COLOR: [0, ""],
+            pyssa_keys.SESSION_SPEC_REPRESENTATION: [0, ""],
+            pyssa_keys.SESSION_SPEC_BG_COLOR: [0, ""],
+        }
+
         # setup defaults for pages
         self._init_fill_combo_boxes()
         self._init_new_page()
@@ -797,11 +805,14 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
         self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
         self.ui.btn_prediction_abort.clicked.connect(self.abort_prediction)
+        self.ui.btn_pred_analysis_monomer_page.clicked.connect(self.display_monomer_pred_analysis)
+        self.ui.btn_pred_analysis_multimer_page.clicked.connect(self.display_multimer_pred_analysis)
         self.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
         self.ui.btn_batch_analysis_page.clicked.connect(self.display_job_analysis_page)
         self.ui.btn_image_analysis_page.clicked.connect(self.display_image_analysis_page)
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
         self.ui.btn_analysis_abort.clicked.connect(self.abort_analysis)
+        self.ui.btn_manage_session.clicked.connect(self.display_manage_pymol_session)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
         self.ui.btn_hotspots_page.clicked.connect(self.display_hotspots_page)
 
@@ -1028,6 +1039,7 @@ class MainWindow(QMainWindow):
             "ribbon",
         ]
         gui_utils.fill_combo_box(self.ui.box_representation, item_list_representation)
+        gui_utils.fill_combo_box(self.ui.box_manage_choose_representation, item_list_representation)
         # combo box BgColor
         item_list_bg_color = [
             "",
@@ -1035,6 +1047,7 @@ class MainWindow(QMainWindow):
             "white",
         ]
         gui_utils.fill_combo_box(self.ui.box_bg_color, item_list_bg_color)
+        gui_utils.fill_combo_box(self.ui.box_manage_choose_bg_color, item_list_bg_color)
         # combo box Renderer
         item_list_renderer = [
             "",
@@ -1061,6 +1074,27 @@ class MainWindow(QMainWindow):
             "Fiber",
         ]
         gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
+        # combo box protein Colors
+        item_list_colors = [
+            "",
+            "red",
+            "tv-red",
+            "green",
+            "limegreen",
+            "blue",
+            "skyblue",
+            "yellow",
+            "limon",
+            "magenta",
+            "hotpink",
+            "violet",
+            "cyan",
+            "greencyan",
+            "orange",
+            "lightorange",
+            "white",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_manage_choose_color, item_list_colors)
 
     def _init_new_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -1467,6 +1501,31 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_hotspots_page)
+
+    def display_monomer_pred_analysis(self):
+        self.monomer_prediction_analysis_management.show_stage_x(0)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 21, "Monomer Prediction + Analysis")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_analysis_monomer_page)
+
+    def display_multimer_pred_analysis(self):
+        self.multimer_prediction_analysis_management.show_stage_x(0)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 22, "Multimer Prediction + Analysis")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_analysis_multimer_page)
+
+    def display_manage_pymol_session(self):
+        pymol_objs = cmd.get_object_list()
+        pymol_objs.insert(0, "")
+        for tmp_object in pymol_objs:
+            self.ui.box_manage_choose_protein.addItem(tmp_object)
+        self.ui.box_manage_choose_protein.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_PROTEIN][0])
+        self.ui.box_manage_choose_color.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_COLOR][0])
+        self.ui.box_manage_choose_representation.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_REPRESENTATION][0])
+        self.ui.box_manage_choose_bg_color.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_BG_COLOR][0])
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 24, "Manage PyMOL session")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_manage_session)
 
     # </editor-fold>
 

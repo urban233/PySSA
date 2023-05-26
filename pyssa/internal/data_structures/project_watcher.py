@@ -98,6 +98,7 @@ class ProjectWatcher:
                 ui.btn_results_page,
                 ui.btn_analysis_abort,
                 ui.lbl_handle_pymol_session,
+                ui.btn_manage_session,
                 ui.btn_image_page,
             ]
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
@@ -136,6 +137,7 @@ class ProjectWatcher:
                 ui.btn_pred_analysis_monomer_page,
                 ui.btn_pred_analysis_multimer_page,
                 ui.lbl_handle_pymol_session,
+                ui.btn_manage_session,
                 ui.btn_image_page,
                 ui.btn_hotspots_page,
             ]
@@ -152,6 +154,7 @@ class ProjectWatcher:
                 ui.btn_pred_analysis_monomer_page,
                 ui.btn_pred_analysis_multimer_page,
                 ui.lbl_handle_pymol_session,
+                ui.btn_manage_session,
                 ui.btn_image_page,
                 ui.btn_hotspots_page,
             ]
@@ -190,6 +193,7 @@ class ProjectWatcher:
                 ui.lbl_analysis,
                 ui.btn_batch_analysis_page,
                 ui.lbl_handle_pymol_session,
+                ui.btn_manage_session,
                 ui.btn_image_page,
                 ui.btn_hotspots_page,
             ]

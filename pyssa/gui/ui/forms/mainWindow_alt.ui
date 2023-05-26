@@ -181,9 +181,9 @@
                 <property name="geometry">
                  <rect>
                   <x>0</x>
-                  <y>0</y>
+                  <y>-12</y>
                   <width>146</width>
-                  <height>770</height>
+                  <height>793</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_115">
@@ -532,6 +532,13 @@
                      </property>
                      <property name="indent">
                       <number>2</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_manage_session">
+                     <property name="text">
+                      <string>Manage</string>
                      </property>
                     </widget>
                    </item>
@@ -6541,7 +6548,7 @@
                     <item>
                      <widget class="QLabel" name="lbl_pred_analysis_multi_ref_chains">
                       <property name="text">
-                       <string>Select chains in protein structure 1 (if necessary)</string>
+                       <string>Select chains in protein structure 1</string>
                       </property>
                      </widget>
                     </item>
@@ -6599,7 +6606,7 @@
                     <item>
                      <widget class="QLabel" name="lbl_pred_analysis_multi_model_chains">
                       <property name="text">
-                       <string>Select chains in protein structure 2 (if necessary)</string>
+                       <string>Select chains in protein structure 2</string>
                       </property>
                      </widget>
                     </item>
@@ -6839,6 +6846,79 @@
                  </widget>
                 </item>
                </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="page_7">
+             <layout class="QVBoxLayout" name="verticalLayout_141">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_117">
+                <item>
+                 <widget class="QLabel" name="lbl_manage_choose_protein">
+                  <property name="text">
+                   <string>Choose protein</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="box_manage_choose_protein"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_118">
+                <item>
+                 <widget class="QLabel" name="lbl_manage_choose_color">
+                  <property name="text">
+                   <string>Choose protein color</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="box_manage_choose_color"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_119">
+                <item>
+                 <widget class="QLabel" name="lbl_manage_choose_representation">
+                  <property name="text">
+                   <string>Choose protein representation</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="box_manage_choose_representation"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_120">
+                <item>
+                 <widget class="QLabel" name="lbl_manage_choose_bg_color">
+                  <property name="text">
+                   <string>Choose background color</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="box_manage_choose_bg_color"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_21">
+                <property name="orientation">
+                 <enum>Qt::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>580</height>
+                 </size>
+                </property>
+               </spacer>
               </item>
              </layout>
             </widget>

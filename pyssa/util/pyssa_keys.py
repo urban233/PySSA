@@ -48,3 +48,7 @@ DISTANCE_ANALYSIS_SESSION_SUBDIR = "distance_analysis_session_subdir"
 DISTANCE_ANALYSIS_RESULTS_SUBDIR = "distance_analysis_results_subdir"
 DISTANCE_ANALYSIS_OBJECTS_SUBDIR = "distance_analysis_objects_subdir"
 
+SESSION_SPEC_PROTEIN = "protein"
+SESSION_SPEC_COLOR = "color"
+SESSION_SPEC_REPRESENTATION = "representation"
+SESSION_SPEC_BG_COLOR = "background_color"
