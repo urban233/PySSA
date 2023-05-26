@@ -170,13 +170,17 @@ class MainWindow(QMainWindow):
         self.single_analysis_management: gui_page_management.GuiPageManagement
         self.batch_analysis_management: gui_page_management.GuiPageManagement
         self.results_management: gui_page_management.GuiPageManagement
+        self.monomer_prediction_analysis_management: gui_page_management.GuiPageManagement
+        self.multi_prediction_analysis_management: gui_page_management.GuiPageManagement
 
-        # management
+        # management functions
         self._create_local_pred_monomer_management()
         self._create_local_pred_multimer_management()
         self._create_single_analysis_management()
         self._create_batch_analysis_management()
         self._create_results_management()
+        self._create_monomer_prediction_analysis_management()
+        self._create_multimer_prediction_analysis_management()
 
         # </editor-fold>
 
@@ -487,6 +491,230 @@ class MainWindow(QMainWindow):
             ),
         ]
         self.results_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_monomer_prediction_analysis_management(self):
+        tmp_stages = [
+            # add protein stage
+            stage.Stage(
+                {
+                    "label_proteins_to_predict": self.ui.lbl_pred_analysis_mono_prot_to_predict,
+                    "table_proteins_to_predict": self.ui.table_pred_analysis_mono_prot_to_predict,
+                },
+                {
+                    "remove_button": self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+                    "next_button": self.ui.btn_pred_analysis_mono_seq_to_predict,
+                }
+            ),
+            # protein name stage
+            stage.Stage(
+                {
+                    "label_protein_name": self.ui.lbl_pred_analysis_mono_prot_name,
+                    "text_field_protein_name": self.ui.txt_pred_analysis_mono_prot_name,
+                    "label_protein_name_status": self.ui.lbl_pred_analysis_mono_prot_name_status,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_mono_back,
+                    "next_button": self.ui.btn_pred_analysis_mono_next,
+                }
+            ),
+            # protein sequence stage
+            stage.Stage(
+                {
+                    "label_protein_sequence": self.ui.lbl_pred_analysis_mono_seq_name,
+                    "text_field_protein_sequence": self.ui.txt_pred_analysis_mono_seq_name,
+                    "label_protein_sequence_status": self.ui.lbl_pred_analysis_mono_seq_name_status,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_mono_back_2,
+                    "next_button": self.ui.btn_pred_analysis_mono_add_protein,
+                }
+            ),
+            # prediction stage (with advanced configurations)
+            stage.Stage(
+                {
+                    "label_advanced_config": self.ui.lbl_pred_mono_advanced_config_2,
+                    "button_advanced_config": self.ui.btn_pred_mono_advanced_config_2,
+                },
+                {
+                    "label_go_to_analysis": self.ui.lbl_pred_analysis_mono_to_analysis_setup,
+                    "button_go_to_analysis": self.ui.btn_pred_analysis_mono_go_analysis_setup,
+                }
+            ),
+            # add a prot analysis: stage 0
+            stage.Stage(
+                {
+                    "label_batch_analysis_overview": self.ui.lbl_pred_analysis_mono_overview,
+                    "box_protein_structure_1": self.ui.list_pred_analysis_mono_overview,
+                },
+                {
+                    "add_button": self.ui.btn_pred_analysis_mono_add,
+                    "remove_button": self.ui.btn_pred_analysis_mono_remove,
+                }
+            ),
+            # choose protein structures: stage 1
+            stage.Stage(
+                {
+                    "label_protein_structure_1": self.ui.lbl_pred_analysis_mono_prot_struct_1,
+                    "box_protein_structure_1": self.ui.box_pred_analysis_mono_prot_struct_1,
+                    "label_vs": self.ui.lbl_analysis_batch_vs_2,
+                    "label_protein_structure_2": self.ui.lbl_pred_analysis_mono_prot_struct_2,
+                    "box_protein_structure_2": self.ui.box_pred_analysis_mono_prot_struct_2,
+                },
+                {
+                    "next_button": self.ui.btn_pred_analysis_mono_next_2,
+                    "back_button": self.ui.btn_pred_analysis_mono_back_3,
+                }
+            ),
+            # choose chains from prot structure 1: stage 2
+            stage.Stage(
+                {
+                    "label_protein_structure_1_chains": self.ui.lbl_pred_analysis_mono_ref_chains,
+                    "list_protein_structure_1_chains": self.ui.list_pred_analysis_mono_ref_chains,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_mono_back_4,
+                    "next_button": self.ui.btn_pred_analysis_mono_next_3,
+                }
+            ),
+            # choose chains from prot structure 2: stage 3
+            stage.Stage(
+                {
+                    "label_protein_structure_2_chains": self.ui.lbl_pred_analysis_mono_model_chains,
+                    "list_protein_structure_2_chains": self.ui.list_pred_analysis_mono_model_chains,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_mono_back_5,
+                    "next_button": self.ui.btn_pred_analysis_mono_next_4,
+                },
+            ),
+            # start batch run: stage 4
+            stage.Stage(
+                {
+                    "label_images": self.ui.lbl_pred_analysis_mono_images,
+                    "checkbox_images": self.ui.cb_pred_analysis_mono_images,
+                },
+                {
+                    "back_button":self.ui.btn_pred_analysis_mono_back_pred_setup,
+                    "start_button": self.ui.btn_pred_analysis_mono_start,
+                }
+            ),
+        ]
+        self.monomer_prediction_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_multimer_prediction_analysis_management(self):
+        tmp_stages = [
+            # add protein stage
+            stage.Stage(
+                {
+                    "label_proteins_to_predict": self.ui.lbl_pred_analysis_multi_prot_to_predict,
+                    "table_proteins_to_predict": self.ui.table_pred_analysis_multi_prot_to_predict,
+                },
+                {
+                    "remove_button": self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                    "next_button": self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+                }
+            ),
+            # protein name stage
+            stage.Stage(
+                {
+                    "label_protein_name": self.ui.lbl_pred_analysis_multi_prot_name,
+                    "text_field_protein_name": self.ui.txt_pred_analysis_multi_prot_name,
+                    "label_protein_name_status": self.ui.lbl_pred_analysis_multi_prot_name_status,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_multi_back,
+                    "next_button": self.ui.btn_pred_analysis_multi_next,
+                }
+            ),
+            # protein sequence stage
+            stage.Stage(
+                {
+                    "label_protein_sequence": self.ui.lbl_pred_analysis_multi_prot_seq,
+                    "text_field_protein_sequence": self.ui.txt_pred_analysis_multi_prot_seq,
+                    "label_protein_sequence_status": self.ui.lbl_pred_analysis_multi_prot_seq_status,
+                    "label_protein_sequence_add": self.ui.lbl_pred_multi_prot_seq_add_2,
+                    "button_protein_sequence_add": self.ui.btn_pred_analysis_multi_prot_seq_add,
+                    "label_protein_sequence_overview": self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                    "list_protein_sequence_overview": self.ui.list_pred_analysis_multi_prot_seq_overview,
+                    "button_protein_sequence_overview_remove": self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                    "label_protein_to_predict": self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_multi_back_2,
+                    "next_button": self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+                }
+            ),
+            # prediction stage (with advanced configurations)
+            stage.Stage(
+                {
+                    "label_advanced_config": self.ui.lbl_pred_analysis_multi_advanced_config,
+                    "button_advanced_config": self.ui.btn_pred_analysis_multi_advanced_config,
+                },
+                {
+                    "label_go_to_analysis": self.ui.lbl_pred_analysis_multi_to_analysis_setup,
+                    "button_go_to_analysis": self.ui.btn_pred_analysis_multi_go_analysis_setup,
+                }
+            ),
+            # add a prot analysis: stage 0
+            stage.Stage(
+                {
+                    "label_batch_analysis_overview": self.ui.lbl_pred_analysis_multi_overview,
+                    "box_protein_structure_1": self.ui.list_pred_analysis_multi_overview,
+                },
+                {
+                    "add_button": self.ui.btn_pred_analysis_multi_add,
+                    "remove_button": self.ui.btn_pred_analysis_multi_remove,
+                }
+            ),
+            # choose protein structures: stage 1
+            stage.Stage(
+                {
+                    "label_protein_structure_1": self.ui.lbl_pred_analysis_multi_prot_struct_1,
+                    "box_protein_structure_1": self.ui.box_pred_analysis_multi_prot_struct_1,
+                    "label_vs": self.ui.lbl_analysis_batch_vs_3,
+                    "label_protein_structure_2": self.ui.lbl_pred_analysis_multi_prot_struct_2,
+                    "box_protein_structure_2": self.ui.box_pred_analysis_multi_prot_struct_2,
+                },
+                {
+                    "next_button": self.ui.btn_pred_analysis_multi_next_2,
+                    "back_button": self.ui.btn_pred_analysis_multi_back_3,
+                }
+            ),
+            # choose chains from prot structure 1: stage 2
+            stage.Stage(
+                {
+                    "label_protein_structure_1_chains": self.ui.lbl_pred_analysis_multi_ref_chains,
+                    "list_protein_structure_1_chains": self.ui.list_pred_analysis_multi_ref_chains,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_multi_back_4,
+                    "next_button": self.ui.btn_pred_analysis_multi_next_3,
+                }
+            ),
+            # choose chains from prot structure 2: stage 3
+            stage.Stage(
+                {
+                    "label_protein_structure_2_chains": self.ui.lbl_pred_analysis_multi_model_chains,
+                    "list_protein_structure_2_chains": self.ui.list_pred_analysis_multi_model_chains,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_multi_back_5,
+                    "next_button": self.ui.btn_pred_analysis_multi_next_4,
+                },
+            ),
+            # start batch run: stage 4
+            stage.Stage(
+                {
+                    "label_images": self.ui.lbl_pred_analysis_multi_images,
+                    "checkbox_images": self.ui.cb_pred_analysis_multi_images,
+                },
+                {
+                    "back_button": self.ui.btn_pred_analysis_multi_back_pred_setup,
+                    "start_button": self.ui.btn_pred_analysis_multi_start,
+                }
+            ),
+        ]
+        self.multimer_prediction_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
 
     # </editor-fold>
 

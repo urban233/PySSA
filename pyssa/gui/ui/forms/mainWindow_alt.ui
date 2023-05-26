@@ -5544,7 +5544,7 @@
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QPushButton" name="btn_pred_analysis_mono_back_2">
+                     <widget class="QPushButton" name="btn_pred_analysis_mono_back">
                       <property name="text">
                        <string>Back</string>
                       </property>
@@ -5596,7 +5596,7 @@
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QPushButton" name="btn_pred_analysis_mono_back">
+                     <widget class="QPushButton" name="btn_pred_analysis_mono_back_2">
                       <property name="text">
                        <string>Back</string>
                       </property>
@@ -5862,7 +5862,7 @@
                     <item>
                      <widget class="QLabel" name="lbl_pred_analysis_mono_ref_chains">
                       <property name="text">
-                       <string>Select chains in protein structure 1 (if necessary)</string>
+                       <string>Select chains in protein structure 1</string>
                       </property>
                      </widget>
                     </item>
@@ -5920,7 +5920,7 @@
                     <item>
                      <widget class="QLabel" name="lbl_pred_analysis_mono_model_chains">
                       <property name="text">
-                       <string>Select chains in protein structure 2 (if necessary)</string>
+                       <string>Select chains in protein structure 2</string>
                       </property>
                      </widget>
                     </item>
