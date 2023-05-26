@@ -212,6 +212,9 @@ class MainWindow(QMainWindow):
             pyssa_keys.SESSION_SPEC_BG_COLOR: [0, ""],
         }
 
+        # helper attributes
+        self.used_proteins: list[str] = ["", "", "", ""]
+
         # setup defaults for pages
         self._init_fill_combo_boxes()
         self._init_new_page()
@@ -1496,7 +1499,19 @@ class MainWindow(QMainWindow):
 
     def display_hotspots_page(self):
         self.ui.list_hotspots_choose_protein.clear()
+        gui_elements_to_hide = [
+            self.ui.lbl_hotspots_resi_no,
+            self.ui.sp_hotspots_resi_no,
+            self.ui.lbl_hotspots_resi_show,
+            self.ui.btn_hotspots_resi_show,
+            self.ui.lbl_hotspots_resi_hide,
+            self.ui.btn_hotspots_resi_hide,
+            self.ui.lbl_hotspots_resi_zoom,
+            self.ui.btn_hotspots_resi_zoom,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_hotspots_choose_protein)
+        gui_utils.fill_list_view_with_protein_pair_names(self.app_project, self.ui.list_hotspots_choose_protein)
         # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_hotspots_choose_protein)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -4149,18 +4164,8 @@ class MainWindow(QMainWindow):
 
     # <editor-fold desc="Hotspots page functions">
     def open_protein(self):
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        # empty list
-        # TODO: TEST IT!!!
-        if input.find(""):
-            self.ui.lbl_hotspots_resi_no.hide()
-            self.ui.sp_hotspots_resi_no.hide()
-            self.ui.lbl_hotspots_resi_show.hide()
-            self.ui.btn_hotspots_resi_show.hide()
-            self.ui.lbl_hotspots_resi_hide.hide()
-            self.ui.btn_hotspots_resi_hide.hide()
-            self.ui.lbl_hotspots_resi_zoom.hide()
-            self.ui.btn_hotspots_resi_zoom.hide()
         if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
@@ -4171,9 +4176,53 @@ class MainWindow(QMainWindow):
             self.ui.sp_hotspots_resi_no.setMinimum(int(first_amoino_acid_no))
             tmp_sequence = cmd.get_fastastr('all')
             self.ui.sp_hotspots_resi_no.setMaximum(len(tmp_sequence))
+            gui_elements_to_show = [
+                self.ui.lbl_hotspots_resi_no,
+                self.ui.sp_hotspots_resi_no,
+                self.ui.lbl_hotspots_resi_show,
+                self.ui.btn_hotspots_resi_show,
+                self.ui.lbl_hotspots_resi_hide,
+                self.ui.btn_hotspots_resi_hide,
+                self.ui.lbl_hotspots_resi_zoom,
+                self.ui.btn_hotspots_resi_zoom,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
         else:
             # protein pair is selected
             tmp_protein_pair = self.app_project.get_specific_protein_pair(input)
+            prot1_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_1))
+            prot2_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_2))
+            if prot1_no > prot2_no:
+                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+                self.used_proteins[0] = tmp_protein_pair.protein_1.get_molecule_object()
+                self.used_proteins[1] = tmp_protein_pair.protein_2.get_molecule_object()
+            else:
+                self.ui.sp_hotspots_resi_no.setMinimum(prot1_no)
+                self.used_proteins[0] = tmp_protein_pair.protein_1.get_molecule_object()
+                self.used_proteins[1] = tmp_protein_pair.protein_2.get_molecule_object()
+
+            prot1_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_1))
+            prot2_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_2))
+            if prot1_seq_len > prot2_seq_len:
+                self.ui.sp_hotspots_resi_no.setMaximum(prot2_seq_len)
+                self.used_proteins[3] = tmp_protein_pair.protein_2.get_molecule_object()
+                self.used_proteins[2] = tmp_protein_pair.protein_1.get_molecule_object()
+            else:
+                self.ui.sp_hotspots_resi_no.setMaximum(prot1_seq_len)
+                self.used_proteins[2] = tmp_protein_pair.protein_1.get_molecule_object()
+                self.used_proteins[3] = tmp_protein_pair.protein_2.get_molecule_object()
+
+            gui_elements_to_show = [
+                self.ui.lbl_hotspots_resi_no,
+                self.ui.sp_hotspots_resi_no,
+                self.ui.lbl_hotspots_resi_show,
+                self.ui.btn_hotspots_resi_show,
+                self.ui.lbl_hotspots_resi_hide,
+                self.ui.btn_hotspots_resi_hide,
+                self.ui.lbl_hotspots_resi_zoom,
+                self.ui.btn_hotspots_resi_zoom,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
             tmp_protein_pair.load_pymol_session()
 
     def show_resi_sticks(self):
@@ -4183,7 +4232,29 @@ class MainWindow(QMainWindow):
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
             tmp_protein.show_resi_as_balls_and_sticks()
-        # protein pair is selected
+        else:
+            tmp_protein_pair = self.app_project.search_protein_pair(input)
+            resi_no = int(self.ui.sp_hotspots_resi_no.text())
+            if resi_no < int(self.used_proteins[0]):
+                # use prot 2
+                tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
+                tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
+            elif resi_no < int(self.used_proteins[1]):
+                # use prot 1
+                tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
+                tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
+            elif resi_no > int(self.used_proteins[2]):
+                # use prot 2
+                tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
+                tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
+            elif resi_no > int(self.used_proteins[3]):
+                # use prot 1
+                tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
+                tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
 
     def hide_resi_sticks(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()

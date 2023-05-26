@@ -488,3 +488,8 @@ def write_fasta_file_from_table():
 def fill_list_view_with_protein_names(app_project: 'project.Project', list_view_project_proteins):
     for tmp_protein in app_project.proteins:
         list_view_project_proteins.addItem(tmp_protein.get_molecule_object())
+
+
+def fill_list_view_with_protein_pair_names(app_project: 'project.Project', list_view_project_proteins):
+    for tmp_protein_pair in app_project.protein_pairs:
+        list_view_project_proteins.addItem(tmp_protein_pair.name)

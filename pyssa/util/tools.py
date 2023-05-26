@@ -620,6 +620,20 @@ def ask_to_save_pymol_session(app_project: 'project.Project', current_session: c
         app_project.save_pymol_session(current_session)
 
 
+def check_first_seq_no(tmp_protein):
+    tmp_protein.load_protein_pymol_session()
+    #tmp_protein.pymol_selection.set_selections_without_chains_ca()
+    tmp_model = cmd.get_model(tmp_protein.pymol_selection.selection_string)
+    first_amoino_acid_no = tmp_model.atom[0].resi
+    return first_amoino_acid_no
+
+
+def check_seq_length(tmp_protein):
+    #tmp_protein.pymol_selection.set_selections_without_chains_ca()
+    tmp_protein.load_protein_pymol_session()
+    tmp_sequence = cmd.get_fastastr(tmp_protein.pymol_selection.selection_string)
+    return len(tmp_sequence)
+
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")
 #
