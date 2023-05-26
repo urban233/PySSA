@@ -31,6 +31,7 @@ import PyQt5.QtCore
 import numpy as np
 import pymol
 import csv
+import copy
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.util import protein_pair_util
 from pyssa.gui.ui.dialogs import dialog_settings_global
@@ -1070,15 +1071,20 @@ class MainWindow(QMainWindow):
 
         """
         results = []
+        results.insert(0, "")
+        current_results_index = 0
+        i = 0
         for tmp_protein_pair in self.app_project.protein_pairs:
             results.append(tmp_protein_pair.name)
-        results.insert(0, "")
+            if tmp_protein_pair.name == self.results_name:
+                current_results_index = i
+            i += 1
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 5, "Results")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_results_page)
-        self.show_analysis_results_options()
+        self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
 
     def display_image_analysis_page(self):
         """This function displays the analysis image work area
@@ -3331,7 +3337,7 @@ class MainWindow(QMainWindow):
 
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
         distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
-        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
+        distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
 
         # check if histogram can be created
         distance_list.sort()
@@ -3493,7 +3499,7 @@ class MainWindow(QMainWindow):
 
         # hide unnecessary representations
         cmd.hide("cartoon", tmp_protein_pair.protein_1.get_molecule_object())
-        cmd.hide("cartoon", f"{self.protein_pair.ref_obj.molecule_object}_CA")
+        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}_CA")
         cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}_CA")
 
     def change_interesting_regions(self):

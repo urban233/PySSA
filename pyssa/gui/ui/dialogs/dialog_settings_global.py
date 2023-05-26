@@ -19,11 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import pathlib
 import subprocess
 import os
 import logging
-import time
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 from pyssa.internal.data_structures import settings
 from pyssa.util import constants, gui_utils
@@ -87,12 +85,12 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
         logging.info("Loading values from settings.json was successful.")
         self.ui.txt_workspace_dir.setEnabled(False)
-        self.ui.txt_zip_storage_dir.setEnabled(False)
+        #self.ui.txt_zip_storage_dir.setEnabled(False)
 
         logging.info("Settings dialog was opened.")
         # loading information from the settings.json
         self.ui.txt_workspace_dir.setText(str(self.settings.get_workspace_path()))
-        self.ui.txt_zip_storage_dir.setText(str(self.settings.get_prediction_path()))
+        #self.ui.txt_zip_storage_dir.setText(str(self.settings.get_prediction_path()))
         self.ui.spb_cycles.setValue(int(self.settings.get_cycles()))
         self.ui.dspb_cutoff.setValue(float(self.settings.get_cutoff()))
         # customize spin boxes
@@ -122,7 +120,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
 
         # connect elements with function
         self.ui.btn_workspace_dir.clicked.connect(self.chooseWorkspaceDir)
-        self.ui.btn_zip_storage_dir.clicked.connect(self.chooseZipStorageDir)
+        #self.ui.btn_zip_storage_dir.clicked.connect(self.chooseZipStorageDir)
         self.ui.btn_cancel.clicked.connect(self.cancelDialog)
         self.ui.btn_ok.clicked.connect(self.okDialog)
         self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
@@ -135,15 +133,15 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
     def chooseWorkspaceDir(self):
         gui_utils.choose_directory(self, self.ui.txt_workspace_dir)
 
-    def chooseZipStorageDir(self):
-        gui_utils.choose_directory(self, self.ui.txt_zip_storage_dir)
+    # def chooseZipStorageDir(self):
+    #     gui_utils.choose_directory(self, self.ui.txt_zip_storage_dir)
 
     def cancelDialog(self):
         self.close()
 
     def okDialog(self):
         self.settings.set_workspace_path(self.ui.txt_workspace_dir.text())
-        self.settings.set_prediction_path(self.ui.txt_zip_storage_dir.text())
+        #self.settings.set_prediction_path(self.ui.txt_zip_storage_dir.text())
         self.settings.set_cycles(str(self.ui.spb_cycles.value()))
         self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))
         self.settings.serialize_settings()

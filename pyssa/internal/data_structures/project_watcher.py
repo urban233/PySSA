@@ -251,7 +251,8 @@ class ProjectWatcher:
         for tmp_protein_pair in self.current_project.protein_pairs:
             if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
                 self.make_images = True
-                break
+                return
+        self.make_images = False
 
     def count_images(self):
         """This function counts the number of images in the project

@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_5">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
@@ -40,31 +40,6 @@
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Directory where the predictions get downloaded</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLineEdit" name="txt_zip_storage_dir"/>
-       </item>
-       <item>
-        <widget class="QToolButton" name="btn_zip_storage_dir">
-         <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item>
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
       <widget class="Line" name="line">
@@ -76,7 +51,7 @@
      <item>
       <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Parameters for structure alignment:</string>
+        <string>Parameters for structure alignment</string>
        </property>
       </widget>
      </item>
@@ -119,6 +94,24 @@
          <width>80</width>
          <height>16777215</height>
         </size>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Installation for LocalColabfold</string>
        </property>
       </widget>
      </item>
