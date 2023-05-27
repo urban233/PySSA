@@ -98,6 +98,27 @@ PYSSA_LOGGER = logging.getLogger("PySSA-Logger")
 PREDICTION_WORKER_LOGGER = logging.getLogger("PredictionWorker")
 ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 
+# pymol parameters
+PYMOL_COLORS = [
+            "",
+            "red",
+            "tv-red",
+            "green",
+            "limegreen",
+            "blue",
+            "skyblue",
+            "yellow",
+            "limon",
+            "magenta",
+            "hotpink",
+            "violet",
+            "cyan",
+            "greencyan",
+            "orange",
+            "lightorange",
+            "white",
+        ]
+
 AMINO_ACID_CODE = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
                    'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
                    'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',

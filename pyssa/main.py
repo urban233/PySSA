@@ -966,6 +966,13 @@ class MainWindow(QMainWindow):
 
         # </editor-fold>
 
+        # <editor-fold desc="Manage">
+        self.ui.box_manage_choose_color.activated.connect(self.choose_manage_color_selected_protein)
+        self.ui.box_manage_choose_representation.activated.connect(self.choose_manage_representation)
+        self.ui.box_manage_choose_bg_color.activated.connect(self.choose_manage_bg_color)
+
+        # </editor-fold>
+
         # <editor-fold desc="Image page">
         self.ui.btn_update_scene.clicked.connect(self.update_scene)
         self.ui.btn_save_scene.clicked.connect(self.save_scene)
@@ -1078,26 +1085,7 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
         # combo box protein Colors
-        item_list_colors = [
-            "",
-            "red",
-            "tv-red",
-            "green",
-            "limegreen",
-            "blue",
-            "skyblue",
-            "yellow",
-            "limon",
-            "magenta",
-            "hotpink",
-            "violet",
-            "cyan",
-            "greencyan",
-            "orange",
-            "lightorange",
-            "white",
-        ]
-        gui_utils.fill_combo_box(self.ui.box_manage_choose_color, item_list_colors)
+        gui_utils.fill_combo_box(self.ui.box_manage_choose_color, constants.PYMOL_COLORS)
 
     def _init_new_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -3984,6 +3972,47 @@ class MainWindow(QMainWindow):
         table_dialog.setModal(True)
         table_dialog.setWindowTitle("Distances of Structure Alignment")
         table_dialog.show()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Manage page functions">
+    def choose_manage_color_selected_protein(self):
+        input = self.ui.box_manage_choose_protein.currentText()
+        tmp_protein = self.app_project.search_protein(input)
+        tmp_protein.color_protein_in_pymol(self.ui.box_manage_choose_color.currentText(), f"/{tmp_protein.get_molecule_object()}")
+
+    def choose_manage_representation(self):
+        """This function sets the representation.
+
+        """
+        input = self.ui.box_manage_choose_protein.currentText()
+        tmp_protein = self.app_project.search_protein(input)
+        tmp_selection = f"/{tmp_protein.get_molecule_object()}"
+        if self.ui.box_manage_choose_representation.currentIndex() == 0:
+            print("Please select a representation.")
+            self.status_bar.showMessage("Please select a representation.")
+        elif self.ui.box_manage_choose_representation.currentIndex() == 1:
+            cmd.show("cartoon", tmp_selection)
+            cmd.hide("ribbon", tmp_selection)
+        elif self.ui.box_manage_choose_representation.currentIndex() == 2:
+            cmd.show("ribbon", tmp_selection)
+            cmd.hide("cartoon", tmp_selection)
+        else:
+            print("Missing implementation!")
+
+    def choose_manage_bg_color(self):
+        """This function sets the background color
+
+        """
+        if self.ui.box_manage_choose_bg_color.currentIndex() == 0:
+            print("Please select a background color.")
+            self.status_bar.showMessage("Please select a background color.")
+        elif self.ui.box_manage_choose_bg_color.currentIndex() == 1:
+            cmd.bg_color("black")
+        elif self.ui.box_manage_choose_bg_color.currentIndex() == 2:
+            cmd.bg_color("white")
+        else:
+            print("Missing implementation!")
 
     # </editor-fold>
 

@@ -244,9 +244,20 @@ class Protein:
         binary_data.write_binary_file_from_base64_string(tmp_session_path, self.pymol_session)
         pymol_io.load_pymol_session(tmp_session_path)
 
-    def color_protein_in_pymol(self) -> None:
-        # TODO: needs to be implemented
-        pass
+    def color_protein_in_pymol(self, color: str, a_selection: str) -> None:
+        """This function colors the protein, in the given color.
+
+        Args:
+            color:
+                a PyMOL color string
+            a_selection:
+                a PyMOL conform selection string
+        Notes:
+            The correct selection string needs to be in a_protein before running this function!!!
+
+        """
+        self.pymol_selection.set_custom_selection(a_selection)
+        graphic_operations.color_protein(color, self.pymol_selection.selection_string)
 
     def set_selections_from_chains_ca(self) -> None:
         """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
