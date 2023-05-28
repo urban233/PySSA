@@ -87,7 +87,8 @@ WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/config
 
 WSL_DISTRO_NAME = "UbuntuColabfold"
 WSL_STORAGE_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/{WSL_DISTRO_NAME}")
-WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
+#WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
+WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/")
 DISTRO_DOWNLOAD_URL = "https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to"
 WSL_DISK_PATH = pathlib.Path(f"{WSL_STORAGE_PATH}/ext4.vhdx")
 # thread main tasks

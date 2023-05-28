@@ -447,6 +447,7 @@ class ColabfoldInstallerWorkerPool(QtCore.QRunnable):
         """
         super(ColabfoldInstallerWorkerPool, self).__init__()
         self.install = install
+        self.local_install: tuple[bool, str] = False, ""
 
     def run(self):
         if self.install is False:
@@ -465,19 +466,23 @@ class ColabfoldInstallerWorkerPool(QtCore.QRunnable):
             if not os.path.exists(constants.WSL_STORAGE_PATH):
                 os.mkdir(constants.WSL_STORAGE_PATH)
 
-            def download_file_with_curl(url, destination):
+            def download_file_with_curl(destination):
                 mega_handler = mega.Mega()
                 # Download the file
                 user = mega_handler.login()
                 # Download the file
                 user.download_url(url=constants.DISTRO_DOWNLOAD_URL, dest_path=destination)
 
-            # TODO: correct download URL
-            download_file_with_curl(str(constants.WSL_DISTRO_IMPORT_PATH), str(constants.DISTRO_DOWNLOAD_URL))
+            if self.local_install[0] is False:
+                download_file_with_curl(str(constants.WSL_DISTRO_IMPORT_PATH))
+            else:
+                shutil.move(self.local_install[1], str(constants.WSL_DISTRO_IMPORT_PATH))
             subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
             subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH),
                             str(constants.WSL_DISTRO_IMPORT_PATH)])
             subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+            if not os.path.exists(constants.WSL_DISK_PATH):
+                basic_boxes.ok("Colabfold installation", "Installation failed, please try again.", QMessageBox.Critical)
 
         # emit finish signal
         self.signals.finished.emit()
