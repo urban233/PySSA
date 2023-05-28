@@ -68,6 +68,7 @@ from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
+from pyssa.util import prediction_util
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -902,7 +903,6 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_multi_prot_seq_add.clicked.connect(self.local_pred_multi_add_sequence_to_list)
         self.ui.btn_pred_multi_prot_seq_overview_remove.clicked.connect(self.local_pred_multi_remove_sequence_to_list)
         self.ui.btn_pred_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
-        # self.ui.btn_pred_mono_advanced_config.clicked.connect(self.local_pred_mono_show_prediction_configuration)
         self.ui.btn_pred_multi_predict.clicked.connect(self.predict_local_multimer)
         # self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
         # self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
@@ -963,6 +963,48 @@ class MainWindow(QMainWindow):
             self.check_mono_pred_analysis_if_same_no_of_chains_selected)
         self.ui.btn_pred_analysis_mono_back_pred_setup.clicked.connect(self.switch_monomer_pred_analysis_tab)
         self.ui.btn_pred_analysis_mono_start.clicked.connect(self.start_process_batch)
+
+        # </editor-fold>
+
+        # </editor-fold>
+
+        # <editor-fold desc="Monomer Prediction + Analysis page">
+        # <editor-fold desc="Prediction section">
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add.clicked.connect(self.multi_pred_analysis_show_protein_name)
+        self.ui.btn_pred_analysis_multi_prot_to_predict_remove.clicked.connect(self.multi_pred_analysis_remove_protein_to_predict)
+        self.ui.btn_pred_analysis_multi_next.clicked.connect(self.multi_pred_analysis_show_protein_sequence)
+        self.ui.btn_pred_analysis_multi_back.clicked.connect(self.multi_pred_analysis_show_protein_overview)
+        self.ui.btn_pred_analysis_multi_prot_seq_add.clicked.connect(self.multi_pred_analysis_add_sequence_to_list)
+        self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.clicked.connect(self.multi_pred_analysis_remove_sequence_to_list)
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.clicked.connect(self.multi_pred_analysis_add_protein_to_predict)
+        self.ui.btn_pred_analysis_multi_back_2.clicked.connect(self.multi_pred_analysis_show_protein_name)
+
+        self.ui.txt_pred_analysis_multi_prot_name.textChanged.connect(self.multi_pred_analysis_validate_protein_name)
+        self.ui.txt_pred_analysis_multi_prot_seq.textChanged.connect(self.multi_pred_analysis_validate_protein_sequence)
+        self.ui.btn_pred_analysis_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
+        self.ui.btn_pred_analysis_multi_go_analysis_setup.clicked.connect(self.switch_multimer_pred_analysis_tab)
+
+        # </editor-fold>
+
+        # <editor-fold desc="Analysis section">
+        self.ui.btn_pred_analysis_multi_add.clicked.connect(self.show_multi_pred_analysis_stage_1)
+        self.ui.btn_pred_analysis_multi_remove.clicked.connect(self.remove_multi_pred_analysis_analysis_run)
+        self.ui.btn_pred_analysis_multi_back_3.clicked.connect(self.show_multi_pred_analysis_stage_0)
+        self.ui.btn_pred_analysis_multi_next_2.clicked.connect(self.show_multi_pred_analysis_stage_2)
+        self.ui.btn_pred_analysis_multi_back_4.clicked.connect(self.show_multi_pred_analysis_stage_1)
+        self.ui.btn_pred_analysis_multi_next_3.clicked.connect(self.show_multi_pred_analysis_stage_3)
+        self.ui.btn_pred_analysis_multi_back_5.clicked.connect(self.show_multi_pred_analysis_stage_2)
+        self.ui.btn_pred_analysis_multi_next_4.clicked.connect(self.show_multi_pred_analysis_stage_0)
+        self.ui.box_pred_analysis_multi_prot_struct_1.currentIndexChanged.connect(
+            self.check_multi_pred_analysis_if_prot_structs_are_filled)
+        self.ui.box_pred_analysis_multi_prot_struct_2.currentIndexChanged.connect(
+            self.check_multi_pred_analysis_if_prot_structs_are_filled)
+        self.ui.list_pred_analysis_multi_ref_chains.itemSelectionChanged.connect(
+            self.count_multi_pred_analysis_selected_chains_for_prot_struct_1)
+        self.ui.list_pred_analysis_multi_model_chains.itemSelectionChanged.connect(
+            self.check_multi_pred_analysis_if_same_no_of_chains_selected)
+        self.ui.btn_pred_analysis_multi_back_pred_setup.clicked.connect(self.switch_monomer_pred_analysis_tab)
+        self.ui.btn_pred_analysis_multi_start.clicked.connect(self.start_process_batch)
 
         # </editor-fold>
 
@@ -1228,6 +1270,26 @@ class MainWindow(QMainWindow):
 
         # </editor-fold>
 
+    def _init_multi_pred_analysis_page(self):
+        # <editor-fold desc="Prediction section">
+        # clears everything
+        self.ui.txt_pred_analysis_multi_prot_name.clear()
+        self.ui.txt_pred_analysis_multi_prot_seq.clear()
+        self.ui.list_pred_analysis_multi_prot_seq_overview.clear()
+        # sets up defaults: Prediction
+        self.ui.btn_pred_analysis_multi_next.setEnabled(False)
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        self.ui.lbl_pred_analysis_multi_prot_name_status.setText("")
+        self.ui.lbl_pred_analysis_multi_prot_seq_status.setText("")
+
+        # </editor-fold>
+
+        # <editor-fold desc="Analysis section">
+        self.ui.list_pred_analysis_multi_overview.clear()
+        self.ui.btn_pred_analysis_multi_remove.hide()
+
+        # </editor-fold>
+
     def _init_sequence_vs_pdb_page(self):
         """This function clears all text fields and hides everything which is needed
 
@@ -1319,6 +1381,7 @@ class MainWindow(QMainWindow):
         self._init_local_pred_mono_page()
         self._init_local_pred_multi_page()
         self._init_mono_pred_analysis_page()
+        self._init_multi_pred_analysis_page()
         self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_batch_analysis_page()
@@ -1578,6 +1641,7 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_pred_analysis_monomer_page)
 
     def display_multimer_pred_analysis(self):
+        self._init_multi_pred_analysis_page()
         self.multimer_prediction_analysis_management.show_stage_x(0)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 22, "Multimer Prediction + Analysis")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -3112,7 +3176,7 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     # <editor-fold desc="Monomer Prediction + Analysis functions">
-    # <editor-fold desc="Predction section">
+    # <editor-fold desc="Prediction section">
     def mono_pred_analysis_validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
@@ -3346,118 +3410,231 @@ class MainWindow(QMainWindow):
         self.display_view_page()
     # </editor-fold>
 
-    # # ----- Functions for Single Analysis
-    # def show_single_analysis_stage_0(self):
-    #     self.single_analysis_management.show_stage_x(0)
-    #     self.ui.lbl_analysis_prot_struct_1.setText("Protein structure 1")
-    #     self.ui.lbl_analysis_prot_struct_2.setText("Protein structure 2")
-    #
-    # def show_single_analysis_stage_1(self):
-    #     self.single_analysis_management.show_stage_x(1)
-    #     self.ui.lbl_analysis_prot_struct_1.setText(self.ui.box_analysis_prot_struct_1.currentText())
-    #     self.ui.lbl_analysis_prot_struct_2.setText(self.ui.box_analysis_prot_struct_2.currentText())
-    #     tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-    #                                            self.ui.box_analysis_prot_struct_1.currentText(),
-    #                                            self.ui.list_analysis_ref_chains)
-    #     self.ui.btn_analysis_next_2.setEnabled(True)
-    #     self.ui.lbl_analysis_ref_chains.setText(
-    #         f"Select chains in protein structure {self.ui.lbl_analysis_prot_struct_1.text()}.")
-    #
-    # def show_single_analysis_stage_2(self):
-    #     self.single_analysis_management.show_stage_x(2)
-    #     tools.add_chains_from_pdb_file_to_list(f"{self.workspace_path}\\{self.ui.lbl_current_project_name.text()}",
-    #                                            self.ui.box_analysis_prot_struct_2.currentText(),
-    #                                            self.ui.list_analysis_model_chains)
-    #     gui_elements_to_show = [
-    #         self.ui.lbl_analysis_ref_chains,
-    #         self.ui.list_analysis_ref_chains,
-    #         self.ui.lbl_analysis_model_chains,
-    #         self.ui.list_analysis_model_chains,
-    #     ]
-    #     gui_utils.show_gui_elements(gui_elements_to_show)
-    #     self.ui.btn_analysis_start.setEnabled(False)
-    #     if self.no_of_selected_chains == 1:
-    #         self.ui.lbl_analysis_model_chains.setText(
-    #             f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
-    #         self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
-    #     elif self.no_of_selected_chains > 1:
-    #         self.ui.lbl_analysis_model_chains.setText(
-    #             f"Please select {self.no_of_selected_chains} chains in protein structure {self.ui.lbl_analysis_prot_struct_2.text()}.")
-    #         self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-    #     else:
-    #         gui_elements_to_hide = [
-    #             self.ui.lbl_analysis_ref_chains,
-    #             self.ui.list_analysis_ref_chains,
-    #             self.ui.lbl_analysis_model_chains,
-    #             self.ui.list_analysis_model_chains,
-    #         ]
-    #         gui_utils.hide_gui_elements(gui_elements_to_hide)
-    #         self.ui.btn_analysis_start.setEnabled(True)
-    #
-    # def fill_protein_structure_boxes(self):
-    #     proteins = self.project_scanner.scan_project_for_valid_proteins()
-    #     proteins.insert(0, "")
-    #     self.ui.box_analysis_prot_struct_1.clear()
-    #     self.ui.box_analysis_prot_struct_2.clear()
-    #     gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_1, proteins)
-    #     gui_utils.fill_combo_box(self.ui.box_analysis_prot_struct_2, proteins)
-    #
-    # def check_if_prot_structs_are_filled(self):
-    #     prot_1 = self.ui.box_analysis_prot_struct_1.itemText(self.ui.box_analysis_prot_struct_1.currentIndex())
-    #     prot_2 = self.ui.box_analysis_prot_struct_2.itemText(self.ui.box_analysis_prot_struct_2.currentIndex())
-    #     if prot_1 != "" and prot_2 != "":
-    #         self.ui.btn_analysis_next.setEnabled(True)
-    #     else:
-    #         self.ui.btn_analysis_next.setEnabled(False)
-    #
-    # def count_selected_chains_for_prot_struct_1(self):
-    #     self.no_of_selected_chains = len(self.ui.list_analysis_ref_chains.selectedItems())
-    #
-    # def check_if_same_no_of_chains_selected(self):
-    #     self.ui.btn_analysis_start.setEnabled(False)
-    #     if self.no_of_selected_chains == len(self.ui.list_analysis_model_chains.selectedItems()):
-    #         self.ui.btn_analysis_start.setEnabled(True)
-    #
-    # def start_process(self):
-    #     """This function contains the main analysis algorithm for the
-    #     Protein structure comparison.
-    #
-    #     """
-    #     self.ui.btn_analysis_start.setEnabled(False)
-    #     self.status_bar.showMessage("Protein structure analysis started ...")
-    #     cmd.reinitialize()
-    #     data_transformer_analysis = data_transformer.DataTransformer(self.ui)
-    #     transformed_analysis_data = data_transformer_analysis.transform_to_analysis(self.app_project)
-    #
-    #     if not os.path.exists(transformed_analysis_data[2]):
-    #         os.mkdir(transformed_analysis_data[2])
-    #     else:
-    #         basic_boxes.ok("Single Analysis", "A structure analysis already exists!", QMessageBox.Critical)
-    #         self._init_single_analysis_page()
-    #         return
-    #
-    #     structure_analysis_obj = structure_analysis.StructureAnalysis(
-    #         reference_protein=[transformed_analysis_data[0]], model_proteins=[transformed_analysis_data[1]],
-    #         ref_chains=transformed_analysis_data[0].chains, model_chains=transformed_analysis_data[1].chains,
-    #         export_dir=transformed_analysis_data[2], cycles=self.app_settings.get_cycles(),
-    #         cutoff=self.app_settings.get_cutoff(),
-    #     )
-    #     if self.ui.cb_analysis_images.isChecked():
-    #         structure_analysis_obj.response_create_images = True
-    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-    #                                                          structure_analysis_obj.reference_protein)
-    #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-    #                                                          structure_analysis_obj.model_proteins)
-    #     protein_pairs = structure_analysis_obj.create_protein_pairs()
-    #     structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
-    #     protein_pairs[0].name = transformed_analysis_data[3]
-    #     protein_pairs[0].cutoff = self.app_settings.cutoff
-    #     self.app_project.add_protein_pair(protein_pairs[0])
-    #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-    #     self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
-    #     self.app_project = project.Project.deserialize_project(self.app_project.folder_paths["project"])
-    #     self._project_watcher.show_valid_options(self.ui)
-    #     self._init_single_analysis_page()
+    # <editor-fold desc="Multimer Prediction + Analysis functions">
+    # <editor-fold desc="Prediction section">
+    def multi_pred_analysis_validate_protein_name(self):
+        """This function validates the input of the project name in real-time
+
+        """
+        tools.validate_protein_name(self.ui.txt_pred_analysis_multi_prot_name,
+                                    self.ui.lbl_pred_analysis_multi_prot_name_status,
+                                    self.ui.btn_pred_analysis_multi_next)
+
+    def multi_pred_analysis_validate_protein_sequence(self):
+        """This function validates the input of the protein sequence in real-time
+
+        """
+        tools.validate_protein_sequence(self.ui.txt_pred_analysis_multi_prot_seq,
+                                        self.ui.lbl_pred_analysis_multi_prot_seq_status,
+                                        self.ui.btn_pred_analysis_multi_prot_seq_add)
+
+    def multi_pred_analysis_show_protein_overview(self):
+        if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
+            self.multimer_prediction_analysis_management.show_stage_x(0)
+        else:
+            gui_elements_to_show = [
+                self.ui.btn_pred_multi_prot_to_predict_add,
+                self.ui.btn_pred_multi_prot_to_predict_remove,
+            ]
+            self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
+                [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
+            )
+
+    def multi_pred_analysis_show_protein_name(self):
+        gui_elements_to_hide = [
+            self.ui.btn_pred_multi_prot_to_predict_add,
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+        ]
+        self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
+            [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_analysis_multi_prot_name,
+                                  self.ui.lbl_pred_analysis_multi_prot_name)
+
+    def multi_pred_analysis_show_protein_sequence(self):
+        gui_elements_to_hide = [
+            self.ui.btn_pred_multi_prot_to_predict_add,
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_analysis_multi_back,
+            self.ui.btn_pred_analysis_multi_next,
+        ]
+        self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
+            [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
+        gui_utils.disable_text_box(self.ui.txt_pred_analysis_multi_prot_name,
+                                   self.ui.lbl_pred_analysis_multi_prot_name)
+
+    def multi_pred_analysis_add_sequence_to_list(self):
+        self.ui.list_pred_analysis_multi_prot_seq_overview.addItem(
+            QListWidgetItem(self.ui.txt_pred_analysis_multi_prot_seq.toPlainText()))
+        self.multi_pred_analysis_check_if_list_is_empty()
+
+    def multi_pred_analysis_remove_sequence_to_list(self):
+        self.ui.list_pred_analysis_multi_prot_seq_overview.takeItem(self.ui.list_pred_analysis_multi_prot_seq_overview.currentRow())
+        self.multi_pred_analysis_check_if_list_is_empty()
+
+    def multi_pred_analysis_check_if_list_is_empty(self):
+        if self.ui.list_pred_analysis_multi_prot_seq_overview.count() == 0:
+            styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(True)
+
+    def multi_pred_analysis_check_if_table_is_empty(self):
+        if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self.ui.btn_pred_multi_predict)
+            self.ui.btn_pred_multi_predict.setEnabled(False)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_multi_predict)
+            self.ui.btn_pred_multi_predict.setEnabled(True)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
+
+    def multi_pred_analysis_add_protein_to_predict(self):
+        for i in range(self.ui.list_pred_analysis_multi_prot_seq_overview.count()):
+            self.ui.table_pred_analysis_multi_prot_to_predict.setRowCount(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
+            self.ui.table_pred_analysis_multi_prot_to_predict.insertRow(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
+            tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text())
+            self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 0,
+                QTableWidgetItem(tmp_chain_seq[0]))
+            self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 1,
+                QTableWidgetItem(tmp_chain_seq[1]))
+            name_item = QTableWidgetItem(self.ui.txt_pred_analysis_multi_prot_name.text())
+            self.ui.table_pred_analysis_multi_prot_to_predict.setVerticalHeaderItem(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, name_item)
+        self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
+        self.multi_pred_analysis_check_if_table_is_empty()
+        self.multi_pred_analysis_show_protein_overview()
+        self._init_multi_pred_analysis_page()
+
+    def multi_pred_analysis_remove_protein_to_predict(self):
+        self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(self.ui.table_pred_analysis_multi_prot_to_predict.currentRow())
+        prot_name = self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(
+            self.ui.table_pred_analysis_multi_prot_to_predict.currentRow()).text()
+        for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+            if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
+                self.ui.table_pred_analysis_multi_prot_to_predict.setItem(i, 0,
+                                                                 QTableWidgetItem(constants.chain_dict.get(i)))
+        self.multi_pred_analysis_check_if_table_is_empty()
+        self.multi_pred_analysis_show_protein_overview()
+
+    # </editor-fold>
+
+    def switch_multimer_pred_analysis_tab(self):
+        if self.ui.tabWidget_2.currentIndex() == 0:
+            self.ui.tabWidget_2.setCurrentIndex(1)
+            self.show_multi_pred_analysis_stage_0()
+            self.multi_pred_analysis_show_protein_overview()
+        else:
+            self.ui.list_pred_analysis_multi_overview.clear()
+            self.ui.tabWidget_2.setCurrentIndex(0)
+
+    # <editor-fold desc="Analysis section">
+    def show_multi_pred_analysis_stage_0(self):
+        gui_page_management.show_analysis_page_stage_0(self.multimer_prediction_analysis_management,
+                                                       self.ui.list_pred_analysis_multi_ref_chains,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_1,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_2,
+                                                       self.ui.list_pred_analysis_multi_model_chains,
+                                                       self.ui.list_pred_analysis_multi_overview,
+                                                       self.ui.btn_pred_analysis_multi_remove,
+                                                       self.ui.btn_pred_analysis_multi_add,
+                                                       4)
+
+    def show_multi_pred_analysis_stage_1(self):
+        gui_page_management.show_analysis_page_stage_1(self.multimer_prediction_analysis_management,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_1,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_2,
+                                                       self.ui.btn_pred_analysis_multi_remove,
+                                                       self.ui.btn_pred_analysis_multi_add,
+                                                       4,
+                                                       self.fill_multi_pred_analysis_protein_boxes)
+
+    def show_multi_pred_analysis_stage_2(self):
+        gui_page_management.show_analysis_page_stage_2(self.app_project,
+                                                       self.multimer_prediction_analysis_management,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_1,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_2,
+                                                       self.ui.box_pred_analysis_multi_prot_struct_1,
+                                                       self.ui.box_pred_analysis_multi_prot_struct_2,
+                                                       self.ui.lbl_pred_analysis_multi_ref_chains,
+                                                       self.ui.list_pred_analysis_multi_ref_chains,
+                                                       self.ui.btn_pred_analysis_multi_next_2,
+                                                       self.ui.btn_pred_analysis_multi_next_3,
+                                                       self.ui.btn_pred_analysis_multi_back_3,
+                                                       4,
+                                                       table_prot_to_predict=self.ui.table_pred_analysis_multi_prot_to_predict,
+                                                       state=constants.PREDICTION_ANALYSIS)
+
+    def show_multi_pred_analysis_stage_3(self):
+        gui_page_management.show_analysis_page_stage_3(self.app_project,
+                                                       self.multimer_prediction_analysis_management,
+                                                       self.ui.list_pred_analysis_multi_overview,
+                                                       self.ui.btn_pred_analysis_multi_add,
+                                                       self.ui.btn_pred_analysis_multi_remove,
+                                                       self.ui.btn_pred_analysis_multi_next_2,
+                                                       self.ui.btn_pred_analysis_multi_back_3,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_1,
+                                                       self.ui.lbl_pred_analysis_multi_prot_struct_2,
+                                                       self.ui.box_pred_analysis_multi_prot_struct_1,
+                                                       self.ui.box_pred_analysis_multi_prot_struct_2,
+                                                       self.ui.btn_pred_analysis_multi_next_3,
+                                                       self.ui.btn_pred_analysis_multi_back_4,
+                                                       self.ui.lbl_pred_analysis_multi_model_chains,
+                                                       self.ui.list_pred_analysis_multi_model_chains,
+                                                       self.ui.btn_pred_analysis_multi_next_4,
+                                                       self.no_of_selected_chains,
+                                                       4,
+                                                       table_prot_to_predict=self.ui.table_pred_analysis_multi_prot_to_predict,
+                                                       state=constants.PREDICTION_ANALYSIS)
+
+    def fill_multi_pred_analysis_protein_boxes(self):
+        protein_names = []
+        prediction_runs = prediction_util.get_prediction_name_and_seq_from_table(self.ui.table_pred_analysis_multi_prot_to_predict)
+        for tmp_prediction_run in prediction_runs:
+            protein_names.append(tmp_prediction_run.name)
+        for tmp_protein in self.app_project.proteins:
+            protein_names.append(tmp_protein.get_molecule_object())
+        protein_names.insert(0, "")
+        self.ui.box_pred_analysis_multi_prot_struct_1.clear()
+        self.ui.box_pred_analysis_multi_prot_struct_2.clear()
+        gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_1, protein_names)
+        gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_2, protein_names)
+
+    def remove_multi_pred_analysis_analysis_run(self):
+        self.ui.list_pred_analysis_multi_overview.takeItem(self.ui.list_pred_analysis_multi_overview.currentRow())
+        if self.ui.list_pred_analysis_multi_overview.count() == 0:
+            self.multimer_prediction_analysis_management.show_stage_x(4)
+            self.ui.btn_pred_analysis_multi_remove.hide()
+
+    def check_multi_pred_analysis_if_same_no_of_chains_selected(self):
+        self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+        styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next_4)
+        if self.no_of_selected_chains == len(self.ui.list_pred_analysis_multi_model_chains.selectedItems()):
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_next_4)
+            self.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
+
+    def check_multi_pred_analysis_if_prot_structs_are_filled(self):
+        prot_1 = self.ui.box_pred_analysis_multi_prot_struct_1.itemText(self.ui.box_pred_analysis_multi_prot_struct_1.currentIndex())
+        prot_2 = self.ui.box_pred_analysis_multi_prot_struct_2.itemText(self.ui.box_pred_analysis_multi_prot_struct_2.currentIndex())
+        if prot_1 != "" and prot_2 != "":
+            self.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
+        else:
+            self.ui.btn_pred_analysis_multi_next_2.setEnabled(False)
+
+    def count_multi_pred_analysis_selected_chains_for_prot_struct_1(self):
+        self.no_of_selected_chains = len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems())
+        if self.no_of_selected_chains > 0:
+            self.ui.btn_pred_analysis_multi_next_3.setEnabled(True)
+        else:
+            self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
+
+    # </editor-fold>
+
+    # </editor-fold>
 
     # <editor-fold desc="Structure Analysis functions">
     def show_batch_analysis_stage_0(self):

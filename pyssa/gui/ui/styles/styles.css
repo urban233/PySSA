@@ -875,6 +875,15 @@ QLabel#lbl_pred_multi_prot_seq_status {
     font-size: 10px;
 }
 
+QLabel#lbl_pred_analysis_mono_seq_name_status {
+    color: #FC5457;
+    font-size: 10px;
+}
+
+QLabel#lbl_pred_analysis_multi_prot_seq_status {
+    color: #FC5457;
+    font-size: 10px;
+}
 
 /* Button for "Prediction" */
 QPushButton#btn_prediction_only_page {
