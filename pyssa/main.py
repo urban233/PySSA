@@ -2078,6 +2078,7 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_save_project)
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
 
@@ -2334,6 +2335,7 @@ class MainWindow(QMainWindow):
 
     # <editor-fold desc="Import, Export functions">
     def import_project(self):
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_import_project)
         file_dialog = QFileDialog()
         desktop_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -2365,6 +2367,7 @@ class MainWindow(QMainWindow):
             self.display_view_page()
 
     def export_current_project(self):
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_export_project)
         file_dialog = QFileDialog()
         desktop_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
