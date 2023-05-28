@@ -25,9 +25,9 @@ import shutil
 import subprocess
 import logging
 import pathlib
-import time
 
-import mega
+
+from pyssa.external_modules.mega import mega
 from PyQt5.QtWidgets import QMessageBox
 from pymol import cmd
 from PyQt5 import QtCore
