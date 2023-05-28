@@ -205,7 +205,6 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_mono_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
         self.ui.table_pred_multi_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
 
-
         self.pymol_session_specs = {
             pyssa_keys.SESSION_SPEC_PROTEIN: [0, ""],
             pyssa_keys.SESSION_SPEC_COLOR: [0, ""],
@@ -1914,6 +1913,13 @@ class MainWindow(QMainWindow):
         """This function creates a new project based on the plugin New ... page
 
         """
+        if self.app_settings.wsl_install == 0:
+            basic_boxes.ok("Create new project", "Please install local colabfold to create a project!", QMessageBox.Warning)
+            return
+        elif self.app_settings.local_colabfold == 0:
+            basic_boxes.ok("Create new project", "Please install local colabfold to create a project!",
+                           QMessageBox.Warning)
+            return
         self._project_watcher.on_home_page = False
         self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
@@ -2336,6 +2342,15 @@ class MainWindow(QMainWindow):
             tmp_project = project.Project("", self.workspace_path)
             tmp_project = tmp_project.deserialize_project(file_path, self.app_settings)
             tmp_project.set_workspace_path(self.workspace_path)
+            if len(tmp_project.proteins) <= 1:
+                if self.app_settings.wsl_install == 0:
+                    basic_boxes.ok("Create new project", "Please install local colabfold to import this project!",
+                                   QMessageBox.Warning)
+                    return
+                elif self.app_settings.local_colabfold == 0:
+                    basic_boxes.ok("Create new project", "Please install local colabfold to import this project!",
+                                   QMessageBox.Warning)
+                    return
             new_filepath = pathlib.Path(f"{self.workspace_path}/{tmp_project.get_project_name()}.xml")
             tmp_project.serialize_project(new_filepath)
             self.app_project = self.app_project.deserialize_project(new_filepath, self.app_settings)
