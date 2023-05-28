@@ -1803,6 +1803,7 @@ class MainWindow(QMainWindow):
         file_path, _ = file_dialog.getOpenFileName(self, "Select the UbuntuColabfold.tar file", "", "Colabfold WSL tar (UbuntuColabfold.tar)")
         if file_path:
             install_worker = workers.ColabfoldInstallerWorkerPool(True)
+            install_worker.signals.finished.connect(self.post_install_local_colabfold_from_file)
             if basic_boxes.yes_or_no("Local Colabfold installation", "Are you sure that you want to install Local Colabfold?", QMessageBox.Question) is True:
                 install_worker.install = True
                 self.threadpool.start(install_worker)
