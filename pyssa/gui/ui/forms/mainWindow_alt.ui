@@ -6967,7 +6967,7 @@
      <string>Expert</string>
     </property>
     <addaction name="action_file_save_as"/>
-    <addaction name="action_add_model"/>
+    <addaction name="action_install_from_file"/>
     <addaction name="action_add_multiple_models"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -7051,9 +7051,9 @@
     <string>About</string>
    </property>
   </action>
-  <action name="action_add_model">
+  <action name="action_install_from_file">
    <property name="text">
-    <string>Add model</string>
+    <string>Install local colabfold from file</string>
    </property>
   </action>
   <action name="action_add_multiple_models">

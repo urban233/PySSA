@@ -154,6 +154,7 @@ class MainWindow(QMainWindow):
         self.no_of_selected_chains = 0
         self.plot_dialog = Qt.QtWidgets.QDialog(self)
         self.view_box = None
+        self.block_box_expert_install = basic_boxes.no_buttons("Local Colabfold installation", "An installation process is currently running.", QMessageBox.Information)
         # type, name, session
         self.current_session = current_session.CurrentSession("", "", "")
 
@@ -241,6 +242,12 @@ class MainWindow(QMainWindow):
             os.mkdir(constants.SCRATCH_DIR)
         if not os.path.exists(constants.CACHE_DIR):
             os.mkdir(constants.CACHE_DIR)
+
+        if self.app_settings.wsl_install == 1 and self.app_settings.local_colabfold == 0:
+            self.ui.action_install_from_file.setVisible(True)
+        else:
+            self.ui.action_install_from_file.setVisible(False)
+
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
@@ -739,7 +746,7 @@ class MainWindow(QMainWindow):
     def _setup_default_configuration(self):
         self.ui.lbl_current_project_name.setText("")
         # menu
-        self.ui.action_add_model.setVisible(False)
+        self.ui.action_install_from_file.setVisible(False)
         self.ui.action_add_multiple_models.setVisible(False)
         self.ui.action_file_save_as.setVisible(False)
         # side menu
@@ -787,7 +794,7 @@ class MainWindow(QMainWindow):
         self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
         self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
         self.ui.action_add_multiple_models.triggered.connect(self.open_add_models)
-        self.ui.action_add_model.triggered.connect(self.open_add_model)
+        self.ui.action_install_from_file.triggered.connect(self.install_local_colabfold_from_file)
         self.ui.action_help_docs.triggered.connect(self.open_documentation)
         self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation_pdf)
         self.ui.action_help_about.triggered.connect(self.open_about)
@@ -1780,23 +1787,31 @@ class MainWindow(QMainWindow):
                             f"{folder_paths[1]}/{reference_name[0]}")
                 shutil.copy(pdb_path, f"{folder_paths[1]}/{pdb_name}.pdb")
 
-    def open_add_model(self):
-        """This function opens the add model dialog.
+    def post_install_local_colabfold_from_file(self):
+        self.block_box_expert_install.destroy(True)
+        self.app_settings.local_colabfold = 1
+        self.app_settings.serialize_settings()
+        basic_boxes.ok("Local Colabfold installation", "Installation is finished!", QMessageBox.Information)
+
+    def install_local_colabfold_from_file(self):
+        """This function installs the local colabfold from a .tar file
 
         """
-        dialog = dialog_add_model.DialogAddModel()
-        dialog.exec_()
-        if dialog_add_model.global_var_add_model[1] is True:
-            file_info = Qt.QtCore.QFileInfo(dialog_add_model.global_var_add_model[0])
-            shutil.copy(dialog_add_model.global_var_add_model[0],
-                        f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{file_info.baseName()}")
-            print("Model was copied to project.")
-            self.ui.lbl_analysis.show()
-            self.ui.btn_single_analysis_page.show()
-            self.ui.action_add_model.setVisible(False)
-            self.ui.action_add_multiple_models.setVisible(False)
-        else:
-            print("No model was added.")
+        file_dialog = QFileDialog()
+        download_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DownloadLocation)[0]
+        file_dialog.setDirectory(download_path)
+        file_path, _ = file_dialog.getOpenFileName(self, "Select the UbuntuColabfold.tar file", "", "Colabfold WSL tar (UbuntuColabfold.tar)")
+        if file_path:
+            install_worker = workers.ColabfoldInstallerWorkerPool(True)
+            if basic_boxes.yes_or_no("Local Colabfold installation", "Are you sure that you want to install Local Colabfold?", QMessageBox.Question) is True:
+                install_worker.install = True
+                self.threadpool.start(install_worker)
+                self.block_box_expert_install.exec_()
+            else:
+                # logical message: the user does NOT want to install local colabfold
+                basic_boxes.ok("Local Colabfold installation", "Installation process aborted.", QMessageBox.Information)
+                return
+
 
     # <editor-fold desc="New project page functions">
     def show_add_reference(self):
