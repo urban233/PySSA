@@ -493,3 +493,7 @@ def fill_list_view_with_protein_names(app_project: 'project.Project', list_view_
 def fill_list_view_with_protein_pair_names(app_project: 'project.Project', list_view_project_proteins):
     for tmp_protein_pair in app_project.protein_pairs:
         list_view_project_proteins.addItem(tmp_protein_pair.name)
+
+
+
+

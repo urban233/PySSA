@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import shutil
 import subprocess
 import os
 import logging
@@ -39,11 +40,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def is_wsl2_installed():
-    try:
-        output = subprocess.check_output(['wsl', '--list', '--verbose'], universal_newlines=True)
-        return True
-    except:
-        return False
+    return shutil.which("wsl.exe") is not None
+
+
+def is_local_colabfold_installed():
+    return os.path.exists(constants.WSL_DISK_PATH)
 
 
 class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
@@ -64,6 +65,8 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+
+        # <editor-fold desc="Class attributes">
         self.tmp_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         try:
             self.settings = self.tmp_settings.deserialize_settings()
@@ -72,7 +75,11 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             return
         self.threadpool = QtCore.QThreadPool()
         self.colabfold_installer_worker = workers.ColabfoldInstallerWorkerPool(True)
-        self.colabfold_installer_worker.signals.finished.connect(self.post_colabfold_install)
+        self.block_box = basic_boxes.no_buttons("Process running", "A process is currently running.", QMessageBox.Information)
+
+        # </editor-fold>
+
+        # <editor-fold desc="Check WSL status">
         # Check if WSL2 is installed
         if is_wsl2_installed():
             self.settings.wsl_install = 1
@@ -81,34 +88,25 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             self.settings.wsl_install = 0
             print("WSL2 is not installed.")
 
-        self.block_box = basic_boxes.no_buttons("Process running", "A process is currently running.", QMessageBox.Information)
-
-        logging.info("Loading values from settings.json was successful.")
-        self.ui.txt_workspace_dir.setEnabled(False)
-        #self.ui.txt_zip_storage_dir.setEnabled(False)
-
-        logging.info("Settings dialog was opened.")
-        # loading information from the settings.json
-        self.ui.txt_workspace_dir.setText(str(self.settings.get_workspace_path()))
-        #self.ui.txt_zip_storage_dir.setText(str(self.settings.get_prediction_path()))
-        self.ui.spb_cycles.setValue(int(self.settings.get_cycles()))
-        self.ui.dspb_cutoff.setValue(float(self.settings.get_cutoff()))
-        # customize spin boxes
-        self.ui.spb_cycles.setMinimum(0)
-        # self.ui.spb_cycles.setMaximum(20) # is a maximum needed?
-        self.ui.spb_cycles.setSingleStep(1)
-        self.ui.dspb_cutoff.setMinimum(0.00)
-        self.ui.dspb_cutoff.setMaximum(20.00)
-        self.ui.dspb_cutoff.setSingleStep(0.1)
-
         if self.settings.wsl_install == 0:
             # wsl is not installed
             self.ui.btn_install_wsl2.setText("Install")
+            self.ui.btn_install_local_prediction.setEnabled(False)
         elif self.settings.wsl_install == 1:
             # wsl is installed
             self.ui.btn_install_wsl2.setText("Uninstall")
+            self.ui.btn_install_local_prediction.setEnabled(True)
         else:
             gui_utils.error_dialog_settings("The settings are corrupted, please restore the settings!", "", self.settings)
+
+        # </editor-fold>
+
+        # <editor-fold desc="Check local colabfold status">
+        if is_local_colabfold_installed():
+            self.settings.local_colabfold = 1
+        else:
+            self.settings.local_colabfold = 2
+
         if self.settings.local_colabfold == 0:
             # local colabfold is not installed
             self.ui.btn_install_local_prediction.setText("Install")
@@ -118,13 +116,25 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
         else:
             gui_utils.error_dialog_settings("The settings are corrupted, please restore the settings!", "", self.settings)
 
-        # connect elements with function
-        self.ui.btn_workspace_dir.clicked.connect(self.chooseWorkspaceDir)
-        #self.ui.btn_zip_storage_dir.clicked.connect(self.chooseZipStorageDir)
-        self.ui.btn_cancel.clicked.connect(self.cancelDialog)
-        self.ui.btn_ok.clicked.connect(self.okDialog)
-        self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
-        self.ui.btn_install_wsl2.clicked.connect(self.install_wsl)
+        # </editor-fold>
+
+        self._connect_all_gui_elements()
+
+        # <editor-fold desc="Set up defaults">
+        self.ui.txt_workspace_dir.setEnabled(False)
+        self.ui.txt_workspace_dir.setText(str(self.settings.get_workspace_path()))
+        self.ui.spb_cycles.setValue(int(self.settings.get_cycles()))
+        self.ui.dspb_cutoff.setValue(float(self.settings.get_cutoff()))
+        # customize spin boxes
+        self.ui.spb_cycles.setMinimum(0)
+        # self.ui.spb_cycles.setMaximum(20) # fixme: is a maximum needed?
+        self.ui.spb_cycles.setSingleStep(1)
+        self.ui.dspb_cutoff.setMinimum(0.00)
+        self.ui.dspb_cutoff.setMaximum(20.00)
+        self.ui.dspb_cutoff.setSingleStep(0.1)
+
+        # </editor-fold>
+
         styles.set_stylesheet(self)
         self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("Global Settings")
@@ -133,8 +143,14 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
     def chooseWorkspaceDir(self):
         gui_utils.choose_directory(self, self.ui.txt_workspace_dir)
 
-    # def chooseZipStorageDir(self):
-    #     gui_utils.choose_directory(self, self.ui.txt_zip_storage_dir)
+    def _connect_all_gui_elements(self):
+        self.ui.btn_workspace_dir.clicked.connect(self.chooseWorkspaceDir)
+        self.ui.btn_cancel.clicked.connect(self.cancelDialog)
+        self.ui.btn_ok.clicked.connect(self.okDialog)
+        self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
+        self.ui.btn_install_wsl2.clicked.connect(self.install_wsl)
+        # thread-related
+        self.colabfold_installer_worker.signals.finished.connect(self.post_colabfold_install)
 
     def cancelDialog(self):
         self.close()
@@ -211,7 +227,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             if basic_boxes.yes_or_no("WSL2 installation", "Are you sure that you want to install WSL2?", QMessageBox.Question) is True:
                 # the user wants to install WSL2
                 try:
-                    subprocess.run("wsl --install")
+                    subprocess.run([constants.POWERSHELL_EXE, constants.INSTALL_WSL_PS1])
                 except:
                     basic_boxes.ok("WSL2 installation", "Installation failed. Please re-run the process or look in the documentation.", QMessageBox.Critical)
                     return

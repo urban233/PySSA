@@ -58,6 +58,7 @@ PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
 POWERSHELL_EXE = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 # Constants for structure prediction
 CONVERT_DOS_TO_UNIX = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/convert_dos_to_unix.ps1")
+INSTALL_WSL_PS1 = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/install_wsl.ps1")
 PREDICTION_PS1 = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/run_prediction.ps1")
 # TODO: original paths, please uncomment before deployment!!!
 COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
@@ -88,7 +89,7 @@ WSL_DISTRO_NAME = "UbuntuColabfold"
 WSL_STORAGE_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/{WSL_DISTRO_NAME}")
 WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
 DISTRO_DOWNLOAD_URL = "https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to"
-
+WSL_DISK_PATH = pathlib.Path(f"{WSL_STORAGE_PATH}/ext4.vhdx")
 # thread main tasks
 PREDICTION_TASK = "Structure Prediction"
 ANALYSIS_TASK = "Structure Analysis"
@@ -126,6 +127,9 @@ AMINO_ACID_CODE = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
 
 CHAIN_TYPE_PROTEIN = "protein_chain"
 CHAIN_TYPE_NON_PROTEIN = "non_protein_chain"
+
+ONLY_ANALYSIS = "only-analysis"
+PREDICTION_ANALYSIS = "prediction-analysis"
 
 chain_dict = {
     0: "A",
