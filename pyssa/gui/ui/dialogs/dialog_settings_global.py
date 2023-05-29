@@ -19,9 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import shutil
 import os
 import logging
+import subprocess
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 from pyssa.internal.data_structures import settings
 from pyssa.util import constants, gui_utils
@@ -39,7 +39,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def is_wsl2_installed():
-    return shutil.which("wsl.exe") is not None
+    output = subprocess.run("wsl --list --verbose")
+    if output.returncode == 0:
+        return True
+    else:
+        return False
 
 
 def is_local_colabfold_installed():

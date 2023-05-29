@@ -55,7 +55,7 @@ from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_add_models
-from pyssa.gui.ui.dialogs import dialog_add_model
+from pyssa.gui.ui.dialogs import dialog_display_docs
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.internal.data_structures import protein
@@ -247,6 +247,9 @@ class MainWindow(QMainWindow):
             self.ui.action_install_from_file.setVisible(True)
         else:
             self.ui.action_install_from_file.setVisible(False)
+
+        # fixme: should the pdf documentation be accessable through the pyssa gui?
+        self.ui.action_help_docs_pdf.setVisible(False)
 
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
@@ -1716,17 +1719,8 @@ class MainWindow(QMainWindow):
         """This function opens the official plugin documentation as HTML page.
 
         """
-        #webbrowser.open_new(f"file://{os.getcwd()}/docs/pyssa/build/html/index.html")
-        # opens the documentation of the os
-        if sys.platform.startswith("darwin"):
-            # macOS path
-            webbrowser.open_new(f"file://{constants.path_list[1]}/docs/pymol_plugin/build/html/index.html")
-        elif sys.platform.startswith("linux"):
-            # Linux path
-            webbrowser.open_new(f"file://{constants.path_list[0]}/docs/pymol_plugin/build/html/index.html")
-        elif sys.platform.startswith("win32"):
-            # Windows path
-            webbrowser.open_new(f"file://{constants.path_list[2]}/docs/pymol_plugin/build/html/index.html")
+        dialog = dialog_display_docs.WebViewDialog(str(constants.DOCS_HTML))
+        dialog.exec_()
 
     @staticmethod
     def open_documentation_pdf():
@@ -1814,7 +1808,6 @@ class MainWindow(QMainWindow):
                 basic_boxes.ok("Local Colabfold installation", "Installation process aborted.", QMessageBox.Information)
                 return
 
-
     # <editor-fold desc="New project page functions">
     def show_add_reference(self):
         """This function shows the reference input section
@@ -1862,7 +1855,7 @@ class MainWindow(QMainWindow):
             # display path in text box
             self.ui.txt_new_choose_reference.setText(str(file_name[0]))
             self.ui.txt_new_choose_reference.setEnabled(False)
-            self.ui.txt_new_choose_reference.setStyleSheet("background-color: #33C065")
+            self.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
             self.ui.btn_new_create_project.setEnabled(True)
             styles.color_button_ready(self.ui.btn_new_create_project)
         except ValueError:

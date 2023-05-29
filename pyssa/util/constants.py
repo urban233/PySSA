@@ -105,7 +105,7 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 # docs paths
 # TODO: get correct paths
 DOCS_PDF = ""
-DOCS_HTML = ""
+DOCS_HTML = pathlib.Path(f"{PLUGIN_PATH}/docs/pyssa/html/index.html")
 
 # pymol parameters
 PYMOL_COLORS = [

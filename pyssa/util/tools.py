@@ -237,9 +237,9 @@ def check_results_for_integrity(workspace_path, project_name) -> (bool, Path):
 def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
     directory_content = os.listdir(workspace_path)
     directory_content.sort()
-    for tmp_project in directory_content:
-        if ".xml" in tmp_project:
-            list_new_projects.addItem(tmp_project)
+    xml_files = [file for file in directory_content if file.endswith('.xml')]
+    for tmp_project in xml_files:
+        list_new_projects.addItem(tmp_project)
     return directory_content
 
 
