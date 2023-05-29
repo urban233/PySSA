@@ -119,7 +119,7 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.lbl_page_title.setText("Home")
-        self.setMinimumWidth(550)
+        self.setMinimumWidth(580)
         self.setMinimumHeight(200)
 
         # <editor-fold desc="Setup app settings">

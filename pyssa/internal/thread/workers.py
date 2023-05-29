@@ -25,14 +25,14 @@ import shutil
 import subprocess
 import logging
 import pathlib
-
+import webbrowser
 
 from pyssa.external_modules.mega import mega
 from PyQt5.QtWidgets import QMessageBox
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-from pyssa.gui.ui.messageboxes import basic_boxes
+from pyssa.gui.ui.messageboxes import basic_boxes, settings_boxes
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.io_pyssa import path_util
 from pyssa.internal.data_structures import structure_prediction
@@ -453,7 +453,7 @@ class ColabfoldInstallerWorkerPool(QtCore.QRunnable):
         if self.install is False:
             # if localcolab should be uninstalled
             try:
-                subprocess.run([constants.POWERSHELL_EXE, constants.REMOVE_WSL_POWERSHELL])
+                subprocess.run(str(constants.UNINSTALL_LOCAL_COLABFOLD_DISTRO))
             except:
                 basic_boxes.ok("Local Colabfold removal",
                                "The uninstallation failed. Please re-run the process or consult the documentation.",
@@ -477,15 +477,78 @@ class ColabfoldInstallerWorkerPool(QtCore.QRunnable):
                 download_file_with_curl(str(constants.WSL_DISTRO_IMPORT_PATH))
             else:
                 shutil.move(self.local_install[1], str(constants.WSL_DISTRO_IMPORT_PATH))
-            subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
-            subprocess.run(["wsl", "--import", constants.WSL_DISTRO_NAME, str(constants.WSL_STORAGE_PATH),
-                            str(constants.WSL_DISTRO_IMPORT_PATH)])
-            subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+            subprocess.run(str(constants.INSTALL_LOCAL_COLABFOLD_DISTRO))
+
             if not os.path.exists(constants.WSL_DISK_PATH):
                 basic_boxes.ok("Colabfold installation", "Installation failed, please try again.", QMessageBox.Critical)
 
         # emit finish signal
         self.signals.finished.emit()
+
+
+class WslInstallerWorkerPool(QtCore.QRunnable):
+    """This class is a worker class for the analysis process.
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    """
+
+    # <editor-fold desc="Class attributes">
+    """
+    the list where all analysis runs are stored
+    """
+    list_analysis_images: QtWidgets.QListWidget
+    """
+    the list where all analysis runs are stored for which images should be created
+    """
+    list_analysis_for_image_creation_overview: QtWidgets.QListWidget
+    """
+    the status bar of the main window
+    """
+    status_bar: QtWidgets.QStatusBar
+    """
+    the current project in use
+    """
+    app_project: 'project.Project'
+    """
+    the settings of pyssa
+    """
+    app_settings: 'settings.Settings'
+    """
+    the signals to use, for the worker
+    """
+    signals = WorkerSignals()
+
+    # </editor-fold>
+
+    def __init__(self, install) -> None:
+        """Constructor
+
+        Args:
+            install:
+                set true if Colabfold should be installed
+
+        Raises:
+            ValueError: raised if an argument is illegal
+        """
+        super(WslInstallerWorkerPool, self).__init__()
+        self.install = install
+
+    def run(self):
+        if self.install is False:
+            # if wsl should be uninstalled
+            webbrowser.open(constants.DOCS_HTML)
+        else:
+            # logical message: the user wants to install wsl
+            try:
+                subprocess.run([constants.POWERSHELL_EXE, constants.INSTALL_WSL_PS1])
+            except:
+                basic_boxes.ok("WSL2 installation",
+                               "Installation failed. Please re-run the process or look in the documentation.",
+                               QMessageBox.Critical)
+        # emit finish signal
+        self.signals.finished.emit()
+
 
 # class ResultsWorkerPool(QtCore.QRunnable):
 #

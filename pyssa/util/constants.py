@@ -60,6 +60,8 @@ POWERSHELL_EXE = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe
 CONVERT_DOS_TO_UNIX = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/convert_dos_to_unix.ps1")
 INSTALL_WSL_PS1 = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/install_wsl.ps1")
 PREDICTION_PS1 = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/run_prediction.ps1")
+INSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/import_distro.bat")
+UNINSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/uninstall_distro.bat")
 # TODO: original paths, please uncomment before deployment!!!
 COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
 COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
@@ -99,6 +101,11 @@ ANALYSIS_TASK = "Structure Analysis"
 PYSSA_LOGGER = logging.getLogger("PySSA-Logger")
 PREDICTION_WORKER_LOGGER = logging.getLogger("PredictionWorker")
 ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
+
+# docs paths
+# TODO: get correct paths
+DOCS_PDF = ""
+DOCS_HTML = ""
 
 # pymol parameters
 PYMOL_COLORS = [
@@ -160,7 +167,3 @@ chain_dict = {
     24: "Y",
     25: "Z",
 }
-
-# Protein subdir dict keys
-
-
