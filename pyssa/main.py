@@ -33,13 +33,12 @@ import pymol
 import csv
 import copy
 from pyssa.internal.data_structures.data_classes import current_session
-from pyssa.util import protein_pair_util
+from pyssa.util import protein_pair_util, session_util
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
 from pyssa.gui.ui.styles import styles
 from PyQt5.QtGui import QIcon
-
 from pymol import cmd
 # TODO: fix import statements so that they do not import a class!
 from urllib.request import urlopen
@@ -189,6 +188,16 @@ class MainWindow(QMainWindow):
 
         # </editor-fold>
 
+        self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
+                                                                       self.prediction_configuration, self.app_project)
+        self.worker_prediction_analysis.signals.finished.connect(self.post_prediction_analysis_process)
+        self.worker_prediction_analysis.setAutoDelete(True)
+
+        self.worker_multi_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
+                                                                       self.prediction_configuration, self.app_project)
+        self.worker_multi_prediction_analysis.signals.finished.connect(self.post_multi_prediction_analysis_process)
+        self.worker_multi_prediction_analysis.setAutoDelete(True)
+
         self.worker_analysis = workers.AnalysisWorkerPool(
             self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
             self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
@@ -201,7 +210,7 @@ class MainWindow(QMainWindow):
         self.worker_image_creation.signals.finished.connect(self.post_image_creation_process)
         self.worker_image_creation.setAutoDelete(True)
 
-        self.block_box_analysis = basic_boxes.no_buttons("Analysis", "A analysis is currently running, please wait.", QMessageBox.Information)
+        self.block_box_analysis = basic_boxes.no_buttons("Analysis", "An analysis is currently running, please wait.", QMessageBox.Information)
         self.block_box_images = basic_boxes.no_buttons("Analysis Images", "Images getting created, please wait.", QMessageBox.Information)
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
@@ -209,15 +218,15 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_mono_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
         self.ui.table_pred_multi_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
 
+
+
+        # helper attributes
         self.pymol_session_specs = {
             pyssa_keys.SESSION_SPEC_PROTEIN: [0, ""],
             pyssa_keys.SESSION_SPEC_COLOR: [0, ""],
             pyssa_keys.SESSION_SPEC_REPRESENTATION: [0, ""],
             pyssa_keys.SESSION_SPEC_BG_COLOR: [0, ""],
         }
-
-        # helper attributes
-        self.used_proteins = hotspot_info.HotspotInfo("", -1, -1, "", -1, -1)
 
         # setup defaults for pages
         self._init_fill_combo_boxes()
@@ -974,7 +983,7 @@ class MainWindow(QMainWindow):
         self.ui.list_pred_analysis_mono_model_chains.itemSelectionChanged.connect(
             self.check_mono_pred_analysis_if_same_no_of_chains_selected)
         self.ui.btn_pred_analysis_mono_back_pred_setup.clicked.connect(self.switch_monomer_pred_analysis_tab)
-        self.ui.btn_pred_analysis_mono_start.clicked.connect(self.start_process_batch)
+        self.ui.btn_pred_analysis_mono_start.clicked.connect(self.start_monomer_prediction_analysis)
 
         # </editor-fold>
 
@@ -1016,7 +1025,7 @@ class MainWindow(QMainWindow):
         self.ui.list_pred_analysis_multi_model_chains.itemSelectionChanged.connect(
             self.check_multi_pred_analysis_if_same_no_of_chains_selected)
         self.ui.btn_pred_analysis_multi_back_pred_setup.clicked.connect(self.switch_monomer_pred_analysis_tab)
-        self.ui.btn_pred_analysis_multi_start.clicked.connect(self.start_process_batch)
+        self.ui.btn_pred_analysis_multi_start.clicked.connect(self.start_multimer_prediction_analysis)
 
         # </editor-fold>
 
@@ -2585,86 +2594,23 @@ class MainWindow(QMainWindow):
     #     styles.color_button_not_ready(self.ui.btn_local_pred_mono_predict)
 
     def post_prediction_process(self):
-        self.app_project.serialize_project(self.app_project.get_project_xml_path())
-        constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
-        basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
-                       QMessageBox.Information)
-        constants.PYSSA_LOGGER.info("All structure predictions are done.")
-        self._project_watcher.show_valid_options(self.ui)
-        self._init_local_pred_mono_page()
+        if len(self.app_project.proteins) <= 0:
+            basic_boxes.ok("Prediction", "Prediction failed due to an unexpected error.", QMessageBox.Critical)
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+        else:
+            self.app_project.serialize_project(self.app_project.get_project_xml_path())
+            constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+            basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
+                           QMessageBox.Information)
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            self._project_watcher.show_valid_options(self.ui)
+            self._init_local_pred_mono_page()
+            self._init_local_pred_multi_page()
 
     def predict_local_monomer(self):
-        # # creating tmp directories in scratch folder to organize prediction inputs and outputs
-        # # TODO: is there a more elegant way to do it?
-        # if not os.path.exists(pathlib.Path(f"{self.scratch_path}/local_predictions")):
-        #     os.mkdir(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        # if not os.path.exists(constants.PREDICTION_FASTA_DIR):
-        #     os.mkdir(constants.PREDICTION_FASTA_DIR)
-        # if not os.path.exists(constants.PREDICTION_PDB_DIR):
-        #     os.mkdir(constants.PREDICTION_PDB_DIR)
-        # # creating fasta file
-        # predictions: list[tuple[str, str]] = gui_utils.get_prediction_name_and_seq_from_table(self.ui.table_pred_mono_prot_to_predict)
-        # prot_entries = []
-        # last_header = predictions[0][0]
-        # pred_list = prediction_list.PredictionList("", [])
-        # for tmp_prediction in predictions:
-        #     current_header = tmp_prediction[0]
-        #     if last_header == current_header:
-        #         pred_list.protein_name = tmp_prediction[0]
-        #         pred_list.protein_sequence.append(tmp_prediction[1])
-        #     else:
-        #         prot_entries.append(pred_list)
-        #         pred_list = prediction_list.PredictionList("", [])
-        #         last_header = current_header
-        # for tmp_prot_to_predict in prot_entries:
-        #     tmp_prot_to_predict.write_fasta_file()
-        # user_name = os.getlogin()
-        # fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
-        # pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
-        # # running prediction script
-        # if self.prediction_configuration.templates == "none":
-        #     try:
-        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
-        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
-        #                         fasta_path, pdb_path])
-        #         subprocess.run(["wsl", "--shutdown"])
-        #     except OSError:
-        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        #         return
-        # else:
-        #     try:
-        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
-        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
-        #                         fasta_path, pdb_path])
-        #         subprocess.run(["wsl", "--shutdown"])
-        #     except OSError:
-        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        #         return
-        # # moving best prediction model
-        # prediction_results: list[str] = os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR))
-        # for tmp_prediction in predictions:
-        #     for filename in prediction_results:
-        #         check = filename.find(f"{tmp_prediction[0]}_relaxed_rank_1")
-        #         if check != -1:
-        #             src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{filename}")
-        #             dest = pathlib.Path(
-        #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
-        #             shutil.copy(src, dest)
-        #             os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
-        #                       f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_prediction[0]}.pdb")
-        #             tmp_protein = protein.Protein(tmp_prediction[0], pathlib.Path(self.app_project.get_pdb_path()))
-        #             self.app_project.add_existing_protein(tmp_protein)
-        #             break
-        # shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        # try:
-        #     tmp_first_prediction = predictions[0]
-        #     cmd.load(
-        #         f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_first_prediction[0]}.pdb")
-        # except pymol.CmdException:
-        #     print("Loading the model failed.")
-        #     return
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        worker = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
+        worker = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
                                               self.prediction_configuration, self.app_project)
         worker.signals.finished.connect(self.post_prediction_process)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
@@ -2679,22 +2625,6 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_local_multimer_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        # constants.PYSSA_LOGGER.info("Begin prediction process.")
-        # self.prediction_thread = QThread()
-        # constants.PYSSA_LOGGER.info("Created a new prediction thread.")
-        # self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
-        #                                                   self.prediction_configuration, self.app_project)
-        # constants.PYSSA_LOGGER.info("Created a new prediction worker.")
-        # self._thread_controller.thread_worker_pairs.get(constants.PREDICTION_TASK).setup_and_run_thread(display_msg_box2)
-        # gui_elements_to_show = [
-        #     self.ui.btn_prediction_abort,
-        # ]
-        # gui_elements_to_hide = [
-        #     self.ui.btn_use_page,
-        #     self.ui.btn_close_project,
-        # ]
-        # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        # #self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
 
     def abort_prediction(self):
@@ -3079,22 +3009,101 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     def post_prediction_analysis_process(self):
-        # TODO: Wedding
-        self.app_project.serialize_project(self.app_project.get_project_xml_path())
-        constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
-        basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
-                       QMessageBox.Information)
-        constants.PYSSA_LOGGER.info("All structure predictions are done.")
-        self._project_watcher.show_valid_options(self.ui)
+        if len(self.app_project.proteins) <= 1:
+            basic_boxes.ok("Prediction", "Prediction failed due to an unexpected error.", QMessageBox.Critical)
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+        else:
+            self.app_project.serialize_project(self.app_project.get_project_xml_path())
+            constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            constants.PYSSA_LOGGER.info("Begin analysis process.")
+            self.worker_analysis = workers.AnalysisWorkerPool(
+                self.ui.list_pred_analysis_mono_overview, self.ui.cb_pred_analysis_mono_images,
+                self.status_bar, self.app_project, self.app_settings, self._init_mono_pred_analysis_page)
+            constants.PYSSA_LOGGER.info("Thread started for analysis process.")
+            self.threadpool.start(self.worker_analysis)
+            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+            self.block_box_analysis.exec_()
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
 
     def start_monomer_prediction_analysis(self):
-        # TODO: Wedding
+        # # creating tmp directories in scratch folder to organize prediction inputs and outputs
+        # # TODO: is there a more elegant way to do it?
+        # if not os.path.exists(pathlib.Path(f"{self.scratch_path}/local_predictions")):
+        #     os.mkdir(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        # if not os.path.exists(constants.PREDICTION_FASTA_DIR):
+        #     os.mkdir(constants.PREDICTION_FASTA_DIR)
+        # if not os.path.exists(constants.PREDICTION_PDB_DIR):
+        #     os.mkdir(constants.PREDICTION_PDB_DIR)
+        # # creating fasta file
+        # predictions: list[tuple[str, str]] = gui_utils.get_prediction_name_and_seq_from_table(self.ui.table_pred_mono_prot_to_predict)
+        # prot_entries = []
+        # last_header = predictions[0][0]
+        # pred_list = prediction_list.PredictionList("", [])
+        # for tmp_prediction in predictions:
+        #     current_header = tmp_prediction[0]
+        #     if last_header == current_header:
+        #         pred_list.protein_name = tmp_prediction[0]
+        #         pred_list.protein_sequence.append(tmp_prediction[1])
+        #     else:
+        #         prot_entries.append(pred_list)
+        #         pred_list = prediction_list.PredictionList("", [])
+        #         last_header = current_header
+        # for tmp_prot_to_predict in prot_entries:
+        #     tmp_prot_to_predict.write_fasta_file()
+        # user_name = os.getlogin()
+        # fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
+        # pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
+        # # running prediction script
+        # if self.prediction_configuration.templates == "none":
+        #     try:
+        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
+        #                         fasta_path, pdb_path])
+        #         subprocess.run(["wsl", "--shutdown"])
+        #     except OSError:
+        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        #         return
+        # else:
+        #     try:
+        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
+        #                         fasta_path, pdb_path])
+        #         subprocess.run(["wsl", "--shutdown"])
+        #     except OSError:
+        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        #         return
+        # # moving best prediction model
+        # prediction_results: list[str] = os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR))
+        # for tmp_prediction in predictions:
+        #     for filename in prediction_results:
+        #         check = filename.find(f"{tmp_prediction[0]}_relaxed_rank_1")
+        #         if check != -1:
+        #             src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{filename}")
+        #             dest = pathlib.Path(
+        #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
+        #             shutil.copy(src, dest)
+        #             os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
+        #                       f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_prediction[0]}.pdb")
+        #             tmp_protein = protein.Protein(tmp_prediction[0], pathlib.Path(self.app_project.get_pdb_path()))
+        #             self.app_project.add_existing_protein(tmp_protein)
+        #             break
+        # shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
+        # try:
+        #     tmp_first_prediction = predictions[0]
+        #     cmd.load(
+        #         f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_first_prediction[0]}.pdb")
+        # except pymol.CmdException:
+        #     print("Loading the model failed.")
+        #     return
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        worker = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
-                                              self.prediction_configuration, self.app_project)
-        worker.signals.finished.connect(self.post_prediction_process)
+        self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
+                                                                       self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        self.threadpool.start(worker)
+        self.threadpool.start(self.worker_prediction_analysis)
         gui_elements_to_show = [
             self.ui.btn_prediction_abort,
         ]
@@ -3105,6 +3114,22 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_local_multimer_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        # constants.PYSSA_LOGGER.info("Begin prediction process.")
+        # self.prediction_thread = QThread()
+        # constants.PYSSA_LOGGER.info("Created a new prediction thread.")
+        # self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
+        #                                                   self.prediction_configuration, self.app_project)
+        # constants.PYSSA_LOGGER.info("Created a new prediction worker.")
+        # self._thread_controller.thread_worker_pairs.get(constants.PREDICTION_TASK).setup_and_run_thread(display_msg_box2)
+        # gui_elements_to_show = [
+        #     self.ui.btn_prediction_abort,
+        # ]
+        # gui_elements_to_hide = [
+        #     self.ui.btn_use_page,
+        #     self.ui.btn_close_project,
+        # ]
+        # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        # #self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
     # </editor-fold>
 
@@ -3331,6 +3356,45 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
 
     # </editor-fold>
+
+    def post_multi_prediction_analysis_process(self):
+        if len(self.app_project.proteins) <= 1:
+            basic_boxes.ok("Prediction", "Prediction failed due to an unexpected error.", QMessageBox.Critical)
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+        else:
+            self.app_project.serialize_project(self.app_project.get_project_xml_path())
+            constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            constants.PYSSA_LOGGER.info("Begin analysis process.")
+            self.worker_analysis = workers.AnalysisWorkerPool(
+                self.ui.list_pred_analysis_multi_overview, self.ui.cb_pred_analysis_multi_images,
+                self.status_bar, self.app_project, self.app_settings, self._init_multi_pred_analysis_page)
+            constants.PYSSA_LOGGER.info("Thread started for analysis process.")
+            self.threadpool.start(self.worker_analysis)
+            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+            self.block_box_analysis.exec_()
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+
+    def start_multimer_prediction_analysis(self):
+        constants.PYSSA_LOGGER.info("Begin prediction process.")
+        self.worker_multi_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_multi_prot_to_predict,
+                                                                             self.prediction_configuration, self.app_project)
+        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
+        self.threadpool.start(self.worker_multi_prediction_analysis)
+        gui_elements_to_show = [
+            self.ui.btn_prediction_abort,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_use_page,
+            self.ui.btn_close_project,
+            self.ui.btn_pred_local_monomer_page,
+            self.ui.btn_pred_local_multimer_page,
+        ]
+        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        self.display_view_page()
 
     # </editor-fold>
 
@@ -4318,20 +4382,20 @@ class MainWindow(QMainWindow):
     # <editor-fold desc="Hotspots page functions">
     def open_protein(self):
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+
         input = self.ui.list_hotspots_choose_protein.currentItem().text()
         if input.find("_vs_") == -1:
             # one protein is selected
             tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
             tmp_protein.load_protein_pymol_session()
-            tmp_protein.pymol_selection.set_selections_without_chains_ca()
-            tmp_model = cmd.get_model(tmp_protein.pymol_selection.selection_string)
-            first_amoino_acid_no = tmp_model.atom[0].resi
-            self.ui.sp_hotspots_resi_no.setMinimum(int(first_amoino_acid_no))
-            tmp_sequence = cmd.get_fastastr('all')
-            self.ui.sp_hotspots_resi_no.setMaximum(len(tmp_sequence))
+            cmd.set("seq_view", 1)
+            # tmp_protein.pymol_selection.set_selections_without_chains_ca()
+            # tmp_model = cmd.get_model(tmp_protein.pymol_selection.selection_string)
+            # first_amoino_acid_no = tmp_model.atom[0].resi
+            # self.ui.sp_hotspots_resi_no.setMinimum(int(first_amoino_acid_no))
+            # tmp_sequence = cmd.get_fastastr('all')
+            # self.ui.sp_hotspots_resi_no.setMaximum(len(tmp_sequence))
             gui_elements_to_show = [
-                self.ui.lbl_hotspots_resi_no,
-                self.ui.sp_hotspots_resi_no,
                 self.ui.lbl_hotspots_resi_show,
                 self.ui.btn_hotspots_resi_show,
                 self.ui.lbl_hotspots_resi_hide,
@@ -4343,50 +4407,7 @@ class MainWindow(QMainWindow):
         else:
             # protein pair is selected
             tmp_protein_pair = self.app_project.get_specific_protein_pair(input)
-            prot1_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_1))
-            prot2_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_2))
-            if prot1_no > prot2_no:
-                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
-                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
-                self.used_proteins.prot_1_seq_start = prot1_no
-                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
-                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
-                self.used_proteins.prot_2_seq_start = prot2_no
-                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
-            else:
-                self.ui.sp_hotspots_resi_no.setMinimum(prot1_no)
-                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
-                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
-                self.used_proteins.prot_1_seq_start = prot1_no
-                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
-                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
-                self.used_proteins.prot_2_seq_start = prot2_no
-                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
-
-            prot1_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_1))
-            prot2_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_2))
-            if prot1_seq_len > prot2_seq_len:
-                self.ui.sp_hotspots_resi_no.setMaximum(prot2_seq_len)
-                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
-                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
-                self.used_proteins.prot_1_seq_start = prot1_no
-                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
-                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
-                self.used_proteins.prot_2_seq_start = prot2_no
-                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
-            else:
-                self.ui.sp_hotspots_resi_no.setMaximum(prot1_seq_len)
-                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
-                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
-                self.used_proteins.prot_1_seq_start = prot1_no
-                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
-                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
-                self.used_proteins.prot_2_seq_start = prot2_no
-                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
-
             gui_elements_to_show = [
-                self.ui.lbl_hotspots_resi_no,
-                self.ui.sp_hotspots_resi_no,
                 self.ui.lbl_hotspots_resi_show,
                 self.ui.btn_hotspots_resi_show,
                 self.ui.lbl_hotspots_resi_hide,
@@ -4396,62 +4417,65 @@ class MainWindow(QMainWindow):
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             tmp_protein_pair.load_pymol_session()
+            cmd.set("seq_view", 1)
+            # prot1_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_1))
+            # prot2_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_2))
+            # if prot1_no > prot2_no:
+            #     self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+            #     self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+            #     self.used_proteins.prot_1_seq_start = prot1_no
+            #     self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+            #     self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+            #     self.used_proteins.prot_2_seq_start = prot2_no
+            #     self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
+            # else:
+            #     self.ui.sp_hotspots_resi_no.setMinimum(prot1_no)
+            #     self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+            #     self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+            #     self.used_proteins.prot_1_seq_start = prot1_no
+            #     self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+            #     self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+            #     self.used_proteins.prot_2_seq_start = prot2_no
+            #     self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
+            #
+            # prot1_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_1))
+            # prot2_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_2))
+            # if prot1_seq_len > prot2_seq_len:
+            #     self.ui.sp_hotspots_resi_no.setMaximum(prot2_seq_len)
+            #     self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+            #     self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+            #     self.used_proteins.prot_1_seq_start = prot1_no
+            #     self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+            #     self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+            #     self.used_proteins.prot_2_seq_start = prot2_no
+            #     self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
+            # else:
+            #     self.ui.sp_hotspots_resi_no.setMaximum(prot1_seq_len)
+            #     self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+            #     self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+            #     self.used_proteins.prot_1_seq_start = prot1_no
+            #     self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+            #     self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+            #     self.used_proteins.prot_2_seq_start = prot2_no
+            #     self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
 
     def show_resi_sticks(self):
-        input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        if input.find("_vs_") == -1:
-            # one protein is selected
-            tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-            tmp_protein.show_resi_as_balls_and_sticks()
-        else:
-            tmp_protein_pair = self.app_project.search_protein_pair(input)
-            resi_no = int(self.ui.sp_hotspots_resi_no.text())
-            if resi_no > int(self.used_proteins.prot_1_seq_start) and resi_no > int(self.used_proteins.prot_2_seq_start):
-                if resi_no < int(self.used_proteins.prot_1_seq_start) and resi_no < int(self.used_proteins.prot_2_seq_start):
-                    tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
-                        f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-                    tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
-                    tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
-                        f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-                    tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
-            elif resi_no < int(self.used_proteins.prot_1_seq_start):
-                # use prot 2
-                tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-                tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
-            elif resi_no < int(self.used_proteins.prot_2_seq_start):
-                # use prot 1
-                tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-                tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
-            elif resi_no > int(self.used_proteins.prot_1_seq_end):
-                # use prot 2
-                tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-                tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
-            elif resi_no > int(self.used_proteins.prot_2_seq_end):
-                # use prot 1
-                tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-                tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
-
+        session_util.check_if_sele_is_empty()
+        cmd.show(representation="sticks", selection="sele")
 
     def hide_resi_sticks(self):
-        input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        if input.find("_vs_") == -1:
-            # one protein is selected
-            tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-            tmp_protein.hide_resi_as_balls_and_sticks()
+        session_util.check_if_sele_is_empty()
+        cmd.hide(representation="sticks", selection="sele")
 
     def zoom_resi_position(self):
-        input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        if input.find("_vs_") == -1:
-            # one protein is selected
-            tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-            tmp_protein.zoom_resi_protein_position()
+        session_util.check_if_sele_is_empty()
+        cmd.zoom(selection="sele", buffer=8.0, state=0, complete=0)
+        # input = self.ui.list_hotspots_choose_protein.currentItem().text()
+        # if input.find("_vs_") == -1:
+        #     # one protein is selected
+        #     tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
+        #     tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
+        #     tmp_protein.zoom_resi_protein_position()
 
     # </editor-fold>
 

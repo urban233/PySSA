@@ -23,6 +23,7 @@ import copy
 import numpy as np
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
 import pyqtgraph as pg
 from pyssa.internal.data_structures import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_histogram import Ui_Dialog

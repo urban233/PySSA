@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""This module contains helper function for the protein class."""
+"""This module contains helper functions for the protein class."""
 import logging
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.data_structures import chain
