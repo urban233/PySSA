@@ -66,6 +66,7 @@ from pyssa.internal.data_structures import project_watcher
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
+from pyssa.internal.data_structures.data_classes import hotspot_info
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import path_util
@@ -216,7 +217,7 @@ class MainWindow(QMainWindow):
         }
 
         # helper attributes
-        self.used_proteins: list[str] = ["", "", "", ""]
+        self.used_proteins = hotspot_info.HotspotInfo("", -1, -1, "", -1, -1)
 
         # setup defaults for pages
         self._init_fill_combo_boxes()
@@ -4346,23 +4347,42 @@ class MainWindow(QMainWindow):
             prot2_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_2))
             if prot1_no > prot2_no:
                 self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
-                self.used_proteins[0] = tmp_protein_pair.protein_1.get_molecule_object()
-                self.used_proteins[1] = tmp_protein_pair.protein_2.get_molecule_object()
+                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+                self.used_proteins.prot_1_seq_start = prot1_no
+                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+                self.used_proteins.prot_2_seq_start = prot2_no
+                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
             else:
                 self.ui.sp_hotspots_resi_no.setMinimum(prot1_no)
-                self.used_proteins[0] = tmp_protein_pair.protein_1.get_molecule_object()
-                self.used_proteins[1] = tmp_protein_pair.protein_2.get_molecule_object()
+                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+                self.used_proteins.prot_1_seq_start = prot1_no
+                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+                self.used_proteins.prot_2_seq_start = prot2_no
+                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
 
             prot1_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_1))
             prot2_seq_len = int(tools.check_seq_length(tmp_protein_pair.protein_2))
             if prot1_seq_len > prot2_seq_len:
                 self.ui.sp_hotspots_resi_no.setMaximum(prot2_seq_len)
-                self.used_proteins[3] = tmp_protein_pair.protein_2.get_molecule_object()
-                self.used_proteins[2] = tmp_protein_pair.protein_1.get_molecule_object()
+                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+                self.used_proteins.prot_1_seq_start = prot1_no
+                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+                self.used_proteins.prot_2_seq_start = prot2_no
+                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
             else:
                 self.ui.sp_hotspots_resi_no.setMaximum(prot1_seq_len)
-                self.used_proteins[2] = tmp_protein_pair.protein_1.get_molecule_object()
-                self.used_proteins[3] = tmp_protein_pair.protein_2.get_molecule_object()
+                self.ui.sp_hotspots_resi_no.setMinimum(prot2_no)
+                self.used_proteins.prot_1 = tmp_protein_pair.protein_1.get_molecule_object()
+                self.used_proteins.prot_1_seq_start = prot1_no
+                self.used_proteins.prot_1_seq_end = tools.check_seq_length(tmp_protein_pair.protein_1)
+                self.used_proteins.prot_2 = tmp_protein_pair.protein_2.get_molecule_object()
+                self.used_proteins.prot_2_seq_start = prot2_no
+                self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
 
             gui_elements_to_show = [
                 self.ui.lbl_hotspots_resi_no,
@@ -4387,26 +4407,35 @@ class MainWindow(QMainWindow):
         else:
             tmp_protein_pair = self.app_project.search_protein_pair(input)
             resi_no = int(self.ui.sp_hotspots_resi_no.text())
-            if resi_no < int(self.used_proteins[0]):
+            if resi_no > int(self.used_proteins.prot_1_seq_start) and resi_no > int(self.used_proteins.prot_2_seq_start):
+                if resi_no < int(self.used_proteins.prot_1_seq_start) and resi_no < int(self.used_proteins.prot_2_seq_start):
+                    tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
+                        f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
+                    tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
+                    tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
+                        f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
+                    tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
+            elif resi_no < int(self.used_proteins.prot_1_seq_start):
                 # use prot 2
                 tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
                     f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
                 tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
-            elif resi_no < int(self.used_proteins[1]):
+            elif resi_no < int(self.used_proteins.prot_2_seq_start):
                 # use prot 1
                 tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
                     f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
                 tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
-            elif resi_no > int(self.used_proteins[2]):
+            elif resi_no > int(self.used_proteins.prot_1_seq_end):
                 # use prot 2
                 tmp_protein_pair.protein_2.pymol_selection.set_custom_selection(
                     f"/{tmp_protein_pair.protein_2.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
                 tmp_protein_pair.protein_2.show_resi_as_balls_and_sticks()
-            elif resi_no > int(self.used_proteins[3]):
+            elif resi_no > int(self.used_proteins.prot_2_seq_end):
                 # use prot 1
                 tmp_protein_pair.protein_1.pymol_selection.set_custom_selection(
                     f"/{tmp_protein_pair.protein_1.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
                 tmp_protein_pair.protein_1.show_resi_as_balls_and_sticks()
+
 
     def hide_resi_sticks(self):
         input = self.ui.list_hotspots_choose_protein.currentItem().text()

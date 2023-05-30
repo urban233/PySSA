@@ -19,10 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-import os.path
-import pathlib
-
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtWidgets
 from pymol import cmd
@@ -119,12 +115,9 @@ class DialogDistancePlot(QtWidgets.QDialog):
         exporter.parameters()['width'] = 1000  # (note this also affects height parameter)
         exporter.parameters()['height'] = 1440
         # save to file
-        # TODO: save file into xml or png with file dialog
-        results_image_path = pathlib.Path(
-            f"{self.protein_pair_for_analysis.results_dir}/user_images")
-        if not os.path.exists(results_image_path):
-            os.mkdir(results_image_path)
-        file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save Plot as Image", str(results_image_path), "Portable Network Graphic (.png)")
-        if file_path == ("", ""):
-            return
-        exporter.export(f'{file_path[0]}.png')
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(self, "Save Plot as image", "", "Portable Network Graphic (.png)")
+        if file_path:
+            exporter.export(f'{file_path}.png')
