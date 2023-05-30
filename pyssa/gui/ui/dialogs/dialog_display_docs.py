@@ -19,11 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
+import PyQt5.QtWebEngineWidgets
+
+import PyQt5
 from PyQt5.QtCore import QUrl
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QDialog, QVBoxLayout
-from PyQt5.QtWebEngineWidgets import QWebEngineView
 from pyssa.util import constants
 
 
@@ -32,7 +35,7 @@ class WebViewDialog(QDialog):
         super().__init__()
         self.setWindowTitle("PySSA Documentation")
         layout = QVBoxLayout(self)
-        self.web_view = QWebEngineView()
+        self.web_view = PyQt5.QtWebEngineWidgets.QWebEngineView()
         self.web_view.load(QUrl.fromLocalFile(url))
         layout.addWidget(self.web_view)
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))

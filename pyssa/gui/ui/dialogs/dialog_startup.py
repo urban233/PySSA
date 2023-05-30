@@ -23,7 +23,7 @@ import os
 import sys
 import PyQt5.QtWidgets
 from PyQt5 import QtCore
-from pymol import Qt
+from PyQt5 import QtWidgets
 from pyssa.util import constants
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_startup import Ui_Dialog
 
@@ -31,7 +31,7 @@ global_var_startup_workspace = ""
 global_var_terminate_app = 0
 
 
-class DialogStartup(Qt.QtWidgets.QDialog):
+class DialogStartup(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         """Constructor
@@ -40,7 +40,7 @@ class DialogStartup(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -79,7 +79,7 @@ class DialogStartup(Qt.QtWidgets.QDialog):
 
         """
         self.workspace_dir = PyQt5.QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Open Workspace Directory", Qt.QtCore.QDir.homePath(),
+            self, "Open Workspace Directory", QtCore.QDir.homePath(),
             PyQt5.QtWidgets.QFileDialog.ShowDirsOnly | PyQt5.QtWidgets.QFileDialog.DontResolveSymlinks)
         if self.workspace_dir != "":
             self.ui.txt_workspace.setText(self.workspace_dir)

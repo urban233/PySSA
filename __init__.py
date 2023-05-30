@@ -22,6 +22,7 @@
 import pathlib
 import sys
 import os
+from PyQt5.QtCore import Qt
 
 # appending the plugin path to the python search path
 # this is necessary to be able to use import (submodules) statements

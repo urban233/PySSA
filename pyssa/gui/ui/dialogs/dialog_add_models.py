@@ -19,14 +19,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pymol import Qt
-
+from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_models import Ui_Dialog
 
 global_var_pdb_files = []
 
 
-class DialogAddModels(Qt.QtWidgets.QDialog):
+class DialogAddModels(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         """Constructor
@@ -35,7 +35,7 @@ class DialogAddModels(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -58,8 +58,8 @@ class DialogAddModels(Qt.QtWidgets.QDialog):
     def add_model_to_list(self):
         try:
             # open file dialog
-            file_names = Qt.QtWidgets.QFileDialog.getOpenFileNames(self, "Open Model",
-                                                                  Qt.QtCore.QDir.homePath(),
+            file_names = QtWidgets.QFileDialog.getOpenFileNames(self, "Open Model",
+                                                                  QtCore.QDir.homePath(),
                                                                   "PDB Files (*.pdb)")
             if file_names == ([], ""):
                 print("No file has been selected.")

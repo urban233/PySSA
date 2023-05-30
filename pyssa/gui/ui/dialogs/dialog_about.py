@@ -20,12 +20,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from PyQt5.QtGui import QIcon
-from pymol import Qt
+from PyQt5 import QtWidgets
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_about import Ui_Dialog
+from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
-class DialogAbout(Qt.QtWidgets.QDialog):
+class DialogAbout(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
         """Constructor
@@ -34,7 +35,7 @@ class DialogAbout(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -42,6 +43,7 @@ class DialogAbout(Qt.QtWidgets.QDialog):
         self.ui.btn_ok.clicked.connect(self.close_dialog)
         self.ui.label.setText("PySSA")
         self.ui.label_2.setText(f"Version: {constants.VERSION_NUMBER}")
+        styles.set_stylesheet(self)
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("About")
 

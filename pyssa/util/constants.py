@@ -111,7 +111,6 @@ DOCS_HTML = pathlib.Path(f"{PLUGIN_PATH}/docs/pyssa/html/index.html")
 PYMOL_COLORS = [
             "",
             "red",
-            "tv-red",
             "green",
             "limegreen",
             "blue",

@@ -19,14 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pymol import Qt
-
+from PyQt5 import QtWidgets
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_advanced_prediction_configurations import Ui_Dialog
 from pyssa.util import gui_utils
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 
 
-class DialogAdvancedPredictionConfigurations(Qt.QtWidgets.QDialog):
+class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
 
     def __init__(self, prediction_config, parent=None):
         """Constructor
@@ -35,7 +34,7 @@ class DialogAdvancedPredictionConfigurations(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)

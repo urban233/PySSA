@@ -24,7 +24,7 @@ import os.path
 import pathlib
 
 from PyQt5.QtGui import QIcon
-from pymol import Qt
+from PyQt5 import QtWidgets
 from pymol import cmd
 import pyqtgraph as pg
 import pyqtgraph.exporters
@@ -35,7 +35,7 @@ from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialo
 from pyssa.util import constants
 
 
-class DialogDistancePlot(Qt.QtWidgets.QDialog):
+class DialogDistancePlot(QtWidgets.QDialog):
 
     def __init__(self, protein_pair_from_project, parent=None):
         """Constructor
@@ -44,7 +44,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -124,7 +124,7 @@ class DialogDistancePlot(Qt.QtWidgets.QDialog):
             f"{self.protein_pair_for_analysis.results_dir}/user_images")
         if not os.path.exists(results_image_path):
             os.mkdir(results_image_path)
-        file_path = Qt.QtWidgets.QFileDialog.getSaveFileName(self, "Save Plot as Image", str(results_image_path), "Portable Network Graphic (.png)")
+        file_path = QtWidgets.QFileDialog.getSaveFileName(self, "Save Plot as Image", str(results_image_path), "Portable Network Graphic (.png)")
         if file_path == ("", ""):
             return
         exporter.export(f'{file_path[0]}.png')

@@ -22,7 +22,7 @@
 import copy
 import numpy as np
 from PyQt5.QtGui import QIcon
-from pymol import Qt
+from PyQt5 import QtWidgets
 import pyqtgraph as pg
 from pyssa.internal.data_structures import protein_pair
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_histogram import Ui_Dialog
@@ -31,7 +31,7 @@ from pyssa.util import constants
 from PyQt5 import QtCore
 
 
-class DialogDistanceHistogram(Qt.QtWidgets.QDialog):
+class DialogDistanceHistogram(QtWidgets.QDialog):
 
     def __init__(self, protein_pair_from_project, parent=None):
         """Constructor
@@ -40,7 +40,7 @@ class DialogDistanceHistogram(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
@@ -80,7 +80,7 @@ class DialogDistanceHistogram(Qt.QtWidgets.QDialog):
             return
 
         y = y.tolist()
-        color = Qt.QtGui.QColor.fromRgb(255, 128, 128)
+        color = QtGui.QColor.fromRgb(255, 128, 128)
         # creates bar chart item
         graph_bar_item = pg.BarGraphItem(x0=0, y=y, height=0.2, width=x,
                                          pen=pg.mkPen(color="#4B91F7"), brush=pg.mkBrush(color="#4B91F7"))

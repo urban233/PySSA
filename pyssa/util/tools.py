@@ -29,9 +29,10 @@ from Bio import PDB
 from pathlib import Path
 
 from PyQt5.QtWidgets import QMessageBox
-from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.gui.ui.messageboxes import basic_boxes
 from typing import TYPE_CHECKING
@@ -153,7 +154,7 @@ def get_file_path_and_name(text) -> tuple[str, str]:
         path:
             absolute path where the file is stored
     """
-    file_info = Qt.QtCore.QFileInfo(text)
+    file_info = QtCore.QFileInfo(text)
     file_name = file_info.baseName()
     path = file_info.canonicalPath()
     return file_name, path
@@ -168,7 +169,7 @@ def restore_default_settings(settings_obj: settings.Settings) -> None:
 
 
 def quick_log_and_display(log_type: str, log_message: str,
-                          status_bar: Qt.QtWidgets.QStatusBar, status_bar_message: str) -> None:
+                          status_bar: QtWidgets.QStatusBar, status_bar_message: str) -> None:
     """This function is used to quickly log, print and display a message
 
     Args:
@@ -288,7 +289,7 @@ def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> t
 
 def OLD_scan_workspace_for_non_duplicate_proteins(valid_projects: list, current_project_name: str,
                                               workspace_path: pathlib.Path,
-                                              list_widget: Qt.QtWidgets.QListWidget) -> tuple[dict, list]:
+                                              list_widget: QtWidgets.QListWidget) -> tuple[dict, list]:
     """This function scans the workspace directory for protein structures and eliminates all duplicates
 
     Args:
@@ -338,7 +339,7 @@ def scan_project_for_valid_proteins(project_path: pathlib.Path, list_view_projec
     return project_proteins
 
 
-def switch_page(stackedWidget: Qt.QtWidgets.QStackedWidget, lbl_page_title: Qt.QtWidgets.QLabel, index: int, text: str) -> None:
+def switch_page(stackedWidget: QtWidgets.QStackedWidget, lbl_page_title: QtWidgets.QLabel, index: int, text: str) -> None:
     """This function switches a given stackedWidget page.
 
     Args:
@@ -440,7 +441,7 @@ def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status
         styles.color_button_not_ready(btn_for_next_step)
         return
     else:
-        regex = Qt.QtCore.QRegularExpression()
+        regex = QtCore.QRegularExpression()
         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
         validator = QtGui.QRegularExpressionValidator(regex)
         for i in range(len(txt_for_project_name.text())):
@@ -463,8 +464,8 @@ def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status
                 styles.color_button_not_ready(btn_for_next_step)
                 return
         item = list_of_projects.findItems(txt_for_project_name.text(),
-                                          Qt.QtCore.Qt.MatchContains |
-                                          Qt.QtCore.Qt.MatchExactly)
+                                          QtCore.Qt.MatchContains |
+                                          QtCore.Qt.MatchExactly)
         if len(item) != 0:
             list_of_projects.setCurrentItem(item[0])
             txt_for_project_name.setStyleSheet("color: #f44336")
@@ -503,8 +504,8 @@ def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_sear
         return
     else:
         item = list_for_projects.findItems(txt_for_search.text(),
-                                            Qt.QtCore.Qt.MatchContains |
-                                            Qt.QtCore.Qt.MatchExactly)
+                                            QtCore.Qt.MatchContains |
+                                            QtCore.Qt.MatchExactly)
         if len(item) != 0:
             list_for_projects.setCurrentItem(item[0])
             lbl_for_status_search.setText("")
@@ -543,7 +544,7 @@ def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
         styles.color_button_not_ready(btn_next)
         return
     else:
-        regex = Qt.QtCore.QRegularExpression()
+        regex = QtCore.QRegularExpression()
         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
         validator = QtGui.QRegularExpressionValidator(regex)
         for i in range(len(txt_for_protein_name.text())):
@@ -582,7 +583,7 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
         styles.color_button_not_ready(btn_next)
         return
     else:
-        regex = Qt.QtCore.QRegularExpression()
+        regex = QtCore.QRegularExpression()
         regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
         validator = QtGui.QRegularExpressionValidator(regex)
         for i in range(len(txt_protein_sequence.toPlainText())):

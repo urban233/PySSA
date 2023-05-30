@@ -39,7 +39,7 @@ from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
 from pyssa.gui.ui.styles import styles
 from PyQt5.QtGui import QIcon
-from pymol import Qt
+
 from pymol import cmd
 # TODO: fix import statements so that they do not import a class!
 from urllib.request import urlopen
@@ -47,6 +47,8 @@ from urllib.error import URLError
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
+from PyQt5 import QtWidgets
+from PyQt5 import QtGui
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.internal.thread import workers
 from pyssa.io_pyssa import safeguard
@@ -147,12 +149,12 @@ class MainWindow(QMainWindow):
         self._project_watcher = project_watcher.ProjectWatcher(self.app_project, no_of_pdb_files=None)
         self.scratch_path = constants.SCRATCH_DIR
         self.workspace_path = self.app_settings.workspace_path
-        self.workspace = Qt.QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
-        self.status_bar = Qt.QtWidgets.QStatusBar()
+        self.workspace = QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
+        self.status_bar = QtWidgets.QStatusBar()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
         self.results_name = ""
         self.no_of_selected_chains = 0
-        self.plot_dialog = Qt.QtWidgets.QDialog(self)
+        self.plot_dialog = QtWidgets.QDialog(self)
         self.view_box = None
         self.block_box_expert_install = basic_boxes.no_buttons("Local Colabfold installation", "An installation process is currently running.", QMessageBox.Information)
         # type, name, session
@@ -248,7 +250,7 @@ class MainWindow(QMainWindow):
         else:
             self.ui.action_install_from_file.setVisible(False)
 
-        # fixme: should the pdf documentation be accessable through the pyssa gui?
+        # fixme: should the pdf documentation be accessible through the pyssa gui?
         self.ui.action_help_docs_pdf.setVisible(False)
 
         # sets additional parameters
@@ -1757,7 +1759,7 @@ class MainWindow(QMainWindow):
 
         if len(dialog_add_models.global_var_pdb_files) > 0:
             for pdb_path in dialog_add_models.global_var_pdb_files:
-                pdb_path_info = Qt.QtCore.QFileInfo(pdb_path)
+                pdb_path_info = QtCore.QFileInfo(pdb_path)
                 pdb_name = pdb_path_info.baseName()
                 # save project folder in current workspace
                 # mkdir project
@@ -1847,8 +1849,8 @@ class MainWindow(QMainWindow):
         """
         try:
             # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                 Qt.QtCore.QDir.homePath(),
+            file_name = QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
+                                                                 QtCore.QDir.homePath(),
                                                                  "PDB Files (*.pdb)")
             if file_name == ("", ""):
                 raise ValueError
@@ -2188,11 +2190,6 @@ class MainWindow(QMainWindow):
     def view_structure(self):
         protein_name = self.ui.list_view_project_proteins.currentItem().text()
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
-        # session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
-        #                                     QMessageBox.Information)
-        # if session_msg is True:
-        #     self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
-        #     self.app_project.save_pymol_session(self.current_session)
         cmd.reinitialize()
         try:
             self.app_project.search_protein(protein_name).load_protein_pymol_session()
@@ -2390,6 +2387,7 @@ class MainWindow(QMainWindow):
     # <editor-fold desc="Close project functions">
     def close_project(self):
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        cmd.reinitialize()
         self._project_watcher.on_home_page = True
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
         self._project_watcher.show_valid_options(self.ui)
@@ -2400,335 +2398,6 @@ class MainWindow(QMainWindow):
         self.display_home_page()
 
     # </editor-fold>
-
-    # # Prediction + Analysis
-    # def show_prediction_load_reference(self):
-    #     """Shows the text field and tool button for the load reference functionality
-    #
-    #     """
-    #     gui_elements_show = [
-    #         self.ui.lbl_prediction_load_reference,
-    #         self.ui.txt_prediction_load_reference,
-    #         self.ui.btn_prediction_load_reference,
-    #         self.ui.btn_prediction_next_2,
-    #         self.ui.btn_prediction_back_2,
-    #     ]
-    #     gui_elements_hide = [
-    #         self.ui.btn_prediction_next_1
-    #     ]
-    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-    #     self.ui.txt_prediction_project_name.setEnabled(False)
-    #     self.ui.list_widget_projects.setEnabled(False)
-    #     self.ui.btn_prediction_next_2.setEnabled(False)
-    #     self.ui.txt_prediction_load_reference.setEnabled(True)
-    #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: white")
-    #
-    # def hide_prediction_load_reference(self):
-    #     """Hides the text field and tool button for the load reference functionality
-    #
-    #     """
-    #     gui_elements_show = [
-    #         self.ui.btn_prediction_next_1,
-    #     ]
-    #     gui_elements_hide = [
-    #         self.ui.lbl_prediction_load_reference,
-    #         self.ui.txt_prediction_load_reference,
-    #         self.ui.btn_prediction_load_reference,
-    #         self.ui.btn_prediction_next_2,
-    #         self.ui.btn_prediction_back_2,
-    #     ]
-    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-    #     self.ui.txt_prediction_project_name.setEnabled(True)
-    #     self.ui.list_widget_projects.setEnabled(True)
-    #     self.ui.txt_prediction_load_reference.clear()
-    #     # color green
-    #     self.ui.txt_prediction_project_name.setStyleSheet("background-color: #33C065")
-    #
-    # def load_reference_for_prediction(self):
-    #     """This function loads a reference for the analysis part
-    #
-    #     """
-    #     try:
-    #         # open file dialog
-    #         file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-    #                                                              Qt.QtCore.QDir.homePath(),
-    #                                                              "PDB Files (*.pdb)")
-    #         if file_name == ("", ""):
-    #             raise ValueError
-    #         # display path in text box
-    #         self.ui.txt_prediction_load_reference.setText(str(file_name[0]))
-    #         self.ui.txt_prediction_load_reference.setEnabled(False)
-    #         self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
-    #         self.ui.btn_prediction_next_2.setEnabled(True)
-    #         styles.color_button_ready(self.ui.btn_prediction_next_2)
-    #     except FileNotFoundError:
-    #         self.status_bar.showMessage("Loading the reference failed!")
-    #     except ValueError:
-    #         print("No file has been selected.")
-    #
-    # def validate_reference_for_prediction(self):
-    #     """This function checks if the entered reference protein is
-    #     valid or not.
-    #
-    #     """
-    #     if len(self.ui.txt_prediction_load_reference.text()) == 0:
-    #         self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-    #         self.ui.btn_prediction_next_2.setEnabled(False)
-    #         styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-    #     elif len(self.ui.txt_prediction_load_reference.text()) < 4:
-    #         self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-    #         self.ui.btn_prediction_next_2.setEnabled(False)
-    #         styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-    #     # checks if a pdb id was entered
-    #     elif len(self.ui.txt_prediction_load_reference.text()) == 4:
-    #         pdb_id = self.ui.txt_prediction_load_reference.text().upper()
-    #         try:
-    #             # the pdb file gets saved in a scratch directory where it gets deleted immediately
-    #             cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
-    #             os.remove(f"{self.scratch_path}/{pdb_id}.pdb")
-    #             cmd.reinitialize()
-    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
-    #             self.ui.btn_prediction_next_2.setEnabled(True)
-    #             styles.color_button_ready(self.ui.btn_prediction_next_2)
-    #         # if the id does not exist an exception gets raised
-    #         except pymol.CmdException:
-    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-    #             self.ui.btn_prediction_next_2.setEnabled(False)
-    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-    #             return
-    #         except FileNotFoundError:
-    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-    #             self.ui.btn_prediction_next_2.setEnabled(False)
-    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-    #             self.ui.lbl_prediction_status_load_reference.setText("Invalid PDB ID.")
-    #             return
-    #     else:
-    #         if self.ui.txt_prediction_load_reference.text().find("/") == -1:
-    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-    #             self.ui.btn_prediction_next_2.setEnabled(False)
-    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-    #
-    #         elif self.ui.txt_prediction_load_reference.text().find("\\") == -1:
-    #             self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #FC5457")
-    #             self.ui.btn_prediction_next_2.setEnabled(False)
-    #             styles.color_button_not_ready(self.ui.btn_prediction_next_2)
-    #
-    # def enable_chain_information_input_for_prediction(self):
-    #     """This function enables the text boxes to enter the chains for the
-    #     reference and the model
-    #
-    #     """
-    #     try:
-    #         self.ui.txt_prediction_chain_ref.setEnabled(self.ui.cb_prediction_chain_info.checkState())
-    #         self.ui.txt_prediction_chain_model.setEnabled(self.ui.cb_prediction_chain_info.checkState())
-    #         self.status_bar.showMessage("Enter the chain information.")
-    #         self.__check_start_possibility_prediction()
-    #     except Exception:
-    #         self.status_bar.showMessage("Unexpected Error.")
-    #
-    # # def show_prediction_chain_info_reference(self):
-    # #     """This function shows all gui elements for the chain information
-    # #     selection of the reference protein
-    # #
-    # #     """
-    # #     self.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
-    # #                                                  "border-width: 2px;"
-    # #                                                  "border-radius: 8px;"
-    # #                                                  "border-color: #DCDBE3;")
-    # #     # show and hide relevant gui elements
-    # #     self.ui.btn_prediction_back_2.hide()
-    # #     self.ui.btn_prediction_next_2.hide()
-    # #     self.ui.lbl_prediction_ref_chains.show()
-    # #     self.ui.list_widget_ref_chains.show()
-    # #     self.ui.btn_prediction_back_3.show()
-    # #     self.ui.btn_prediction_start.show()
-    # #     # disable important gui elements
-    # #     self.ui.txt_prediction_load_reference.setEnabled(False)
-    # #     self.ui.btn_prediction_load_reference.setEnabled(False)
-    # #     # colors white
-    # #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: white")
-    # #
-    # #     # fill chains list widget
-    # #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
-    # #         pdb_id = self.ui.txt_prediction_load_reference.text().upper()
-    # #         tmp_ref_protein = core.Protein(pdb_id, export_data_dir=self.scratch_path)
-    # #         tmp_ref_protein.clean_pdb_file()
-    # #         chains = cmd.get_chains(pdb_id)
-    # #     else:
-    # #         cmd.load(self.ui.txt_prediction_load_reference.text(), object="reference_protein")
-    # #         chains = cmd.get_chains("reference_protein")
-    # #     for chain in chains:
-    # #         self.ui.list_widget_ref_chains.addItem(chain)
-    # #     styles.color_button_ready(self.ui.btn_prediction_start)
-    # #     cmd.reinitialize()
-    #
-    # # def hide_prediction_chain_info_reference(self):
-    # #     """Hides the gui elements for the reference chains
-    # #
-    # #     """
-    # #     self.ui.list_widget_ref_chains.clear()
-    # #     # show and hide relevant gui elements
-    # #     self.ui.btn_prediction_back_2.show()
-    # #     self.ui.btn_prediction_next_2.show()
-    # #     self.ui.lbl_prediction_ref_chains.hide()
-    # #     self.ui.list_widget_ref_chains.hide()
-    # #     self.ui.btn_prediction_back_3.hide()
-    # #     self.ui.btn_prediction_start.hide()
-    # #     # disable important gui elements
-    # #     self.ui.txt_prediction_load_reference.setEnabled(True)
-    # #     self.ui.btn_prediction_load_reference.setEnabled(True)
-    # #     # colors green
-    # #     self.ui.txt_prediction_load_reference.setStyleSheet("background-color: #33C065")
-    #
-    # # def check_prediction_if_txt_prediction_chain_ref_is_filled(self):
-    # #     """This function checks if any chains are in the text field for the
-    # #     reference.
-    # #
-    # #     """
-    # #     self.__check_start_possibility_prediction()
-    # #
-    # # def check_prediction_if_txt_prediction_chain_model_is_filled(self):
-    # #     """This function checks if any chains are in the text field for the
-    # #     model.
-    # #
-    # #     """
-    # #     self.__check_start_possibility_prediction()
-    # #
-    # # def check_prediction_if_txt_prediction_project_name_is_filled(self):
-    # #     """This function checks if the project name text field is filled.
-    # #
-    # #     """
-    # #     self.__check_start_possibility_prediction()
-    # #
-    # # def check_prediction_if_txt_prediction_load_reference_is_filled(self):
-    # #     """This function checks if a reference pdb file is selected.
-    # #
-    # #     """
-    # #     self.__check_start_possibility_prediction()
-    #
-    # def enable_predict_button(self):
-    #     self.ui.btn_prediction_only_start.setEnabled(True)
-    #     styles.color_button_ready(self.ui.btn_prediction_only_start)
-    #
-    # # def predict(self):
-    # #     """This function opens a webbrowser with a colab notebook, to run the
-    # #     prediction. In addition, it runs the entire analysis after the
-    # #     prediction.
-    # #
-    # #     """
-    # #     ref_chain_items = self.ui.list_widget_ref_chains.selectedItems()
-    # #     ref_chains = []
-    # #     for chain in ref_chain_items:
-    # #         ref_chains.append(chain.text())
-    # #     # global global_var_abort_prediction
-    # #     # global_var_abort_prediction = False
-    # #     # check if a prediction is already finished
-    # #     if os.path.isfile(f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip"):
-    # #         self.status_bar.showMessage(
-    # #             f"Warning! | Current Workspace: {self.workspace_path}")
-    # #         check = gui_utils.warning_message_prediction_exists(
-    # #             f"The prediction is here: {global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip ",
-    # #             f"{global_variables.global_var_settings_obj.get_prediction_path()}/prediction.zip")
-    # #         if not check:
-    # #             return
-    # #     # creates project without xml creation and model adding these come after the prediction
-    # #     project_obj = project.Project(self.ui.txt_prediction_project_name.text(),
-    # #                                                         self.workspace_path)
-    # #     project_obj.create_project_tree()
-    # #     project_obj.set_pdb_file(self.ui.txt_prediction_load_reference.text())
-    # #     project_obj.set_pdb_id(self.ui.txt_prediction_load_reference.text())
-    # #     project_obj.set_ref_chains(ref_chains)
-    # #     project_obj.set_model_chains((self.ui.txt_prediction_chain_model.text()))
-    # #     # gets reference filename and filepath
-    # #     if len(self.ui.txt_prediction_load_reference.text()) == 4:
-    # #         tmp_protein = core.Protein(self.ui.txt_prediction_load_reference.text(),
-    # #                                    export_data_dir=project_obj.get_pdb_path())
-    # #         tmp_protein.clean_pdb_file()
-    # #         REFERENCE_OBJ_NAME = self.ui.txt_prediction_load_reference.text()
-    # #         REFERENCE_DIR = project_obj.get_pdb_path()
-    # #     else:
-    # #         ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_prediction_load_reference.text())
-    # #         REFERENCE_OBJ_NAME = ref_file_info.baseName()
-    # #         REFERENCE_DIR = ref_file_info.canonicalPath()
-    # #     # starting the default web browser to display the colab notebook
-    # #     self.status_bar.showMessage("Opening Google colab notebook ...")
-    # #     if self.ui.action_settings_model_w_off_colab_notebook.isChecked():
-    # #         webbrowser.open_new(constants.OFFICIAL_NOTEBOOK_URL)
-    # #     else:
-    # #         webbrowser.open_new(constants.NOTEBOOK_URL)
-    # #
-    # #     # # waiting for the colab notebook to finish
-    # #     # archive = "prediction.zip"
-    # #     # source_path = global_variables.global_var_settings_obj.get_prediction_path()
-    # #     # FILE_NAME = f"{source_path}/{archive}"
-    # #     # # flag = False
-    # #     # # while flag == False:
-    # #     # #     print("AlphaFold is still running ...")
-    # #     # #     time.sleep(5)
-    # #     # #     # time.sleep(120)
-    # #     # # TO-DO: loop doesn't work correctly
-    # #     # while os.path.isfile(FILE_NAME) is False:
-    # #     #     print("AlphaFold is still running ...")
-    # #     #     # time.sleep(5)
-    # #     #     time.sleep(20)
-    # #     #     # time.sleep(120)
-    # #     #     # global global_var_abort_prediction
-    # #     #     # if global_var_abort_prediction:
-    # #     #     #     return
-    # #
-    # #     # alphafold specific process
-    # #     archive = "prediction.zip"
-    # #     source_path = global_variables.global_var_settings_obj.get_prediction_path()
-    # #     filename = f"{source_path}/{archive}"
-    # #     while os.path.isfile(filename) is False:
-    # #         print("AlphaFold is still running ...")
-    # #         time.sleep(20)
-    # #     # move prediction.zip in scratch folder
-    # #     shutil.copy(filename, f"{self.scratch_path}/{archive}")
-    # #     shutil.unpack_archive(f"{self.scratch_path}/{archive}", self.scratch_path, "zip")
-    # #     shutil.copy(f"{self.scratch_path}/prediction/selected_prediction.pdb",
-    # #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/selected_prediction.pdb")
-    # #     shutil.rmtree(f"{self.scratch_path}/prediction")
-    # #     os.remove(f"{self.scratch_path}/{archive}")
-    # #
-    # #     # ----------------------------------------------------------------- #
-    # #     # start of the analysis algorithm
-    # #     self.status_bar.showMessage("Protein structure analysis started ...")
-    # #
-    # #     # # extracts and moves the prediction.pdb to the workspace/pdb folder
-    # #     # tools.extract_and_move_model_pdb(
-    # #     #     str(source_path), f"{str(source_path)}/tmp", archive, project.get_pdb_path())
-    # #
-    # #     # gets model filename and filepath
-    # #     PREDICTION_NAME = tools.get_prediction_file_name(project_obj.get_pdb_path())
-    # #     full_model_file_path = f"{project_obj.get_pdb_path()}/{PREDICTION_NAME[0]}"
-    # #     model_file_info = Qt.QtCore.QFileInfo(full_model_file_path)
-    # #     MODEL_OBJ_NAME = model_file_info.baseName()
-    # #     MODEL_DIR = model_file_info.canonicalPath()
-    # #
-    # #     # set model in project object
-    # #     project_obj.set_pdb_model(full_model_file_path)
-    # #     project_obj.create_xml_file()
-    # #
-    # #     # create the Protein object for the reference
-    # #     reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-    # #
-    # #     # create model Protein object
-    # #     model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-    # #     # sets the filepath of the model in the project xml file
-    # #     export_dir = project_obj.get_results_path()
-    # #     structure_analysis_obj = structure_analysis.StructureAnalysis(
-    # #         reference_protein, model_proteins,
-    # #         project_obj.get_ref_chains().split(","), project_obj.get_model_chains().split(","),
-    # #         export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
-    # #         cutoff=global_variables.global_var_settings_obj.get_cutoff(),
-    # #     )
-    # #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-    # #                                                      structure_analysis_obj.reference_protein)
-    # #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-    # #                                                      structure_analysis_obj.model_proteins)
-    # #     structure_analysis_obj.do_analysis_in_pymol(structure_analysis_obj.create_protein_pairs(),
-    # #                                             self.status_bar, "2")
 
     # <editor-fold desc="Monomer Local Prediction functions">
     def local_pred_mono_validate_protein_name(self):
@@ -4280,12 +3949,12 @@ class MainWindow(QMainWindow):
         """This function opens a window which displays the image of the structure alignment.
 
         """
-        png_dialog = Qt.QtWidgets.QDialog(self)
-        label = Qt.QtWidgets.QLabel(self)
+        png_dialog = QtWidgets.QDialog(self)
+        label = QtWidgets.QLabel(self)
         file_path = pathlib.Path(
             f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         self.ui.cb_results_analysis_options.currentText()
-        pixmap = Qt.QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{self.ui.cb_results_analysis_options.currentText()}")
+        pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{self.ui.cb_results_analysis_options.currentText()}")
         # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
@@ -4320,13 +3989,13 @@ class MainWindow(QMainWindow):
         """This function displays an image of an interesting region.
 
         """
-        png_dialog = Qt.QtWidgets.QDialog(self)
-        label = Qt.QtWidgets.QLabel(self)
+        png_dialog = QtWidgets.QDialog(self)
+        label = QtWidgets.QLabel(self)
         global global_var_project_dict
         file_path = constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR
         #file_name = self.ui.cb_interesting_regions.currentText()
         file_name = self.ui.list_results_interest_regions.currentItem().text()
-        pixmap = Qt.QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{file_name}")
+        pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{file_name}")
         # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
@@ -4341,14 +4010,14 @@ class MainWindow(QMainWindow):
         """This function displays the distances in a table.
 
         """
-        csv_model = Qt.QtGui.QStandardItemModel()
+        csv_model = QtGui.QStandardItemModel()
         csv_model.setColumnCount(7)
         labels = ["Residue pair no.", "Reference Chain", "Reference Position", "Reference Residue",
                   "Model Chain", "Model Position", "Model Residue", "Distance",
                   ]
         csv_model.setHorizontalHeaderLabels(labels)
-        table_dialog = Qt.QtWidgets.QDialog(self)
-        table_view = Qt.QtWidgets.QTableView()
+        table_dialog = QtWidgets.QDialog(self)
+        table_view = QtWidgets.QTableView()
         table_view.setModel(csv_model)
 
         tmp_protein_pair = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
@@ -4378,21 +4047,21 @@ class MainWindow(QMainWindow):
                 tmp_list = line.split(",")
                # tmp_list.pop(0)
                 standard_item_list = []
-                pair_no_item = Qt.QtGui.QStandardItem()
+                pair_no_item = QtGui.QStandardItem()
                 pair_no_item.setData(int(tmp_list[0]), role=QtCore.Qt.DisplayRole)
-                ref_chain_item = Qt.QtGui.QStandardItem()
+                ref_chain_item = QtGui.QStandardItem()
                 ref_chain_item.setData(str(tmp_list[1]), role=QtCore.Qt.DisplayRole)
-                ref_pos_item = Qt.QtGui.QStandardItem()
+                ref_pos_item = QtGui.QStandardItem()
                 ref_pos_item.setData(int(tmp_list[2]), role=QtCore.Qt.DisplayRole)
-                ref_resi_item = Qt.QtGui.QStandardItem()
+                ref_resi_item = QtGui.QStandardItem()
                 ref_resi_item.setData(str(tmp_list[3]), role=QtCore.Qt.DisplayRole)
-                model_chain_item = Qt.QtGui.QStandardItem()
+                model_chain_item = QtGui.QStandardItem()
                 model_chain_item.setData(str(tmp_list[4]), role=QtCore.Qt.DisplayRole)
-                model_pos_item = Qt.QtGui.QStandardItem()
+                model_pos_item = QtGui.QStandardItem()
                 model_pos_item.setData(int(tmp_list[5]), role=QtCore.Qt.DisplayRole)
-                model_resi_item = Qt.QtGui.QStandardItem()
+                model_resi_item = QtGui.QStandardItem()
                 model_resi_item.setData(str(tmp_list[6]), role=QtCore.Qt.DisplayRole)
-                distance_item = Qt.QtGui.QStandardItem()
+                distance_item = QtGui.QStandardItem()
                 distance_item.setData(float(tmp_list[7]), role=QtCore.Qt.DisplayRole)
                 standard_item_list.append(pair_no_item)
                 standard_item_list.append(ref_chain_item)
@@ -4581,7 +4250,7 @@ class MainWindow(QMainWindow):
 
         """
         # returns tuple with (name, bool)
-        scene_name = Qt.QtWidgets.QInputDialog.getText(self, "Save Scene", "Enter scene name:")
+        scene_name = QtWidgets.QInputDialog.getText(self, "Save Scene", "Enter scene name:")
         if scene_name[1]:
             cmd.scene(key=scene_name[0], action="append")
 
@@ -4603,7 +4272,7 @@ class MainWindow(QMainWindow):
 
         """
         if self.ui.cb_ray_tracing.isChecked():
-            save_dialog = Qt.QtWidgets.QFileDialog()
+            save_dialog = QtWidgets.QFileDialog()
             try:
                 full_file_name = save_dialog.getSaveFileName(caption="Save Image",
                                                              filter="Image (*.png)")
@@ -4623,7 +4292,7 @@ class MainWindow(QMainWindow):
                                                      "an image", self.status_bar,
                                             "Unexpected Error from PyMOL")
         else:
-            save_dialog = Qt.QtWidgets.QFileDialog()
+            save_dialog = QtWidgets.QFileDialog()
             try:
                 full_file_name = save_dialog.getSaveFileName(caption="Save Image",
                                                              filter="Image (*.png)")

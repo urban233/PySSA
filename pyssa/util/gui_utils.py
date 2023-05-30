@@ -25,10 +25,12 @@ import os
 import pathlib
 import shutil
 from pathlib import Path
+
+from PyQt5.QtGui import QIcon
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
-from pyssa.util import tools
+from pyssa.util import tools, constants
 
 if typing.TYPE_CHECKING:
     from pyssa.internal.data_structures import project
@@ -94,6 +96,7 @@ def critical_message(message, message_detail):
             additional information
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Critical)
     msg.setText("Critical")
     msg.setInformativeText(message)
@@ -113,6 +116,7 @@ def error_dialog(message, message_detail):
             additional information
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Critical)
     msg.setText("Error")
     msg.setInformativeText(message)
@@ -134,6 +138,7 @@ def error_dialog_settings(message, message_detail, settings_obj):
             settings object of the MainWindow class
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Critical)
     msg.setText(message)
     msg.setInformativeText(message_detail)
@@ -166,6 +171,7 @@ def warning_dialog_restore_settings(message):
         returns a bool value whether to restore the settings or not
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Warning)
     msg.setText(message)
     msg.setWindowTitle("Warning")
@@ -189,6 +195,7 @@ def warning_message_prediction_exists(message_detail, path):
             path where the prediction is stored
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
     msg.setInformativeText("A prediction already exists! Please delete it or "
@@ -218,6 +225,7 @@ def warning_message_project_exists(project_name, message_detail, path):
             path where the prediction is stored
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
     msg.setInformativeText(f"A project with the name {project_name} already exists! "
@@ -247,8 +255,10 @@ def warning_message_project_gets_deleted() -> bool:
             path where the prediction is stored
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Warning)
     msg.setText(f"Are you sure you want to delete this project?")
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)
@@ -272,6 +282,7 @@ def warning_message_protein_gets_deleted() -> bool:
             path where the prediction is stored
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Warning)
     msg.setText(f"Are you sure you want to delete this protein?")
     msg.setWindowTitle("Warning")
@@ -293,6 +304,7 @@ def error_project_data_is_invalid(path) -> bool:
             path where the data is missing
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Critical)
     msg.setText("Error")
     msg.setInformativeText(f"Your project data is corrupted.")
@@ -317,6 +329,7 @@ def warning_switch_pymol_session(message_detail) -> bool:
             detailed message string
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
     msg.setInformativeText(f"Do you want to save the current PyMOL session?")
@@ -341,6 +354,7 @@ def warning_prediction_is_running(dialog_obj):
             detailed message string
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
     msg.setInformativeText("The AlphaFold prediction is running ...")
@@ -365,6 +379,7 @@ def warning_prediction_is_finished(dialog_obj):
     """
     # closes the previous message box
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Information)
     msg.setText("Finish")
     msg.setInformativeText("The AlphaFold prediction is finished.")
@@ -385,6 +400,7 @@ def error_prediction_progress_lost() -> bool:
             path where the data is missing
     """
     msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     msg.setIcon(QMessageBox.Critical)
     msg.setText("Error")
     msg.setInformativeText(f"Your prediction data was not saved!")

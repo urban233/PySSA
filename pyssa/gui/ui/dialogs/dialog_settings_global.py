@@ -27,10 +27,10 @@ from pyssa.internal.data_structures import settings
 from pyssa.util import constants, gui_utils
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import workers
-from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 import PyQt5
 from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.messageboxes import settings_boxes
 
@@ -50,7 +50,7 @@ def is_local_colabfold_installed():
     return os.path.exists(constants.WSL_DISK_PATH)
 
 
-class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
+class DialogSettingsGlobal(QtWidgets.QDialog):
     """This class opens a settings customization dialog.
 
     """
@@ -64,7 +64,7 @@ class DialogSettingsGlobal(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
