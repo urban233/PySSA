@@ -48,6 +48,7 @@ from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
+from PyQt5.QtCore import Qt
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.internal.thread import workers
 from pyssa.io_pyssa import safeguard
@@ -1144,6 +1145,9 @@ class MainWindow(QMainWindow):
         self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
         self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
 
+    def restore_cursor(self):
+        QApplication.restoreOverrideCursor()
+
     # <editor-fold desc="Page init functions">
     def _init_fill_combo_boxes(self):
         """This function fills all combo boxes of the plugin
@@ -1612,6 +1616,7 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_pred_local_multimer_page)
 
     def display_use_page(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         self._init_use_page()
         self.ui.list_use_available_protein_structures.clear()
         self.ui.list_use_selected_protein_structures.clear()
@@ -1633,6 +1638,7 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_use_page)
+        QApplication.restoreOverrideCursor()
 
     def display_hotspots_page(self):
         self.ui.list_hotspots_choose_protein.clear()
