@@ -48,6 +48,10 @@ class Analysis:
         self.app_project = app_project
 
     def run_analysis(self, cb_analysis_images):
+        logger.debug(f"self.analysis_list: {self.analysis_list}")
+        if len(self.analysis_list) == 0:
+            logger.error("Analysis list is empty.")
+            raise ValueError("Analysis list is empty.")
         logger.debug(self.analysis_list)
         for tmp_protein_pair in self.analysis_list:
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)

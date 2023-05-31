@@ -97,6 +97,9 @@ WSL_DISK_PATH = pathlib.Path(f"{WSL_STORAGE_PATH}/ext4.vhdx")
 PREDICTION_TASK = "Structure Prediction"
 ANALYSIS_TASK = "Structure Analysis"
 
+PREDICTION_TYPE_PRED = 1
+PREDICTION_TYPE_PRED_ANALYSIS = 2
+
 # all loggers used in the pyssa project
 PYSSA_LOGGER = logging.getLogger("PySSA-Logger")
 PREDICTION_WORKER_LOGGER = logging.getLogger("PredictionWorker")

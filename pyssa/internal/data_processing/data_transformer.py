@@ -235,6 +235,7 @@ class DistanceAnalysisDataTransformer:
 
     def _create_analysis_run_info(self):
         tmp_analysis_run_infos: list = analysis_util.split_analysis_run_name_in_protein_name_and_chain(self.analysis_run_name)
+        logger.debug(f"tmp_analysis_run_infos: {tmp_analysis_run_infos}")
         self.analysis_run = analysis_run_info.AnalysisRunInfo(tmp_analysis_run_infos[0], tmp_analysis_run_infos[1],
                                                               tmp_analysis_run_infos[2], tmp_analysis_run_infos[3],
                                                               self.analysis_run_name)
