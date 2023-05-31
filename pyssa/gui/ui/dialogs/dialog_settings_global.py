@@ -188,7 +188,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
     def post_wsl_install(self):
         self.block_box_wsl.destroy(True)
         if self.wsl_installer_worker.install is False:
-            self.ui.btn_install_wsl2.setText("Install")
+            #self.ui.btn_install_wsl2.setText("Install")
             self.settings.wsl_install = 0
         else:
             basic_boxes.ok("WSL2", "Installation of WSL2 is finished!", QMessageBox.Information)
@@ -202,9 +202,11 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         if self.settings.wsl_install == 1:
             # WSL is installed on system, user wants to uninstall WSL2
             if basic_boxes.yes_or_no("Remove WSL2", "Are you sure that you want to remove WSL2 from your system?", QMessageBox.Question):
-                self.wsl_installer_worker.install = False
-                self.threadpool.start(self.wsl_installer_worker)
-                self.block_box_wsl.exec_()
+                basic_boxes.ok("Uninstall WSL2", "Please refer to the documentation under Help, to uninstall the WSL2.",
+                               QMessageBox.Information)
+                #self.wsl_installer_worker.install = False
+                #self.threadpool.start(self.wsl_installer_worker)
+                #self.block_box_wsl.exec_()
             else:
                 return
         elif self.settings.wsl_install == 0:

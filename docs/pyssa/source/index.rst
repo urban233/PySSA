@@ -3,19 +3,19 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the PyMOL Plugin!
+Welcome to PySSA!
 =========================================================
-This plugin combines the colab notebook from DeepMind's AlphaFold with the molecular visualization software PyMOL.
+This plugin combines prediction engine from DeepMind's AlphaFold through the ColabFold with the molecular visualization software PyMOL.
 
-.. figure:: /assets/blackandwhiteLogo.png
-   :height: 600px
-   :width: 600px
+.. figure:: /assets/pyssa_logo.png
+   :height: 350px
+   :width: 350px
 
-   This image shows a structure alignment of the BMP2 protein.
+   Logo of PySSA.
 
-The prediction is done with DeepMind's Google Colab notebook.
+The prediction is done locally with the ColabFold which is based on the AlphaFold of DeepMind.
 The structure alignment is done with the align command from PyMOL and
-the image is also taken with PyMOL. All tasks were done with this plugin.
+the images are also taken with PyMOL. All tasks were done with this plugin.
 
 *Warren's Philosophy*
 
@@ -32,6 +32,7 @@ the image is also taken with PyMOL. All tasks were done with this plugin.
    :caption: Contents:
 
    installation
+   getting_started_project
    getting_started_prediction
    getting_started_analysis
    getting_started_image

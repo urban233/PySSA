@@ -32,6 +32,8 @@ from PyQt5.QtWidgets import QMessageBox
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+
+from pyssa.gui.ui.dialogs import dialog_display_docs
 from pyssa.gui.ui.messageboxes import basic_boxes, settings_boxes
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.io_pyssa import path_util
@@ -616,7 +618,7 @@ class WslInstallerWorkerPool(QtCore.QRunnable):
     def run(self):
         if self.install is False:
             # if wsl should be uninstalled
-            webbrowser.open(constants.DOCS_HTML)
+            basic_boxes.ok("Uninstall WSL2", "Please refer to the documentation under help, to uninstall the WSL2.", QMessageBox.Information)
         else:
             # logical message: the user wants to install wsl
             try:

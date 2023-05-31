@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'PySSA - Python-plugin for sequence to structure analysis'
+project = 'PySSA - Python-Plugin for Protein Sequence-to-Structure Analysis'
 copyright = '2022, Martin Urban & Hannah Kullik'
 author = 'Martin Urban & Hannah Kullik'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = '9.3.0'
 
 
 # -- General configuration ---------------------------------------------------

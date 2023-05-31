@@ -1,10 +1,10 @@
-Getting Started with Prediction + Analysis
+Getting Started with Prediction
 ==========================================
-This page explains the handling of the "Prediction + Analysis" tab.
+This page explains all basics of the prediction monomer and multimer page.
 
 Setup
 -----
-
+First you need to decide if you would like to predict a monomer or multimer protein.
 
 Running the prediction
 ----------------------
