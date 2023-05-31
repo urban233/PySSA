@@ -2110,9 +2110,11 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_save_project)
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
+        QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 
@@ -2302,6 +2304,7 @@ class MainWindow(QMainWindow):
         gui_utils.enable_text_box(self.ui.txt_use_project_name, self.ui.lbl_use_project_name)
 
     def create_use_project(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         self.ui.lbl_current_project_name.setText(self.ui.txt_use_project_name.text())
         self.status_bar.showMessage(
             f"Current project path: {self.workspace_path}/{self.ui.txt_use_project_name.text()}")
@@ -2357,6 +2360,7 @@ class MainWindow(QMainWindow):
         self._init_use_page()
         constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
+        QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 
@@ -4391,6 +4395,7 @@ class MainWindow(QMainWindow):
         """This function previews the image
 
         """
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.ui.cb_ray_tracing.isChecked():
             self.status_bar.showMessage("Preview ray-traced image ...")
             cmd.ray(2400, 2400, renderer=int(self.renderer))
@@ -4399,11 +4404,13 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage("Preview draw image ...")
             cmd.draw(2400, 2400)
             self.status_bar.showMessage("Finished preview of drawn image.")
+        QApplication.restoreOverrideCursor()
 
     def save_image(self):
         """This function saves the image as a png file.
 
         """
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.ui.cb_ray_tracing.isChecked():
             save_dialog = QtWidgets.QFileDialog()
             try:
@@ -4444,6 +4451,7 @@ class MainWindow(QMainWindow):
                 tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
                                                      "an image", self.status_bar,
                                             "Unexpected Error from PyMOL")
+        QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 
