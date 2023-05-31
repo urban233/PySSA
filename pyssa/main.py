@@ -1227,6 +1227,7 @@ class MainWindow(QMainWindow):
         self.ui.list_use_selected_protein_structures.clear()
         self.ui.list_use_existing_projects.clear()
         self.ui.btn_use_next.setEnabled(False)
+        self.hide_protein_selection_for_use()
 
     def _init_edit_page(self):
         self.ui.list_edit_project_proteins.clear()
@@ -1253,6 +1254,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_mono_add_protein.setEnabled(False)
         self.ui.lbl_pred_mono_prot_name_status.setText("")
         self.ui.lbl_pred_mono_seq_name_status.setText("")
+        self.local_pred_mono_show_protein_overview()
 
     def _init_local_pred_multi_page(self):
         # clears everything
@@ -1264,6 +1266,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
         self.ui.lbl_pred_multi_prot_name_status.setText("")
         self.ui.lbl_pred_multi_prot_seq_status.setText("")
+        self.local_pred_multi_show_protein_overview()
         # self.local_pred_multimer_management.show_stage_x(0)
         # self.local_pred_multimer_management.disable_all_next_buttons()
         # self.local_pred_multimer_management.clear_all_text_boxes()
@@ -1289,6 +1292,8 @@ class MainWindow(QMainWindow):
 
         # </editor-fold>
 
+        self.mono_pred_analysis_show_protein_overview()
+
     def _init_multi_pred_analysis_page(self):
         # <editor-fold desc="Prediction section">
         # clears everything
@@ -1308,6 +1313,8 @@ class MainWindow(QMainWindow):
         self.ui.btn_pred_analysis_multi_remove.hide()
 
         # </editor-fold>
+
+        self.multi_pred_analysis_show_protein_overview()
 
     def _init_sequence_vs_pdb_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -2116,6 +2123,7 @@ class MainWindow(QMainWindow):
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         QApplication.restoreOverrideCursor()
+        basic_boxes.ok("Save Project", "The project was successfully saved.", QMessageBox.Information)
 
     # </editor-fold>
 
@@ -2400,6 +2408,7 @@ class MainWindow(QMainWindow):
             self._project_watcher.show_valid_options(self.ui)
             self.ui.btn_manage_session.show()
             self.display_view_page()
+        basic_boxes.ok("Import Project", "The project was successfully imported.", QMessageBox.Information)
 
     def export_current_project(self):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_export_project)
@@ -2409,7 +2418,7 @@ class MainWindow(QMainWindow):
         file_path, _ = file_dialog.getSaveFileName(self, "Save current project", "", "XML Files (*.xml)")
         if file_path:
             self.app_project.serialize_project(file_path)
-
+        basic_boxes.ok("Export Project", "The project was successfully exported.", QMessageBox.Information)
     # </editor-fold>
 
     # <editor-fold desc="Close project functions">
