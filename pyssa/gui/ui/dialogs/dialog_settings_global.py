@@ -165,6 +165,8 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
             self.settings.local_colabfold = 1
             self.settings.serialize_settings()
             basic_boxes.ok("Local Colabfold installation", "Installation is finished!", QMessageBox.Information)
+            if settings_boxes.restart_now_later():
+                os.system("shutdown /r")
 
     def install_local_colabfold(self):
         if self.settings.local_colabfold == 1:

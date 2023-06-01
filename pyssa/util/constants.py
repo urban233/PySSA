@@ -30,7 +30,7 @@ from pathlib import Path
 PLUGIN_NAME = "tmpPySSA"
 PLUGIN_PATH = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\{PLUGIN_NAME}")
 PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-VERSION_NUMBER = "v1.0.0"
+VERSION_NUMBER = "v0.9.4"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
