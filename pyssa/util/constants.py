@@ -83,7 +83,8 @@ NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
 
 current_time = datetime.datetime.now()
 LOG_FILENAME = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"
-LOG_FILEPATH = pathlib.Path(f"{PLUGIN_PATH}/logs/{LOG_FILENAME}")
+LOG_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/logs/{LOG_FILENAME}")
+LOG_PATH = pathlib.Path(f"{SETTINGS_DIR}/logs")
 
 # OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
 # OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"

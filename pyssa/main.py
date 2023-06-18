@@ -125,6 +125,10 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(580)
         self.setMinimumHeight(200)
 
+        if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa"))):
+            os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa")))
+        if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs"))):
+            os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs")))
         # <editor-fold desc="Setup app settings">
         self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
