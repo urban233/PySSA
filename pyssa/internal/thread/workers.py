@@ -544,7 +544,8 @@ class WslInstallerWorkerPool(QtCore.QRunnable):
         else:
             # logical message: the user wants to install wsl
             try:
-                subprocess.run([constants.POWERSHELL_EXE, constants.INSTALL_WSL_PS1])
+                #subprocess.run([constants.POWERSHELL_EXE, constants.INSTALL_WSL_PS1])
+                subprocess.run(str(constants.INSTALL_WSL))
             except:
                 basic_boxes.ok("WSL2 installation",
                                "Installation failed. Please re-run the process or look in the documentation.",

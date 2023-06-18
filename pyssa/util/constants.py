@@ -60,6 +60,7 @@ POWERSHELL_EXE = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe
 CONVERT_DOS_TO_UNIX = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/convert_dos_to_unix.ps1")
 INSTALL_WSL_PS1 = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/install_wsl.ps1")
 PREDICTION_PS1 = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/run_prediction.ps1")
+INSTALL_WSL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/install_wsl.bat")
 INSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/import_distro.bat")
 UNINSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/uninstall_distro.bat")
 # TODO: original paths, please uncomment before deployment!!!
