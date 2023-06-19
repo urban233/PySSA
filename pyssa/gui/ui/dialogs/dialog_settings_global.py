@@ -76,33 +76,22 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         except ValueError:
             logging.error("Settings dialog cannot be opened due to an error.")
             return
-        self.threadpool = QtCore.QThreadPool()
-        self.colabfold_installer_worker = workers.ColabfoldInstallerWorkerPool(True)
-        self.wsl_installer_worker = workers.WslInstallerWorkerPool(True)
-        self.block_box_colabfold = basic_boxes.no_buttons("Process running", "A process is currently running.", QMessageBox.Information)
-        self.block_box_wsl = basic_boxes.no_buttons("Process running", "A process is currently running.", QMessageBox.Information)
 
         # </editor-fold>
 
         # <editor-fold desc="Check WSL status">
         if is_wsl2_installed():
             self.settings.wsl_install = 1
-            self.ui.btn_install_wsl2.setText("Uninstall")
-            self.ui.btn_install_local_prediction.setEnabled(True)
         else:
             self.settings.wsl_install = 0
-            self.ui.btn_install_wsl2.setText("Install")
-            self.ui.btn_install_local_prediction.setEnabled(False)
 
         # </editor-fold>
 
         # <editor-fold desc="Check local colabfold status">
         if is_local_colabfold_installed():
             self.settings.local_colabfold = 1
-            self.ui.btn_install_local_prediction.setText("Uninstall")
         else:
             self.settings.local_colabfold = 0
-            self.ui.btn_install_local_prediction.setText("Install")
 
         # </editor-fold>
 
@@ -135,89 +124,14 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
         self.ui.btn_cancel.clicked.connect(self.cancel_dialog)
         self.ui.btn_ok.clicked.connect(self.ok_dialog)
-        self.ui.btn_install_local_prediction.clicked.connect(self.install_local_colabfold)
-        self.ui.btn_install_wsl2.clicked.connect(self.install_wsl)
-        # thread-related
-        self.colabfold_installer_worker.signals.finished.connect(self.post_colabfold_install)
-        self.wsl_installer_worker.signals.finished.connect(self.post_wsl_install)
 
     def cancel_dialog(self):
         self.close()
 
     def ok_dialog(self):
         self.settings.set_workspace_path(self.ui.txt_workspace_dir.text())
-        #self.settings.set_prediction_path(self.ui.txt_zip_storage_dir.text())
         self.settings.set_cycles(str(self.ui.spb_cycles.value()))
         self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))
         self.settings.serialize_settings()
         logging.info("Settings were successfully saved.")
         self.close()
-
-    def post_colabfold_install(self):
-        self.block_box_colabfold.destroy(True)
-        if self.colabfold_installer_worker.install is False:
-            self.ui.btn_install_local_prediction.setText("Install")
-            self.settings.local_colabfold = 0
-            self.settings.serialize_settings()
-            basic_boxes.ok("Local Colabfold", "Removing local colabfold is finished!", QMessageBox.Information)
-        else:
-            self.ui.btn_install_local_prediction.setText("Uninstall")
-            self.settings.local_colabfold = 1
-            self.settings.serialize_settings()
-            basic_boxes.ok("Local Colabfold installation", "Installation is finished!", QMessageBox.Information)
-            if settings_boxes.restart_now_later():
-                os.system("shutdown /r")
-
-    def install_local_colabfold(self):
-        if self.settings.local_colabfold == 1:
-            # colabfold installed on system, user wants to uninstall local colabfold
-            if basic_boxes.yes_or_no("Remove Local Colabfold", "Are you sure that you want to remove Local Colabfold from your system?", QMessageBox.Question):
-                self.colabfold_installer_worker.install = False
-                self.threadpool.start(self.colabfold_installer_worker)
-                self.block_box_colabfold.exec_()
-            else:
-                return
-        else:
-            if basic_boxes.yes_or_no("Local Colabfold installation", "Are you sure that you want to install Local Colabfold?", QMessageBox.Question) is True:
-                self.colabfold_installer_worker.install = True
-                self.threadpool.start(self.colabfold_installer_worker)
-                self.block_box_colabfold.exec_()
-            else:
-                # logical message: the user does NOT want to install local colabfold
-                basic_boxes.ok("Local Colabfold installation", "Installation process aborted.", QMessageBox.Information)
-                return
-
-    def post_wsl_install(self):
-        self.block_box_wsl.destroy(True)
-        if self.wsl_installer_worker.install is False:
-            #self.ui.btn_install_wsl2.setText("Install")
-            self.settings.wsl_install = 0
-        else:
-            basic_boxes.ok("WSL2", "Installation of WSL2 is finished!", QMessageBox.Information)
-            self.ui.btn_install_wsl2.setText("Uninstall")
-            self.settings.wsl_install = 1
-            self.settings.serialize_settings()
-            if settings_boxes.restart_now_later():
-                os.system("shutdown /r")
-
-    def install_wsl(self):
-        if self.settings.wsl_install == 1:
-            # WSL is installed on system, user wants to uninstall WSL2
-            if basic_boxes.yes_or_no("Remove WSL2", "Are you sure that you want to remove WSL2 from your system?", QMessageBox.Question):
-                basic_boxes.ok("Uninstall WSL2", "Please refer to the documentation under Help, to uninstall the WSL2.",
-                               QMessageBox.Information)
-                #self.wsl_installer_worker.install = False
-                #self.threadpool.start(self.wsl_installer_worker)
-                #self.block_box_wsl.exec_()
-            else:
-                return
-        elif self.settings.wsl_install == 0:
-            if basic_boxes.yes_or_no("WSL2 installation", "Are you sure that you want to install WSL2?", QMessageBox.Question) is True:
-                # the user wants to install WSL2
-                self.wsl_installer_worker.install = True
-                self.threadpool.start(self.wsl_installer_worker)
-                self.block_box_wsl.exec_()
-            else:
-                # the user does NOT want to install WSL
-                basic_boxes.ok("WSL2 installation", "Installation process aborted.", QMessageBox.Information)
-                return
