@@ -147,6 +147,16 @@ class MainWindow(QMainWindow):
             print("The settings file is corrupted. Please restore the settings!")
             gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
                                             self.app_settings)
+        if dialog_settings_global.is_wsl2_installed():
+            self.app_settings.wsl_install = 1
+        else:
+            self.app_settings.wsl_install = 0
+
+        if dialog_settings_global.is_local_colabfold_installed():
+            self.app_settings.local_colabfold = 1
+        else:
+            self.app_settings.local_colabfold = 0
+
         # </editor-fold>
 
         # <editor-fold desc="Class attributes">

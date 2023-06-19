@@ -97,7 +97,7 @@ ADD_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/add_ws
 WSL_CONF_PATH = f"/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
 
 WSL_DISTRO_NAME = "UbuntuColabfold"
-WSL_STORAGE_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/wsl/{WSL_DISTRO_NAME}")
+WSL_STORAGE_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold")
 #WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
 WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/")
 DISTRO_DOWNLOAD_URL = "https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to"

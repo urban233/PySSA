@@ -22,12 +22,18 @@
 """This module contains the handlers used by the loggers."""
 import logging
 import datetime
+import os.path
+
 from pyssa.util import constants
 
 current_time = datetime.datetime.now()
 filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"
 
 log_formatter = logging.Formatter("%(asctime)s: %(name)s %(levelname)s - %(message)s")
+if not os.path.exists(constants.SETTINGS_DIR):
+    os.mkdir(constants.SETTINGS_DIR)
+if not os.path.exists(constants.LOG_PATH):
+    os.mkdir(constants.LOG_PATH)
 log_file_handler = logging.FileHandler(constants.LOG_FILEPATH)
 log_file_handler.setLevel(logging.DEBUG)
 log_file_handler.setFormatter(log_formatter)
