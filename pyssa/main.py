@@ -2649,7 +2649,7 @@ class MainWindow(QMainWindow):
                 self._project_watcher.show_valid_options(self.ui)
                 self._init_local_pred_mono_page()
                 self._init_local_pred_multi_page()
-        elif self.prediction_type == constants.PREDICTION_TYPE_PRED_ANALYSIS:
+        elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS:
             if len(self.app_project.proteins) == 1:
                 basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
                 self.display_view_page()
@@ -2661,6 +2661,32 @@ class MainWindow(QMainWindow):
                 constants.PYSSA_LOGGER.info("Begin analysis process.")
                 constants.PYSSA_LOGGER.debug(
                     f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}")
+
+                self.worker_analysis = workers.AnalysisWorkerPool(
+                    self.ui.list_pred_analysis_mono_overview, self.ui.cb_pred_analysis_mono_images,
+                    self.status_bar, self.app_project, self.app_settings, self._init_mono_pred_analysis_page)
+                constants.PYSSA_LOGGER.info("Thread started for analysis process.")
+                self.threadpool.start(self.worker_analysis)
+                constants.PYSSA_LOGGER.debug(
+                    f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
+                if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                    os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+                self.block_box_analysis.exec_()
+                self.display_view_page()
+                self._project_watcher.show_valid_options(self.ui)
+        elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS:
+            if len(self.app_project.proteins) == 1:
+                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
+                self.display_view_page()
+                self._project_watcher.show_valid_options(self.ui)
+            else:
+                self.app_project.serialize_project(self.app_project.get_project_xml_path())
+                constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+                constants.PYSSA_LOGGER.info("All structure predictions are done.")
+                constants.PYSSA_LOGGER.info("Begin analysis process.")
+                constants.PYSSA_LOGGER.debug(
+                    f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}")
+
                 self.worker_analysis = workers.AnalysisWorkerPool(
                     self.ui.list_pred_analysis_multi_overview, self.ui.cb_pred_analysis_multi_images,
                     self.status_bar, self.app_project, self.app_settings, self._init_multi_pred_analysis_page)
@@ -3169,7 +3195,7 @@ class MainWindow(QMainWindow):
         # except pymol.CmdException:
         #     print("Loading the model failed.")
         #     return
-        self.prediction_type = constants.PREDICTION_TYPE_PRED_ANALYSIS
+        self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
         self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
                                                                        self.prediction_configuration, self.app_project)
@@ -3465,7 +3491,7 @@ class MainWindow(QMainWindow):
     #         self._project_watcher.show_valid_options(self.ui)
 
     def start_multimer_prediction_analysis(self):
-        self.prediction_type = constants.PREDICTION_TYPE_PRED_ANALYSIS
+        self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
         self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_analysis_multi_prot_to_predict,
                                                               self.prediction_configuration, self.app_project)

@@ -9,4 +9,3 @@ for /r "%directory_path%" %%F in (*) do (
     rem Do something with the file
 	%dos2unixExe% "%%F"
 )
-pause

@@ -114,7 +114,8 @@ PREDICTION_TASK = "Structure Prediction"
 ANALYSIS_TASK = "Structure Analysis"
 
 PREDICTION_TYPE_PRED = 1
-PREDICTION_TYPE_PRED_ANALYSIS = 2
+PREDICTION_TYPE_PRED_MONO_ANALYSIS = 2
+PREDICTION_TYPE_PRED_MULTI_ANALYSIS = 3
 
 # all loggers used in the pyssa project
 PYSSA_LOGGER = logging.getLogger("PySSA-Logger")
