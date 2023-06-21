@@ -1,0 +1,1 @@
+C:\ProgramData\pyssa\plugin\Miniconda3\envs\pyssa_colab\Lib\site-packages\pymol\pymol_path\data\startup\tmpPySSA\externals\dos2unix.exe "C:\ProgramData\pyssa\plugin\Miniconda3\envs\pyssa_colab\Lib\site-packages\pymol\pymol_path\data\startup\tmpPySSA\scripts\unix\colabfold_predict.sh"

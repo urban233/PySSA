@@ -82,7 +82,11 @@ class Colabbatch:
         """This function starts the wsl and runs a prediction.
 
         """
-        subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
+
+        #subprocess.run([constants.POWERSHELL_EXE, str(constants.CONVERT_DOS_TO_UNIX_EXE), str(constants.COLABFOLD_PREDICT_SCRIPT_WIN)])
+        #subprocess.run([constants.POWERSHELL_EXE, "-ExecutionPolicy", "Bypass", "-File", constants.CONVERT_DOS_TO_UNIX])
+        #subprocess.run([str(constants.CONVERT_DOS_TO_UNIX)])
+        os.startfile(str(constants.CONVERT_DOS_TO_UNIX))
         # running prediction script
         logger.debug(f"templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
         if self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is True:

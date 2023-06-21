@@ -1,0 +1,12 @@
+---------------------------------------
+DEV - BOOK Part: File organization
+---------------------------------------
+
+The PySSA plugin is installed in the C:\ProgramData\pyssa\plugin
+directory.
+However, the actual plugin is installed in
+C:\ProgramData\pyssa\plugin\Miniconda3\envs\pyssa_colab\Lib\site-packages\pymol\pymol_path\data\startup\tmpPySSA.
+
+Due to permission problems, the unix script files are relocated into the specific user directory.
+The path for this is C:\Users\%USERNAME%\.pyssa\scripts\unix.
+

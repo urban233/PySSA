@@ -20,8 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import pathlib
 import sys
+import zipfile
 import PyQt5.QtWidgets
+from urllib import request
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pyssa.util import constants
@@ -90,4 +93,19 @@ class DialogStartup(QtWidgets.QDialog):
         """
         global global_var_startup_workspace
         global_var_startup_workspace = self.ui.txt_workspace.text()
+
+        url = constants.UNIX_SCRIPTS_SCIEBO_URL  # Replace with the actual file URL
+        destination = pathlib.Path(f"{constants.SETTINGS_DIR}/unix.zip")  # Replace with the desired file path and name
+        if not os.path.exists(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts")):
+            os.mkdir(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts"))
+        if not os.path.exists(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts/unix")):
+            os.mkdir(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts/unix"))
+
+        request.urlretrieve(url, str(destination))
+
+        zip_file_path = str(destination)  # Replace with the actual path to your downloaded zip file
+        destination_folder = str(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts"))  # Replace with the desired folder to extract the contents
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            zip_ref.extractall(destination_folder)
+
         self.close()
