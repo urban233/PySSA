@@ -44,8 +44,8 @@ QStackedWidget#stackedWidget {
 }
 
 QToolTip {
-    background: black;
-    color: white;
+    /*background: black;
+    color: white;*/
     font: bold;
     font-size: 14px;
 }
@@ -1505,6 +1505,35 @@ QPushButton#btn_side_menu {
     min-width: 2em;
 }
 
+/* Button for info button */
+QPushButton#btn_info {
+    background-color: white;
+    border-style: outset;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #DCDCDC;
+    min-width: 2em;
+    padding: 2px;
+}
+
+QPushButton::hover#btn_info {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
+    color: white;
+    color: #4B91F7;
+    border: 2px solid #4B91F7;
+}
+
+QPushButton::pressed#btn_info {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #276cea, stop: 0.4 #0047c8,
+                                stop: 0.5 #0047c8, stop: 1.0 #276cea);
+    background: white;
+    border-color: #276cea;
+    color: #276cea;
+}
 
 QPushButton {
     background-color: white;

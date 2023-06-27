@@ -24,6 +24,7 @@ from PyQt5 import QtWidgets
 from pymol import cmd
 import pyqtgraph as pg
 import pyqtgraph.exporters
+import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
 from pyssa.internal.data_structures import protein_pair
 from pyssa.util import pyssa_keys
@@ -46,6 +47,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.graph_widget = pg.PlotWidget()
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
+        custom_pyssa_styles.set_stylesheet(self)
         # read csv file
         # path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
         # distance_list = []

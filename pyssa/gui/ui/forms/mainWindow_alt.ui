@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>540</width>
-    <height>851</height>
+    <height>959</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -182,8 +182,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>146</width>
-                  <height>793</height>
+                  <width>142</width>
+                  <height>962</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_115">
@@ -657,7 +657,7 @@
            <number>4</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>8</number>
           </property>
           <property name="bottomMargin">
            <number>4</number>
@@ -681,6 +681,13 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btn_info">
+            <property name="text">
+             <string>Info</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -766,7 +773,7 @@
                    <string/>
                   </property>
                   <property name="pixmap">
-                   <pixmap>../../../../../../../../../../../.designer/assets/pyssa_logo.png</pixmap>
+                   <pixmap>../../../../../../../../.designer/assets/pyssa_logo.png</pixmap>
                   </property>
                   <property name="scaledContents">
                    <bool>true</bool>
@@ -2691,7 +2698,7 @@
                  <item>
                   <widget class="QCheckBox" name="cb_new_add_reference">
                    <property name="text">
-                    <string>Add reference protein</string>
+                    <string>Add existing protein</string>
                    </property>
                    <property name="checkable">
                     <bool>true</bool>
@@ -2706,7 +2713,7 @@
                    <item>
                     <widget class="QLabel" name="lbl_new_choose_reference">
                      <property name="text">
-                      <string>Choose a reference .pdb file or enter a PDB ID</string>
+                      <string>Choose a existing .pdb file or enter a PDB ID</string>
                      </property>
                     </widget>
                    </item>
@@ -3656,7 +3663,7 @@
                 <item>
                  <widget class="QLabel" name="lbl_use_project_name">
                   <property name="text">
-                   <string>Project name</string>
+                   <string>Enter new project name</string>
                   </property>
                  </widget>
                 </item>
@@ -4916,7 +4923,7 @@
                 <item>
                  <widget class="QLabel" name="lbl_pred_mono_prot_name">
                   <property name="text">
-                   <string>Enter protein name</string>
+                   <string>Enter new protein name</string>
                   </property>
                  </widget>
                 </item>
@@ -4968,7 +4975,7 @@
                 <item>
                  <widget class="QLabel" name="lbl_pred_mono_seq_name">
                   <property name="text">
-                   <string>Enter protein sequence</string>
+                   <string>Enter new protein sequence</string>
                   </property>
                  </widget>
                 </item>
@@ -5175,7 +5182,7 @@
                   <item>
                    <widget class="QLabel" name="lbl_pred_multi_prot_name">
                     <property name="text">
-                     <string>Enter Protein name</string>
+                     <string>Enter new protein name</string>
                     </property>
                    </widget>
                   </item>
@@ -5231,7 +5238,7 @@
                   <item>
                    <widget class="QLabel" name="lbl_pred_multi_prot_seq">
                     <property name="text">
-                     <string>Enter protein sequence</string>
+                     <string>Enter new protein sequence</string>
                     </property>
                    </widget>
                   </item>
@@ -5531,7 +5538,7 @@
                     <item>
                      <widget class="QLabel" name="lbl_pred_analysis_mono_prot_name">
                       <property name="text">
-                       <string>Enter protein name</string>
+                       <string>Enter new protein name</string>
                       </property>
                      </widget>
                     </item>
@@ -5583,7 +5590,7 @@
                     <item>
                      <widget class="QLabel" name="lbl_pred_analysis_mono_seq_name">
                       <property name="text">
-                       <string>Enter protein sequence</string>
+                       <string>Enter new protein sequence</string>
                       </property>
                      </widget>
                     </item>
@@ -6142,7 +6149,7 @@
                       <item>
                        <widget class="QLabel" name="lbl_pred_analysis_multi_prot_name">
                         <property name="text">
-                         <string>Enter Protein name</string>
+                         <string>Enter new protein name</string>
                         </property>
                        </widget>
                       </item>
@@ -6198,7 +6205,7 @@
                       <item>
                        <widget class="QLabel" name="lbl_pred_analysis_multi_prot_seq">
                         <property name="text">
-                         <string>Enter protein sequence</string>
+                         <string>Enter new protein sequence</string>
                         </property>
                        </widget>
                       </item>
@@ -6950,7 +6957,7 @@
      <x>0</x>
      <y>0</y>
      <width>540</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">

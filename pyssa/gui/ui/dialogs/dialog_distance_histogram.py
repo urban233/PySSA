@@ -26,6 +26,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 import pyqtgraph as pg
 from pyssa.internal.data_structures import protein_pair
+import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_histogram import Ui_Dialog
 from pyssa.util import pyssa_keys
 from pyssa.util import constants
@@ -48,6 +49,7 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         self.histogram_pos = (0, 2.5)
         self.scroll_pos = ""
+        custom_pyssa_styles.set_stylesheet(self)
 
         self.graph_widget = pg.PlotWidget()
         self.view_box = self.graph_widget.plotItem.getViewBox()

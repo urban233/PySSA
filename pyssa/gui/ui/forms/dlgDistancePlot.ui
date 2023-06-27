@@ -51,7 +51,7 @@
      <item>
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>From AA pair</string>
+        <string>From residue pair</string>
        </property>
       </widget>
      </item>

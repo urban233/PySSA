@@ -46,8 +46,8 @@ class DialogDistanceTable(Qt.QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.labels = [
-            "Residue pair no.", "Reference Chain", "Reference Position", "Reference Residue",
-            "Model Chain", "Model Pos", "Model Residue", "Distance"
+            "Residue pair no.", "Protein 1 Chain", "Protein 1 Position", "Protein 1 Residue",
+            "Protein 2 Chain", "Protein 2 Position", "Protein 2 Residue", "Distance in Å"
         ]
         self.standard_item_list = []
         with open(path, 'r', encoding="utf-8") as csv_file:

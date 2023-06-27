@@ -125,6 +125,16 @@ class MainWindow(QMainWindow):
         self.setMinimumWidth(580)
         self.setMinimumHeight(200)
 
+
+        # <editor-fold desc="Info button changes">
+        pixmapi = QStyle.SP_MessageBoxQuestion
+        icon = self.style().standardIcon(pixmapi)
+        self.ui.btn_info.setIcon(icon)
+        self.ui.btn_info.setText("")
+        self.ui.btn_info.setFixedWidth(50)
+
+        # </editor-fold>
+
         if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa"))):
             os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa")))
         if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs"))):
@@ -824,6 +834,8 @@ class MainWindow(QMainWindow):
 
         # </editor-fold>
 
+        self.ui.btn_info.clicked.connect(self.open_page_information)
+
         # <editor-fold desc="Side Menu">
         self.ui.btn_new_page.clicked.connect(self.display_new_page)
         self.ui.btn_open_page.clicked.connect(self.display_open_page)
@@ -1111,40 +1123,32 @@ class MainWindow(QMainWindow):
         # </editor-fold>
 
     def _create_all_tooltips(self):
-        # menu
-
-        # side menu
-
+        self.status_bar.setToolTip("Status information: Current process")
         # new project page
-
-        # open project page
-
-        # delete project page
-
-        # edit project page
-
-        # view project page
-
-        # use project page
-
-        # new sequence page
-
-        # sequence vs .pdb page
-        self.ui.btn_prediction_load_reference.setToolTip("Open reference pdb file")
-        self.ui.btn_prediction_start.setToolTip("Predict with Colab Notebook")
-        self.ui.txt_prediction_load_reference.setToolTip("Reference file path")
-        # self.ui.txt_prediction_chain_ref.setToolTip("Enter chain(s) of reference")
-        self.ui.txt_prediction_chain_model.setToolTip("Enter chain(s) of model")
-        # single analysis page
-        self.ui.btn_analysis_start.setToolTip("Start analysis process")
-        self.status_bar.setToolTip("Status information: Current process")
-        # batch analysis page
-        self.status_bar.setToolTip("Status information: Current process")
-        # results page
-
+        self.ui.btn_new_choose_reference.setToolTip("Click to add a .pdb file")
+        # sidebar
+        self.ui.lbl_current_project_name.setToolTip("Name of the current project")
+        # view page
+        #fixme: is this important? self.ui.list_view_project_proteins.setToolTip("Proteins of the current project")
+        self.ui.txtedit_view_sequence.setToolTip("Protein sequence of the selected protein")
+        # use page
+        self.ui.txt_use_search.setToolTip("Enter a protein name to search in your current project")
+        # prediction Monomer
+        self.ui.table_pred_mono_prot_to_predict.setToolTip("Protein monomers which get predicted")
+        self.ui.btn_pred_mono_seq_to_predict.setToolTip("Set up a protein which can be used for a prediction")
+        self.ui.table_pred_analysis_mono_prot_to_predict.setToolTip("Protein monomers which get predicted")
+        self.ui.list_pred_analysis_mono_overview.setToolTip("Protein pairs which get analyzed")
+        self.ui.btn_pred_analysis_mono_seq_to_predict.setToolTip("Set up a protein which can be used for a prediction")
+        # prediction Multimer
+        self.ui.table_pred_multi_prot_to_predict.setToolTip("Protein multimers which get predicted")
+        self.ui.btn_pred_multi_prot_to_predict_add.setToolTip("Set up a protein which can be used for a prediction")
+        self.ui.table_pred_analysis_multi_prot_to_predict.setToolTip("Protein multimers which get predicted")
+        self.ui.list_pred_analysis_multi_overview.setToolTip("Protein pairs which get analyzed")
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add.setToolTip("Set up a protein which can be used for a prediction")
         # image page
         self.ui.btn_save_scene.setToolTip("Create new PyMOL scene")
         self.ui.btn_update_scene.setToolTip("Overwrite current scene")
+        self.ui.btn_preview_image.setToolTip("Preview current viewpoint")
         self.ui.btn_save_image.setToolTip("Save current viewpoint as png file")
         self.ui.cb_ray_tracing.setToolTip("Enable ray-tracing")
         self.ui.cb_transparent_bg.setToolTip("Enable transparent background")
@@ -1850,6 +1854,32 @@ class MainWindow(QMainWindow):
                 # logical message: the user does NOT want to install local colabfold
                 basic_boxes.ok("Local Colabfold installation", "Installation process aborted.", QMessageBox.Information)
                 return
+
+    def open_page_information(self):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        styles.set_stylesheet(msg)
+        msg.setWindowTitle("Information")
+        msg.setStyleSheet("QLabel{font-size: 11pt;}")
+
+        if self.ui.lbl_page_title.text() == "View proteins of current project":
+            msg.setText(
+                "This is the View page.\n"
+                "Here you can create a new project or delete an existing one.\n"
+                "Or you can import an existing one or open one.\n"
+                "\n"
+                "\n"
+                "Create project: \n"
+                "Here you can create a blank or a project with an existing protein.\n"
+                "\n"
+                "Open project: \n"
+                "Here you can open a project which you created previously."
+            )
+        else:
+            msg.setText("Ohh that is the homepage ...")
+        msg.exec_()
+        return
 
     # <editor-fold desc="New project page functions">
     def show_add_reference(self):
@@ -4191,9 +4221,10 @@ class MainWindow(QMainWindow):
         """
         csv_model = QtGui.QStandardItemModel()
         csv_model.setColumnCount(7)
-        labels = ["Residue pair no.", "Reference Chain", "Reference Position", "Reference Residue",
-                  "Model Chain", "Model Position", "Model Residue", "Distance",
-                  ]
+        labels = [
+            "Residue pair no.", "Protein 1 Chain", "Protein 1 Position", "Protein 1 Residue",
+            "Protein 2 Chain", "Protein 2 Position", "Protein 2 Residue", "Distance in Å"
+        ]
         csv_model.setHorizontalHeaderLabels(labels)
         table_dialog = QtWidgets.QDialog(self)
         table_view = QtWidgets.QTableView()
@@ -4268,10 +4299,10 @@ class MainWindow(QMainWindow):
         QTableView {background-color: white;}
         """
         table_dialog.setStyleSheet(stylesheet)
-
         table_dialog.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
         table_dialog.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
         table_dialog.setModal(True)
+        table_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)  # disables editing of cells
         table_dialog.setWindowTitle("Distances of Structure Alignment")
         table_dialog.show()
 
