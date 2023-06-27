@@ -2452,7 +2452,7 @@ class MainWindow(QMainWindow):
             self._project_watcher.show_valid_options(self.ui)
             self.ui.btn_manage_session.show()
             self.display_view_page()
-        basic_boxes.ok("Import Project", "The project was successfully imported.", QMessageBox.Information)
+            basic_boxes.ok("Import Project", "The project was successfully imported.", QMessageBox.Information)
 
     def export_current_project(self):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_export_project)
@@ -2462,7 +2462,7 @@ class MainWindow(QMainWindow):
         file_path, _ = file_dialog.getSaveFileName(self, "Save current project", "", "XML Files (*.xml)")
         if file_path:
             self.app_project.serialize_project(file_path)
-        basic_boxes.ok("Export Project", "The project was successfully exported.", QMessageBox.Information)
+            basic_boxes.ok("Export Project", "The project was successfully exported.", QMessageBox.Information)
     # </editor-fold>
 
     # <editor-fold desc="Close project functions">
