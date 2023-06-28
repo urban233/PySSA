@@ -22,6 +22,7 @@
 """Module for the project watcher class which is hard coded based on pyssa"""
 from pyssa.internal.data_structures import project
 from pyssa.util import gui_utils
+from pyssa.util import tools
 
 
 class ProjectWatcher:
@@ -228,6 +229,14 @@ class ProjectWatcher:
             else:
                 gui_elements_to_show.append(ui.btn_image_analysis_page)
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+
+    def check_workspace_for_projects(self, workspace, ui):
+        if len(tools.scan_workspace_for_valid_projects(workspace, ui.list_delete_projects)) > 0:
+            ui.btn_delete_page.show()
+            ui.btn_open_page.show()
+        else:
+            ui.btn_delete_page.hide()
+            ui.btn_open_page.hide()
 
     def count_proteins_in_project(self):
         """This function counts the number of pdb files in the project pdb directory
