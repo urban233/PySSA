@@ -904,7 +904,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_view_project_show.clicked.connect(self.view_sequence)
         self.ui.btn_view_project_show_structure.clicked.connect(self.view_structure)
         self.ui.list_view_project_proteins.doubleClicked.connect(self.view_sequence)
-
+        self.ui.list_view_project_proteins.itemClicked.connect(self.view_show_options)
         # </editor-fold>
 
         # <editor-fold desc="Use project page">
@@ -913,8 +913,10 @@ class MainWindow(QMainWindow):
         self.ui.txt_use_search.textChanged.connect(self.validate_use_search)
         self.ui.btn_use_add_available_protein_structures.clicked.connect(self.add_protein_structure_to_new_project)
         self.ui.list_use_available_protein_structures.doubleClicked.connect(self.add_protein_structure_to_new_project)
+        self.ui.list_use_available_protein_structures.itemClicked.connect(self.use_enable_add)
         self.ui.btn_use_remove_selected_protein_structures.clicked.connect(self.remove_protein_structure_to_new_project)
         self.ui.list_use_selected_protein_structures.doubleClicked.connect(self.remove_protein_structure_to_new_project)
+        self.ui.list_use_selected_protein_structures.itemClicked.connect(self.use_enable_remove)
         self.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
         self.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
 
@@ -1138,7 +1140,7 @@ class MainWindow(QMainWindow):
         #fixme: is this important? self.ui.list_view_project_proteins.setToolTip("Proteins of the current project")
         self.ui.txtedit_view_sequence.setToolTip("Protein sequence of the selected protein")
         # use page
-        self.ui.txt_use_search.setToolTip("Enter a protein name to search in your current project")
+        self.ui.txt_use_search.setToolTip("Enter a protein name to search in your current workspace")
         # prediction Monomer
         self.ui.table_pred_mono_prot_to_predict.setToolTip("Protein monomers which get predicted")
         self.ui.btn_pred_mono_seq_to_predict.setToolTip("Set up a protein which can be used for a prediction")
@@ -1558,26 +1560,6 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_edit_page)
-
-    def display_view_page(self):
-        """This function displays the edit project page
-
-        """
-        self.ui.list_view_project_proteins.clear()
-        self.ui.txtedit_view_sequence.clear()
-        # pre-process
-        self.status_bar.showMessage(self.workspace.text())
-        # list all proteins from pdb directory
-        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_view_project_proteins)
-        # self.project_scanner.scan_project_for_valid_proteins(list_view_project_proteins=self.ui.list_view_project_proteins)
-
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_view_page)
-
-
-
-
 
     def display_use_page(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -2210,6 +2192,40 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     # <editor-fold desc="View project page functions">
+    def display_view_page(self):
+        """This function displays the edit project page
+
+        """
+        self.ui.list_view_project_proteins.clear()
+        self.ui.txtedit_view_sequence.clear()
+        # pre-process
+        self.status_bar.showMessage(self.workspace.text())
+        # list all proteins from pdb directory
+        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_view_project_proteins)
+        # self.project_scanner.scan_project_for_valid_proteins(list_view_project_proteins=self.ui.list_view_project_proteins)
+
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_view_page)
+        gui_elements_to_hide = [
+            self.ui.btn_view_project_show,
+            self.ui.btn_view_project_show_structure,
+            self.ui.txtedit_view_sequence,
+            self.ui.label_9,
+            self.ui.label_11
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def view_show_options(self):
+        gui_elements_to_show = [
+            self.ui.btn_view_project_show,
+            self.ui.btn_view_project_show_structure,
+            self.ui.txtedit_view_sequence,
+            self.ui.label_9,
+            self.ui.label_11
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+
     def view_sequence(self):
         tmp_protein_basename = self.ui.list_view_project_proteins.currentItem().text()
         tmp_protein_sequences = self.app_project.search_protein(tmp_protein_basename).get_protein_sequences()
@@ -2259,11 +2275,23 @@ class MainWindow(QMainWindow):
         prot_to_add = self.ui.list_use_available_protein_structures.currentItem().text()
         self.ui.list_use_selected_protein_structures.addItem(prot_to_add)
         self.ui.list_use_available_protein_structures.takeItem(self.ui.list_use_available_protein_structures.currentRow())
+        self.ui.btn_use_add_available_protein_structures.setEnabled(False)
+        if self.ui.list_use_available_protein_structures.count() > 0:
+            try:
+                self.ui.list_use_available_protein_structures.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in use available proteins list on Use page.")
 
     def remove_protein_structure_to_new_project(self):
         prot_to_remove = self.ui.list_use_selected_protein_structures.currentItem()
         self.ui.list_use_selected_protein_structures.takeItem(self.ui.list_use_selected_protein_structures.currentRow())
         self.ui.list_use_available_protein_structures.addItem(prot_to_remove)
+        self.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
+        if self.ui.list_use_selected_protein_structures.count() > 0:
+            try:
+                self.ui.list_use_selected_protein_structures.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in use selected proteins list on Use page.")
 
     def show_protein_selection_for_use(self):
         gui_elements_to_show = [
@@ -2282,13 +2310,14 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         self.ui.txt_use_project_name.setEnabled(False)
-
         gui_elements_to_hide = [
             self.ui.btn_use_next,
             self.ui.list_use_existing_projects,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.disable_text_box(self.ui.txt_use_project_name, self.ui.lbl_use_project_name)
+        self.ui.btn_use_add_available_protein_structures.setEnabled(False)
+        self.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
 
     def hide_protein_selection_for_use(self):
         gui_elements_to_show = [
@@ -2314,6 +2343,12 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.enable_text_box(self.ui.txt_use_project_name, self.ui.lbl_use_project_name)
+
+    def use_enable_add(self):
+        self.ui.btn_use_add_available_protein_structures.setEnabled(True)
+
+    def use_enable_remove(self):
+        self.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
     def create_use_project(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -4592,28 +4627,102 @@ class MainWindow(QMainWindow):
         # </editor-fold>
 
         # <editor-fold desc="Main Thread variant">
-        gui_elements_to_hide = []
-        # TODO: implement image check for xml format
-        # if not os.path.exists(pathlib.Path(f"{current_results_path}/images")):
-        #     # no images where made
-        #     gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
-        #     gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
-        #     gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
-        #     gui_elements_to_hide.append(self.ui.list_results_interest_regions)
-        #     gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
-        # elif os.path.exists(pathlib.Path(f"{current_results_path}/images")):
-        #     if not os.path.exists(pathlib.Path(f"{current_results_path}/images/structure_alignment.png")):
-        #         gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
-        #         gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
-        #     elif not os.path.exists(pathlib.Path(f"{current_results_path}/images/interesting_")):
-        #         gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
-        #         gui_elements_to_hide.append(self.ui.list_results_interest_regions)
-        #         gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
-
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
         distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
         distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
 
+        filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(
+            tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
+        if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) != 0:
+            # if both image types were made during analysis
+            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
+            self.ui.list_results_interest_regions.clear()
+            for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                self.ui.list_results_interest_regions.addItem(tmp_filename)
+            gui_elements_to_show = [
+                self.ui.lbl_results_analysis_options,
+                self.ui.cb_results_analysis_options,
+                self.ui.lbl_results_rmsd,
+                self.ui.txt_results_rmsd,
+                self.ui.lbl_color_rmsd,
+                self.ui.btn_color_rmsd,
+                self.ui.lbl_results_aligned_residues,
+                self.ui.txt_results_aligned_residues,
+                self.ui.lbl_results_distance_plot,
+                self.ui.btn_view_distance_plot,
+                self.ui.lbl_results_distance_histogram,
+                self.ui.btn_view_distance_histogram,
+                self.ui.lbl_results_distance_table,
+                self.ui.btn_view_distance_table,
+                self.ui.lbl_results_structure_alignment,
+                self.ui.btn_view_struct_alignment,
+                self.ui.lbl_results_interest_regions,
+                self.ui.list_results_interest_regions,
+                self.ui.btn_view_interesting_region
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+        elif len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) == 0:
+            # only struct align image were made
+            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
+            self.ui.lbl_results_structure_alignment.show()
+            self.ui.btn_view_struct_alignment.show()
+            gui_elements_to_show = [
+                self.ui.lbl_results_analysis_options,
+                self.ui.cb_results_analysis_options,
+                self.ui.lbl_results_rmsd,
+                self.ui.txt_results_rmsd,
+                self.ui.lbl_color_rmsd,
+                self.ui.btn_color_rmsd,
+                self.ui.lbl_results_aligned_residues,
+                self.ui.txt_results_aligned_residues,
+                self.ui.lbl_results_distance_plot,
+                self.ui.btn_view_distance_plot,
+                self.ui.lbl_results_distance_histogram,
+                self.ui.btn_view_distance_histogram,
+                self.ui.lbl_results_distance_table,
+                self.ui.btn_view_distance_table,
+                self.ui.lbl_results_structure_alignment,
+                self.ui.btn_view_struct_alignment
+            ]
+            gui_elements_to_hide = [
+                self.ui.lbl_results_interest_regions,
+                self.ui.list_results_interest_regions,
+                self.ui.btn_view_interesting_region
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            # no images were made
+            gui_elements_to_show = [
+                self.ui.lbl_results_analysis_options,
+                self.ui.cb_results_analysis_options,
+                self.ui.lbl_results_rmsd,
+                self.ui.txt_results_rmsd,
+                self.ui.lbl_color_rmsd,
+                self.ui.btn_color_rmsd,
+                self.ui.lbl_results_aligned_residues,
+                self.ui.txt_results_aligned_residues,
+                self.ui.lbl_results_distance_plot,
+                self.ui.btn_view_distance_plot,
+                self.ui.lbl_results_distance_histogram,
+                self.ui.btn_view_distance_histogram,
+                self.ui.lbl_results_distance_table,
+                self.ui.btn_view_distance_table
+            ]
+            gui_elements_to_hide = [
+                self.ui.lbl_results_structure_alignment,
+                self.ui.btn_view_struct_alignment,
+                self.ui.lbl_results_interest_regions,
+                self.ui.list_results_interest_regions,
+                self.ui.btn_view_interesting_region
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.list_results_interest_regions.sortItems()
+        self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
+        self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
+
+        # <editor-fold desc="Histogram check">
         # check if histogram can be created
         distance_list.sort()
         x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
@@ -4627,37 +4736,10 @@ class MainWindow(QMainWindow):
             # histogram could not be created
             gui_elements_to_hide.append(self.ui.lbl_results_distance_histogram)
             gui_elements_to_hide.append(self.ui.btn_view_distance_histogram)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
 
-        filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(
-            tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
-        if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) != 0:
-            # if both image types were made during analysis
-            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
-            self.ui.list_results_interest_regions.clear()
-            for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                self.ui.list_results_interest_regions.addItem(tmp_filename)
-        elif len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) == 0:
-            # only struct align image were made
-            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
-            self.ui.lbl_results_structure_alignment.show()
-            self.ui.btn_view_struct_alignment.show()
-            gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
-            gui_elements_to_hide.append(self.ui.list_results_interest_regions)
-            gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
-        else:
-            # no images were made
-            gui_elements_to_hide.append(self.ui.lbl_results_structure_alignment)
-            gui_elements_to_hide.append(self.ui.btn_view_struct_alignment)
-            gui_elements_to_hide.append(self.ui.lbl_results_interest_regions)
-            gui_elements_to_hide.append(self.ui.list_results_interest_regions)
-            gui_elements_to_hide.append(self.ui.btn_view_interesting_region)
-        if gui_elements_to_hide:
-            self.show_results_interactions(gui_elements_to_hide=gui_elements_to_hide)
-        else:
-            self.show_results_interactions()
-        self.ui.list_results_interest_regions.sortItems()
-        self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
-        self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
+        # </editor-fold>
+
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
         self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
