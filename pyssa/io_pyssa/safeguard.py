@@ -125,9 +125,11 @@ class Safeguard:
     @staticmethod
     def check_if_value_is_in_table_v_header(value, table):
         for i in range(table.rowCount()):
-            if table.verticalHeaderItem(i).text() == value:
-                return False
-        return True
+            header = table.verticalHeaderItem(i).text()
+            new_value = value
+            if header == new_value:
+                return True
+        return False
 
     @staticmethod
     def check_if_value_is_not_none(value) -> bool:

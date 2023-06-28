@@ -532,7 +532,8 @@ def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
 
     """
     # set color for lineEdit
-    txt_for_protein_name.setStyleSheet("color: #f44336")
+    txt_for_protein_name.setStyleSheet("color: #f44336;"
+                                       "background-color: white;")
     if len(txt_for_protein_name.text()) == 0:
         lbl_for_status_protein_name.setText("")
         btn_next.setEnabled(False)
@@ -550,12 +551,14 @@ def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
         for i in range(len(txt_for_protein_name.text())):
             result = validator.validate(txt_for_protein_name.text(), i)
             if result[0] > 0:
-                txt_for_protein_name.setStyleSheet("color: #000000")
+                txt_for_protein_name.setStyleSheet("color: #000000;"
+                                                   "background-color: white;")
                 lbl_for_status_protein_name.setText("")
                 btn_next.setEnabled(True)
                 styles.color_button_ready(btn_next)
             else:
-                txt_for_protein_name.setStyleSheet("color: #f44336")
+                txt_for_protein_name.setStyleSheet("color: #f44336;"
+                                                   "background-color: white;")
                 lbl_for_status_protein_name.setText("Invalid character.")
                 btn_next.setEnabled(False)
                 styles.color_button_not_ready(btn_next)
@@ -576,7 +579,8 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
 
     """
     # set color for lineEdit
-    txt_protein_sequence.setStyleSheet("color: #f44336")
+    txt_protein_sequence.setStyleSheet("color: #f44336;"
+                                       "background-color: white;")
     if len(txt_protein_sequence.toPlainText()) == 0:
         lbl_status_protein_sequence.setText("")
         btn_next.setEnabled(False)
@@ -589,12 +593,14 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
         for i in range(len(txt_protein_sequence.toPlainText())):
             result = validator.validate(txt_protein_sequence.toPlainText(), i)
             if result[0] > 0:
-                txt_protein_sequence.setStyleSheet("color: #000000")
+                txt_protein_sequence.setStyleSheet("color: #000000;"
+                                                   "background-color: white;")
                 lbl_status_protein_sequence.setText("")
                 btn_next.setEnabled(True)
                 styles.color_button_ready(btn_next)
             else:
-                txt_protein_sequence.setStyleSheet("color: #f44336")
+                txt_protein_sequence.setStyleSheet("color: #f44336;"
+                                                   "background-color: white;")
                 lbl_status_protein_sequence.setText("Invalid character.")
                 btn_next.setEnabled(False)
                 styles.color_button_not_ready(btn_next)

@@ -258,6 +258,8 @@ class MainWindow(QMainWindow):
         self.ui.action_toggle_notebook_visibility.setVisible(False)
         self.ui.action_settings_model_w_off_colab_notebook.setVisible(False)
         self.last_sidebar_button = PyQt5.QtWidgets.QPushButton()
+        self.ui.table_pred_mono_prot_to_predict.setEditTriggers(self.ui.table_pred_mono_prot_to_predict.NoEditTriggers)
+        self.ui.table_pred_multi_prot_to_predict.setEditTriggers(self.ui.table_pred_multi_prot_to_predict.NoEditTriggers)
 
         # connections
         self._connect_all_gui_elements()
@@ -919,32 +921,36 @@ class MainWindow(QMainWindow):
         # </editor-fold>
 
         # <editor-fold desc="Monomer local prediction page">
-        self.ui.btn_pred_mono_seq_to_predict.clicked.connect(self.local_pred_mono_show_protein_name)
-        self.ui.btn_pred_mono_seq_to_predict_remove.clicked.connect(self.local_pred_mono_remove_protein_to_predict)
-        self.ui.btn_pred_mono_next.clicked.connect(self.local_pred_mono_show_protein_sequence)
-        self.ui.btn_pred_mono_back.clicked.connect(self.local_pred_mono_show_protein_overview)
-        self.ui.btn_pred_mono_add_protein.clicked.connect(self.local_pred_mono_add_protein_to_predict)
-        self.ui.btn_pred_mono_back_2.clicked.connect(self.local_pred_mono_show_protein_name)
+        self.ui.btn_pred_mono_seq_to_predict.clicked.connect(self.local_pred_mono_add_seq_to_predict)
+        self.ui.btn_pred_mono_seq_to_predict_remove.clicked.connect(self.local_pred_mono_remove)
+        self.ui.btn_pred_mono_next.clicked.connect(self.local_pred_mono_next)
+        self.ui.btn_pred_mono_back.clicked.connect(self.local_pred_mono_back)
+        self.ui.btn_pred_mono_add_protein.clicked.connect(self.local_pred_mono_add_protein)
+        self.ui.btn_pred_mono_back_2.clicked.connect(self.local_pred_mono_back_2)
         self.ui.txt_pred_mono_prot_name.textChanged.connect(self.local_pred_mono_validate_protein_name)
         self.ui.txt_pred_mono_seq_name.textChanged.connect(self.local_pred_mono_validate_protein_sequence)
         self.ui.btn_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_pred_mono_predict.clicked.connect(self.predict_local_monomer)
 
+        self.ui.table_pred_mono_prot_to_predict.itemSelectionChanged.connect(self.local_pred_mono_item_changed)
         # </editor-fold>
 
         # <editor-fold desc="Multimer prediction page">
-        self.ui.btn_pred_multi_prot_to_predict_add.clicked.connect(self.local_pred_multi_show_protein_name)
-        self.ui.btn_pred_multi_prot_to_predict_remove.clicked.connect(self.local_pred_multi_remove_protein_to_predict)
-        self.ui.btn_pred_multi_next.clicked.connect(self.local_pred_multi_show_protein_sequence)
-        self.ui.btn_pred_multi_back.clicked.connect(self.local_pred_multi_show_protein_overview)
-        self.ui.btn_pred_multi_prot_to_predict_add_2.clicked.connect(self.local_pred_multi_add_protein_to_predict)
-        self.ui.btn_pred_multi_back_2.clicked.connect(self.local_pred_multi_show_protein_name)
+        self.ui.btn_pred_multi_prot_to_predict_add.clicked.connect(self.local_pred_multi_add)
+        self.ui.btn_pred_multi_prot_to_predict_remove.clicked.connect(self.local_pred_multi_remove)
+        self.ui.btn_pred_multi_next.clicked.connect(self.local_pred_multi_next)
+        self.ui.btn_pred_multi_back.clicked.connect(self.local_pred_multi_back)
+        self.ui.btn_pred_multi_prot_to_predict_add_2.clicked.connect(self.local_pred_multi_prot_to_predict_add_2)
+        self.ui.btn_pred_multi_back_2.clicked.connect(self.local_pred_multi_back_2)
         self.ui.txt_pred_multi_prot_name.textChanged.connect(self.local_pred_multi_validate_protein_name)
         self.ui.txt_pred_multi_prot_seq.textChanged.connect(self.local_pred_multi_validate_protein_sequence)
         self.ui.btn_pred_multi_prot_seq_add.clicked.connect(self.local_pred_multi_add_sequence_to_list)
         self.ui.btn_pred_multi_prot_seq_overview_remove.clicked.connect(self.local_pred_multi_remove_sequence_to_list)
         self.ui.btn_pred_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_pred_multi_predict.clicked.connect(self.predict_local_multimer)
+
+        self.ui.list_pred_multi_prot_seq_overview.itemClicked.connect(self.local_pred_multi_prot_seq_overview_item_changed)
+        self.ui.table_pred_multi_prot_to_predict.itemSelectionChanged.connect(self.local_pred_multi_prot_to_predict_item_changed)
         # self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
         # self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
         # # single connections
@@ -1261,35 +1267,6 @@ class MainWindow(QMainWindow):
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
         # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
 
-    def _init_local_pred_mono_page(self):
-        # clears everything
-        self.ui.txt_pred_mono_prot_name.clear()
-        self.ui.txt_pred_mono_seq_name.clear()
-        for i in range(self.ui.table_pred_mono_prot_to_predict.rowCount()):
-            self.ui.table_pred_mono_prot_to_predict.removeRow(i)
-        # sets up defaults: Prediction
-        self.ui.btn_pred_mono_next.setEnabled(False)
-        self.ui.btn_pred_mono_add_protein.setEnabled(False)
-        self.ui.lbl_pred_mono_prot_name_status.setText("")
-        self.ui.lbl_pred_mono_seq_name_status.setText("")
-        self.local_pred_mono_show_protein_overview()
-
-    def _init_local_pred_multi_page(self):
-        # clears everything
-        self.ui.txt_pred_multi_prot_name.clear()
-        self.ui.txt_pred_multi_prot_seq.clear()
-        self.ui.list_pred_multi_prot_seq_overview.clear()
-        # sets up defaults: Prediction
-        self.ui.btn_pred_multi_next.setEnabled(False)
-        self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
-        self.ui.lbl_pred_multi_prot_name_status.setText("")
-        self.ui.lbl_pred_multi_prot_seq_status.setText("")
-        self.local_pred_multi_show_protein_overview()
-        # self.local_pred_multimer_management.show_stage_x(0)
-        # self.local_pred_multimer_management.disable_all_next_buttons()
-        # self.local_pred_multimer_management.clear_all_text_boxes()
-        # self.local_pred_multimer_management.set_empty_string_in_label()
-
     def _init_mono_pred_analysis_page(self):
         # <editor-fold desc="Prediction section">
         self.ui.txt_pred_analysis_mono_prot_name.clear()
@@ -1441,29 +1418,6 @@ class MainWindow(QMainWindow):
 
         """
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 0, "Home")
-
-    def display_prediction_and_analysis_page(self):
-        """This function displays the prediction + analysis work area
-
-        """
-        self.ui.list_widget_projects.clear()
-        # pre-process
-        self.status_bar.showMessage(self.workspace.text())
-        workspace_projects: list[str] = os.listdir(self.workspace_path)
-        workspace_projects.sort()
-        for project in workspace_projects:
-            self.ui.list_widget_projects.addItem(project)
-
-        # regular opening of work area
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 2, "Sequence vs .pdb")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_prediction_analysis_page)
-
-    def display_sequence_vs_pdb_page(self):
-        """This function displays the sequence vs .pdb page
-
-        """
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 10, "Sequence vs .pdb")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_prediction_analysis_page)
 
     def display_single_analysis_page(self):
         """This function displays the single analysis work area
@@ -1621,18 +1575,9 @@ class MainWindow(QMainWindow):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_view_page)
 
-    def display_local_pred_mono(self):
-        self._init_local_pred_mono_page()
-        self.local_pred_monomer_management.show_stage_x(0)
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 19, "Local Monomer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_local_monomer_page)
 
-    def display_local_pred_multi(self):
-        self.local_pred_multimer_management.show_stage_x(0)
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 20, "Local Multimer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_local_multimer_page)
+
+
 
     def display_use_page(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -1681,14 +1626,26 @@ class MainWindow(QMainWindow):
 
     def display_monomer_pred_analysis(self):
         self._init_mono_pred_analysis_page()
+        self.ui.table_pred_analysis_mono_prot_to_predict.clear()
+        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(0, QTableWidgetItem("Chain"))
+        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(1, QTableWidgetItem("Sequence"))
+        self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         self.monomer_prediction_analysis_management.show_stage_x(0)
+        if self.ui.tabWidget.currentIndex() == 1:
+            self.ui.tabWidget.setCurrentIndex(0)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 21, "Monomer Prediction + Analysis")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_pred_analysis_monomer_page)
 
     def display_multimer_pred_analysis(self):
         self._init_multi_pred_analysis_page()
+        self.ui.table_pred_analysis_multi_prot_to_predict.clear()
+        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(0, QTableWidgetItem("Chain"))
+        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(1, QTableWidgetItem("Sequence"))
+        self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
         self.multimer_prediction_analysis_management.show_stage_x(0)
+        if self.ui.tabWidget_2.currentIndex() == 1:
+            self.ui.tabWidget_2.setCurrentIndex(0)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 22, "Multimer Prediction + Analysis")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_pred_analysis_multimer_page)
@@ -2481,17 +2438,75 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     # <editor-fold desc="Monomer Local Prediction functions">
+    def _init_local_pred_mono_page(self):
+        # clears everything
+        self.ui.txt_pred_mono_prot_name.clear()
+        self.ui.txt_pred_mono_seq_name.clear()
+        for i in range(self.ui.table_pred_mono_prot_to_predict.rowCount()):
+            self.ui.table_pred_mono_prot_to_predict.removeRow(i)
+        # sets up defaults: Prediction
+        self.ui.btn_pred_mono_next.setEnabled(False)
+        self.ui.btn_pred_mono_add_protein.setEnabled(False)
+        self.ui.lbl_pred_mono_prot_name_status.setText("")
+        self.ui.lbl_pred_mono_seq_name_status.setText("")
+
+    def display_local_pred_mono(self):
+        self._init_local_pred_mono_page()
+        gui_elements_to_show = [
+            self.ui.lbl_pred_mono_prot_to_predict,
+            self.ui.table_pred_mono_prot_to_predict,
+
+            self.ui.btn_pred_mono_seq_to_predict
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+
+            self.ui.lbl_pred_mono_prot_name,
+            self.ui.txt_pred_mono_prot_name,
+            self.ui.lbl_pred_mono_prot_name_status,
+            self.ui.btn_pred_mono_back,
+            self.ui.btn_pred_mono_next,
+
+            self.ui.lbl_pred_mono_seq_name,
+            self.ui.txt_pred_mono_seq_name,
+            self.ui.lbl_pred_mono_seq_name_status,
+            self.ui.btn_pred_mono_back_2,
+            self.ui.btn_pred_mono_add_protein,
+
+            self.ui.lbl_pred_mono_advanced_config,
+            self.ui.btn_pred_mono_advanced_config,
+
+            self.ui.btn_pred_mono_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        styles.color_button_not_ready(self.ui.btn_pred_mono_next)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 19, "Local Monomer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_local_monomer_page)
+
     def local_pred_mono_validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
         """
-        # TODO: does not work as expected
-        if not safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_mono_prot_name.text(),
-                                                                       self.ui.table_pred_mono_prot_to_predict):
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_mono_prot_name.text(),
+                                                                   self.ui.table_pred_mono_prot_to_predict):
             self.ui.lbl_pred_mono_prot_name_status.setText("Protein name already used.")
-        tools.validate_protein_name(self.ui.txt_pred_mono_prot_name,
-                                    self.ui.lbl_pred_mono_prot_name_status,
-                                    self.ui.btn_pred_mono_next)
+            self.ui.btn_pred_mono_next.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_pred_mono_next)
+        else:
+            self.ui.btn_pred_mono_next.setEnabled(True)
+            tools.validate_protein_name(self.ui.txt_pred_mono_prot_name,
+                                        self.ui.lbl_pred_mono_prot_name_status,
+                                        self.ui.btn_pred_mono_next)
+
+    def local_pred_mono_validate_protein_sequence(self):
+        """This function validates the input of the protein sequence in real-time
+
+        """
+        tools.validate_protein_sequence(self.ui.txt_pred_mono_seq_name,
+                                        self.ui.lbl_pred_mono_seq_name_status,
+                                        self.ui.btn_pred_mono_add_protein)
 
     def show_prediction_configuration(self):
         config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(self.prediction_configuration)
@@ -2509,74 +2524,309 @@ class MainWindow(QMainWindow):
         self.ui.lbl_pred_mono_prot_name_status.setText("")
         self.ui.lbl_pred_mono_seq_name_status.setText("")
 
-    def local_pred_mono_validate_protein_sequence(self):
-        """This function validates the input of the protein sequence in real-time
+    def local_pred_mono_add_seq_to_predict(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_mono_prot_to_predict,
+            self.ui.table_pred_mono_prot_to_predict,
 
-        """
-        tools.validate_protein_sequence(self.ui.txt_pred_mono_seq_name,
-                                        self.ui.lbl_pred_mono_seq_name_status,
-                                        self.ui.btn_pred_mono_add_protein)
-
-    def local_pred_mono_show_protein_overview(self):
-        if self.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
-            self.local_pred_monomer_management.show_stage_x(0)
-        else:
-            gui_elements_to_show = [
-                self.ui.btn_pred_mono_seq_to_predict,
-                self.ui.btn_pred_mono_seq_to_predict_remove,
-            ]
-            self.local_pred_monomer_management.show_gui_elements_stage_x(
-                [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
-            )
-
-    def local_pred_mono_show_protein_name(self):
-        gui_elements_to_hide = [
-            self.ui.btn_pred_mono_seq_to_predict,
-            self.ui.btn_pred_mono_seq_to_predict_remove,
-        ]
-        self.local_pred_monomer_management.show_gui_elements_stage_x(
-            [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
-        gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name,
-                                  self.ui.lbl_pred_mono_prot_name)
-
-    def local_pred_mono_show_protein_sequence(self):
-        gui_elements_to_hide = [
-            self.ui.btn_pred_mono_seq_to_predict,
-            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.lbl_pred_mono_prot_name,
+            self.ui.txt_pred_mono_prot_name,
+            self.ui.lbl_pred_mono_prot_name_status,
             self.ui.btn_pred_mono_back,
             self.ui.btn_pred_mono_next,
         ]
-        self.local_pred_monomer_management.show_gui_elements_stage_x(
-            [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
-        gui_utils.disable_text_box(self.ui.txt_pred_mono_prot_name,
-                                   self.ui.lbl_pred_mono_prot_name)
+        gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
+        gui_elements_to_hide = [
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.btn_pred_mono_seq_to_predict,
+
+            self.ui.lbl_pred_mono_seq_name,
+            self.ui.txt_pred_mono_seq_name,
+            self.ui.lbl_pred_mono_seq_name_status,
+            self.ui.btn_pred_mono_back_2,
+            self.ui.btn_pred_mono_add_protein,
+
+            self.ui.lbl_pred_mono_advanced_config,
+            self.ui.btn_pred_mono_advanced_config,
+
+            self.ui.btn_pred_mono_predict
+        ]
+        gui_utils.disable_text_box(self.ui.txt_pred_mono_seq_name, self.ui.lbl_pred_mono_seq_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_pred_mono_next.setEnabled(False)
+        self.ui.txt_pred_mono_prot_name.clear()
+        styles.color_button_not_ready(self.ui.btn_pred_mono_next)
+        if self.ui.table_pred_mono_prot_to_predict.rowCount() > 0:
+            try:
+                self.ui.table_pred_mono_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
+
+    def local_pred_mono_back(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_mono_prot_to_predict,
+            self.ui.table_pred_mono_prot_to_predict,
+
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.btn_pred_mono_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self.ui.lbl_pred_mono_prot_name,
+            self.ui.txt_pred_mono_prot_name,
+            self.ui.lbl_pred_mono_prot_name_status,
+            self.ui.btn_pred_mono_back,
+            self.ui.btn_pred_mono_next,
+
+            self.ui.lbl_pred_mono_seq_name,
+            self.ui.txt_pred_mono_seq_name,
+            self.ui.lbl_pred_mono_seq_name_status,
+            self.ui.btn_pred_mono_back_2,
+            self.ui.btn_pred_mono_add_protein,
+
+            self.ui.lbl_pred_mono_advanced_config,
+            self.ui.btn_pred_mono_advanced_config,
+
+            self.ui.btn_pred_mono_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.local_pred_mono_check_if_table_is_empty()
+        self.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
+
+    def local_pred_mono_next(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_mono_prot_to_predict,
+            self.ui.table_pred_mono_prot_to_predict,
+
+            self.ui.lbl_pred_mono_prot_name,
+            self.ui.txt_pred_mono_prot_name,
+
+            self.ui.lbl_pred_mono_seq_name,
+            self.ui.txt_pred_mono_seq_name,
+            self.ui.lbl_pred_mono_seq_name_status,
+            self.ui.btn_pred_mono_back_2,
+            self.ui.btn_pred_mono_add_protein,
+        ]
+        gui_utils.enable_text_box(self.ui.txt_pred_mono_seq_name, self.ui.lbl_pred_mono_seq_name)
+        gui_elements_to_hide = [
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.btn_pred_mono_seq_to_predict,
+
+            self.ui.lbl_pred_mono_prot_name_status,
+            self.ui.btn_pred_mono_back,
+            self.ui.btn_pred_mono_next,
+
+            self.ui.lbl_pred_mono_advanced_config,
+            self.ui.btn_pred_mono_advanced_config,
+
+            self.ui.btn_pred_mono_predict
+        ]
+        gui_utils.disable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.txt_pred_mono_seq_name.clear()
+
+    def local_pred_mono_back_2(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_mono_prot_to_predict,
+            self.ui.table_pred_mono_prot_to_predict,
+
+            self.ui.lbl_pred_mono_prot_name,
+            self.ui.txt_pred_mono_prot_name,
+            self.ui.lbl_pred_mono_prot_name_status,
+            self.ui.btn_pred_mono_back,
+            self.ui.btn_pred_mono_next
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.btn_pred_mono_seq_to_predict,
+
+            self.ui.lbl_pred_mono_seq_name,
+            self.ui.txt_pred_mono_seq_name,
+            self.ui.lbl_pred_mono_seq_name_status,
+            self.ui.btn_pred_mono_back_2,
+            self.ui.btn_pred_mono_add_protein,
+
+            self.ui.lbl_pred_mono_advanced_config,
+            self.ui.btn_pred_mono_advanced_config,
+
+            self.ui.btn_pred_mono_predict
+        ]
+        gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
+        gui_utils.disable_text_box(self.ui.txt_pred_mono_seq_name, self.ui.lbl_pred_mono_seq_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def local_pred_mono_add_protein(self):
+        self.ui.table_pred_mono_prot_to_predict.setRowCount(self.ui.table_pred_mono_prot_to_predict.rowCount() + 1)
+        self.ui.table_pred_mono_prot_to_predict.insertRow(self.ui.table_pred_mono_prot_to_predict.rowCount() + 1)
+        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0,
+                                                        QTableWidgetItem("A"))
+        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 1,
+                                                        QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
+        self.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(
+            self.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
+            QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
+        self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
+        self.local_pred_mono_check_if_table_is_empty()
+        gui_elements_to_show = [
+            self.ui.lbl_pred_mono_prot_to_predict,
+            self.ui.table_pred_mono_prot_to_predict,
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.btn_pred_mono_seq_to_predict,
+
+            self.ui.lbl_pred_mono_advanced_config,
+            self.ui.btn_pred_mono_advanced_config,
+
+            self.ui.btn_pred_mono_predict
+        ]
+        gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
+        gui_elements_to_hide = [
+            self.ui.lbl_pred_mono_prot_name,
+            self.ui.txt_pred_mono_prot_name,
+            self.ui.lbl_pred_mono_prot_name_status,
+            self.ui.btn_pred_mono_back,
+            self.ui.btn_pred_mono_next,
+
+            self.ui.lbl_pred_mono_seq_name,
+            self.ui.txt_pred_mono_seq_name,
+            self.ui.lbl_pred_mono_seq_name_status,
+            self.ui.btn_pred_mono_back_2,
+            self.ui.btn_pred_mono_add_protein
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_pred_mono_predict.setEnabled(True)
+        self.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
+        styles.color_button_ready(self.ui.btn_pred_mono_predict)
+        self.setup_defaults_monomer_prediction()
+
+    def local_pred_mono_remove(self):
+        self.ui.table_pred_mono_prot_to_predict.removeRow(self.ui.table_pred_mono_prot_to_predict.currentRow())
+        gui_elements_to_show = [
+            self.ui.lbl_pred_mono_prot_to_predict,
+            self.ui.table_pred_mono_prot_to_predict,
+            self.ui.btn_pred_mono_seq_to_predict_remove,
+            self.ui.btn_pred_mono_seq_to_predict,
+
+            self.ui.lbl_pred_mono_advanced_config,
+            self.ui.btn_pred_mono_advanced_config,
+
+            self.ui.btn_pred_mono_predict
+        ]
+        gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
+        gui_elements_to_hide = [
+            self.ui.lbl_pred_mono_prot_name,
+            self.ui.txt_pred_mono_prot_name,
+            self.ui.lbl_pred_mono_prot_name_status,
+            self.ui.btn_pred_mono_back,
+            self.ui.btn_pred_mono_next,
+
+            self.ui.lbl_pred_mono_seq_name,
+            self.ui.txt_pred_mono_seq_name,
+            self.ui.lbl_pred_mono_seq_name_status,
+            self.ui.btn_pred_mono_back_2,
+            self.ui.btn_pred_mono_add_protein
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
+        self.local_pred_mono_check_if_table_is_empty()
+
+    def local_pred_mono_item_changed(self):
+        self.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(True)
 
     def local_pred_mono_check_if_table_is_empty(self):
         if self.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
             styles.color_button_not_ready(self.ui.btn_pred_mono_predict)
             self.ui.btn_pred_mono_predict.setEnabled(False)
+            gui_elements_to_show = [
+                self.ui.lbl_pred_mono_prot_to_predict,
+                self.ui.table_pred_mono_prot_to_predict,
+                self.ui.btn_pred_mono_seq_to_predict
+            ]
+            gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
+            gui_elements_to_hide = [
+                self.ui.btn_pred_mono_seq_to_predict_remove,
+
+                self.ui.lbl_pred_mono_prot_name,
+                self.ui.txt_pred_mono_prot_name,
+                self.ui.lbl_pred_mono_prot_name_status,
+                self.ui.btn_pred_mono_back,
+                self.ui.btn_pred_mono_next,
+
+                self.ui.lbl_pred_mono_seq_name,
+                self.ui.txt_pred_mono_seq_name,
+                self.ui.lbl_pred_mono_seq_name_status,
+                self.ui.btn_pred_mono_back_2,
+                self.ui.btn_pred_mono_add_protein,
+
+                self.ui.lbl_pred_mono_advanced_config,
+                self.ui.btn_pred_mono_advanced_config,
+
+                self.ui.btn_pred_mono_predict
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
         else:
             styles.color_button_ready(self.ui.btn_pred_mono_predict)
             self.ui.btn_pred_mono_predict.setEnabled(True)
 
-    def local_pred_mono_add_protein_to_predict(self):
-        self.ui.table_pred_mono_prot_to_predict.setRowCount(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
-        self.ui.table_pred_mono_prot_to_predict.insertRow(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
-        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0,
-                                                        QTableWidgetItem("A"))
-        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1, 1,
-                                                        QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
-        self.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1,
-                                                                      QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
-        self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
-        self.local_pred_mono_check_if_table_is_empty()
-        self.local_pred_mono_show_protein_overview()
-        self.setup_defaults_monomer_prediction()
-
-    def local_pred_mono_remove_protein_to_predict(self):
-        self.ui.table_pred_mono_prot_to_predict.removeRow(self.ui.table_pred_mono_prot_to_predict.currentRow())
-        self.local_pred_mono_check_if_table_is_empty()
-        self.local_pred_mono_show_protein_overview()
+    # def local_pred_mono_show_protein_overview(self):
+    #     if self.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
+    #         self.local_pred_monomer_management.show_stage_x(0)
+    #     else:
+    #         gui_elements_to_show = [
+    #             self.ui.btn_pred_mono_seq_to_predict,
+    #             self.ui.btn_pred_mono_seq_to_predict_remove,
+    #         ]
+    #         self.local_pred_monomer_management.show_gui_elements_stage_x(
+    #             [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
+    #         )
+    #
+    # def local_pred_mono_show_protein_name(self):
+    #     gui_elements_to_hide = [
+    #         self.ui.btn_pred_mono_seq_to_predict,
+    #         self.ui.btn_pred_mono_seq_to_predict_remove,
+    #     ]
+    #     self.local_pred_monomer_management.show_gui_elements_stage_x(
+    #         [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
+    #     gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name,
+    #                               self.ui.lbl_pred_mono_prot_name)
+    #
+    # def local_pred_mono_show_protein_sequence(self):
+    #     gui_elements_to_hide = [
+    #         self.ui.btn_pred_mono_seq_to_predict,
+    #         self.ui.btn_pred_mono_seq_to_predict_remove,
+    #         self.ui.btn_pred_mono_back,
+    #         self.ui.btn_pred_mono_next,
+    #     ]
+    #     self.local_pred_monomer_management.show_gui_elements_stage_x(
+    #         [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
+    #     gui_utils.disable_text_box(self.ui.txt_pred_mono_prot_name,
+    #                                self.ui.lbl_pred_mono_prot_name)
+    #     gui_utils.enable_text_box(self.ui.txt_pred_mono_seq_name,
+    #                               self.ui.lbl_pred_mono_seq_name)
+    #
+    # def local_pred_mono_add_protein_to_predict(self):
+    #     self.ui.table_pred_mono_prot_to_predict.setRowCount(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
+    #     self.ui.table_pred_mono_prot_to_predict.insertRow(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
+    #     self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0,
+    #                                                     QTableWidgetItem("A"))
+    #     self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1, 1,
+    #                                                     QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
+    #     self.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1,
+    #                                                                   QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
+    #     self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
+    #     self.local_pred_mono_check_if_table_is_empty()
+    #     self.local_pred_mono_show_protein_overview()
+    #     self.setup_defaults_monomer_prediction()
+    #
+    # def local_pred_mono_remove_protein_to_predict(self):
+    #     self.ui.table_pred_mono_prot_to_predict.removeRow(self.ui.table_pred_mono_prot_to_predict.currentRow())
+    #     self.local_pred_mono_check_if_table_is_empty()
+    #     self.local_pred_mono_show_protein_overview()
 
     # def local_pred_mono_validate_protein_name(self):
     #     """This function validates the input of the project name in real-time
@@ -2766,13 +3016,70 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     # <editor-fold desc="Multimer Local Prediction functions">
+    def _init_local_pred_multi_page(self):
+        # clears everything
+        self.ui.txt_pred_multi_prot_name.clear()
+        self.ui.txt_pred_multi_prot_seq.clear()
+        self.ui.list_pred_multi_prot_seq_overview.clear()
+        # sets up defaults: Prediction
+        self.ui.btn_pred_multi_next.setEnabled(False)
+        self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
+        self.ui.lbl_pred_multi_prot_name_status.setText("")
+        self.ui.lbl_pred_multi_prot_seq_status.setText("")
+
+    def display_local_pred_multi(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
+
+            self.ui.btn_pred_multi_prot_to_predict_add,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 20, "Local Multimer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_local_multimer_page)
+
     def local_pred_multi_validate_protein_name(self):
         """This function validates the input of the project name in real-time
 
         """
-        tools.validate_protein_name(self.ui.txt_pred_multi_prot_name,
-                                    self.ui.lbl_pred_multi_prot_name_status,
-                                    self.ui.btn_pred_multi_next)
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_multi_prot_name.text(),
+                                                                   self.ui.table_pred_multi_prot_to_predict):
+            self.ui.lbl_pred_multi_prot_name_status.setText("Protein name already used.")
+            self.ui.btn_pred_multi_next.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_pred_multi_next)
+        else:
+            self.ui.btn_pred_multi_next.setEnabled(True)
+            tools.validate_protein_name(self.ui.txt_pred_multi_prot_name,
+                                        self.ui.lbl_pred_multi_prot_name_status,
+                                        self.ui.btn_pred_multi_next)
 
     def local_pred_multi_validate_protein_sequence(self):
         """This function validates the input of the protein sequence in real-time
@@ -2782,39 +3089,82 @@ class MainWindow(QMainWindow):
                                         self.ui.lbl_pred_multi_prot_seq_status,
                                         self.ui.btn_pred_multi_prot_seq_add)
 
-    def local_pred_multi_show_protein_overview(self):
+    def local_pred_multi_check_if_table_is_empty(self):
         if self.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
-            self.local_pred_multimer_management.show_stage_x(0)
-        else:
+            styles.color_button_not_ready(self.ui.btn_pred_multi_predict)
+            self.ui.btn_pred_multi_predict.setEnabled(False)
             gui_elements_to_show = [
+                self.ui.lbl_pred_multi_prot_to_predict,
+                self.ui.table_pred_multi_prot_to_predict,
+
+                self.ui.btn_pred_multi_prot_to_predict_add,
+            ]
+            gui_elements_to_hide = [
+                self.ui.btn_pred_multi_prot_to_predict_remove,
+
+                self.ui.lbl_pred_multi_prot_name_status,
+                self.ui.btn_pred_multi_back,
+                self.ui.btn_pred_multi_next,
+                self.ui.lbl_pred_multi_prot_name,
+                self.ui.txt_pred_multi_prot_name,
+
+                self.ui.lbl_pred_multi_prot_seq,
+                self.ui.txt_pred_multi_prot_seq,
+                self.ui.lbl_pred_multi_prot_seq_status,
+                self.ui.lbl_pred_multi_prot_seq_add,
+                self.ui.btn_pred_multi_prot_seq_add,
+                self.ui.lbl_pred_multi_prot_seq_overview,
+                self.ui.list_pred_multi_prot_seq_overview,
+                self.ui.btn_pred_multi_prot_seq_overview_remove,
+                self.ui.lbl_pred_multi_prot_to_predict_2,
+                self.ui.btn_pred_multi_back_2,
+                self.ui.btn_pred_multi_prot_to_predict_add_2,
+
+                self.ui.lbl_pred_multi_advanced_config,
+                self.ui.btn_pred_multi_advanced_config,
+
+                self.ui.btn_pred_multi_predict
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_multi_predict)
+            self.ui.btn_pred_multi_predict.setEnabled(True)
+            gui_elements_to_show = [
+                self.ui.lbl_pred_multi_prot_to_predict,
+                self.ui.table_pred_multi_prot_to_predict,
+
                 self.ui.btn_pred_multi_prot_to_predict_add,
                 self.ui.btn_pred_multi_prot_to_predict_remove,
+
+                self.ui.lbl_pred_multi_advanced_config,
+                self.ui.btn_pred_multi_advanced_config,
+
+                self.ui.btn_pred_multi_predict
             ]
-            self.local_pred_multimer_management.show_gui_elements_stage_x(
-                [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
-            )
+            gui_elements_to_hide = [
+                self.ui.lbl_pred_multi_prot_name_status,
+                self.ui.btn_pred_multi_back,
+                self.ui.btn_pred_multi_next,
+                self.ui.lbl_pred_multi_prot_name,
+                self.ui.txt_pred_multi_prot_name,
 
-    def local_pred_multi_show_protein_name(self):
-        gui_elements_to_hide = [
-            self.ui.btn_pred_multi_prot_to_predict_add,
-            self.ui.btn_pred_multi_prot_to_predict_remove,
-        ]
-        self.local_pred_multimer_management.show_gui_elements_stage_x(
-            [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
-        gui_utils.enable_text_box(self.ui.txt_pred_multi_prot_name,
-                                  self.ui.lbl_pred_multi_prot_name)
-
-    def local_pred_multi_show_protein_sequence(self):
-        gui_elements_to_hide = [
-            self.ui.btn_pred_multi_prot_to_predict_add,
-            self.ui.btn_pred_multi_prot_to_predict_remove,
-            self.ui.btn_pred_multi_back,
-            self.ui.btn_pred_multi_next,
-        ]
-        self.local_pred_multimer_management.show_gui_elements_stage_x(
-            [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
-        gui_utils.disable_text_box(self.ui.txt_pred_multi_prot_name,
-                                   self.ui.lbl_pred_multi_prot_name)
+                self.ui.lbl_pred_multi_prot_seq,
+                self.ui.txt_pred_multi_prot_seq,
+                self.ui.lbl_pred_multi_prot_seq_status,
+                self.ui.lbl_pred_multi_prot_seq_add,
+                self.ui.btn_pred_multi_prot_seq_add,
+                self.ui.lbl_pred_multi_prot_seq_overview,
+                self.ui.list_pred_multi_prot_seq_overview,
+                self.ui.btn_pred_multi_prot_seq_overview_remove,
+                self.ui.lbl_pred_multi_prot_to_predict_2,
+                self.ui.btn_pred_multi_back_2,
+                self.ui.btn_pred_multi_prot_to_predict_add_2
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
 
     def local_pred_multi_add_sequence_to_list(self):
         self.ui.list_pred_multi_prot_seq_overview.addItem(QListWidgetItem(self.ui.txt_pred_multi_prot_seq.toPlainText()))
@@ -2823,6 +3173,7 @@ class MainWindow(QMainWindow):
     def local_pred_multi_remove_sequence_to_list(self):
         self.ui.list_pred_multi_prot_seq_overview.takeItem(self.ui.list_pred_multi_prot_seq_overview.currentRow())
         self.local_pred_multi_check_if_list_is_empty()
+        self.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(False)
 
     def local_pred_multi_check_if_list_is_empty(self):
         if self.ui.list_pred_multi_prot_seq_overview.count() == 0:
@@ -2832,17 +3183,205 @@ class MainWindow(QMainWindow):
             styles.color_button_ready(self.ui.btn_pred_multi_prot_to_predict_add_2)
             self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(True)
 
-    def local_pred_multi_check_if_table_is_empty(self):
-        if self.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self.ui.btn_pred_multi_predict)
-            self.ui.btn_pred_multi_predict.setEnabled(False)
-            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-        else:
-            styles.color_button_ready(self.ui.btn_pred_multi_predict)
-            self.ui.btn_pred_multi_predict.setEnabled(True)
-            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
+    def local_pred_multi_add(self):
+        gui_elements = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_multi_prot_to_predict_add,
 
-    def local_pred_multi_add_protein_to_predict(self):
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_elements_to_show = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
+
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_multi_prot_name, self.ui.lbl_pred_multi_prot_name)
+        gui_utils.disable_text_box(self.ui.txt_pred_multi_prot_seq, self.ui.lbl_pred_multi_prot_seq)
+        self.ui.btn_pred_multi_next.setEnabled(False)
+        self.ui.txt_pred_multi_prot_name.clear()
+        styles.color_button_not_ready(self.ui.btn_pred_multi_next)
+        if self.ui.table_pred_multi_prot_to_predict.rowCount() > 0:
+            try:
+                self.ui.table_pred_multi_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Multimer Prediction in overview table.")
+
+    def local_pred_multi_back(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
+            self.ui.btn_pred_multi_prot_to_predict_add,
+
+
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.local_pred_multi_check_if_table_is_empty()
+
+    def local_pred_multi_next(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
+
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_multi_prot_seq, self.ui.lbl_pred_multi_prot_seq)
+        gui_utils.disable_text_box(self.ui.txt_pred_multi_prot_name, self.ui.lbl_pred_multi_prot_name)
+        self.ui.txt_pred_multi_prot_seq.clear()
+        self.ui.list_pred_multi_prot_seq_overview.clear()
+        self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
+        self.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(False)
+        styles.color_button_not_ready(self.ui.btn_pred_multi_prot_to_predict_add_2)
+
+    def local_pred_multi_back_2(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
+
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_multi_prot_name, self.ui.lbl_pred_multi_prot_name)
+        gui_utils.disable_text_box(self.ui.txt_pred_multi_prot_seq, self.ui.lbl_pred_multi_prot_seq)
+
+    def local_pred_multi_prot_seq_overview_item_changed(self):
+        self.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(True)
+
+    def local_pred_multi_prot_to_predict_item_changed(self):
+        self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
+
+    def local_pred_multi_prot_to_predict_add_2(self):
         for i in range(self.ui.list_pred_multi_prot_seq_overview.count()):
             self.ui.table_pred_multi_prot_to_predict.setRowCount(
                 self.ui.table_pred_multi_prot_to_predict.rowCount() + 1)
@@ -2856,17 +3395,119 @@ class MainWindow(QMainWindow):
             self.ui.table_pred_multi_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.rowCount()-1, name_item)
         self.ui.table_pred_multi_prot_to_predict.resizeColumnsToContents()
         self.local_pred_multi_check_if_table_is_empty()
-        self.local_pred_multi_show_protein_overview()
-        self._init_local_pred_multi_page()
+        gui_elements_to_show = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
 
-    def local_pred_multi_remove_protein_to_predict(self):
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_elements_to_hide = [
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._init_local_pred_multi_page()
+        self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+
+    def local_pred_multi_remove(self):
         self.ui.table_pred_multi_prot_to_predict.removeRow(self.ui.table_pred_multi_prot_to_predict.currentRow())
-        prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.currentRow()).text()
-        for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount()):
-            if self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                self.ui.table_pred_multi_prot_to_predict.setItem(i, 0, QTableWidgetItem(constants.chain_dict.get(i)))
+        if self.ui.table_pred_multi_prot_to_predict.rowCount() > 0:
+            prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.currentRow()).text()
+            for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount()):
+                if self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
+                    self.ui.table_pred_multi_prot_to_predict.setItem(i, 0, QTableWidgetItem(constants.chain_dict.get(i)))
         self.local_pred_multi_check_if_table_is_empty()
-        self.local_pred_multi_show_protein_overview()
+        gui_elements_to_show = [
+            self.ui.lbl_pred_multi_prot_to_predict,
+            self.ui.table_pred_multi_prot_to_predict,
+
+            self.ui.btn_pred_multi_prot_to_predict_remove,
+            self.ui.btn_pred_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_multi_advanced_config,
+            self.ui.btn_pred_multi_advanced_config,
+
+            self.ui.btn_pred_multi_predict
+        ]
+        gui_elements_to_hide = [
+            self.ui.lbl_pred_multi_prot_name_status,
+            self.ui.btn_pred_multi_back,
+            self.ui.btn_pred_multi_next,
+            self.ui.lbl_pred_multi_prot_name,
+            self.ui.txt_pred_multi_prot_name,
+
+            self.ui.lbl_pred_multi_prot_seq,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add,
+            self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.lbl_pred_multi_prot_seq_overview,
+            self.ui.list_pred_multi_prot_seq_overview,
+            self.ui.btn_pred_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_multi_prot_to_predict_2,
+            self.ui.btn_pred_multi_back_2,
+            self.ui.btn_pred_multi_prot_to_predict_add_2
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        self.local_pred_multi_check_if_table_is_empty()
+
+    # def local_pred_multi_show_protein_overview(self):
+    #     if self.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
+    #         self.local_pred_multimer_management.show_stage_x(0)
+    #     else:
+    #         gui_elements_to_show = [
+    #             self.ui.btn_pred_multi_prot_to_predict_add,
+    #             self.ui.btn_pred_multi_prot_to_predict_remove,
+    #         ]
+    #         self.local_pred_multimer_management.show_gui_elements_stage_x(
+    #             [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
+    #         )
+    #
+    # def local_pred_multi_show_protein_name(self):
+    #     gui_elements_to_hide = [
+    #         self.ui.btn_pred_multi_prot_to_predict_add,
+    #         self.ui.btn_pred_multi_prot_to_predict_remove,
+    #     ]
+    #     self.local_pred_multimer_management.show_gui_elements_stage_x(
+    #         [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
+    #     gui_utils.enable_text_box(self.ui.txt_pred_multi_prot_name,
+    #                               self.ui.lbl_pred_multi_prot_name)
+    #
+    # def local_pred_multi_show_protein_sequence(self):
+    #     gui_elements_to_hide = [
+    #         self.ui.btn_pred_multi_prot_to_predict_add,
+    #         self.ui.btn_pred_multi_prot_to_predict_remove,
+    #         self.ui.btn_pred_multi_back,
+    #         self.ui.btn_pred_multi_next,
+    #     ]
+    #     self.local_pred_multimer_management.show_gui_elements_stage_x(
+    #         [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
+    #     gui_utils.disable_text_box(self.ui.txt_pred_multi_prot_name,
+    #                                self.ui.lbl_pred_multi_prot_name)
 
     def predict_local_multimer(self):
         self.prediction_type = constants.PREDICTION_TYPE_PRED
@@ -2935,13 +3576,16 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-        # TODO: does not work as expected
-        if not safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_analysis_mono_prot_name.text(),
-                                                                       self.ui.table_pred_analysis_mono_prot_to_predict):
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_analysis_mono_prot_name.text(),
+                                                                   self.ui.table_pred_analysis_mono_prot_to_predict):
             self.ui.lbl_pred_analysis_mono_prot_name_status.setText("Protein name already used.")
-        tools.validate_protein_name(self.ui.txt_pred_analysis_mono_prot_name,
-                                    self.ui.lbl_pred_analysis_mono_prot_name_status,
-                                    self.ui.btn_pred_analysis_mono_next)
+            self.ui.btn_pred_analysis_mono_next.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_pred_analysis_mono_next)
+        else:
+            self.ui.btn_pred_analysis_mono_next.setEnabled(True)
+            tools.validate_protein_name(self.ui.txt_pred_analysis_mono_prot_name,
+                                        self.ui.lbl_pred_analysis_mono_prot_name_status,
+                                        self.ui.btn_pred_analysis_mono_next)
 
     def setup_defaults_monomer_prediction_analysis(self):
         # clears everything
@@ -2994,6 +3638,8 @@ class MainWindow(QMainWindow):
             [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
         gui_utils.disable_text_box(self.ui.txt_pred_analysis_mono_prot_name,
                                    self.ui.lbl_pred_analysis_mono_prot_name)
+        gui_utils.enable_text_box(self.ui.txt_pred_analysis_mono_seq_name,
+                                  self.ui.lbl_pred_analysis_mono_seq_name)
 
     def mono_pred_analysis_check_if_table_is_empty(self):
         if self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() == 0:
@@ -3015,7 +3661,7 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         self.mono_pred_analysis_check_if_table_is_empty()
         self.mono_pred_analysis_show_protein_overview()
-        self.setup_defaults_monomer_prediction()
+        self.setup_defaults_monomer_prediction_analysis()
 
     def mono_pred_analysis_remove_protein_to_predict(self):
         self.ui.table_pred_analysis_mono_prot_to_predict.removeRow(self.ui.table_pred_analysis_mono_prot_to_predict.currentRow())
@@ -3266,9 +3912,16 @@ class MainWindow(QMainWindow):
         """This function validates the input of the project name in real-time
 
         """
-        tools.validate_protein_name(self.ui.txt_pred_analysis_multi_prot_name,
-                                    self.ui.lbl_pred_analysis_multi_prot_name_status,
-                                    self.ui.btn_pred_analysis_multi_next)
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_analysis_multi_prot_name.text(),
+                                                                   self.ui.table_pred_analysis_multi_prot_to_predict):
+            self.ui.lbl_pred_analysis_multi_prot_name_status.setText("Protein name already used.")
+            self.ui.btn_pred_analysis_multi_next.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next)
+        else:
+            self.ui.btn_pred_analysis_multi_next.setEnabled(True)
+            tools.validate_protein_name(self.ui.txt_pred_analysis_multi_prot_name,
+                                        self.ui.lbl_pred_analysis_multi_prot_name_status,
+                                        self.ui.btn_pred_analysis_multi_next)
 
     def multi_pred_analysis_validate_protein_sequence(self):
         """This function validates the input of the protein sequence in real-time
@@ -3335,7 +3988,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_multi_predict.setEnabled(False)
             self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
         else:
-            styles.color_button_ready(self.ui.btn_pred_multi_predict)
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_go_analysis_setup)
             self.ui.btn_pred_multi_predict.setEnabled(True)
             self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
 
