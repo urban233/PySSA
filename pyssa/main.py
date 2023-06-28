@@ -3922,6 +3922,7 @@ class MainWindow(QMainWindow):
             return
         # TODO: check if the function below works correctly
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         # session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
         #                                     QMessageBox.Information)
         # if session_msg is True:
@@ -4008,7 +4009,7 @@ class MainWindow(QMainWindow):
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
         self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
-
+        QApplication.restoreOverrideCursor()
         # </editor-fold>
 
     def color_protein_pair_by_rmsd(self):
