@@ -266,6 +266,7 @@ class MainWindow(QMainWindow):
         # create tooltips
         self._create_all_tooltips()
         self._project_watcher.show_valid_options(self.ui)
+        self._project_watcher.check_workspace_for_projects(self.workspace_path, self.ui)
         self.project_scanner = filesystem_io.ProjectScanner(self.app_project)
         # sets threadpool
         self.threadpool = QtCore.QThreadPool()
@@ -1060,14 +1061,14 @@ class MainWindow(QMainWindow):
         # </editor-fold>
 
         # <editor-fold desc="Batch analysis page">
-        self.ui.btn_analysis_batch_add.clicked.connect(self.show_batch_analysis_stage_1)
+        self.ui.btn_analysis_batch_add.clicked.connect(self.structure_analysis_add)
         self.ui.btn_analysis_batch_remove.clicked.connect(self.remove_analysis_run)
-        self.ui.btn_analysis_batch_back.clicked.connect(self.show_batch_analysis_stage_0)
-        self.ui.btn_analysis_batch_next.clicked.connect(self.show_batch_analysis_stage_2)
-        self.ui.btn_analysis_batch_back_2.clicked.connect(self.show_batch_analysis_stage_1)
-        self.ui.btn_analysis_batch_next_2.clicked.connect(self.show_batch_analysis_stage_3)
-        self.ui.btn_analysis_batch_back_3.clicked.connect(self.show_batch_analysis_stage_2)
-        self.ui.btn_analysis_batch_next_3.clicked.connect(self.show_batch_analysis_stage_0)
+        self.ui.btn_analysis_batch_back.clicked.connect(self.structure_analysis_back)
+        self.ui.btn_analysis_batch_next.clicked.connect(self.structure_analysis_next)
+        self.ui.btn_analysis_batch_back_2.clicked.connect(self.structure_analysis_back_2)
+        self.ui.btn_analysis_batch_next_2.clicked.connect(self.structure_analysis_next_2)
+        self.ui.btn_analysis_batch_back_3.clicked.connect(self.structure_analysis_back_3)
+        self.ui.btn_analysis_batch_next_3.clicked.connect(self.structure_analysis_next_3)
         self.ui.box_analysis_batch_prot_struct_1.currentIndexChanged.connect(
             self.check_if_prot_structs_are_filled_batch)
         self.ui.box_analysis_batch_prot_struct_2.currentIndexChanged.connect(
@@ -1077,6 +1078,7 @@ class MainWindow(QMainWindow):
         self.ui.list_analysis_batch_model_chains.itemSelectionChanged.connect(
             self.check_if_same_no_of_chains_selected_batch)
         self.ui.btn_analysis_batch_start.clicked.connect(self.start_process_batch)
+        self.ui.list_analysis_batch_overview.clicked.connect(self.structure_analysis_overview_clicked)
 
         # </editor-fold>
 
@@ -2080,6 +2082,9 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(self.workspace.text())
             tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_delete_projects)
             constants.PYSSA_LOGGER.info(f"The project {tmp_project_name} was successfully deleted.")
+            if self.ui.list_delete_projects.count() == 0:
+                self.display_home_page()
+                self._project_watcher.check_workspace_for_projects(self.workspace_path, self.ui)
         else:
             constants.PYSSA_LOGGER.info("No project has been deleted. No changes were made.")
             return
@@ -4220,6 +4225,337 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     # <editor-fold desc="Structure Analysis functions">
+    def structure_analysis_add(self):
+        gui_elements = [
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.btn_analysis_batch_remove,
+            self.ui.btn_analysis_batch_add,
+
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next,
+
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2,
+
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start
+        ]
+
+        gui_elements_to_show = [
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next
+
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_analysis_batch_remove,
+            self.ui.btn_analysis_batch_add,
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2,
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.lbl_analysis_batch_prot_struct_1.clear()
+        self.ui.lbl_analysis_batch_prot_struct_2.clear()
+        self.ui.lbl_analysis_batch_prot_struct_1.setText("Protein structure 1")
+        self.ui.lbl_analysis_batch_prot_struct_2.setText("Protein structure 2")
+        self.fill_protein_boxes_batch()
+        if self.ui.list_analysis_batch_overview.count() > 0:
+            try:
+                self.ui.list_analysis_batch_overview.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
+
+    def structure_analysis_next(self):
+        gui_elements_to_show = [
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2,
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_analysis_batch_remove,
+            self.ui.btn_analysis_batch_add,
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next,
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.lbl_analysis_batch_prot_struct_1.setText(self.ui.box_analysis_batch_prot_struct_1.currentText())
+        self.ui.lbl_analysis_batch_prot_struct_2.setText(self.ui.box_analysis_batch_prot_struct_2.currentText())
+        self.ui.list_analysis_batch_ref_chains.clear()
+        self.ui.btn_analysis_batch_next_2.setEnabled(False)
+        self.ui.list_analysis_batch_ref_chains.setEnabled(True)
+
+        tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_1.currentText())
+        for tmp_chain in tmp_protein.chains:
+            if tmp_chain.chain_type == "protein_chain":
+                self.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
+        if self.ui.list_analysis_batch_ref_chains.count() == 1:
+            self.ui.lbl_analysis_batch_ref_chains.setText(
+                f"Select chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
+        else:
+            self.ui.lbl_analysis_batch_ref_chains.setText(
+                f"Select chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
+
+    def structure_analysis_back(self):
+        gui_elements_to_show = [
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.btn_analysis_batch_add
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_analysis_batch_remove,
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2,
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next,
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self.ui.list_analysis_batch_overview.count() > 0:
+            self.ui.btn_analysis_batch_remove.show()
+            self.ui.btn_analysis_batch_remove.setEnabled(False)
+            self.ui.btn_analysis_batch_start.show()
+            self.ui.lbl_analysis_batch_images.show()
+            self.ui.cb_analysis_batch_images.show()
+            styles.color_button_ready(self.ui.btn_analysis_batch_start)
+
+    def structure_analysis_next_2(self):
+        gui_elements_to_show = [
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_analysis_batch_remove,
+            self.ui.btn_analysis_batch_add,
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2,
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.list_analysis_batch_model_chains.clear()
+        self.ui.list_analysis_batch_ref_chains.setEnabled(False)
+        self.ui.btn_analysis_batch_next_3.setEnabled(False)
+
+        tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_2.currentText())
+        for tmp_chain in tmp_protein.chains:
+            if tmp_chain.chain_type == "protein_chain":
+                self.ui.list_analysis_batch_model_chains.addItem(tmp_chain.chain_letter)
+        if len(self.ui.list_analysis_batch_ref_chains.selectedItems()) == 1:
+            self.ui.lbl_analysis_batch_model_chains.setText(
+                f"Select 1 chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.")
+        else:
+            self.ui.lbl_analysis_batch_model_chains.setText(
+                f"Select {len(self.ui.list_analysis_batch_ref_chains.selectedItems())} chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.")
+
+    def structure_analysis_back_2(self):
+        gui_elements_to_show = [
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next
+
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_analysis_batch_remove,
+            self.ui.btn_analysis_batch_add,
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2,
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.lbl_analysis_batch_prot_struct_1.setText("Protein structure 1")
+        self.ui.lbl_analysis_batch_prot_struct_2.setText("Protein structure 2")
+
+    def structure_analysis_next_3(self):
+        gui_elements_to_show = [
+            self.ui.btn_analysis_batch_remove,
+            self.ui.btn_analysis_batch_add,
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        prot_1_name = self.ui.lbl_analysis_batch_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self.ui.list_analysis_batch_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self.ui.list_analysis_batch_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        item = QListWidgetItem(analysis_name)
+        self.ui.list_analysis_batch_overview.addItem(item)
+        self.ui.btn_analysis_batch_remove.setEnabled(False)
+        styles.color_button_ready(self.ui.btn_analysis_batch_start)
+
+    def structure_analysis_back_3(self):
+        gui_elements_to_show = [
+            self.ui.lbl_analysis_batch_overview,
+            self.ui.list_analysis_batch_overview,
+            self.ui.lbl_analysis_batch_prot_struct_1,
+            self.ui.lbl_analysis_batch_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs,
+            self.ui.lbl_analysis_batch_ref_chains,
+            self.ui.list_analysis_batch_ref_chains,
+            self.ui.btn_analysis_batch_back_2,
+            self.ui.btn_analysis_batch_next_2
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_analysis_batch_remove,
+            self.ui.btn_analysis_batch_add,
+            self.ui.box_analysis_batch_prot_struct_1,
+            self.ui.box_analysis_batch_prot_struct_2,
+            self.ui.btn_analysis_batch_back,
+            self.ui.btn_analysis_batch_next,
+            self.ui.btn_analysis_batch_back_3,
+            self.ui.btn_analysis_batch_next_3,
+            self.ui.lbl_analysis_batch_images,
+            self.ui.cb_analysis_batch_images,
+            self.ui.btn_analysis_batch_start,
+            self.ui.lbl_analysis_batch_model_chains,
+            self.ui.list_analysis_batch_model_chains,
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.list_analysis_batch_ref_chains.setEnabled(True)
+
+        # tmp_protein = self.app_project.search_protein(self.ui.box_analysis_batch_prot_struct_2.currentText())
+        # for tmp_chain in tmp_protein.chains:
+        #     if tmp_chain.chain_type == "protein_chain":
+        #         self.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
+
+    def structure_analysis_overview_clicked(self):
+        self.ui.btn_analysis_batch_remove.setEnabled(True)
+
+
+
     def show_batch_analysis_stage_0(self):
         gui_page_management.show_analysis_page_stage_0(self.batch_analysis_management,
                                                        self.ui.list_analysis_batch_ref_chains,
@@ -4287,15 +4623,69 @@ class MainWindow(QMainWindow):
     def remove_analysis_run(self):
         self.ui.list_analysis_batch_overview.takeItem(self.ui.list_analysis_batch_overview.currentRow())
         if self.ui.list_analysis_batch_overview.count() == 0:
-            self.batch_analysis_management.show_stage_x(0)
+            gui_elements_to_show = [
+                self.ui.lbl_analysis_batch_overview,
+                self.ui.list_analysis_batch_overview,
+                self.ui.btn_analysis_batch_add
+            ]
+
+            gui_elements_to_hide = [
+                self.ui.btn_analysis_batch_remove,
+                self.ui.lbl_analysis_batch_prot_struct_1,
+                self.ui.lbl_analysis_batch_prot_struct_2,
+                self.ui.lbl_analysis_batch_vs,
+                self.ui.lbl_analysis_batch_ref_chains,
+                self.ui.list_analysis_batch_ref_chains,
+                self.ui.btn_analysis_batch_back_2,
+                self.ui.btn_analysis_batch_next_2,
+                self.ui.box_analysis_batch_prot_struct_1,
+                self.ui.box_analysis_batch_prot_struct_2,
+                self.ui.btn_analysis_batch_back,
+                self.ui.btn_analysis_batch_next,
+                self.ui.lbl_analysis_batch_model_chains,
+                self.ui.list_analysis_batch_model_chains,
+                self.ui.btn_analysis_batch_back_3,
+                self.ui.btn_analysis_batch_next_3,
+                self.ui.lbl_analysis_batch_images,
+                self.ui.cb_analysis_batch_images,
+                self.ui.btn_analysis_batch_start
+            ]
+
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
             self.ui.btn_analysis_batch_remove.hide()
+        else:
+            if self.ui.list_analysis_batch_overview.count() > 0:
+                try:
+                    self.ui.list_analysis_batch_overview.currentItem().setSelected(False)
+                except AttributeError:
+                    constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
+        self.ui.btn_analysis_batch_remove.setEnabled(False)
 
     def check_if_same_no_of_chains_selected_batch(self):
         self.ui.btn_analysis_batch_next_3.setEnabled(False)
         styles.color_button_not_ready(self.ui.btn_analysis_batch_next_3)
+
         if self.no_of_selected_chains == len(self.ui.list_analysis_batch_model_chains.selectedItems()):
             styles.color_button_ready(self.ui.btn_analysis_batch_next_3)
             self.ui.btn_analysis_batch_next_3.setEnabled(True)
+
+        prot_1_name = self.ui.lbl_analysis_batch_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self.ui.list_analysis_batch_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self.ui.list_analysis_batch_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        for tmp_row in range(self.ui.list_analysis_batch_overview.count()):
+            if analysis_name == self.ui.list_analysis_batch_overview.item(tmp_row).text():
+                self.ui.btn_analysis_batch_next_3.setEnabled(False)
+                styles.color_button_not_ready(self.ui.btn_analysis_batch_next_3)
+                return
 
     def check_if_prot_structs_are_filled_batch(self):
         prot_1 = self.ui.box_analysis_batch_prot_struct_1.itemText(self.ui.box_analysis_batch_prot_struct_1.currentIndex())
@@ -4635,6 +5025,7 @@ class MainWindow(QMainWindow):
             return
         # TODO: check if the function below works correctly
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         # session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
         #                                     QMessageBox.Information)
         # if session_msg is True:
@@ -4768,7 +5159,7 @@ class MainWindow(QMainWindow):
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
         self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
-
+        QApplication.restoreOverrideCursor()
         # </editor-fold>
 
     def color_protein_pair_by_rmsd(self):
