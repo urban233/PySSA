@@ -1083,8 +1083,10 @@ class MainWindow(QMainWindow):
         # <editor-fold desc="Analysis images page">
         self.ui.btn_add_analysis_images_struct_analysis.clicked.connect(self.add_protein_pair_to_image_creation_queue)
         self.ui.list_analysis_images_struct_analysis.doubleClicked.connect(self.add_protein_pair_to_image_creation_queue)
+        self.ui.list_analysis_images_struct_analysis.clicked.connect(self.analysis_images_enable_add)
         self.ui.btn_remove_analysis_images_creation_struct_analysis.clicked.connect(self.remove_protein_pair_from_image_creation_queue)
         self.ui.list_analysis_images_creation_struct_analysis.doubleClicked.connect(self.remove_protein_pair_from_image_creation_queue)
+        self.ui.list_analysis_images_creation_struct_analysis.clicked.connect(self.analysis_images_enable_remove)
         self.ui.btn_start_automatic_image_creation.clicked.connect(self.start_automatic_image_creation)
 
         # </editor-fold>
@@ -1466,19 +1468,7 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_results_page)
         self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
 
-    def display_image_analysis_page(self):
-        """This function displays the analysis image work area
 
-        """
-        # get all protein pairs without images
-        self.ui.list_analysis_images_struct_analysis.clear()
-        self.ui.list_analysis_images_creation_struct_analysis.clear()
-        for tmp_protein_pair in self.app_project.protein_pairs:
-            if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
-                self.ui.list_analysis_images_struct_analysis.addItem(tmp_protein_pair.name)
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_image_analysis_page)
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 23, "Analysis Images")
 
     def display_image_page(self):
         """This function displays the image work area
@@ -4523,15 +4513,50 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     # <editor-fold desc="Analysis Images">
+    def display_image_analysis_page(self):
+        """This function displays the analysis image work area
+
+        """
+        # get all protein pairs without images
+        self.ui.list_analysis_images_struct_analysis.clear()
+        self.ui.list_analysis_images_creation_struct_analysis.clear()
+        for tmp_protein_pair in self.app_project.protein_pairs:
+            if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
+                self.ui.list_analysis_images_struct_analysis.addItem(tmp_protein_pair.name)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_image_analysis_page)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 23, "Analysis Images")
+        self.ui.btn_add_analysis_images_struct_analysis.setEnabled(False)
+        self.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
+        self.ui.btn_start_automatic_image_creation.setEnabled(False)
+
+    def analysis_images_enable_add(self):
+        self.ui.btn_add_analysis_images_struct_analysis.setEnabled(True)
+
+    def analysis_images_enable_remove(self):
+        self.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(True)
+
     def add_protein_pair_to_image_creation_queue(self):
         protein_pair_to_add = self.ui.list_analysis_images_struct_analysis.currentItem().text()
         self.ui.list_analysis_images_creation_struct_analysis.addItem(protein_pair_to_add)
         self.ui.list_analysis_images_struct_analysis.takeItem(self.ui.list_analysis_images_struct_analysis.currentRow())
+        self.ui.btn_add_analysis_images_struct_analysis.setEnabled(False)
+        self.analysis_images_check_if_creation_can_start()
 
     def remove_protein_pair_from_image_creation_queue(self):
         protein_pair_to_remove = self.ui.list_analysis_images_creation_struct_analysis.currentItem()
         self.ui.list_analysis_images_creation_struct_analysis.takeItem(self.ui.list_analysis_images_creation_struct_analysis.currentRow())
         self.ui.list_analysis_images_struct_analysis.addItem(protein_pair_to_remove)
+        self.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
+        self.analysis_images_check_if_creation_can_start()
+
+    def analysis_images_check_if_creation_can_start(self):
+        if self.ui.list_analysis_images_creation_struct_analysis.count() > 0:
+            self.ui.btn_start_automatic_image_creation.setEnabled(True)
+            styles.color_button_ready(self.ui.btn_start_automatic_image_creation)
+        else:
+            self.ui.btn_start_automatic_image_creation.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_start_automatic_image_creation)
 
     def post_image_creation_process(self):
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
