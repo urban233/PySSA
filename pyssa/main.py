@@ -237,6 +237,8 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.ui.table_pred_mono_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
         self.ui.table_pred_multi_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
+        self.ui.list_pred_analysis_multi_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_pred_analysis_multi_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
 
         # helper attributes
         self.pymol_session_specs = {
@@ -1026,31 +1028,34 @@ class MainWindow(QMainWindow):
 
         # <editor-fold desc="Multimer Prediction + Analysis page">
         # <editor-fold desc="Prediction section">
-        self.ui.btn_pred_analysis_multi_prot_to_predict_add.clicked.connect(self.multi_pred_analysis_show_protein_name)
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add.clicked.connect(self.multi_pred_analysis_add)
         self.ui.btn_pred_analysis_multi_prot_to_predict_remove.clicked.connect(self.multi_pred_analysis_remove_protein_to_predict)
-        self.ui.btn_pred_analysis_multi_next.clicked.connect(self.multi_pred_analysis_show_protein_sequence)
-        self.ui.btn_pred_analysis_multi_back.clicked.connect(self.multi_pred_analysis_show_protein_overview)
+        self.ui.btn_pred_analysis_multi_next.clicked.connect(self.multi_pred_analysis_next)
+        self.ui.btn_pred_analysis_multi_back.clicked.connect(self.multi_pred_analysis_back)
         self.ui.btn_pred_analysis_multi_prot_seq_add.clicked.connect(self.multi_pred_analysis_add_sequence_to_list)
         self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.clicked.connect(self.multi_pred_analysis_remove_sequence_to_list)
         self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.clicked.connect(self.multi_pred_analysis_add_protein_to_predict)
-        self.ui.btn_pred_analysis_multi_back_2.clicked.connect(self.multi_pred_analysis_show_protein_name)
+        self.ui.btn_pred_analysis_multi_back_2.clicked.connect(self.multi_pred_analysis_back_2)
 
         self.ui.txt_pred_analysis_multi_prot_name.textChanged.connect(self.multi_pred_analysis_validate_protein_name)
         self.ui.txt_pred_analysis_multi_prot_seq.textChanged.connect(self.multi_pred_analysis_validate_protein_sequence)
         self.ui.btn_pred_analysis_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_pred_analysis_multi_go_analysis_setup.clicked.connect(self.switch_multimer_pred_analysis_tab)
 
+        self.ui.list_pred_analysis_multi_prot_seq_overview.clicked.connect(self.multi_pred_analysis_prot_seq_overview_item_changed)
+        self.ui.table_pred_analysis_multi_prot_to_predict.itemSelectionChanged.connect(self.multi_pred_analysis_prot_to_predict_item_changed)
+
         # </editor-fold>
 
         # <editor-fold desc="Analysis section">
-        self.ui.btn_pred_analysis_multi_add.clicked.connect(self.show_multi_pred_analysis_stage_1)
+        self.ui.btn_pred_analysis_multi_add.clicked.connect(self.multi_pred_analysis_structure_analysis_add)
         self.ui.btn_pred_analysis_multi_remove.clicked.connect(self.remove_multi_pred_analysis_analysis_run)
-        self.ui.btn_pred_analysis_multi_back_3.clicked.connect(self.show_multi_pred_analysis_stage_0)
-        self.ui.btn_pred_analysis_multi_next_2.clicked.connect(self.show_multi_pred_analysis_stage_2)
-        self.ui.btn_pred_analysis_multi_back_4.clicked.connect(self.show_multi_pred_analysis_stage_1)
-        self.ui.btn_pred_analysis_multi_next_3.clicked.connect(self.show_multi_pred_analysis_stage_3)
-        self.ui.btn_pred_analysis_multi_back_5.clicked.connect(self.show_multi_pred_analysis_stage_2)
-        self.ui.btn_pred_analysis_multi_next_4.clicked.connect(self.show_multi_pred_analysis_stage_0)
+        self.ui.btn_pred_analysis_multi_back_3.clicked.connect(self.multi_pred_analysis_structure_analysis_back_3)
+        self.ui.btn_pred_analysis_multi_next_2.clicked.connect(self.multi_pred_analysis_structure_analysis_next_2)
+        self.ui.btn_pred_analysis_multi_back_4.clicked.connect(self.multi_pred_analysis_structure_analysis_back_4)
+        self.ui.btn_pred_analysis_multi_next_3.clicked.connect(self.multi_pred_analysis_structure_analysis_next_3)
+        self.ui.btn_pred_analysis_multi_back_5.clicked.connect(self.multi_pred_analysis_structure_analysis_back_5)
+        self.ui.btn_pred_analysis_multi_next_4.clicked.connect(self.multi_pred_analysis_structure_analysis_next_4)
         self.ui.box_pred_analysis_multi_prot_struct_1.currentIndexChanged.connect(
             self.check_multi_pred_analysis_if_prot_structs_are_filled)
         self.ui.box_pred_analysis_multi_prot_struct_2.currentIndexChanged.connect(
@@ -1059,9 +1064,9 @@ class MainWindow(QMainWindow):
             self.count_multi_pred_analysis_selected_chains_for_prot_struct_1)
         self.ui.list_pred_analysis_multi_model_chains.itemSelectionChanged.connect(
             self.check_multi_pred_analysis_if_same_no_of_chains_selected)
-        self.ui.btn_pred_analysis_multi_back_pred_setup.clicked.connect(self.switch_monomer_pred_analysis_tab)
+        self.ui.btn_pred_analysis_multi_back_pred_setup.clicked.connect(self.switch_multimer_pred_analysis_tab)
         self.ui.btn_pred_analysis_multi_start.clicked.connect(self.start_multimer_prediction_analysis)
-
+        self.ui.list_pred_analysis_multi_overview.clicked.connect(self.multi_pred_analysis_structure_analysis_overview_clicked)
         # </editor-fold>
 
         # </editor-fold>
@@ -1278,28 +1283,6 @@ class MainWindow(QMainWindow):
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
         # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
-
-    def _init_multi_pred_analysis_page(self):
-        # <editor-fold desc="Prediction section">
-        # clears everything
-        self.ui.txt_pred_analysis_multi_prot_name.clear()
-        self.ui.txt_pred_analysis_multi_prot_seq.clear()
-        self.ui.list_pred_analysis_multi_prot_seq_overview.clear()
-        # sets up defaults: Prediction
-        self.ui.btn_pred_analysis_multi_next.setEnabled(False)
-        self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
-        self.ui.lbl_pred_analysis_multi_prot_name_status.setText("")
-        self.ui.lbl_pred_analysis_multi_prot_seq_status.setText("")
-
-        # </editor-fold>
-
-        # <editor-fold desc="Analysis section">
-        self.ui.list_pred_analysis_multi_overview.clear()
-        self.ui.btn_pred_analysis_multi_remove.hide()
-
-        # </editor-fold>
-
-        self.multi_pred_analysis_show_protein_overview()
 
     def _init_sequence_vs_pdb_page(self):
         """This function clears all text fields and hides everything which is needed
@@ -1579,19 +1562,6 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_hotspots_page)
-
-    def display_multimer_pred_analysis(self):
-        self._init_multi_pred_analysis_page()
-        self.ui.table_pred_analysis_multi_prot_to_predict.clear()
-        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(0, QTableWidgetItem("Chain"))
-        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(1, QTableWidgetItem("Sequence"))
-        self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
-        self.multimer_prediction_analysis_management.show_stage_x(0)
-        if self.ui.tabWidget_2.currentIndex() == 1:
-            self.ui.tabWidget_2.setCurrentIndex(0)
-        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 22, "Multimer Prediction + Analysis")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_analysis_multimer_page)
 
     def display_manage_pymol_session(self):
         self.ui.box_manage_choose_protein.clear()
@@ -4455,42 +4425,7 @@ class MainWindow(QMainWindow):
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
                 gui_utils.hide_gui_elements(gui_elements_to_hide)
-                # gui_elements_to_show = [
-                #     self.ui.lbl_pred_analysis_mono_overview,
-                #     self.ui.list_pred_analysis_mono_overview,
-                #     self.ui.btn_pred_analysis_mono_add
-                # ]
-                # gui_elements_to_hide = [
-                #     self.ui.btn_pred_analysis_mono_remove,
-                #     self.ui.lbl_pred_analysis_mono_prot_struct_1,
-                #     self.ui.lbl_pred_analysis_mono_prot_struct_2,
-                #     self.ui.lbl_analysis_batch_vs_2,
-                #     self.ui.lbl_pred_analysis_mono_ref_chains,
-                #     self.ui.list_pred_analysis_mono_ref_chains,
-                #     self.ui.btn_pred_analysis_mono_back_4,
-                #     self.ui.btn_pred_analysis_mono_next_3,
-                #     self.ui.box_pred_analysis_mono_prot_struct_1,
-                #     self.ui.box_pred_analysis_mono_prot_struct_2,
-                #     self.ui.btn_pred_analysis_mono_back_3,
-                #     self.ui.btn_pred_analysis_mono_next_2,
-                #     self.ui.lbl_pred_analysis_mono_model_chains,
-                #     self.ui.list_pred_analysis_mono_model_chains,
-                #     self.ui.btn_pred_analysis_mono_back_5,
-                #     self.ui.btn_pred_analysis_mono_next_4,
-                #     self.ui.lbl_pred_analysis_mono_images,
-                #     self.ui.cb_pred_analysis_mono_images,
-                #     self.ui.btn_pred_analysis_mono_start
-                # ]
-                # gui_utils.show_gui_elements(gui_elements_to_show)
-                # gui_utils.hide_gui_elements(gui_elements_to_hide)
-                # self.ui.btn_pred_analysis_mono_remove.show()
-                # self.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-                # self.ui.btn_pred_analysis_mono_start.show()
-                # self.ui.lbl_pred_analysis_mono_images.show()
-                # self.ui.cb_pred_analysis_mono_images.show()
-                # styles.color_button_ready(self.ui.btn_pred_analysis_mono_start)
             else:
-                print("No analysis runs")
                 gui_elements_to_show = [
                     self.ui.lbl_pred_analysis_mono_prot_to_predict,
                     self.ui.table_pred_analysis_mono_prot_to_predict,
@@ -4519,34 +4454,6 @@ class MainWindow(QMainWindow):
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
                 gui_utils.hide_gui_elements(gui_elements_to_hide)
-                # gui_elements_to_show = [
-                #     self.ui.lbl_pred_analysis_mono_overview,
-                #     self.ui.list_pred_analysis_mono_overview,
-                #     self.ui.btn_pred_analysis_mono_add
-                # ]
-                # gui_elements_to_hide = [
-                #     self.ui.btn_pred_analysis_mono_remove,
-                #     self.ui.lbl_pred_analysis_mono_prot_struct_1,
-                #     self.ui.lbl_pred_analysis_mono_prot_struct_2,
-                #     self.ui.lbl_analysis_batch_vs_2,
-                #     self.ui.lbl_pred_analysis_mono_ref_chains,
-                #     self.ui.list_pred_analysis_mono_ref_chains,
-                #     self.ui.btn_pred_analysis_mono_back_4,
-                #     self.ui.btn_pred_analysis_mono_next_3,
-                #     self.ui.box_pred_analysis_mono_prot_struct_1,
-                #     self.ui.box_pred_analysis_mono_prot_struct_2,
-                #     self.ui.btn_pred_analysis_mono_back_3,
-                #     self.ui.btn_pred_analysis_mono_next_2,
-                #     self.ui.lbl_pred_analysis_mono_model_chains,
-                #     self.ui.list_pred_analysis_mono_model_chains,
-                #     self.ui.btn_pred_analysis_mono_back_5,
-                #     self.ui.btn_pred_analysis_mono_next_4,
-                #     self.ui.lbl_pred_analysis_mono_images,
-                #     self.ui.cb_pred_analysis_mono_images,
-                #     self.ui.btn_pred_analysis_mono_start
-                # ]
-                # gui_utils.show_gui_elements(gui_elements_to_show)
-                # gui_utils.hide_gui_elements(gui_elements_to_hide)
                 self.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
             self.ui.tabWidget.setTabEnabled(0, True)
             self.ui.tabWidget.setTabEnabled(1, False)
@@ -4658,6 +4565,80 @@ class MainWindow(QMainWindow):
     # </editor-fold>
 
     # <editor-fold desc="Multimer Prediction + Analysis functions">
+    def _init_multi_pred_analysis_page(self):
+        # <editor-fold desc="Prediction section">
+        # clears everything
+        self.ui.txt_pred_analysis_multi_prot_name.clear()
+        self.ui.txt_pred_analysis_multi_prot_seq.clear()
+        self.ui.list_pred_analysis_multi_prot_seq_overview.clear()
+        for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, -1, -1):
+            self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(i)
+
+        # sets up defaults: Prediction
+        self.ui.btn_pred_analysis_multi_next.setEnabled(False)
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        self.ui.lbl_pred_analysis_multi_prot_name_status.setText("")
+        self.ui.lbl_pred_analysis_multi_prot_seq_status.setText("")
+
+        # </editor-fold>
+
+        # <editor-fold desc="Analysis section">
+        self.ui.list_pred_analysis_multi_overview.clear()
+        self.ui.btn_pred_analysis_multi_remove.hide()
+
+        # </editor-fold>
+
+        #self.multi_pred_analysis_show_protein_overview()
+
+    def display_multimer_pred_analysis(self):
+        self._init_multi_pred_analysis_page()
+        self.ui.table_pred_analysis_multi_prot_to_predict.clear()
+        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(0, QTableWidgetItem("Chain"))
+        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(1, QTableWidgetItem("Sequence"))
+        self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self.ui.table_pred_analysis_multi_prot_to_predict,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+
+            self.ui.lbl_pred_analysis_multi_prot_name,
+            self.ui.txt_pred_analysis_multi_prot_name,
+            self.ui.lbl_pred_analysis_multi_prot_name_status,
+            self.ui.btn_pred_analysis_multi_back,
+            self.ui.btn_pred_analysis_multi_next,
+
+            self.ui.lbl_pred_analysis_multi_prot_seq,
+            self.ui.txt_pred_analysis_multi_prot_seq,
+            self.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add_2,
+            self.ui.btn_pred_analysis_multi_prot_seq_add,
+            self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self.ui.list_pred_analysis_multi_prot_seq_overview,
+            self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self.ui.btn_pred_analysis_multi_back_2,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_analysis_multi_advanced_config,
+            self.ui.btn_pred_analysis_multi_advanced_config,
+
+            self.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self.ui.tabWidget_2.currentIndex() == 1:
+            self.ui.tabWidget_2.setCurrentIndex(0)
+        self.ui.tabWidget_2.setTabEnabled(1, False)
+        self.ui.tabWidget_2.setTabEnabled(0, True)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 22, "Multimer Prediction + Analysis")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_analysis_multimer_page)
+        self.ui.table_pred_analysis_multi_prot_to_predict.setEnabled(True)
+
     # <editor-fold desc="Prediction section">
     def multi_pred_analysis_validate_protein_name(self):
         """This function validates the input of the project name in real-time
@@ -4682,13 +4663,344 @@ class MainWindow(QMainWindow):
                                         self.ui.lbl_pred_analysis_multi_prot_seq_status,
                                         self.ui.btn_pred_analysis_multi_prot_seq_add)
 
+    def multi_pred_analysis_check_if_list_is_empty(self):
+        if self.ui.list_pred_analysis_multi_prot_seq_overview.count() == 0:
+            styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(True)
+
+    def multi_pred_analysis_add_sequence_to_list(self):
+        self.ui.list_pred_analysis_multi_prot_seq_overview.addItem(
+            QListWidgetItem(self.ui.txt_pred_analysis_multi_prot_seq.toPlainText()))
+        self.multi_pred_analysis_check_if_list_is_empty()
+
+    def multi_pred_analysis_remove_sequence_to_list(self):
+        self.ui.list_pred_analysis_multi_prot_seq_overview.takeItem(self.ui.list_pred_analysis_multi_prot_seq_overview.currentRow())
+        self.multi_pred_analysis_check_if_list_is_empty()
+        self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
+
+    def multi_pred_analysis_check_if_table_is_empty(self):
+        if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self.ui.btn_pred_multi_predict)
+            gui_elements_to_show = [
+                self.ui.lbl_pred_analysis_multi_prot_to_predict,
+                self.ui.table_pred_analysis_multi_prot_to_predict,
+                self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+            ]
+            gui_elements_to_hide = [
+                self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+
+                self.ui.lbl_pred_analysis_multi_prot_name,
+                self.ui.txt_pred_analysis_multi_prot_name,
+                self.ui.lbl_pred_analysis_multi_prot_name_status,
+                self.ui.btn_pred_analysis_multi_back,
+                self.ui.btn_pred_analysis_multi_next,
+
+                self.ui.lbl_pred_analysis_multi_prot_seq,
+                self.ui.txt_pred_analysis_multi_prot_seq,
+                self.ui.lbl_pred_analysis_multi_prot_seq_status,
+                self.ui.lbl_pred_multi_prot_seq_add_2,
+                self.ui.btn_pred_analysis_multi_prot_seq_add,
+                self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                self.ui.list_pred_analysis_multi_prot_seq_overview,
+                self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                self.ui.btn_pred_analysis_multi_back_2,
+                self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+
+                self.ui.lbl_pred_analysis_multi_advanced_config,
+                self.ui.btn_pred_analysis_multi_advanced_config,
+
+                self.ui.btn_pred_analysis_multi_go_analysis_setup,
+                self.ui.lbl_pred_analysis_multi_to_analysis_setup
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.ui.btn_pred_multi_predict.setEnabled(False)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        else:
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_go_analysis_setup)
+            self.ui.btn_pred_multi_predict.setEnabled(True)
+            gui_elements_to_show = [
+                self.ui.lbl_pred_analysis_multi_prot_to_predict,
+                self.ui.table_pred_analysis_multi_prot_to_predict,
+                self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+
+                self.ui.lbl_pred_analysis_multi_advanced_config,
+                self.ui.btn_pred_analysis_multi_advanced_config,
+
+                self.ui.btn_pred_analysis_multi_go_analysis_setup,
+                self.ui.lbl_pred_analysis_multi_to_analysis_setup
+            ]
+            gui_elements_to_hide = [
+                self.ui.lbl_pred_analysis_multi_prot_name,
+                self.ui.txt_pred_analysis_multi_prot_name,
+                self.ui.lbl_pred_analysis_multi_prot_name_status,
+                self.ui.btn_pred_analysis_multi_back,
+                self.ui.btn_pred_analysis_multi_next,
+
+                self.ui.lbl_pred_analysis_multi_prot_seq,
+                self.ui.txt_pred_analysis_multi_prot_seq,
+                self.ui.lbl_pred_analysis_multi_prot_seq_status,
+                self.ui.lbl_pred_multi_prot_seq_add_2,
+                self.ui.btn_pred_analysis_multi_prot_seq_add,
+                self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                self.ui.list_pred_analysis_multi_prot_seq_overview,
+                self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                self.ui.btn_pred_analysis_multi_back_2,
+                self.ui.btn_pred_analysis_multi_prot_to_predict_add_2
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+
+    def multi_pred_analysis_add_protein_to_predict(self):
+        for i in range(self.ui.list_pred_analysis_multi_prot_seq_overview.count()):
+            self.ui.table_pred_analysis_multi_prot_to_predict.setRowCount(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
+            self.ui.table_pred_analysis_multi_prot_to_predict.insertRow(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
+            tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text())
+            self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 0,
+                QTableWidgetItem(tmp_chain_seq[0]))
+            self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 1,
+                QTableWidgetItem(tmp_chain_seq[1]))
+            name_item = QTableWidgetItem(self.ui.txt_pred_analysis_multi_prot_name.text())
+            self.ui.table_pred_analysis_multi_prot_to_predict.setVerticalHeaderItem(
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, name_item)
+        self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
+        self.multi_pred_analysis_check_if_table_is_empty()
+        self.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
+
+    def multi_pred_analysis_remove_protein_to_predict(self):
+        if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 1:
+            self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(0)
+        else:
+            self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(self.ui.table_pred_analysis_multi_prot_to_predict.currentRow())
+            prot_name = self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(
+                self.ui.table_pred_analysis_multi_prot_to_predict.currentRow()).text()
+            for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+                if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
+                    self.ui.table_pred_analysis_multi_prot_to_predict.setItem(i, 0,
+                                                                     QTableWidgetItem(constants.chain_dict.get(i)))
+        self.multi_pred_analysis_check_if_table_is_empty()
+        self.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
+
+    def multi_pred_analysis_add(self):
+        gui_elements = [
+            self.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self.ui.table_pred_analysis_multi_prot_to_predict,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_analysis_multi_prot_name,
+            self.ui.txt_pred_analysis_multi_prot_name,
+            self.ui.lbl_pred_analysis_multi_prot_name_status,
+            self.ui.btn_pred_analysis_multi_back,
+            self.ui.btn_pred_analysis_multi_next,
+
+            self.ui.lbl_pred_analysis_multi_prot_seq,
+            self.ui.txt_pred_analysis_multi_prot_seq,
+            self.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add_2,
+            self.ui.btn_pred_analysis_multi_prot_seq_add,
+            self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self.ui.list_pred_analysis_multi_prot_seq_overview,
+            self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self.ui.btn_pred_analysis_multi_back_2,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_analysis_multi_advanced_config,
+            self.ui.btn_pred_analysis_multi_advanced_config,
+
+            self.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+        ]
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self.ui.table_pred_analysis_multi_prot_to_predict,
+
+            self.ui.lbl_pred_analysis_multi_prot_name,
+            self.ui.txt_pred_analysis_multi_prot_name,
+            self.ui.lbl_pred_analysis_multi_prot_name_status,
+            self.ui.btn_pred_analysis_multi_back,
+            self.ui.btn_pred_analysis_multi_next,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_analysis_multi_prot_seq,
+            self.ui.txt_pred_analysis_multi_prot_seq,
+            self.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add_2,
+            self.ui.btn_pred_analysis_multi_prot_seq_add,
+            self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self.ui.list_pred_analysis_multi_prot_seq_overview,
+            self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self.ui.btn_pred_analysis_multi_back_2,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_analysis_multi_advanced_config,
+            self.ui.btn_pred_analysis_multi_advanced_config,
+
+            self.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_analysis_multi_prot_name, self.ui.lbl_pred_analysis_multi_prot_name)
+        gui_utils.disable_text_box(self.ui.txt_pred_analysis_multi_prot_seq, self.ui.lbl_pred_analysis_multi_prot_seq)
+        self.ui.btn_pred_analysis_multi_next.setEnabled(False)
+        self.ui.txt_pred_analysis_multi_prot_name.clear()
+        styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next)
+        if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() > 0:
+            try:
+                self.ui.table_pred_analysis_multi_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Multimer Prediction in overview table.")
+
+    def multi_pred_analysis_back(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self.ui.table_pred_analysis_multi_prot_to_predict,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+
+            self.ui.lbl_pred_analysis_multi_prot_name,
+            self.ui.txt_pred_analysis_multi_prot_name,
+            self.ui.lbl_pred_analysis_multi_prot_name_status,
+            self.ui.btn_pred_analysis_multi_back,
+            self.ui.btn_pred_analysis_multi_next,
+
+            self.ui.lbl_pred_analysis_multi_prot_seq,
+            self.ui.txt_pred_analysis_multi_prot_seq,
+            self.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add_2,
+            self.ui.btn_pred_analysis_multi_prot_seq_add,
+            self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self.ui.list_pred_analysis_multi_prot_seq_overview,
+            self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self.ui.btn_pred_analysis_multi_back_2,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_analysis_multi_advanced_config,
+            self.ui.btn_pred_analysis_multi_advanced_config,
+
+            self.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.multi_pred_analysis_check_if_table_is_empty()
+
+    def multi_pred_analysis_next(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self.ui.table_pred_analysis_multi_prot_to_predict,
+
+            self.ui.lbl_pred_analysis_multi_prot_name,
+            self.ui.txt_pred_analysis_multi_prot_name,
+
+            self.ui.lbl_pred_analysis_multi_prot_seq,
+            self.ui.txt_pred_analysis_multi_prot_seq,
+            self.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add_2,
+            self.ui.btn_pred_analysis_multi_prot_seq_add,
+            self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self.ui.list_pred_analysis_multi_prot_seq_overview,
+            self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self.ui.btn_pred_analysis_multi_back_2,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_analysis_multi_prot_name_status,
+            self.ui.btn_pred_analysis_multi_back,
+            self.ui.btn_pred_analysis_multi_next,
+
+            self.ui.lbl_pred_analysis_multi_advanced_config,
+            self.ui.btn_pred_analysis_multi_advanced_config,
+
+            self.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_analysis_multi_prot_seq, self.ui.lbl_pred_analysis_multi_prot_seq)
+        gui_utils.disable_text_box(self.ui.txt_pred_analysis_multi_prot_name, self.ui.lbl_pred_analysis_multi_prot_name)
+        self.ui.txt_pred_analysis_multi_prot_seq.clear()
+        self.ui.list_pred_analysis_multi_prot_seq_overview.clear()
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
+        styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+
+    def multi_pred_analysis_back_2(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self.ui.table_pred_analysis_multi_prot_to_predict,
+
+            self.ui.lbl_pred_analysis_multi_prot_name_status,
+            self.ui.btn_pred_analysis_multi_back,
+            self.ui.btn_pred_analysis_multi_next,
+            self.ui.lbl_pred_analysis_multi_prot_name,
+            self.ui.txt_pred_analysis_multi_prot_name,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+
+            self.ui.lbl_pred_analysis_multi_prot_seq,
+            self.ui.txt_pred_analysis_multi_prot_seq,
+            self.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self.ui.lbl_pred_multi_prot_seq_add_2,
+            self.ui.btn_pred_analysis_multi_prot_seq_add,
+            self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self.ui.list_pred_analysis_multi_prot_seq_overview,
+            self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self.ui.btn_pred_analysis_multi_back_2,
+            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+
+            self.ui.lbl_pred_analysis_multi_advanced_config,
+            self.ui.btn_pred_analysis_multi_advanced_config,
+
+            self.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self.ui.txt_pred_analysis_multi_prot_name, self.ui.lbl_pred_analysis_multi_prot_name)
+        gui_utils.disable_text_box(self.ui.txt_pred_analysis_multi_prot_seq, self.ui.lbl_pred_analysis_multi_prot_seq)
+
+    def multi_pred_analysis_prot_seq_overview_item_changed(self):
+        self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(True)
+
+    def multi_pred_analysis_prot_to_predict_item_changed(self):
+        self.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(True)
+
+    # <editor-fold desc="old">
     def multi_pred_analysis_show_protein_overview(self):
         if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
             self.multimer_prediction_analysis_management.show_stage_x(0)
         else:
             gui_elements_to_show = [
-                self.ui.btn_pred_multi_prot_to_predict_add,
-                self.ui.btn_pred_multi_prot_to_predict_remove,
+                self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+                self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
             ]
             self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
                 [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
@@ -4715,78 +5027,570 @@ class MainWindow(QMainWindow):
             [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
         gui_utils.disable_text_box(self.ui.txt_pred_analysis_multi_prot_name,
                                    self.ui.lbl_pred_analysis_multi_prot_name)
-
-    def multi_pred_analysis_add_sequence_to_list(self):
-        self.ui.list_pred_analysis_multi_prot_seq_overview.addItem(
-            QListWidgetItem(self.ui.txt_pred_analysis_multi_prot_seq.toPlainText()))
-        self.multi_pred_analysis_check_if_list_is_empty()
-
-    def multi_pred_analysis_remove_sequence_to_list(self):
-        self.ui.list_pred_analysis_multi_prot_seq_overview.takeItem(self.ui.list_pred_analysis_multi_prot_seq_overview.currentRow())
-        self.multi_pred_analysis_check_if_list_is_empty()
-
-    def multi_pred_analysis_check_if_list_is_empty(self):
-        if self.ui.list_pred_analysis_multi_prot_seq_overview.count() == 0:
-            styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
-            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
-        else:
-            styles.color_button_ready(self.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
-            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(True)
-
-    def multi_pred_analysis_check_if_table_is_empty(self):
-        if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self.ui.btn_pred_multi_predict)
-            self.ui.btn_pred_multi_predict.setEnabled(False)
-            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-        else:
-            styles.color_button_ready(self.ui.btn_pred_analysis_multi_go_analysis_setup)
-            self.ui.btn_pred_multi_predict.setEnabled(True)
-            self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
-
-    def multi_pred_analysis_add_protein_to_predict(self):
-        for i in range(self.ui.list_pred_analysis_multi_prot_seq_overview.count()):
-            self.ui.table_pred_analysis_multi_prot_to_predict.setRowCount(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
-            self.ui.table_pred_analysis_multi_prot_to_predict.insertRow(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
-            tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text())
-            self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 0,
-                QTableWidgetItem(tmp_chain_seq[0]))
-            self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 1,
-                QTableWidgetItem(tmp_chain_seq[1]))
-            name_item = QTableWidgetItem(self.ui.txt_pred_analysis_multi_prot_name.text())
-            self.ui.table_pred_analysis_multi_prot_to_predict.setVerticalHeaderItem(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, name_item)
-        self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
-        self.multi_pred_analysis_check_if_table_is_empty()
-        self.multi_pred_analysis_show_protein_overview()
-        self._init_multi_pred_analysis_page()
-
-    def multi_pred_analysis_remove_protein_to_predict(self):
-        self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(self.ui.table_pred_analysis_multi_prot_to_predict.currentRow())
-        prot_name = self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(
-            self.ui.table_pred_analysis_multi_prot_to_predict.currentRow()).text()
-        for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
-            if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                self.ui.table_pred_analysis_multi_prot_to_predict.setItem(i, 0,
-                                                                 QTableWidgetItem(constants.chain_dict.get(i)))
-        self.multi_pred_analysis_check_if_table_is_empty()
-        self.multi_pred_analysis_show_protein_overview()
+    # </editor-fold>
 
     # </editor-fold>
 
     def switch_multimer_pred_analysis_tab(self):
         if self.ui.tabWidget_2.currentIndex() == 0:
+            # goes from prediction to analysis
             self.ui.tabWidget_2.setCurrentIndex(1)
-            self.show_multi_pred_analysis_stage_0()
-            self.multi_pred_analysis_show_protein_overview()
+            gui_elements_to_show = [
+                self.ui.lbl_pred_analysis_multi_overview,
+                self.ui.list_pred_analysis_multi_overview,
+                self.ui.btn_pred_analysis_multi_add,
+                self.ui.btn_pred_analysis_multi_back_pred_setup
+            ]
+            gui_elements_to_hide = [
+                self.ui.btn_pred_analysis_multi_remove,
+                self.ui.lbl_pred_analysis_multi_prot_struct_1,
+                self.ui.lbl_pred_analysis_multi_prot_struct_2,
+                self.ui.lbl_analysis_batch_vs_3,
+                self.ui.lbl_pred_analysis_multi_ref_chains,
+                self.ui.list_pred_analysis_multi_ref_chains,
+                self.ui.btn_pred_analysis_multi_back_4,
+                self.ui.btn_pred_analysis_multi_next_3,
+                self.ui.box_pred_analysis_multi_prot_struct_1,
+                self.ui.box_pred_analysis_multi_prot_struct_2,
+                self.ui.btn_pred_analysis_multi_back_3,
+                self.ui.btn_pred_analysis_multi_next_2,
+                self.ui.lbl_pred_analysis_multi_model_chains,
+                self.ui.list_pred_analysis_multi_model_chains,
+                self.ui.btn_pred_analysis_multi_back_5,
+                self.ui.btn_pred_analysis_multi_next_4,
+                self.ui.lbl_pred_analysis_multi_images,
+                self.ui.cb_pred_analysis_multi_images,
+                self.ui.btn_pred_analysis_multi_start
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.ui.tabWidget_2.setTabEnabled(1, True)
+            self.ui.tabWidget_2.setTabEnabled(0, False)
+            if self.ui.list_pred_analysis_multi_overview.count() > 0:
+                self.ui.btn_pred_analysis_multi_remove.show()
+                self.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+                self.ui.btn_pred_analysis_multi_start.show()
+                self.ui.lbl_pred_analysis_multi_images.show()
+                self.ui.cb_pred_analysis_multi_images.show()
+                styles.color_button_ready(self.ui.btn_pred_analysis_multi_start)
         else:
-            self.ui.list_pred_analysis_multi_overview.clear()
+            # goes from analysis to prediction
             self.ui.tabWidget_2.setCurrentIndex(0)
+            if self.ui.list_pred_analysis_multi_overview.count() > 0:
+                gui_elements_to_show = [
+                    self.ui.lbl_pred_analysis_multi_prot_to_predict,
+                    self.ui.table_pred_analysis_multi_prot_to_predict,
+
+                    self.ui.btn_pred_analysis_multi_go_analysis_setup,
+                    self.ui.lbl_pred_analysis_multi_to_analysis_setup
+                ]
+                gui_elements_to_hide = [
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+
+                    self.ui.lbl_pred_analysis_multi_advanced_config,
+                    self.ui.btn_pred_analysis_multi_advanced_config,
+
+                    self.ui.lbl_pred_analysis_multi_prot_name,
+                    self.ui.txt_pred_analysis_multi_prot_name,
+                    self.ui.lbl_pred_analysis_multi_prot_name_status,
+                    self.ui.btn_pred_analysis_multi_back,
+                    self.ui.btn_pred_analysis_multi_next,
+
+                    self.ui.lbl_pred_analysis_multi_prot_seq,
+                    self.ui.txt_pred_analysis_multi_prot_seq,
+                    self.ui.lbl_pred_analysis_multi_prot_seq_status,
+                    self.ui.lbl_pred_multi_prot_seq_add_2,
+                    self.ui.btn_pred_analysis_multi_prot_seq_add,
+                    self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                    self.ui.list_pred_analysis_multi_prot_seq_overview,
+                    self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                    self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                    self.ui.btn_pred_analysis_multi_back_2,
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_add_2
+                ]
+                gui_utils.show_gui_elements(gui_elements_to_show)
+                gui_utils.hide_gui_elements(gui_elements_to_hide)
+            else:
+                gui_elements_to_show = [
+                    self.ui.lbl_pred_analysis_multi_prot_to_predict,
+                    self.ui.table_pred_analysis_multi_prot_to_predict,
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_add,
+
+                    self.ui.lbl_pred_analysis_multi_advanced_config,
+                    self.ui.btn_pred_analysis_multi_advanced_config,
+
+                    self.ui.btn_pred_analysis_multi_go_analysis_setup,
+                    self.ui.lbl_pred_analysis_multi_to_analysis_setup
+                ]
+                gui_elements_to_hide = [
+                    self.ui.lbl_pred_analysis_multi_prot_name,
+                    self.ui.txt_pred_analysis_multi_prot_name,
+                    self.ui.lbl_pred_analysis_multi_prot_name_status,
+                    self.ui.btn_pred_analysis_multi_back,
+                    self.ui.btn_pred_analysis_multi_next,
+
+                    self.ui.lbl_pred_analysis_multi_prot_seq,
+                    self.ui.txt_pred_analysis_multi_prot_seq,
+                    self.ui.lbl_pred_analysis_multi_prot_seq_status,
+                    self.ui.lbl_pred_multi_prot_seq_add_2,
+                    self.ui.btn_pred_analysis_multi_prot_seq_add,
+                    self.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                    self.ui.list_pred_analysis_multi_prot_seq_overview,
+                    self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                    self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                    self.ui.btn_pred_analysis_multi_back_2,
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_add_2
+                ]
+                gui_utils.show_gui_elements(gui_elements_to_show)
+                gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self.ui.tabWidget_2.setTabEnabled(0, True)
+            self.ui.tabWidget_2.setTabEnabled(1, False)
 
     # <editor-fold desc="Analysis section">
+    def multi_pred_analysis_structure_analysis_add(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.lbl_pred_analysis_multi_prot_struct_1.clear()
+        self.ui.lbl_pred_analysis_multi_prot_struct_2.clear()
+        self.ui.lbl_pred_analysis_multi_prot_struct_1.setText("Protein structure 1")
+        self.ui.lbl_pred_analysis_multi_prot_struct_2.setText("Protein structure 2")
+        self.fill_multi_pred_analysis_protein_boxes()
+        if self.ui.list_pred_analysis_multi_overview.count() > 0:
+            try:
+                self.ui.list_pred_analysis_multi_overview.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
+
+    def multi_pred_analysis_structure_analysis_next_2(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3,
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.lbl_pred_analysis_multi_prot_struct_1.setText(self.ui.box_pred_analysis_multi_prot_struct_1.currentText())
+        self.ui.lbl_pred_analysis_multi_prot_struct_2.setText(self.ui.box_pred_analysis_multi_prot_struct_2.currentText())
+        self.ui.list_pred_analysis_multi_ref_chains.clear()
+        self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
+        self.ui.list_pred_analysis_multi_ref_chains.setEnabled(True)
+
+        for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+            if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == self.ui.box_pred_analysis_multi_prot_struct_1.currentText():
+                self.ui.list_pred_analysis_multi_ref_chains.addItem(self.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text())
+        if self.ui.list_pred_analysis_multi_ref_chains.count() == 0:
+            tmp_protein = self.app_project.search_protein(self.ui.box_pred_analysis_multi_prot_struct_1.currentText())
+            for tmp_chain in tmp_protein.chains:
+                if tmp_chain.chain_type == "protein_chain":
+                    self.ui.list_pred_analysis_multi_ref_chains.addItem(tmp_chain.chain_letter)
+        if self.ui.list_pred_analysis_multi_ref_chains.count() == 1:
+            self.ui.lbl_pred_analysis_multi_ref_chains.setText(
+                f"Select chain in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.")
+        else:
+            self.ui.lbl_pred_analysis_multi_ref_chains.setText(
+                f"Select chains in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.")
+
+    def multi_pred_analysis_structure_analysis_back_3(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3,
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self.ui.list_pred_analysis_multi_overview.count() > 0:
+            self.ui.btn_pred_analysis_multi_remove.show()
+            self.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+            self.ui.btn_pred_analysis_multi_start.show()
+            self.ui.lbl_pred_analysis_multi_images.show()
+            self.ui.cb_pred_analysis_multi_images.show()
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_start)
+
+    def multi_pred_analysis_structure_analysis_next_3(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.list_pred_analysis_multi_model_chains.clear()
+        self.ui.list_pred_analysis_multi_ref_chains.setEnabled(False)
+        self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+
+        for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+            if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == self.ui.box_pred_analysis_multi_prot_struct_2.currentText():
+                self.ui.list_pred_analysis_multi_model_chains.addItem(self.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text())
+        if self.ui.list_pred_analysis_multi_model_chains.count() == 0:
+            tmp_protein = self.app_project.search_protein(self.ui.box_pred_analysis_multi_prot_struct_2.currentText())
+            for tmp_chain in tmp_protein.chains:
+                if tmp_chain.chain_type == "protein_chain":
+                    self.ui.list_pred_analysis_multi_model_chains.addItem(tmp_chain.chain_letter)
+        if len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems()) == 1:
+            self.ui.lbl_pred_analysis_multi_model_chains.setText(
+                f"Select 1 chain in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.")
+        else:
+            self.ui.lbl_pred_analysis_multi_model_chains.setText(
+                f"Select {len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems())} chains in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.")
+
+    def multi_pred_analysis_structure_analysis_back_4(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.lbl_pred_analysis_multi_prot_struct_1.setText("Protein structure 1")
+        self.ui.lbl_pred_analysis_multi_prot_struct_2.setText("Protein structure 2")
+
+    def multi_pred_analysis_structure_analysis_next_4(self):
+        gui_elements_to_show = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+        gui_elements_to_hide = [
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        prot_1_name = self.ui.lbl_pred_analysis_multi_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self.ui.list_pred_analysis_multi_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self.ui.lbl_pred_analysis_multi_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self.ui.list_pred_analysis_multi_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        item = QListWidgetItem(analysis_name)
+        self.ui.list_pred_analysis_multi_overview.addItem(item)
+        self.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+        styles.color_button_ready(self.ui.btn_pred_analysis_multi_start)
+
+    def multi_pred_analysis_structure_analysis_back_5(self):
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3
+        ]
+
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.list_pred_analysis_multi_ref_chains.setEnabled(True)
+
+        # tmp_protein = self.app_project.search_protein(self.ui.box_pred_analysis_multi_prot_struct_2.currentText())
+        # for tmp_chain in tmp_protein.chains:
+        #     if tmp_chain.chain_type == "protein_chain":
+        #         self.ui.list_pred_analysis_multi_ref_chains.addItem(tmp_chain.chain_letter)
+
+    def multi_pred_analysis_structure_analysis_overview_clicked(self):
+        self.ui.btn_pred_analysis_multi_remove.setEnabled(True)
+
+    def fill_multi_pred_analysis_protein_boxes(self):
+        protein_names = []
+        for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+            protein_names.append(self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text())
+        for tmp_protein in self.app_project.proteins:
+            protein_names.append(tmp_protein.get_molecule_object())
+        protein_names.insert(0, "")
+        protein_names = list(set(protein_names))
+        self.ui.box_pred_analysis_multi_prot_struct_1.clear()
+        self.ui.box_pred_analysis_multi_prot_struct_2.clear()
+        gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_1, protein_names)
+        gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_2, protein_names)
+
+    def remove_multi_pred_analysis_analysis_run(self):
+        self.ui.list_pred_analysis_multi_overview.takeItem(self.ui.list_pred_analysis_multi_overview.currentRow())
+        gui_elements_to_show = [
+            self.ui.lbl_pred_analysis_multi_overview,
+            self.ui.list_pred_analysis_multi_overview,
+            self.ui.btn_pred_analysis_multi_add,
+            self.ui.btn_pred_analysis_multi_back_pred_setup
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_pred_analysis_multi_remove,
+            self.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self.ui.lbl_analysis_batch_vs_3,
+            self.ui.lbl_pred_analysis_multi_ref_chains,
+            self.ui.list_pred_analysis_multi_ref_chains,
+            self.ui.btn_pred_analysis_multi_back_4,
+            self.ui.btn_pred_analysis_multi_next_3,
+            self.ui.box_pred_analysis_multi_prot_struct_1,
+            self.ui.box_pred_analysis_multi_prot_struct_2,
+            self.ui.btn_pred_analysis_multi_back_3,
+            self.ui.btn_pred_analysis_multi_next_2,
+            self.ui.lbl_pred_analysis_multi_model_chains,
+            self.ui.list_pred_analysis_multi_model_chains,
+            self.ui.btn_pred_analysis_multi_back_5,
+            self.ui.btn_pred_analysis_multi_next_4,
+            self.ui.lbl_pred_analysis_multi_images,
+            self.ui.cb_pred_analysis_multi_images,
+            self.ui.btn_pred_analysis_multi_start
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self.ui.list_pred_analysis_multi_overview.count() > 0:
+            self.ui.btn_pred_analysis_multi_remove.show()
+            self.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+            self.ui.btn_pred_analysis_multi_start.show()
+            self.ui.lbl_pred_analysis_multi_images.show()
+            self.ui.cb_pred_analysis_multi_images.show()
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_start)
+        # if self.ui.list_pred_analysis_multi_overview.count() == 0:
+        #
+        #     self.ui.btn_pred_analysis_multi_back_pred_setup.show()
+        #     self.ui.btn_pred_analysis_multi_remove.hide()
+
+    def check_multi_pred_analysis_if_same_no_of_chains_selected(self):
+        self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+        styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next_4)
+        if self.no_of_selected_chains == len(self.ui.list_pred_analysis_multi_model_chains.selectedItems()):
+            styles.color_button_ready(self.ui.btn_pred_analysis_multi_next_4)
+            self.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
+
+        prot_1_name = self.ui.lbl_pred_analysis_multi_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self.ui.list_pred_analysis_multi_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self.ui.lbl_pred_analysis_multi_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self.ui.list_pred_analysis_multi_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        for tmp_row in range(self.ui.list_pred_analysis_multi_overview.count()):
+            if analysis_name == self.ui.list_pred_analysis_multi_overview.item(tmp_row).text():
+                self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+                styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next_4)
+                return
+
+    def check_multi_pred_analysis_if_prot_structs_are_filled(self):
+        prot_1 = self.ui.box_pred_analysis_multi_prot_struct_1.itemText(self.ui.box_pred_analysis_multi_prot_struct_1.currentIndex())
+        prot_2 = self.ui.box_pred_analysis_multi_prot_struct_2.itemText(self.ui.box_pred_analysis_multi_prot_struct_2.currentIndex())
+        if prot_1 != "" and prot_2 != "":
+            self.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
+        else:
+            self.ui.btn_pred_analysis_multi_next_2.setEnabled(False)
+
+    def count_multi_pred_analysis_selected_chains_for_prot_struct_1(self):
+        self.no_of_selected_chains = len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems())
+        if self.no_of_selected_chains > 0:
+            self.ui.btn_pred_analysis_multi_next_3.setEnabled(True)
+        else:
+            self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
+
+
+
+    # def fill_multi_pred_analysis_protein_boxes(self):
+    #     protein_names = []
+    #     prediction_runs = prediction_util.get_prediction_name_and_seq_from_table(self.ui.table_pred_analysis_multi_prot_to_predict)
+    #     for tmp_prediction_run in prediction_runs:
+    #         protein_names.append(tmp_prediction_run.name)
+    #     for tmp_protein in self.app_project.proteins:
+    #         protein_names.append(tmp_protein.get_molecule_object())
+    #     protein_names.insert(0, "")
+    #     self.ui.box_pred_analysis_multi_prot_struct_1.clear()
+    #     self.ui.box_pred_analysis_multi_prot_struct_2.clear()
+    #     gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_1, protein_names)
+    #     gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_2, protein_names)
+    #
+    # def remove_multi_pred_analysis_analysis_run(self):
+    #     self.ui.list_pred_analysis_multi_overview.takeItem(self.ui.list_pred_analysis_multi_overview.currentRow())
+    #     if self.ui.list_pred_analysis_multi_overview.count() == 0:
+    #         self.multimer_prediction_analysis_management.show_stage_x(4)
+    #         self.ui.btn_pred_analysis_multi_remove.hide()
+    #
+    # def check_multi_pred_analysis_if_same_no_of_chains_selected(self):
+    #     self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+    #     styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next_4)
+    #     if self.no_of_selected_chains == len(self.ui.list_pred_analysis_multi_model_chains.selectedItems()):
+    #         styles.color_button_ready(self.ui.btn_pred_analysis_multi_next_4)
+    #         self.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
+    #
+    # def check_multi_pred_analysis_if_prot_structs_are_filled(self):
+    #     prot_1 = self.ui.box_pred_analysis_multi_prot_struct_1.itemText(self.ui.box_pred_analysis_multi_prot_struct_1.currentIndex())
+    #     prot_2 = self.ui.box_pred_analysis_multi_prot_struct_2.itemText(self.ui.box_pred_analysis_multi_prot_struct_2.currentIndex())
+    #     if prot_1 != "" and prot_2 != "":
+    #         self.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
+    #     else:
+    #         self.ui.btn_pred_analysis_multi_next_2.setEnabled(False)
+    #
+    # def count_multi_pred_analysis_selected_chains_for_prot_struct_1(self):
+    #     self.no_of_selected_chains = len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems())
+    #     if self.no_of_selected_chains > 0:
+    #         self.ui.btn_pred_analysis_multi_next_3.setEnabled(True)
+    #     else:
+    #         self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
+
+    # <editor-fold desc="old">
     def show_multi_pred_analysis_stage_0(self):
         gui_page_management.show_analysis_page_stage_0(self.multimer_prediction_analysis_management,
                                                        self.ui.list_pred_analysis_multi_ref_chains,
@@ -4844,47 +5648,7 @@ class MainWindow(QMainWindow):
                                                        4,
                                                        table_prot_to_predict=self.ui.table_pred_analysis_multi_prot_to_predict,
                                                        state=constants.PREDICTION_ANALYSIS)
-
-    def fill_multi_pred_analysis_protein_boxes(self):
-        protein_names = []
-        prediction_runs = prediction_util.get_prediction_name_and_seq_from_table(self.ui.table_pred_analysis_multi_prot_to_predict)
-        for tmp_prediction_run in prediction_runs:
-            protein_names.append(tmp_prediction_run.name)
-        for tmp_protein in self.app_project.proteins:
-            protein_names.append(tmp_protein.get_molecule_object())
-        protein_names.insert(0, "")
-        self.ui.box_pred_analysis_multi_prot_struct_1.clear()
-        self.ui.box_pred_analysis_multi_prot_struct_2.clear()
-        gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_1, protein_names)
-        gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_2, protein_names)
-
-    def remove_multi_pred_analysis_analysis_run(self):
-        self.ui.list_pred_analysis_multi_overview.takeItem(self.ui.list_pred_analysis_multi_overview.currentRow())
-        if self.ui.list_pred_analysis_multi_overview.count() == 0:
-            self.multimer_prediction_analysis_management.show_stage_x(4)
-            self.ui.btn_pred_analysis_multi_remove.hide()
-
-    def check_multi_pred_analysis_if_same_no_of_chains_selected(self):
-        self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-        styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next_4)
-        if self.no_of_selected_chains == len(self.ui.list_pred_analysis_multi_model_chains.selectedItems()):
-            styles.color_button_ready(self.ui.btn_pred_analysis_multi_next_4)
-            self.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
-
-    def check_multi_pred_analysis_if_prot_structs_are_filled(self):
-        prot_1 = self.ui.box_pred_analysis_multi_prot_struct_1.itemText(self.ui.box_pred_analysis_multi_prot_struct_1.currentIndex())
-        prot_2 = self.ui.box_pred_analysis_multi_prot_struct_2.itemText(self.ui.box_pred_analysis_multi_prot_struct_2.currentIndex())
-        if prot_1 != "" and prot_2 != "":
-            self.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
-        else:
-            self.ui.btn_pred_analysis_multi_next_2.setEnabled(False)
-
-    def count_multi_pred_analysis_selected_chains_for_prot_struct_1(self):
-        self.no_of_selected_chains = len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems())
-        if self.no_of_selected_chains > 0:
-            self.ui.btn_pred_analysis_multi_next_3.setEnabled(True)
-        else:
-            self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
+    # </editor-fold>
 
     # </editor-fold>
 
