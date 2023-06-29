@@ -262,13 +262,14 @@ def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> t
 
     for tmp_project_file in os.listdir(workspace_path):
         """Var: project_proteins is a list which contains all proteins from a single project"""
-        xml_deserializer = filesystem_io.XmlDeserializer(pathlib.Path(f"{workspace_path}/{tmp_project_file}"))
-        project_name = str(tmp_project_file).replace(".xml", "")
-        for tmp_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
-            molecule_object = tmp_protein.attrib[attribute_names.PROTEIN_MOLECULE_OBJECT]
-            if molecule_object not in protein_names:
-                protein_names.append(molecule_object)
-                protein_infos.append(basic_protein_info.BasicProteinInfo(molecule_object, tmp_protein.attrib[attribute_names.ID], project_name))
+        if not os.path.isdir(pathlib.Path(f"{workspace_path}/{tmp_project_file}")):
+            xml_deserializer = filesystem_io.XmlDeserializer(pathlib.Path(f"{workspace_path}/{tmp_project_file}"))
+            project_name = str(tmp_project_file).replace(".xml", "")
+            for tmp_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
+                molecule_object = tmp_protein.attrib[attribute_names.PROTEIN_MOLECULE_OBJECT]
+                if molecule_object not in protein_names:
+                    protein_names.append(molecule_object)
+                    protein_infos.append(basic_protein_info.BasicProteinInfo(molecule_object, tmp_protein.attrib[attribute_names.ID], project_name))
 
     #
     #
