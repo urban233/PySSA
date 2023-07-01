@@ -152,6 +152,24 @@ AMINO_ACID_CODE = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
                    'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
                    'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
 
+PYMOL_DEFAULT_BACKGROUND_COLOR = "black"
+
+CVM_NORMAL = "normal"
+CVM_NORMAL_PROT_1_COLOR = "green"
+CVM_NORMAL_PROT_2_COLOR = "blue"
+CVM_DEUTERANOPIA = "Red-green (green weak, deuteranopia)"
+CVM_DEUTERANOPIA_PROT_1_COLOR = "orange"
+CVM_DEUTERANOPIA_PROT_2_COLOR = "blue"
+
+CVM_PROTANOPIA = "Red-green (red weak, protanopia)"
+CVM_PROTANOPIA_PROT_1_COLOR = "orange"
+CVM_PROTANOPIA_PROT_2_COLOR = "blue"
+
+CVM_TRITANOPIA = "Blue-yellow (tritanopia)"
+CVM_TRITANOPIA_PROT_1_COLOR = "red"
+CVM_TRITANOPIA_PROT_2_COLOR = "blue"
+
+
 CHAIN_TYPE_PROTEIN = "protein_chain"
 CHAIN_TYPE_NON_PROTEIN = "non_protein_chain"
 

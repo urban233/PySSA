@@ -66,6 +66,7 @@ class Settings:
         self.local_colabfold: int = 0
         self.wsl_username: str = "no_user_name"
         self.wsl_install: int = 0
+        self.color_vision_mode: str = "normal"
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object
@@ -131,6 +132,10 @@ class Settings:
         else:
             raise ValueError
         tmp_settings.wsl_username = settings_dict.get("wsl_username")
+        if settings_dict.get("color_vision_mode") != "":
+            tmp_settings.color_vision_mode = settings_dict.get("color_vision_mode")
+        else:
+            raise ValueError
         return tmp_settings
 
     def get_workspace_path(self) -> pathlib.Path:

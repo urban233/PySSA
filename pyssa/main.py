@@ -71,6 +71,7 @@ from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
+from pyssa.util import globals
 from pyssa.util import prediction_util
 from typing import TYPE_CHECKING
 
@@ -167,6 +168,7 @@ class MainWindow(QMainWindow):
         else:
             self.app_settings.local_colabfold = 0
 
+        globals.g_settings = self.app_settings
         # </editor-fold>
 
         # <editor-fold desc="Class attributes">
@@ -1628,6 +1630,7 @@ class MainWindow(QMainWindow):
         dialog = dialog_settings_global.DialogSettingsGlobal()
         dialog.exec_()
         self.app_settings = self.app_settings.deserialize_settings()
+        globals.g_settings = self.app_settings
         self.workspace_path = self.app_settings.workspace_path
         self._setup_statusbar()
 
@@ -6814,9 +6817,14 @@ class MainWindow(QMainWindow):
         """This function opens a window which displays the distance plot.
 
         """
-        protein_pair_of_analysis = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
-        dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
-        dialog.exec_()
+        try:
+            protein_pair_of_analysis = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
+            dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
+            dialog.exec_()
+        except:
+            constants.PYSSA_LOGGER.error("The distance plot could not be created, due to an known bug.")
+            basic_boxes.ok("Display distance plot", "There was a problem with the display of the distance plot.\n"
+                                                    "Try closing the project, or restarting the application.", QMessageBox.Error)
 
     def display_distance_histogram(self):
         """This function opens a window which displays the distance histogram.

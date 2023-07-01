@@ -162,7 +162,7 @@ class DistanceAnalysis:
         """This function does the distance analysis of the protein pair.
 
         """
-        self._protein_pair_for_analysis.load_protein_pair_in_pymol() # This creates a new pymol session
+        self._protein_pair_for_analysis.load_protein_pair_in_pymol()  # This creates a new pymol session
         self._protein_pair_for_analysis.color_protein_pair()
         align_results = self.align_protein_pair_for_analysis()
         self.rmsd_dict = {
@@ -259,11 +259,12 @@ class DistanceAnalysis:
         cmd.orient()
         cmd.center()
         # set image parameters
-        cmd.bg_color("white")
+        cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
         cmd.set("ray_trace_mode", 3)
         cmd.set("antialias", 2)
         cmd.set("ray_shadows", opt_ray_shadows)
         cmd.set('ray_opaque_background', opaque_background)
+        self._protein_pair_for_analysis.color_protein_pair()
 
         cmd.scene(key=f"{self._protein_pair_for_analysis.protein_1.get_molecule_object()}-"
                       f"{self._protein_pair_for_analysis.protein_2.get_molecule_object()}",
@@ -307,7 +308,7 @@ class DistanceAnalysis:
         cmd.set("label_color", "hotpink")
         cmd.set("depth_cue", 0)
         # cmd.set("fog_start", 0.6)
-        cmd.bg_color("white")
+        cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
 
         j: int = 0
         measurement_obj: str = f"measure{j}"
@@ -315,6 +316,7 @@ class DistanceAnalysis:
 
         cmd.hide("cartoon", "all")
         cmd.show(REPRESENTATION, "all")
+        self._protein_pair_for_analysis.color_protein_pair()
 
         i: int = 0
         for distance_value in self.analysis_results.distance_data.get("distance"):
@@ -349,7 +351,7 @@ class DistanceAnalysis:
                 else:
                     opt_ray_shadows: str = "on"
                 # set image parameters
-                cmd.bg_color("white")
+                cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
                 cmd.set("ray_trace_mode", 3)
                 cmd.set("antialias", 2)
                 cmd.set("ray_shadows", opt_ray_shadows)

@@ -109,8 +109,23 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.ui.dspb_cutoff.setMinimum(0.00)
         self.ui.dspb_cutoff.setMaximum(20.00)
         self.ui.dspb_cutoff.setSingleStep(0.1)
+        item_list = [
+            "normal",
+            "Red-green (green weak, deuteranopia)",
+            "Red-green (red weak, protanopia)",
+            "Blue-yellow (tritanopia)"
+        ]
+        gui_utils.fill_combo_box(self.ui.cb_color_vision_mode, item_list)
 
         # </editor-fold>
+        if self.settings.color_vision_mode == constants.CVM_NORMAL:
+            self.ui.cb_color_vision_mode.setCurrentIndex(0)
+        elif self.settings.color_vision_mode == constants.CVM_DEUTERANOPIA:
+            self.ui.cb_color_vision_mode.setCurrentIndex(1)
+        elif self.settings.color_vision_mode == constants.CVM_PROTANOPIA:
+            self.ui.cb_color_vision_mode.setCurrentIndex(2)
+        elif self.settings.color_vision_mode == constants.CVM_TRITANOPIA:
+            self.ui.cb_color_vision_mode.setCurrentIndex(3)
 
         styles.set_stylesheet(self)
         self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
@@ -120,7 +135,11 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
     def choose_workspace_dir(self):
         gui_utils.choose_directory(self, self.ui.txt_workspace_dir)
 
+    def set_color_vision_mode(self):
+        pass
+
     def _connect_all_gui_elements(self):
+        self.ui.cb_color_vision_mode.currentIndexChanged.connect(self.set_color_vision_mode)
         self.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
         self.ui.btn_cancel.clicked.connect(self.cancel_dialog)
         self.ui.btn_ok.clicked.connect(self.ok_dialog)
@@ -132,6 +151,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.settings.set_workspace_path(self.ui.txt_workspace_dir.text())
         self.settings.set_cycles(str(self.ui.spb_cycles.value()))
         self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))
+        self.settings.color_vision_mode = self.ui.cb_color_vision_mode.currentText()
         self.settings.serialize_settings()
         logging.info("Settings were successfully saved.")
         self.close()
