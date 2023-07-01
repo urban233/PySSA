@@ -1736,21 +1736,56 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle("Information")
         msg.setStyleSheet("QLabel{font-size: 11pt;}")
 
-        if self.ui.lbl_page_title.text() == "View proteins of current project":
+
+        if self.ui.lbl_page_title.text() == "Home":
+            msg.setText(
+                "This is the Home page.\n"
+                "At the sidebar you can see some options what you can do."
+            )
+        elif self.ui.lbl_page_title.text() == "Create new project":
+            msg.setText(
+                "This is the page for creating a new project.\n"
+                "Here you can create a blank or a project with an existing protein.\n"
+                "Therfore you type your project name in the row. \n"
+                "The valid charakters for the project name are: A-Z, a-z, 0-9, _ and -. \n"
+                "Otherwise you use an invalid charakter and cannot create a new project. \n"
+                "If you click on Add existing protein, you can choose your protein by typing the PDB ID or choose a existing .pdb file in your filesystem."
+                "When you have no internet, you cannot type your PDB ID in the row."
+            )
+        elif self.ui.lbl_page_title.text() == "Open existing project":
+            msg.setText(
+                "This is the page for open an existing project. \n"
+                "If you have a lot of projects you can search they in the row of Search. \n"
+                "Moreover your selected project is in the row of Selected project. Now the Open button is enabled and you can open your project."
+            )
+        elif self.ui.lbl_page_title.text() == "Delete existing project":
+            msg.setText(
+                "This is the page for delete a existing project. \n"
+                "If you have a lot of projects you can search they in the row of Search. \n"
+                "Moreover your selected project is in the row of Selected project."
+                "Now the Delete button is enabled and you can delete your project."
+            )
+        elif self.ui.lbl_page_title.text() == "Edit proteins of current project":
+            msg.setText(
+                "This is the Edit page.\n"
+                "Here you can clean or delete your protein structure. \n"
+                "Click at the protein you want to edit. \n"
+                "If you use your uncleaned protein structure, you can create a new protein structure."
+                "This creates a duplicate, which included the cleaned protein structure."
+                "Otherwise you can update your protein structure with no duplicate."
+            )
+        elif self.ui.lbl_page_title.text() == "View proteins of current project":
             msg.setText(
                 "This is the View page.\n"
-                "Here you can create a new project or delete an existing one.\n"
-                "Or you can import an existing one or open one.\n"
-                "\n"
-                "\n"
-                "Create project: \n"
-                "Here you can create a blank or a project with an existing protein.\n"
-                "\n"
-                "Open project: \n"
-                "Here you can open a project which you created previously."
+                "Here you can show the sequence or the structure of selected protein.\n"
             )
-        else:
-            msg.setText("Ohh that is the homepage ...")
+        elif self.ui.lbl_page_title.text() == "Use existing project":
+            msg.setText(
+                "This is the Use page.\n"
+                ""
+            )
+
+
         msg.exec_()
         return
 
