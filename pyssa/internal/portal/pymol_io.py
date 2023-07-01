@@ -28,6 +28,7 @@ from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import path_util
 from pyssa.util import constants
+from pyssa.util import globals
 
 
 def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
@@ -41,7 +42,17 @@ def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) ->
     if not safeguard.Safeguard.check_filepath(f"{filepath}/{basename}"):
         raise FileNotFoundError
     cmd.load(f"{filepath}/{basename}", object=molecule_object)
-
+    if globals.g_settings.color_vision_mode == constants.CVM_NORMAL:
+        color_prot_1 = constants.CVM_NORMAL_PROT_1_COLOR
+    elif globals.g_settings.color_vision_mode == constants.CVM_DEUTERANOPIA:
+        color_prot_1 = constants.CVM_DEUTERANOPIA_PROT_1_COLOR
+    elif globals.g_settings.color_vision_mode == constants.CVM_PROTANOPIA:
+        color_prot_1 = constants.CVM_PROTANOPIA_PROT_1_COLOR
+    elif globals.g_settings.color_vision_mode == constants.CVM_TRITANOPIA:
+        color_prot_1 = constants.CVM_TRITANOPIA_PROT_1_COLOR
+    else:
+        color_prot_1 = "green"
+    cmd.color(color_prot_1, molecule_object)
 
 def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_object: str) -> None:
     """This function fetches a protein in pymol from the PDB.
