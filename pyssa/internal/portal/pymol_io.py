@@ -54,6 +54,7 @@ def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) ->
         color_prot_1 = "green"
     cmd.color(color_prot_1, molecule_object)
 
+
 def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_object: str) -> None:
     """This function fetches a protein in pymol from the PDB.
 

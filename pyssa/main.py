@@ -233,6 +233,7 @@ class MainWindow(QMainWindow):
         self.worker_image_creation.setAutoDelete(True)
 
         self.block_box_analysis = basic_boxes.no_buttons("Analysis", "An analysis is currently running, please wait.", QMessageBox.Information)
+        self.block_box_prediction: QMessageBox = QMessageBox()
         self.block_box_images = basic_boxes.no_buttons("Analysis Images", "Images getting created, please wait.", QMessageBox.Information)
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
@@ -2924,12 +2925,14 @@ class MainWindow(QMainWindow):
     def post_prediction_process(self):
         if self.prediction_type == constants.PREDICTION_TYPE_PRED:
             if len(self.app_project.proteins) == 0:
+                self.block_box_prediction.destroy(True)
                 basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
                 self.app_project.serialize_project(self.app_project.get_project_xml_path())
                 constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+                self.block_box_prediction.destroy(True)
                 basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
                                QMessageBox.Information)
                 constants.PYSSA_LOGGER.info("All structure predictions are done.")
@@ -2938,6 +2941,7 @@ class MainWindow(QMainWindow):
                 self._init_local_pred_multi_page()
         elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS:
             if len(self.app_project.proteins) == 1:
+                self.block_box_prediction.destroy(True)
                 basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
@@ -2958,11 +2962,13 @@ class MainWindow(QMainWindow):
                     f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
                 if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
                     os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+                self.block_box_prediction.destroy(True)
                 self.block_box_analysis.exec_()
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
         elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS:
             if len(self.app_project.proteins) == 1:
+                self.block_box_prediction.destroy(True)
                 basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
@@ -2983,6 +2989,7 @@ class MainWindow(QMainWindow):
                     f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
                 if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
                     os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+                self.block_box_prediction.destroy(True)
                 self.block_box_analysis.exec_()
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
@@ -2998,16 +3005,32 @@ class MainWindow(QMainWindow):
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
         self.threadpool.start(self.worker_prediction)
         gui_elements_to_show = [
-            self.ui.btn_prediction_abort,
+
         ]
         gui_elements_to_hide = [
+            self.ui.btn_prediction_abort,
             self.ui.btn_use_page,
             self.ui.btn_close_project,
             self.ui.btn_pred_local_monomer_page,
             self.ui.btn_pred_local_multimer_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        self.display_view_page()
+
+        self.block_box_prediction = QMessageBox()
+        self.block_box_prediction.setIcon(QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        self.block_box_prediction.exec_()
+        if self.block_box_prediction.clickedButton() == btn_abort:
+            self.abort_prediction()
+            self.block_box_prediction.close()
+            return
+        else:
+            print("Unexpected Error.")
+            self.block_box_prediction.close()
 
     def abort_prediction(self):
         constants.PYSSA_LOGGER.info("Structure prediction process was aborted manually.")
@@ -3534,7 +3557,21 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_local_multimer_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        self.display_view_page()
+
+        self.block_box_prediction = QMessageBox()
+        self.block_box_prediction.setIcon(QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        if self.block_box_prediction.clickedButton() == btn_abort:
+            self.abort_prediction()
+            self.block_box_prediction.close()
+            return
+        else:
+            print("Unexpected Error.")
+            self.block_box_prediction.close()
 
     # def validate_local_pred_multi(self):
     #     self.local_pred_multimer_management.create_validation()
@@ -4589,7 +4626,7 @@ class MainWindow(QMainWindow):
         # self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
         #                                                   self.prediction_configuration, self.app_project)
         # constants.PYSSA_LOGGER.info("Created a new prediction worker.")
-        # self._thread_controller.thread_worker_pairs.get(constants.PREDICTION_TASK).setup_and_run_thread(display_msg_box2)
+        # self._thread_controller.thread_worker_pairs.get(constants.PREDICTION_TASK).setup_and_run_thread(display_self.block_box_prediction_box2)
         # gui_elements_to_show = [
         #     self.ui.btn_prediction_abort,
         # ]
@@ -4599,7 +4636,21 @@ class MainWindow(QMainWindow):
         # ]
         # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
         # #self._project_watcher.show_valid_options(self.ui)
-        self.display_view_page()
+        self.block_box_prediction = QMessageBox()
+        self.block_box_prediction.setIcon(QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        if self.block_box_prediction.clickedButton() == btn_abort:
+            self.abort_prediction()
+            self.block_box_prediction.close()
+            return
+        else:
+            print("Unexpected Error.")
+            self.block_box_prediction.close()
+
     # </editor-fold>
 
     # <editor-fold desc="Multimer Prediction + Analysis functions">
@@ -5743,7 +5794,21 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_local_multimer_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        self.display_view_page()
+
+        self.block_box_prediction = QMessageBox()
+        self.block_box_prediction.setIcon(QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        if self.block_box_prediction.clickedButton() == btn_abort:
+            self.abort_prediction()
+            self.block_box_prediction.close()
+            return
+        else:
+            print("Unexpected Error.")
+            self.block_box_prediction.close()
 
     # </editor-fold>
 

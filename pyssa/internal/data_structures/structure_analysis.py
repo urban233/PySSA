@@ -24,6 +24,7 @@ import logging
 import os.path
 import pathlib
 import shutil
+from pymol import cmd
 from typing import TYPE_CHECKING
 from pyssa.io_pyssa import path_util
 from pyssa.logging_pyssa import log_handlers
@@ -54,6 +55,9 @@ class Analysis:
             raise ValueError("Analysis list is empty.")
         logger.debug(self.analysis_list)
         for tmp_protein_pair in self.analysis_list:
+            logger.debug(cmd.get_model("all"))
+            cmd.reinitialize()
+            logger.debug(cmd.get_model("all"))
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
             take_images = False
             # make images if checked

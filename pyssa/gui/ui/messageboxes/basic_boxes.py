@@ -27,6 +27,28 @@ from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
+def abort(window_title, text_message, icon):
+    """This is a function which creates a basic QMessageBox with the buttons yes or no.
+
+    Returns:
+        True if "yes" is clicked
+        False if "no" is clicked
+    """
+    msg = QMessageBox()
+    msg.setIcon(icon)
+    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    styles.set_stylesheet(msg)
+    msg.setWindowTitle(window_title)
+    msg.setText(text_message)
+    btn_abort = msg.addButton("Abort", QMessageBox.ActionRole)
+    if msg.clickedButton() == btn_abort:
+        return True
+    else:
+        print("Unexpected Error.")
+        msg.close()
+    return msg
+
+
 def yes_or_no(window_title, text_message, icon) -> bool:
     """This is a function which creates a basic QMessageBox with the buttons yes or no.
 
@@ -54,6 +76,17 @@ def yes_or_no(window_title, text_message, icon) -> bool:
         msg.close()
 
 
+def no_buttons(window_title, text_message, icon):
+    msg = QMessageBox()
+    msg.setIcon(icon)
+    msg.setWindowTitle(window_title)
+    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    styles.set_stylesheet(msg)
+    msg.setText(text_message)
+    msg.setStandardButtons(QMessageBox.NoButton)
+    return msg
+
+
 def ok(window_title, text_message, icon):
     msg = QMessageBox()
     msg.setIcon(icon)
@@ -69,14 +102,3 @@ def ok(window_title, text_message, icon):
     else:
         msg.close()
         return False
-
-
-def no_buttons(window_title, text_message, icon):
-    msg = QMessageBox()
-    msg.setIcon(icon)
-    msg.setWindowTitle(window_title)
-    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setText(text_message)
-    msg.setStandardButtons(QMessageBox.NoButton)
-    return msg
