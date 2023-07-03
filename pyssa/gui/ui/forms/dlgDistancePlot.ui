@@ -86,7 +86,28 @@
     </widget>
    </item>
    <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <item>
+      <widget class="QPushButton" name="btn_distance_plot_reset">
+       <property name="text">
+        <string>Reset Plot</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer_15">
        <property name="orientation">
@@ -111,6 +132,13 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QCheckBox" name="cb_turn_on_grid">
+       <property name="text">
+        <string>Turn on grid</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer_14">
        <property name="orientation">

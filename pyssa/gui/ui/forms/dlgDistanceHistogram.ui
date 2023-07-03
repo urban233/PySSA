@@ -30,6 +30,13 @@
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="btn_scroll_down">
+       <property name="text">
+        <string>Scroll down</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="btn_scroll_up">
        <property name="text">
         <string>Scroll up</string>
@@ -40,6 +47,16 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QLabel" name="lbl_bar_size">
+       <property name="text">
+        <string>Bar widths:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cb_bar_size"/>
+     </item>
      <item>
       <spacer name="horizontalSpacer_14">
        <property name="orientation">
@@ -52,13 +69,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btn_scroll_down">
-       <property name="text">
-        <string>Scroll down</string>
-       </property>
-      </widget>
      </item>
     </layout>
    </item>

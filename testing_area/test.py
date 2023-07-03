@@ -19,29 +19,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import json
-import pathlib
-from xml.etree import ElementTree
-
-
-class XMLDeserialzer:
-
-    def __init__(self, filepath):
-        # Read the XML file
-        xml_file = open(filepath, "r")
-        xml_contents = xml_file.read()
-        self.xml_root = ElementTree.fromstring(xml_contents)
-
-    def deserialize_analysis_images(self, analysis_results: 'results.DistanceAnalysisResults'):
-        for tmp_protein_pair in self.xml_root.findall(".//protein_pair"):
-            if tmp_protein_pair.attrib["name"] == "6OMN_1_with_6OMN_2":
-                structure_aln_images = tmp_protein_pair.findall(".//auto_images/structure_aln_image")
-                print(structure_aln_images[0].tag)
-                interesting_reg_images = tmp_protein_pair.findall(".//auto_images/interesting_reg_image")
-                for tmp_image in interesting_reg_images:
-                    print(tmp_image.tag)
+from pymol import cmd
 
 
 if __name__ == '__main__':
+    cmd.fetch("3bmp")
+    cmd.fetch("6omn")
+    cmd.align("/3bmp//A//CA", "/6omn//E//CA", cycles=0, object="aln")
+    raw_aln = cmd.get_raw_alignment(name="aln")
+    # print residue pairs (atom index)
+    for idx1, idx2 in raw_aln:
+        print('%s`%d -> %s`%d' % tuple(idx1 + idx2))
+
+    #idx2resi = {}
+    #cmd.iterate('aln', 'idx2resi[model, index] = resi', space={'idx2resi': idx2resi})
+    idx2resi = []
+    cmd.iterate('aln', 'idx2resi.append((model, chain, resi, resn))', space={'idx2resi': idx2resi})
+    print(idx2resi)
+    prot_1_indices = []
+    prot_1_name = "3bmp"
+    prot_2_indices = []
+    prot_2_name = "6omn"
+    for tmp_prot_atom in idx2resi:
+        if tmp_prot_atom[0] == prot_1_name:
+            prot_1_indices.append(tmp_prot_atom[1])
+        if tmp_prot_atom[0] == prot_2_name:
+            prot_2_indices.append(tmp_prot_atom[1])
+    print(prot_1_indices)
+    print(prot_2_indices)
+    # calculate the distance between the alpha-C atoms
+    for resi_no in range(len(prot_1_indices)):
+        atom1 = f"/{prot_1_name}//A/{prot_1_indices[resi_no]}/CA"
+        atom2 = f"/{prot_2_name}//E/{prot_2_indices[resi_no]}/CA"
+        distance = round(cmd.get_distance(atom1, atom2), 2)
+        print(distance)
 

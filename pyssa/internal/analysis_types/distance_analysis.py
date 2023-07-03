@@ -74,7 +74,7 @@ class DistanceAnalysis:
     """
     the filename of the alignement file which gets created during the align command
     """
-    alignment_file_name: str
+    alignment_file_name: str = "aln"
     """
     a directory where all results related to the protein will be stored
     """
@@ -116,7 +116,8 @@ class DistanceAnalysis:
         self.cutoff: float = app_settings.cutoff
         self.cycles: int = app_settings.cycles
         self.figure_size = (11.0, 6.0)
-        self.alignment_file_name = f"{self._protein_pair_for_analysis.name}_alignment"
+        #self.alignment_file_name = f"{self._protein_pair_for_analysis.name}_alignment"
+        self.alignment_file_name = "aln"
 
     def save_distance_analysis_session(self) -> None:
         """This function saves the pymol session of the Protein pair distance analysis.
@@ -164,11 +165,7 @@ class DistanceAnalysis:
         """
         self._protein_pair_for_analysis.load_protein_pair_in_pymol()  # This creates a new pymol session
         self._protein_pair_for_analysis.color_protein_pair()
-        align_results = self.align_protein_pair_for_analysis()
-        self.rmsd_dict = {
-            "rmsd": str(round(align_results[0], 2)),
-            "aligned_residues": str(align_results[1]),
-        }
+
         # extract single chain selections into a list
         protein_1_chain_selections = self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string.split(",")
         protein_2_chain_selections = self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string.split(",")
@@ -181,6 +178,12 @@ class DistanceAnalysis:
         for tmp_selection_string in protein_2_chain_selections:
             protein_2_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
             logger.debug(f"Prot2: selection {tmp_selection_string}")
+
+        align_results = self.align_protein_pair_for_analysis()
+        self.rmsd_dict = {
+            "rmsd": str(round(align_results[0], 2)),
+            "aligned_residues": str(align_results[1]),
+        }
 
         # create list which consists of a tuple (prot_1_ca, prot_2_ca)
         pymol_ca_object_pairs = []

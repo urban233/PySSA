@@ -261,54 +261,83 @@ def calculate_distance_between_ca_atoms(a_count, a_ref_prot_ca, a_model_prot_ca,
     model_pos_list: [int] = []
     model_resi_list: [str] = []
     distance_list = []
-    for i in range(a_count):
-        print(i)
-        chain_ref: str = a_ref_prot_ca.atom[i + a_gap_ref].chain
-        pos_ref: str = a_ref_prot_ca.atom[i + a_gap_ref].resi
-        resi_ref: str = a_ref_prot_ca.atom[i + a_gap_ref].resn
-        print(f"ref resi: {resi_ref}")
-        # create var for chain, position and residue name for
-        # the model
-        chain_model: str = a_model_prot_ca.atom[i + a_gap_model].chain
-        pos_model: str = a_model_prot_ca.atom[i + a_gap_model].resi
-        resi_model: str = a_model_prot_ca.atom[i + a_gap_model].resn
-        print(f"model resi: {resi_model}")
 
-        # calculate the distance between the alpha-C atoms
-        atom1 = f"/{ref_prot_name}//{chain_ref}/{pos_ref}/CA"
-        atom2 = f"/{model_prot_name}//{chain_model}/{pos_model}/CA"
+    #raw_aln = cmd.get_raw_alignment(name="aln")
+    idx2resi = []
+    cmd.iterate('aln', 'idx2resi.append((model, chain, resi, resn))', space={'idx2resi': idx2resi})
+    prot_1_indices = []
+    prot_2_indices = []
+    for tmp_prot_atom in idx2resi:
+        if tmp_prot_atom[0] == ref_prot_name:
+            prot_1_indices.append((tmp_prot_atom[1], tmp_prot_atom[2], tmp_prot_atom[3]))
+        if tmp_prot_atom[0] == model_prot_name:
+            prot_2_indices.append((tmp_prot_atom[1], tmp_prot_atom[2], tmp_prot_atom[3]))
+    # calculate the distance between the alpha-C atoms
+    for resi_no in range(len(prot_1_indices)):
+        logger.debug(prot_1_indices)
+        atom1 = f"/{ref_prot_name}//{prot_1_indices[resi_no][0]}/{prot_1_indices[resi_no][1]}/CA"
+        atom2 = f"/{model_prot_name}//{prot_2_indices[resi_no][0]}/{prot_2_indices[resi_no][1]}/CA"
+        logger.debug(atom1)
+        logger.debug(atom2)
         distance = round(cmd.get_distance(atom1, atom2), 2)
 
-        ref_chain_list.append(chain_ref)
-        ref_pos_list.append(pos_ref)
-        ref_resi_list.append(resi_ref)
-        model_chain_list.append(chain_model)
-        model_pos_list.append(pos_model)
-        model_resi_list.append(resi_model)
+        ref_chain_list.append(prot_1_indices[resi_no][0])
+        ref_pos_list.append(prot_1_indices[resi_no][1])
+        ref_resi_list.append(prot_1_indices[resi_no][2])
+        model_chain_list.append(prot_2_indices[resi_no][0])
+        model_pos_list.append(prot_2_indices[resi_no][1])
+        model_resi_list.append(prot_2_indices[resi_no][2])
         distance_list.append(distance)
-        index_list.append(i)
-        # ONLY FOR DEBUG PURPOSE!
-        # TODO: Remove if everything is stable
-        print(index_list)
-        print(ref_chain_list)
-        print(ref_pos_list)
-        print(ref_resi_list)
-        print(model_chain_list)
-        print(model_pos_list)
-        print(model_resi_list)
-        print(distance_list)
+        index_list.append(resi_no)
 
-        current_time = datetime.datetime.now()
-        filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}_{chain_ref}-{chain_model}.ascii"
-        file = open(f"{filename}", "w")
-        file.write(f"{str(ref_chain_list)}\n")
-        file.write(f"{str(ref_pos_list)}\n")
-        file.write(f"{str(ref_resi_list)}\n")
-        file.write(f"{str(model_chain_list)}\n")
-        file.write(f"{str(model_pos_list)}\n")
-        file.write(f"{str(model_resi_list)}\n")
-        file.write(f"{str(distance_list)}\n")
-        file.close()
+    # for i in range(a_count):
+    #     print(i)
+    #     chain_ref: str = a_ref_prot_ca.atom[i + a_gap_ref].chain
+    #     pos_ref: str = a_ref_prot_ca.atom[i + a_gap_ref].resi
+    #     resi_ref: str = a_ref_prot_ca.atom[i + a_gap_ref].resn
+    #     print(f"ref resi: {resi_ref}")
+    #     # create var for chain, position and residue name for
+    #     # the model
+    #     chain_model: str = a_model_prot_ca.atom[i + a_gap_model].chain
+    #     pos_model: str = a_model_prot_ca.atom[i + a_gap_model].resi
+    #     resi_model: str = a_model_prot_ca.atom[i + a_gap_model].resn
+    #     print(f"model resi: {resi_model}")
+    #
+    #     # calculate the distance between the alpha-C atoms
+    #     atom1 = f"/{ref_prot_name}//{chain_ref}/{pos_ref}/CA"
+    #     atom2 = f"/{model_prot_name}//{chain_model}/{pos_model}/CA"
+    #     distance = round(cmd.get_distance(atom1, atom2), 2)
+    #
+    #     ref_chain_list.append(chain_ref)
+    #     ref_pos_list.append(pos_ref)
+    #     ref_resi_list.append(resi_ref)
+    #     model_chain_list.append(chain_model)
+    #     model_pos_list.append(pos_model)
+    #     model_resi_list.append(resi_model)
+    #     distance_list.append(distance)
+    #     index_list.append(i)
+    #     # ONLY FOR DEBUG PURPOSE!
+    #     # TODO: Remove if everything is stable
+    #     print(index_list)
+    #     print(ref_chain_list)
+    #     print(ref_pos_list)
+    #     print(ref_resi_list)
+    #     print(model_chain_list)
+    #     print(model_pos_list)
+    #     print(model_resi_list)
+    #     print(distance_list)
+    #
+    #     current_time = datetime.datetime.now()
+    #     filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}_{chain_ref}-{chain_model}.ascii"
+    #     file = open(f"{filename}", "w")
+    #     file.write(f"{str(ref_chain_list)}\n")
+    #     file.write(f"{str(ref_pos_list)}\n")
+    #     file.write(f"{str(ref_resi_list)}\n")
+    #     file.write(f"{str(model_chain_list)}\n")
+    #     file.write(f"{str(model_pos_list)}\n")
+    #     file.write(f"{str(model_resi_list)}\n")
+    #     file.write(f"{str(distance_list)}\n")
+    #     file.close()
 
     index_array: np.ndarray = np.array(index_list)
     ref_chain_array: np.ndarray = np.array(ref_chain_list)

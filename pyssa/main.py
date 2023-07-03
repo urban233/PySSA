@@ -6860,8 +6860,8 @@ class MainWindow(QMainWindow):
 
         # hide unnecessary representations
         cmd.hide("cartoon", tmp_protein_pair.protein_1.get_molecule_object())
-        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}_CA")
-        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}_CA")
+        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
+        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
 
     def change_interesting_regions(self):
         """This function is used to switch between projects within a job.

@@ -55,9 +55,7 @@ class Analysis:
             raise ValueError("Analysis list is empty.")
         logger.debug(self.analysis_list)
         for tmp_protein_pair in self.analysis_list:
-            logger.debug(cmd.get_model("all"))
             cmd.reinitialize()
-            logger.debug(cmd.get_model("all"))
             tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
             take_images = False
             # make images if checked
