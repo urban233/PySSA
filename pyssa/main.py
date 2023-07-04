@@ -25,6 +25,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import webbrowser
 import pathlib
 import PyQt5.QtCore
@@ -269,7 +270,6 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_analysis_multi_prot_to_predict.setEditTriggers(
             self.ui.table_pred_analysis_multi_prot_to_predict.NoEditTriggers)
 
-
         # connections
         self._connect_all_gui_elements()
         # create tooltips
@@ -292,7 +292,7 @@ class MainWindow(QMainWindow):
 
         # fixme: should the pdf documentation be accessible through the pyssa gui?
         self.ui.action_help_docs_pdf.setVisible(False)
-
+        self.ui.action_help_docs.setVisible(False)
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
@@ -1521,12 +1521,11 @@ class MainWindow(QMainWindow):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_edit_page)
 
-    def display_use_page(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+    def thread_func_build_use_page(self):
         self._init_use_page()
         self.ui.list_use_available_protein_structures.clear()
         self.ui.list_use_selected_protein_structures.clear()
-        valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
+        tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
         # filesystem operations
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
         # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_use_selected_protein_structures)
@@ -1541,10 +1540,40 @@ class MainWindow(QMainWindow):
                 protein_names.remove(tmp_prot_name)
 
         self.ui.list_use_available_protein_structures.addItems(protein_names)
+
+    def display_use_page(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        tmp_thread = threading.Thread(target=self.thread_func_build_use_page, daemon=True)
+        tmp_thread.start()
+        tmp_thread.join()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_use_page)
         QApplication.restoreOverrideCursor()
+
+        # QApplication.setOverrideCursor(Qt.WaitCursor)
+        # self._init_use_page()
+        # self.ui.list_use_available_protein_structures.clear()
+        # self.ui.list_use_selected_protein_structures.clear()
+        # valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
+        # # filesystem operations
+        # gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
+        # # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_use_selected_protein_structures)
+        # protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path)
+        # global_variables.global_var_workspace_proteins = protein_dict
+        # # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
+        # # are available
+        # for i in range(self.ui.list_use_selected_protein_structures.count()):
+        #     self.ui.list_use_selected_protein_structures.setCurrentRow(i)
+        #     tmp_prot_name = self.ui.list_use_selected_protein_structures.currentItem().text()
+        #     if tmp_prot_name in protein_names:
+        #         protein_names.remove(tmp_prot_name)
+        #
+        # self.ui.list_use_available_protein_structures.addItems(protein_names)
+        # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
+        # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+        #                                                         self.ui.btn_use_page)
+        # QApplication.restoreOverrideCursor()
 
     def display_hotspots_page(self):
         self.ui.list_hotspots_choose_protein.clear()
@@ -1986,23 +2015,32 @@ class MainWindow(QMainWindow):
             self.ui.btn_open_open_project.setEnabled(True)
             styles.color_button_ready(self.ui.btn_open_open_project)
 
-    def open_project(self):
-        """This function opens an existing project
-
-        """
+    def thread_func_open_project(self):
         # show project management options in side menu
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.ui.list_open_projects.currentItem().text()}")
         self.app_project = project.Project.deserialize_project(tmp_project_path, self.app_settings)
         constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
         self._project_watcher.current_project = self.app_project
         self.project_scanner.project = self.app_project
-        constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
+        constants.PYSSA_LOGGER.info(
+            f"{self._project_watcher.current_project.get_project_name()} is the current project.")
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
         self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
+
+    def open_project(self):
+        """This function opens an existing project
+
+        """
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        tmp_thread = threading.Thread(target=self.thread_func_open_project, daemon=True)
+        tmp_thread.start()
+        tmp_thread.join()
         cmd.reinitialize()
         self.ui.btn_manage_session.hide()
         self.display_view_page()
+        QApplication.restoreOverrideCursor()
+
 
     # </editor-fold>
 

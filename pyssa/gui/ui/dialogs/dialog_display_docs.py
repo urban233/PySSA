@@ -19,9 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-import PyQt5.QtWebEngineWidgets
-
 import PyQt5
 from PyQt5.QtCore import QUrl
 from PyQt5.QtCore import Qt

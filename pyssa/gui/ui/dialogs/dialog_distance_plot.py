@@ -24,8 +24,8 @@ from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from pymol import cmd
-import pyqtgraph as pg
-import pyqtgraph.exporters
+#import pyqtgraph as pg
+#import pyqtgraph.exporters
 import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
 from pyssa.internal.data_structures import protein_pair
