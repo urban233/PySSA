@@ -3603,6 +3603,7 @@ class MainWindow(QMainWindow):
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
         btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        self.block_box_prediction.exec_()
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
@@ -4681,6 +4682,7 @@ class MainWindow(QMainWindow):
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
         btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        self.block_box_prediction.exec_()
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
@@ -5840,6 +5842,7 @@ class MainWindow(QMainWindow):
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
         btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        self.block_box_prediction.exec_()
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
@@ -6337,7 +6340,18 @@ class MainWindow(QMainWindow):
                        QMessageBox.Information)
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._project_watcher.show_valid_options(self.ui)
+        self.display_view_page()
         self._init_batch_analysis_page()
+
+    # def thread_func_run_analysis(self, callback):
+    #     worker = workers.AnalysisWorkerPool(
+    #         self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
+    #         self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
+    #     worker.run()
+    #     callback()
+    #
+    # def analysis_callback(self):
+    #     self.post_analysis_process()
 
     def start_process_batch(self):
         """This function contains the main analysis algorithm for the
@@ -6400,6 +6414,9 @@ class MainWindow(QMainWindow):
         #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
         #     self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
         constants.PYSSA_LOGGER.info("Begin analysis process.")
+        # analysis_thread = threading.Thread(target=self.thread_func_run_analysis, args=(self.analysis_callback,))
+        # analysis_thread.start()
+        # self.block_box_analysis.exec_()
         self.worker_analysis = workers.AnalysisWorkerPool(
             self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
             self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
@@ -6955,14 +6972,19 @@ class MainWindow(QMainWindow):
         """This function opens a window which displays the distance plot.
 
         """
-        try:
-            protein_pair_of_analysis = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
-            dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
-            dialog.exec_()
-        except:
-            constants.PYSSA_LOGGER.error("The distance plot could not be created, due to an known bug.")
-            basic_boxes.ok("Display distance plot", "There was a problem with the display of the distance plot.\n"
-                                                    "Try closing the project, or restarting the application.", QMessageBox.Error)
+        protein_pair_of_analysis = self.app_project.search_protein_pair(
+        self.ui.cb_results_analysis_options.currentText()
+        )
+        dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
+        dialog.exec_()
+        # try:
+        #     protein_pair_of_analysis = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
+        #     dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
+        #     dialog.exec_()
+        # except:
+        #     constants.PYSSA_LOGGER.error("The distance plot could not be created, due to an known bug.")
+        #     basic_boxes.ok("Display distance plot", "There was a problem with the display of the distance plot.\n"
+        #                                             "Try closing the project, or restarting the application.", QMessageBox.Error)
 
     def display_distance_histogram(self):
         """This function opens a window which displays the distance histogram.

@@ -61,7 +61,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-        self.graph_widget = pg.PlotWidget()
+        #self.graph_widget = pg.PlotWidget()
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         custom_pyssa_styles.set_stylesheet(self)
 
@@ -228,7 +228,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
     def save_plot_to_file(self):
         # create an exporter instance, as an argument give it
         # the item you wish to export
-        exporter = pg.exporters.ImageExporter(self.graph_widget.plotItem)
+        #exporter = pg.exporters.ImageExporter(self.graph_widget.plotItem)
 
         # set export parameters if needed
         exporter.parameters()['width'] = 1000  # (note this also affects height parameter)

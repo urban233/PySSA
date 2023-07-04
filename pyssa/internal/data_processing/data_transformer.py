@@ -20,15 +20,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains helper functions for specific data transformations."""
+import gc
 import logging
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
-from pyssa.internal.data_structures import sequence
+from pyssa.internal.data_structures import sequence, selection
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import analysis_run_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.analysis_types import distance_analysis
-from pyssa.util import analysis_util
+from pyssa.util import analysis_util, protein_util
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -270,14 +271,14 @@ class DistanceAnalysisDataTransformer:
 
     def _create_distance_analysis(self):
         self.analysis_protein_pair.set_distance_analysis(distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings))
+        logger.debug(f"Memory address of distance analysis object: {self.analysis_protein_pair.distance_analysis}")
 
     def _set_selection_for_analysis(self):
-        self.analysis_protein_pair.distance_analysis.create_align_selections(
-            analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_1,
-                                                                           self.analysis_run.protein_chains_1),
-            analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_2,
-                                                                           self.analysis_run.protein_chains_2)
-        )
+        prot_1_selection = analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_1,
+                                                                                          self.analysis_run.protein_chains_1)
+        prot_2_selection = analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_2,
+                                                                                          self.analysis_run.protein_chains_2)
+        self.analysis_protein_pair.distance_analysis.create_align_selections(prot_1_selection, prot_2_selection)
 
     def transform_gui_input_to_distance_analysis_object(self):
         self._create_analysis_run_info()

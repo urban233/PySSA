@@ -91,7 +91,7 @@ def get_analysis_runs(self):
     return transformer.transform_data_for_analysis()
 
 
-def create_selection_strings_for_structure_alignment(protein, selected_chains: list):
+def create_selection_strings_for_structure_alignment(protein, selected_chains: list) -> selection.Selection:
     protein_selection = selection.Selection(protein.get_molecule_object())
     if len(selected_chains) != 0:
         protein_chains = []
@@ -99,6 +99,9 @@ def create_selection_strings_for_structure_alignment(protein, selected_chains: l
             protein_chains.append(tmp_chain)
         protein_selection.set_selections_from_chains_ca(
             protein_util.get_chains_from_list_of_chain_names(protein, protein_chains))
+        logger.debug(
+            f"This is one selection created with <create_selection_strings_for_structure_alignment>: {protein_selection.selection_string}")
+        #protein_selection.set_selections_from_chains_ca(protein_chains)
     else:
         all_protein_chains = []
         for tmp_chain in protein.chains:

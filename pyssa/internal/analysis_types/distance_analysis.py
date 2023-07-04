@@ -84,7 +84,6 @@ class DistanceAnalysis:
     """
     pymol_session_filepath: path_util.FilePath
     """
-    
     """
     distance_analysis_data: dict[str, np.ndarray] = {}
     """
@@ -119,6 +118,9 @@ class DistanceAnalysis:
         #self.alignment_file_name = f"{self._protein_pair_for_analysis.name}_alignment"
         self.alignment_file_name = "aln"
 
+    def get_protein_pair(self):
+        return self._protein_pair_for_analysis
+
     def save_distance_analysis_session(self) -> None:
         """This function saves the pymol session of the Protein pair distance analysis.
 
@@ -131,6 +133,8 @@ class DistanceAnalysis:
         """This function creates the selection which are needed for the align command.
 
         """
+        logger.debug(f"1st argument of <create_align_selections>: {protein_1_selection.selection_string} {protein_1_selection}")
+        logger.debug(f"2nd argument of <create_align_selections>: {protein_2_selection.selection_string} {protein_2_selection}")
         # <editor-fold desc="Checks">
         if protein_1_selection.molecule_object != self._protein_pair_for_analysis.protein_1.get_molecule_object():
             logger.error("Selection is illegal.")
@@ -143,6 +147,9 @@ class DistanceAnalysis:
 
         self._protein_pair_for_analysis.protein_1.pymol_selection = protein_1_selection
         self._protein_pair_for_analysis.protein_2.pymol_selection = protein_2_selection
+        logger.debug(f"Prot 1 sele in <create_align_selections>: {self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_1.pymol_selection}")
+        logger.debug(
+            f"Prot 2 sele in <create_align_selections>: {self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_2.pymol_selection}")
 
     def align_protein_pair_for_analysis(self) -> tuple:
         """This function aligns the protein pair with the PyMOL align command.
@@ -150,6 +157,10 @@ class DistanceAnalysis:
         Returns:
             a tuple with the rmsd and aligned amino acids
         """
+        logger.debug(
+            f"Prot 1 sele in <align_protein_pair_for_analysis>: {self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_1.pymol_selection}")
+        logger.debug(
+            f"Prot 2 sele in <align_protein_pair_for_analysis>: {self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_2.pymol_selection}")
         results = protein_pair_operations.align_protein_pair(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string,
                                                              self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string,
                                                              self.alignment_file_name)
@@ -163,49 +174,40 @@ class DistanceAnalysis:
         """This function does the distance analysis of the protein pair.
 
         """
-        self._protein_pair_for_analysis.load_protein_pair_in_pymol()  # This creates a new pymol session
+        logger.info("Start of do_analysis_in_pymol() method.")
+        self._protein_pair_for_analysis.load_protein_pair_in_pymol()
+        logger.info(f"Loaded protein pair: {self._protein_pair_for_analysis.name} in pymol session.")
         self._protein_pair_for_analysis.color_protein_pair()
+        logger.info(f"Colored protein pair: {self._protein_pair_for_analysis.name} in pymol session.")
 
-        # extract single chain selections into a list
-        protein_1_chain_selections = self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string.split(",")
-        protein_2_chain_selections = self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string.split(",")
-        # get the pymol chempy objects of the selections
-        protein_1_ca_pymol_objects = []
-        for tmp_selection_string in protein_1_chain_selections:
-            protein_1_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
-            logger.debug(f"Prot1: selection {tmp_selection_string}")
-        protein_2_ca_pymol_objects = []
-        for tmp_selection_string in protein_2_chain_selections:
-            protein_2_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
-            logger.debug(f"Prot2: selection {tmp_selection_string}")
+        logger.debug(f"Protein 1 selection string: {self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_1.pymol_selection}")
+        logger.debug(f"Protein 2 selection string: {self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_2.pymol_selection}")
+        # # extract single chain selections into a list
+        # protein_1_chain_selections = self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string.split(",")
+        # protein_2_chain_selections = self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string.split(",")
+        # # get the pymol chempy objects of the selections
+        # protein_1_ca_pymol_objects = []
+        # for tmp_selection_string in protein_1_chain_selections:
+        #     protein_1_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
+        #     logger.debug(f"Prot1: selection {tmp_selection_string}")
+        # protein_2_ca_pymol_objects = []
+        # for tmp_selection_string in protein_2_chain_selections:
+        #     protein_2_ca_pymol_objects.append(cmd.get_model(tmp_selection_string))
+        #     logger.debug(f"Prot2: selection {tmp_selection_string}")
 
         align_results = self.align_protein_pair_for_analysis()
+        logger.info(f"Aligned protein pair: {self._protein_pair_for_analysis.name} in pymol session.")
         self.rmsd_dict = {
             "rmsd": str(round(align_results[0], 2)),
             "aligned_residues": str(align_results[1]),
         }
 
-        # create list which consists of a tuple (prot_1_ca, prot_2_ca)
-        pymol_ca_object_pairs = []
-        logger.debug(pymol_ca_object_pairs)
-        for i in range(len(protein_1_ca_pymol_objects)):
-            pymol_ca_object_pairs.append((protein_1_ca_pymol_objects[i], protein_2_ca_pymol_objects[i]))
-        for tmp_pair in pymol_ca_object_pairs:
-            prot_ref_ca = tmp_pair[0]
-            prot_model_ca = tmp_pair[1]
-
-            ref_count, ref_start_index = analysis_util.count_atoms_in_selection(prot_ref_ca)
-            model_count, model_start_index = analysis_util.count_atoms_in_selection(prot_model_ca)
-
-            count = analysis_util.get_lowest_count(ref_count, model_count)
-            distances = protein_pair_util.calculate_distance_between_ca_atoms(
-                count, prot_ref_ca, prot_model_ca,
-                analysis_util.get_ref_gap(ref_start_index, model_start_index),
-                analysis_util.get_model_gap(ref_start_index, model_start_index),
-                self._protein_pair_for_analysis.protein_1.get_molecule_object(),
-                self._protein_pair_for_analysis.protein_2.get_molecule_object(),
-            )
-            self.distance_analysis_data = distances
+        distances = protein_pair_util.calculate_distance_between_ca_atoms(
+            self._protein_pair_for_analysis.protein_1.get_molecule_object(),
+            self._protein_pair_for_analysis.protein_2.get_molecule_object(),
+        )
+        logger.info(f"Calculated distances of protein pair: {self._protein_pair_for_analysis.name}.")
+        self.distance_analysis_data = distances
         self.analysis_results = results.DistanceAnalysisResults(
             self.distance_analysis_data,
             pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),

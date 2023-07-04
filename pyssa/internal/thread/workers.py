@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains worker classes for all processes done in the threadpool"""
+import copy
 import os
 import shutil
 import subprocess
@@ -256,14 +257,19 @@ class AnalysisWorkerPool(QtCore.QRunnable):
         distance_analysis_runs = []
         logger.debug(f"list count: {self.list_analysis_overview.count()}")
         for row_no in range(self.list_analysis_overview.count()):
-            distance_analysis_runs.append(
-                data_transformer.DistanceAnalysisDataTransformer(
+            input_transformer = data_transformer.DistanceAnalysisDataTransformer(
                     self.list_analysis_overview.item(row_no).text(),
                     self.app_project,
                     self.app_settings
-                ).transform_gui_input_to_distance_analysis_object()
             )
-        logger.debug(distance_analysis_runs)
+            logger.debug(f"Memory address of transformer: {input_transformer}")
+            protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
+            logger.debug(f"Memory address of protein_pair_for_analysis: {protein_pair_for_analysis}")
+            new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
+            distance_analysis_runs.append(new_protein_pair)
+            logger.debug(f"Protein selection: {protein_pair_for_analysis.distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
+        logger.debug(f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}")
+        logger.debug(f"Protein 1 from distance_analysis_runs: {distance_analysis_runs[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
         return distance_analysis_runs
 
     def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':
@@ -271,8 +277,8 @@ class AnalysisWorkerPool(QtCore.QRunnable):
 
         """
         analysis_runs = structure_analysis.Analysis(self.app_project)
-        for tmp_distance_analysis in self.transform_gui_input_to_practical_data():
-            analysis_runs.analysis_list.append(tmp_distance_analysis)
+        analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
+        logger.debug(analysis_runs.analysis_list[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
         return analysis_runs
 
     def run_analysis(self) -> None:
