@@ -95,6 +95,9 @@ LOG_FILENAME = f"{current_time.year}-{current_time.month:02d}-{current_time.day:
 LOG_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/logs/{LOG_FILENAME}")
 LOG_PATH = pathlib.Path(f"{SETTINGS_DIR}/logs")
 
+TUTORIAL_PATH = "C:\\ProgramData\\pyssa\\plugin\\pyssa-demo-tutorial.pdf"
+DOCS_PATH = "C:\\ProgramData\\pyssa\\plugin\\user_guide.pdf"
+
 # OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
 # OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
 # NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
@@ -104,7 +107,6 @@ ADD_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/add_ws
 # TODO: uncomment constant below before deployment
 # WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
 WSL_CONF_PATH = f"/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
-
 WSL_DISTRO_NAME = "UbuntuColabfold"
 WSL_STORAGE_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold")
 #WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")

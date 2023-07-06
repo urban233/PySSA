@@ -299,8 +299,10 @@ class MainWindow(QMainWindow):
             self.ui.action_install_from_file.setVisible(False)
 
         # fixme: should the pdf documentation be accessible through the pyssa gui?
-        self.ui.action_help_docs_pdf.setVisible(False)
-        self.ui.action_help_docs.setVisible(False)
+        self.ui.action_help_docs_pdf.setText("Documentation")
+        self.ui.action_help_docs_pdf.setVisible(True)
+        self.ui.action_help_docs.setText("Tutorial")
+        self.ui.action_help_docs.setVisible(True)
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
@@ -1684,26 +1686,14 @@ class MainWindow(QMainWindow):
         """This function opens the official plugin documentation as HTML page.
 
         """
-        dialog = dialog_display_docs.WebViewDialog(str(constants.DOCS_HTML))
-        dialog.exec_()
+        os.startfile(constants.TUTORIAL_PATH)
 
     @staticmethod
     def open_documentation_pdf():
         """This function opens the official plugin documentation as PDF.
 
         """
-        # webbrowser.open_new(
-        #     f"file://{os.getcwd()}/docs/pyssa/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
-        # opens the documentation of the os
-        if sys.platform.startswith("darwin"):
-            # macOS path
-            webbrowser.open_new(f"file://{constants.path_list[1]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
-        elif sys.platform.startswith("linux"):
-            # Linux path
-            webbrowser.open_new(f"file://{constants.path_list[0]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
-        elif sys.platform.startswith("win32"):
-            # Windows path
-            webbrowser.open_new(f"file://{constants.path_list[2]}/docs/pymol_plugin/build/latex/pyssa-python-pluginforsequencetostructureanalysis.pdf")
+        os.startfile(constants.DOCS_PATH)
 
     @staticmethod
     def open_about():
