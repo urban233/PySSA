@@ -21,6 +21,7 @@
 #
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_about import Ui_Dialog
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
@@ -41,7 +42,9 @@ class DialogAbout(QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.ui.btn_ok.clicked.connect(self.close_dialog)
-        self.ui.label.setText("PySSA")
+        original_pixmap = QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png")
+        scaled_pixmap = original_pixmap.scaled(150, 150)
+        self.ui.lbl_pyssa_logo.setPixmap(scaled_pixmap)
         self.ui.label_2.setText(f"Version: {constants.VERSION_NUMBER}")
         styles.set_stylesheet(self)
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))

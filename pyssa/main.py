@@ -26,6 +26,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 import webbrowser
 import pathlib
 import PyQt5.QtCore
@@ -152,7 +153,14 @@ class MainWindow(QMainWindow):
                 sys.exit()
             self.app_settings.app_launch = 1
             self.app_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
+            tmp_project = project.Project("", dialog_startup.global_var_startup_workspace)
+            tmp_project = tmp_project.deserialize_project(str(pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml")), self.app_settings)
+            tmp_project.set_workspace_path(dialog_startup.global_var_startup_workspace)
+            new_filepath = pathlib.Path(f"{dialog_startup.global_var_startup_workspace}/bmp2-demo.xml")
+            tmp_project.serialize_project(new_filepath)
+            os.remove(str(pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml")))
             self.app_settings.serialize_settings()
+            QApplication.restoreOverrideCursor()
         try:
             self.app_settings = self.app_settings.deserialize_settings()
         except ValueError:
@@ -296,7 +304,7 @@ class MainWindow(QMainWindow):
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-        self.setWindowTitle(f"PySSA {constants.VERSION_NUMBER}")
+        self.setWindowTitle("PySSA")
         constants.PYSSA_LOGGER.info("PySSA started.")
 
     # <editor-fold desc="GUI page management functions">
@@ -1521,7 +1529,7 @@ class MainWindow(QMainWindow):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_edit_page)
 
-    def thread_func_build_use_page(self):
+    def thread_func_build_use_page(self, show_use_page):
         self._init_use_page()
         self.ui.list_use_available_protein_structures.clear()
         self.ui.list_use_selected_protein_structures.clear()
@@ -1540,16 +1548,23 @@ class MainWindow(QMainWindow):
                 protein_names.remove(tmp_prot_name)
 
         self.ui.list_use_available_protein_structures.addItems(protein_names)
+        show_use_page()
 
-    def display_use_page(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        tmp_thread = threading.Thread(target=self.thread_func_build_use_page, daemon=True)
-        tmp_thread.start()
-        tmp_thread.join()
+    def show_use_page(self):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_use_page)
+
+    def display_use_page(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        tmp_thread = threading.Thread(target=self.thread_func_build_use_page, args=((self.show_use_page,)), daemon=True)
+        tmp_thread.start()
+        tmp_thread.join()
         QApplication.restoreOverrideCursor()
+        # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
+        # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+        #                                                         self.ui.btn_use_page)
+        # QApplication.restoreOverrideCursor()
 
         # QApplication.setOverrideCursor(Qt.WaitCursor)
         # self._init_use_page()
@@ -2376,10 +2391,10 @@ class MainWindow(QMainWindow):
         for i in range(self.ui.list_use_selected_protein_structures.count()):
             self.ui.list_use_selected_protein_structures.setCurrentRow(i)
             proteins_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
+        protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path))[0]
         for tmp_protein in proteins_to_copy:
             # protein_path = global_variables.global_var_workspace_proteins[tmp_protein] # TODO: global_var needs to be removed
             # shutil.copy(protein_path, f"{self.app_project.folder_paths["proteins"]}/{tmp_protein}")
-            protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path))[0]
             for tmp_protein_info in protein_infos:
                 if tmp_protein_info.name == tmp_protein:
                     """Var: project_proteins is a list which contains all proteins from a single project"""
@@ -2402,8 +2417,6 @@ class MainWindow(QMainWindow):
                                 molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
                                 pdb_xml_string=xml_protein)
                             tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
-
-
             #
             # new_protein = protein.Protein(molecule_object=tmp_protein,
             #                               pdb_filepath=path_util.FilePath(workspace_scanner.scan_workspace_for_non_duplicate_proteins().get(tmp_protein)))
@@ -3128,6 +3141,8 @@ class MainWindow(QMainWindow):
 
             self.ui.btn_pred_multi_predict
         ]
+        for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, -1, -1):
+            self.ui.table_pred_multi_prot_to_predict.removeRow(i)
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 20, "Local Multimer Prediction")
@@ -6973,7 +6988,7 @@ class MainWindow(QMainWindow):
 
         """
         protein_pair_of_analysis = self.app_project.search_protein_pair(
-        self.ui.cb_results_analysis_options.currentText()
+            self.ui.cb_results_analysis_options.currentText()
         )
         dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
         dialog.exec_()

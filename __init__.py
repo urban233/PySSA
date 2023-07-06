@@ -60,7 +60,7 @@ def __init_plugin__(app=None):
             None
     """
     from pymol.plugins import addmenuitemqt
-    plugin_name = 'PySSA_v0_9_0'
+    plugin_name = 'PySSA'
     addmenuitemqt(plugin_name, run_plugin_gui)
 
 

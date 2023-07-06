@@ -59,6 +59,8 @@ PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
 UNIX_SCRIPTS_SCIEBO_URL = "https://w-hs.sciebo.de/s/X3L7pnr4wfqy6gu/download"
 UNIX_SCRIPTS_USER_DIR = pathlib.Path(f"{SETTINGS_DIR}/scripts/unix")
 
+DEMO_PROJECT_SCIEBO_URL = "https://w-hs.sciebo.de/s/4KxYeovy5t9Ycr1/download"
+
 POWERSHELL_EXE = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 # Constants for structure prediction
 CONVERT_DOS_TO_UNIX = pathlib.Path(f"{PLUGIN_PATH}/scripts/batch/convert.bat")

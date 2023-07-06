@@ -27,6 +27,8 @@ import PyQt5.QtWidgets
 from urllib import request
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
 from pyssa.util import constants
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_startup import Ui_Dialog
 
@@ -91,11 +93,14 @@ class DialogStartup(QtWidgets.QDialog):
         """This function launches the plugin
 
         """
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         global global_var_startup_workspace
         global_var_startup_workspace = self.ui.txt_workspace.text()
 
         url = constants.UNIX_SCRIPTS_SCIEBO_URL  # Replace with the actual file URL
         destination = pathlib.Path(f"{constants.SETTINGS_DIR}/unix.zip")  # Replace with the desired file path and name
+        if not os.path.exists(pathlib.Path(constants.SETTINGS_DIR)):
+            os.mkdir(pathlib.Path(constants.SETTINGS_DIR))
         if not os.path.exists(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts")):
             os.mkdir(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts"))
         if not os.path.exists(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts/unix")):
@@ -107,5 +112,11 @@ class DialogStartup(QtWidgets.QDialog):
         destination_folder = str(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts"))  # Replace with the desired folder to extract the contents
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
             zip_ref.extractall(destination_folder)
+
+        if not os.path.exists(pathlib.Path(f"{constants.SCRATCH_DIR}")):
+            os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}"))
+        if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
+            os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
+        request.urlretrieve(constants.DEMO_PROJECT_SCIEBO_URL, str(pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml")))
 
         self.close()
