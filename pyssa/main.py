@@ -1766,7 +1766,6 @@ class MainWindow(QMainWindow):
         msg.setWindowTitle("Information")
         msg.setStyleSheet("QLabel{font-size: 11pt;}")
 
-
         if self.ui.lbl_page_title.text() == "Home":
             msg.setText(
                 "This is the Home page.\n"
@@ -1780,7 +1779,7 @@ class MainWindow(QMainWindow):
                 "The valid charakters for the project name are: A-Z, a-z, 0-9, _ and -. \n"
                 "Otherwise you use an invalid charakter and cannot create a new project. \n"
                 "If you click on Add existing protein, you can choose your protein by typing the PDB ID or choose a existing .pdb file in your filesystem."
-                "When you have no internet, you cannot type your PDB ID in the row."
+                "If you have no internet, you cannot type your PDB ID in the row."
             )
         elif self.ui.lbl_page_title.text() == "Open existing project":
             msg.setText(
@@ -1812,10 +1811,99 @@ class MainWindow(QMainWindow):
         elif self.ui.lbl_page_title.text() == "Use existing project":
             msg.setText(
                 "This is the Use page.\n"
-                ""
+                "Here you can use a project by creating a new one. \n"
+                "You can select an existing project or you select no existing project."
+                "If you select an existing project, you can choose proteins from that for your new project."
             )
+        elif self.ui.lbl_page_title.text() == "Structure Analysis":
+            msg.setText(
+                "This is the Structure Analysis page.\n"
+                "Here you can create so many Structure Analysis' as you want. So you can do 1 Structure Analysis or more. \n"
+                "For that you choose your 2 Protein Structures. \n"
+                "After that, you select the chain(s) of protein structure 1. Then you select the chain(s) of protein structure 2. \n"
+                "IMPORTANT: You can select so many chains in structure 2 how you selected in stucture 1."
+                "If you want no images from structure comparison, DON'T click on the checkbox. \n"
+                "With images, the time for the structure analysis gets longer."
 
-
+            )
+        elif self.ui.lbl_page_title.text() == "Results":
+            msg.setText(
+                "This is the Results page.\n"
+                "Here you can see the results from the protein pair, that you select in the combo box. \n"
+                "If you want to see which region in the protein are near the RMSD or not, you can click on the Color button. \n"
+                "The distance plot shows the distances of the residue pairs in Å. \n"
+                "The distance histogram shows the frequency of distance intervals. \n"
+                "The distance table shows the distances between residues in Å."
+                "It contains the protein chain, position and residue from both proteins. \n"
+                "If you want to see a option from this, you can click on View."
+            )
+        elif self.ui.lbl_page_title.text() == "Analysis Images":
+            msg.setText(
+                "This is the Analysis Images page.\n"
+                "Here you can add your protein pair for the automatic image creation. \n"
+                "If you add this, you can click on Start to begin the process."
+            )
+        elif self.ui.lbl_page_title.text() == "Image":
+            msg.setText(
+                "This is the Image page.\n"
+                "Here you can configurate some options for a new or current scene or a image, which you can save."
+            )
+        elif self.ui.lbl_page_title.text() == "Hotspots":
+            msg.setText(
+                "This is the Hotspots page.\n"
+                "Here you can choose your protein you want to show as balls and sticks or zoom to a specific residue position.\n"
+                "For the specific residue position, select the residues in PyMOL at the sequence view. Then you can click on Zoom."
+            )
+        elif self.ui.lbl_page_title.text() == "Manage PyMOL session":
+            msg.setText(
+                "This is the Manage PyMOL session page.\n"
+                "Here you can choose your protein in the combo box. \n"
+                "In the other combo boxes you can configurate your PyMOL session."
+            )
+        elif self.ui.lbl_page_title.text() == "Local Monomer Prediction":
+            msg.setText(
+                "This is the Local Monomer Prediction page.\n"
+                "Here you can give a protein a name and add the sequence. \n"
+                "If you have more monomers, you can add this to the Proteins to predict list. \n"
+                "If you don't want to use the force field or the template mode by prediction you can click on Edit, to configurate this."
+            )
+        elif self.ui.lbl_page_title.text() == "Local Multimer Prediction":
+            msg.setText(
+                "This is the Local Multimer Prediction page.\n"
+                "Here you can give a protein a name and add the sequence. \n"
+                "You can click after the protein sequence on Add to the sequence(s) count for the multimer. \n"
+                "If you have more multimers, you can add this to the Proteins to predict list. \n"
+                "If you don't want to use the force field or the template mode by prediction you can click on Edit, to configurate this."
+            )
+        elif self.ui.lbl_page_title.text() == "Monomer Prediction + Analysis":
+            msg.setText(
+                "This is the Monomer Prediction + Analysis page.\n"
+                "Here you can give a protein a name and add the sequence. \n"
+                "You can click after the protein sequence on Add to the sequence(s) count for the multimer. \n"
+                "If you have more multimers, you can add this to the Proteins to predict list. \n"
+                "If you don't want to use the force field or the template mode by prediction you can click on Edit, to configurate this. \n"
+                "Then click on Go to get to the analyze setup. \n"
+                "Now you can do so many Structure Analysis' as you want. So you can do 1 Structure Analysis or more. \n"
+                "For that you choose your 2 Protein Structures. \n"
+                "After that, you select the chain(s) of protein structure 1. Then you select the chain(s) of protein structure 2. \n"
+                "IMPORTANT: You can select so many chains in structure 2 how you selected in stucture 1."
+                "If you want no images from structure comparison, DON'T click on the checkbox. \n"
+                "With images, the time for the structure analysis gets longer."
+            )
+        elif self.ui.lbl_page_title.text() == "Multimer Prediction + Analysis":
+            msg.setText(
+                "This is the Multimer Prediction + Analysis page.\n"
+                "Here you can give a protein a name and add the sequence. \n"
+                "You can click after the protein sequence on Add to the sequence(s) count for the multimer. \n"
+                "If you have more multimers, you can add this to the Proteins to predict list. \n"
+                "If you don't want to use the force field or the template mode by prediction you can click on Edit, to configurate this. \n"
+                "Now you can create so many Structure Analysis' as you want. So you can do 1 Structure Analysis or more. \n"
+                "For that you choose your 2 Protein Structures. \n"
+                "After that, you select the chain(s) of protein structure 1. Then you select the chain(s) of protein structure 2. \n"
+                "IMPORTANT: You can select so many chains in structure 2 how you selected in stucture 1."
+                "If you want no images from structure comparison, DON'T click on the checkbox. \n"
+                "With images, the time for the structure analysis gets longer."
+            )
         msg.exec_()
         return
 
