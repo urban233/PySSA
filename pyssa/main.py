@@ -1868,7 +1868,7 @@ class MainWindow(QMainWindow):
                 "click on Add.\n\n"
                 "To remove a protein pair, click on a protein pair name in the list Protein structure analysis' "
                 "for image creation and click on Remove.\n\n"
-                "To start the analysis images job, click on Start (Automatic image creation)"
+                "To start the analysis images job, click on Start (Automatic image creation)."
             )
         elif self.ui.lbl_page_title.text() == "Image":
             msg.setText(
@@ -1892,10 +1892,10 @@ class MainWindow(QMainWindow):
                 "Page: Hotspots\n\n"
                 "Here you can display specific hotspots of a selected protein.\n\n"
                 "To display a hotspot, click on a protein or protein pair name of the list.\n"
-                "To define the hotspot region, click on the residues in PyMOLs protein sequence view\n\n"
-                "To display the selected hotspot as balls and sticks, click on Show (Residues as balls and sticks)\n\n"
-                "To hide the balls and sticks representation of the selected hotspot, click on Hide (Residues as balls and sticks)\n\n"
-                "To zoom to the selected hotspot, click on Zoom (Residue position)\n\n"
+                "To define the hotspot region, click on the residues in PyMOLs protein sequence view. \n\n"
+                "To display the selected hotspot as balls and sticks, click on Show (Residues as balls and sticks). \n\n"
+                "To hide the balls and sticks representation of the selected hotspot, click on Hide (Residues as balls and sticks). \n\n"
+                "To zoom to the selected hotspot, click on Zoom (Residue position). \n\n"
             )
         elif self.ui.lbl_page_title.text() == "Manage PyMOL session":
             msg.setText(
@@ -1915,7 +1915,7 @@ class MainWindow(QMainWindow):
                 "Then paste the sequence you want to predict into the text field and click on Add to add the run to the job.\n\n"
                 "To start the prediction job, click on Predict.\n\n"
                 "NOTE FOR EXPERTS: If you don't want to use the force field or want to change the template mode "
-                "can click on Edit, to configurate this."
+                "you can click on Edit, to configurate this."
             )
         elif self.ui.lbl_page_title.text() == "Local Multimer Prediction":
             msg.setText(
@@ -1928,7 +1928,7 @@ class MainWindow(QMainWindow):
                 "After that, click on Add, to add the prediction run to the prediction job.\n\n"
                 "To start the prediction job, click on Predict.\n\n"
                 "NOTE FOR EXPERTS: If you don't want to use the force field or want to change the template mode "
-                "can click on Edit, to configurate this."
+                "you can click on Edit, to configurate this."
             )
         elif self.ui.lbl_page_title.text() == "Monomer Prediction + Analysis":
             msg.setText(
