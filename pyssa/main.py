@@ -2529,17 +2529,16 @@ class MainWindow(QMainWindow):
 
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
-        self.tmp_thread_1 = PyQt5.QtCore.QThread()
-        self.tmp_worker_1 = task_workers.CreateUseProjectWorker(self.workspace_path, proteins_to_copy)
-        self.tmp_thread_1 = task_workers.setup_worker_for_work(self.tmp_thread_1, self.tmp_worker_1, self.create_use_project)
-        self.tmp_thread_1.start()
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.CreateUseProjectWorker(self.workspace_path, proteins_to_copy)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.create_use_project)
+        self.tmp_thread.start()
         # --End: worker setup
 
         # </editor-fold>
 
         self.ui.lbl_current_project_name.setText(self.ui.txt_use_project_name.text())
-        self.status_bar.showMessage(
-            f"Current project path: {self.workspace_path}/{self.ui.txt_use_project_name.text()}")
+        self.status_bar.showMessage(f"Creating new project: {self.ui.txt_use_project_name.text()} ...")
         # save project folder in current workspace
         new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
         # new_project.create_project_tree()
