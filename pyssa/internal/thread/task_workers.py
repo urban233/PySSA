@@ -19,13 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os
 import pathlib
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
 
-from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
-from pyssa.util import tools
+from pyssa.util import tools, constants
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import project
 
 
 def setup_worker_for_work(tmp_thread, tmp_worker, return_value_func):
@@ -38,7 +43,6 @@ def setup_worker_for_work(tmp_thread, tmp_worker, return_value_func):
     return tmp_thread
 
 
-# Step 1: Create a worker class
 class Worker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(int)
@@ -96,4 +100,39 @@ class CreateUseProjectWorker(QObject):
             proteins_for_new_project.append(tmp_protein_obj)
 
         self.return_value.emit(proteins_for_new_project)
+        self.finished.emit()
+
+
+class LoadResultsWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(str)
+    protein_pair_of_results: protein_pair.ProteinPair
+    app_project_xml_filepath: str
+    image_type: str
+
+    def __init__(self, protein_pair_of_results, app_project_xml_filepath):
+        super().__init__()
+        self.protein_pair_of_results = protein_pair_of_results
+        self.image_type = constants.IMAGES_NONE
+        self.app_project_xml_filepath = app_project_xml_filepath
+
+    def run(self):
+        filesystem_io.XmlDeserializer(self.app_project_xml_filepath).deserialize_analysis_images(
+            self.protein_pair_of_results.name, self.protein_pair_of_results.distance_analysis.analysis_results)
+        if len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0 and len(
+                self.protein_pair_of_results.distance_analysis.analysis_results.interesting_regions_images) != 0:
+            # if both image types were made during analysis
+            self.protein_pair_of_results.distance_analysis.analysis_results.create_image_png_files_from_base64()
+            self.image_type = constants.IMAGES_ALL
+        elif len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0 and len(
+                self.protein_pair_of_results.distance_analysis.analysis_results.interesting_regions_images) == 0:
+            # only struct align image were made
+            self.protein_pair_of_results.distance_analysis.analysis_results.create_image_png_files_from_base64()
+            self.image_type = constants.IMAGES_STRUCT_ALN_ONLY
+        else:
+            # no images were made
+            self.image_type = constants.IMAGES_NONE
+
+        self.return_value.emit(self.image_type)
         self.finished.emit()

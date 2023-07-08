@@ -180,6 +180,10 @@ CHAIN_TYPE_NON_PROTEIN = "non_protein_chain"
 ONLY_ANALYSIS = "only-analysis"
 PREDICTION_ANALYSIS = "prediction-analysis"
 
+IMAGES_ALL = "all images made"
+IMAGES_STRUCT_ALN_ONLY = "only structure alignment image made"
+IMAGES_NONE = "none images made"
+
 chain_dict = {
     0: "A",
     1: "B",

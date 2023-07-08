@@ -1118,7 +1118,7 @@ class MainWindow(QMainWindow):
         # </editor-fold>
 
         # <editor-fold desc="Results page">
-        self.ui.cb_results_analysis_options.currentIndexChanged.connect(self.load_results)
+        self.ui.cb_results_analysis_options.currentIndexChanged.connect(self.pre_load_results)
         self.ui.btn_color_rmsd.clicked.connect(self.color_protein_pair_by_rmsd)
         self.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
         self.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
@@ -1448,7 +1448,7 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 5, "Results")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_results_page)
-        self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
+        #self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
 
     def display_image_page(self):
         """This function displays the image work area
@@ -6823,7 +6823,7 @@ class MainWindow(QMainWindow):
     def post_load_results(self):
         print("Results were loaded.")
 
-    def load_results(self):
+    def pre_load_results(self):
         shutil.rmtree(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_IMAGES)
@@ -6831,38 +6831,28 @@ class MainWindow(QMainWindow):
         if self.results_name == "":
             self.show_analysis_results_options()
             return
-        # TODO: check if the function below works correctly
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        # session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
-        #                                     QMessageBox.Information)
-        # if session_msg is True:
-        #     self.current_session.session = pymol_io.convert_pymol_session_to_base64_string(self.current_session.name)
-        #     self.app_project.save_pymol_session(self.current_session)
+        tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
 
-        # <editor-fold desc="Worker variant">
-        # worker = workers.ResultsWorkerPool(
-        #    self.app_project, self.ui, self.show_analysis_results_options, self.show_results_interactions
-        # )
-        # worker.signals.finished.connect(self.post_load_results)
-        # self.threadpool.start(worker)
-        # print("Worker started.")
-        #
+        # <editor-fold desc="Worker setup">
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.LoadResultsWorker(tmp_protein_pair, self.app_project.get_project_xml_path())
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.load_results)
+        self.tmp_thread.start()
+        # --End: worker setup
+
         # </editor-fold>
 
-        # <editor-fold desc="Main Thread variant">
-        tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
-        distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
-        distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
+        #distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
+        #distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
+        self.ui.list_results_interest_regions.clear()
+        self.status_bar.showMessage(f"Loading results of {self.results_name} ...")
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        filesystem_io.XmlDeserializer(self.app_project.get_project_xml_path()).deserialize_analysis_images(
-            tmp_protein_pair.name, tmp_protein_pair.distance_analysis.analysis_results)
-        if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) != 0:
-            # if both image types were made during analysis
-            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
-            self.ui.list_results_interest_regions.clear()
-            for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                self.ui.list_results_interest_regions.addItem(tmp_filename)
+
+    def load_results(self, images_type):
+        if images_type == constants.IMAGES_ALL:
             gui_elements_to_show = [
                 self.ui.lbl_results_analysis_options,
                 self.ui.cb_results_analysis_options,
@@ -6885,11 +6875,9 @@ class MainWindow(QMainWindow):
                 self.ui.btn_view_interesting_region
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
-        elif len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0 and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) == 0:
-            # only struct align image were made
-            tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
-            self.ui.lbl_results_structure_alignment.show()
-            self.ui.btn_view_struct_alignment.show()
+            for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                self.ui.list_results_interest_regions.addItem(tmp_filename)
+        elif images_type == constants.IMAGES_STRUCT_ALN_ONLY:
             gui_elements_to_show = [
                 self.ui.lbl_results_analysis_options,
                 self.ui.cb_results_analysis_options,
@@ -6915,8 +6903,7 @@ class MainWindow(QMainWindow):
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
-        else:
-            # no images were made
+        elif images_type == constants.IMAGES_NONE:
             gui_elements_to_show = [
                 self.ui.lbl_results_analysis_options,
                 self.ui.cb_results_analysis_options,
@@ -6942,33 +6929,37 @@ class MainWindow(QMainWindow):
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            raise ValueError("Illegal argument.")
+
+        tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
         self.ui.list_results_interest_regions.sortItems()
         self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
         self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
 
-        # <editor-fold desc="Histogram check">
-        # check if histogram can be created
-        distance_list.sort()
-        x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
-        if x.size != y.size:
-            x = np.resize(x, (1, y.size))
-        # this conversion is needed for the pyqtgraph library!
-        x = x.tolist()
-        try:
-            x = x[0]
-        except IndexError:
-            # histogram could not be created
-            gui_elements_to_hide.append(self.ui.lbl_results_distance_histogram)
-            gui_elements_to_hide.append(self.ui.btn_view_distance_histogram)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-
-        # </editor-fold>
+        # # <editor-fold desc="Histogram check">
+        # # check if histogram can be created
+        # distance_list.sort()
+        # x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
+        # if x.size != y.size:
+        #     x = np.resize(x, (1, y.size))
+        # # this conversion is needed for the pyqtgraph library!
+        # x = x.tolist()
+        # try:
+        #     x = x[0]
+        # except IndexError:
+        #     # histogram could not be created
+        #     gui_elements_to_hide.append(self.ui.lbl_results_distance_histogram)
+        #     gui_elements_to_hide.append(self.ui.btn_view_distance_histogram)
+        #     gui_utils.hide_gui_elements(gui_elements_to_hide)
+        #
+        # # </editor-fold>
 
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
         self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
         QApplication.restoreOverrideCursor()
-        # </editor-fold>
+        self.status_bar.showMessage(f"Current workspace: {str(self.workspace_path)}")
 
     def color_protein_pair_by_rmsd(self):
         """This function colors the residues of the reference and the model protein in 5 colors
