@@ -52,7 +52,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.internal.thread import workers
+from pyssa.internal.thread import workers, task_workers
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import filesystem_io
 from pyssa.gui.ui.dialogs import dialog_distance_plot
@@ -865,7 +865,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_save_project.clicked.connect(self.save_project)
         self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self.ui.btn_view_page.clicked.connect(self.display_view_page)
-        self.ui.btn_use_page.clicked.connect(self.display_use_page)
+        self.ui.btn_use_page.clicked.connect(self.start_display_use_page)
         self.ui.btn_import_project.clicked.connect(self.import_project)
         self.ui.btn_export_project.clicked.connect(self.export_current_project)
         self.ui.btn_close_project.clicked.connect(self.close_project)
@@ -1531,37 +1531,39 @@ class MainWindow(QMainWindow):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_edit_page)
 
-    def thread_func_build_use_page(self, show_use_page):
+    def start_display_use_page(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        # <editor-fold desc="Worker setup">
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.Worker(self.workspace_path)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_use_page)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
         self._init_use_page()
         self.ui.list_use_available_protein_structures.clear()
         self.ui.list_use_selected_protein_structures.clear()
         tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
-        # filesystem operations
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
-        # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_use_selected_protein_structures)
-        protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path)
-        global_variables.global_var_workspace_proteins = protein_dict
+
+    def display_use_page(self, return_value):
         # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
         # are available
         for i in range(self.ui.list_use_selected_protein_structures.count()):
             self.ui.list_use_selected_protein_structures.setCurrentRow(i)
             tmp_prot_name = self.ui.list_use_selected_protein_structures.currentItem().text()
-            if tmp_prot_name in protein_names:
-                protein_names.remove(tmp_prot_name)
+            if tmp_prot_name in return_value[1]:
+                return_value[1].remove(tmp_prot_name)
 
-        self.ui.list_use_available_protein_structures.addItems(protein_names)
-        show_use_page()
+        self.ui.list_use_available_protein_structures.addItems(return_value[1])
 
-    def show_use_page(self):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_use_page)
-
-    def display_use_page(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        tmp_thread = threading.Thread(target=self.thread_func_build_use_page, args=((self.show_use_page,)), daemon=True)
-        tmp_thread.start()
-        tmp_thread.join()
         QApplication.restoreOverrideCursor()
         # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
