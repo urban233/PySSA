@@ -21,6 +21,10 @@
 #
 import pathlib
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
+
+from pyssa.internal.data_structures import protein
+from pyssa.io_pyssa import filesystem_io
+from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.util import tools
 
 
@@ -48,4 +52,48 @@ class Worker(QObject):
     def run(self):
         protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path))
         self.return_value.emit((protein_dict, protein_names))
+        self.finished.emit()
+
+
+class CreateUseProjectWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(list)
+    workspace_path: str
+    proteins_to_copy: list
+
+    def __init__(self, workspace, proteins_to_copy):
+        super().__init__()
+        self.workspace_path = workspace
+        self.proteins_to_copy = proteins_to_copy
+
+    def run(self):
+        proteins_for_new_project = []
+        protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path)))[0]
+        for tmp_protein in self.proteins_to_copy:
+            for tmp_protein_info in protein_infos:
+                if tmp_protein_info.name == tmp_protein:
+                    """Var: project_proteins is a list which contains all proteins from a single project"""
+                    xml_deserializer = filesystem_io.XmlDeserializer(
+                        pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml"))
+                    for xml_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
+                        if xml_protein.attrib[attribute_names.ID] == tmp_protein_info.id:
+                            basic_information = xml_protein.attrib
+                            pdb_lines = []
+                            session_data_base64 = ""
+                            for tmp_data in xml_protein:
+                                if tmp_data.tag == "pdb_data":
+                                    for tmp_atom in tmp_data.findall("atom"):
+                                        pdb_lines.append(tmp_atom.text)
+                                elif tmp_data.tag == "session_data":
+                                    session_data_base64 = tmp_data.attrib[attribute_names.PROTEIN_SESSION]
+                                else:
+                                    raise ValueError
+                            tmp_protein_obj = protein.Protein(
+                                molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
+                                pdb_xml_string=xml_protein)
+                            tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
+            proteins_for_new_project.append(tmp_protein_obj)
+
+        self.return_value.emit(proteins_for_new_project)
         self.finished.emit()

@@ -938,7 +938,7 @@ class MainWindow(QMainWindow):
         self.ui.list_use_selected_protein_structures.doubleClicked.connect(self.remove_protein_structure_to_new_project)
         self.ui.list_use_selected_protein_structures.itemClicked.connect(self.use_enable_remove)
         self.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
-        self.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
+        self.ui.btn_use_create_new_project.clicked.connect(self.pre_create_use_project)
 
         # </editor-fold>
 
@@ -2519,51 +2519,58 @@ class MainWindow(QMainWindow):
     def use_enable_remove(self):
         self.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
-    def create_use_project(self):
+    def pre_create_use_project(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.ui.lbl_current_project_name.setText(self.ui.txt_use_project_name.text())
-        self.status_bar.showMessage(
-            f"Current project path: {self.workspace_path}/{self.ui.txt_use_project_name.text()}")
-        # save project folder in current workspace
-        # existing_project = self.app_project
-        new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
-        # new_project.create_project_tree()
-        self.app_project = new_project
         # copy proteins in new project
         proteins_to_copy = []
         for i in range(self.ui.list_use_selected_protein_structures.count()):
             self.ui.list_use_selected_protein_structures.setCurrentRow(i)
             proteins_to_copy.append(self.ui.list_use_selected_protein_structures.currentItem().text())
-        protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path))[0]
-        for tmp_protein in proteins_to_copy:
-            # protein_path = global_variables.global_var_workspace_proteins[tmp_protein] # TODO: global_var needs to be removed
-            # shutil.copy(protein_path, f"{self.app_project.folder_paths["proteins"]}/{tmp_protein}")
-            for tmp_protein_info in protein_infos:
-                if tmp_protein_info.name == tmp_protein:
-                    """Var: project_proteins is a list which contains all proteins from a single project"""
-                    xml_deserializer = filesystem_io.XmlDeserializer(
-                        pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml"))
-                    for xml_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
-                        if xml_protein.attrib[attribute_names.ID] == tmp_protein_info.id:
-                            basic_information = xml_protein.attrib
-                            pdb_lines = []
-                            session_data_base64 = ""
-                            for tmp_data in xml_protein:
-                                if tmp_data.tag == "pdb_data":
-                                    for tmp_atom in tmp_data.findall("atom"):
-                                        pdb_lines.append(tmp_atom.text)
-                                elif tmp_data.tag == "session_data":
-                                    session_data_base64 = tmp_data.attrib[attribute_names.PROTEIN_SESSION]
-                                else:
-                                    raise ValueError
-                            tmp_protein_obj = protein.Protein(
-                                molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
-                                pdb_xml_string=xml_protein)
-                            tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
-            #
-            # new_protein = protein.Protein(molecule_object=tmp_protein,
-            #                               pdb_filepath=path_util.FilePath(workspace_scanner.scan_workspace_for_non_duplicate_proteins().get(tmp_protein)))
-            #new_protein.serialize_protein()
+
+        # <editor-fold desc="Worker setup">
+        # --Begin: worker setup
+        self.tmp_thread_1 = PyQt5.QtCore.QThread()
+        self.tmp_worker_1 = task_workers.CreateUseProjectWorker(self.workspace_path, proteins_to_copy)
+        self.tmp_thread_1 = task_workers.setup_worker_for_work(self.tmp_thread_1, self.tmp_worker_1, self.create_use_project)
+        self.tmp_thread_1.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
+        self.ui.lbl_current_project_name.setText(self.ui.txt_use_project_name.text())
+        self.status_bar.showMessage(
+            f"Current project path: {self.workspace_path}/{self.ui.txt_use_project_name.text()}")
+        # save project folder in current workspace
+        new_project = project.Project(self.ui.txt_use_project_name.text(), self.workspace_path)
+        # new_project.create_project_tree()
+        self.app_project = new_project
+
+    def create_use_project(self, proteins_for_new_project):
+        # protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path))[0]
+        # for tmp_protein in proteins_to_copy:
+        #     for tmp_protein_info in protein_infos:
+        #         if tmp_protein_info.name == tmp_protein:
+        #             """Var: project_proteins is a list which contains all proteins from a single project"""
+        #             xml_deserializer = filesystem_io.XmlDeserializer(
+        #                 pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml"))
+        #             for xml_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
+        #                 if xml_protein.attrib[attribute_names.ID] == tmp_protein_info.id:
+        #                     basic_information = xml_protein.attrib
+        #                     pdb_lines = []
+        #                     session_data_base64 = ""
+        #                     for tmp_data in xml_protein:
+        #                         if tmp_data.tag == "pdb_data":
+        #                             for tmp_atom in tmp_data.findall("atom"):
+        #                                 pdb_lines.append(tmp_atom.text)
+        #                         elif tmp_data.tag == "session_data":
+        #                             session_data_base64 = tmp_data.attrib[attribute_names.PROTEIN_SESSION]
+        #                         else:
+        #                             raise ValueError
+        #                     tmp_protein_obj = protein.Protein(
+        #                         molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
+        #                         pdb_xml_string=xml_protein)
+        #                     tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
+        for tmp_protein_obj in proteins_for_new_project:
             self.app_project.add_existing_protein(tmp_protein_obj)
         self.app_project.serialize_project(pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"))
         # shows options which can be done with the data in the project folder
@@ -2572,7 +2579,8 @@ class MainWindow(QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
         self.project_scanner.project = self.app_project
         self._init_use_page()
-        constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was successfully created through a use.")
+        constants.PYSSA_LOGGER.info(
+            f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
         QApplication.restoreOverrideCursor()
 
