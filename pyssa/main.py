@@ -34,6 +34,9 @@ import numpy as np
 import pymol
 import csv
 import copy
+
+import requests
+
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.util import protein_pair_util, session_util
 from pyssa.gui.ui.dialogs import dialog_settings_global
@@ -179,6 +182,19 @@ class MainWindow(QMainWindow):
 
         globals.g_settings = self.app_settings
         # </editor-fold>
+
+        url = "https://w-hs.sciebo.de/s/0kR11n8PkLDo1gB/download"
+        try:
+            response = requests.get(url)
+            print(response.text)
+            current_version_filepath = "C:\\ProgramData\\pyssa\\plugin\\pyssa_version_current.txt"
+            with open(current_version_filepath, 'r') as file:
+                line = file.readline()
+            file.close()
+            if response.text != line:
+                basic_boxes.ok("New version", f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.", QMessageBox.Information)
+        except requests.exceptions.RequestException as e:
+            print('Failed to download the file:', e)
 
         # <editor-fold desc="Class attributes">
         self.app_project = project.Project("", pathlib.Path(""))
