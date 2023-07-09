@@ -113,6 +113,8 @@ class ProjectWatcher:
                 ui.lbl_pred_local,
                 ui.btn_pred_local_monomer_page,
                 ui.btn_pred_local_multimer_page,
+                ui.lbl_pred_cloud,
+                ui.btn_pred_cloud_monomer_page,
             ]
             gui_elements_to_hide = [
                 ui.btn_new_page,
@@ -120,8 +122,6 @@ class ProjectWatcher:
                 ui.btn_delete_page,
                 ui.btn_import_project,
                 ui.btn_export_project,
-                ui.lbl_pred_cloud,
-                ui.btn_pred_cloud_monomer_page,
                 ui.btn_pred_cloud_multimer_page,
                 ui.btn_pred_cloud_monomer_vs_pdb_page,
                 ui.btn_pred_cloud_multimer_vs_pdb_page,

@@ -833,167 +833,126 @@
              </layout>
             </widget>
             <widget class="QWidget" name="prediction_only_page">
-             <layout class="QVBoxLayout" name="verticalLayout_54">
+             <layout class="QVBoxLayout" name="verticalLayout_45">
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout_142">
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_143">
+                  <item>
+                   <widget class="QLabel" name="lbl_esm_prot_to_predict">
+                    <property name="text">
+                     <string>Proteins to predict</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QTableWidget" name="table_esm_prot_to_predict">
+                    <property name="horizontalScrollBarPolicy">
+                     <enum>Qt::ScrollBarAsNeeded</enum>
+                    </property>
+                    <property name="sizeAdjustPolicy">
+                     <enum>QAbstractScrollArea::AdjustIgnored</enum>
+                    </property>
+                    <property name="sortingEnabled">
+                     <bool>false</bool>
+                    </property>
+                    <column>
+                     <property name="text">
+                      <string>Chain</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Sequence</string>
+                     </property>
+                    </column>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_100">
+                  <item>
+                   <spacer name="horizontalSpacer_78">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_esm_seq_to_predict_remove">
+                    <property name="text">
+                     <string>Remove</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="btn_esm_seq_to_predict">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>131</width>
+                      <height>16777215</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Add</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_16">
                 <item>
-                 <layout class="QVBoxLayout" name="protein_name_layout">
-                  <item>
-                   <widget class="QLabel" name="lbl_prediction_only_protein_name">
-                    <property name="text">
-                     <string>Protein name</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="txt_prediction_only_protein_name"/>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="lbl_prediction_only_status_protein_name">
-                    <property name="text">
-                     <string>TextLabel</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="next_layout_1">
-                  <item>
-                   <spacer name="horizontalSpacer_14">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btn_prediction_only_next">
-                    <property name="minimumSize">
-                     <size>
-                      <width>120</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Next</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_45">
-                <item>
-                 <layout class="QVBoxLayout" name="protein_sequence_layout">
-                  <item>
-                   <widget class="QLabel" name="lbl_cloud_pred_mono_prot_seq">
-                    <property name="text">
-                     <string>Protein sequence</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="txt_cloud_pred_mono_prot_seq"/>
-                  </item>
-                  <item>
-                   <widget class="QLabel" name="lbl_cloud_pred_mono_status_prot_seq">
-                    <property name="text">
-                     <string>TextLabel</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="next_layout_2">
-                  <item>
-                   <spacer name="horizontalSpacer_22">
-                    <property name="orientation">
-                     <enum>Qt::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btn_cloud_pred_mono_back">
-                    <property name="minimumSize">
-                     <size>
-                      <width>120</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>120</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Back</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="btn_cloud_pred_mono_next_2">
-                    <property name="minimumSize">
-                     <size>
-                      <width>120</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>120</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Next</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QVBoxLayout" name="verticalLayout_53">
-                <item>
-                 <widget class="QLabel" name="lbl_prediction_only_choose_notebook">
+                 <widget class="QLabel" name="lbl_esm_prot_name">
                   <property name="text">
-                   <string>Choose a Google Colab Notebook from the list below</string>
+                   <string>Enter new protein name</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QListWidget" name="list_new_seq_notebooks"/>
+                 <widget class="QLineEdit" name="txt_esm_prot_name"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_esm_prot_name_status">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_7">
                 <item>
-                 <widget class="QLabel" name="lbl_cloud_pred_mono_advanced_config">
-                  <property name="text">
-                   <string>Advanced configurations</string>
+                 <spacer name="horizontalSpacer_14">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
                   </property>
-                 </widget>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>38</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_cloud_pred_mono_advanced_config">
+                 <widget class="QPushButton" name="btn_esm_back">
                   <property name="minimumSize">
                    <size>
                     <width>120</width>
@@ -1007,7 +966,96 @@
                    </size>
                   </property>
                   <property name="text">
-                   <string>Edit</string>
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_esm_next">
+                  <property name="minimumSize">
+                   <size>
+                    <width>120</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Next</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QVBoxLayout" name="protein_sequence_layout">
+                <item>
+                 <widget class="QLabel" name="lbl_esm_prot_seq">
+                  <property name="text">
+                   <string>Protein sequence</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QTextEdit" name="txt_esm_prot_seq"/>
+                </item>
+                <item>
+                 <widget class="QLabel" name="lbl_esm_prot_seq_status">
+                  <property name="text">
+                   <string>TextLabel</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="next_layout_2">
+                <item>
+                 <spacer name="horizontalSpacer_22">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_esm_back_2">
+                  <property name="minimumSize">
+                   <size>
+                    <width>120</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Back</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_esm_next_2">
+                  <property name="minimumSize">
+                   <size>
+                    <width>120</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Next</string>
                   </property>
                  </widget>
                 </item>
@@ -1045,26 +1093,7 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="btn_prediction_only_back">
-                  <property name="minimumSize">
-                   <size>
-                    <width>120</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>120</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Back</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="btn_prediction_only_start">
+                 <widget class="QPushButton" name="btn_esm_predict">
                   <property name="minimumSize">
                    <size>
                     <width>120</width>
@@ -6953,14 +6982,6 @@
     <addaction name="separator"/>
     <addaction name="action_file_restore_settings"/>
    </widget>
-   <widget class="QMenu" name="menuWizard">
-    <property name="title">
-     <string>Expert</string>
-    </property>
-    <addaction name="action_file_save_as"/>
-    <addaction name="action_install_from_file"/>
-    <addaction name="action_add_multiple_models"/>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
@@ -6970,7 +6991,6 @@
     <addaction name="action_help_about"/>
    </widget>
    <addaction name="menuSettings"/>
-   <addaction name="menuWizard"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

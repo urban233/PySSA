@@ -801,9 +801,6 @@ class MainWindow(QMainWindow):
     def _setup_default_configuration(self):
         self.ui.lbl_current_project_name.setText("")
         # menu
-        self.ui.action_install_from_file.setVisible(False)
-        self.ui.action_add_multiple_models.setVisible(False)
-        self.ui.action_file_save_as.setVisible(False)
         # side menu
 
         # new project page
@@ -823,9 +820,6 @@ class MainWindow(QMainWindow):
         # use project page
 
         # new sequence page
-        self.ui.btn_prediction_only_start.setEnabled(False)
-        self.ui.btn_prediction_only_next.setEnabled(False)
-        self.ui.lbl_prediction_only_status_protein_name.setText("")
         # sequence vs .pdb page
         self.ui.btn_s_v_p_start.setEnabled(False)
         self.ui.list_s_v_p_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -848,10 +842,8 @@ class MainWindow(QMainWindow):
         self.ui.action_file_quit.triggered.connect(self.quit_app)
         self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
         self.ui.action_settings_edit_all.triggered.connect(self.open_settings_global)
-        self.ui.action_add_multiple_models.triggered.connect(self.open_add_models)
-        self.ui.action_install_from_file.triggered.connect(self.install_local_colabfold_from_file)
-        self.ui.action_help_docs.triggered.connect(self.open_documentation)
-        self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation_pdf)
+        self.ui.action_help_docs.triggered.connect(self.open_tutorial)
+        self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation)
         self.ui.action_help_about.triggered.connect(self.open_about)
 
         # </editor-fold>
@@ -869,6 +861,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_import_project.clicked.connect(self.import_project)
         self.ui.btn_export_project.clicked.connect(self.export_current_project)
         self.ui.btn_close_project.clicked.connect(self.close_project)
+        self.ui.btn_pred_cloud_monomer_page.clicked.connect(self.display_esm_pred_mono)
         self.ui.btn_pred_local_monomer_page.clicked.connect(self.display_local_pred_mono)
         self.ui.btn_pred_local_multimer_page.clicked.connect(self.display_local_pred_multi)
         self.ui.btn_prediction_abort.clicked.connect(self.abort_prediction)
@@ -940,6 +933,20 @@ class MainWindow(QMainWindow):
         self.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
         self.ui.btn_use_create_new_project.clicked.connect(self.pre_create_use_project)
 
+        # </editor-fold>
+
+        # <editor-fold desc="ESMFold Monomer Prediction page">
+        self.ui.btn_esm_seq_to_predict.clicked.connect(self.cloud_esm_add_seq_to_predict)
+        self.ui.btn_esm_seq_to_predict_remove.clicked.connect(self.cloud_esm_remove)
+        self.ui.btn_esm_next.clicked.connect(self.cloud_esm_next)
+        self.ui.btn_esm_back.clicked.connect(self.cloud_esm_back)
+        self.ui.btn_esm_next_2.clicked.connect(self.cloud_esm_add_protein)
+        self.ui.btn_esm_back_2.clicked.connect(self.cloud_esm_back_2)
+        self.ui.txt_esm_prot_name.textChanged.connect(self.cloud_esm_validate_protein_name)
+        self.ui.txt_esm_prot_seq.textChanged.connect(self.cloud_esm_validate_protein_sequence)
+        self.ui.btn_esm_predict.clicked.connect(self.predict_esm_monomer)
+
+        self.ui.table_esm_prot_to_predict.itemSelectionChanged.connect(self.cloud_esm_item_changed)
         # </editor-fold>
 
         # <editor-fold desc="Monomer local prediction page">
@@ -1192,9 +1199,6 @@ class MainWindow(QMainWindow):
         self.ui.box_bg_color.setToolTip("Choose a background color")
         self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
         self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
-
-    def restore_cursor(self):
-        QApplication.restoreOverrideCursor()
 
     # <editor-fold desc="Page init functions">
     def _init_fill_combo_boxes(self):
@@ -1684,14 +1688,14 @@ class MainWindow(QMainWindow):
         self._setup_statusbar()
 
     @staticmethod
-    def open_documentation():
+    def open_tutorial():
         """This function opens the official plugin documentation as HTML page.
 
         """
         os.startfile(constants.TUTORIAL_PATH)
 
     @staticmethod
-    def open_documentation_pdf():
+    def open_documentation():
         """This function opens the official plugin documentation as PDF.
 
         """
@@ -1704,66 +1708,6 @@ class MainWindow(QMainWindow):
         """
         dialog = dialog_about.DialogAbout()
         dialog.exec_()
-
-    def open_add_models(self):
-        """This function opens the add models dialog.
-
-        """
-        dialog = dialog_add_models.DialogAddModels()
-        dialog.exec_()
-
-        if len(dialog_add_models.global_var_pdb_files) > 0:
-            for pdb_path in dialog_add_models.global_var_pdb_files:
-                pdb_path_info = QtCore.QFileInfo(pdb_path)
-                pdb_name = pdb_path_info.baseName()
-                # save project folder in current workspace
-                # mkdir project
-                folder_paths = [
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/pdb"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/alignment_files"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/distance_csv"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/images/interesting_regions"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_histogram"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/plots/distance_plot"),
-                    pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}_{pdb_name}/results/sessions/"),
-                ]
-                for path in folder_paths:
-                    os.mkdir(path)
-                reference_name = os.listdir(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb")
-                shutil.copy(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{reference_name[0]}",
-                            f"{folder_paths[1]}/{reference_name[0]}")
-                shutil.copy(pdb_path, f"{folder_paths[1]}/{pdb_name}.pdb")
-
-    def post_install_local_colabfold_from_file(self):
-        self.block_box_expert_install.destroy(True)
-        self.app_settings.local_colabfold = 1
-        self.app_settings.serialize_settings()
-        basic_boxes.ok("Local Colabfold installation", "Installation is finished!", QMessageBox.Information)
-
-    def install_local_colabfold_from_file(self):
-        """This function installs the local colabfold from a .tar file
-
-        """
-        file_dialog = QFileDialog()
-        download_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DownloadLocation)[0]
-        file_dialog.setDirectory(download_path)
-        file_path, _ = file_dialog.getOpenFileName(self, "Select the UbuntuColabfold.tar file", "", "Colabfold WSL tar (UbuntuColabfold.tar)")
-        if file_path:
-            install_worker = workers.ColabfoldInstallerWorkerPool(True)
-            install_worker.signals.finished.connect(self.post_install_local_colabfold_from_file)
-            if basic_boxes.yes_or_no("Local Colabfold installation", "Are you sure that you want to install Local Colabfold?", QMessageBox.Question) is True:
-                install_worker.install = True
-                install_worker.local_install = True, file_path
-                self.threadpool.start(install_worker)
-                self.block_box_expert_install.exec_()
-            else:
-                # logical message: the user does NOT want to install local colabfold
-                basic_boxes.ok("Local Colabfold installation", "Installation process aborted.", QMessageBox.Information)
-                return
 
     def open_page_information(self):
         msg = QMessageBox()
@@ -2643,6 +2587,317 @@ class MainWindow(QMainWindow):
         self.results_name = ""
         constants.PYSSA_LOGGER.info(f"The project {self.app_project.get_project_name()} was closed")
         self.display_home_page()
+
+    # </editor-fold>
+
+    # <editor-fold desc="ESMFold Monomer functions">
+    def _init_esm_pred_mono_page(self):
+        # clears everything
+        self.ui.txt_esm_prot_name.clear()
+        self.ui.txt_esm_prot_seq.clear()
+        for i in range(self.ui.table_esm_prot_to_predict.rowCount()):
+            self.ui.table_esm_prot_to_predict.removeRow(i)
+        # sets up defaults: Prediction
+        self.ui.btn_esm_next.setEnabled(False)
+        self.ui.btn_esm_next_2.setEnabled(False)
+        self.ui.lbl_esm_prot_name_status.setText("")
+        self.ui.lbl_esm_prot_seq_status.setText("")
+
+    def display_esm_pred_mono(self):
+        self._init_esm_pred_mono_page()
+        gui_elements_to_show = [
+            self.ui.lbl_esm_prot_to_predict,
+            self.ui.table_esm_prot_to_predict,
+
+            self.ui.btn_esm_seq_to_predict
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_esm_seq_to_predict_remove,
+
+            self.ui.lbl_esm_prot_name,
+            self.ui.txt_esm_prot_name,
+            self.ui.lbl_esm_prot_name_status,
+            self.ui.btn_esm_back,
+            self.ui.btn_esm_next,
+
+            self.ui.lbl_esm_prot_seq,
+            self.ui.txt_esm_prot_seq,
+            self.ui.lbl_esm_prot_seq_status,
+            self.ui.btn_esm_back_2,
+            self.ui.btn_esm_next_2,
+
+            self.ui.btn_esm_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        styles.color_button_not_ready(self.ui.btn_esm_next)
+        tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 1, "ESMFold Monomer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
+                                                                self.ui.btn_pred_cloud_monomer_page)
+
+    def cloud_esm_validate_protein_name(self):
+        """This function validates the input of the project name in real-time
+
+        """
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_esm_prot_name.text(),
+                                                                   self.ui.table_esm_prot_to_predict):
+            self.ui.lbl_esm_prot_name_status.setText("Protein name already used.")
+            self.ui.btn_esm_next.setEnabled(False)
+            styles.color_button_not_ready(self.ui.btn_esm_next)
+        else:
+            self.ui.btn_esm_next.setEnabled(True)
+            tools.validate_protein_name(self.ui.txt_esm_prot_name,
+                                        self.ui.lbl_esm_prot_name_status,
+                                        self.ui.btn_esm_next)
+
+    def cloud_esm_validate_protein_sequence(self):
+        """This function validates the input of the protein sequence in real-time
+
+        """
+        tools.validate_protein_sequence(self.ui.txt_esm_prot_seq,
+                                        self.ui.lbl_esm_prot_seq_status,
+                                        self.ui.btn_esm_next_2)
+
+    def setup_defaults_esm_monomer_prediction(self):
+        # clears everything
+        self.ui.txt_esm_prot_name.clear()
+        self.ui.txt_esm_prot_seq.clear()
+        # sets up defaults: Prediction
+        self.ui.btn_esm_next.setEnabled(False)
+        self.ui.btn_esm_next_2.setEnabled(False)
+        self.ui.lbl_esm_prot_name_status.setText("")
+        self.ui.lbl_esm_prot_seq_status.setText("")
+
+    def cloud_esm_add_seq_to_predict(self):
+        gui_elements_to_show = [
+            self.ui.lbl_esm_prot_to_predict,
+            self.ui.table_esm_prot_to_predict,
+
+            self.ui.lbl_esm_prot_name,
+            self.ui.txt_esm_prot_name,
+            self.ui.lbl_esm_prot_name_status,
+            self.ui.btn_esm_back,
+            self.ui.btn_esm_next,
+        ]
+        gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
+        gui_elements_to_hide = [
+            self.ui.btn_esm_seq_to_predict_remove,
+            self.ui.btn_esm_seq_to_predict,
+
+            self.ui.lbl_esm_prot_seq,
+            self.ui.txt_esm_prot_seq,
+            self.ui.lbl_esm_prot_seq_status,
+            self.ui.btn_esm_back_2,
+            self.ui.btn_esm_next_2,
+
+            self.ui.btn_esm_predict
+        ]
+        gui_utils.disable_text_box(self.ui.txt_esm_prot_seq, self.ui.lbl_esm_prot_seq)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_esm_next.setEnabled(False)
+        self.ui.txt_esm_prot_name.clear()
+        styles.color_button_not_ready(self.ui.btn_esm_next)
+        if self.ui.table_esm_prot_to_predict.rowCount() > 0:
+            try:
+                self.ui.table_esm_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
+
+    def cloud_esm_back(self):
+        gui_elements_to_show = [
+            self.ui.lbl_esm_prot_to_predict,
+            self.ui.table_esm_prot_to_predict,
+
+            self.ui.btn_esm_seq_to_predict_remove,
+            self.ui.btn_esm_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self.ui.lbl_esm_prot_name,
+            self.ui.txt_esm_prot_name,
+            self.ui.lbl_esm_prot_name_status,
+            self.ui.btn_esm_back,
+            self.ui.btn_esm_next,
+
+            self.ui.lbl_esm_prot_seq,
+            self.ui.txt_esm_prot_seq,
+            self.ui.lbl_esm_prot_seq_status,
+            self.ui.btn_esm_back_2,
+            self.ui.btn_esm_next_2,
+
+            self.ui.btn_esm_predict
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.cloud_esm_check_if_table_is_empty()
+        self.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
+
+    def cloud_esm_next(self):
+        gui_elements_to_show = [
+            self.ui.lbl_esm_prot_to_predict,
+            self.ui.table_esm_prot_to_predict,
+
+            self.ui.lbl_esm_prot_name,
+            self.ui.txt_esm_prot_name,
+
+            self.ui.lbl_esm_prot_seq,
+            self.ui.txt_esm_prot_seq,
+            self.ui.lbl_esm_prot_seq_status,
+            self.ui.btn_esm_back_2,
+            self.ui.btn_esm_next_2,
+        ]
+        gui_utils.enable_text_box(self.ui.txt_esm_prot_seq, self.ui.lbl_esm_prot_seq)
+        gui_elements_to_hide = [
+            self.ui.btn_esm_seq_to_predict_remove,
+            self.ui.btn_esm_seq_to_predict,
+
+            self.ui.lbl_esm_prot_name_status,
+            self.ui.btn_esm_back,
+            self.ui.btn_esm_next,
+
+            self.ui.btn_esm_predict
+        ]
+        gui_utils.disable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.txt_esm_prot_seq.clear()
+
+    def cloud_esm_back_2(self):
+        gui_elements_to_show = [
+            self.ui.lbl_esm_prot_to_predict,
+            self.ui.table_esm_prot_to_predict,
+
+            self.ui.lbl_esm_prot_name,
+            self.ui.txt_esm_prot_name,
+            self.ui.lbl_esm_prot_name_status,
+            self.ui.btn_esm_back,
+            self.ui.btn_esm_next
+        ]
+        gui_elements_to_hide = [
+            self.ui.btn_esm_seq_to_predict_remove,
+            self.ui.btn_esm_seq_to_predict,
+
+            self.ui.lbl_esm_prot_seq,
+            self.ui.txt_esm_prot_seq,
+            self.ui.lbl_esm_prot_seq_status,
+            self.ui.btn_esm_back_2,
+            self.ui.btn_esm_next_2,
+
+            self.ui.btn_esm_predict
+        ]
+        gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
+        gui_utils.disable_text_box(self.ui.txt_esm_prot_seq, self.ui.lbl_esm_prot_seq)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def cloud_esm_add_protein(self):
+        self.ui.table_esm_prot_to_predict.setRowCount(self.ui.table_esm_prot_to_predict.rowCount() + 1)
+        self.ui.table_esm_prot_to_predict.insertRow(self.ui.table_esm_prot_to_predict.rowCount() + 1)
+        self.ui.table_esm_prot_to_predict.setItem(self.ui.table_esm_prot_to_predict.rowCount() - 1, 0,
+                                                        QTableWidgetItem("A"))
+        self.ui.table_esm_prot_to_predict.setItem(self.ui.table_esm_prot_to_predict.rowCount() - 1, 1,
+                                                        QTableWidgetItem(self.ui.txt_esm_prot_seq.toPlainText()))
+        self.ui.table_esm_prot_to_predict.setVerticalHeaderItem(
+            self.ui.table_esm_prot_to_predict.rowCount() - 1,
+            QTableWidgetItem(self.ui.txt_esm_prot_name.text()))
+        self.ui.table_esm_prot_to_predict.resizeColumnsToContents()
+        self.cloud_esm_check_if_table_is_empty()
+        gui_elements_to_show = [
+            self.ui.lbl_esm_prot_to_predict,
+            self.ui.table_esm_prot_to_predict,
+            self.ui.btn_esm_seq_to_predict_remove,
+            self.ui.btn_esm_seq_to_predict,
+
+            self.ui.btn_esm_predict
+        ]
+        gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
+        gui_elements_to_hide = [
+            self.ui.lbl_esm_prot_name,
+            self.ui.txt_esm_prot_name,
+            self.ui.lbl_esm_prot_name_status,
+            self.ui.btn_esm_back,
+            self.ui.btn_esm_next,
+
+            self.ui.lbl_esm_prot_seq,
+            self.ui.txt_esm_prot_seq,
+            self.ui.lbl_esm_prot_seq_status,
+            self.ui.btn_esm_back_2,
+            self.ui.btn_esm_next_2
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_esm_predict.setEnabled(True)
+        self.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
+        styles.color_button_ready(self.ui.btn_esm_predict)
+        self.setup_defaults_esm_monomer_prediction()
+
+    def cloud_esm_remove(self):
+        self.ui.table_esm_prot_to_predict.removeRow(self.ui.table_esm_prot_to_predict.currentRow())
+        gui_elements_to_show = [
+            self.ui.lbl_esm_prot_to_predict,
+            self.ui.table_esm_prot_to_predict,
+            self.ui.btn_esm_seq_to_predict_remove,
+            self.ui.btn_esm_seq_to_predict,
+
+            self.ui.btn_esm_predict
+        ]
+        gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
+        gui_elements_to_hide = [
+            self.ui.lbl_esm_prot_name,
+            self.ui.txt_esm_prot_name,
+            self.ui.lbl_esm_prot_name_status,
+            self.ui.btn_esm_back,
+            self.ui.btn_esm_next,
+
+            self.ui.lbl_esm_prot_seq,
+            self.ui.txt_esm_prot_seq,
+            self.ui.lbl_esm_prot_seq_status,
+            self.ui.btn_esm_back_2,
+            self.ui.btn_esm_next_2
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
+        self.cloud_esm_check_if_table_is_empty()
+
+    def cloud_esm_item_changed(self):
+        self.ui.btn_esm_seq_to_predict_remove.setEnabled(True)
+
+    def cloud_esm_check_if_table_is_empty(self):
+        if self.ui.table_esm_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self.ui.btn_esm_predict)
+            self.ui.btn_esm_predict.setEnabled(False)
+            gui_elements_to_show = [
+                self.ui.lbl_esm_prot_to_predict,
+                self.ui.table_esm_prot_to_predict,
+                self.ui.btn_esm_seq_to_predict
+            ]
+            gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
+            gui_elements_to_hide = [
+                self.ui.btn_esm_seq_to_predict_remove,
+
+                self.ui.lbl_esm_prot_name,
+                self.ui.txt_esm_prot_name,
+                self.ui.lbl_esm_prot_name_status,
+                self.ui.btn_esm_back,
+                self.ui.btn_esm_next,
+
+                self.ui.lbl_esm_prot_seq,
+                self.ui.txt_esm_prot_seq,
+                self.ui.lbl_esm_prot_seq_status,
+                self.ui.btn_esm_back_2,
+                self.ui.btn_esm_next_2,
+
+                self.ui.btn_esm_predict
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            styles.color_button_ready(self.ui.btn_esm_predict)
+            self.ui.btn_esm_predict.setEnabled(True)
+
+    def predict_esm_monomer(self):
+        pass
 
     # </editor-fold>
 
