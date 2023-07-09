@@ -22,11 +22,13 @@
 import os
 import pathlib
 from PyQt5.QtCore import QObject, pyqtSignal, QThread
-
+from PyQt5 import QtWidgets
 from pyssa.internal.data_structures import protein, protein_pair
+from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
-from pyssa.util import tools, constants
+from pyssa.util import tools, constants, prediction_util
+from pyssa.internal.prediction_engines import esmfold
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -135,4 +137,22 @@ class LoadResultsWorker(QObject):
             self.image_type = constants.IMAGES_NONE
 
         self.return_value.emit(self.image_type)
+        self.finished.emit()
+
+
+class EsmFoldWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(list)
+    table: QtWidgets.QTableWidget
+
+    def __init__(self, table_prot_to_predict: QtWidgets.QTableWidget):
+        super().__init__()
+        self.table = table_prot_to_predict
+
+    def run(self):
+        predictions: list[prediction_protein_info.PredictionProteinInfo] = prediction_util.get_prediction_name_and_seq_from_table(
+            self.table)
+        output = esmfold.EsmFold(predictions).run_prediction()
+        self.return_value.emit(output)
         self.finished.emit()

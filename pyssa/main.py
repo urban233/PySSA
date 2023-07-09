@@ -2896,8 +2896,45 @@ class MainWindow(QMainWindow):
             styles.color_button_ready(self.ui.btn_esm_predict)
             self.ui.btn_esm_predict.setEnabled(True)
 
+    def post_predict_esm_monomer(self, output):
+        self.block_box_prediction.destroy(True)
+        for tmp_filename in os.listdir(constants.ESMFOLD_PDB_DIR):
+            constants.PYSSA_LOGGER.info(f"Add protein {tmp_filename} to the current project {self.app_project.get_project_name()}")
+            self.app_project.add_existing_protein(
+                protein.Protein(
+                    tmp_filename.replace(".pdb", ""),
+                    path_util.FilePath(pathlib.Path(f"{constants.ESMFOLD_PDB_DIR}/{tmp_filename}"))
+                )
+            )
+        if len(output) > 0:
+            formatted_output = ', '.join(output)
+            basic_boxes.ok("ESMFold Prediction", f"These protein prediction failed: {formatted_output}.", QMessageBox.Critical)
+        else:
+            basic_boxes.ok("ESMFold Prediction", "The prediction was successful.", QMessageBox.Information)
+        self.app_project.serialize_project(self.app_project.get_project_xml_path())
+        self.display_view_page()
+        self._project_watcher.show_valid_options(self.ui)
+
     def predict_esm_monomer(self):
-        pass
+        # <editor-fold desc="Worker setup">
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.EsmFoldWorker(self.ui.table_esm_prot_to_predict)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.post_predict_esm_monomer)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
+        self.block_box_prediction = QMessageBox()
+        self.block_box_prediction.setStandardButtons(QMessageBox.NoButton)
+        self.block_box_prediction.setIcon(QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(
+            PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        self.block_box_prediction.exec_()
 
     # </editor-fold>
 

@@ -31,7 +31,7 @@ PLUGIN_NAME = "tmpPySSA"
 PLUGIN_PATH_OLD = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\{PLUGIN_NAME}")
 PLUGIN_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{PLUGIN_NAME}")
 PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-VERSION_NUMBER = "v0.9.8"
+VERSION_NUMBER = "v0.9.9"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
@@ -55,6 +55,9 @@ CACHE_STRUCTURE_ALN_IMAGES_DIR = Path(f"{CACHE_DIR}/images/structure_alignment")
 CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = Path(f"{CACHE_STRUCTURE_ALN_IMAGES_DIR}/interesting_regions")
 PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")
 PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
+
+ESMFOLD_DIR = Path(f"{SCRATCH_DIR}/esmfold")
+ESMFOLD_PDB_DIR = Path(f"{SCRATCH_DIR}/esmfold/pdb")
 
 UNIX_SCRIPTS_SCIEBO_URL = "https://w-hs.sciebo.de/s/X3L7pnr4wfqy6gu/download"
 UNIX_SCRIPTS_USER_DIR = pathlib.Path(f"{SETTINGS_DIR}/scripts/unix")
