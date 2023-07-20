@@ -34,7 +34,7 @@ from pyssa.util import protein_pair_util
 from pyssa.internal.portal import protein_pair_operations
 from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
-from pyssa.util import analysis_util
+from pyssa.internal.portal import graphic_operations
 from pyssa.util import constants
 from pyssa.internal.data_structures import results
 
@@ -265,10 +265,11 @@ class DistanceAnalysis:
         cmd.center()
         # set image parameters
         cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
-        cmd.set("ray_trace_mode", 3)
-        cmd.set("antialias", 2)
+        cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
+        cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
         cmd.set("ray_shadows", opt_ray_shadows)
         cmd.set('ray_opaque_background', opaque_background)
+        graphic_operations.setup_default_session_graphic_settings()
         self._protein_pair_for_analysis.color_protein_pair()
 
         cmd.scene(key=f"{self._protein_pair_for_analysis.protein_1.get_molecule_object()}-"
@@ -321,6 +322,7 @@ class DistanceAnalysis:
 
         cmd.hide("cartoon", "all")
         cmd.show(REPRESENTATION, "all")
+        graphic_operations.setup_default_session_graphic_settings()
         self._protein_pair_for_analysis.color_protein_pair()
 
         i: int = 0

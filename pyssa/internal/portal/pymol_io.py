@@ -24,6 +24,8 @@ import pathlib
 import pymol
 import os
 from pymol import cmd
+
+from pyssa.internal.portal import graphic_operations
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import path_util
@@ -103,6 +105,7 @@ def load_pymol_session(pymol_session_file):
     if not safeguard.Safeguard.check_filepath(f"{pymol_session_file}"):
         raise FileNotFoundError
     cmd.load(pymol_session_file)
+    graphic_operations.setup_default_session_graphic_settings()
 
 
 def convert_pymol_session_to_base64_string(pymol_molecule_object) -> str:

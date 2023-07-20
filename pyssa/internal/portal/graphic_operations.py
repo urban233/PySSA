@@ -97,3 +97,20 @@ def color_protein(pymol_color: str, a_selection_string: str):
         cmd.color(pymol_color, a_selection_string)
     except pymol.CmdException:
         print("Color process was unsuccessful.")
+
+
+def setup_default_session_graphic_settings():
+    cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+    cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
+    cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
+    cmd.set("ambient", constants.PYMOL_DEFAULT_AMBIENT)
+    cmd.set("cartoon_fancy_helices", constants.PYMOL_DEFAULT_FANCY_HELICES)
+    cmd.set("cartoon_discrete_colors", constants.PYMOL_DEFAULT_CARTOON_DISCRETE_COLORS)
+    cmd.set("cartoon_sampling", constants.PYMOL_DEFAULT_CARTOON_SAMPLING)
+    cmd.set("spec_power", constants.PYMOL_DEFAULT_SPEC_POWER)
+    cmd.set("spec_reflect", constants.PYMOL_DEFAULT_SPEC_REFLECT)
+    cmd.set("ray_transparency_contrast", constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_CONTRAST)
+    cmd.set("ray_transparency_oblique", constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_OBLIQUE)
+    cmd.set("ray_transparency_oblique_power", constants.PYMOL_DEFAULT_RAY_OBLIQUE_POWER)
+    cmd.set("ray_trace_color", constants.PYMOL_DEFAULT_RAY_COLOR)
+    cmd.unset("depth_cue")
