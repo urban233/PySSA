@@ -68,6 +68,9 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.ui.label.hide()
+        self.ui.lbl_color_vision_mode.hide()
+        self.ui.cb_color_vision_mode.hide()
 
         # <editor-fold desc="Class attributes">
         self.tmp_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
