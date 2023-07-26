@@ -82,7 +82,7 @@ def choose_directory(self, txt_box_dir):
     new_file_path = pathlib.Path(Qt.QtWidgets.QFileDialog.getExistingDirectory(
         self, "Open Directory", str(current_file_path),
         options=Qt.QtWidgets.QFileDialog.ShowDirsOnly))
-    if new_file_path == "":
+    if new_file_path == pathlib.Path("."):
         txt_box_dir.setText(str(current_file_path))
     else:
         txt_box_dir.setText(str(new_file_path))

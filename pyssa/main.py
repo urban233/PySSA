@@ -812,7 +812,7 @@ class MainWindow(QMainWindow):
 
         """
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage(str(self.workspace_path))
+        self.status_bar.showMessage(str(self.workspace.text()))
 
     def _setup_default_configuration(self):
         self.ui.lbl_current_project_name.setText("")
@@ -1700,7 +1700,8 @@ class MainWindow(QMainWindow):
         dialog.exec_()
         self.app_settings = self.app_settings.deserialize_settings()
         globals.g_settings = self.app_settings
-        self.workspace_path = self.app_settings.workspace_path
+        self.workspace_path = globals.g_settings.workspace_path
+        self.workspace = QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self._setup_statusbar()
 
     @staticmethod
@@ -2158,7 +2159,6 @@ class MainWindow(QMainWindow):
         self.ui.btn_manage_session.hide()
         self.display_view_page()
         QApplication.restoreOverrideCursor()
-
 
     # </editor-fold>
 
