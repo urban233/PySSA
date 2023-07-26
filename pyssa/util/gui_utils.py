@@ -30,6 +30,8 @@ from PyQt5.QtGui import QIcon
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
+
+from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.util import tools, constants
 
@@ -81,10 +83,14 @@ def choose_directory(self, txt_box_dir):
     new_file_path = pathlib.Path(Qt.QtWidgets.QFileDialog.getExistingDirectory(
         self, "Open Directory", str(current_file_path),
         options=Qt.QtWidgets.QFileDialog.ShowDirsOnly))
-    if new_file_path == pathlib.Path("."):
+    test = os.access(new_file_path, os.W_OK)
+    if new_file_path != pathlib.Path(".") and os.access(new_file_path, os.W_OK):
+        txt_box_dir.setText(str(new_file_path))
+    elif new_file_path != pathlib.Path(".") and not os.access(new_file_path, os.W_OK):
+        basic_boxes.ok("Permission error", "You do not have write permissions for this directroy. Please choose another one.", QMessageBox.Warning)
         txt_box_dir.setText(str(current_file_path))
     else:
-        txt_box_dir.setText(str(new_file_path))
+        txt_box_dir.setText(str(current_file_path))
 
 
 def critical_message(message, message_detail):
