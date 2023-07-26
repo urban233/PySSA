@@ -260,6 +260,7 @@ class MainWindow(QMainWindow):
         self.block_box_analysis = basic_boxes.no_buttons("Analysis", "An analysis is currently running, please wait.", QMessageBox.Information)
         self.block_box_prediction: QMessageBox = QMessageBox()
         self.block_box_images = basic_boxes.no_buttons("Analysis Images", "Images getting created, please wait.", QMessageBox.Information)
+        self.block_box_uni = basic_boxes.no_buttons("Generic", "Generic", QMessageBox.Information)
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
         self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -2943,13 +2944,16 @@ class MainWindow(QMainWindow):
         # </editor-fold>
 
         self.block_box_prediction = QMessageBox()
-        self.block_box_prediction.setStandardButtons(QMessageBox.NoButton)
-        self.block_box_prediction.setIcon(QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(
-            PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-        styles.set_stylesheet(self.block_box_prediction)
-        self.block_box_prediction.setWindowTitle("Structure Prediction")
-        self.block_box_prediction.setText("A prediction is currently running.")
+        self.block_box_prediction = gui_utils.setup_standard_block_box(
+            self.block_box_prediction, "Structure Prediction", "A prediction is currently running."
+        )
+        # self.block_box_prediction.setStandardButtons(QMessageBox.NoButton)
+        # self.block_box_prediction.setIcon(QMessageBox.Information)
+        # self.block_box_prediction.setWindowIcon(
+        #     PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        # styles.set_stylesheet(self.block_box_prediction)
+        # self.block_box_prediction.setWindowTitle("Structure Prediction")
+        # self.block_box_prediction.setText("A prediction is currently running.")
         self.block_box_prediction.exec_()
 
     # </editor-fold>
@@ -3290,147 +3294,6 @@ class MainWindow(QMainWindow):
             styles.color_button_ready(self.ui.btn_pred_mono_predict)
             self.ui.btn_pred_mono_predict.setEnabled(True)
 
-    # def local_pred_mono_show_protein_overview(self):
-    #     if self.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
-    #         self.local_pred_monomer_management.show_stage_x(0)
-    #     else:
-    #         gui_elements_to_show = [
-    #             self.ui.btn_pred_mono_seq_to_predict,
-    #             self.ui.btn_pred_mono_seq_to_predict_remove,
-    #         ]
-    #         self.local_pred_monomer_management.show_gui_elements_stage_x(
-    #             [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
-    #         )
-    #
-    # def local_pred_mono_show_protein_name(self):
-    #     gui_elements_to_hide = [
-    #         self.ui.btn_pred_mono_seq_to_predict,
-    #         self.ui.btn_pred_mono_seq_to_predict_remove,
-    #     ]
-    #     self.local_pred_monomer_management.show_gui_elements_stage_x(
-    #         [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
-    #     gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name,
-    #                               self.ui.lbl_pred_mono_prot_name)
-    #
-    # def local_pred_mono_show_protein_sequence(self):
-    #     gui_elements_to_hide = [
-    #         self.ui.btn_pred_mono_seq_to_predict,
-    #         self.ui.btn_pred_mono_seq_to_predict_remove,
-    #         self.ui.btn_pred_mono_back,
-    #         self.ui.btn_pred_mono_next,
-    #     ]
-    #     self.local_pred_monomer_management.show_gui_elements_stage_x(
-    #         [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
-    #     gui_utils.disable_text_box(self.ui.txt_pred_mono_prot_name,
-    #                                self.ui.lbl_pred_mono_prot_name)
-    #     gui_utils.enable_text_box(self.ui.txt_pred_mono_seq_name,
-    #                               self.ui.lbl_pred_mono_seq_name)
-    #
-    # def local_pred_mono_add_protein_to_predict(self):
-    #     self.ui.table_pred_mono_prot_to_predict.setRowCount(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
-    #     self.ui.table_pred_mono_prot_to_predict.insertRow(self.ui.table_pred_mono_prot_to_predict.rowCount()+1)
-    #     self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0,
-    #                                                     QTableWidgetItem("A"))
-    #     self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1, 1,
-    #                                                     QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
-    #     self.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_mono_prot_to_predict.rowCount()-1,
-    #                                                                   QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
-    #     self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
-    #     self.local_pred_mono_check_if_table_is_empty()
-    #     self.local_pred_mono_show_protein_overview()
-    #     self.setup_defaults_monomer_prediction()
-    #
-    # def local_pred_mono_remove_protein_to_predict(self):
-    #     self.ui.table_pred_mono_prot_to_predict.removeRow(self.ui.table_pred_mono_prot_to_predict.currentRow())
-    #     self.local_pred_mono_check_if_table_is_empty()
-    #     self.local_pred_mono_show_protein_overview()
-
-    # def local_pred_mono_validate_protein_name(self):
-    #     """This function validates the input of the project name in real-time
-    #
-    #     """
-    #     tools.validate_protein_name(self.ui.txt_local_pred_mono_protein_name,
-    #                                 self.ui.lbl_local_pred_mono_status_protein_name,
-    #                                 self.ui.btn_local_pred_mono_next)
-    #
-    # def local_pred_mono_show_prediction_configuration(self):
-    #     config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(self.prediction_configuration)
-    #     config.exec_()
-    #     self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
-    #     self.prediction_configuration.templates = config.prediction_config.templates
-    #
-    # def local_pred_mono_validate_protein_sequence(self):
-    #     """This function validates the input of the protein sequence in real-time
-    #
-    #     """
-    #     tools.validate_protein_sequence(self.ui.txt_local_pred_mono_prot_seq,
-    #                                     self.ui.lbl_local_pred_mono_status_prot_seq,
-    #                                     self.ui.btn_local_pred_mono_next_2)
-    #
-    # def local_pred_mono_show_protein_sequence(self):
-    #     gui_elements_hide = [
-    #         self.ui.btn_local_pred_mono_next,
-    #     ]
-    #     gui_elements_show = [
-    #         self.ui.lbl_local_pred_mono_prot_seq,
-    #         self.ui.lbl_local_pred_mono_status_prot_seq,
-    #         self.ui.txt_local_pred_mono_prot_seq,
-    #         self.ui.btn_local_pred_mono_back,
-    #         self.ui.btn_local_pred_mono_next_2,
-    #     ]
-    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-    #     gui_utils.disable_text_box(self.ui.txt_local_pred_mono_protein_name,
-    #                                self.ui.lbl_local_pred_mono_protein_name)
-    #
-    # def local_pred_mono_hide_protein_sequence(self):
-    #     gui_elements_hide = [
-    #         self.ui.lbl_local_pred_mono_prot_seq,
-    #         self.ui.lbl_local_pred_mono_status_prot_seq,
-    #         self.ui.txt_local_pred_mono_prot_seq,
-    #         self.ui.btn_local_pred_mono_back,
-    #         self.ui.btn_local_pred_mono_next_2,
-    #     ]
-    #     gui_elements_show = [
-    #         self.ui.btn_local_pred_mono_next,
-    #     ]
-    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-    #     gui_utils.enable_text_box(self.ui.txt_local_pred_mono_protein_name,
-    #                               self.ui.lbl_local_pred_mono_protein_name)
-    #
-    # def local_pred_mono_show_advanced_config(self):
-    #     gui_elements_show = [
-    #         self.ui.btn_local_pred_mono_back_2,
-    #         self.ui.btn_local_pred_mono_predict,
-    #         self.ui.lbl_local_pred_mono_advanced_config,
-    #         self.ui.btn_local_pred_mono_advanced_config,
-    #     ]
-    #     gui_elements_hide = [
-    #         self.ui.btn_local_pred_mono_back,
-    #         self.ui.btn_local_pred_mono_next_2,
-    #     ]
-    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-    #     gui_utils.disable_text_box(self.ui.txt_local_pred_mono_prot_seq,
-    #                                self.ui.lbl_local_pred_mono_prot_seq)
-    #     self.ui.btn_local_pred_mono_predict.setEnabled(True)
-    #     styles.color_button_ready(self.ui.btn_local_pred_mono_predict)
-    #
-    # def local_pred_mono_hide_advanced_config(self):
-    #     gui_elements_hide = [
-    #         self.ui.btn_local_pred_mono_back_2,
-    #         self.ui.btn_local_pred_mono_predict,
-    #         self.ui.lbl_local_pred_mono_advanced_config,
-    #         self.ui.btn_local_pred_mono_advanced_config,
-    #     ]
-    #     gui_elements_show = [
-    #         self.ui.btn_local_pred_mono_back,
-    #         self.ui.btn_local_pred_mono_next_2,
-    #     ]
-    #     gui_utils.manage_gui_visibility(gui_elements_show, gui_elements_hide)
-    #     gui_utils.enable_text_box(self.ui.txt_local_pred_mono_prot_seq,
-    #                               self.ui.lbl_local_pred_mono_prot_seq)
-    #     self.ui.btn_local_pred_mono_predict.setEnabled(False)
-    #     styles.color_button_not_ready(self.ui.btn_local_pred_mono_predict)
-
     def post_prediction_process(self):
         if self.prediction_type == constants.PREDICTION_TYPE_PRED:
             if len(self.app_project.proteins) == 0:
@@ -3448,6 +3311,7 @@ class MainWindow(QMainWindow):
                 self._project_watcher.show_valid_options(self.ui)
                 self._init_local_pred_mono_page()
                 self._init_local_pred_multi_page()
+                self.display_view_page()
         elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS:
             if len(self.app_project.proteins) == 1:
                 self.block_box_prediction.destroy(True)
@@ -3455,6 +3319,7 @@ class MainWindow(QMainWindow):
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
+                # executes if monomers were successfully predicted
                 self.app_project.serialize_project(self.app_project.get_project_xml_path())
                 constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
                 constants.PYSSA_LOGGER.info("All structure predictions are done.")
@@ -3462,13 +3327,32 @@ class MainWindow(QMainWindow):
                 constants.PYSSA_LOGGER.debug(
                     f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}")
 
-                self.worker_analysis = workers.AnalysisWorkerPool(
-                    self.ui.list_pred_analysis_mono_overview, self.ui.cb_pred_analysis_mono_images,
-                    self.status_bar, self.app_project, self.app_settings, self._init_mono_pred_analysis_page)
+                #self.worker_analysis = workers.AnalysisWorkerPool(
+                #    self.ui.list_pred_analysis_mono_overview, self.ui.cb_pred_analysis_mono_images,
+                #    self.status_bar, self.app_project, self.app_settings, self._init_mono_pred_analysis_page)
                 constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-                self.threadpool.start(self.worker_analysis)
+                #self.threadpool.start(self.worker_analysis)
                 constants.PYSSA_LOGGER.debug(
                     f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
+
+                # <editor-fold desc="Worker setup">
+                # TODO: test code below
+                # --Begin: worker setup
+                self.tmp_thread = PyQt5.QtCore.QThread()
+                self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_pred_analysis_mono_overview,
+                                                                      self.ui.cb_pred_analysis_mono_images,
+                                                                      self.status_bar,
+                                                                      self.app_project,
+                                                                      self.app_settings,
+                                                                      self._init_mono_pred_analysis_page)
+                self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
+                                                                     self.display_view_page)
+                self.tmp_worker.finished.connect(self.post_analysis_process)
+                self.tmp_thread.start()
+                # --End: worker setup
+
+                # </editor-fold>
+
                 if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
                     os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
                 self.block_box_prediction.destroy(True)
@@ -3489,13 +3373,32 @@ class MainWindow(QMainWindow):
                 constants.PYSSA_LOGGER.debug(
                     f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}")
 
-                self.worker_analysis = workers.AnalysisWorkerPool(
-                    self.ui.list_pred_analysis_multi_overview, self.ui.cb_pred_analysis_multi_images,
-                    self.status_bar, self.app_project, self.app_settings, self._init_multi_pred_analysis_page)
+                #self.worker_analysis = workers.AnalysisWorkerPool(
+                #    self.ui.list_pred_analysis_multi_overview, self.ui.cb_pred_analysis_multi_images,
+                #    self.status_bar, self.app_project, self.app_settings, self._init_multi_pred_analysis_page)
                 constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-                self.threadpool.start(self.worker_analysis)
+                #self.threadpool.start(self.worker_analysis)
                 constants.PYSSA_LOGGER.debug(
                     f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
+
+                # <editor-fold desc="Worker setup">
+                # TODO: test code below
+                # --Begin: worker setup
+                self.tmp_thread = PyQt5.QtCore.QThread()
+                self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_pred_analysis_multi_overview,
+                                                                      self.ui.cb_pred_analysis_multi_images,
+                                                                      self.status_bar,
+                                                                      self.app_project,
+                                                                      self.app_settings,
+                                                                      self._init_multi_pred_analysis_page)
+                self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
+                                                                     self.display_view_page)
+                self.tmp_worker.finished.connect(self.post_analysis_process)
+                self.tmp_thread.start()
+                # --End: worker setup
+
+                # </editor-fold>
+
                 if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
                     os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
                 self.block_box_prediction.destroy(True)
@@ -3506,13 +3409,24 @@ class MainWindow(QMainWindow):
     def predict_local_monomer(self):
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        # worker = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
-        #                                       self.prediction_configuration, self.app_project)
-        # worker.signals.finished.connect(self.post_prediction_process)
-        self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
-                                                              self.prediction_configuration, self.app_project)
+        # self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
+        #                                                       self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        self.threadpool.start(self.worker_prediction)
+        #self.threadpool.start(self.worker_prediction)
+
+        # <editor-fold desc="Worker setup">
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_mono_prot_to_predict,
+                                                       self.prediction_configuration,
+                                                       self.app_project)
+        self.tmp_worker.finished.connect(self.post_prediction_process)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
         gui_elements_to_show = [
 
         ]
@@ -4053,11 +3967,26 @@ class MainWindow(QMainWindow):
     def predict_local_multimer(self):
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin multimer prediction process.")
-        worker = workers.PredictionWorkerPool(self.ui.table_pred_multi_prot_to_predict,
-                                              self.prediction_configuration, self.app_project)
-        worker.signals.finished.connect(self.post_prediction_process)
+        #worker = workers.PredictionWorkerPool(self.ui.table_pred_multi_prot_to_predict,
+        #                                      self.prediction_configuration, self.app_project)
+        #worker.signals.finished.connect(self.post_prediction_process)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        self.threadpool.start(worker)
+        #self.threadpool.start(worker)
+
+        # <editor-fold desc="Worker setup">
+        # TODO: test code below
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_multi_prot_to_predict,
+                                                       self.prediction_configuration,
+                                                       self.app_project)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
+        self.tmp_worker.finished.connect(self.post_prediction_process)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
         gui_elements_to_show = [
             self.ui.btn_prediction_abort,
         ]
@@ -5118,10 +5047,25 @@ class MainWindow(QMainWindow):
         #     return
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
-                                                                       self.prediction_configuration, self.app_project)
+        #self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
+        #                                                               self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        self.threadpool.start(self.worker_prediction_analysis)
+        #self.threadpool.start(self.worker_prediction_analysis)
+
+        # <editor-fold desc="Worker setup">
+        # TODO: test code below
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_analysis_mono_prot_to_predict,
+                                                       self.prediction_configuration,
+                                                       self.app_project)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
+        self.tmp_worker.finished.connect(self.post_prediction_process)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
         gui_elements_to_show = [
             self.ui.btn_prediction_abort,
         ]
@@ -6149,49 +6093,6 @@ class MainWindow(QMainWindow):
         else:
             self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
 
-
-
-    # def fill_multi_pred_analysis_protein_boxes(self):
-    #     protein_names = []
-    #     prediction_runs = prediction_util.get_prediction_name_and_seq_from_table(self.ui.table_pred_analysis_multi_prot_to_predict)
-    #     for tmp_prediction_run in prediction_runs:
-    #         protein_names.append(tmp_prediction_run.name)
-    #     for tmp_protein in self.app_project.proteins:
-    #         protein_names.append(tmp_protein.get_molecule_object())
-    #     protein_names.insert(0, "")
-    #     self.ui.box_pred_analysis_multi_prot_struct_1.clear()
-    #     self.ui.box_pred_analysis_multi_prot_struct_2.clear()
-    #     gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_1, protein_names)
-    #     gui_utils.fill_combo_box(self.ui.box_pred_analysis_multi_prot_struct_2, protein_names)
-    #
-    # def remove_multi_pred_analysis_analysis_run(self):
-    #     self.ui.list_pred_analysis_multi_overview.takeItem(self.ui.list_pred_analysis_multi_overview.currentRow())
-    #     if self.ui.list_pred_analysis_multi_overview.count() == 0:
-    #         self.multimer_prediction_analysis_management.show_stage_x(4)
-    #         self.ui.btn_pred_analysis_multi_remove.hide()
-    #
-    # def check_multi_pred_analysis_if_same_no_of_chains_selected(self):
-    #     self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-    #     styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next_4)
-    #     if self.no_of_selected_chains == len(self.ui.list_pred_analysis_multi_model_chains.selectedItems()):
-    #         styles.color_button_ready(self.ui.btn_pred_analysis_multi_next_4)
-    #         self.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
-    #
-    # def check_multi_pred_analysis_if_prot_structs_are_filled(self):
-    #     prot_1 = self.ui.box_pred_analysis_multi_prot_struct_1.itemText(self.ui.box_pred_analysis_multi_prot_struct_1.currentIndex())
-    #     prot_2 = self.ui.box_pred_analysis_multi_prot_struct_2.itemText(self.ui.box_pred_analysis_multi_prot_struct_2.currentIndex())
-    #     if prot_1 != "" and prot_2 != "":
-    #         self.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
-    #     else:
-    #         self.ui.btn_pred_analysis_multi_next_2.setEnabled(False)
-    #
-    # def count_multi_pred_analysis_selected_chains_for_prot_struct_1(self):
-    #     self.no_of_selected_chains = len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems())
-    #     if self.no_of_selected_chains > 0:
-    #         self.ui.btn_pred_analysis_multi_next_3.setEnabled(True)
-    #     else:
-    #         self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
-
     # <editor-fold desc="old">
     def show_multi_pred_analysis_stage_0(self):
         gui_page_management.show_analysis_page_stage_0(self.multimer_prediction_analysis_management,
@@ -6293,10 +6194,10 @@ class MainWindow(QMainWindow):
     def start_multimer_prediction_analysis(self):
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_analysis_multi_prot_to_predict,
-                                                              self.prediction_configuration, self.app_project)
+        #self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_analysis_multi_prot_to_predict,
+        #                                                      self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        self.threadpool.start(self.worker_prediction)
+        #self.threadpool.start(self.worker_prediction)
         gui_elements_to_show = [
             self.ui.btn_prediction_abort,
         ]
@@ -6306,6 +6207,21 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_local_monomer_page,
             self.ui.btn_pred_local_multimer_page,
         ]
+
+        # <editor-fold desc="Worker setup">
+        # TODO: test code below
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_analysis_multi_prot_to_predict,
+                                                       self.prediction_configuration,
+                                                       self.app_project)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
+        self.tmp_worker.finished.connect(self.post_prediction_process)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
         self.block_box_prediction = QMessageBox()
@@ -6656,8 +6572,6 @@ class MainWindow(QMainWindow):
     def structure_analysis_overview_clicked(self):
         self.ui.btn_analysis_batch_remove.setEnabled(True)
 
-
-
     def show_batch_analysis_stage_0(self):
         gui_page_management.show_analysis_page_stage_0(self.batch_analysis_management,
                                                        self.ui.list_analysis_batch_ref_chains,
@@ -6890,11 +6804,29 @@ class MainWindow(QMainWindow):
         # analysis_thread = threading.Thread(target=self.thread_func_run_analysis, args=(self.analysis_callback,))
         # analysis_thread.start()
         # self.block_box_analysis.exec_()
-        self.worker_analysis = workers.AnalysisWorkerPool(
-            self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
-            self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
+        #self.worker_analysis = workers.AnalysisWorkerPool(
+        #    self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
+        #    self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
         constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-        self.threadpool.start(self.worker_analysis)
+        #self.threadpool.start(self.worker_analysis)
+
+        # <editor-fold desc="Worker setup">
+        # TODO: test code below
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_analysis_batch_overview,
+                                                              self.ui.cb_analysis_images,
+                                                              self.status_bar,
+                                                              self.app_project,
+                                                              self.app_settings,
+                                                              self._init_batch_analysis_page)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_use_page)
+        self.tmp_worker.finished.connect(self.post_analysis_process)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
@@ -7078,11 +7010,27 @@ class MainWindow(QMainWindow):
 
     def start_automatic_image_creation(self):
         constants.PYSSA_LOGGER.info("Begin image creation process.")
-        self.worker_image_creation = workers.BatchImageWorkerPool(
-            self.ui.list_analysis_images_struct_analysis, self.ui.list_analysis_images_creation_struct_analysis,
-            self.status_bar, self.app_project)
+        #self.worker_image_creation = workers.BatchImageWorkerPool(
+        #    self.ui.list_analysis_images_struct_analysis, self.ui.list_analysis_images_creation_struct_analysis,
+        #    self.status_bar, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for image creation process.")
-        self.threadpool.start(self.worker_image_creation)
+        #self.threadpool.start(self.worker_image_creation)
+
+        # <editor-fold desc="Worker setup">
+        # TODO: test code below
+        # --Begin: worker setup
+        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_worker = task_workers.BatchImageWorker(self.ui.list_analysis_images_struct_analysis,
+                                                        self.ui.list_analysis_images_creation_struct_analysis,
+                                                        self.status_bar,
+                                                        self.app_project)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
+        self.tmp_worker.finished.connect(self.post_image_creation_process)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
@@ -7743,6 +7691,12 @@ class MainWindow(QMainWindow):
         if scene_name[1]:
             cmd.scene(key=scene_name[0], action="append")
 
+    def post_preview_image(self):
+        self.block_box_uni.hide()
+        self.block_box_uni.destroy(True)
+        self.status_bar.showMessage("Finished preview of ray-traced image.")
+        QApplication.restoreOverrideCursor()
+
     def preview_image(self):
         """This function previews the image
 
@@ -7750,13 +7704,31 @@ class MainWindow(QMainWindow):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.ui.cb_ray_tracing.isChecked():
             self.status_bar.showMessage("Preview ray-traced image ...")
-            cmd.ray(2400, 2400, renderer=int(self.renderer))
-            self.status_bar.showMessage("Finished preview of ray-traced image.")
+            # <editor-fold desc="Worker setup">
+            # --Begin: worker setup
+            self.tmp_thread = PyQt5.QtCore.QThread()
+            self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
+            self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
+                                                                 self.display_view_page)
+            self.tmp_worker.finished.connect(self.post_preview_image)
+            self.tmp_thread.start()
+            # --End: worker setup
+
+            # </editor-fold>
+            gui_utils.setup_standard_block_box(self.block_box_uni, "Preview ray-trace image", "The preview for the ray-traced image is getting created ...")
+            self.block_box_uni.exec_()
         else:
             self.status_bar.showMessage("Preview draw image ...")
             cmd.draw(2400, 2400)
             self.status_bar.showMessage("Finished preview of drawn image.")
+            QApplication.restoreOverrideCursor()
+
+    def post_save_image(self):
+        self.block_box_uni.hide()
+        self.block_box_uni.destroy(True)
+        self.status_bar.showMessage("Finished image creation.")
         QApplication.restoreOverrideCursor()
+        basic_boxes.ok("Finished image creation", "The image has been created.", QMessageBox.Information)
 
     def save_image(self):
         """This function saves the image as a png file.
@@ -7773,9 +7745,25 @@ class MainWindow(QMainWindow):
                                                 self.status_bar, "No file has been selected.")
                     return
                 self.status_bar.showMessage("Creating ray-traced image ...")
-                cmd.ray(2400, 2400, renderer=int(self.renderer))
-                cmd.png(full_file_name[0], dpi=300)
-                self.status_bar.showMessage("Finished image creation.")
+
+                # <editor-fold desc="Worker setup">
+                # --Begin: worker setup
+                self.tmp_thread = PyQt5.QtCore.QThread()
+                self.tmp_worker = task_workers.SaveRayImageWorker(self.renderer, full_file_name[0])
+                self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
+                                                                     self.display_view_page)
+                self.tmp_worker.finished.connect(self.post_save_image)
+                self.tmp_thread.start()
+                # --End: worker setup
+
+                # </editor-fold>
+                gui_utils.setup_standard_block_box(self.block_box_uni, "Save ray-trace image",
+                                                   "Creating the ray-traced image ...")
+                self.block_box_uni.exec_()
+
+                #cmd.ray(2400, 2400, renderer=int(self.renderer))
+                #cmd.png(full_file_name[0], dpi=300)
+
             except FileExistsError:
                 tools.quick_log_and_display("error", "File exists already.",
                                             self.status_bar, "File exists already.")
@@ -7796,6 +7784,7 @@ class MainWindow(QMainWindow):
                 cmd.draw(2400, 2400)
                 cmd.png(full_file_name[0], dpi=300)
                 self.status_bar.showMessage("Finished image creation.")
+                basic_boxes.ok("Finished image creation", "The image has been created.", QMessageBox.Information)
             except FileExistsError:
                 tools.quick_log_and_display("error", "File exists already.",
                                             self.status_bar, "File exists already.")
@@ -7803,7 +7792,8 @@ class MainWindow(QMainWindow):
                 tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
                                                      "an image", self.status_bar,
                                             "Unexpected Error from PyMOL")
-        QApplication.restoreOverrideCursor()
+            finally:
+                QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 

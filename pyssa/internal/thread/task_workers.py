@@ -19,20 +19,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import copy
+import logging
 import os
 import pathlib
-from PyQt5.QtCore import QObject, pyqtSignal, QThread
+import shutil
+import subprocess
+
+from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5 import QtWidgets
-from pyssa.internal.data_structures import protein, protein_pair
-from pyssa.internal.data_structures.data_classes import prediction_protein_info
-from pyssa.io_pyssa import filesystem_io
+from pymol import cmd
+from pyssa.internal.data_processing import data_transformer
+from pyssa.internal.data_structures import protein, protein_pair, structure_prediction, structure_analysis
+from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
+from pyssa.io_pyssa import filesystem_io, safeguard, path_util
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import tools, constants, prediction_util
 from pyssa.internal.prediction_engines import esmfold
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
+    from pyssa.internal.data_structures import settings
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 def setup_worker_for_work(tmp_thread, tmp_worker, return_value_func):
@@ -140,6 +152,118 @@ class LoadResultsWorker(QObject):
         self.finished.emit()
 
 
+class BatchImageWorker(QObject):
+    """This class is a worker class for the analysis process.
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    """
+
+    # <editor-fold desc="Class attributes">
+    """
+    the list where all analysis runs are stored
+    """
+    list_analysis_images: QtWidgets.QListWidget
+    """
+    the list where all analysis runs are stored for which images should be created
+    """
+    list_analysis_for_image_creation_overview: QtWidgets.QListWidget
+    """
+    the status bar of the main window
+    """
+    status_bar: QtWidgets.QStatusBar
+    """
+    the current project in use
+    """
+    app_project: 'project.Project'
+    """
+    the settings of pyssa
+    """
+    app_settings: 'settings.Settings'
+    """
+    the signals to use, for the worker
+    """
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(str)
+
+    # </editor-fold>
+
+    def __init__(self,
+                 list_analysis_images: QtWidgets.QListWidget,
+                 list_analysis_for_image_creation_overview: QtWidgets.QListWidget,
+                 status_bar: QtWidgets.QStatusBar,
+                 app_project: 'project.Project') -> None:
+        """Constructor
+
+        Args:
+            list_analysis_images:
+                list where all analysis runs are stored
+            status_bar:
+                status bar object of the main window
+            app_project:
+                project of the main window
+            app_settings:
+                settings of the main window
+
+        Raises:
+            ValueError: raised if an argument is illegal
+        """
+        super().__init__()
+        # <editor-fold desc="Checks">
+        if not safeguard.Safeguard.check_if_value_is_not_none(status_bar):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+
+        # </editor-fold>
+
+        self.list_analysis_images = list_analysis_images
+        self.list_analysis_for_image_creation_overview = list_analysis_for_image_creation_overview
+        self.status_bar = status_bar
+        self.app_project = app_project
+
+    def run(self):
+        for i in range(self.list_analysis_for_image_creation_overview.count()):
+            tmp_protein_pair = self.app_project.search_protein_pair(self.list_analysis_for_image_creation_overview.item(i).text())
+            cmd.reinitialize()
+            tmp_protein_pair.load_pymol_session()
+            if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
+                os.mkdir(constants.SCRATCH_DIR_IMAGES)
+            if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR):
+                os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
+            if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+            tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
+                filename=f"structure_aln_{tmp_protein_pair.name}",
+                representation="cartoon")
+            tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
+                path_util.FilePath(
+                    pathlib.Path(
+                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
+                )
+            )
+            logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
+            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
+                tmp_protein_pair.distance_analysis.cutoff,
+                f"interesting_reg_{tmp_protein_pair.name}")
+            interesting_region_filepaths = []
+            for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                interesting_region_filepaths.append(
+                    path_util.FilePath(
+                        pathlib.Path(
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
+                    )
+                )
+            tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
+                interesting_region_filepaths)
+            shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
+            # emit finish signal
+            self.finished.emit()
+
+
 class EsmFoldWorker(QObject):
     finished = pyqtSignal()
     progress = pyqtSignal(int)
@@ -155,4 +279,259 @@ class EsmFoldWorker(QObject):
             self.table)
         output = esmfold.EsmFold(predictions).run_prediction()
         self.return_value.emit(output)
+        self.finished.emit()
+
+
+class ColabfoldWorker(QObject):
+    """This class is a worker class for the prediction process.
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    """
+
+    # <editor-fold desc="Class attributes">
+    """
+    pyqt table which contains the proteins to predict
+    """
+    table: QtWidgets.QTableWidget
+    """
+    the configuration settings for the prediction
+    """
+    prediction_config: prediction_configuration.PredictionConfiguration
+    """
+    the current project in use
+    """
+    app_project: 'project.Project'
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(list)
+
+    # </editor-fold>
+
+    def __init__(self,
+                 table_prot_to_predict: QtWidgets.QTableWidget,
+                 prediction_config: prediction_configuration.PredictionConfiguration,
+                 app_project: 'project.Project') -> None:
+        """Constructor.
+
+        Args:
+            table_prot_to_predict:
+                pyqt table which contains the proteins to predict
+            prediction_config:
+                the prediction_config object
+            app_project:
+                current project
+
+        Raises:
+            ValueError: raised if an argument is illegal
+        """
+        super().__init__()
+        # <editor-fold desc="Checks">
+        if not safeguard.Safeguard.check_if_value_is_not_none(table_prot_to_predict):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(prediction_config):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+
+        # </editor-fold>
+
+        self.table = table_prot_to_predict
+        self.prediction_configuration = prediction_config
+        self.app_project = app_project
+
+    def run(self):
+        """This function is a reimplementation of the QObject run method. It does the structure prediction.
+
+        """
+        predictions: list[
+            prediction_protein_info.PredictionProteinInfo] = prediction_util.get_prediction_name_and_seq_from_table(
+            self.table)
+        structure_prediction_obj = structure_prediction.StructurePrediction(predictions, self.prediction_configuration,
+                                                                            self.app_project)
+        structure_prediction_obj.create_tmp_directories()
+        logger.info("Tmp directories were created.")
+        structure_prediction_obj.create_fasta_files_for_prediction()
+        logger.info("Fasta files were created.")
+        structure_prediction_obj.run_prediction()
+        logger.info("Prediction ran successfully.")
+        structure_prediction_obj.move_best_prediction_models()
+        logger.info("Saved predicted pdb file into XML file.")
+        subprocess.run(["wsl", "--shutdown"])
+        logger.info("WSL gets shutdown.")
+        self.finished.emit()
+
+
+class DistanceAnalysisWorker(QObject):
+    """This class is a worker class for the analysis process.
+
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+
+    """
+
+    # <editor-fold desc="Class attributes">
+    """
+    the list where all analysis runs are stored
+    """
+    list_analysis_overview: QtWidgets.QListWidget
+    """
+    the checkbox if images should be taken or not
+    """
+    cb_analysis_images: QtWidgets.QCheckBox
+    """
+    the status bar of the main window
+    """
+    status_bar: QtWidgets.QStatusBar
+    """
+    the current project in use
+    """
+    app_project: 'project.Project'
+    """
+    the settings of pyssa
+    """
+    app_settings: 'settings.Settings'
+    """
+    the signals to use, for the worker
+    """
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(list)
+
+    # </editor-fold>
+
+    def __init__(self,
+                 list_analysis_overview: QtWidgets.QListWidget,
+                 cb_analysis_images: QtWidgets.QCheckBox,
+                 status_bar: QtWidgets.QStatusBar,
+                 app_project: 'project.Project',
+                 app_settings: 'settings.Settings',
+                 _init_batch_analysis_page) -> None:
+        """Constructor
+
+        Args:
+            list_analysis_overview:
+                list where all analysis runs are stored
+            cb_analysis_images:
+                checkbox which controls whether images should be created or not
+            status_bar:
+                status bar object of the main window
+            app_project:
+                project of the main window
+            app_settings:
+                settings of the main window
+            _init_batch_analysis_page:
+                function which clears the page, without parenthesis!!!
+
+        Raises:
+            ValueError: raised if an argument is illegal
+        """
+        super().__init__()
+        # <editor-fold desc="Checks">
+        if not safeguard.Safeguard.check_if_value_is_not_none(list_analysis_overview):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(cb_analysis_images):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(status_bar):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+        if not safeguard.Safeguard.check_if_value_is_not_none(app_settings):
+            logger.error("An argument is illegal.")
+            raise ValueError("An argument is illegal.")
+
+        # </editor-fold>
+
+        self.list_analysis_overview = list_analysis_overview
+        self.cb_analysis_images = cb_analysis_images
+        self.status_bar = status_bar
+        self.app_project = app_project
+        self.app_settings = app_settings
+        self._init_batch_analysis_page = _init_batch_analysis_page
+
+    def transform_gui_input_to_practical_data(self) -> list:
+        """This function transforms the input from the gui to a practical data basis which can be used to setup
+        analysis runs
+
+        """
+        distance_analysis_runs = []
+        logger.debug(f"list count: {self.list_analysis_overview.count()}")
+        for row_no in range(self.list_analysis_overview.count()):
+            input_transformer = data_transformer.DistanceAnalysisDataTransformer(
+                self.list_analysis_overview.item(row_no).text(),
+                self.app_project,
+                self.app_settings
+            )
+            logger.debug(f"Memory address of transformer: {input_transformer}")
+            protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
+            logger.debug(f"Memory address of protein_pair_for_analysis: {protein_pair_for_analysis}")
+            new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
+            distance_analysis_runs.append(new_protein_pair)
+            logger.debug(
+                f"Protein selection: {protein_pair_for_analysis.distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
+        logger.debug(f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}")
+        logger.debug(
+            f"Protein 1 from distance_analysis_runs: {distance_analysis_runs[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
+        return distance_analysis_runs
+
+    def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':
+        """This function creates protein pairs and distance analysis objects for the analysis runs.
+
+        """
+        analysis_runs = structure_analysis.Analysis(self.app_project)
+        analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
+        logger.debug(analysis_runs.analysis_list[
+                         0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
+        return analysis_runs
+
+    def run_analysis(self) -> None:
+        self.set_up_analysis_runs().run_analysis(self.cb_analysis_images)
+
+    def run(self):
+        """This function is a reimplementation of the QRunnable run method.
+
+        """
+        logger.debug(f"Memory address of worker {self}")
+        # do the analysis runs
+        self.run_analysis()
+        # emit finish signal
+        self.finished.emit()
+
+
+class PreviewRayImageWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(tuple)
+    renderer: str
+
+    def __init__(self, renderer):
+        super().__init__()
+        self.renderer = renderer
+
+    def run(self):
+        cmd.ray(2400, 2400, renderer=int(self.renderer))
+        self.finished.emit()
+
+
+class SaveRayImageWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(tuple)
+    renderer: str
+    full_file_name: str
+
+    def __init__(self, renderer, full_file_name):
+        super().__init__()
+        self.renderer = renderer
+        self.full_file_name = full_file_name
+
+    def run(self):
+        cmd.ray(2400, 2400, renderer=int(self.renderer))
+        cmd.png(self.full_file_name, dpi=300)
         self.finished.emit()

@@ -30,7 +30,6 @@ from PyQt5.QtGui import QIcon
 from pymol import Qt
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
-
 from pyssa.gui.ui.styles import styles
 from pyssa.util import tools, constants
 
@@ -525,5 +524,12 @@ def fill_list_view_with_protein_pair_names(app_project: 'project.Project', list_
         list_view_project_proteins.addItem(tmp_protein_pair.name)
 
 
-
-
+def setup_standard_block_box(block_box, window_title, msg_text):
+    block_box.setStandardButtons(QMessageBox.NoButton)
+    block_box.setIcon(QMessageBox.Information)
+    block_box.setWindowIcon(
+        QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    styles.set_stylesheet(block_box)
+    block_box.setWindowTitle(window_title)
+    block_box.setText(msg_text)
+    return block_box
