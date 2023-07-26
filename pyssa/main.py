@@ -38,6 +38,7 @@ import copy
 import requests
 
 from pyssa.internal.data_structures.data_classes import current_session
+from pyssa.internal.portal import graphic_operations
 from pyssa.util import protein_pair_util, session_util
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.dialogs import dialog_startup
@@ -2079,12 +2080,13 @@ class MainWindow(QMainWindow):
                     tools.clean_scratch_folder()
                     # TODO: add message that fetching the reference failed
                     return
-
+                graphic_operations.setup_default_session_graphic_settings()
                 tmp_ref_protein = protein.Protein(molecule_object=pdb_id,
                                                   pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")))
             else:
                 # local pdb file as input
                 pdb_filepath = path_util.FilePath(pathlib.Path(self.ui.txt_new_choose_reference.text()))
+                graphic_operations.setup_default_session_graphic_settings()
                 tmp_ref_protein = protein.Protein(molecule_object=pdb_filepath.get_filename(),
                                                   pdb_filepath=pdb_filepath)
             self.app_project.add_existing_protein(tmp_ref_protein)
