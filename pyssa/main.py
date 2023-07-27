@@ -150,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow):
             tmp_project.serialize_project(new_filepath)
             os.remove(str(pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml")))
             self.app_settings.serialize_settings()
-            QtWidgets.QtWidgets.QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.restoreOverrideCursor()
         try:
             self.app_settings = self.app_settings.deserialize_settings()
         except ValueError:
