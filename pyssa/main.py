@@ -7682,7 +7682,7 @@ class MainWindow(QMainWindow):
         """This function updates the current selected PyMOL scene.
 
         """
-        cmd.scene(key="auto_generated", action="update")
+        cmd.scene(key="auto", action="update")
 
     def save_scene(self):
         """This function saves the current view as a new PyMOL scene.
