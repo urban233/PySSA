@@ -84,12 +84,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
 
-# setup logger
-# logging.basicConfig(level=logging.DEBUG)
-# global variables
-global_var_project_dict = {0: project.Project("", pathlib.Path(""))}
-global_var_list_widget_row = 0
-
 
 class MainWindow(QMainWindow):
     """This class contains all information about the MainWindow in the
@@ -1682,22 +1676,9 @@ class MainWindow(QMainWindow):
         self.close()
 
     def open_settings_global(self):
-        """This function open the dialog for the global settings.
+        """This function opens the dialog for the global settings.
 
         """
-        # TODO: Wsl2 und Localcolabfold btn -> Is it on machine? -> Don't show btn
-        # wsl2 btn
-        # subprocess.run("(gcm wsl).Version"): # gives version of wsl
-        # PS C:\Users\hannah> wsl hostname -i 127.0.1.1
-
-
-        # local colabfold # TODO: make it possible that it grap on btn
-        # "/home/$USER/.pyssa/colabfold_batch/bin/colabfold_batch"
-        # if os.path.exists("/home/$USER/.pyssa/colabfold_batch/bin/colabfold_batch"):
-        #     self.ui.btn_install_local_prediction.hide()
-        #
-        # else:
-        #     self.ui.btn_install_local_prediction.show()
         dialog = dialog_settings_global.DialogSettingsGlobal()
         dialog.exec_()
         self.app_settings = self.app_settings.deserialize_settings()
@@ -7078,7 +7059,8 @@ class MainWindow(QMainWindow):
                                                                   self.ui.lbl_results_analysis_options,
                                                                   self.ui.cb_results_analysis_options])
 
-    def post_load_results(self):
+    @staticmethod
+    def post_load_results():
         print("Results were loaded.")
 
     def pre_load_results(self):
@@ -7107,7 +7089,6 @@ class MainWindow(QMainWindow):
         self.ui.list_results_interest_regions.clear()
         self.status_bar.showMessage(f"Loading results of {self.results_name} ...")
         QApplication.setOverrideCursor(Qt.WaitCursor)
-
 
     def load_results(self, images_type):
         if images_type == constants.IMAGES_ALL:
@@ -7332,36 +7313,6 @@ class MainWindow(QMainWindow):
         cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
         cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
 
-    def change_interesting_regions(self):
-        """This function is used to switch between projects within a job.
-
-        """
-        global global_var_list_widget_row
-        global global_var_project_dict
-
-        if gui_utils.warning_switch_pymol_session("") is True:
-            try:
-                file_path = global_var_project_dict[global_var_list_widget_row].get_protein_pairs_path()
-                cmd.save(f"{file_path}/sessions/session_file_model_s.pse")
-                tools.quick_log_and_display("info", "Saving the pymol session was successful.",
-                                            self.status_bar, "Saving was successful.")
-            except KeyError:
-                tools.quick_log_and_display("error", "No project has been opened.", self.status_bar,
-                                            "No project has been opened.")
-            except pymol.CmdException:
-                tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-                                                     "current pymol session", self.status_bar,
-                                            "Unexpected Error from PyMOL")
-
-        current_row = self.ui.project_list.currentRow()
-        global_var_list_widget_row = current_row
-        results_path = global_var_project_dict[current_row].get_protein_pairs_path()
-        dir_content = os.listdir(f"{results_path}/images/interesting_regions")
-        self.ui.cb_interesting_regions.clear()
-        for tmp_file in dir_content:
-            self.ui.cb_interesting_regions.addItem(tmp_file)
-        cmd.load(global_var_project_dict[current_row].get_session_file())
-
     def display_structure_alignment(self):
         """This function opens a window which displays the image of the structure alignment.
 
@@ -7418,9 +7369,7 @@ class MainWindow(QMainWindow):
         """
         png_dialog = QtWidgets.QDialog(self)
         label = QtWidgets.QLabel(self)
-        global global_var_project_dict
         file_path = constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR
-        #file_name = self.ui.cb_interesting_regions.currentText()
         file_name = self.ui.list_results_interest_regions.currentItem().text()
         pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{file_name}")
         # TO-DO: Create setting for min. image size
