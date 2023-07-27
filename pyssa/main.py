@@ -26,66 +26,58 @@ import shutil
 import subprocess
 import sys
 import threading
-import time
-import webbrowser
 import pathlib
-import PyQt5.QtCore
-import numpy as np
-import pymol
 import csv
-import copy
-
 import requests
-
-from pyssa.internal.data_structures.data_classes import current_session
-from pyssa.internal.portal import graphic_operations
-from pyssa.util import protein_pair_util, session_util
-from pyssa.gui.ui.dialogs import dialog_settings_global
-from pyssa.gui.ui.dialogs import dialog_startup
-from pyssa.util import constants, input_validator, gui_page_management, tools, global_variables, gui_utils
-from pyssa.gui.ui.styles import styles
-from PyQt5.QtGui import QIcon
-from pymol import cmd
-# TODO: fix import statements so that they do not import a class!
+from typing import TYPE_CHECKING
 from urllib.request import urlopen
 from urllib.error import URLError
-from PyQt5.QtWidgets import *
-from PyQt5.QtWidgets import QHBoxLayout
-from PyQt5 import QtCore
-from PyQt5 import QtWidgets
+
+import numpy as np
+import pymol
+from pymol import cmd
 from PyQt5 import QtGui
-from PyQt5.QtCore import Qt
-from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.internal.thread import workers, task_workers
-from pyssa.io_pyssa import safeguard
-from pyssa.io_pyssa import filesystem_io
-from pyssa.gui.ui.dialogs import dialog_distance_plot
-from pyssa.gui.ui.dialogs import dialog_distance_histogram
-from pyssa.gui.ui.dialogs import dialog_about
-from pyssa.gui.ui.dialogs import dialog_add_models
-from pyssa.gui.ui.dialogs import dialog_display_docs
-from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.messageboxes import basic_boxes
+from PyQt5 import QtWidgets
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt  # pylint: disable=no-name-in-module
+
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import project_watcher
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
-from pyssa.internal.data_structures.data_classes import hotspot_info
-from pyssa.io_pyssa.xml_pyssa import element_names
-from pyssa.io_pyssa.xml_pyssa import attribute_names
+from pyssa.internal.data_structures.data_classes import current_session
+from pyssa.internal.portal import graphic_operations
+from pyssa.internal.thread import workers, task_workers
+from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
+from pyssa.gui.ui.dialogs import dialog_settings_global
+from pyssa.gui.ui.dialogs import dialog_startup
+from pyssa.gui.ui.dialogs import dialog_distance_plot
+from pyssa.gui.ui.dialogs import dialog_distance_histogram
+from pyssa.gui.ui.dialogs import dialog_about
+from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
+from pyssa.gui.ui.messageboxes import basic_boxes
+from pyssa.gui.ui.styles import styles
+from pyssa.io_pyssa import safeguard
+from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
 from pyssa.util import globals
-from pyssa.util import prediction_util
-from typing import TYPE_CHECKING
+from pyssa.util import protein_pair_util, session_util
+from pyssa.util import constants, input_validator, gui_page_management, tools, gui_utils
+
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
 
 
-class MainWindow(QMainWindow):
+def show_resi_sticks():
+    session_util.check_if_sele_is_empty()
+    cmd.show(representation="sticks", selection="sele")
+
+
+class MainWindow(QtWidgets.QMainWindow):
     """This class contains all information about the MainWindow in the
     application
 
@@ -128,7 +120,7 @@ class MainWindow(QMainWindow):
 
 
         # <editor-fold desc="Info button changes">
-        pixmapi = QStyle.SP_MessageBoxQuestion
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_info.setIcon(icon)
         self.ui.btn_info.setText("")
@@ -158,7 +150,7 @@ class MainWindow(QMainWindow):
             tmp_project.serialize_project(new_filepath)
             os.remove(str(pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml")))
             self.app_settings.serialize_settings()
-            QApplication.restoreOverrideCursor()
+            QtWidgets.QtWidgets.QApplication.restoreOverrideCursor()
         try:
             self.app_settings = self.app_settings.deserialize_settings()
         except ValueError:
@@ -187,7 +179,7 @@ class MainWindow(QMainWindow):
                 line = file.readline()
             file.close()
             if response.text != line:
-                basic_boxes.ok("New version", f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.", QMessageBox.Information)
+                basic_boxes.ok("New version", f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.", QtWidgets.QMessageBox.Information)
         except requests.exceptions.RequestException as e:
             print('Failed to download the file:', e)
 
@@ -203,7 +195,7 @@ class MainWindow(QMainWindow):
         self.no_of_selected_chains = 0
         self.plot_dialog = QtWidgets.QDialog(self)
         self.view_box = None
-        self.block_box_expert_install = basic_boxes.no_buttons("Local Colabfold installation", "An installation process is currently running.", QMessageBox.Information)
+        self.block_box_expert_install = basic_boxes.no_buttons("Local Colabfold installation", "An installation process is currently running.", QtWidgets.QMessageBox.Information)
         self.prediction_type = 0
         # type, name, session
         self.current_session = current_session.CurrentSession("", "", "")
@@ -252,17 +244,17 @@ class MainWindow(QMainWindow):
         self.worker_image_creation.signals.finished.connect(self.post_image_creation_process)
         self.worker_image_creation.setAutoDelete(True)
 
-        self.block_box_analysis = basic_boxes.no_buttons("Analysis", "An analysis is currently running, please wait.", QMessageBox.Information)
-        self.block_box_prediction: QMessageBox = QMessageBox()
-        self.block_box_images = basic_boxes.no_buttons("Analysis Images", "Images getting created, please wait.", QMessageBox.Information)
-        self.block_box_uni = basic_boxes.no_buttons("Generic", "Generic", QMessageBox.Information)
+        self.block_box_analysis = basic_boxes.no_buttons("Analysis", "An analysis is currently running, please wait.", QtWidgets.QMessageBox.Information)
+        self.block_box_prediction: QtWidgets.QMessageBox = QtWidgets.QMessageBox()
+        self.block_box_images = basic_boxes.no_buttons("Analysis Images", "Images getting created, please wait.", QtWidgets.QMessageBox.Information)
+        self.block_box_uni = basic_boxes.no_buttons("Generic", "Generic", QtWidgets.QMessageBox.Information)
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
-        self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.ui.table_pred_mono_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
         self.ui.table_pred_multi_prot_to_predict.horizontalHeader().setDefaultAlignment(QtCore.Qt.AlignLeft)
-        self.ui.list_pred_analysis_multi_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.ui.list_pred_analysis_multi_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_pred_analysis_multi_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_pred_analysis_multi_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
         # helper attributes
         self.pymol_session_specs = {
@@ -283,7 +275,7 @@ class MainWindow(QMainWindow):
         self._init_batch_analysis_page()
         self.ui.action_toggle_notebook_visibility.setVisible(False)
         self.ui.action_settings_model_w_off_colab_notebook.setVisible(False)
-        self.last_sidebar_button = PyQt5.QtWidgets.QPushButton()
+        self.last_sidebar_button = QtWidgets.QPushButton()
         self.ui.table_pred_mono_prot_to_predict.setEditTriggers(self.ui.table_pred_mono_prot_to_predict.NoEditTriggers)
         self.ui.table_pred_multi_prot_to_predict.setEditTriggers(self.ui.table_pred_multi_prot_to_predict.NoEditTriggers)
         self.ui.table_pred_analysis_mono_prot_to_predict.setEditTriggers(self.ui.table_pred_analysis_mono_prot_to_predict.NoEditTriggers)
@@ -316,8 +308,8 @@ class MainWindow(QMainWindow):
         self.ui.action_help_docs.setText("Tutorial")
         self.ui.action_help_docs.setVisible(True)
         # sets additional parameters
-        self.ui.lbl_logo.setPixmap(PyQt5.QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-        self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.ui.lbl_logo.setPixmap(QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("PySSA")
         constants.PYSSA_LOGGER.info("PySSA started.")
 
@@ -834,7 +826,7 @@ class MainWindow(QMainWindow):
         # new sequence page
         # sequence vs .pdb page
         self.ui.btn_s_v_p_start.setEnabled(False)
-        self.ui.list_s_v_p_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_s_v_p_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         # single analysis page
         self.ui.lbl_analysis_model_chains.hide()
         self.ui.list_analysis_model_chains.hide()
@@ -1171,7 +1163,7 @@ class MainWindow(QMainWindow):
 
         # <editor-fold desc="Hotspots page">
         self.ui.list_hotspots_choose_protein.currentItemChanged.connect(self.open_protein)
-        self.ui.btn_hotspots_resi_show.clicked.connect(self.show_resi_sticks)
+        self.ui.btn_hotspots_resi_show.clicked.connect(show_resi_sticks)
         self.ui.btn_hotspots_resi_hide.clicked.connect(self.hide_resi_sticks)
         self.ui.btn_hotspots_resi_zoom.clicked.connect(self.zoom_resi_position)
 
@@ -1426,8 +1418,8 @@ class MainWindow(QMainWindow):
 
         """
         self.fill_protein_structure_boxes()
-        self.ui.list_analysis_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.ui.list_analysis_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_analysis_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_analysis_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         # regular work area opening
         self._init_single_analysis_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 3, "Single Analysis")
@@ -1438,8 +1430,8 @@ class MainWindow(QMainWindow):
         """This function displays the job analysis work area
 
         """
-        self.ui.list_analysis_batch_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.ui.list_analysis_batch_model_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_analysis_batch_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.ui.list_analysis_batch_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         # regular work area opening
         self._init_batch_analysis_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Structure Analysis")
@@ -1452,12 +1444,11 @@ class MainWindow(QMainWindow):
         """
         results = []
         results.insert(0, "")
-        current_results_index = 0
         i = 0
         for tmp_protein_pair in self.app_project.protein_pairs:
             results.append(tmp_protein_pair.name)
             if tmp_protein_pair.name == self.results_name:
-                current_results_index = i
+                pass
             i += 1
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
@@ -1548,11 +1539,11 @@ class MainWindow(QMainWindow):
                                                                 self.ui.btn_edit_page)
 
     def start_display_use_page(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
 
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.Worker(self.workspace_path)
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_use_page)
         self.tmp_thread.start()
@@ -1580,13 +1571,13 @@ class MainWindow(QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_use_page)
-        QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()
         # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
         #                                                         self.ui.btn_use_page)
-        # QApplication.restoreOverrideCursor()
+        # QtWidgets.QApplication.restoreOverrideCursor()
 
-        # QApplication.setOverrideCursor(Qt.WaitCursor)
+        # QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         # self._init_use_page()
         # self.ui.list_use_available_protein_structures.clear()
         # self.ui.list_use_selected_protein_structures.clear()
@@ -1608,7 +1599,7 @@ class MainWindow(QMainWindow):
         # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
         #                                                         self.ui.btn_use_page)
-        # QApplication.restoreOverrideCursor()
+        # QtWidgets.QApplication.restoreOverrideCursor()
 
     def display_hotspots_page(self):
         self.ui.list_hotspots_choose_protein.clear()
@@ -1710,9 +1701,9 @@ class MainWindow(QMainWindow):
         dialog.exec_()
 
     def open_page_information(self):
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Question)
-        msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Question)
+        msg.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         styles.set_stylesheet(msg)
         msg.setWindowTitle("Information")
         msg.setStyleSheet("QLabel{font-size: 11pt;}")
@@ -1927,7 +1918,7 @@ class MainWindow(QMainWindow):
 
         """
         # checkbox is checked
-        test = self.ui.cb_new_add_reference.checkState()
+        self.ui.cb_new_add_reference.checkState()
         if self.ui.cb_new_add_reference.checkState() == 2:
             self.ui.txt_new_choose_reference.clear()
             self.ui.txt_new_choose_reference.setStyleSheet("background-color: white")
@@ -2036,20 +2027,22 @@ class MainWindow(QMainWindow):
         """This function creates a new project based on the plugin New ... page
 
         """
+        # <editor-fold desc="Checks">
         if self.app_settings.wsl_install == 0:
-            basic_boxes.ok("Create new project", "Please install local colabfold to create a project!", QMessageBox.Warning)
+            basic_boxes.ok("Create new project",
+                           "Please install local colabfold to create a project!",
+                           QtWidgets.QMessageBox.Warning)
             return
         elif self.app_settings.local_colabfold == 0:
-            basic_boxes.ok("Create new project", "Please install local colabfold to create a project!",
-                           QMessageBox.Warning)
+            basic_boxes.ok("Create new project",
+                           "Please install local colabfold to create a project!",
+                           QtWidgets.QMessageBox.Warning)
             return
-        self._project_watcher.on_home_page = False
-        self.ui.lbl_current_project_name.setText(self.ui.txt_new_project_name.text())
-        self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{self.ui.txt_new_project_name.text()}")
-        # save project folder in current workspace
-        self.app_project = project.Project(self.ui.txt_new_project_name.text(), self.workspace_path)
-        # self.app_project.create_project_tree()
-        # save reference .pdb
+
+        # </editor-fold>
+
+        new_project_name = self.ui.txt_new_project_name.text()
+        self.app_project = project.Project(new_project_name, self.workspace_path)
         if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() is True:
             if len(self.ui.txt_new_choose_reference.text()) == 4:
                 # PDB ID as input
@@ -2063,7 +2056,8 @@ class MainWindow(QMainWindow):
                     return
                 graphic_operations.setup_default_session_graphic_settings()
                 tmp_ref_protein = protein.Protein(molecule_object=pdb_id,
-                                                  pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")))
+                                                  pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb"))
+                                                  )
             else:
                 # local pdb file as input
                 pdb_filepath = path_util.FilePath(pathlib.Path(self.ui.txt_new_choose_reference.text()))
@@ -2079,11 +2073,14 @@ class MainWindow(QMainWindow):
         for tmp_protein in self.app_project.proteins:
             protein_names.append(tmp_protein.get_molecule_object())
         constants.PYSSA_LOGGER.debug(f"These are the proteins {protein_names}.")
-        # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(f"{self._project_watcher.current_project.get_project_name()} is the current project.")
+        self._project_watcher.on_home_page = False
+        # update gui
         self._project_watcher.show_valid_options(self.ui)
+        self.ui.lbl_current_project_name.setText(new_project_name)
+        self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{new_project_name}")
         self.display_view_page()
 
     # </editor-fold>
@@ -2135,14 +2132,14 @@ class MainWindow(QMainWindow):
         """This function opens an existing project
 
         """
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         tmp_thread = threading.Thread(target=self.thread_func_open_project, daemon=True)
         tmp_thread.start()
         tmp_thread.join()
         cmd.reinitialize()
         self.ui.btn_manage_session.hide()
         self.display_view_page()
-        QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 
@@ -2214,12 +2211,12 @@ class MainWindow(QMainWindow):
         """This function saves the "project" which is currently only the pymol session
 
         """
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_save_project)
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
-        QApplication.restoreOverrideCursor()
-        basic_boxes.ok("Save Project", "The project was successfully saved.", QMessageBox.Information)
+        QtWidgets.QApplication.restoreOverrideCursor()
+        basic_boxes.ok("Save Project", "The project was successfully saved.", QtWidgets.QMessageBox.Information)
 
     # </editor-fold>
 
@@ -2279,7 +2276,7 @@ class MainWindow(QMainWindow):
         if basic_boxes.yes_or_no("Clean protein",
                                  "Are you sure you want to clean this protein?\n"
                                  "This will remove all organic and solvent components!",
-                                 QMessageBox.Information):
+                                 QtWidgets.QMessageBox.Information):
             tmp_protein.clean_protein()
             constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", tmp_protein.get_molecule_object())
             self.app_project.serialize_project(self.app_project.get_project_xml_path())
@@ -2464,7 +2461,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
     def pre_create_use_project(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         # copy proteins in new project
         proteins_to_copy = []
         for i in range(self.ui.list_use_selected_protein_structures.count()):
@@ -2473,7 +2470,7 @@ class MainWindow(QMainWindow):
 
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.CreateUseProjectWorker(self.workspace_path, proteins_to_copy)
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.create_use_project)
         self.tmp_thread.start()
@@ -2525,15 +2522,15 @@ class MainWindow(QMainWindow):
         constants.PYSSA_LOGGER.info(
             f"The project {self.app_project.get_project_name()} was successfully created through a use.")
         self.display_view_page()
-        QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 
     # <editor-fold desc="Import, Export functions">
     def import_project(self):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_import_project)
-        file_dialog = QFileDialog()
-        desktop_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
         file_path, _ = file_dialog.getOpenFileName(self, "Select a project file to import", "", "XML Files (*.xml)")
         if file_path:
@@ -2543,11 +2540,11 @@ class MainWindow(QMainWindow):
             if len(tmp_project.proteins) <= 1:
                 if self.app_settings.wsl_install == 0:
                     basic_boxes.ok("Create new project", "Please install local colabfold to import this project!",
-                                   QMessageBox.Warning)
+                                   QtWidgets.QMessageBox.Warning)
                     return
                 elif self.app_settings.local_colabfold == 0:
                     basic_boxes.ok("Create new project", "Please install local colabfold to import this project!",
-                                   QMessageBox.Warning)
+                                   QtWidgets.QMessageBox.Warning)
                     return
             new_filepath = pathlib.Path(f"{self.workspace_path}/{tmp_project.get_project_name()}.xml")
             tmp_project.serialize_project(new_filepath)
@@ -2562,17 +2559,17 @@ class MainWindow(QMainWindow):
             self._project_watcher.show_valid_options(self.ui)
             self.ui.btn_manage_session.show()
             self.display_view_page()
-            basic_boxes.ok("Import Project", "The project was successfully imported.", QMessageBox.Information)
+            basic_boxes.ok("Import Project", "The project was successfully imported.", QtWidgets.QMessageBox.Information)
 
     def export_current_project(self):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_export_project)
-        file_dialog = QFileDialog()
-        desktop_path = PyQt5.QtCore.QStandardPaths.standardLocations(PyQt5.QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
         file_path, _ = file_dialog.getSaveFileName(self, "Save current project", "", "XML Files (*.xml)")
         if file_path:
             self.app_project.serialize_project(file_path)
-            basic_boxes.ok("Export Project", "The project was successfully exported.", QMessageBox.Information)
+            basic_boxes.ok("Export Project", "The project was successfully exported.", QtWidgets.QMessageBox.Information)
     # </editor-fold>
 
     # <editor-fold desc="Close project functions">
@@ -2794,12 +2791,12 @@ class MainWindow(QMainWindow):
         self.ui.table_esm_prot_to_predict.setRowCount(self.ui.table_esm_prot_to_predict.rowCount() + 1)
         self.ui.table_esm_prot_to_predict.insertRow(self.ui.table_esm_prot_to_predict.rowCount() + 1)
         self.ui.table_esm_prot_to_predict.setItem(self.ui.table_esm_prot_to_predict.rowCount() - 1, 0,
-                                                        QTableWidgetItem("A"))
+                                                  QtWidgets.QTableWidgetItem("A"))
         self.ui.table_esm_prot_to_predict.setItem(self.ui.table_esm_prot_to_predict.rowCount() - 1, 1,
-                                                        QTableWidgetItem(self.ui.txt_esm_prot_seq.toPlainText()))
+                                                  QtWidgets.QTableWidgetItem(self.ui.txt_esm_prot_seq.toPlainText()))
         self.ui.table_esm_prot_to_predict.setVerticalHeaderItem(
             self.ui.table_esm_prot_to_predict.rowCount() - 1,
-            QTableWidgetItem(self.ui.txt_esm_prot_name.text()))
+            QtWidgets.QTableWidgetItem(self.ui.txt_esm_prot_name.text()))
         self.ui.table_esm_prot_to_predict.resizeColumnsToContents()
         self.cloud_esm_check_if_table_is_empty()
         gui_elements_to_show = [
@@ -2908,9 +2905,9 @@ class MainWindow(QMainWindow):
             )
         if len(output) > 0:
             formatted_output = ', '.join(output)
-            basic_boxes.ok("ESMFold Prediction", f"These protein prediction failed: {formatted_output}.", QMessageBox.Critical)
+            basic_boxes.ok("ESMFold Prediction", f"These protein prediction failed: {formatted_output}.", QtWidgets.QMessageBox.Critical)
         else:
-            basic_boxes.ok("ESMFold Prediction", "The prediction was successful.", QMessageBox.Information)
+            basic_boxes.ok("ESMFold Prediction", "The prediction was successful.", QtWidgets.QMessageBox.Information)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         self.display_view_page()
         self._project_watcher.show_valid_options(self.ui)
@@ -2918,7 +2915,7 @@ class MainWindow(QMainWindow):
     def predict_esm_monomer(self):
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.EsmFoldWorker(self.ui.table_esm_prot_to_predict)
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.post_predict_esm_monomer)
         self.tmp_thread.start()
@@ -2926,12 +2923,12 @@ class MainWindow(QMainWindow):
 
         # </editor-fold>
 
-        self.block_box_prediction = QMessageBox()
+        self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction = gui_utils.setup_standard_block_box(
             self.block_box_prediction, "Structure Prediction", "A prediction is currently running."
         )
-        # self.block_box_prediction.setStandardButtons(QMessageBox.NoButton)
-        # self.block_box_prediction.setIcon(QMessageBox.Information)
+        # self.block_box_prediction.setStandardButtons(QtWidgets.QMessageBox.NoButton)
+        # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
         # self.block_box_prediction.setWindowIcon(
         #     PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         # styles.set_stylesheet(self.block_box_prediction)
@@ -3166,12 +3163,12 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_mono_prot_to_predict.setRowCount(self.ui.table_pred_mono_prot_to_predict.rowCount() + 1)
         self.ui.table_pred_mono_prot_to_predict.insertRow(self.ui.table_pred_mono_prot_to_predict.rowCount() + 1)
         self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0,
-                                                        QTableWidgetItem("A"))
+                                                        QtWidgets.QTableWidgetItem("A"))
         self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 1,
-                                                        QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
+                                                        QtWidgets.QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
         self.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(
             self.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
-            QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
         self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
         self.local_pred_mono_check_if_table_is_empty()
         gui_elements_to_show = [
@@ -3281,7 +3278,7 @@ class MainWindow(QMainWindow):
         if self.prediction_type == constants.PREDICTION_TYPE_PRED:
             if len(self.app_project.proteins) == 0:
                 self.block_box_prediction.destroy(True)
-                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
+                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical)
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
@@ -3289,7 +3286,7 @@ class MainWindow(QMainWindow):
                 constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
                 self.block_box_prediction.destroy(True)
                 basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
-                               QMessageBox.Information)
+                               QtWidgets.QMessageBox.Information)
                 constants.PYSSA_LOGGER.info("All structure predictions are done.")
                 self._project_watcher.show_valid_options(self.ui)
                 self._init_local_pred_mono_page()
@@ -3298,7 +3295,7 @@ class MainWindow(QMainWindow):
         elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS:
             if len(self.app_project.proteins) == 1:
                 self.block_box_prediction.destroy(True)
-                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
+                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical)
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
@@ -3321,7 +3318,7 @@ class MainWindow(QMainWindow):
                 # <editor-fold desc="Worker setup">
                 # TODO: test code below
                 # --Begin: worker setup
-                self.tmp_thread = PyQt5.QtCore.QThread()
+                self.tmp_thread = QtCore.QThread()
                 self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_pred_analysis_mono_overview,
                                                                       self.ui.cb_pred_analysis_mono_images,
                                                                       self.status_bar,
@@ -3345,7 +3342,7 @@ class MainWindow(QMainWindow):
         elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS:
             if len(self.app_project.proteins) == 1:
                 self.block_box_prediction.destroy(True)
-                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QMessageBox.Critical)
+                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical)
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
@@ -3367,7 +3364,7 @@ class MainWindow(QMainWindow):
                 # <editor-fold desc="Worker setup">
                 # TODO: test code below
                 # --Begin: worker setup
-                self.tmp_thread = PyQt5.QtCore.QThread()
+                self.tmp_thread = QtCore.QThread()
                 self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_pred_analysis_multi_overview,
                                                                       self.ui.cb_pred_analysis_multi_images,
                                                                       self.status_bar,
@@ -3399,7 +3396,7 @@ class MainWindow(QMainWindow):
 
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_mono_prot_to_predict,
                                                        self.prediction_configuration,
                                                        self.app_project)
@@ -3422,13 +3419,13 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-        self.block_box_prediction = QMessageBox()
-        self.block_box_prediction.setIcon(QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction = QtWidgets.QMessageBox()
+        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
-        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
         self.block_box_prediction.exec_()
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
@@ -3444,7 +3441,7 @@ class MainWindow(QMainWindow):
         constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
         filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
         constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
-        basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QMessageBox.Information)
+        basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QtWidgets.QMessageBox.Information)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_prediction_abort)
         self._project_watcher.show_valid_options(self.ui)
@@ -3605,7 +3602,7 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
 
     def local_pred_multi_add_sequence_to_list(self):
-        self.ui.list_pred_multi_prot_seq_overview.addItem(QListWidgetItem(self.ui.txt_pred_multi_prot_seq.toPlainText()))
+        self.ui.list_pred_multi_prot_seq_overview.addItem(QtWidgets.QListWidgetItem(self.ui.txt_pred_multi_prot_seq.toPlainText()))
         self.local_pred_multi_check_if_list_is_empty()
 
     def local_pred_multi_remove_sequence_to_list(self):
@@ -3622,35 +3619,6 @@ class MainWindow(QMainWindow):
             self.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(True)
 
     def local_pred_multi_add(self):
-        gui_elements = [
-            self.ui.lbl_pred_multi_prot_to_predict,
-            self.ui.table_pred_multi_prot_to_predict,
-            self.ui.btn_pred_multi_prot_to_predict_remove,
-            self.ui.btn_pred_multi_prot_to_predict_add,
-
-            self.ui.lbl_pred_multi_prot_name,
-            self.ui.txt_pred_multi_prot_name,
-            self.ui.lbl_pred_multi_prot_name_status,
-            self.ui.btn_pred_multi_back,
-            self.ui.btn_pred_multi_next,
-
-            self.ui.lbl_pred_multi_prot_seq,
-            self.ui.txt_pred_multi_prot_seq,
-            self.ui.lbl_pred_multi_prot_seq_status,
-            self.ui.lbl_pred_multi_prot_seq_add,
-            self.ui.btn_pred_multi_prot_seq_add,
-            self.ui.lbl_pred_multi_prot_seq_overview,
-            self.ui.list_pred_multi_prot_seq_overview,
-            self.ui.btn_pred_multi_prot_seq_overview_remove,
-            self.ui.lbl_pred_multi_prot_to_predict_2,
-            self.ui.btn_pred_multi_back_2,
-            self.ui.btn_pred_multi_prot_to_predict_add_2,
-
-            self.ui.lbl_pred_multi_advanced_config,
-            self.ui.btn_pred_multi_advanced_config,
-
-            self.ui.btn_pred_multi_predict
-        ]
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
@@ -3826,10 +3794,10 @@ class MainWindow(QMainWindow):
             self.ui.table_pred_multi_prot_to_predict.insertRow(self.ui.table_pred_multi_prot_to_predict.rowCount() + 1)
             tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_multi_prot_seq_overview.item(i).text())
             self.ui.table_pred_multi_prot_to_predict.setItem(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 0,
-                                                             QTableWidgetItem(tmp_chain_seq[0]))
+                                                             QtWidgets.QTableWidgetItem(tmp_chain_seq[0]))
             self.ui.table_pred_multi_prot_to_predict.setItem(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 1,
-                                                             QTableWidgetItem(tmp_chain_seq[1]))
-            name_item = QTableWidgetItem(self.ui.txt_pred_multi_prot_name.text())
+                                                             QtWidgets.QTableWidgetItem(tmp_chain_seq[1]))
+            name_item = QtWidgets.QTableWidgetItem(self.ui.txt_pred_multi_prot_name.text())
             self.ui.table_pred_multi_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.rowCount()-1, name_item)
         self.ui.table_pred_multi_prot_to_predict.resizeColumnsToContents()
         self.local_pred_multi_check_if_table_is_empty()
@@ -3875,7 +3843,7 @@ class MainWindow(QMainWindow):
             prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.currentRow()).text()
             for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount()):
                 if self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                    self.ui.table_pred_multi_prot_to_predict.setItem(i, 0, QTableWidgetItem(constants.chain_dict.get(i)))
+                    self.ui.table_pred_multi_prot_to_predict.setItem(i, 0, QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)))
         self.local_pred_multi_check_if_table_is_empty()
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
@@ -3959,7 +3927,7 @@ class MainWindow(QMainWindow):
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_multi_prot_to_predict,
                                                        self.prediction_configuration,
                                                        self.app_project)
@@ -3981,13 +3949,13 @@ class MainWindow(QMainWindow):
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-        self.block_box_prediction = QMessageBox()
-        self.block_box_prediction.setIcon(QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction = QtWidgets.QMessageBox()
+        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
-        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
         self.block_box_prediction.exec_()
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
@@ -4063,8 +4031,8 @@ class MainWindow(QMainWindow):
     def display_monomer_pred_analysis(self):
         self._init_mono_pred_analysis_page()
         self.ui.table_pred_analysis_mono_prot_to_predict.clear()
-        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(0, QTableWidgetItem("Chain"))
-        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(1, QTableWidgetItem("Sequence"))
+        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem("Chain"))
+        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem("Sequence"))
         self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_mono_prot_to_predict,
@@ -4345,12 +4313,12 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1)
         self.ui.table_pred_analysis_mono_prot_to_predict.insertRow(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1)
         self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 0,
-                                                        QTableWidgetItem("A"))
+                                                        QtWidgets.QTableWidgetItem("A"))
         self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 1,
-                                                        QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()))
+                                                        QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()))
         self.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(
             self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()))
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()))
         self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         self.mono_pred_analysis_check_if_table_is_empty()
         gui_elements_to_show = [
@@ -4393,11 +4361,11 @@ class MainWindow(QMainWindow):
         self.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()+1)
         self.ui.table_pred_analysis_mono_prot_to_predict.insertRow(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()+1)
         self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 0,
-                                                        QTableWidgetItem("A"))
+                                                        QtWidgets.QTableWidgetItem("A"))
         self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()-1, 1,
-                                                        QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()))
+                                                        QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()))
         self.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()-1,
-                                                                      QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()))
+                                                                      QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()))
         self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         self.mono_pred_analysis_check_if_table_is_empty()
         self.setup_defaults_monomer_prediction_analysis()
@@ -4411,34 +4379,6 @@ class MainWindow(QMainWindow):
 
     # <editor-fold desc="Analysis section">
     def mono_pred_analysis_structure_analysis_add(self):
-        gui_elements = [
-            self.ui.lbl_pred_analysis_mono_overview,
-            self.ui.list_pred_analysis_mono_overview,
-            self.ui.btn_pred_analysis_mono_remove,
-            self.ui.btn_pred_analysis_mono_add,
-
-            self.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self.ui.box_pred_analysis_mono_prot_struct_1,
-            self.ui.lbl_analysis_batch_vs_2,
-            self.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self.ui.box_pred_analysis_mono_prot_struct_2,
-            self.ui.btn_pred_analysis_mono_back_3,
-            self.ui.btn_pred_analysis_mono_next_2,
-
-            self.ui.lbl_pred_analysis_mono_ref_chains,
-            self.ui.list_pred_analysis_mono_ref_chains,
-            self.ui.btn_pred_analysis_mono_back_4,
-            self.ui.btn_pred_analysis_mono_next_3,
-
-            self.ui.lbl_pred_analysis_mono_model_chains,
-            self.ui.list_pred_analysis_mono_model_chains,
-            self.ui.btn_pred_analysis_mono_back_5,
-            self.ui.btn_pred_analysis_mono_next_4,
-
-            self.ui.lbl_pred_analysis_mono_images,
-            self.ui.cb_pred_analysis_mono_images,
-            self.ui.btn_pred_analysis_mono_start
-        ]
 
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_mono_overview,
@@ -4706,7 +4646,7 @@ class MainWindow(QMainWindow):
             prot_2_chains.append(chain.text())
         prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QListWidgetItem(analysis_name)
+        item = QtWidgets.QListWidgetItem(analysis_name)
         self.ui.list_pred_analysis_mono_overview.addItem(item)
         self.ui.btn_pred_analysis_mono_remove.setEnabled(False)
         styles.color_button_ready(self.ui.btn_pred_analysis_mono_start)
@@ -5038,7 +4978,7 @@ class MainWindow(QMainWindow):
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_analysis_mono_prot_to_predict,
                                                        self.prediction_configuration,
                                                        self.app_project)
@@ -5075,13 +5015,13 @@ class MainWindow(QMainWindow):
         # ]
         # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
         # #self._project_watcher.show_valid_options(self.ui)
-        self.block_box_prediction = QMessageBox()
-        self.block_box_prediction.setIcon(QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction = QtWidgets.QMessageBox()
+        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
-        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
         self.block_box_prediction.exec_()
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
@@ -5122,8 +5062,8 @@ class MainWindow(QMainWindow):
     def display_multimer_pred_analysis(self):
         self._init_multi_pred_analysis_page()
         self.ui.table_pred_analysis_multi_prot_to_predict.clear()
-        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(0, QTableWidgetItem("Chain"))
-        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(1, QTableWidgetItem("Sequence"))
+        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem("Chain"))
+        self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem("Sequence"))
         self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_multi_prot_to_predict,
@@ -5202,7 +5142,7 @@ class MainWindow(QMainWindow):
 
     def multi_pred_analysis_add_sequence_to_list(self):
         self.ui.list_pred_analysis_multi_prot_seq_overview.addItem(
-            QListWidgetItem(self.ui.txt_pred_analysis_multi_prot_seq.toPlainText()))
+            QtWidgets.QListWidgetItem(self.ui.txt_pred_analysis_multi_prot_seq.toPlainText()))
         self.multi_pred_analysis_check_if_list_is_empty()
 
     def multi_pred_analysis_remove_sequence_to_list(self):
@@ -5296,11 +5236,11 @@ class MainWindow(QMainWindow):
             tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text())
             self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
                 self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 0,
-                QTableWidgetItem(tmp_chain_seq[0]))
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[0]))
             self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
                 self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 1,
-                QTableWidgetItem(tmp_chain_seq[1]))
-            name_item = QTableWidgetItem(self.ui.txt_pred_analysis_multi_prot_name.text())
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[1]))
+            name_item = QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_multi_prot_name.text())
             self.ui.table_pred_analysis_multi_prot_to_predict.setVerticalHeaderItem(
                 self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, name_item)
         self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
@@ -5317,41 +5257,11 @@ class MainWindow(QMainWindow):
             for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
                 if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
                     self.ui.table_pred_analysis_multi_prot_to_predict.setItem(i, 0,
-                                                                     QTableWidgetItem(constants.chain_dict.get(i)))
+                                                                     QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)))
         self.multi_pred_analysis_check_if_table_is_empty()
         self.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
 
     def multi_pred_analysis_add(self):
-        gui_elements = [
-            self.ui.lbl_pred_analysis_multi_prot_to_predict,
-            self.ui.table_pred_analysis_multi_prot_to_predict,
-            self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-            self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-
-            self.ui.lbl_pred_analysis_multi_prot_name,
-            self.ui.txt_pred_analysis_multi_prot_name,
-            self.ui.lbl_pred_analysis_multi_prot_name_status,
-            self.ui.btn_pred_analysis_multi_back,
-            self.ui.btn_pred_analysis_multi_next,
-
-            self.ui.lbl_pred_analysis_multi_prot_seq,
-            self.ui.txt_pred_analysis_multi_prot_seq,
-            self.ui.lbl_pred_analysis_multi_prot_seq_status,
-            self.ui.lbl_pred_multi_prot_seq_add_2,
-            self.ui.btn_pred_analysis_multi_prot_seq_add,
-            self.ui.lbl_pred_analysis_multi_prot_seq_overview,
-            self.ui.list_pred_analysis_multi_prot_seq_overview,
-            self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-            self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-            self.ui.btn_pred_analysis_multi_back_2,
-            self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-
-            self.ui.lbl_pred_analysis_multi_advanced_config,
-            self.ui.btn_pred_analysis_multi_advanced_config,
-
-            self.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self.ui.lbl_pred_analysis_multi_to_analysis_setup
-        ]
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_multi_prot_to_predict,
             self.ui.table_pred_analysis_multi_prot_to_predict,
@@ -5934,7 +5844,7 @@ class MainWindow(QMainWindow):
             prot_2_chains.append(chain.text())
         prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QListWidgetItem(analysis_name)
+        item = QtWidgets.QListWidgetItem(analysis_name)
         self.ui.list_pred_analysis_multi_overview.addItem(item)
         self.ui.btn_pred_analysis_multi_remove.setEnabled(False)
         styles.color_button_ready(self.ui.btn_pred_analysis_multi_start)
@@ -6145,7 +6055,7 @@ class MainWindow(QMainWindow):
     #     self.block_box_analysis.destroy(True)
     #     basic_boxes.ok("Structure analysis",
     #                    "All structure analysis' are done. Go to results to check the new results.",
-    #                    QMessageBox.Information)
+    #                    QtWidgets.QMessageBox.Information)
     #     constants.PYSSA_LOGGER.info("All multimer structure analysis' are done.")
     #     self._project_watcher.show_valid_options(self.ui)
     #     self._init_batch_analysis_page()
@@ -6153,7 +6063,7 @@ class MainWindow(QMainWindow):
     # def post_multi_prediction_analysis_process(self):
     #     constants.PYSSA_LOGGER.debug("post_multi_prediction_analysis_process() started ...")
     #     if len(self.app_project.proteins) <= 1:
-    #         basic_boxes.ok("Prediction", "Prediction failed due to an unexpected error.", QMessageBox.Critical)
+    #         basic_boxes.ok("Prediction", "Prediction failed due to an unexpected error.", QtWidgets.QMessageBox.Critical)
     #         self.display_view_page()
     #         self._project_watcher.show_valid_options(self.ui)
     #     else:
@@ -6194,7 +6104,7 @@ class MainWindow(QMainWindow):
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_analysis_multi_prot_to_predict,
                                                        self.prediction_configuration,
                                                        self.app_project)
@@ -6207,13 +6117,13 @@ class MainWindow(QMainWindow):
 
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-        self.block_box_prediction = QMessageBox()
-        self.block_box_prediction.setIcon(QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction = QtWidgets.QMessageBox()
+        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
-        btn_abort = self.block_box_prediction.addButton("Abort", QMessageBox.ActionRole)
+        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
         self.block_box_prediction.exec_()
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
@@ -6227,34 +6137,6 @@ class MainWindow(QMainWindow):
 
     # <editor-fold desc="Structure Analysis functions">
     def structure_analysis_add(self):
-        gui_elements = [
-            self.ui.lbl_analysis_batch_overview,
-            self.ui.list_analysis_batch_overview,
-            self.ui.btn_analysis_batch_remove,
-            self.ui.btn_analysis_batch_add,
-
-            self.ui.lbl_analysis_batch_prot_struct_1,
-            self.ui.box_analysis_batch_prot_struct_1,
-            self.ui.lbl_analysis_batch_vs,
-            self.ui.lbl_analysis_batch_prot_struct_2,
-            self.ui.box_analysis_batch_prot_struct_2,
-            self.ui.btn_analysis_batch_back,
-            self.ui.btn_analysis_batch_next,
-
-            self.ui.lbl_analysis_batch_ref_chains,
-            self.ui.list_analysis_batch_ref_chains,
-            self.ui.btn_analysis_batch_back_2,
-            self.ui.btn_analysis_batch_next_2,
-
-            self.ui.lbl_analysis_batch_model_chains,
-            self.ui.list_analysis_batch_model_chains,
-            self.ui.btn_analysis_batch_back_3,
-            self.ui.btn_analysis_batch_next_3,
-
-            self.ui.lbl_analysis_batch_images,
-            self.ui.cb_analysis_batch_images,
-            self.ui.btn_analysis_batch_start
-        ]
 
         gui_elements_to_show = [
             self.ui.lbl_analysis_batch_overview,
@@ -6509,7 +6391,7 @@ class MainWindow(QMainWindow):
             prot_2_chains.append(chain.text())
         prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QListWidgetItem(analysis_name)
+        item = QtWidgets.QListWidgetItem(analysis_name)
         self.ui.list_analysis_batch_overview.addItem(item)
         self.ui.btn_analysis_batch_remove.setEnabled(False)
         styles.color_button_ready(self.ui.btn_analysis_batch_start)
@@ -6707,7 +6589,7 @@ class MainWindow(QMainWindow):
         constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
         self.block_box_analysis.destroy(True)
         basic_boxes.ok("Structure analysis", "All structure analysis' are done. Go to results to check the new results.",
-                       QMessageBox.Information)
+                       QtWidgets.QMessageBox.Information)
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
@@ -6759,7 +6641,7 @@ class MainWindow(QMainWindow):
         #     if not os.path.exists(analysis_data[2]):
         #         os.mkdir(analysis_data[2])
         #     else:
-        #         basic_boxes.ok("Single Analysis", f"The structure analysis: {analysis_data[3]} already exists!", QMessageBox.Critical)
+        #         basic_boxes.ok("Single Analysis", f"The structure analysis: {analysis_data[3]} already exists!", QtWidgets.QMessageBox.Critical)
         #         self._init_batch_analysis_page()
         #         return
         #
@@ -6796,7 +6678,7 @@ class MainWindow(QMainWindow):
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_analysis_batch_overview,
                                                               self.ui.cb_analysis_images,
                                                               self.status_bar,
@@ -6925,7 +6807,7 @@ class MainWindow(QMainWindow):
     def abort_analysis(self):
         # TODO: abort analysis does not work!
         self.worker_analysis.__del__()
-        basic_boxes.ok("Abort structure analysis", "The structure analysis was aborted.", QMessageBox.Information)
+        basic_boxes.ok("Abort structure analysis", "The structure analysis was aborted.", QtWidgets.QMessageBox.Information)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
                                                                 self.ui.btn_analysis_abort)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -6985,7 +6867,7 @@ class MainWindow(QMainWindow):
         self.block_box_images.destroy(True)
         basic_boxes.ok("Analysis Images",
                        "All images of all analysis' have been created. Go to results to check the new results.",
-                       QMessageBox.Information)
+                       QtWidgets.QMessageBox.Information)
         constants.PYSSA_LOGGER.info("All images of all analysis' have been created.")
         self._init_analysis_image_page()
         self.display_view_page()
@@ -7002,7 +6884,7 @@ class MainWindow(QMainWindow):
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.BatchImageWorker(self.ui.list_analysis_images_struct_analysis,
                                                         self.ui.list_analysis_images_creation_struct_analysis,
                                                         self.status_bar,
@@ -7076,7 +6958,7 @@ class MainWindow(QMainWindow):
 
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
-        self.tmp_thread = PyQt5.QtCore.QThread()
+        self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.LoadResultsWorker(tmp_protein_pair, self.app_project.get_project_xml_path())
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.load_results)
         self.tmp_thread.start()
@@ -7088,7 +6970,7 @@ class MainWindow(QMainWindow):
         #distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
         self.ui.list_results_interest_regions.clear()
         self.status_bar.showMessage(f"Loading results of {self.results_name} ...")
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
 
     def load_results(self, images_type):
         if images_type == constants.IMAGES_ALL:
@@ -7197,17 +7079,12 @@ class MainWindow(QMainWindow):
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
         self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
-        QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()
         self.status_bar.showMessage(f"Current workspace: {str(self.workspace_path)}")
 
     def color_protein_pair_by_rmsd(self):
         """This function colors the residues of the reference and the model protein in 5 colors
                 depending on their distance to the reference
-
-        Args:
-            alignment_filename:
-                filename of the alignment_file
-        Returns:
 
         """
         tmp_protein_pair: 'protein_pair.ProteinPair' = self.app_project.search_protein_pair(self.results_name)
@@ -7319,15 +7196,15 @@ class MainWindow(QMainWindow):
         """
         png_dialog = QtWidgets.QDialog(self)
         label = QtWidgets.QLabel(self)
-        file_path = pathlib.Path(
+        pathlib.Path(
             f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         self.ui.cb_results_analysis_options.currentText()
         pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{self.ui.cb_results_analysis_options.currentText()}")
         # TO-DO: Create setting for min. image size
-        pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
+        pixmap = pixmap.scaled(450, 450, transformMode=QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
         label.setScaledContents(True)
-        png_dialog_layout = QHBoxLayout()
+        png_dialog_layout = QtWidgets.QHBoxLayout()
         png_dialog_layout.addWidget(label)
         png_dialog.setLayout(png_dialog_layout)
         png_dialog.setWindowTitle("Image of: structure alignment")
@@ -7349,7 +7226,7 @@ class MainWindow(QMainWindow):
         # except:
         #     constants.PYSSA_LOGGER.error("The distance plot could not be created, due to an known bug.")
         #     basic_boxes.ok("Display distance plot", "There was a problem with the display of the distance plot.\n"
-        #                                             "Try closing the project, or restarting the application.", QMessageBox.Error)
+        #                                             "Try closing the project, or restarting the application.", QtWidgets.QMessageBox.Error)
 
     def display_distance_histogram(self):
         """This function opens a window which displays the distance histogram.
@@ -7369,14 +7246,13 @@ class MainWindow(QMainWindow):
         """
         png_dialog = QtWidgets.QDialog(self)
         label = QtWidgets.QLabel(self)
-        file_path = constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR
         file_name = self.ui.list_results_interest_regions.currentItem().text()
         pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{file_name}")
         # TO-DO: Create setting for min. image size
-        pixmap = pixmap.scaled(450, 450, transformMode=PyQt5.QtCore.Qt.SmoothTransformation)
+        pixmap = pixmap.scaled(450, 450, transformMode=QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
         label.setScaledContents(True)
-        png_dialog_layout = QHBoxLayout()
+        png_dialog_layout = QtWidgets.QHBoxLayout()
         png_dialog_layout.addWidget(label)
         png_dialog.setLayout(png_dialog_layout)
         png_dialog.setWindowTitle(f"Image of: {file_name}")
@@ -7457,7 +7333,7 @@ class MainWindow(QMainWindow):
         table_view.verticalHeader().setVisible(False)
         table_view.setSortingEnabled(True)
         table_view.sortByColumn(0, QtCore.Qt.AscendingOrder)
-        table_dialog_layout = QHBoxLayout()
+        table_dialog_layout = QtWidgets.QHBoxLayout()
         table_dialog_layout.addWidget(table_view)
         table_dialog.setLayout(table_dialog_layout)
         # styles
@@ -7646,18 +7522,18 @@ class MainWindow(QMainWindow):
         self.block_box_uni.hide()
         self.block_box_uni.destroy(True)
         self.status_bar.showMessage("Finished preview of ray-traced image.")
-        QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()
 
     def preview_image(self):
         """This function previews the image
 
         """
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.ui.cb_ray_tracing.isChecked():
             self.status_bar.showMessage("Preview ray-traced image ...")
             # <editor-fold desc="Worker setup">
             # --Begin: worker setup
-            self.tmp_thread = PyQt5.QtCore.QThread()
+            self.tmp_thread = QtCore.QThread()
             self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
             self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
                                                                  self.display_view_page)
@@ -7672,20 +7548,20 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage("Preview draw image ...")
             cmd.draw(2400, 2400)
             self.status_bar.showMessage("Finished preview of drawn image.")
-            QApplication.restoreOverrideCursor()
+            QtWidgets.QApplication.restoreOverrideCursor()
 
     def post_save_image(self):
         self.block_box_uni.hide()
         self.block_box_uni.destroy(True)
         self.status_bar.showMessage("Finished image creation.")
-        QApplication.restoreOverrideCursor()
-        basic_boxes.ok("Finished image creation", "The image has been created.", QMessageBox.Information)
+        QtWidgets.QApplication.restoreOverrideCursor()
+        basic_boxes.ok("Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information)
 
     def save_image(self):
         """This function saves the image as a png file.
 
         """
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.ui.cb_ray_tracing.isChecked():
             save_dialog = QtWidgets.QFileDialog()
             try:
@@ -7699,7 +7575,7 @@ class MainWindow(QMainWindow):
 
                 # <editor-fold desc="Worker setup">
                 # --Begin: worker setup
-                self.tmp_thread = PyQt5.QtCore.QThread()
+                self.tmp_thread = QtCore.QThread()
                 self.tmp_worker = task_workers.SaveRayImageWorker(self.renderer, full_file_name[0])
                 self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
                                                                      self.display_view_page)
@@ -7735,7 +7611,7 @@ class MainWindow(QMainWindow):
                 cmd.draw(2400, 2400)
                 cmd.png(full_file_name[0], dpi=300)
                 self.status_bar.showMessage("Finished image creation.")
-                basic_boxes.ok("Finished image creation", "The image has been created.", QMessageBox.Information)
+                basic_boxes.ok("Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information)
             except FileExistsError:
                 tools.quick_log_and_display("error", "File exists already.",
                                             self.status_bar, "File exists already.")
@@ -7744,7 +7620,7 @@ class MainWindow(QMainWindow):
                                                      "an image", self.status_bar,
                                             "Unexpected Error from PyMOL")
             finally:
-                QApplication.restoreOverrideCursor()
+                QtWidgets.QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 
@@ -7830,11 +7706,6 @@ class MainWindow(QMainWindow):
                 #     self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
         self.ui.btn_manage_session.show()
 
-
-    def show_resi_sticks(self):
-        session_util.check_if_sele_is_empty()
-        cmd.show(representation="sticks", selection="sele")
-
     def hide_resi_sticks(self):
         session_util.check_if_sele_is_empty()
         cmd.hide(representation="sticks", selection="sele")
@@ -7853,7 +7724,7 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     styles.set_stylesheet(app)
     ex = MainWindow()
     ex.show()

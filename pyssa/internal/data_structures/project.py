@@ -25,19 +25,21 @@ import os
 import pathlib
 import platform
 from datetime import datetime
-from pathlib import Path
-from pyssa.internal.data_structures import protein, protein_pair
+from xml.etree import ElementTree
+from xml.dom import minidom
+from typing import TYPE_CHECKING
+
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.util import constants
-from xml.etree import ElementTree
-from xml.dom import minidom
-from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures.data_classes import current_session
+    from pyssa.internal.data_structures import protein
+    from pyssa.internal.data_structures import protein_pair
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -75,11 +77,11 @@ class Project:
     """
     a list of all protein objects of the project
     """
-    proteins: list[protein.Protein]
+    proteins: list['protein.Protein']
     """
     a list of all protein_pair objects of the project
     """
-    protein_pairs: list[protein_pair.ProteinPair]
+    protein_pairs: list['protein_pair.ProteinPair']
 
     # </editor-fold>
 
@@ -94,14 +96,14 @@ class Project:
         """
         self._project_name: str = project_name
         self._workspace: pathlib.Path = workspace_path
-        self.proteins: list[protein.Protein] = []
-        self.protein_pairs: list[protein_pair.ProteinPair] = []
+        self.proteins: list['protein.Protein'] = []
+        self.protein_pairs: list['protein_pair.ProteinPair'] = []
         self.create_folder_paths()
 
     def set_workspace_path(self, value) -> None:
         self._workspace = value
 
-    def add_existing_protein(self, value_protein: protein.Protein) -> None:
+    def add_existing_protein(self, value_protein: 'protein.Protein') -> None:
         """This function adds an existing protein object to the project.
 
         Args:
@@ -110,7 +112,7 @@ class Project:
         """
         self.proteins.append(value_protein)
 
-    def add_protein_pair(self, value_protein_pair: protein_pair.ProteinPair) -> None:
+    def add_protein_pair(self, value_protein_pair: 'protein_pair.ProteinPair') -> None:
         """This function adds an existing protein_pair object to the project.
 
         Args:
@@ -121,11 +123,11 @@ class Project:
 
     def create_folder_paths(self):
         self.folder_paths = {
-            "project": Path(f"{self._workspace}/{self._project_name}"),
-            "proteins": Path(f"{self._workspace}/{self._project_name}/proteins"),
-            "protein_pairs": Path(f"{self._workspace}/{self._project_name}/protein_pairs"),
-            "analysis": Path(f"{self._workspace}/{self._project_name}/protein_pairs/analysis"),
-            "distance_analysis": Path(f"{self._workspace}/{self._project_name}/protein_pairs/analysis/distance_analysis"),
+            "project": pathlib.Path(f"{self._workspace}/{self._project_name}"),
+            "proteins": pathlib.Path(f"{self._workspace}/{self._project_name}/proteins"),
+            "protein_pairs": pathlib.Path(f"{self._workspace}/{self._project_name}/protein_pairs"),
+            "analysis": pathlib.Path(f"{self._workspace}/{self._project_name}/protein_pairs/analysis"),
+            "distance_analysis": pathlib.Path(f"{self._workspace}/{self._project_name}/protein_pairs/analysis/distance_analysis"),
         }
         # Path(f"{self._workspace}/{self._project_name}/pdb"),
         # Path(f"{self._workspace}/{self._project_name}/results"),
@@ -187,8 +189,8 @@ class Project:
         #     tmp_distance_analysis.serialize_distance_analysis()
 
         xmlstr = minidom.parseString(ElementTree.tostring(project_root)).toprettyxml(indent="   ")
-        with open(filepath, "w") as f:
-            f.write(xmlstr)
+        with open(filepath, "w", encoding='utf-8') as tmp_file:
+            tmp_file.write(xmlstr)
 
     @staticmethod
     def deserialize_project(filepath, app_settings):
@@ -229,7 +231,7 @@ class Project:
             tmp_protein_pair = self.search_protein_pair(current_session.name)
             tmp_protein_pair.pymol_session = current_session.session
 
-    def get_specific_protein_pair(self, protein_pair_name):
+    def get_specific_protein_pair(self, protein_pair_name: str):
         """This function gets a specific protein_pair by name from the project
 
         Args:
@@ -277,7 +279,7 @@ class Project:
     def dump_project_to_file(self):
         current_time = datetime.now()
         filename = f"project_dump-{self._project_name}-{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.ascii"
-        memory_dump_file = open(f"{constants.SCRATCH_DIR}/{filename}", "w")
+        memory_dump_file = open(f"{constants.SCRATCH_DIR}/{filename}", "w", encoding='utf-8')
         memory_dump_file.write("----- Project information \n")
         memory_dump_file.write(f"_project_name: {self._project_name} \n")
         memory_dump_file.write(f"_workspace: {self._workspace} \n")

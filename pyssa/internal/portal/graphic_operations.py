@@ -24,17 +24,13 @@ import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
 from pyssa.util import constants
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from pyssa.internal.data_structures import protein
 
 
 def show_protein_selection_as_balls_and_sticks(selection: str):
     """This function shows the protein as balls and sticks in representation mode.
 
     Args:
-        protein_obj:
+        selection:
 
     """
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
@@ -49,9 +45,8 @@ def hide_protein_selection_as_balls_and_sticks(selection: str):
     """This function hides the protein from balls and sticks.
 
     Args:
-        protein_obj:
-
-    Returns:
+        selection:
+            a pymol selection string
 
     """
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
@@ -66,9 +61,8 @@ def zoom_to_residue_in_protein_position(selection: str):
     """This function zooms to the residue in protein.
 
     Args:
-        protein_obj:
-
-    Returns:
+        selection:
+            a pymol selection string
 
     """
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
@@ -100,6 +94,9 @@ def color_protein(pymol_color: str, a_selection_string: str):
 
 
 def setup_default_session_graphic_settings():
+    """This functions modifies the pymol session to look fancy.
+
+    """
     cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
     cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
     cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
@@ -110,7 +107,7 @@ def setup_default_session_graphic_settings():
     cmd.set("spec_power", constants.PYMOL_DEFAULT_SPEC_POWER)
     cmd.set("spec_reflect", constants.PYMOL_DEFAULT_SPEC_REFLECT)
     cmd.set("ray_transparency_contrast", constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_CONTRAST)
-    cmd.set("ray_transparency_oblique", constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_OBLIQUE)
+    cmd.set("ray_transparency_oblique", constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_OBLIQUE)  # noqa: E501
     cmd.set("ray_transparency_oblique_power", constants.PYMOL_DEFAULT_RAY_OBLIQUE_POWER)
     cmd.set("ray_trace_color", constants.PYMOL_DEFAULT_RAY_COLOR)
     cmd.unset("depth_cue")

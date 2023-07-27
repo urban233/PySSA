@@ -23,10 +23,10 @@
 import os
 import logging
 import pathlib
-import numpy as np
-from pymol import cmd
 from typing import TYPE_CHECKING
 from xml.etree import ElementTree
+import numpy as np
+from pymol import cmd
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.logging_pyssa import log_handlers
@@ -99,7 +99,9 @@ class DistanceAnalysis:
 
     # </editor-fold>
 
-    def __init__(self, protein_pair_for_analysis: 'protein_pair.ProteinPair', app_settings: 'settings.Settings'):
+    def __init__(self,
+                 protein_pair_for_analysis: 'protein_pair.ProteinPair',
+                 app_settings: 'settings.Settings'):
         """Constructor
 
         Args:
@@ -107,8 +109,6 @@ class DistanceAnalysis:
                 a pair of proteins which get analyzed
             app_settings:
                 the settings from pyssa
-            export_dirname:
-                a directory where all results will be stored
         """
         self._protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_for_analysis
         self.name = f"dist_analysis_{self._protein_pair_for_analysis.name}"
@@ -120,6 +120,9 @@ class DistanceAnalysis:
         self.alignment_file_name = "aln"
 
     def get_protein_pair(self):
+        """This function returns the protein_pair.
+
+        """
         return self._protein_pair_for_analysis
 
     def save_distance_analysis_session(self) -> None:
@@ -134,13 +137,15 @@ class DistanceAnalysis:
         """This function creates the selection which are needed for the align command.
 
         """
-        logger.debug(f"1st argument of <create_align_selections>: {protein_1_selection.selection_string} {protein_1_selection}")
-        logger.debug(f"2nd argument of <create_align_selections>: {protein_2_selection.selection_string} {protein_2_selection}")
+        logger.debug(f"1st argument of <create_align_selections>: "
+                     f"{protein_1_selection.selection_string} {protein_1_selection}")
+        logger.debug(f"2nd argument of <create_align_selections>: "
+                     f"{protein_2_selection.selection_string} {protein_2_selection}")
         # <editor-fold desc="Checks">
-        if protein_1_selection.molecule_object != self._protein_pair_for_analysis.protein_1.get_molecule_object():
+        if protein_1_selection.molecule_object != self._protein_pair_for_analysis.protein_1.get_molecule_object(): # pylint: disable=line-too-long
             logger.error("Selection is illegal.")
             raise ValueError("Selection is illegal.")
-        if protein_2_selection.molecule_object != self._protein_pair_for_analysis.protein_2.get_molecule_object():
+        if protein_2_selection.molecule_object != self._protein_pair_for_analysis.protein_2.get_molecule_object(): # pylint: disable=line-too-long
             logger.error("Selection is illegal.")
             raise ValueError("Selection is illegal.")
 
@@ -148,9 +153,14 @@ class DistanceAnalysis:
 
         self._protein_pair_for_analysis.protein_1.pymol_selection = protein_1_selection
         self._protein_pair_for_analysis.protein_2.pymol_selection = protein_2_selection
-        logger.debug(f"Prot 1 sele in <create_align_selections>: {self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_1.pymol_selection}")
         logger.debug(
-            f"Prot 2 sele in <create_align_selections>: {self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_2.pymol_selection}")
+            f"Prot 1 sele in <create_align_selections>: "
+            f"{self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} "
+            f"{self._protein_pair_for_analysis.protein_1.pymol_selection}")
+        logger.debug(
+            f"Prot 2 sele in <create_align_selections>: "
+            f"{self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} "
+            f"{self._protein_pair_for_analysis.protein_2.pymol_selection}")
 
     def align_protein_pair_for_analysis(self) -> tuple:
         """This function aligns the protein pair with the PyMOL align command.
@@ -159,12 +169,17 @@ class DistanceAnalysis:
             a tuple with the rmsd and aligned amino acids
         """
         logger.debug(
-            f"Prot 1 sele in <align_protein_pair_for_analysis>: {self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_1.pymol_selection}")
+            f"Prot 1 sele in <align_protein_pair_for_analysis>: "
+            f"{self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} "
+            f"{self._protein_pair_for_analysis.protein_1.pymol_selection}")
         logger.debug(
-            f"Prot 2 sele in <align_protein_pair_for_analysis>: {self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_2.pymol_selection}")
-        results = protein_pair_operations.align_protein_pair(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string,
-                                                             self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string,
-                                                             self.alignment_file_name)
+            f"Prot 2 sele in <align_protein_pair_for_analysis>: "
+            f"{self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} "
+            f"{self._protein_pair_for_analysis.protein_2.pymol_selection}")
+        results = protein_pair_operations.align_protein_pair(
+            self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string,
+            self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string,
+            self.alignment_file_name)
         # save the align object from pymol as alignment file
         # if not os.path.exists(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files")):
         #     os.mkdir(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files"))
@@ -177,15 +192,24 @@ class DistanceAnalysis:
         """
         logger.info("Start of do_analysis_in_pymol() method.")
         self._protein_pair_for_analysis.load_protein_pair_in_pymol()
-        logger.info(f"Loaded protein pair: {self._protein_pair_for_analysis.name} in pymol session.")
+        logger.info(f"Loaded protein pair: "
+                    f"{self._protein_pair_for_analysis.name} in pymol session.")
         self._protein_pair_for_analysis.color_protein_pair()
-        logger.info(f"Colored protein pair: {self._protein_pair_for_analysis.name} in pymol session.")
+        logger.info(f"Colored protein pair: "
+                    f"{self._protein_pair_for_analysis.name} in pymol session.")
 
-        logger.debug(f"Protein 1 selection string: {self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_1.pymol_selection}")
-        logger.debug(f"Protein 2 selection string: {self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} {self._protein_pair_for_analysis.protein_2.pymol_selection}")
+        logger.debug(
+            f"Protein 1 selection string: "
+            f"{self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} "
+            f"{self._protein_pair_for_analysis.protein_1.pymol_selection}")
+        logger.debug(
+            f"Protein 2 selection string: "
+            f"{self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} "
+            f"{self._protein_pair_for_analysis.protein_2.pymol_selection}")
 
         align_results = self.align_protein_pair_for_analysis()
-        logger.info(f"Aligned protein pair: {self._protein_pair_for_analysis.name} in pymol session.")
+        logger.info(f"Aligned protein pair: "
+                    f"{self._protein_pair_for_analysis.name} in pymol session.")
         self.rmsd_dict = {
             "rmsd": str(round(align_results[0], 2)),
             "aligned_residues": str(align_results[1]),
@@ -195,7 +219,8 @@ class DistanceAnalysis:
             self._protein_pair_for_analysis.protein_1.get_molecule_object(),
             self._protein_pair_for_analysis.protein_2.get_molecule_object(),
         )
-        logger.info(f"Calculated distances of protein pair: {self._protein_pair_for_analysis.name}.")
+        logger.info(f"Calculated distances of protein pair: "
+                    f"{self._protein_pair_for_analysis.name}.")
         self.distance_analysis_data = distances
         self.analysis_results = results.DistanceAnalysisResults(
             self.distance_analysis_data,
@@ -240,7 +265,7 @@ class DistanceAnalysis:
         else:
             opt_ray_shadows: str = "on"
 
-        REPRESENTATION: str = "cartoon"
+        REPRESENTATION: str = "cartoon"  # pylint: disable=invalid-name
         cmd.show(REPRESENTATION)
 
         if selection != "":
@@ -306,7 +331,7 @@ class DistanceAnalysis:
 
         j: int = 0
         measurement_obj: str = f"measure{j}"
-        REPRESENTATION: str = "ribbon"
+        REPRESENTATION: str = "ribbon"  # pylint: disable=invalid-name
 
         cmd.hide("cartoon", "all")
         cmd.show(REPRESENTATION, "all")
@@ -323,7 +348,7 @@ class DistanceAnalysis:
                 ref_chain: str = ref_chain_array[i]
                 model_pos_array: np.ndarray = self.analysis_results.distance_data.get("model_pos")
                 model_pos: int = model_pos_array[i]
-                model_chain_array: np.ndarray = self.analysis_results.distance_data.get("model_chain")
+                model_chain_array: np.ndarray = self.analysis_results.distance_data.get("model_chain")  # pylint: disable=line-too-long
                 model_chain: str = model_chain_array[i]
 
                 measurement_obj: str = f"measure{j}"
@@ -341,7 +366,7 @@ class DistanceAnalysis:
                 cmd.label(atom2, "'%s-%s' % (resn, resi)")
                 cmd.set("label_position", (0, 0, 10))
                 # determine the option for ray_shadows
-                if ray_shadows == False:
+                if ray_shadows is False:
                     opt_ray_shadows: str = "off"
                 else:
                     opt_ray_shadows: str = "on"
@@ -379,7 +404,10 @@ class DistanceAnalysis:
         """This function serialize the protein pair object
 
         """
-        tmp_distance_analysis = ElementTree.SubElement(xml_distance_analysis_element, element_names.DISTANCE_ANALYSIS)
+        tmp_distance_analysis = ElementTree.SubElement(
+            xml_distance_analysis_element,
+            element_names.DISTANCE_ANALYSIS
+        )
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_NAME, str(self.name))
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CUTOFF, str(self.cutoff))
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CYCLES, str(self.cycles))
@@ -388,5 +416,11 @@ class DistanceAnalysis:
         logger.debug(self.analysis_results)
 
         self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
-        tmp_session_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_SESSION)
-        tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, pymol_io.convert_pymol_session_to_base64_string(self.name))
+        tmp_session_data = ElementTree.SubElement(
+            tmp_distance_analysis,
+            element_names.DISTANCE_ANALYSIS_SESSION
+        )
+        tmp_session_data.set(
+            attribute_names.PROTEIN_PAIR_SESSION,
+            pymol_io.convert_pymol_session_to_base64_string(self.name)
+        )

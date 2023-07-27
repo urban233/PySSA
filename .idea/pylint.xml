@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PylintConfigService">
+    <option name="customPylintPath" value="C:\Users\martin\anaconda3\envs\tmpPySSA\Scripts\pylint.exe" />
+    <option name="pylintrcPath" value="C:\Users\martin\github_repos\tmpPySSA\.pylintrc" />
+  </component>
+</project>
