@@ -135,7 +135,7 @@ class XmlDeserializer:
                                                            'model_chain': model_chain_array,
                                                            'model_pos': model_pos_array,
                                                            'model_resi': model_resi_array,
-                                                           'distance': distance_array
+                                                           'distance': distance_array,
                                                            }
 
             tmp_protein_pair_obj.distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair_obj, app_settings)
@@ -186,7 +186,7 @@ class ObjectSerializer:
     object_dict: dict
 
     def __init__(self, object_to_serialize, filepath, filename):
-        """Constructor
+        """Constructor.
 
         Args:
             object_to_serialize:
@@ -278,27 +278,27 @@ class ObjectDeserializer:
             tmp_project.add_existing_protein(
                 ObjectDeserializer(
                     tmp_protein_json_filepath.get_dirname(),
-                    tmp_protein_json_filepath.get_filename()
-                ).deserialize_protein()
+                    tmp_protein_json_filepath.get_filename(),
+                ).deserialize_protein(),
             )
         for tmp_protein_pair_json_filepath in project_util.get_all_protein_pair_json_filepaths_from_project(tmp_project):
             tmp_project.add_protein_pair(
                 ObjectDeserializer(
                     tmp_protein_pair_json_filepath.get_dirname(),
-                    tmp_protein_pair_json_filepath.get_filename()
-                ).deserialize_protein_pair()
+                    tmp_protein_pair_json_filepath.get_filename(),
+                ).deserialize_protein_pair(),
             )
         for tmp_distance_analysis_json_filepath in project_util.get_all_distance_analysis_json_filepaths_from_project(tmp_project):
             tmp_project.add_distance_analysis(
                 ObjectDeserializer(
                     tmp_distance_analysis_json_filepath.get_dirname(),
-                    tmp_distance_analysis_json_filepath.get_filename()
-                ).deserialize_distance_analysis(app_settings=app_settings, app_project=tmp_project)
+                    tmp_distance_analysis_json_filepath.get_filename(),
+                ).deserialize_distance_analysis(app_settings=app_settings, app_project=tmp_project),
             )
         return tmp_project
 
     def deserialize_distance_analysis(self, app_settings: 'settings.Settings', app_project: 'project.Project') -> 'distance_analysis.DistanceAnalysis':
-        tmp_protein_pair = app_project.get_specific_protein_pair(self.object_dict.get("protein_pair_for_analysis_name"))
+        tmp_protein_pair = app_project.search_protein_pair(self.object_dict.get("protein_pair_for_analysis_name"))
         tmp_distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair, app_settings, self.object_dict.get("distance_analysis_dirname"))
         tmp_distance_analysis.cutoff = self.object_dict.get("cutoff")
         tmp_distance_analysis.cycles = self.object_dict.get("cycles")
@@ -358,7 +358,7 @@ class ProjectScanner:
         self.project = project_obj
 
     def scan_project_for_valid_proteins(self, list_view_project_proteins=None) -> list[str]:
-        """This function scans the project pdb path and optionally fills a list view
+        """This function scans the project pdb path and optionally fills a list view.
 
         Args:
             list_view_project_proteins:
@@ -407,7 +407,7 @@ class WorkspaceScanner:
         return valid_directories
 
     def scan_workspace_for_non_duplicate_proteins(self) -> dict:
-        """This function scans the workspace directory for protein structures and eliminates all duplicates
+        """This function scans the workspace directory for protein structures and eliminates all duplicates.
 
         Args:
             workspace_path:

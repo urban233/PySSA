@@ -31,7 +31,7 @@ PLUGIN_NAME = "tmpPySSA"
 PLUGIN_PATH_OLD = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\{PLUGIN_NAME}")
 PLUGIN_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{PLUGIN_NAME}")
 PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-VERSION_NUMBER = "v0.9.13"
+VERSION_NUMBER = "v0.9.15"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))

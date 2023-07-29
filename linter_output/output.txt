@@ -1,0 +1,68 @@
+testing_area\test_format_project.py:49:5: D404 First word of the docstring should not be "This"
+testing_area\test_format_project.py:88:9: D417 Missing argument descriptions in the docstring for `__init__`: `project_name`, `workspace_path`
+testing_area\test_format_project.py:89:9: D401 First line of docstring should be in imperative mood: "Constructor."
+testing_area\test_format_project.py:104:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:104:34: ANN001 Missing type annotation for function argument `value`
+testing_area\test_format_project.py:107:9: D417 Missing argument description in the docstring for `add_existing_protein`: `value_protein`
+testing_area\test_format_project.py:108:9: D401 First line of docstring should be in imperative mood: "This function adds an existing protein object to the project."
+testing_area\test_format_project.py:108:9: D404 First word of the docstring should not be "This"
+testing_area\test_format_project.py:117:9: D417 Missing argument description in the docstring for `add_protein_pair`: `value_protein_pair`
+testing_area\test_format_project.py:118:9: D401 First line of docstring should be in imperative mood: "This function adds an existing protein_pair object to the project."
+testing_area\test_format_project.py:118:9: D404 First word of the docstring should not be "This"
+testing_area\test_format_project.py:127:9: ANN201 Missing return type annotation for public function `create_folder_paths`
+testing_area\test_format_project.py:127:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:151:9: ANN201 Missing return type annotation for public function `create_project_tree`
+testing_area\test_format_project.py:151:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:158:9: ANN201 Missing return type annotation for public function `get_number_of_proteins`
+testing_area\test_format_project.py:158:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:161:9: ANN201 Missing return type annotation for public function `get_project_name`
+testing_area\test_format_project.py:161:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:164:9: ANN201 Missing return type annotation for public function `get_project_xml_path`
+testing_area\test_format_project.py:164:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:167:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:167:33: ANN001 Missing type annotation for function argument `filepath`
+testing_area\test_format_project.py:201:9: ANN205 Missing return type annotation for staticmethod `deserialize_project`
+testing_area\test_format_project.py:201:29: ANN001 Missing type annotation for function argument `filepath`
+testing_area\test_format_project.py:201:39: ANN001 Missing type annotation for function argument `app_settings`
+testing_area\test_format_project.py:202:9: D205 1 blank line required between summary line and description
+testing_area\test_format_project.py:202:9: D401 First line of docstring should be in imperative mood: "This function constructs the protein object from"
+testing_area\test_format_project.py:202:9: D404 First word of the docstring should not be "This"
+testing_area\test_format_project.py:211:9: ANN201 Missing return type annotation for public function `search_protein`
+testing_area\test_format_project.py:211:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:211:30: ANN001 Missing type annotation for function argument `protein_name`
+testing_area\test_format_project.py:215:9: RET503 Missing explicit `return` at the end of function able to return non-`None` value
+testing_area\test_format_project.py:217:9: D417 Missing argument description in the docstring for `search_protein_pair`: `protein_pair_name`
+testing_area\test_format_project.py:217:35: ANN001 Missing type annotation for function argument `protein_pair_name`
+testing_area\test_format_project.py:218:9: D401 First line of docstring should be in imperative mood: "This function searches all protein_pairs within the project and returns true if the project contains the pair."
+testing_area\test_format_project.py:218:9: D404 First word of the docstring should not be "This"
+testing_area\test_format_project.py:218:121: E501 Line too long (121 > 120 characters)
+testing_area\test_format_project.py:231:9: RET503 Missing explicit `return` at the end of function able to return non-`None` value
+testing_area\test_format_project.py:233:9: ANN201 Missing return type annotation for public function `save_pymol_session`
+testing_area\test_format_project.py:233:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:241:9: ANN201 Missing return type annotation for public function `get_specific_protein_pair`
+testing_area\test_format_project.py:241:9: D417 Missing argument description in the docstring for `get_specific_protein_pair`: `protein_pair_name`
+testing_area\test_format_project.py:242:9: D401 First line of docstring should be in imperative mood: "This function gets a specific protein_pair by name from the project."
+testing_area\test_format_project.py:242:9: D404 First word of the docstring should not be "This"
+testing_area\test_format_project.py:254:9: RET503 Missing explicit `return` at the end of function able to return non-`None` value
+testing_area\test_format_project.py:256:9: ANN201 Missing return type annotation for public function `get_specific_protein_pair_tuple`
+testing_area\test_format_project.py:256:9: D417 Missing argument description in the docstring for `get_specific_protein_pair_tuple`: `protein_pair_name`
+testing_area\test_format_project.py:256:47: ANN001 Missing type annotation for function argument `protein_pair_name`
+testing_area\test_format_project.py:257:9: D401 First line of docstring should be in imperative mood: "This function gets a specific protein_pair by name from the project."
+testing_area\test_format_project.py:257:9: D404 First word of the docstring should not be "This"
+testing_area\test_format_project.py:269:9: RET503 Missing explicit `return` at the end of function able to return non-`None` value
+testing_area\test_format_project.py:271:9: ANN201 Missing return type annotation for public function `check_if_protein_is_in_any_protein_pair`
+testing_area\test_format_project.py:271:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:271:55: ANN001 Missing type annotation for function argument `protein_name`
+testing_area\test_format_project.py:276:13: RET505 Unnecessary `elif` after `return` statement
+testing_area\test_format_project.py:282:9: ANN201 Missing return type annotation for public function `delete_specific_protein`
+testing_area\test_format_project.py:282:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:282:39: ANN001 Missing type annotation for function argument `protein_name`
+testing_area\test_format_project.py:290:9: ANN201 Missing return type annotation for public function `dump_project_to_file`
+testing_area\test_format_project.py:290:9: D102 Missing docstring in public method
+testing_area\test_format_project.py:292:121: E501 Line too long (179 > 120 characters)
+
+Fixed 2 errors:
+- testing_area\test_format_project.py:
+    2 × COM812 (missing-trailing-comma)
+
+Found 64 errors (2 fixed, 62 remaining).

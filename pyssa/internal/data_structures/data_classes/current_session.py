@@ -19,11 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the dataclass CurrentSession."""
 from dataclasses import dataclass
 
 
 @dataclass
 class CurrentSession:
+    """Class which holds information about the current pymol session.
+
+    This is a dataclass with:
+        type (str)
+        name (str)
+        session (str)
+    """
+
     type: str
     name: str
     session: str

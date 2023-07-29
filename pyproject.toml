@@ -1,0 +1,20 @@
+[project]
+name = "pyssa"
+#version = "0.9.15"
+description = "A PyMOL plugin for protein structure prediction and analysis."
+license = "GPL v3"
+authors = ["Martin Urban <martin.urban@studmail.w-hs.de>", "Hannah Kullik <hannah.kullik@studmail.w-hs.de>"]
+maintainers = ["Martin Urban <martin.urban@studmail.w-hs.de>", "Hannah Kullik <hannah.kullik@studmail.w-hs.de>"]
+
+[tool.ruff]
+select = ["E", "F", "W", "N", "D", "ANN", "A", "COM", "C4", "RET", "SLF"]
+ignore = ["ANN101", "D203", "D213", "D407", "D408", "D409", "W291", "W293"]
+fixable = ["D", "COM"]
+line-length = 120
+[tool.ruff.pydocstyle]
+convention = "google"
+
+
+[tool.black]
+line-length = 120
+target-version = ["py39"]

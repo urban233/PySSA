@@ -19,7 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the main window of the pyssa plugin"""
+"""Module for the main window of the pyssa plugin."""
+from typing import TYPE_CHECKING
+from urllib.request import urlopen
+from urllib.error import URLError
 import logging
 import os
 import shutil
@@ -29,9 +32,6 @@ import threading
 import pathlib
 import csv
 import requests
-from typing import TYPE_CHECKING
-from urllib.request import urlopen
-from urllib.error import URLError
 
 import numpy as np
 import pymol
@@ -72,16 +72,12 @@ if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
 
 
-def show_resi_sticks():
-    session_util.check_if_sele_is_empty()
-    cmd.show(representation="sticks", selection="sele")
-
-
 class MainWindow(QtWidgets.QMainWindow):
     """This class contains all information about the MainWindow in the
-    application
+    application.
 
     Attributes:
+    ----------
         app_project:
             The active project.Project object which contains all information about the currently loaded project.
         _project_watcher:
@@ -108,7 +104,8 @@ class MainWindow(QtWidgets.QMainWindow):
             The object which contains information in form of stages of the page.
 
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
         # ----- Initialize the ui building process
         super().__init__()
         # build ui object
@@ -197,7 +194,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.view_box = None
         self.block_box_expert_install = basic_boxes.no_buttons("Local Colabfold installation", "An installation process is currently running.", QtWidgets.QMessageBox.Information)
         self.prediction_type = 0
-        # type, name, session
         self.current_session = current_session.CurrentSession("", "", "")
 
         # </editor-fold>
@@ -326,7 +322,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "remove_button": self.ui.btn_pred_mono_seq_to_predict_remove,
                     "next_button": self.ui.btn_pred_mono_seq_to_predict,
-                }
+                },
             ),
             # protein name stage
             stage.Stage(
@@ -338,7 +334,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_mono_back,
                     "next_button": self.ui.btn_pred_mono_next,
-                }
+                },
             ),
             # protein sequence stage
             stage.Stage(
@@ -350,7 +346,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_mono_back_2,
                     "next_button": self.ui.btn_pred_mono_add_protein,
-                }
+                },
             ),
             # prediction stage (with advanced configurations)
             stage.Stage(
@@ -360,7 +356,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 },
                 {
                     "predict_button": self.ui.btn_pred_mono_predict,
-                }
+                },
             ),
         ]
         self.local_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
@@ -377,7 +373,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "remove_button": self.ui.btn_pred_multi_prot_to_predict_remove,
                     "next_button": self.ui.btn_pred_multi_prot_to_predict_add,
-                }
+                },
             ),
             # protein name stage
             stage.Stage(
@@ -389,7 +385,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_multi_back,
                     "next_button": self.ui.btn_pred_multi_next,
-                }
+                },
             ),
             # protein sequence stage
             stage.Stage(
@@ -407,7 +403,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_multi_back_2,
                     "next_button": self.ui.btn_pred_multi_prot_to_predict_add_2,
-                }
+                },
             ),
             # prediction stage (with advanced configurations)
             stage.Stage(
@@ -417,7 +413,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 },
                 {
                     "predict_button": self.ui.btn_pred_multi_predict,
-                }
+                },
             ),
         ]
         self.local_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
@@ -436,7 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 },
                 {
                     "next_button": self.ui.btn_analysis_next,
-                }
+                },
             ),
             # choose chains from prot structure 1: stage 1
             stage.Stage(
@@ -447,7 +443,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_analysis_back,
                     "next_button": self.ui.btn_analysis_next_2,
-                }
+                },
             ),
             # choose chains from prot structure 2: stage 2
             stage.Stage(
@@ -460,7 +456,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_analysis_back_2,
                     "start_button": self.ui.btn_analysis_start,
-                }
+                },
             ),
         ]
         self.single_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
@@ -477,7 +473,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "add_button": self.ui.btn_analysis_batch_add,
                     "remove_button": self.ui.btn_analysis_batch_remove,
-                }
+                },
             ),
             # choose protein structures: stage 1
             stage.Stage(
@@ -491,7 +487,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "next_button": self.ui.btn_analysis_batch_next,
                     "back_button": self.ui.btn_analysis_batch_back,
-                }
+                },
             ),
             # choose chains from prot structure 1: stage 2
             stage.Stage(
@@ -502,7 +498,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_analysis_batch_back_2,
                     "next_button": self.ui.btn_analysis_batch_next_2,
-                }
+                },
             ),
             # choose chains from prot structure 2: stage 3
             stage.Stage(
@@ -523,7 +519,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 },
                 {
                     "start_button": self.ui.btn_analysis_batch_start,
-                }
+                },
             ),
         ]
         self.batch_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
@@ -539,7 +535,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 },
                 {
                     "": None,
-                }
+                },
             ),
             # choose chains from prot structure 1: stage 1
             stage.Stage(
@@ -564,7 +560,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 },
                 {
                     "": None,
-                }
+                },
             ),
         ]
         self.results_management = gui_page_management.GuiPageManagement(tmp_stages)
@@ -580,7 +576,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "remove_button": self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
                     "next_button": self.ui.btn_pred_analysis_mono_seq_to_predict,
-                }
+                },
             ),
             # protein name stage 1
             stage.Stage(
@@ -592,7 +588,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_analysis_mono_back,
                     "next_button": self.ui.btn_pred_analysis_mono_next,
-                }
+                },
             ),
             # protein sequence stage 2
             stage.Stage(
@@ -604,7 +600,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_analysis_mono_back_2,
                     "next_button": self.ui.btn_pred_analysis_mono_add_protein,
-                }
+                },
             ),
             # prediction stage (with advanced configurations) 3
             stage.Stage(
@@ -615,7 +611,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "label_go_to_analysis": self.ui.lbl_pred_analysis_mono_to_analysis_setup,
                     "button_go_to_analysis": self.ui.btn_pred_analysis_mono_go_analysis_setup,
-                }
+                },
             ),
             # add a prot analysis: stage 4
             stage.Stage(
@@ -626,7 +622,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "add_button": self.ui.btn_pred_analysis_mono_add,
                     "remove_button": self.ui.btn_pred_analysis_mono_remove,
-                }
+                },
             ),
             # choose protein structures: stage 5
             stage.Stage(
@@ -640,7 +636,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "next_button": self.ui.btn_pred_analysis_mono_next_2,
                     "back_button": self.ui.btn_pred_analysis_mono_back_3,
-                }
+                },
             ),
             # choose chains from prot structure 1: stage 6
             stage.Stage(
@@ -651,7 +647,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_analysis_mono_back_4,
                     "next_button": self.ui.btn_pred_analysis_mono_next_3,
-                }
+                },
             ),
             # choose chains from prot structure 2: stage 7
             stage.Stage(
@@ -673,7 +669,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button":self.ui.btn_pred_analysis_mono_back_pred_setup,
                     "start_button": self.ui.btn_pred_analysis_mono_start,
-                }
+                },
             ),
         ]
         self.monomer_prediction_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
@@ -689,7 +685,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "remove_button": self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
                     "next_button": self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-                }
+                },
             ),
             # protein name stage
             stage.Stage(
@@ -701,7 +697,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_analysis_multi_back,
                     "next_button": self.ui.btn_pred_analysis_multi_next,
-                }
+                },
             ),
             # protein sequence stage
             stage.Stage(
@@ -719,7 +715,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_analysis_multi_back_2,
                     "next_button": self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-                }
+                },
             ),
             # prediction stage (with advanced configurations)
             stage.Stage(
@@ -730,7 +726,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "label_go_to_analysis": self.ui.lbl_pred_analysis_multi_to_analysis_setup,
                     "button_go_to_analysis": self.ui.btn_pred_analysis_multi_go_analysis_setup,
-                }
+                },
             ),
             # add a prot analysis: stage 0
             stage.Stage(
@@ -741,7 +737,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "add_button": self.ui.btn_pred_analysis_multi_add,
                     "remove_button": self.ui.btn_pred_analysis_multi_remove,
-                }
+                },
             ),
             # choose protein structures: stage 1
             stage.Stage(
@@ -755,7 +751,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "next_button": self.ui.btn_pred_analysis_multi_next_2,
                     "back_button": self.ui.btn_pred_analysis_multi_back_3,
-                }
+                },
             ),
             # choose chains from prot structure 1: stage 2
             stage.Stage(
@@ -766,7 +762,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_analysis_multi_back_4,
                     "next_button": self.ui.btn_pred_analysis_multi_next_3,
-                }
+                },
             ),
             # choose chains from prot structure 2: stage 3
             stage.Stage(
@@ -788,7 +784,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "back_button": self.ui.btn_pred_analysis_multi_back_pred_setup,
                     "start_button": self.ui.btn_pred_analysis_multi_start,
-                }
+                },
             ),
         ]
         self.multimer_prediction_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
@@ -796,9 +792,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # </editor-fold>
 
     def _setup_statusbar(self):
-        """This function sets up the status bar and fills it with the current workspace
-
-        """
+        """This function sets up the status bar and fills it with the current workspace."""
         self.setStatusBar(self.status_bar)
         self.status_bar.showMessage(str(self.workspace.text()))
 
@@ -839,9 +833,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # image page
 
     def _connect_all_gui_elements(self):
-        """This function connects all gui elements with their corresponding slots
-
-        """
+        """This function connects all gui elements with their corresponding slots."""
         # <editor-fold desc="Menu">
         self.ui.action_file_quit.triggered.connect(self.quit_app)
         self.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
@@ -1163,7 +1155,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # <editor-fold desc="Hotspots page">
         self.ui.list_hotspots_choose_protein.currentItemChanged.connect(self.open_protein)
-        self.ui.btn_hotspots_resi_show.clicked.connect(show_resi_sticks)
+        self.ui.btn_hotspots_resi_show.clicked.connect(self.show_resi_sticks)
         self.ui.btn_hotspots_resi_hide.clicked.connect(self.hide_resi_sticks)
         self.ui.btn_hotspots_resi_zoom.clicked.connect(self.zoom_resi_position)
 
@@ -1206,9 +1198,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Page init functions">
     def _init_fill_combo_boxes(self):
-        """This function fills all combo boxes of the plugin
-
-        """
+        """This function fills all combo boxes of the plugin."""
         item_list_representation = [
             "",
             "cartoon",
@@ -1254,9 +1244,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_utils.fill_combo_box(self.ui.box_manage_choose_color, constants.PYMOL_COLORS)
 
     def _init_new_page(self):
-        """This function clears all text fields and hides everything which is needed
-
-        """
+        """This function clears all text fields and hides everything which is needed."""
         self.ui.txt_new_project_name.clear()
         self.ui.txt_new_choose_reference.clear()
         self.ui.lbl_new_status_project_name.setText("")
@@ -1306,9 +1294,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_edit_project_proteins)
 
     def _init_sequence_vs_pdb_page(self):
-        """This function clears all text fields and hides everything which is needed
-
-        """
+        """This function clears all text fields and hides everything which is needed."""
         self.ui.list_s_v_p_ref_chains.clear()
         # # sets up defaults: Prediction + Analysis
         #
@@ -1348,9 +1334,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.ui.txt_prediction_chain_model.hide()
 
     def _init_single_analysis_page(self):
-        """This function clears all text fields and hides everything which is needed
-
-        """
+        """This function clears all text fields and hides everything which is needed."""
         self.single_analysis_management.show_stage_x(0)
         self.single_analysis_management.disable_all_next_buttons()
         self.single_analysis_management.set_empty_string_in_label()
@@ -1360,9 +1344,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.box_analysis_prot_struct_2.setCurrentIndex(0)
 
     def _init_results_page(self):
-        """This function clears all text fields and hides everything which is needed
-
-        """
+        """This function clears all text fields and hides everything which is needed."""
         # stage 1
         self.ui.list_results_interest_regions.clear()
         self.ui.txt_results_rmsd.clear()
@@ -1374,9 +1356,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.display_image_analysis_page()
 
     def _init_image_page(self):
-        """This function clears all text fields and hides everything which is needed
-
-        """
+        """This function clears all text fields and hides everything which is needed."""
         # stage 1
         self.ui.box_representation.setCurrentIndex(0)
         self.ui.box_bg_color.setCurrentIndex(0)
@@ -1408,15 +1388,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Display page functions">
     def display_home_page(self):
-        """This function displays the homepage of the plugin
-
-        """
+        """This function displays the homepage of the plugin."""
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 0, "Home")
 
     def display_single_analysis_page(self):
-        """This function displays the single analysis work area
-
-        """
+        """This function displays the single analysis work area."""
         self.fill_protein_structure_boxes()
         self.ui.list_analysis_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.ui.list_analysis_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -1427,9 +1403,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                 self.ui.btn_single_analysis_page)
 
     def display_job_analysis_page(self):
-        """This function displays the job analysis work area
-
-        """
+        """This function displays the job analysis work area."""
         self.ui.list_analysis_batch_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.ui.list_analysis_batch_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         # regular work area opening
@@ -1439,9 +1413,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                 self.ui.btn_batch_analysis_page)
 
     def display_results_page(self):
-        """This function displays the results work area
-
-        """
+        """This function displays the results work area."""
         results = []
         results.insert(0, "")
         i = 0
@@ -1458,9 +1430,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
 
     def display_image_page(self):
-        """This function displays the image work area
-
-        """
+        """This function displays the image work area."""
         self._init_image_page()
         if self.ui.box_renderer.currentText() == "":
             self.ui.cb_ray_tracing.hide()
@@ -1473,9 +1443,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 6, "Image")
 
     def display_new_page(self):
-        """This function displays the new project work area
-
-        """
+        """This function displays the new project work area."""
         self._init_new_page()
         self.ui.list_new_projects.clear()
         # pre-process
@@ -1491,9 +1459,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_new_page)
 
     def display_open_page(self):
-        """This function displays the open project work area
-
-        """
+        """This function displays the open project work area."""
         self.ui.txt_open_search.clear()
         self.ui.txt_open_selected_project.clear()
         if safeguard.Safeguard.check_filepath(self.workspace_path):
@@ -1515,9 +1481,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.display_home_page()
 
     def display_delete_page(self):
-        """This function displays the "delete" project work area
-
-        """
+        """This function displays the "delete" project work area."""
         self.ui.txt_delete_search.clear()
         self.ui.txt_delete_selected_projects.clear()
         self.ui.list_delete_projects.clear()
@@ -1528,9 +1492,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_delete_page)
 
     def display_edit_page(self):
-        """This function displays the edit project page
-
-        """
+        """This function displays the edit project page."""
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
         self._init_edit_page()
@@ -1661,15 +1623,11 @@ class MainWindow(QtWidgets.QMainWindow):
             logging.info("Settings were not modified.")
 
     def quit_app(self):
-        """This function closes the entire plugin.
-
-        """
+        """This function closes the entire plugin."""
         self.close()
 
     def open_settings_global(self):
-        """This function opens the dialog for the global settings.
-
-        """
+        """This function opens the dialog for the global settings."""
         dialog = dialog_settings_global.DialogSettingsGlobal()
         dialog.exec_()
         self.app_settings = self.app_settings.deserialize_settings()
@@ -1680,23 +1638,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def open_tutorial():
-        """This function opens the official plugin documentation as HTML page.
-
-        """
+        """This function opens the official plugin documentation as HTML page."""
         os.startfile(constants.TUTORIAL_PATH)
 
     @staticmethod
     def open_documentation():
-        """This function opens the official plugin documentation as PDF.
-
-        """
+        """This function opens the official plugin documentation as PDF."""
         os.startfile(constants.DOCS_PATH)
 
     @staticmethod
     def open_about():
-        """This function opens the about dialog.
-
-        """
+        """This function opens the about dialog."""
         dialog = dialog_about.DialogAbout()
         dialog.exec_()
 
@@ -1711,7 +1663,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.ui.lbl_page_title.text() == "Home":
             msg.setText(
                 "Page: Home\n\n"
-                "Here you can use the sidebar to create, open, delete or import a project."
+                "Here you can use the sidebar to create, open, delete or import a project.",
             )
         elif self.ui.lbl_page_title.text() == "Create new project":
             msg.setText(
@@ -1722,21 +1674,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 "To add an existing protein to your project, tick the checkbox Add existing protein.\n"
                 "You can either type the PDB ID or choose an existing .pdb file in your filesystem, by clicking on the "
                 "tree dots.\n\n"
-                "To use a protein from the PDB, you need to have an internet connection."
+                "To use a protein from the PDB, you need to have an internet connection.",
             )
         elif self.ui.lbl_page_title.text() == "Open existing project":
             msg.setText(
                 "Page: Open existing project\n\n"
                 "To open a project, click on a project name from the list and click on Open.\n\n"
                 "To search a project, type the project name in the text box.\n\n"
-                "The selected project is displayed in the text box below the list."
+                "The selected project is displayed in the text box below the list.",
             )
         elif self.ui.lbl_page_title.text() == "Delete existing project":
             msg.setText(
                 "Page: Delete existing project.\n\n"
                 "To delete a project, click on a project name from the list and click on Delete.\n\n"
                 "To search a project, type the project name in the text box.\n\n"
-                "The selected project is displayed in the text box below the list."
+                "The selected project is displayed in the text box below the list.",
             )
         elif self.ui.lbl_page_title.text() == "Edit proteins of current project":
             msg.setText(
@@ -1745,14 +1697,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 "To clean a protein structure, click on a protein name from the list.\n"
                 "Then you can either clean the selected one (Update current protein structure) \n"
                 "or create a duplicate and clean that one (Create new protein structure).\n\n"
-                "To delete a protein structure, click on a protein name and on Delete."
+                "To delete a protein structure, click on a protein name and on Delete.",
             )
         elif self.ui.lbl_page_title.text() == "View proteins of current project":
             msg.setText(
                 "Page: View proteins of current project\n\n"
                 "Here you can show the sequence or the structure of a selected protein.\n\n"
                 "To show the sequence, click on a protein name from the list and on Show (Sequence of selected protein).\n\n"
-                "To show the structure, click on a protein name from the list and on Show (Structure of selected protein)."
+                "To show the structure, click on a protein name from the list and on Show (Structure of selected protein).",
             )
         elif self.ui.lbl_page_title.text() == "Use existing project":
             msg.setText(
@@ -1764,7 +1716,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "To add a protein to the list, click on a protein name in the Availabe protein structures list and "
                 "click on Add.\n\n"
                 "To remove a protein from the list, click on a protein name in the list Protein structures in new project "
-                "and click on Remove."
+                "and click on Remove.",
             )
         elif self.ui.lbl_page_title.text() == "Structure Analysis":
             msg.setText(
@@ -1779,7 +1731,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Before you start, you can decide if during the analysis images should be created. \n"
                 "To enable the image creation, tick the checkbox Create ray-traced images (slow).\n"
                 "IMPORTANT: The image creation can take a long time, depending on your job configuration.\n"
-                "You can also create the images afterwards!"
+                "You can also create the images afterwards!",
             )
         elif self.ui.lbl_page_title.text() == "Results":
             msg.setText(
@@ -1793,7 +1745,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "View (Distance Histogram): click to open the distance histogram, which shows the frequency of certain distance intervals.\n\n"
                 "View (Table): click to open the distance table, which shows a detailed table of the analysis.\n\n"
                 "View (Structure alignment): click to open the image of the structure alignment.\n\n"
-                "View (Interesting regions): click to open the image of the selected interesting region."
+                "View (Interesting regions): click to open the image of the selected interesting region.",
             )
         elif self.ui.lbl_page_title.text() == "Analysis Images":
             msg.setText(
@@ -1805,7 +1757,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "click on Add.\n\n"
                 "To remove a protein pair, click on a protein pair name in the list Protein structure analysis' "
                 "for image creation and click on Remove.\n\n"
-                "To start the analysis images job, click on Start (Automatic image creation)."
+                "To start the analysis images job, click on Start (Automatic image creation).",
             )
         elif self.ui.lbl_page_title.text() == "Image":
             msg.setText(
@@ -1822,7 +1774,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Save (New scene): saves a new PyMOL scene.\n"
                 "Update (Current scene): updates the current PyMOL scene.\n"
                 "Preview (Image): creates a preview of the image, which would get created.\n"
-                "Save (Image): creates the image and saves it as .png file."
+                "Save (Image): creates the image and saves it as .png file.",
             )
         elif self.ui.lbl_page_title.text() == "Hotspots":
             msg.setText(
@@ -1832,7 +1784,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "To define the hotspot region, click on the residues in PyMOLs protein sequence view. \n\n"
                 "To display the selected hotspot as balls and sticks, click on Show (Residues as balls and sticks). \n\n"
                 "To hide the balls and sticks representation of the selected hotspot, click on Hide (Residues as balls and sticks). \n\n"
-                "To zoom to the selected hotspot, click on Zoom (Residue position). \n\n"
+                "To zoom to the selected hotspot, click on Zoom (Residue position). \n\n",
             )
         elif self.ui.lbl_page_title.text() == "Manage PyMOL session":
             msg.setText(
@@ -1841,7 +1793,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "To change the PyMOL session settings, select a protein or protein pair in the combo box.\n\n"
                 "To change the color of the protein, select the color in the combo box.\n\n"
                 "To change the representation of the selected protein, select the representation in the combo box.\n\n"
-                "To change the background color of the session, select the color in the combo box."
+                "To change the background color of the session, select the color in the combo box.",
             )
         elif self.ui.lbl_page_title.text() == "Local Monomer Prediction":
             msg.setText(
@@ -1852,7 +1804,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "Then paste the sequence you want to predict into the text field and click on Add to add the run to the job.\n\n"
                 "To start the prediction job, click on Predict.\n\n"
                 "NOTE FOR EXPERTS: If you don't want to use the force field or want to change the template mode "
-                "you can click on Edit, to configurate this."
+                "you can click on Edit, to configurate this.",
             )
         elif self.ui.lbl_page_title.text() == "Local Multimer Prediction":
             msg.setText(
@@ -1865,7 +1817,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "After that, click on Add, to add the prediction run to the prediction job.\n\n"
                 "To start the prediction job, click on Predict.\n\n"
                 "NOTE FOR EXPERTS: If you don't want to use the force field or want to change the template mode "
-                "you can click on Edit, to configurate this."
+                "you can click on Edit, to configurate this.",
             )
         elif self.ui.lbl_page_title.text() == "Monomer Prediction + Analysis":
             msg.setText(
@@ -1886,7 +1838,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "You can also create the images afterwards!\n\n"
                 "To start the prediction + analysis job, click on Start.\n\n"
                 "NOTE: For a step-by-step explaination, consult the tutorial which is accessable through the Help menu "
-                "within the PySSA plugin."
+                "within the PySSA plugin.",
             )
         elif self.ui.lbl_page_title.text() == "Multimer Prediction + Analysis":
             msg.setText(
@@ -1907,16 +1859,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 "You can also create the images afterwards!\n\n"
                 "To start the prediction + analysis job, click on Start.\n\n"
                 "NOTE: For a step-by-step explaination, consult the tutorial which is accessable through the Help menu "
-                "within the PySSA plugin."
+                "within the PySSA plugin.",
             )
         msg.exec_()
         return
 
     # <editor-fold desc="New project page functions">
     def show_add_reference(self):
-        """This function shows the reference input section
-
-        """
+        """This function shows the reference input section."""
         # checkbox is checked
         self.ui.cb_new_add_reference.checkState()
         if self.ui.cb_new_add_reference.checkState() == 2:
@@ -1946,9 +1896,7 @@ class MainWindow(QtWidgets.QMainWindow):
             styles.color_button_ready(self.ui.btn_new_create_project)
 
     def load_reference_in_project(self):
-        """This function loads a reference in a new project
-
-        """
+        """This function loads a reference in a new project."""
         try:
             # open file dialog
             file_name = QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
@@ -2014,19 +1962,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 styles.color_button_not_ready(self.ui.btn_new_create_project)
 
     def validate_project_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         input_validator.InputValidator.validate_project_name(
             self.ui.list_new_projects, self.ui.txt_new_project_name,
             self.ui.lbl_new_status_project_name, self.ui.btn_new_create_project,
-            self.ui.cb_new_add_reference
+            self.ui.cb_new_add_reference,
         )
 
     def create_new_project(self):
-        """This function creates a new project based on the plugin New ... page
-
-        """
+        """This function creates a new project based on the plugin New ... page."""
         # <editor-fold desc="Checks">
         if self.app_settings.wsl_install == 0:
             basic_boxes.ok("Create new project",
@@ -2056,7 +2000,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     return
                 graphic_operations.setup_default_session_graphic_settings()
                 tmp_ref_protein = protein.Protein(molecule_object=pdb_id,
-                                                  pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb"))
+                                                  pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")),
                                                   )
             else:
                 # local pdb file as input
@@ -2087,15 +2031,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Open project page functions">
     def validate_open_search(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         if self.ui.list_open_projects.currentItem() is not None:
             self.ui.list_open_projects.currentItem().setSelected(False)
         # set color for lineEdit
         input_validator.InputValidator.validate_search_input(
             self.ui.list_open_projects, self.ui.txt_open_search,
-            self.ui.lbl_open_status_search, self.ui.txt_open_selected_project
+            self.ui.lbl_open_status_search, self.ui.txt_open_selected_project,
         )
 
     def select_project_from_open_list(self):
@@ -2105,9 +2047,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_open_selected_project.setText("")
 
     def activate_open_button(self):
-        """This function is used to activate the open button
-
-        """
+        """This function is used to activate the open button."""
         if self.ui.txt_open_selected_project.text() == "":
             self.ui.btn_open_open_project.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_open_open_project)
@@ -2129,9 +2069,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
 
     def open_project(self):
-        """This function opens an existing project
-
-        """
+        """This function opens an existing project."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         tmp_thread = threading.Thread(target=self.thread_func_open_project, daemon=True)
         tmp_thread.start()
@@ -2145,18 +2083,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Delete project page functions">
     def select_project_from_delete_list(self):
-        """This function selects a project from the project list on the delete page
-
-        """
+        """This function selects a project from the project list on the delete page."""
         try:
             self.ui.txt_delete_selected_projects.setText(self.ui.list_delete_projects.currentItem().text())
         except AttributeError:
             self.ui.txt_delete_selected_projects.setText("")
 
     def activate_delete_button(self):
-        """This function is used to activate the open button
-
-        """
+        """This function is used to activate the open button."""
         if self.ui.txt_delete_selected_projects.text() == "":
             self.ui.btn_delete_delete_project.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_delete_delete_project)
@@ -2165,22 +2099,17 @@ class MainWindow(QtWidgets.QMainWindow):
             styles.color_button_ready(self.ui.btn_delete_delete_project)
 
     def validate_delete_search(self):
-        """This function validates the input of the project name in real-time
-
-        """
-
+        """This function validates the input of the project name in real-time."""
         if self.ui.list_delete_projects.currentItem() is not None:
             self.ui.list_delete_projects.currentItem().setSelected(False)
         # set color for lineEdit
         input_validator.InputValidator.validate_search_input(
             self.ui.list_delete_projects, self.ui.txt_delete_search,
-            self.ui.lbl_delete_status_search, self.ui.txt_delete_selected_projects
+            self.ui.lbl_delete_status_search, self.ui.txt_delete_selected_projects,
         )
 
     def delete_project(self):
-        """This function deletes an existing project
-
-        """
+        """This function deletes an existing project."""
         # popup message which warns the user that the selected project gets deleted
         response: bool = gui_utils.warning_message_project_gets_deleted()
         tmp_project_name = self.ui.txt_delete_selected_projects.text()
@@ -2208,9 +2137,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Save project functions">
     def save_project(self):
-        """This function saves the "project" which is currently only the pymol session
-
-        """
+        """This function saves the "project" which is currently only the pymol session."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_save_project)
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
@@ -2303,9 +2230,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="View project page functions">
     def display_view_page(self):
-        """This function displays the edit project page
-
-        """
+        """This function displays the edit project page."""
         self.ui.list_view_project_proteins.clear()
         self.ui.txtedit_view_sequence.clear()
         # pre-process
@@ -2322,7 +2247,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_view_project_show_structure,
             self.ui.txtedit_view_sequence,
             self.ui.label_9,
-            self.ui.label_11
+            self.ui.label_11,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
 
@@ -2332,7 +2257,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_view_project_show_structure,
             self.ui.txtedit_view_sequence,
             self.ui.label_9,
-            self.ui.label_11
+            self.ui.label_11,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
 
@@ -2363,22 +2288,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Use project page functions">
     def validate_use_project_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         input_validator.InputValidator.validate_project_name(
             self.ui.list_use_existing_projects, self.ui.txt_use_project_name,
-            self.ui.lbl_use_status_project_name, self.ui.btn_use_next
+            self.ui.lbl_use_status_project_name, self.ui.btn_use_next,
         )
 
     def validate_use_search(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         message = "Protein structure does not exists."
         input_validator.InputValidator.validate_search_input(
             self.ui.list_use_available_protein_structures, self.ui.txt_use_search,
-            self.ui.lbl_use_status_search, status_message=message
+            self.ui.lbl_use_status_search, status_message=message,
         )
 
     def add_protein_structure_to_new_project(self):
@@ -2606,7 +2527,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_esm_prot_to_predict,
             self.ui.table_esm_prot_to_predict,
 
-            self.ui.btn_esm_seq_to_predict
+            self.ui.btn_esm_seq_to_predict,
         ]
         gui_elements_to_hide = [
             self.ui.btn_esm_seq_to_predict_remove,
@@ -2623,7 +2544,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
 
-            self.ui.btn_esm_predict
+            self.ui.btn_esm_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -2633,9 +2554,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                 self.ui.btn_pred_cloud_monomer_page)
 
     def cloud_esm_validate_protein_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_esm_prot_name.text(),
                                                                    self.ui.table_esm_prot_to_predict):
             self.ui.lbl_esm_prot_name_status.setText("Protein name already used.")
@@ -2648,9 +2567,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.ui.btn_esm_next)
 
     def cloud_esm_validate_protein_sequence(self):
-        """This function validates the input of the protein sequence in real-time
-
-        """
+        """This function validates the input of the protein sequence in real-time."""
         tools.validate_protein_sequence(self.ui.txt_esm_prot_seq,
                                         self.ui.lbl_esm_prot_seq_status,
                                         self.ui.btn_esm_next_2)
@@ -2687,7 +2604,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
 
-            self.ui.btn_esm_predict
+            self.ui.btn_esm_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_esm_prot_seq, self.ui.lbl_esm_prot_seq)
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -2722,7 +2639,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
 
-            self.ui.btn_esm_predict
+            self.ui.btn_esm_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -2752,7 +2669,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_esm_back,
             self.ui.btn_esm_next,
 
-            self.ui.btn_esm_predict
+            self.ui.btn_esm_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -2768,7 +2685,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_esm_prot_name,
             self.ui.lbl_esm_prot_name_status,
             self.ui.btn_esm_back,
-            self.ui.btn_esm_next
+            self.ui.btn_esm_next,
         ]
         gui_elements_to_hide = [
             self.ui.btn_esm_seq_to_predict_remove,
@@ -2780,7 +2697,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
 
-            self.ui.btn_esm_predict
+            self.ui.btn_esm_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
         gui_utils.disable_text_box(self.ui.txt_esm_prot_seq, self.ui.lbl_esm_prot_seq)
@@ -2805,7 +2722,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
 
-            self.ui.btn_esm_predict
+            self.ui.btn_esm_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
         gui_elements_to_hide = [
@@ -2819,7 +2736,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
             self.ui.btn_esm_back_2,
-            self.ui.btn_esm_next_2
+            self.ui.btn_esm_next_2,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -2836,7 +2753,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
 
-            self.ui.btn_esm_predict
+            self.ui.btn_esm_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
         gui_elements_to_hide = [
@@ -2850,7 +2767,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
             self.ui.btn_esm_back_2,
-            self.ui.btn_esm_next_2
+            self.ui.btn_esm_next_2,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -2867,7 +2784,7 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_elements_to_show = [
                 self.ui.lbl_esm_prot_to_predict,
                 self.ui.table_esm_prot_to_predict,
-                self.ui.btn_esm_seq_to_predict
+                self.ui.btn_esm_seq_to_predict,
             ]
             gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
             gui_elements_to_hide = [
@@ -2885,7 +2802,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_esm_back_2,
                 self.ui.btn_esm_next_2,
 
-                self.ui.btn_esm_predict
+                self.ui.btn_esm_predict,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -2900,8 +2817,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_project.add_existing_protein(
                 protein.Protein(
                     tmp_filename.replace(".pdb", ""),
-                    path_util.FilePath(pathlib.Path(f"{constants.ESMFOLD_PDB_DIR}/{tmp_filename}"))
-                )
+                    path_util.FilePath(pathlib.Path(f"{constants.ESMFOLD_PDB_DIR}/{tmp_filename}")),
+                ),
             )
         if len(output) > 0:
             formatted_output = ', '.join(output)
@@ -2925,7 +2842,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction = gui_utils.setup_standard_block_box(
-            self.block_box_prediction, "Structure Prediction", "A prediction is currently running."
+            self.block_box_prediction, "Structure Prediction", "A prediction is currently running.",
         )
         # self.block_box_prediction.setStandardButtons(QtWidgets.QMessageBox.NoButton)
         # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
@@ -2957,7 +2874,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_prot_to_predict,
             self.ui.table_pred_mono_prot_to_predict,
 
-            self.ui.btn_pred_mono_seq_to_predict
+            self.ui.btn_pred_mono_seq_to_predict,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_mono_seq_to_predict_remove,
@@ -2977,7 +2894,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
 
-            self.ui.btn_pred_mono_predict
+            self.ui.btn_pred_mono_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -2987,9 +2904,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                 self.ui.btn_pred_local_monomer_page)
 
     def local_pred_mono_validate_protein_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_mono_prot_name.text(),
                                                                    self.ui.table_pred_mono_prot_to_predict):
             self.ui.lbl_pred_mono_prot_name_status.setText("Protein name already used.")
@@ -3002,9 +2917,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.ui.btn_pred_mono_next)
 
     def local_pred_mono_validate_protein_sequence(self):
-        """This function validates the input of the protein sequence in real-time
-
-        """
+        """This function validates the input of the protein sequence in real-time."""
         tools.validate_protein_sequence(self.ui.txt_pred_mono_seq_name,
                                         self.ui.lbl_pred_mono_seq_name_status,
                                         self.ui.btn_pred_mono_add_protein)
@@ -3050,7 +2963,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
 
-            self.ui.btn_pred_mono_predict
+            self.ui.btn_pred_mono_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_pred_mono_seq_name, self.ui.lbl_pred_mono_seq_name)
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3088,7 +3001,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
 
-            self.ui.btn_pred_mono_predict
+            self.ui.btn_pred_mono_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3121,7 +3034,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
 
-            self.ui.btn_pred_mono_predict
+            self.ui.btn_pred_mono_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3137,7 +3050,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_pred_mono_prot_name,
             self.ui.lbl_pred_mono_prot_name_status,
             self.ui.btn_pred_mono_back,
-            self.ui.btn_pred_mono_next
+            self.ui.btn_pred_mono_next,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_mono_seq_to_predict_remove,
@@ -3152,7 +3065,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
 
-            self.ui.btn_pred_mono_predict
+            self.ui.btn_pred_mono_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
         gui_utils.disable_text_box(self.ui.txt_pred_mono_seq_name, self.ui.lbl_pred_mono_seq_name)
@@ -3180,7 +3093,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
 
-            self.ui.btn_pred_mono_predict
+            self.ui.btn_pred_mono_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
         gui_elements_to_hide = [
@@ -3194,7 +3107,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
             self.ui.btn_pred_mono_back_2,
-            self.ui.btn_pred_mono_add_protein
+            self.ui.btn_pred_mono_add_protein,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3214,7 +3127,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
 
-            self.ui.btn_pred_mono_predict
+            self.ui.btn_pred_mono_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
         gui_elements_to_hide = [
@@ -3228,7 +3141,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
             self.ui.btn_pred_mono_back_2,
-            self.ui.btn_pred_mono_add_protein
+            self.ui.btn_pred_mono_add_protein,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3245,7 +3158,7 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_elements_to_show = [
                 self.ui.lbl_pred_mono_prot_to_predict,
                 self.ui.table_pred_mono_prot_to_predict,
-                self.ui.btn_pred_mono_seq_to_predict
+                self.ui.btn_pred_mono_seq_to_predict,
             ]
             gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
             gui_elements_to_hide = [
@@ -3266,7 +3179,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_mono_advanced_config,
                 self.ui.btn_pred_mono_advanced_config,
 
-                self.ui.btn_pred_mono_predict
+                self.ui.btn_pred_mono_predict,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3491,7 +3404,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
 
-            self.ui.btn_pred_multi_predict
+            self.ui.btn_pred_multi_predict,
         ]
         for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, -1, -1):
             self.ui.table_pred_multi_prot_to_predict.removeRow(i)
@@ -3502,9 +3415,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                                 self.ui.btn_pred_local_multimer_page)
 
     def local_pred_multi_validate_protein_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_multi_prot_name.text(),
                                                                    self.ui.table_pred_multi_prot_to_predict):
             self.ui.lbl_pred_multi_prot_name_status.setText("Protein name already used.")
@@ -3517,9 +3428,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.ui.btn_pred_multi_next)
 
     def local_pred_multi_validate_protein_sequence(self):
-        """This function validates the input of the protein sequence in real-time
-
-        """
+        """This function validates the input of the protein sequence in real-time."""
         tools.validate_protein_sequence(self.ui.txt_pred_multi_prot_seq,
                                         self.ui.lbl_pred_multi_prot_seq_status,
                                         self.ui.btn_pred_multi_prot_seq_add)
@@ -3558,7 +3467,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_multi_advanced_config,
                 self.ui.btn_pred_multi_advanced_config,
 
-                self.ui.btn_pred_multi_predict
+                self.ui.btn_pred_multi_predict,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3576,7 +3485,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_multi_advanced_config,
                 self.ui.btn_pred_multi_advanced_config,
 
-                self.ui.btn_pred_multi_predict
+                self.ui.btn_pred_multi_predict,
             ]
             gui_elements_to_hide = [
                 self.ui.lbl_pred_multi_prot_name_status,
@@ -3595,7 +3504,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_multi_prot_seq_overview_remove,
                 self.ui.lbl_pred_multi_prot_to_predict_2,
                 self.ui.btn_pred_multi_back_2,
-                self.ui.btn_pred_multi_prot_to_predict_add_2
+                self.ui.btn_pred_multi_prot_to_predict_add_2,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3648,7 +3557,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
 
-            self.ui.btn_pred_multi_predict
+            self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3695,7 +3604,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
 
-            self.ui.btn_pred_multi_predict
+            self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3732,7 +3641,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
 
-            self.ui.btn_pred_multi_predict
+            self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3774,7 +3683,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
 
-            self.ui.btn_pred_multi_predict
+            self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3811,7 +3720,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
 
-            self.ui.btn_pred_multi_predict
+            self.ui.btn_pred_multi_predict,
         ]
         gui_elements_to_hide = [
             self.ui.lbl_pred_multi_prot_name_status,
@@ -3830,7 +3739,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_multi_prot_seq_overview_remove,
             self.ui.lbl_pred_multi_prot_to_predict_2,
             self.ui.btn_pred_multi_back_2,
-            self.ui.btn_pred_multi_prot_to_predict_add_2
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -3855,7 +3764,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
 
-            self.ui.btn_pred_multi_predict
+            self.ui.btn_pred_multi_predict,
         ]
         gui_elements_to_hide = [
             self.ui.lbl_pred_multi_prot_name_status,
@@ -3874,7 +3783,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_multi_prot_seq_overview_remove,
             self.ui.lbl_pred_multi_prot_to_predict_2,
             self.ui.btn_pred_multi_back_2,
-            self.ui.btn_pred_multi_prot_to_predict_add_2
+            self.ui.btn_pred_multi_prot_to_predict_add_2,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4059,7 +3968,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_mono_advanced_config_2,
 
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self.ui.lbl_pred_analysis_mono_to_analysis_setup
+            self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4074,9 +3983,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Prediction section">
     def mono_pred_analysis_validate_protein_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_analysis_mono_prot_name.text(),
                                                                    self.ui.table_pred_analysis_mono_prot_to_predict):
             self.ui.lbl_pred_analysis_mono_prot_name_status.setText("Protein name already used.")
@@ -4089,9 +3996,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.ui.btn_pred_analysis_mono_next)
 
     def mono_pred_analysis_validate_protein_sequence(self):
-        """This function validates the input of the protein sequence in real-time
-
-        """
+        """This function validates the input of the protein sequence in real-time."""
         tools.validate_protein_sequence(self.ui.txt_pred_analysis_mono_seq_name,
                                         self.ui.lbl_pred_analysis_mono_seq_name_status,
                                         self.ui.btn_pred_analysis_mono_add_protein)
@@ -4125,7 +4030,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_mono_advanced_config_2,
 
                 self.ui.btn_pred_analysis_mono_go_analysis_setup,
-                self.ui.lbl_pred_analysis_mono_to_analysis_setup
+                self.ui.lbl_pred_analysis_mono_to_analysis_setup,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4141,7 +4046,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_mono_advanced_config_2,
 
                 self.ui.btn_pred_analysis_mono_go_analysis_setup,
-                self.ui.lbl_pred_analysis_mono_to_analysis_setup
+                self.ui.lbl_pred_analysis_mono_to_analysis_setup,
             ]
             gui_elements_to_hide = [
                 self.ui.lbl_pred_analysis_mono_prot_name,
@@ -4154,7 +4059,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.txt_pred_analysis_mono_seq_name,
                 self.ui.lbl_pred_analysis_mono_seq_name_status,
                 self.ui.btn_pred_analysis_mono_back_2,
-                self.ui.btn_pred_analysis_mono_add_protein
+                self.ui.btn_pred_analysis_mono_add_protein,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4197,7 +4102,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_mono_advanced_config_2,
 
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self.ui.lbl_pred_analysis_mono_to_analysis_setup
+            self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
         gui_utils.disable_text_box(self.ui.txt_pred_analysis_mono_seq_name, self.ui.lbl_pred_analysis_mono_seq_name)
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -4236,7 +4141,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_mono_advanced_config_2,
 
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self.ui.lbl_pred_analysis_mono_to_analysis_setup
+            self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4270,7 +4175,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_mono_advanced_config_2,
 
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self.ui.lbl_pred_analysis_mono_to_analysis_setup
+            self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
         gui_utils.disable_text_box(self.ui.txt_pred_analysis_mono_prot_name, self.ui.lbl_pred_analysis_mono_prot_name)
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -4286,7 +4191,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_pred_analysis_mono_prot_name,
             self.ui.lbl_pred_analysis_mono_prot_name_status,
             self.ui.btn_pred_analysis_mono_back,
-            self.ui.btn_pred_analysis_mono_next
+            self.ui.btn_pred_analysis_mono_next,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
@@ -4302,7 +4207,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_mono_advanced_config_2,
 
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self.ui.lbl_pred_analysis_mono_to_analysis_setup
+            self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_analysis_mono_prot_name, self.ui.lbl_pred_analysis_mono_prot_name)
         gui_utils.disable_text_box(self.ui.txt_pred_analysis_mono_seq_name, self.ui.lbl_pred_analysis_mono_seq_name)
@@ -4331,7 +4236,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_mono_advanced_config_2,
 
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self.ui.lbl_pred_analysis_mono_to_analysis_setup
+            self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_analysis_mono_prot_name, self.ui.lbl_pred_analysis_mono_prot_name)
         gui_elements_to_hide = [
@@ -4345,7 +4250,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.txt_pred_analysis_mono_seq_name,
             self.ui.lbl_pred_analysis_mono_seq_name_status,
             self.ui.btn_pred_analysis_mono_back_2,
-            self.ui.btn_pred_analysis_mono_add_protein
+            self.ui.btn_pred_analysis_mono_add_protein,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4389,7 +4294,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_prot_struct_2,
             self.ui.box_pred_analysis_mono_prot_struct_2,
             self.ui.btn_pred_analysis_mono_back_3,
-            self.ui.btn_pred_analysis_mono_next_2
+            self.ui.btn_pred_analysis_mono_next_2,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_remove,
@@ -4405,7 +4310,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_images,
             self.ui.cb_pred_analysis_mono_images,
             self.ui.btn_pred_analysis_mono_start,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4446,7 +4351,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_images,
             self.ui.cb_pred_analysis_mono_images,
             self.ui.btn_pred_analysis_mono_start,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4476,7 +4381,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_overview,
             self.ui.list_pred_analysis_mono_overview,
             self.ui.btn_pred_analysis_mono_add,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_remove,
@@ -4497,7 +4402,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_mono_next_4,
             self.ui.lbl_pred_analysis_mono_images,
             self.ui.cb_pred_analysis_mono_images,
-            self.ui.btn_pred_analysis_mono_start
+            self.ui.btn_pred_analysis_mono_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4536,7 +4441,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_images,
             self.ui.cb_pred_analysis_mono_images,
             self.ui.btn_pred_analysis_mono_start,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4581,7 +4486,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.box_pred_analysis_mono_prot_struct_2,
             self.ui.btn_pred_analysis_mono_back_3,
             self.ui.btn_pred_analysis_mono_next_2,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
 
         gui_elements_to_hide = [
@@ -4597,7 +4502,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_mono_next_4,
             self.ui.lbl_pred_analysis_mono_images,
             self.ui.cb_pred_analysis_mono_images,
-            self.ui.btn_pred_analysis_mono_start
+            self.ui.btn_pred_analysis_mono_start,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -4614,7 +4519,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_images,
             self.ui.cb_pred_analysis_mono_images,
             self.ui.btn_pred_analysis_mono_start,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
         gui_elements_to_hide = [
             self.ui.box_pred_analysis_mono_prot_struct_1,
@@ -4661,7 +4566,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_ref_chains,
             self.ui.list_pred_analysis_mono_ref_chains,
             self.ui.btn_pred_analysis_mono_back_4,
-            self.ui.btn_pred_analysis_mono_next_3
+            self.ui.btn_pred_analysis_mono_next_3,
         ]
 
         gui_elements_to_hide = [
@@ -4678,7 +4583,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_mono_start,
             self.ui.lbl_pred_analysis_mono_model_chains,
             self.ui.list_pred_analysis_mono_model_chains,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -4711,7 +4616,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_overview,
             self.ui.list_pred_analysis_mono_overview,
             self.ui.btn_pred_analysis_mono_add,
-            self.ui.btn_pred_analysis_mono_back_pred_setup
+            self.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_remove,
@@ -4732,7 +4637,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_mono_next_4,
             self.ui.lbl_pred_analysis_mono_images,
             self.ui.cb_pred_analysis_mono_images,
-            self.ui.btn_pred_analysis_mono_start
+            self.ui.btn_pred_analysis_mono_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4801,7 +4706,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_analysis_mono_overview,
                 self.ui.list_pred_analysis_mono_overview,
                 self.ui.btn_pred_analysis_mono_add,
-                self.ui.btn_pred_analysis_mono_back_pred_setup
+                self.ui.btn_pred_analysis_mono_back_pred_setup,
             ]
             gui_elements_to_hide = [
                 self.ui.btn_pred_analysis_mono_remove,
@@ -4822,7 +4727,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_analysis_mono_next_4,
                 self.ui.lbl_pred_analysis_mono_images,
                 self.ui.cb_pred_analysis_mono_images,
-                self.ui.btn_pred_analysis_mono_start
+                self.ui.btn_pred_analysis_mono_start,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -4841,7 +4746,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.table_pred_analysis_mono_prot_to_predict,
 
                     self.ui.btn_pred_analysis_mono_go_analysis_setup,
-                    self.ui.lbl_pred_analysis_mono_to_analysis_setup
+                    self.ui.lbl_pred_analysis_mono_to_analysis_setup,
                 ]
                 gui_elements_to_hide = [
                     self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
@@ -4876,7 +4781,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.btn_pred_mono_advanced_config_2,
 
                     self.ui.btn_pred_analysis_mono_go_analysis_setup,
-                    self.ui.lbl_pred_analysis_mono_to_analysis_setup
+                    self.ui.lbl_pred_analysis_mono_to_analysis_setup,
                 ]
                 gui_elements_to_hide = [
                     self.ui.lbl_pred_analysis_mono_prot_name,
@@ -4889,7 +4794,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.txt_pred_analysis_mono_seq_name,
                     self.ui.lbl_pred_analysis_mono_seq_name_status,
                     self.ui.btn_pred_analysis_mono_back_2,
-                    self.ui.btn_pred_analysis_mono_add_protein
+                    self.ui.btn_pred_analysis_mono_add_protein,
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
                 gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5095,7 +5000,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_advanced_config,
 
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5110,9 +5015,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Prediction section">
     def multi_pred_analysis_validate_protein_name(self):
-        """This function validates the input of the project name in real-time
-
-        """
+        """This function validates the input of the project name in real-time."""
         if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_analysis_multi_prot_name.text(),
                                                                    self.ui.table_pred_analysis_multi_prot_to_predict):
             self.ui.lbl_pred_analysis_multi_prot_name_status.setText("Protein name already used.")
@@ -5125,9 +5028,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                         self.ui.btn_pred_analysis_multi_next)
 
     def multi_pred_analysis_validate_protein_sequence(self):
-        """This function validates the input of the protein sequence in real-time
-
-        """
+        """This function validates the input of the protein sequence in real-time."""
         tools.validate_protein_sequence(self.ui.txt_pred_analysis_multi_prot_seq,
                                         self.ui.lbl_pred_analysis_multi_prot_seq_status,
                                         self.ui.btn_pred_analysis_multi_prot_seq_add)
@@ -5183,7 +5084,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_analysis_multi_advanced_config,
 
                 self.ui.btn_pred_analysis_multi_go_analysis_setup,
-                self.ui.lbl_pred_analysis_multi_to_analysis_setup
+                self.ui.lbl_pred_analysis_multi_to_analysis_setup,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5202,7 +5103,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_analysis_multi_advanced_config,
 
                 self.ui.btn_pred_analysis_multi_go_analysis_setup,
-                self.ui.lbl_pred_analysis_multi_to_analysis_setup
+                self.ui.lbl_pred_analysis_multi_to_analysis_setup,
             ]
             gui_elements_to_hide = [
                 self.ui.lbl_pred_analysis_multi_prot_name,
@@ -5221,7 +5122,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
                 self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
                 self.ui.btn_pred_analysis_multi_back_2,
-                self.ui.btn_pred_analysis_multi_prot_to_predict_add_2
+                self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5292,7 +5193,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_advanced_config,
 
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5338,7 +5239,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_advanced_config,
 
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5376,7 +5277,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_advanced_config,
 
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5419,7 +5320,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_advanced_config,
 
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self.ui.lbl_pred_analysis_multi_to_analysis_setup
+            self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5442,7 +5343,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
             ]
             self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
-                [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
+                [0, 3], [1, 2], show_specific_elements=gui_elements_to_show,
             )
 
     def multi_pred_analysis_show_protein_name(self):
@@ -5478,7 +5379,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_analysis_multi_overview,
                 self.ui.list_pred_analysis_multi_overview,
                 self.ui.btn_pred_analysis_multi_add,
-                self.ui.btn_pred_analysis_multi_back_pred_setup
+                self.ui.btn_pred_analysis_multi_back_pred_setup,
             ]
             gui_elements_to_hide = [
                 self.ui.btn_pred_analysis_multi_remove,
@@ -5499,7 +5400,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_analysis_multi_next_4,
                 self.ui.lbl_pred_analysis_multi_images,
                 self.ui.cb_pred_analysis_multi_images,
-                self.ui.btn_pred_analysis_multi_start
+                self.ui.btn_pred_analysis_multi_start,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5521,7 +5422,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.table_pred_analysis_multi_prot_to_predict,
 
                     self.ui.btn_pred_analysis_multi_go_analysis_setup,
-                    self.ui.lbl_pred_analysis_multi_to_analysis_setup
+                    self.ui.lbl_pred_analysis_multi_to_analysis_setup,
                 ]
                 gui_elements_to_hide = [
                     self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
@@ -5546,7 +5447,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
                     self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
                     self.ui.btn_pred_analysis_multi_back_2,
-                    self.ui.btn_pred_analysis_multi_prot_to_predict_add_2
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
                 gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5561,7 +5462,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.btn_pred_analysis_multi_advanced_config,
 
                     self.ui.btn_pred_analysis_multi_go_analysis_setup,
-                    self.ui.lbl_pred_analysis_multi_to_analysis_setup
+                    self.ui.lbl_pred_analysis_multi_to_analysis_setup,
                 ]
                 gui_elements_to_hide = [
                     self.ui.lbl_pred_analysis_multi_prot_name,
@@ -5580,7 +5481,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
                     self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
                     self.ui.btn_pred_analysis_multi_back_2,
-                    self.ui.btn_pred_analysis_multi_prot_to_predict_add_2
+                    self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
                 gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5598,7 +5499,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_prot_struct_2,
             self.ui.box_pred_analysis_multi_prot_struct_2,
             self.ui.btn_pred_analysis_multi_back_3,
-            self.ui.btn_pred_analysis_multi_next_2
+            self.ui.btn_pred_analysis_multi_next_2,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_remove,
@@ -5614,7 +5515,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_images,
             self.ui.cb_pred_analysis_multi_images,
             self.ui.btn_pred_analysis_multi_start,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5655,7 +5556,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_images,
             self.ui.cb_pred_analysis_multi_images,
             self.ui.btn_pred_analysis_multi_start,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5685,7 +5586,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_overview,
             self.ui.list_pred_analysis_multi_overview,
             self.ui.btn_pred_analysis_multi_add,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_remove,
@@ -5706,7 +5607,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_next_4,
             self.ui.lbl_pred_analysis_multi_images,
             self.ui.cb_pred_analysis_multi_images,
-            self.ui.btn_pred_analysis_multi_start
+            self.ui.btn_pred_analysis_multi_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5745,7 +5646,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_images,
             self.ui.cb_pred_analysis_multi_images,
             self.ui.btn_pred_analysis_multi_start,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -5779,7 +5680,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.box_pred_analysis_multi_prot_struct_2,
             self.ui.btn_pred_analysis_multi_back_3,
             self.ui.btn_pred_analysis_multi_next_2,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
 
         gui_elements_to_hide = [
@@ -5795,7 +5696,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_next_4,
             self.ui.lbl_pred_analysis_multi_images,
             self.ui.cb_pred_analysis_multi_images,
-            self.ui.btn_pred_analysis_multi_start
+            self.ui.btn_pred_analysis_multi_start,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -5812,7 +5713,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_images,
             self.ui.cb_pred_analysis_multi_images,
             self.ui.btn_pred_analysis_multi_start,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
         gui_elements_to_hide = [
             self.ui.box_pred_analysis_multi_prot_struct_1,
@@ -5859,7 +5760,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_ref_chains,
             self.ui.list_pred_analysis_multi_ref_chains,
             self.ui.btn_pred_analysis_multi_back_4,
-            self.ui.btn_pred_analysis_multi_next_3
+            self.ui.btn_pred_analysis_multi_next_3,
         ]
 
         gui_elements_to_hide = [
@@ -5876,7 +5777,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_start,
             self.ui.lbl_pred_analysis_multi_model_chains,
             self.ui.list_pred_analysis_multi_model_chains,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -5910,7 +5811,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_overview,
             self.ui.list_pred_analysis_multi_overview,
             self.ui.btn_pred_analysis_multi_add,
-            self.ui.btn_pred_analysis_multi_back_pred_setup
+            self.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_remove,
@@ -5931,7 +5832,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_analysis_multi_next_4,
             self.ui.lbl_pred_analysis_multi_images,
             self.ui.cb_pred_analysis_multi_images,
-            self.ui.btn_pred_analysis_multi_start
+            self.ui.btn_pred_analysis_multi_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -6147,7 +6048,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_analysis_batch_prot_struct_2,
             self.ui.box_analysis_batch_prot_struct_2,
             self.ui.btn_analysis_batch_back,
-            self.ui.btn_analysis_batch_next
+            self.ui.btn_analysis_batch_next,
 
         ]
 
@@ -6164,7 +6065,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_analysis_batch_next_3,
             self.ui.lbl_analysis_batch_images,
             self.ui.cb_analysis_batch_images,
-            self.ui.btn_analysis_batch_start
+            self.ui.btn_analysis_batch_start,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -6206,7 +6107,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_analysis_batch_next_3,
             self.ui.lbl_analysis_batch_images,
             self.ui.cb_analysis_batch_images,
-            self.ui.btn_analysis_batch_start
+            self.ui.btn_analysis_batch_start,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -6232,7 +6133,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_analysis_batch_overview,
             self.ui.list_analysis_batch_overview,
-            self.ui.btn_analysis_batch_add
+            self.ui.btn_analysis_batch_add,
         ]
 
         gui_elements_to_hide = [
@@ -6254,7 +6155,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_analysis_batch_next_3,
             self.ui.lbl_analysis_batch_images,
             self.ui.cb_analysis_batch_images,
-            self.ui.btn_analysis_batch_start
+            self.ui.btn_analysis_batch_start,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -6294,7 +6195,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_analysis_batch_next_2,
             self.ui.lbl_analysis_batch_images,
             self.ui.cb_analysis_batch_images,
-            self.ui.btn_analysis_batch_start
+            self.ui.btn_analysis_batch_start,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -6324,7 +6225,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_analysis_batch_prot_struct_2,
             self.ui.box_analysis_batch_prot_struct_2,
             self.ui.btn_analysis_batch_back,
-            self.ui.btn_analysis_batch_next
+            self.ui.btn_analysis_batch_next,
 
         ]
 
@@ -6341,7 +6242,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_analysis_batch_next_3,
             self.ui.lbl_analysis_batch_images,
             self.ui.cb_analysis_batch_images,
-            self.ui.btn_analysis_batch_start
+            self.ui.btn_analysis_batch_start,
         ]
 
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -6357,7 +6258,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.list_analysis_batch_overview,
             self.ui.lbl_analysis_batch_images,
             self.ui.cb_analysis_batch_images,
-            self.ui.btn_analysis_batch_start
+            self.ui.btn_analysis_batch_start,
         ]
 
         gui_elements_to_hide = [
@@ -6406,7 +6307,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_analysis_batch_ref_chains,
             self.ui.list_analysis_batch_ref_chains,
             self.ui.btn_analysis_batch_back_2,
-            self.ui.btn_analysis_batch_next_2
+            self.ui.btn_analysis_batch_next_2,
         ]
 
         gui_elements_to_hide = [
@@ -6507,7 +6408,7 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_elements_to_show = [
                 self.ui.lbl_analysis_batch_overview,
                 self.ui.list_analysis_batch_overview,
-                self.ui.btn_analysis_batch_add
+                self.ui.btn_analysis_batch_add,
             ]
 
             gui_elements_to_hide = [
@@ -6529,7 +6430,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_analysis_batch_next_3,
                 self.ui.lbl_analysis_batch_images,
                 self.ui.cb_analysis_batch_images,
-                self.ui.btn_analysis_batch_start
+                self.ui.btn_analysis_batch_start,
             ]
 
             gui_utils.show_gui_elements(gui_elements_to_show)
@@ -6817,9 +6718,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Analysis Images">
     def display_image_analysis_page(self):
-        """This function displays the analysis image work area
-
-        """
+        """This function displays the analysis image work area."""
         # get all protein pairs without images
         self.ui.list_analysis_images_struct_analysis.clear()
         self.ui.list_analysis_images_creation_struct_analysis.clear()
@@ -6993,7 +6892,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_view_struct_alignment,
                 self.ui.lbl_results_interest_regions,
                 self.ui.list_results_interest_regions,
-                self.ui.btn_view_interesting_region
+                self.ui.btn_view_interesting_region,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
@@ -7015,12 +6914,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_results_distance_table,
                 self.ui.btn_view_distance_table,
                 self.ui.lbl_results_structure_alignment,
-                self.ui.btn_view_struct_alignment
+                self.ui.btn_view_struct_alignment,
             ]
             gui_elements_to_hide = [
                 self.ui.lbl_results_interest_regions,
                 self.ui.list_results_interest_regions,
-                self.ui.btn_view_interesting_region
+                self.ui.btn_view_interesting_region,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -7039,14 +6938,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_results_distance_histogram,
                 self.ui.btn_view_distance_histogram,
                 self.ui.lbl_results_distance_table,
-                self.ui.btn_view_distance_table
+                self.ui.btn_view_distance_table,
             ]
             gui_elements_to_hide = [
                 self.ui.lbl_results_structure_alignment,
                 self.ui.btn_view_struct_alignment,
                 self.ui.lbl_results_interest_regions,
                 self.ui.list_results_interest_regions,
-                self.ui.btn_view_interesting_region
+                self.ui.btn_view_interesting_region,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -7084,7 +6983,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def color_protein_pair_by_rmsd(self):
         """This function colors the residues of the reference and the model protein in 5 colors
-                depending on their distance to the reference
+        depending on their distance to the reference.
 
         """
         tmp_protein_pair: 'protein_pair.ProteinPair' = self.app_project.search_protein_pair(self.results_name)
@@ -7191,9 +7090,7 @@ class MainWindow(QtWidgets.QMainWindow):
         cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
 
     def display_structure_alignment(self):
-        """This function opens a window which displays the image of the structure alignment.
-
-        """
+        """This function opens a window which displays the image of the structure alignment."""
         png_dialog = QtWidgets.QDialog(self)
         label = QtWidgets.QLabel(self)
         pathlib.Path(
@@ -7211,11 +7108,9 @@ class MainWindow(QtWidgets.QMainWindow):
         png_dialog.show()
 
     def display_distance_plot(self):
-        """This function opens a window which displays the distance plot.
-
-        """
+        """This function opens a window which displays the distance plot."""
         protein_pair_of_analysis = self.app_project.search_protein_pair(
-            self.ui.cb_results_analysis_options.currentText()
+            self.ui.cb_results_analysis_options.currentText(),
         )
         dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
         dialog.exec_()
@@ -7229,9 +7124,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #                                             "Try closing the project, or restarting the application.", QtWidgets.QMessageBox.Error)
 
     def display_distance_histogram(self):
-        """This function opens a window which displays the distance histogram.
-
-        """
+        """This function opens a window which displays the distance histogram."""
         # item = self.ui.project_list.selectedItems()
         # if item is None:
         #     raise ValueError
@@ -7241,9 +7134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog.exec_()
 
     def display_interesting_region(self):
-        """This function displays an image of an interesting region.
-
-        """
+        """This function displays an image of an interesting region."""
         png_dialog = QtWidgets.QDialog(self)
         label = QtWidgets.QLabel(self)
         file_name = self.ui.list_results_interest_regions.currentItem().text()
@@ -7259,14 +7150,12 @@ class MainWindow(QtWidgets.QMainWindow):
         png_dialog.show()
 
     def display_distance_table(self):
-        """This function displays the distances in a table.
-
-        """
+        """This function displays the distances in a table."""
         csv_model = QtGui.QStandardItemModel()
         csv_model.setColumnCount(7)
         labels = [
             "Residue pair no.", "Protein 1 Chain", "Protein 1 Position", "Protein 1 Residue",
-            "Protein 2 Chain", "Protein 2 Position", "Protein 2 Residue", "Distance in Å"
+            "Protein 2 Chain", "Protein 2 Position", "Protein 2 Residue", "Distance in Å",
         ]
         csv_model.setHorizontalHeaderLabels(labels)
         table_dialog = QtWidgets.QDialog(self)
@@ -7369,9 +7258,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tmp_protein.color_protein_in_pymol(self.ui.box_manage_choose_color.currentText(), f"/{tmp_protein.get_molecule_object()}")
 
     def choose_manage_representation(self):
-        """This function sets the representation.
-
-        """
+        """This function sets the representation."""
         input = self.ui.box_manage_choose_protein.currentText()
         tmp_protein = self.app_project.search_protein(input)
         tmp_selection = f"/{tmp_protein.get_molecule_object()}"
@@ -7388,9 +7275,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Missing implementation!")
 
     def choose_manage_bg_color(self):
-        """This function sets the background color
-
-        """
+        """This function sets the background color."""
         if self.ui.box_manage_choose_bg_color.currentIndex() == 0:
             print("Please select a background color.")
             self.status_bar.showMessage("Please select a background color.")
@@ -7405,9 +7290,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # <editor-fold desc="Image page functions">
     def show_representation(self):
-        """This function sets the representation.
-
-        """
+        """This function sets the representation."""
         if self.ui.box_representation.currentIndex() == 0:
             print("Please select a representation.")
             self.status_bar.showMessage("Please select a representation.")
@@ -7421,9 +7304,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Missing implementation!")
 
     def choose_bg_color(self):
-        """This function sets the background color
-
-        """
+        """This function sets the background color."""
         if self.ui.box_bg_color.currentIndex() == 0:
             print("Please select a background color.")
             self.status_bar.showMessage("Please select a background color.")
@@ -7435,9 +7316,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Missing implementation!")
 
     def choose_renderer(self):
-        """This function sets the renderer.
-
-        """
+        """This function sets the renderer."""
         if self.ui.box_renderer.currentIndex() == 0:
             self.status_bar.showMessage("Please select a renderer.")
             self.ui.cb_ray_tracing.hide()
@@ -7454,9 +7333,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Missing implementation!")
 
     def choose_ray_trace_mode(self):
-        """This function sets the ray-trace mode.
-
-        """
+        """This function sets the ray-trace mode."""
         if self.ui.box_ray_trace_mode.currentIndex() == 0:
             print("Please select a Ray-Trace-Mode.")
             self.status_bar.showMessage("Please select a Ray-Trace-Mode.")
@@ -7472,9 +7349,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Missing implementation!")
 
     def choose_ray_texture(self):
-        """This function sets the ray texture.
-
-        """
+        """This function sets the ray texture."""
         if self.ui.box_ray_texture.currentIndex() == 0:
             print("Please select a Ray Texture.")
             self.status_bar.showMessage("Please select a Ray Texture.")
@@ -7494,9 +7369,7 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Missing implementation!")
 
     def decide_transparent_bg(self):
-        """This function sets the transparent background.
-
-        """
+        """This function sets the transparent background."""
         if self.ui.cb_transparent_bg.isChecked():
             cmd.set("ray_opaque_background", "off")
         else:
@@ -7504,15 +7377,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def update_scene():
-        """This function updates the current selected PyMOL scene.
-
-        """
+        """This function updates the current selected PyMOL scene."""
         cmd.scene(key="auto", action="update")
 
     def save_scene(self):
-        """This function saves the current view as a new PyMOL scene.
-
-        """
+        """This function saves the current view as a new PyMOL scene."""
         # returns tuple with (name, bool)
         scene_name = QtWidgets.QInputDialog.getText(self, "Save Scene", "Enter scene name:")
         if scene_name[1]:
@@ -7525,9 +7394,7 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QApplication.restoreOverrideCursor()
 
     def preview_image(self):
-        """This function previews the image
-
-        """
+        """This function previews the image."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.ui.cb_ray_tracing.isChecked():
             self.status_bar.showMessage("Preview ray-traced image ...")
@@ -7542,7 +7409,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # --End: worker setup
 
             # </editor-fold>
-            gui_utils.setup_standard_block_box(self.block_box_uni, "Preview ray-trace image", "The preview for the ray-traced image is getting created ...")
+            gui_utils.setup_standard_block_box(self.block_box_uni, "Preview ray-trace image", "Creating preview for the ray-traced image ...")
             self.block_box_uni.exec_()
         else:
             self.status_bar.showMessage("Preview draw image ...")
@@ -7558,9 +7425,7 @@ class MainWindow(QtWidgets.QMainWindow):
         basic_boxes.ok("Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information)
 
     def save_image(self):
-        """This function saves the image as a png file.
-
-        """
+        """This function saves the image as a png file."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         if self.ui.cb_ray_tracing.isChecked():
             save_dialog = QtWidgets.QFileDialog()
@@ -7652,7 +7517,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 gui_utils.show_gui_elements(gui_elements_to_show)
             else:
                 # protein pair is selected
-                tmp_protein_pair = self.app_project.get_specific_protein_pair(input)
+                tmp_protein_pair = self.app_project.search_protein_pair(input)
                 gui_elements_to_show = [
                     self.ui.lbl_hotspots_resi_show,
                     self.ui.btn_hotspots_resi_show,
@@ -7710,15 +7575,13 @@ class MainWindow(QtWidgets.QMainWindow):
         session_util.check_if_sele_is_empty()
         cmd.hide(representation="sticks", selection="sele")
 
+    def show_resi_sticks(self):
+        session_util.check_if_sele_is_empty()
+        cmd.show(representation="sticks", selection="sele")
+
     def zoom_resi_position(self):
         session_util.check_if_sele_is_empty()
         cmd.zoom(selection="sele", buffer=8.0, state=0, complete=0)
-        # input = self.ui.list_hotspots_choose_protein.currentItem().text()
-        # if input.find("_vs_") == -1:
-        #     # one protein is selected
-        #     tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
-        #     tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein.get_molecule_object()}///{self.ui.sp_hotspots_resi_no.text()}/")
-        #     tmp_protein.zoom_resi_protein_position()
 
     # </editor-fold>
 

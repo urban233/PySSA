@@ -20,18 +20,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+import pathlib
+
 from pymol import cmd
 from pyssa.util import constants
 
 
 class Safeguard:
-    """This class is used to collect all safeguard functions in one place.
-
-    """
-    def __init__(self):
-        """Constructor
-
-        """
+    """This class is used to collect all safeguard functions in one place."""
+    def __init__(self) -> None:
+        """Constructor."""
         pass
 
     @staticmethod
@@ -49,21 +47,23 @@ class Safeguard:
         return True
 
     @staticmethod
-    def check_filepath(filepath) -> bool:
+    def check_filepath(a_filepath: pathlib.Path) -> bool:
         """This function checks if the filepath exists or not.
+
+        Args:
+            a_filepath (pathlib.Path): the filepath which should be checked
 
         Returns:
             True: if path exists
             False: if path does NOT exist
         """
-        if not os.path.exists(filepath):
+        if not os.path.exists(a_filepath):
             return False
-        else:
-            return True
+        return True
 
     @staticmethod
     def check_if_number_is_positive(value) -> bool:
-        """This function checks if a number is positive
+        """This function checks if a number is positive.
 
         Returns:
             True: if number is positive (0 is also positive)
@@ -133,7 +133,7 @@ class Safeguard:
 
     @staticmethod
     def check_if_value_is_not_none(value) -> bool:
-        """This function checks if a value is None or not
+        """This function checks if a value is None or not.
 
         Args:
             value:
