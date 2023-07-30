@@ -113,7 +113,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMinimumWidth(580)
         self.setMinimumHeight(200)
 
-
         # <editor-fold desc="Info button changes">
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
@@ -140,7 +139,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
             tmp_project = project.Project("", dialog_startup.global_var_startup_workspace)
             tmp_project = tmp_project.deserialize_project(
-                pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml"), 
+                pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml"),
                 self.app_settings,
             )
             tmp_project.set_workspace_path(dialog_startup.global_var_startup_workspace)
@@ -153,8 +152,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_settings = self.app_settings.deserialize_settings()
         except ValueError:
             print("The settings file is corrupted. Please restore the settings!")
-            gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
-                                            self.app_settings)
+            gui_utils.error_dialog_settings(
+                "The settings file is corrupted. Please restore the settings!", "", self.app_settings,
+            )
         if dialog_settings_global.is_wsl2_installed():
             self.app_settings.wsl_install = 1
         else:
@@ -173,13 +173,17 @@ class MainWindow(QtWidgets.QMainWindow):
             response = requests.get(url)
             print(response.text)
             current_version_filepath = "C:\\ProgramData\\pyssa\\plugin\\pyssa_version_current.txt"
-            with open(current_version_filepath, 'r') as file:
+            with open(current_version_filepath, "r") as file:
                 line = file.readline()
             file.close()
             if response.text != line:
-                basic_boxes.ok("New version", f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.", QtWidgets.QMessageBox.Information)
+                basic_boxes.ok(
+                    "New version",
+                    f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.",
+                    QtWidgets.QMessageBox.Information,
+                )
         except requests.exceptions.RequestException as e:
-            print('Failed to download the file:', e)
+            print("Failed to download the file:", e)
 
         # <editor-fold desc="Class attributes">
         self.app_project = project.Project("", pathlib.Path(""))
@@ -193,7 +197,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.no_of_selected_chains = 0
         self.plot_dialog = QtWidgets.QDialog(self)
         self.view_box = None
-        self.block_box_expert_install = basic_boxes.no_buttons("Local Colabfold installation", "An installation process is currently running.", QtWidgets.QMessageBox.Information)
+        self.block_box_expert_install = basic_boxes.no_buttons(
+            "Local Colabfold installation",
+            "An installation process is currently running.",
+            QtWidgets.QMessageBox.Information,
+        )
         self.prediction_type = 0
         self.current_session = current_session.CurrentSession("", "", "")
 
@@ -225,25 +233,38 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # </editor-fold>
 
-        self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
-                                                              self.prediction_configuration, self.app_project)
+        self.worker_prediction = workers.PredictionWorkerPool(
+            self.ui.table_pred_analysis_mono_prot_to_predict, self.prediction_configuration, self.app_project,
+        )
         self.worker_prediction.signals.finished.connect(self.post_prediction_process)
 
         self.worker_analysis = workers.AnalysisWorkerPool(
-            self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
-            self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
+            self.ui.list_analysis_batch_overview,
+            self.ui.cb_analysis_images,
+            self.status_bar,
+            self.app_project,
+            self.app_settings,
+            self._init_batch_analysis_page,
+        )
         self.worker_analysis.signals.finished.connect(self.post_analysis_process)
         self.worker_analysis.setAutoDelete(True)
 
         self.worker_image_creation = workers.BatchImageWorkerPool(
-            self.ui.list_analysis_images_struct_analysis, self.ui.list_analysis_images_creation_struct_analysis,
-            self.status_bar, self.app_project)
+            self.ui.list_analysis_images_struct_analysis,
+            self.ui.list_analysis_images_creation_struct_analysis,
+            self.status_bar,
+            self.app_project,
+        )
         self.worker_image_creation.signals.finished.connect(self.post_image_creation_process)
         self.worker_image_creation.setAutoDelete(True)
 
-        self.block_box_analysis = basic_boxes.no_buttons("Analysis", "An analysis is currently running, please wait.", QtWidgets.QMessageBox.Information)
+        self.block_box_analysis = basic_boxes.no_buttons(
+            "Analysis", "An analysis is currently running, please wait.", QtWidgets.QMessageBox.Information,
+        )
         self.block_box_prediction: QtWidgets.QMessageBox = QtWidgets.QMessageBox()
-        self.block_box_images = basic_boxes.no_buttons("Analysis Images", "Images getting created, please wait.", QtWidgets.QMessageBox.Information)
+        self.block_box_images = basic_boxes.no_buttons(
+            "Analysis Images", "Images getting created, please wait.", QtWidgets.QMessageBox.Information,
+        )
         self.block_box_uni = basic_boxes.no_buttons("Generic", "Generic", QtWidgets.QMessageBox.Information)
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
@@ -274,10 +295,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.action_settings_model_w_off_colab_notebook.setVisible(False)
         self.last_sidebar_button = QtWidgets.QPushButton()
         self.ui.table_pred_mono_prot_to_predict.setEditTriggers(self.ui.table_pred_mono_prot_to_predict.NoEditTriggers)
-        self.ui.table_pred_multi_prot_to_predict.setEditTriggers(self.ui.table_pred_multi_prot_to_predict.NoEditTriggers)
-        self.ui.table_pred_analysis_mono_prot_to_predict.setEditTriggers(self.ui.table_pred_analysis_mono_prot_to_predict.NoEditTriggers)
+        self.ui.table_pred_multi_prot_to_predict.setEditTriggers(
+            self.ui.table_pred_multi_prot_to_predict.NoEditTriggers,
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.setEditTriggers(
+            self.ui.table_pred_analysis_mono_prot_to_predict.NoEditTriggers,
+        )
         self.ui.table_pred_analysis_multi_prot_to_predict.setEditTriggers(
-            self.ui.table_pred_analysis_multi_prot_to_predict.NoEditTriggers)
+            self.ui.table_pred_analysis_multi_prot_to_predict.NoEditTriggers,
+        )
 
         # connections
         self._connect_all_gui_elements()
@@ -320,7 +346,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 {
                     "label_proteins_to_predict": self.ui.lbl_pred_mono_prot_to_predict,
                     "table_proteins_to_predict": self.ui.table_pred_mono_prot_to_predict,
-                 },
+                },
                 {
                     "remove_button": self.ui.btn_pred_mono_seq_to_predict_remove,
                     "next_button": self.ui.btn_pred_mono_seq_to_predict,
@@ -674,7 +700,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     "checkbox_images": self.ui.cb_pred_analysis_mono_images,
                 },
                 {
-                    "back_button":self.ui.btn_pred_analysis_mono_back_pred_setup,
+                    "back_button": self.ui.btn_pred_analysis_mono_back_pred_setup,
                     "start_button": self.ui.btn_pred_analysis_mono_start,
                 },
             ),
@@ -876,7 +902,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_batch_analysis_page.clicked.connect(self.display_job_analysis_page)
         self.ui.btn_image_analysis_page.clicked.connect(self.display_image_analysis_page)
         self.ui.btn_results_page.clicked.connect(self.display_results_page)
-        #self.ui.btn_analysis_abort.clicked.connect(self.abort_analysis)
+        # self.ui.btn_analysis_abort.clicked.connect(self.abort_analysis)
         self.ui.btn_manage_session.clicked.connect(self.display_manage_pymol_session)
         self.ui.btn_image_page.clicked.connect(self.display_image_page)
         self.ui.btn_hotspots_page.clicked.connect(self.display_hotspots_page)
@@ -983,8 +1009,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_pred_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_pred_multi_predict.clicked.connect(self.predict_local_multimer)
 
-        self.ui.list_pred_multi_prot_seq_overview.itemClicked.connect(self.local_pred_multi_prot_seq_overview_item_changed)
-        self.ui.table_pred_multi_prot_to_predict.itemSelectionChanged.connect(self.local_pred_multi_prot_to_predict_item_changed)
+        self.ui.list_pred_multi_prot_seq_overview.itemClicked.connect(
+            self.local_pred_multi_prot_seq_overview_item_changed,
+        )
+        self.ui.table_pred_multi_prot_to_predict.itemSelectionChanged.connect(
+            self.local_pred_multi_prot_to_predict_item_changed,
+        )
         # self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
         # self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
         # # single connections
@@ -1013,7 +1043,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # <editor-fold desc="Monomer Prediction + Analysis page">
         # <editor-fold desc="Prediction section">
         self.ui.btn_pred_analysis_mono_seq_to_predict.clicked.connect(self.mono_pred_analysis_add_seq_to_predict)
-        self.ui.btn_pred_analysis_mono_seq_to_predict_remove.clicked.connect(self.mono_pred_analysis_remove_protein_to_predict)
+        self.ui.btn_pred_analysis_mono_seq_to_predict_remove.clicked.connect(
+            self.mono_pred_analysis_remove_protein_to_predict,
+        )
         self.ui.btn_pred_analysis_mono_next.clicked.connect(self.mono_pred_analysis_next)
         self.ui.btn_pred_analysis_mono_back.clicked.connect(self.mono_pred_analysis_back)
         self.ui.btn_pred_analysis_mono_add_protein.clicked.connect(self.mono_pred_analysis_add_protein)
@@ -1022,7 +1054,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.txt_pred_analysis_mono_seq_name.textChanged.connect(self.mono_pred_analysis_validate_protein_sequence)
         self.ui.btn_pred_mono_advanced_config_2.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_pred_analysis_mono_go_analysis_setup.clicked.connect(self.switch_monomer_pred_analysis_tab)
-        self.ui.table_pred_analysis_mono_prot_to_predict.itemSelectionChanged.connect(self.mono_pred_analysis_prediction_overview_item_clicked)
+        self.ui.table_pred_analysis_mono_prot_to_predict.itemSelectionChanged.connect(
+            self.mono_pred_analysis_prediction_overview_item_clicked,
+        )
 
         # </editor-fold>
 
@@ -1036,16 +1070,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_pred_analysis_mono_back_5.clicked.connect(self.mono_pred_analysis_structure_analysis_back_5)
         self.ui.btn_pred_analysis_mono_next_4.clicked.connect(self.mono_pred_analysis_structure_analysis_next_4)
         self.ui.box_pred_analysis_mono_prot_struct_1.currentIndexChanged.connect(
-            self.check_mono_pred_analysis_if_prot_structs_are_filled)
+            self.check_mono_pred_analysis_if_prot_structs_are_filled,
+        )
         self.ui.box_pred_analysis_mono_prot_struct_2.currentIndexChanged.connect(
-            self.check_mono_pred_analysis_if_prot_structs_are_filled)
+            self.check_mono_pred_analysis_if_prot_structs_are_filled,
+        )
         self.ui.list_pred_analysis_mono_ref_chains.itemSelectionChanged.connect(
-            self.count_mono_pred_analysis_selected_chains_for_prot_struct_1)
+            self.count_mono_pred_analysis_selected_chains_for_prot_struct_1,
+        )
         self.ui.list_pred_analysis_mono_model_chains.itemSelectionChanged.connect(
-            self.check_mono_pred_analysis_if_same_no_of_chains_selected)
+            self.check_mono_pred_analysis_if_same_no_of_chains_selected,
+        )
         self.ui.btn_pred_analysis_mono_back_pred_setup.clicked.connect(self.switch_monomer_pred_analysis_tab)
         self.ui.btn_pred_analysis_mono_start.clicked.connect(self.start_monomer_prediction_analysis)
-        self.ui.list_pred_analysis_mono_overview.clicked.connect(self.mono_pred_analysis_structure_analysis_overview_clicked)
+        self.ui.list_pred_analysis_mono_overview.clicked.connect(
+            self.mono_pred_analysis_structure_analysis_overview_clicked,
+        )
 
         # </editor-fold>
 
@@ -1054,12 +1094,18 @@ class MainWindow(QtWidgets.QMainWindow):
         # <editor-fold desc="Multimer Prediction + Analysis page">
         # <editor-fold desc="Prediction section">
         self.ui.btn_pred_analysis_multi_prot_to_predict_add.clicked.connect(self.multi_pred_analysis_add)
-        self.ui.btn_pred_analysis_multi_prot_to_predict_remove.clicked.connect(self.multi_pred_analysis_remove_protein_to_predict)
+        self.ui.btn_pred_analysis_multi_prot_to_predict_remove.clicked.connect(
+            self.multi_pred_analysis_remove_protein_to_predict,
+        )
         self.ui.btn_pred_analysis_multi_next.clicked.connect(self.multi_pred_analysis_next)
         self.ui.btn_pred_analysis_multi_back.clicked.connect(self.multi_pred_analysis_back)
         self.ui.btn_pred_analysis_multi_prot_seq_add.clicked.connect(self.multi_pred_analysis_add_sequence_to_list)
-        self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.clicked.connect(self.multi_pred_analysis_remove_sequence_to_list)
-        self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.clicked.connect(self.multi_pred_analysis_add_protein_to_predict)
+        self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.clicked.connect(
+            self.multi_pred_analysis_remove_sequence_to_list,
+        )
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add_2.clicked.connect(
+            self.multi_pred_analysis_add_protein_to_predict,
+        )
         self.ui.btn_pred_analysis_multi_back_2.clicked.connect(self.multi_pred_analysis_back_2)
 
         self.ui.txt_pred_analysis_multi_prot_name.textChanged.connect(self.multi_pred_analysis_validate_protein_name)
@@ -1067,8 +1113,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_pred_analysis_multi_advanced_config.clicked.connect(self.show_prediction_configuration)
         self.ui.btn_pred_analysis_multi_go_analysis_setup.clicked.connect(self.switch_multimer_pred_analysis_tab)
 
-        self.ui.list_pred_analysis_multi_prot_seq_overview.clicked.connect(self.multi_pred_analysis_prot_seq_overview_item_changed)
-        self.ui.table_pred_analysis_multi_prot_to_predict.itemSelectionChanged.connect(self.multi_pred_analysis_prot_to_predict_item_changed)
+        self.ui.list_pred_analysis_multi_prot_seq_overview.clicked.connect(
+            self.multi_pred_analysis_prot_seq_overview_item_changed,
+        )
+        self.ui.table_pred_analysis_multi_prot_to_predict.itemSelectionChanged.connect(
+            self.multi_pred_analysis_prot_to_predict_item_changed,
+        )
 
         # </editor-fold>
 
@@ -1082,16 +1132,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_pred_analysis_multi_back_5.clicked.connect(self.multi_pred_analysis_structure_analysis_back_5)
         self.ui.btn_pred_analysis_multi_next_4.clicked.connect(self.multi_pred_analysis_structure_analysis_next_4)
         self.ui.box_pred_analysis_multi_prot_struct_1.currentIndexChanged.connect(
-            self.check_multi_pred_analysis_if_prot_structs_are_filled)
+            self.check_multi_pred_analysis_if_prot_structs_are_filled,
+        )
         self.ui.box_pred_analysis_multi_prot_struct_2.currentIndexChanged.connect(
-            self.check_multi_pred_analysis_if_prot_structs_are_filled)
+            self.check_multi_pred_analysis_if_prot_structs_are_filled,
+        )
         self.ui.list_pred_analysis_multi_ref_chains.itemSelectionChanged.connect(
-            self.count_multi_pred_analysis_selected_chains_for_prot_struct_1)
+            self.count_multi_pred_analysis_selected_chains_for_prot_struct_1,
+        )
         self.ui.list_pred_analysis_multi_model_chains.itemSelectionChanged.connect(
-            self.check_multi_pred_analysis_if_same_no_of_chains_selected)
+            self.check_multi_pred_analysis_if_same_no_of_chains_selected,
+        )
         self.ui.btn_pred_analysis_multi_back_pred_setup.clicked.connect(self.switch_multimer_pred_analysis_tab)
         self.ui.btn_pred_analysis_multi_start.clicked.connect(self.start_multimer_prediction_analysis)
-        self.ui.list_pred_analysis_multi_overview.clicked.connect(self.multi_pred_analysis_structure_analysis_overview_clicked)
+        self.ui.list_pred_analysis_multi_overview.clicked.connect(
+            self.multi_pred_analysis_structure_analysis_overview_clicked,
+        )
         # </editor-fold>
 
         # </editor-fold>
@@ -1106,13 +1162,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_analysis_batch_back_3.clicked.connect(self.structure_analysis_back_3)
         self.ui.btn_analysis_batch_next_3.clicked.connect(self.structure_analysis_next_3)
         self.ui.box_analysis_batch_prot_struct_1.currentIndexChanged.connect(
-            self.check_if_prot_structs_are_filled_batch)
+            self.check_if_prot_structs_are_filled_batch,
+        )
         self.ui.box_analysis_batch_prot_struct_2.currentIndexChanged.connect(
-            self.check_if_prot_structs_are_filled_batch)
+            self.check_if_prot_structs_are_filled_batch,
+        )
         self.ui.list_analysis_batch_ref_chains.itemSelectionChanged.connect(
-            self.count_batch_selected_chains_for_prot_struct_1)
+            self.count_batch_selected_chains_for_prot_struct_1,
+        )
         self.ui.list_analysis_batch_model_chains.itemSelectionChanged.connect(
-            self.check_if_same_no_of_chains_selected_batch)
+            self.check_if_same_no_of_chains_selected_batch,
+        )
         self.ui.btn_analysis_batch_start.clicked.connect(self.start_process_batch)
         self.ui.list_analysis_batch_overview.clicked.connect(self.structure_analysis_overview_clicked)
 
@@ -1120,10 +1180,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # <editor-fold desc="Analysis images page">
         self.ui.btn_add_analysis_images_struct_analysis.clicked.connect(self.add_protein_pair_to_image_creation_queue)
-        self.ui.list_analysis_images_struct_analysis.doubleClicked.connect(self.add_protein_pair_to_image_creation_queue)
+        self.ui.list_analysis_images_struct_analysis.doubleClicked.connect(
+            self.add_protein_pair_to_image_creation_queue,
+        )
         self.ui.list_analysis_images_struct_analysis.clicked.connect(self.analysis_images_enable_add)
-        self.ui.btn_remove_analysis_images_creation_struct_analysis.clicked.connect(self.remove_protein_pair_from_image_creation_queue)
-        self.ui.list_analysis_images_creation_struct_analysis.doubleClicked.connect(self.remove_protein_pair_from_image_creation_queue)
+        self.ui.btn_remove_analysis_images_creation_struct_analysis.clicked.connect(
+            self.remove_protein_pair_from_image_creation_queue,
+        )
+        self.ui.list_analysis_images_creation_struct_analysis.doubleClicked.connect(
+            self.remove_protein_pair_from_image_creation_queue,
+        )
         self.ui.list_analysis_images_creation_struct_analysis.clicked.connect(self.analysis_images_enable_remove)
         self.ui.btn_start_automatic_image_creation.clicked.connect(self.start_automatic_image_creation)
 
@@ -1178,7 +1244,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # sidebar
         self.ui.lbl_current_project_name.setToolTip("Name of the current project")
         # view page
-        #fixme: is this important? self.ui.list_view_project_proteins.setToolTip("Proteins of the current project")
+        # fixme: is this important? self.ui.list_view_project_proteins.setToolTip("Proteins of the current project")
         self.ui.txtedit_view_sequence.setToolTip("Protein sequence of the selected protein")
         # use page
         self.ui.txt_use_search.setToolTip("Enter a protein name to search in your current workspace")
@@ -1193,7 +1259,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_pred_multi_prot_to_predict_add.setToolTip("Set up a protein which can be used for a prediction")
         self.ui.table_pred_analysis_multi_prot_to_predict.setToolTip("Protein multimers which get predicted")
         self.ui.list_pred_analysis_multi_overview.setToolTip("Protein pairs which get analyzed")
-        self.ui.btn_pred_analysis_multi_prot_to_predict_add.setToolTip("Set up a protein which can be used for a prediction")
+        self.ui.btn_pred_analysis_multi_prot_to_predict_add.setToolTip(
+            "Set up a protein which can be used for a prediction",
+        )
         # image page
         self.ui.btn_save_scene.setToolTip("Create new PyMOL scene")
         self.ui.btn_update_scene.setToolTip("Overwrite current scene")
@@ -1413,8 +1481,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # regular work area opening
         self._init_single_analysis_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 3, "Single Analysis")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_single_analysis_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_single_analysis_page,
+        )
 
     def display_job_analysis_page(self) -> None:
         """Displays the job analysis work area."""
@@ -1423,8 +1492,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # regular work area opening
         self._init_batch_analysis_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 4, "Structure Analysis")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_batch_analysis_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_batch_analysis_page,
+        )
 
     def display_results_page(self) -> None:
         """Displays the results work area."""
@@ -1439,9 +1509,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 5, "Results")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_results_page)
-        #self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_results_page)
+        # self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
 
     def display_image_page(self) -> None:
         """Displays the image work area."""
@@ -1452,8 +1521,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.ui.cb_ray_tracing.show()
             self.ui.label_26.show()
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_image_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_image_page)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 6, "Image")
 
     def display_new_page(self) -> None:
@@ -1483,15 +1551,17 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_open_projects)
             except PermissionError:
-                gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
-                                                self.app_settings)
+                gui_utils.error_dialog_settings(
+                    "The settings file is corrupted. Please restore the settings!", "", self.app_settings,
+                )
                 self.display_home_page()
                 return
             tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 8, "Open existing project")
             self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_open_page)
         else:
-            gui_utils.error_dialog_settings("The settings file is corrupted. Please restore the settings!", "",
-                                            self.app_settings)
+            gui_utils.error_dialog_settings(
+                "The settings file is corrupted. Please restore the settings!", "", self.app_settings,
+            )
             self.display_home_page()
 
     def display_delete_page(self) -> None:
@@ -1511,8 +1581,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar.showMessage(self.workspace.text())
         self._init_edit_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_edit_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_edit_page)
 
     def start_display_use_page(self) -> None:
         """Displays the use project page."""
@@ -1551,8 +1620,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.list_use_available_protein_structures.addItems(return_value[1])
 
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_use_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_use_page)
         QtWidgets.QApplication.restoreOverrideCursor()
         # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
@@ -1601,8 +1669,7 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_utils.fill_list_view_with_protein_pair_names(self.app_project, self.ui.list_hotspots_choose_protein)
         # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_hotspots_choose_protein)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_hotspots_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_hotspots_page)
 
     def display_manage_pymol_session(self) -> None:
         """Displays the manage pymol session page."""
@@ -1613,11 +1680,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.box_manage_choose_protein.addItem(tmp_object)
         self.ui.box_manage_choose_protein.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_PROTEIN][0])
         self.ui.box_manage_choose_color.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_COLOR][0])
-        self.ui.box_manage_choose_representation.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_REPRESENTATION][0])
-        self.ui.box_manage_choose_bg_color.setCurrentIndex(self.pymol_session_specs[pyssa_keys.SESSION_SPEC_BG_COLOR][0])
+        self.ui.box_manage_choose_representation.setCurrentIndex(
+            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_REPRESENTATION][0],
+        )
+        self.ui.box_manage_choose_bg_color.setCurrentIndex(
+            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_BG_COLOR][0],
+        )
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 24, "Manage PyMOL session")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_manage_session)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_manage_session)
         gui_elements_to_hide = [
             self.ui.lbl_manage_choose_color,
             self.ui.box_manage_choose_color,
@@ -1682,8 +1752,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self.ui.lbl_page_title.text() == "Home":
             msg.setText(
-                "Page: Home\n\n"
-                "Here you can use the sidebar to create, open, delete or import a project.",
+                "Page: Home\n\n" "Here you can use the sidebar to create, open, delete or import a project.",
             )
         elif self.ui.lbl_page_title.text() == "Create new project":
             msg.setText(
@@ -1733,7 +1802,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "To use the current project, type a new project name in the text box.\n\n"
                 "Then add the proteins you want in your new project to the list Protein structures in new project and "
                 "click on Create (New project).\n\n"
-                "To add a protein to the list, click on a protein name in the Availabe protein structures list and "
+                "To add a protein to the list, click on a protein name in the Available protein structures list and "
                 "click on Add.\n\n"
                 "To remove a protein from the list, click on a protein name in the list Protein structures in new project "
                 "and click on Remove.",
@@ -1857,7 +1926,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "IMPORTANT: The image creation can take a long time, depending on your job configuration.\n"
                 "You can also create the images afterwards!\n\n"
                 "To start the prediction + analysis job, click on Start.\n\n"
-                "NOTE: For a step-by-step explaination, consult the tutorial which is accessable through the Help menu "
+                "NOTE: For a step-by-step explanation, consult the tutorial which is accessable through the Help menu "
                 "within the PySSA plugin.",
             )
         elif self.ui.lbl_page_title.text() == "Multimer Prediction + Analysis":
@@ -1878,7 +1947,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 "IMPORTANT: The image creation can take a long time, depending on your job configuration.\n"
                 "You can also create the images afterwards!\n\n"
                 "To start the prediction + analysis job, click on Start.\n\n"
-                "NOTE: For a step-by-step explaination, consult the tutorial which is accessable through the Help menu "
+                "NOTE: For a step-by-step explanation, consult the tutorial which is accessable through the Help menu "
                 "within the PySSA plugin.",
             )
         msg.exec_()
@@ -1900,7 +1969,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # check internet connectivity
             timeout: float = 3
             try:
-                urlopen('https://www.google.com', timeout=timeout)
+                urlopen("https://www.google.com", timeout=timeout)
             except URLError:
                 self.ui.txt_new_choose_reference.setEnabled(False)
                 self.ui.lbl_new_status_choose_reference.setText("You cannot enter a PDB ID (no internet).")
@@ -1919,9 +1988,9 @@ class MainWindow(QtWidgets.QMainWindow):
         """Loads a reference in a new project."""
         try:
             # open file dialog
-            file_name = QtWidgets.QFileDialog.getOpenFileName(self, "Open Reference",
-                                                                 QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
+            file_name = QtWidgets.QFileDialog.getOpenFileName(
+                self, "Open Reference", QtCore.QDir.homePath(), "PDB Files (*.pdb)",
+            )
             if file_name == ("", ""):
                 raise ValueError
             # display path in text box
@@ -1981,8 +2050,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def validate_project_name(self) -> None:
         """Validates the input of the project name in real-time."""
         input_validator.InputValidator.validate_project_name(
-            self.ui.list_new_projects, self.ui.txt_new_project_name,
-            self.ui.lbl_new_status_project_name, self.ui.btn_new_create_project,
+            self.ui.list_new_projects,
+            self.ui.txt_new_project_name,
+            self.ui.lbl_new_status_project_name,
+            self.ui.btn_new_create_project,
             self.ui.cb_new_add_reference,
         )
 
@@ -1990,14 +2061,18 @@ class MainWindow(QtWidgets.QMainWindow):
         """Creates a new project with the content of the new page."""
         # <editor-fold desc="Checks">
         if self.app_settings.wsl_install == 0:
-            basic_boxes.ok("Create new project",
-                           "Please install local colabfold to create a project!",
-                           QtWidgets.QMessageBox.Warning)
+            basic_boxes.ok(
+                "Create new project",
+                "Please install local colabfold to create a project!",
+                QtWidgets.QMessageBox.Warning,
+            )
             return
         if self.app_settings.local_colabfold == 0:
-            basic_boxes.ok("Create new project",
-                           "Please install local colabfold to create a project!",
-                           QtWidgets.QMessageBox.Warning)
+            basic_boxes.ok(
+                "Create new project",
+                "Please install local colabfold to create a project!",
+                QtWidgets.QMessageBox.Warning,
+            )
             return
 
         # </editor-fold>
@@ -2016,19 +2091,23 @@ class MainWindow(QtWidgets.QMainWindow):
                     # TODO: add message that fetching the reference failed
                     return
                 graphic_operations.setup_default_session_graphic_settings()
-                tmp_ref_protein = protein.Protein(molecule_object=pdb_id,
-                                                  pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")),
-                                                  )
+                tmp_ref_protein = protein.Protein(
+                    molecule_object=pdb_id,
+                    pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")),
+                )
             else:
                 # local pdb file as input
                 pdb_filepath = path_util.FilePath(pathlib.Path(self.ui.txt_new_choose_reference.text()))
                 graphic_operations.setup_default_session_graphic_settings()
-                tmp_ref_protein = protein.Protein(molecule_object=pdb_filepath.get_filename(),
-                                                  pdb_filepath=pdb_filepath)
+                tmp_ref_protein = protein.Protein(
+                    molecule_object=pdb_filepath.get_filename(), pdb_filepath=pdb_filepath,
+                )
             self.app_project.add_existing_protein(tmp_ref_protein)
         self.ui.cb_new_add_reference.setCheckState(0)
 
-        self.app_project.serialize_project(pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"))
+        self.app_project.serialize_project(
+            pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"),
+        )
         constants.PYSSA_LOGGER.info(f"Created the project {self.app_project.get_project_name()}.")
         protein_names = []
         for tmp_protein in self.app_project.proteins:
@@ -2055,8 +2134,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.list_open_projects.currentItem().setSelected(False)
         # set color for lineEdit
         input_validator.InputValidator.validate_search_input(
-            self.ui.list_open_projects, self.ui.txt_open_search,
-            self.ui.lbl_open_status_search, self.ui.txt_open_selected_project,
+            self.ui.list_open_projects,
+            self.ui.txt_open_search,
+            self.ui.lbl_open_status_search,
+            self.ui.txt_open_selected_project,
         )
 
     def select_project_from_open_list(self) -> None:
@@ -2084,7 +2165,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._project_watcher.current_project = self.app_project
         self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(
-            f"{self._project_watcher.current_project.get_project_name()} is the current project.")
+            f"{self._project_watcher.current_project.get_project_name()} is the current project.",
+        )
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
         self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
@@ -2125,8 +2207,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.list_delete_projects.currentItem().setSelected(False)
         # set color for lineEdit
         input_validator.InputValidator.validate_search_input(
-            self.ui.list_delete_projects, self.ui.txt_delete_search,
-            self.ui.lbl_delete_status_search, self.ui.txt_delete_selected_projects,
+            self.ui.list_delete_projects,
+            self.ui.txt_delete_search,
+            self.ui.lbl_delete_status_search,
+            self.ui.txt_delete_selected_projects,
         )
 
     def delete_project(self) -> None:
@@ -2178,8 +2262,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         cmd.reinitialize()
         self.ui.btn_manage_session.show()
-        tmp_protein = self.app_project.search_protein(
-            protein_name.replace(".pdb", ""))
+        tmp_protein = self.app_project.search_protein(protein_name.replace(".pdb", ""))
         tmp_protein.load_protein_in_pymol()
         # check if selected protein contains any organic or solvent molecules which can be removed
         if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
@@ -2214,7 +2297,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def clean_protein_new(self) -> None:
         """Cleans the selected protein structure and creates a new cleaned structure."""
-        tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
+        tmp_protein = self.app_project.search_protein(
+            self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""),
+        )
         clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
         constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", clean_tmp_protein.get_molecule_object())
         self.app_project.add_existing_protein(clean_tmp_protein)
@@ -2223,11 +2308,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
-        tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""))
-        if basic_boxes.yes_or_no("Clean protein",
-                                 "Are you sure you want to clean this protein?\n"
-                                 "This will remove all organic and solvent components!",
-                                 QtWidgets.QMessageBox.Information):
+        tmp_protein = self.app_project.search_protein(
+            self.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""),
+        )
+        if basic_boxes.yes_or_no(
+            "Clean protein",
+            "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!",
+            QtWidgets.QMessageBox.Information,
+        ):
             tmp_protein.clean_protein()
             constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", tmp_protein.get_molecule_object())
             self.app_project.serialize_project(self.app_project.get_project_xml_path())
@@ -2244,7 +2332,9 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 self.app_project.delete_specific_protein(protein_name)
             except ValueError:
-                constants.PYSSA_LOGGER.error("The protein %s could not be deleted, because it is not in the project.", protein_name)
+                constants.PYSSA_LOGGER.error(
+                    "The protein %s could not be deleted, because it is not in the project.", protein_name,
+                )
             self.ui.list_edit_project_proteins.clear()
             gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
             self._project_watcher.show_valid_options(self.ui)
@@ -2265,8 +2355,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.project_scanner.scan_project_for_valid_proteins(list_view_project_proteins=self.ui.list_view_project_proteins)
 
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_view_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_view_page)
         gui_elements_to_hide = [
             self.ui.btn_view_project_show,
             self.ui.btn_view_project_show_structure,
@@ -2310,7 +2399,9 @@ class MainWindow(QtWidgets.QMainWindow):
         except pymol.CmdException:
             constants.PYSSA_LOGGER.error("Error while loading protein in PyMOL!")
             return
-        self.current_session = current_session.CurrentSession("protein", protein_name, self.app_project.search_protein(protein_name).load_protein_pymol_session())
+        self.current_session = current_session.CurrentSession(
+            "protein", protein_name, self.app_project.search_protein(protein_name).load_protein_pymol_session(),
+        )
 
     # </editor-fold>
 
@@ -2318,23 +2409,29 @@ class MainWindow(QtWidgets.QMainWindow):
     def validate_use_project_name(self) -> None:
         """Validates the input of the project name in real-time."""
         input_validator.InputValidator.validate_project_name(
-            self.ui.list_use_existing_projects, self.ui.txt_use_project_name,
-            self.ui.lbl_use_status_project_name, self.ui.btn_use_next,
+            self.ui.list_use_existing_projects,
+            self.ui.txt_use_project_name,
+            self.ui.lbl_use_status_project_name,
+            self.ui.btn_use_next,
         )
 
     def validate_use_search(self) -> None:
         """Validates the input of the protein name in real-time."""
         message = "Protein structure does not exists."
         input_validator.InputValidator.validate_search_input(
-            self.ui.list_use_available_protein_structures, self.ui.txt_use_search,
-            self.ui.lbl_use_status_search, status_message=message,
+            self.ui.list_use_available_protein_structures,
+            self.ui.txt_use_search,
+            self.ui.lbl_use_status_search,
+            status_message=message,
         )
 
     def add_protein_structure_to_new_project(self) -> None:
         """Adds the selected protein to the list which is used to create the new project."""
         prot_to_add = self.ui.list_use_available_protein_structures.currentItem().text()
         self.ui.list_use_selected_protein_structures.addItem(prot_to_add)
-        self.ui.list_use_available_protein_structures.takeItem(self.ui.list_use_available_protein_structures.currentRow())
+        self.ui.list_use_available_protein_structures.takeItem(
+            self.ui.list_use_available_protein_structures.currentRow(),
+        )
         self.ui.btn_use_add_available_protein_structures.setEnabled(False)
         if self.ui.list_use_available_protein_structures.count() > 0:
             try:
@@ -2473,7 +2570,9 @@ class MainWindow(QtWidgets.QMainWindow):
         #                     tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
         for tmp_protein_obj in proteins_for_new_project:
             self.app_project.add_existing_protein(tmp_protein_obj)
-        self.app_project.serialize_project(pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"))
+        self.app_project.serialize_project(
+            pathlib.Path(f"{self.workspace_path}/{self.app_project.get_project_name()}.xml"),
+        )
         # shows options which can be done with the data in the project folder
         self._project_watcher.current_project = self.app_project
         self._project_watcher.on_home_page = False
@@ -2481,7 +2580,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.project_scanner.project = self.app_project
         self._init_use_page()
         constants.PYSSA_LOGGER.info(
-            f"The project {self.app_project.get_project_name()} was successfully created through a use.")
+            f"The project {self.app_project.get_project_name()} was successfully created through a use.",
+        )
         self.display_view_page()
         QtWidgets.QApplication.restoreOverrideCursor()
 
@@ -2497,16 +2597,22 @@ class MainWindow(QtWidgets.QMainWindow):
         file_path, _ = file_dialog.getOpenFileName(self, "Select a project file to import", "", "XML Files (*.xml)")
         if file_path:
             tmp_project = project.Project("", self.workspace_path)
-            tmp_project = tmp_project.deserialize_project(file_path, self.app_settings)
+            tmp_project = tmp_project.deserialize_project(pathlib.Path(file_path), self.app_settings)
             tmp_project.set_workspace_path(self.workspace_path)
             if len(tmp_project.proteins) <= 1:
                 if self.app_settings.wsl_install == 0:
-                    basic_boxes.ok("Create new project", "Please install local colabfold to import this project!",
-                                   QtWidgets.QMessageBox.Warning)
+                    basic_boxes.ok(
+                        "Create new project",
+                        "Please install local colabfold to import this project!",
+                        QtWidgets.QMessageBox.Warning,
+                    )
                     return
                 elif self.app_settings.local_colabfold == 0:
-                    basic_boxes.ok("Create new project", "Please install local colabfold to import this project!",
-                                   QtWidgets.QMessageBox.Warning)
+                    basic_boxes.ok(
+                        "Create new project",
+                        "Please install local colabfold to import this project!",
+                        QtWidgets.QMessageBox.Warning,
+                    )
                     return
             new_filepath = pathlib.Path(f"{self.workspace_path}/{tmp_project.get_project_name()}.xml")
             tmp_project.serialize_project(new_filepath)
@@ -2515,15 +2621,16 @@ class MainWindow(QtWidgets.QMainWindow):
             self._project_watcher.current_project = self.app_project
             self.project_scanner.project = self.app_project
             constants.PYSSA_LOGGER.info(
-                f"{self._project_watcher.current_project.get_project_name()} is the current project.")
+                f"{self._project_watcher.current_project.get_project_name()} is the current project.",
+            )
             self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
             self._project_watcher.on_home_page = False
             self._project_watcher.show_valid_options(self.ui)
             self.ui.btn_manage_session.show()
             self.display_view_page()
-            basic_boxes.ok("Import Project", 
-                           "The project was successfully imported.", 
-                           QtWidgets.QMessageBox.Information)
+            basic_boxes.ok(
+                "Import Project", "The project was successfully imported.", QtWidgets.QMessageBox.Information,
+            )
 
     def export_current_project(self) -> None:
         """Exports the current project to an importable format."""
@@ -2534,9 +2641,10 @@ class MainWindow(QtWidgets.QMainWindow):
         file_path, _ = file_dialog.getSaveFileName(self, "Save current project", "", "XML Files (*.xml)")
         if file_path:
             self.app_project.serialize_project(pathlib.Path(file_path))
-            basic_boxes.ok("Export Project", 
-                           "The project was successfully exported.", 
-                           QtWidgets.QMessageBox.Information)
+            basic_boxes.ok(
+                "Export Project", "The project was successfully exported.", QtWidgets.QMessageBox.Information,
+            )
+
     # </editor-fold>
 
     # <editor-fold desc="Close project functions">
@@ -2575,51 +2683,49 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_esm_prot_to_predict,
             self.ui.table_esm_prot_to_predict,
-
             self.ui.btn_esm_seq_to_predict,
         ]
         gui_elements_to_hide = [
             self.ui.btn_esm_seq_to_predict_remove,
-
             self.ui.lbl_esm_prot_name,
             self.ui.txt_esm_prot_name,
             self.ui.lbl_esm_prot_name_status,
             self.ui.btn_esm_back,
             self.ui.btn_esm_next,
-
             self.ui.lbl_esm_prot_seq,
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
-
             self.ui.btn_esm_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         styles.color_button_not_ready(self.ui.btn_esm_next)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 1, "ESMFold Monomer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_cloud_monomer_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_pred_cloud_monomer_page,
+        )
 
     def cloud_esm_validate_protein_name(self) -> None:
         """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_esm_prot_name.text(),
-                                                                   self.ui.table_esm_prot_to_predict):
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self.ui.txt_esm_prot_name.text(), self.ui.table_esm_prot_to_predict,
+        ):
             self.ui.lbl_esm_prot_name_status.setText("Protein name already used.")
             self.ui.btn_esm_next.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_esm_next)
         else:
             self.ui.btn_esm_next.setEnabled(True)
-            tools.validate_protein_name(self.ui.txt_esm_prot_name,
-                                        self.ui.lbl_esm_prot_name_status,
-                                        self.ui.btn_esm_next)
+            tools.validate_protein_name(
+                self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name_status, self.ui.btn_esm_next,
+            )
 
     def cloud_esm_validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(self.ui.txt_esm_prot_seq,
-                                        self.ui.lbl_esm_prot_seq_status,
-                                        self.ui.btn_esm_next_2)
+        tools.validate_protein_sequence(
+            self.ui.txt_esm_prot_seq, self.ui.lbl_esm_prot_seq_status, self.ui.btn_esm_next_2,
+        )
 
     def setup_defaults_esm_monomer_prediction(self) -> None:
         """Sets up the default values for the page."""
@@ -2637,7 +2743,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_esm_prot_to_predict,
             self.ui.table_esm_prot_to_predict,
-
             self.ui.lbl_esm_prot_name,
             self.ui.txt_esm_prot_name,
             self.ui.lbl_esm_prot_name_status,
@@ -2648,13 +2753,11 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
-
             self.ui.lbl_esm_prot_seq,
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
-
             self.ui.btn_esm_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_esm_prot_seq, self.ui.lbl_esm_prot_seq)
@@ -2674,7 +2777,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_esm_prot_to_predict,
             self.ui.table_esm_prot_to_predict,
-
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
         ]
@@ -2684,13 +2786,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_esm_prot_name_status,
             self.ui.btn_esm_back,
             self.ui.btn_esm_next,
-
             self.ui.lbl_esm_prot_seq,
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
-
             self.ui.btn_esm_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -2703,10 +2803,8 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_esm_prot_to_predict,
             self.ui.table_esm_prot_to_predict,
-
             self.ui.lbl_esm_prot_name,
             self.ui.txt_esm_prot_name,
-
             self.ui.lbl_esm_prot_seq,
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
@@ -2717,11 +2815,9 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
-
             self.ui.lbl_esm_prot_name_status,
             self.ui.btn_esm_back,
             self.ui.btn_esm_next,
-
             self.ui.btn_esm_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
@@ -2734,7 +2830,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_esm_prot_to_predict,
             self.ui.table_esm_prot_to_predict,
-
             self.ui.lbl_esm_prot_name,
             self.ui.txt_esm_prot_name,
             self.ui.lbl_esm_prot_name_status,
@@ -2744,13 +2839,11 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
-
             self.ui.lbl_esm_prot_seq,
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
             self.ui.btn_esm_back_2,
             self.ui.btn_esm_next_2,
-
             self.ui.btn_esm_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
@@ -2762,13 +2855,18 @@ class MainWindow(QtWidgets.QMainWindow):
         """Adds protein to the list of proteins to predict."""
         self.ui.table_esm_prot_to_predict.setRowCount(self.ui.table_esm_prot_to_predict.rowCount() + 1)
         self.ui.table_esm_prot_to_predict.insertRow(self.ui.table_esm_prot_to_predict.rowCount() + 1)
-        self.ui.table_esm_prot_to_predict.setItem(self.ui.table_esm_prot_to_predict.rowCount() - 1, 0,
-                                                  QtWidgets.QTableWidgetItem("A"))
-        self.ui.table_esm_prot_to_predict.setItem(self.ui.table_esm_prot_to_predict.rowCount() - 1, 1,
-                                                  QtWidgets.QTableWidgetItem(self.ui.txt_esm_prot_seq.toPlainText()))
+        self.ui.table_esm_prot_to_predict.setItem(
+            self.ui.table_esm_prot_to_predict.rowCount() - 1, 0, QtWidgets.QTableWidgetItem("A"),
+        )
+        self.ui.table_esm_prot_to_predict.setItem(
+            self.ui.table_esm_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self.ui.txt_esm_prot_seq.toPlainText()),
+        )
         self.ui.table_esm_prot_to_predict.setVerticalHeaderItem(
             self.ui.table_esm_prot_to_predict.rowCount() - 1,
-            QtWidgets.QTableWidgetItem(self.ui.txt_esm_prot_name.text()))
+            QtWidgets.QTableWidgetItem(self.ui.txt_esm_prot_name.text()),
+        )
         self.ui.table_esm_prot_to_predict.resizeColumnsToContents()
         self.cloud_esm_check_if_table_is_empty()
         gui_elements_to_show = [
@@ -2776,7 +2874,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.table_esm_prot_to_predict,
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
-
             self.ui.btn_esm_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
@@ -2786,7 +2883,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_esm_prot_name_status,
             self.ui.btn_esm_back,
             self.ui.btn_esm_next,
-
             self.ui.lbl_esm_prot_seq,
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
@@ -2808,7 +2904,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.table_esm_prot_to_predict,
             self.ui.btn_esm_seq_to_predict_remove,
             self.ui.btn_esm_seq_to_predict,
-
             self.ui.btn_esm_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
@@ -2818,7 +2913,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_esm_prot_name_status,
             self.ui.btn_esm_back,
             self.ui.btn_esm_next,
-
             self.ui.lbl_esm_prot_seq,
             self.ui.txt_esm_prot_seq,
             self.ui.lbl_esm_prot_seq_status,
@@ -2847,19 +2941,16 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_utils.enable_text_box(self.ui.txt_esm_prot_name, self.ui.lbl_esm_prot_name)
             gui_elements_to_hide = [
                 self.ui.btn_esm_seq_to_predict_remove,
-
                 self.ui.lbl_esm_prot_name,
                 self.ui.txt_esm_prot_name,
                 self.ui.lbl_esm_prot_name_status,
                 self.ui.btn_esm_back,
                 self.ui.btn_esm_next,
-
                 self.ui.lbl_esm_prot_seq,
                 self.ui.txt_esm_prot_seq,
                 self.ui.lbl_esm_prot_seq_status,
                 self.ui.btn_esm_back_2,
                 self.ui.btn_esm_next_2,
-
                 self.ui.btn_esm_predict,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
@@ -2872,11 +2963,13 @@ class MainWindow(QtWidgets.QMainWindow):
         """Post thread method, for the prediction process.
 
         Args:
-            output (list): the proteins which got predicted 
+            output (list): the proteins which got predicted
         """
         self.block_box_prediction.destroy(True)
         for tmp_filename in os.listdir(constants.ESMFOLD_PDB_DIR):
-            constants.PYSSA_LOGGER.info(f"Add protein {tmp_filename} to the current project {self.app_project.get_project_name()}")
+            constants.PYSSA_LOGGER.info(
+                f"Add protein {tmp_filename} to the current project {self.app_project.get_project_name()}",
+            )
             self.app_project.add_existing_protein(
                 protein.Protein(
                     tmp_filename.replace(".pdb", ""),
@@ -2884,8 +2977,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 ),
             )
         if len(output) > 0:
-            formatted_output = ', '.join(output)
-            basic_boxes.ok("ESMFold Prediction", f"These protein prediction failed: {formatted_output}.", QtWidgets.QMessageBox.Critical)
+            formatted_output = ", ".join(output)
+            basic_boxes.ok(
+                "ESMFold Prediction",
+                f"These protein prediction failed: {formatted_output}.",
+                QtWidgets.QMessageBox.Critical,
+            )
         else:
             basic_boxes.ok("ESMFold Prediction", "The prediction was successful.", QtWidgets.QMessageBox.Information)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
@@ -2898,7 +2995,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.EsmFoldWorker(self.ui.table_esm_prot_to_predict)
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.post_predict_esm_monomer)
+        self.tmp_thread = task_workers.setup_worker_for_work(
+            self.tmp_thread, self.tmp_worker, self.post_predict_esm_monomer,
+        )
         self.tmp_thread.start()
         # --End: worker setup
 
@@ -2906,7 +3005,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction = gui_utils.setup_standard_block_box(
-            self.block_box_prediction, "Structure Prediction", "A prediction is currently running.",
+            self.block_box_prediction,
+            "Structure Prediction",
+            "A prediction is currently running.",
         )
         # self.block_box_prediction.setStandardButtons(QtWidgets.QMessageBox.NoButton)
         # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
@@ -2939,58 +3040,57 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_mono_prot_to_predict,
             self.ui.table_pred_mono_prot_to_predict,
-
             self.ui.btn_pred_mono_seq_to_predict,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_mono_seq_to_predict_remove,
-
             self.ui.lbl_pred_mono_prot_name,
             self.ui.txt_pred_mono_prot_name,
             self.ui.lbl_pred_mono_prot_name_status,
             self.ui.btn_pred_mono_back,
             self.ui.btn_pred_mono_next,
-
             self.ui.lbl_pred_mono_seq_name,
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
             self.ui.btn_pred_mono_back_2,
             self.ui.btn_pred_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
-
             self.ui.btn_pred_mono_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         styles.color_button_not_ready(self.ui.btn_pred_mono_next)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 19, "Local Monomer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_local_monomer_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_pred_local_monomer_page,
+        )
 
     def local_pred_mono_validate_protein_name(self) -> None:
         """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_mono_prot_name.text(),
-                                                                   self.ui.table_pred_mono_prot_to_predict):
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self.ui.txt_pred_mono_prot_name.text(), self.ui.table_pred_mono_prot_to_predict,
+        ):
             self.ui.lbl_pred_mono_prot_name_status.setText("Protein name already used.")
             self.ui.btn_pred_mono_next.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_pred_mono_next)
         else:
             self.ui.btn_pred_mono_next.setEnabled(True)
-            tools.validate_protein_name(self.ui.txt_pred_mono_prot_name,
-                                        self.ui.lbl_pred_mono_prot_name_status,
-                                        self.ui.btn_pred_mono_next)
+            tools.validate_protein_name(
+                self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name_status, self.ui.btn_pred_mono_next,
+            )
 
     def local_pred_mono_validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(self.ui.txt_pred_mono_seq_name,
-                                        self.ui.lbl_pred_mono_seq_name_status,
-                                        self.ui.btn_pred_mono_add_protein)
+        tools.validate_protein_sequence(
+            self.ui.txt_pred_mono_seq_name, self.ui.lbl_pred_mono_seq_name_status, self.ui.btn_pred_mono_add_protein,
+        )
 
     def show_prediction_configuration(self) -> None:
         """Opens the prediction configuration dialog window."""
-        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(self.prediction_configuration)
+        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(
+            self.prediction_configuration,
+        )
         config.exec_()
         self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
         self.prediction_configuration.templates = config.prediction_config.templates
@@ -3011,7 +3111,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_mono_prot_to_predict,
             self.ui.table_pred_mono_prot_to_predict,
-
             self.ui.lbl_pred_mono_prot_name,
             self.ui.txt_pred_mono_prot_name,
             self.ui.lbl_pred_mono_prot_name_status,
@@ -3022,16 +3121,13 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_mono_seq_to_predict_remove,
             self.ui.btn_pred_mono_seq_to_predict,
-
             self.ui.lbl_pred_mono_seq_name,
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
             self.ui.btn_pred_mono_back_2,
             self.ui.btn_pred_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
-
             self.ui.btn_pred_mono_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_pred_mono_seq_name, self.ui.lbl_pred_mono_seq_name)
@@ -3051,7 +3147,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_mono_prot_to_predict,
             self.ui.table_pred_mono_prot_to_predict,
-
             self.ui.btn_pred_mono_seq_to_predict_remove,
             self.ui.btn_pred_mono_seq_to_predict,
         ]
@@ -3061,16 +3156,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_prot_name_status,
             self.ui.btn_pred_mono_back,
             self.ui.btn_pred_mono_next,
-
             self.ui.lbl_pred_mono_seq_name,
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
             self.ui.btn_pred_mono_back_2,
             self.ui.btn_pred_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
-
             self.ui.btn_pred_mono_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3083,10 +3175,8 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_mono_prot_to_predict,
             self.ui.table_pred_mono_prot_to_predict,
-
             self.ui.lbl_pred_mono_prot_name,
             self.ui.txt_pred_mono_prot_name,
-
             self.ui.lbl_pred_mono_seq_name,
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
@@ -3097,14 +3187,11 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_mono_seq_to_predict_remove,
             self.ui.btn_pred_mono_seq_to_predict,
-
             self.ui.lbl_pred_mono_prot_name_status,
             self.ui.btn_pred_mono_back,
             self.ui.btn_pred_mono_next,
-
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
-
             self.ui.btn_pred_mono_predict,
         ]
         gui_utils.disable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
@@ -3117,7 +3204,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_mono_prot_to_predict,
             self.ui.table_pred_mono_prot_to_predict,
-
             self.ui.lbl_pred_mono_prot_name,
             self.ui.txt_pred_mono_prot_name,
             self.ui.lbl_pred_mono_prot_name_status,
@@ -3127,16 +3213,13 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_mono_seq_to_predict_remove,
             self.ui.btn_pred_mono_seq_to_predict,
-
             self.ui.lbl_pred_mono_seq_name,
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
             self.ui.btn_pred_mono_back_2,
             self.ui.btn_pred_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
-
             self.ui.btn_pred_mono_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
@@ -3148,13 +3231,18 @@ class MainWindow(QtWidgets.QMainWindow):
         """Adds protein to the list of proteins to predict."""
         self.ui.table_pred_mono_prot_to_predict.setRowCount(self.ui.table_pred_mono_prot_to_predict.rowCount() + 1)
         self.ui.table_pred_mono_prot_to_predict.insertRow(self.ui.table_pred_mono_prot_to_predict.rowCount() + 1)
-        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0,
-                                                        QtWidgets.QTableWidgetItem("A"))
-        self.ui.table_pred_mono_prot_to_predict.setItem(self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 1,
-                                                        QtWidgets.QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()))
+        self.ui.table_pred_mono_prot_to_predict.setItem(
+            self.ui.table_pred_mono_prot_to_predict.rowCount() - 1, 0, QtWidgets.QTableWidgetItem("A"),
+        )
+        self.ui.table_pred_mono_prot_to_predict.setItem(
+            self.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_mono_seq_name.toPlainText()),
+        )
         self.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(
             self.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
-            QtWidgets.QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()))
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_mono_prot_name.text()),
+        )
         self.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
         self.local_pred_mono_check_if_table_is_empty()
         gui_elements_to_show = [
@@ -3162,10 +3250,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.table_pred_mono_prot_to_predict,
             self.ui.btn_pred_mono_seq_to_predict_remove,
             self.ui.btn_pred_mono_seq_to_predict,
-
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
-
             self.ui.btn_pred_mono_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
@@ -3175,7 +3261,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_prot_name_status,
             self.ui.btn_pred_mono_back,
             self.ui.btn_pred_mono_next,
-
             self.ui.lbl_pred_mono_seq_name,
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
@@ -3197,10 +3282,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.table_pred_mono_prot_to_predict,
             self.ui.btn_pred_mono_seq_to_predict_remove,
             self.ui.btn_pred_mono_seq_to_predict,
-
             self.ui.lbl_pred_mono_advanced_config,
             self.ui.btn_pred_mono_advanced_config,
-
             self.ui.btn_pred_mono_predict,
         ]
         gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
@@ -3210,7 +3293,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_mono_prot_name_status,
             self.ui.btn_pred_mono_back,
             self.ui.btn_pred_mono_next,
-
             self.ui.lbl_pred_mono_seq_name,
             self.ui.txt_pred_mono_seq_name,
             self.ui.lbl_pred_mono_seq_name_status,
@@ -3239,22 +3321,18 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_utils.enable_text_box(self.ui.txt_pred_mono_prot_name, self.ui.lbl_pred_mono_prot_name)
             gui_elements_to_hide = [
                 self.ui.btn_pred_mono_seq_to_predict_remove,
-
                 self.ui.lbl_pred_mono_prot_name,
                 self.ui.txt_pred_mono_prot_name,
                 self.ui.lbl_pred_mono_prot_name_status,
                 self.ui.btn_pred_mono_back,
                 self.ui.btn_pred_mono_next,
-
                 self.ui.lbl_pred_mono_seq_name,
                 self.ui.txt_pred_mono_seq_name,
                 self.ui.lbl_pred_mono_seq_name_status,
                 self.ui.btn_pred_mono_back_2,
                 self.ui.btn_pred_mono_add_protein,
-
                 self.ui.lbl_pred_mono_advanced_config,
                 self.ui.btn_pred_mono_advanced_config,
-
                 self.ui.btn_pred_mono_predict,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3268,15 +3346,20 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.prediction_type == constants.PREDICTION_TYPE_PRED:
             if len(self.app_project.proteins) == 0:
                 self.block_box_prediction.destroy(True)
-                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical)
+                basic_boxes.ok(
+                    "Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical,
+                )
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
                 self.app_project.serialize_project(self.app_project.get_project_xml_path())
                 constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
                 self.block_box_prediction.destroy(True)
-                basic_boxes.ok("Structure prediction", "All structure predictions are done. Go to View to check the new proteins.",
-                               QtWidgets.QMessageBox.Information)
+                basic_boxes.ok(
+                    "Structure prediction",
+                    "All structure predictions are done. Go to View to check the new proteins.",
+                    QtWidgets.QMessageBox.Information,
+                )
                 constants.PYSSA_LOGGER.info("All structure predictions are done.")
                 self._project_watcher.show_valid_options(self.ui)
                 self._init_local_pred_mono_page()
@@ -3285,7 +3368,9 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS:
             if len(self.app_project.proteins) == 1:
                 self.block_box_prediction.destroy(True)
-                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical)
+                basic_boxes.ok(
+                    "Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical,
+                )
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
@@ -3295,28 +3380,33 @@ class MainWindow(QtWidgets.QMainWindow):
                 constants.PYSSA_LOGGER.info("All structure predictions are done.")
                 constants.PYSSA_LOGGER.info("Begin analysis process.")
                 constants.PYSSA_LOGGER.debug(
-                    f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}")
+                    f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}",
+                )
 
-                #self.worker_analysis = workers.AnalysisWorkerPool(
+                # self.worker_analysis = workers.AnalysisWorkerPool(
                 #    self.ui.list_pred_analysis_mono_overview, self.ui.cb_pred_analysis_mono_images,
                 #    self.status_bar, self.app_project, self.app_settings, self._init_mono_pred_analysis_page)
                 constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-                #self.threadpool.start(self.worker_analysis)
+                # self.threadpool.start(self.worker_analysis)
                 constants.PYSSA_LOGGER.debug(
-                    f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
+                    f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}",
+                )
 
                 # <editor-fold desc="Worker setup">
                 # TODO: test code below
                 # --Begin: worker setup
                 self.tmp_thread = QtCore.QThread()
-                self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_pred_analysis_mono_overview,
-                                                                      self.ui.cb_pred_analysis_mono_images,
-                                                                      self.status_bar,
-                                                                      self.app_project,
-                                                                      self.app_settings,
-                                                                      self._init_mono_pred_analysis_page)
-                self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
-                                                                     self.display_view_page)
+                self.tmp_worker = task_workers.DistanceAnalysisWorker(
+                    self.ui.list_pred_analysis_mono_overview,
+                    self.ui.cb_pred_analysis_mono_images,
+                    self.status_bar,
+                    self.app_project,
+                    self.app_settings,
+                    self._init_mono_pred_analysis_page,
+                )
+                self.tmp_thread = task_workers.setup_worker_for_work(
+                    self.tmp_thread, self.tmp_worker, self.display_view_page,
+                )
                 self.tmp_worker.finished.connect(self.post_analysis_process)
                 self.tmp_thread.start()
                 # --End: worker setup
@@ -3332,7 +3422,9 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS:
             if len(self.app_project.proteins) == 1:
                 self.block_box_prediction.destroy(True)
-                basic_boxes.ok("Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical)
+                basic_boxes.ok(
+                    "Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical,
+                )
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
             else:
@@ -3341,28 +3433,33 @@ class MainWindow(QtWidgets.QMainWindow):
                 constants.PYSSA_LOGGER.info("All structure predictions are done.")
                 constants.PYSSA_LOGGER.info("Begin analysis process.")
                 constants.PYSSA_LOGGER.debug(
-                    f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}")
+                    f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}",
+                )
 
-                #self.worker_analysis = workers.AnalysisWorkerPool(
+                # self.worker_analysis = workers.AnalysisWorkerPool(
                 #    self.ui.list_pred_analysis_multi_overview, self.ui.cb_pred_analysis_multi_images,
                 #    self.status_bar, self.app_project, self.app_settings, self._init_multi_pred_analysis_page)
                 constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-                #self.threadpool.start(self.worker_analysis)
+                # self.threadpool.start(self.worker_analysis)
                 constants.PYSSA_LOGGER.debug(
-                    f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
+                    f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}",
+                )
 
                 # <editor-fold desc="Worker setup">
                 # TODO: test code below
                 # --Begin: worker setup
                 self.tmp_thread = QtCore.QThread()
-                self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_pred_analysis_multi_overview,
-                                                                      self.ui.cb_pred_analysis_multi_images,
-                                                                      self.status_bar,
-                                                                      self.app_project,
-                                                                      self.app_settings,
-                                                                      self._init_multi_pred_analysis_page)
-                self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
-                                                                     self.display_view_page)
+                self.tmp_worker = task_workers.DistanceAnalysisWorker(
+                    self.ui.list_pred_analysis_multi_overview,
+                    self.ui.cb_pred_analysis_multi_images,
+                    self.status_bar,
+                    self.app_project,
+                    self.app_settings,
+                    self._init_multi_pred_analysis_page,
+                )
+                self.tmp_thread = task_workers.setup_worker_for_work(
+                    self.tmp_thread, self.tmp_worker, self.display_view_page,
+                )
                 self.tmp_worker.finished.connect(self.post_analysis_process)
                 self.tmp_thread.start()
                 # --End: worker setup
@@ -3383,14 +3480,14 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
         #                                                       self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        #self.threadpool.start(self.worker_prediction)
+        # self.threadpool.start(self.worker_prediction)
 
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_mono_prot_to_predict,
-                                                       self.prediction_configuration,
-                                                       self.app_project)
+        self.tmp_worker = task_workers.ColabfoldWorker(
+            self.ui.table_pred_mono_prot_to_predict, self.prediction_configuration, self.app_project,
+        )
         self.tmp_worker.finished.connect(self.post_prediction_process)
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
         self.tmp_thread.start()
@@ -3398,9 +3495,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # </editor-fold>
 
-        gui_elements_to_show = [
-
-        ]
+        gui_elements_to_show = []
         gui_elements_to_hide = [
             self.ui.btn_prediction_abort,
             self.ui.btn_use_page,
@@ -3434,8 +3529,7 @@ class MainWindow(QtWidgets.QMainWindow):
         filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
         constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
         basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QtWidgets.QMessageBox.Information)
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_prediction_abort)
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_prediction_abort)
         self._project_watcher.show_valid_options(self.ui)
 
     # </editor-fold>
@@ -3458,18 +3552,15 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
-
             self.ui.btn_pred_multi_prot_to_predict_add,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_multi_prot_to_predict_remove,
-
             self.ui.lbl_pred_multi_prot_name_status,
             self.ui.btn_pred_multi_back,
             self.ui.btn_pred_multi_next,
             self.ui.lbl_pred_multi_prot_name,
             self.ui.txt_pred_multi_prot_name,
-
             self.ui.lbl_pred_multi_prot_seq,
             self.ui.txt_pred_multi_prot_seq,
             self.ui.lbl_pred_multi_prot_seq_status,
@@ -3481,10 +3572,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_prot_to_predict_2,
             self.ui.btn_pred_multi_back_2,
             self.ui.btn_pred_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
-
             self.ui.btn_pred_multi_predict,
         ]
         for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, -1, -1):
@@ -3492,27 +3581,29 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 20, "Local Multimer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_local_multimer_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_pred_local_multimer_page,
+        )
 
     def local_pred_multi_validate_protein_name(self) -> None:
         """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_multi_prot_name.text(),
-                                                                   self.ui.table_pred_multi_prot_to_predict):
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self.ui.txt_pred_multi_prot_name.text(), self.ui.table_pred_multi_prot_to_predict,
+        ):
             self.ui.lbl_pred_multi_prot_name_status.setText("Protein name already used.")
             self.ui.btn_pred_multi_next.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_pred_multi_next)
         else:
             self.ui.btn_pred_multi_next.setEnabled(True)
-            tools.validate_protein_name(self.ui.txt_pred_multi_prot_name,
-                                        self.ui.lbl_pred_multi_prot_name_status,
-                                        self.ui.btn_pred_multi_next)
+            tools.validate_protein_name(
+                self.ui.txt_pred_multi_prot_name, self.ui.lbl_pred_multi_prot_name_status, self.ui.btn_pred_multi_next,
+            )
 
     def local_pred_multi_validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(self.ui.txt_pred_multi_prot_seq,
-                                        self.ui.lbl_pred_multi_prot_seq_status,
-                                        self.ui.btn_pred_multi_prot_seq_add)
+        tools.validate_protein_sequence(
+            self.ui.txt_pred_multi_prot_seq, self.ui.lbl_pred_multi_prot_seq_status, self.ui.btn_pred_multi_prot_seq_add,
+        )
 
     def local_pred_multi_check_if_table_is_empty(self) -> None:
         """Checks if the table proteins to predict is empty."""
@@ -3522,18 +3613,15 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_elements_to_show = [
                 self.ui.lbl_pred_multi_prot_to_predict,
                 self.ui.table_pred_multi_prot_to_predict,
-
                 self.ui.btn_pred_multi_prot_to_predict_add,
             ]
             gui_elements_to_hide = [
                 self.ui.btn_pred_multi_prot_to_predict_remove,
-
                 self.ui.lbl_pred_multi_prot_name_status,
                 self.ui.btn_pred_multi_back,
                 self.ui.btn_pred_multi_next,
                 self.ui.lbl_pred_multi_prot_name,
                 self.ui.txt_pred_multi_prot_name,
-
                 self.ui.lbl_pred_multi_prot_seq,
                 self.ui.txt_pred_multi_prot_seq,
                 self.ui.lbl_pred_multi_prot_seq_status,
@@ -3545,10 +3633,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_multi_prot_to_predict_2,
                 self.ui.btn_pred_multi_back_2,
                 self.ui.btn_pred_multi_prot_to_predict_add_2,
-
                 self.ui.lbl_pred_multi_advanced_config,
                 self.ui.btn_pred_multi_advanced_config,
-
                 self.ui.btn_pred_multi_predict,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3560,13 +3646,10 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_elements_to_show = [
                 self.ui.lbl_pred_multi_prot_to_predict,
                 self.ui.table_pred_multi_prot_to_predict,
-
                 self.ui.btn_pred_multi_prot_to_predict_add,
                 self.ui.btn_pred_multi_prot_to_predict_remove,
-
                 self.ui.lbl_pred_multi_advanced_config,
                 self.ui.btn_pred_multi_advanced_config,
-
                 self.ui.btn_pred_multi_predict,
             ]
             gui_elements_to_hide = [
@@ -3575,7 +3658,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_pred_multi_next,
                 self.ui.lbl_pred_multi_prot_name,
                 self.ui.txt_pred_multi_prot_name,
-
                 self.ui.lbl_pred_multi_prot_seq,
                 self.ui.txt_pred_multi_prot_seq,
                 self.ui.lbl_pred_multi_prot_seq_status,
@@ -3594,7 +3676,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def local_pred_multi_add_sequence_to_list(self) -> None:
         """Adds the entered sequence to the list of sequences of the protein."""
-        self.ui.list_pred_multi_prot_seq_overview.addItem(QtWidgets.QListWidgetItem(self.ui.txt_pred_multi_prot_seq.toPlainText()))
+        self.ui.list_pred_multi_prot_seq_overview.addItem(
+            QtWidgets.QListWidgetItem(self.ui.txt_pred_multi_prot_seq.toPlainText()),
+        )
         self.local_pred_multi_check_if_list_is_empty()
 
     def local_pred_multi_remove_sequence_to_list(self) -> None:
@@ -3617,7 +3701,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
-
             self.ui.lbl_pred_multi_prot_name,
             self.ui.txt_pred_multi_prot_name,
             self.ui.lbl_pred_multi_prot_name_status,
@@ -3627,7 +3710,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_multi_prot_to_predict_remove,
             self.ui.btn_pred_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_multi_prot_seq,
             self.ui.txt_pred_multi_prot_seq,
             self.ui.lbl_pred_multi_prot_seq_status,
@@ -3639,10 +3721,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_prot_to_predict_2,
             self.ui.btn_pred_multi_back_2,
             self.ui.btn_pred_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
-
             self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3664,18 +3744,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
             self.ui.btn_pred_multi_prot_to_predict_add,
-
-
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_multi_prot_to_predict_remove,
-
             self.ui.lbl_pred_multi_prot_name,
             self.ui.txt_pred_multi_prot_name,
             self.ui.lbl_pred_multi_prot_name_status,
             self.ui.btn_pred_multi_back,
             self.ui.btn_pred_multi_next,
-
             self.ui.lbl_pred_multi_prot_seq,
             self.ui.txt_pred_multi_prot_seq,
             self.ui.lbl_pred_multi_prot_seq_status,
@@ -3687,10 +3763,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_prot_to_predict_2,
             self.ui.btn_pred_multi_back_2,
             self.ui.btn_pred_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
-
             self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3702,10 +3776,8 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
-
             self.ui.lbl_pred_multi_prot_name,
             self.ui.txt_pred_multi_prot_name,
-
             self.ui.lbl_pred_multi_prot_seq,
             self.ui.txt_pred_multi_prot_seq,
             self.ui.lbl_pred_multi_prot_seq_status,
@@ -3721,14 +3793,11 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_multi_prot_to_predict_remove,
             self.ui.btn_pred_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_multi_prot_name_status,
             self.ui.btn_pred_multi_back,
             self.ui.btn_pred_multi_next,
-
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
-
             self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3746,7 +3815,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
-
             self.ui.lbl_pred_multi_prot_name_status,
             self.ui.btn_pred_multi_back,
             self.ui.btn_pred_multi_next,
@@ -3756,7 +3824,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_multi_prot_to_predict_remove,
             self.ui.btn_pred_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_multi_prot_seq,
             self.ui.txt_pred_multi_prot_seq,
             self.ui.lbl_pred_multi_prot_seq_status,
@@ -3768,10 +3835,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_multi_prot_to_predict_2,
             self.ui.btn_pred_multi_back_2,
             self.ui.btn_pred_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
-
             self.ui.btn_pred_multi_predict,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -3791,27 +3856,29 @@ class MainWindow(QtWidgets.QMainWindow):
         """Adds the protein to the list of proteins to predict."""
         for i in range(self.ui.list_pred_multi_prot_seq_overview.count()):
             self.ui.table_pred_multi_prot_to_predict.setRowCount(
-                self.ui.table_pred_multi_prot_to_predict.rowCount() + 1)
+                self.ui.table_pred_multi_prot_to_predict.rowCount() + 1,
+            )
             self.ui.table_pred_multi_prot_to_predict.insertRow(self.ui.table_pred_multi_prot_to_predict.rowCount() + 1)
             tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_multi_prot_seq_overview.item(i).text())
-            self.ui.table_pred_multi_prot_to_predict.setItem(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 0,
-                                                             QtWidgets.QTableWidgetItem(tmp_chain_seq[0]))
-            self.ui.table_pred_multi_prot_to_predict.setItem(self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 1,
-                                                             QtWidgets.QTableWidgetItem(tmp_chain_seq[1]))
+            self.ui.table_pred_multi_prot_to_predict.setItem(
+                self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 0, QtWidgets.QTableWidgetItem(tmp_chain_seq[0]),
+            )
+            self.ui.table_pred_multi_prot_to_predict.setItem(
+                self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, 1, QtWidgets.QTableWidgetItem(tmp_chain_seq[1]),
+            )
             name_item = QtWidgets.QTableWidgetItem(self.ui.txt_pred_multi_prot_name.text())
-            self.ui.table_pred_multi_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.rowCount()-1, name_item)
+            self.ui.table_pred_multi_prot_to_predict.setVerticalHeaderItem(
+                self.ui.table_pred_multi_prot_to_predict.rowCount() - 1, name_item,
+            )
         self.ui.table_pred_multi_prot_to_predict.resizeColumnsToContents()
         self.local_pred_multi_check_if_table_is_empty()
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
-
             self.ui.btn_pred_multi_prot_to_predict_remove,
             self.ui.btn_pred_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
-
             self.ui.btn_pred_multi_predict,
         ]
         gui_elements_to_hide = [
@@ -3820,7 +3887,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_multi_next,
             self.ui.lbl_pred_multi_prot_name,
             self.ui.txt_pred_multi_prot_name,
-
             self.ui.lbl_pred_multi_prot_seq,
             self.ui.txt_pred_multi_prot_seq,
             self.ui.lbl_pred_multi_prot_seq_status,
@@ -3842,21 +3908,22 @@ class MainWindow(QtWidgets.QMainWindow):
         """Removes the selected protein from the list of proteins to predict."""
         self.ui.table_pred_multi_prot_to_predict.removeRow(self.ui.table_pred_multi_prot_to_predict.currentRow())
         if self.ui.table_pred_multi_prot_to_predict.rowCount() > 0:
-            prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(self.ui.table_pred_multi_prot_to_predict.currentRow()).text()
+            prot_name = self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(
+                self.ui.table_pred_multi_prot_to_predict.currentRow(),
+            ).text()
             for i in range(self.ui.table_pred_multi_prot_to_predict.rowCount()):
                 if self.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                    self.ui.table_pred_multi_prot_to_predict.setItem(i, 0, QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)))
+                    self.ui.table_pred_multi_prot_to_predict.setItem(
+                        i, 0, QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)),
+                    )
         self.local_pred_multi_check_if_table_is_empty()
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
-
             self.ui.btn_pred_multi_prot_to_predict_remove,
             self.ui.btn_pred_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_multi_advanced_config,
             self.ui.btn_pred_multi_advanced_config,
-
             self.ui.btn_pred_multi_predict,
         ]
         gui_elements_to_hide = [
@@ -3865,7 +3932,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_multi_next,
             self.ui.lbl_pred_multi_prot_name,
             self.ui.txt_pred_multi_prot_name,
-
             self.ui.lbl_pred_multi_prot_seq,
             self.ui.txt_pred_multi_prot_seq,
             self.ui.lbl_pred_multi_prot_seq_status,
@@ -3921,19 +3987,19 @@ class MainWindow(QtWidgets.QMainWindow):
         """Sets up the worker for the prediction with the colabfold."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin multimer prediction process.")
-        #worker = workers.PredictionWorkerPool(self.ui.table_pred_multi_prot_to_predict,
+        # worker = workers.PredictionWorkerPool(self.ui.table_pred_multi_prot_to_predict,
         #                                      self.prediction_configuration, self.app_project)
-        #worker.signals.finished.connect(self.post_prediction_process)
+        # worker.signals.finished.connect(self.post_prediction_process)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        #self.threadpool.start(worker)
+        # self.threadpool.start(worker)
 
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_multi_prot_to_predict,
-                                                       self.prediction_configuration,
-                                                       self.app_project)
+        self.tmp_worker = task_workers.ColabfoldWorker(
+            self.ui.table_pred_multi_prot_to_predict, self.prediction_configuration, self.app_project,
+        )
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
         self.tmp_worker.finished.connect(self.post_prediction_process)
         self.tmp_thread.start()
@@ -4036,32 +4102,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self._init_mono_pred_analysis_page()
         self.ui.table_pred_analysis_mono_prot_to_predict.clear()
         self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem("Chain"))
-        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem("Sequence"))
+        self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(
+            1, QtWidgets.QTableWidgetItem("Sequence"),
+        )
         self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_mono_prot_to_predict,
             self.ui.table_pred_analysis_mono_prot_to_predict,
-
             self.ui.btn_pred_analysis_mono_seq_to_predict,
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-
             self.ui.lbl_pred_analysis_mono_prot_name,
             self.ui.txt_pred_analysis_mono_prot_name,
             self.ui.lbl_pred_analysis_mono_prot_name_status,
             self.ui.btn_pred_analysis_mono_back,
             self.ui.btn_pred_analysis_mono_next,
-
             self.ui.lbl_pred_analysis_mono_seq_name,
             self.ui.txt_pred_analysis_mono_seq_name,
             self.ui.lbl_pred_analysis_mono_seq_name_status,
             self.ui.btn_pred_analysis_mono_back_2,
             self.ui.btn_pred_analysis_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config_2,
             self.ui.btn_pred_mono_advanced_config_2,
-
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
             self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
@@ -4072,31 +4135,37 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tabWidget.setTabEnabled(1, False)
         self.ui.tabWidget.setTabEnabled(0, True)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 21, "Monomer Prediction + Analysis")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_analysis_monomer_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_pred_analysis_monomer_page,
+        )
         self.ui.table_pred_analysis_mono_prot_to_predict.setEnabled(True)
-   
+
     # <editor-fold desc="Sections">
 
     # <editor-fold desc="Prediction section">
     def mono_pred_analysis_validate_protein_name(self) -> None:
         """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_analysis_mono_prot_name.text(),
-                                                                   self.ui.table_pred_analysis_mono_prot_to_predict):
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self.ui.txt_pred_analysis_mono_prot_name.text(), self.ui.table_pred_analysis_mono_prot_to_predict,
+        ):
             self.ui.lbl_pred_analysis_mono_prot_name_status.setText("Protein name already used.")
             self.ui.btn_pred_analysis_mono_next.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_pred_analysis_mono_next)
         else:
             self.ui.btn_pred_analysis_mono_next.setEnabled(True)
-            tools.validate_protein_name(self.ui.txt_pred_analysis_mono_prot_name,
-                                        self.ui.lbl_pred_analysis_mono_prot_name_status,
-                                        self.ui.btn_pred_analysis_mono_next)
+            tools.validate_protein_name(
+                self.ui.txt_pred_analysis_mono_prot_name,
+                self.ui.lbl_pred_analysis_mono_prot_name_status,
+                self.ui.btn_pred_analysis_mono_next,
+            )
 
     def mono_pred_analysis_validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(self.ui.txt_pred_analysis_mono_seq_name,
-                                        self.ui.lbl_pred_analysis_mono_seq_name_status,
-                                        self.ui.btn_pred_analysis_mono_add_protein)
+        tools.validate_protein_sequence(
+            self.ui.txt_pred_analysis_mono_seq_name,
+            self.ui.lbl_pred_analysis_mono_seq_name_status,
+            self.ui.btn_pred_analysis_mono_add_protein,
+        )
 
     def mono_pred_analysis_check_if_table_is_empty(self) -> None:
         """Checks if the table proteins to predict is empty."""
@@ -4106,27 +4175,22 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_elements_to_show = [
                 self.ui.lbl_pred_analysis_mono_prot_to_predict,
                 self.ui.table_pred_analysis_mono_prot_to_predict,
-
                 self.ui.btn_pred_analysis_mono_seq_to_predict,
             ]
             gui_elements_to_hide = [
                 self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-
                 self.ui.lbl_pred_analysis_mono_prot_name,
                 self.ui.txt_pred_analysis_mono_prot_name,
                 self.ui.lbl_pred_analysis_mono_prot_name_status,
                 self.ui.btn_pred_analysis_mono_back,
                 self.ui.btn_pred_analysis_mono_next,
-
                 self.ui.lbl_pred_analysis_mono_seq_name,
                 self.ui.txt_pred_analysis_mono_seq_name,
                 self.ui.lbl_pred_analysis_mono_seq_name_status,
                 self.ui.btn_pred_analysis_mono_back_2,
                 self.ui.btn_pred_analysis_mono_add_protein,
-
                 self.ui.lbl_pred_mono_advanced_config_2,
                 self.ui.btn_pred_mono_advanced_config_2,
-
                 self.ui.btn_pred_analysis_mono_go_analysis_setup,
                 self.ui.lbl_pred_analysis_mono_to_analysis_setup,
             ]
@@ -4136,13 +4200,10 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_elements_to_show = [
                 self.ui.lbl_pred_analysis_mono_prot_to_predict,
                 self.ui.table_pred_analysis_mono_prot_to_predict,
-
                 self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
                 self.ui.btn_pred_analysis_mono_seq_to_predict,
-
                 self.ui.lbl_pred_mono_advanced_config_2,
                 self.ui.btn_pred_mono_advanced_config_2,
-
                 self.ui.btn_pred_analysis_mono_go_analysis_setup,
                 self.ui.lbl_pred_analysis_mono_to_analysis_setup,
             ]
@@ -4152,7 +4213,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_analysis_mono_prot_name_status,
                 self.ui.btn_pred_analysis_mono_back,
                 self.ui.btn_pred_analysis_mono_next,
-
                 self.ui.lbl_pred_analysis_mono_seq_name,
                 self.ui.txt_pred_analysis_mono_seq_name,
                 self.ui.lbl_pred_analysis_mono_seq_name_status,
@@ -4180,7 +4240,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_mono_prot_to_predict,
             self.ui.table_pred_analysis_mono_prot_to_predict,
-
             self.ui.lbl_pred_analysis_mono_prot_name,
             self.ui.txt_pred_analysis_mono_prot_name,
             self.ui.lbl_pred_analysis_mono_prot_name_status,
@@ -4191,16 +4250,13 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
             self.ui.btn_pred_analysis_mono_seq_to_predict,
-
             self.ui.lbl_pred_analysis_mono_seq_name,
             self.ui.txt_pred_analysis_mono_seq_name,
             self.ui.lbl_pred_analysis_mono_seq_name_status,
             self.ui.btn_pred_analysis_mono_back_2,
             self.ui.btn_pred_analysis_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config_2,
             self.ui.btn_pred_mono_advanced_config_2,
-
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
             self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
@@ -4221,7 +4277,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_mono_prot_to_predict,
             self.ui.table_pred_analysis_mono_prot_to_predict,
-
             self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
             self.ui.btn_pred_analysis_mono_seq_to_predict,
         ]
@@ -4231,16 +4286,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_prot_name_status,
             self.ui.btn_pred_analysis_mono_back,
             self.ui.btn_pred_analysis_mono_next,
-
             self.ui.lbl_pred_analysis_mono_seq_name,
             self.ui.txt_pred_analysis_mono_seq_name,
             self.ui.lbl_pred_analysis_mono_seq_name_status,
             self.ui.btn_pred_analysis_mono_back_2,
             self.ui.btn_pred_analysis_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config_2,
             self.ui.btn_pred_mono_advanced_config_2,
-
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
             self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
@@ -4254,10 +4306,8 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_mono_prot_to_predict,
             self.ui.table_pred_analysis_mono_prot_to_predict,
-
             self.ui.lbl_pred_analysis_mono_prot_name,
             self.ui.txt_pred_analysis_mono_prot_name,
-
             self.ui.lbl_pred_analysis_mono_seq_name,
             self.ui.txt_pred_analysis_mono_seq_name,
             self.ui.lbl_pred_analysis_mono_seq_name_status,
@@ -4268,14 +4318,11 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
             self.ui.btn_pred_analysis_mono_seq_to_predict,
-
             self.ui.lbl_pred_analysis_mono_prot_name_status,
             self.ui.btn_pred_analysis_mono_back,
             self.ui.btn_pred_analysis_mono_next,
-
             self.ui.lbl_pred_mono_advanced_config_2,
             self.ui.btn_pred_mono_advanced_config_2,
-
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
             self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
@@ -4289,7 +4336,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_mono_prot_to_predict,
             self.ui.table_pred_analysis_mono_prot_to_predict,
-
             self.ui.lbl_pred_analysis_mono_prot_name,
             self.ui.txt_pred_analysis_mono_prot_name,
             self.ui.lbl_pred_analysis_mono_prot_name_status,
@@ -4299,16 +4345,13 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
             self.ui.btn_pred_analysis_mono_seq_to_predict,
-
             self.ui.lbl_pred_analysis_mono_seq_name,
             self.ui.txt_pred_analysis_mono_seq_name,
             self.ui.lbl_pred_analysis_mono_seq_name_status,
             self.ui.btn_pred_analysis_mono_back_2,
             self.ui.btn_pred_analysis_mono_add_protein,
-
             self.ui.lbl_pred_mono_advanced_config_2,
             self.ui.btn_pred_mono_advanced_config_2,
-
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
             self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
@@ -4319,15 +4362,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def mono_pred_analysis_add_protein(self) -> None:
         """Adds the protein to the list of proteins to predict."""
-        self.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1)
-        self.ui.table_pred_analysis_mono_prot_to_predict.insertRow(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1)
-        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 0,
-                                                        QtWidgets.QTableWidgetItem("A"))
-        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 1,
-                                                        QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()))
+        self.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.insertRow(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 0, QtWidgets.QTableWidgetItem("A"),
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()),
+        )
         self.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(
             self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()))
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()),
+        )
         self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         self.mono_pred_analysis_check_if_table_is_empty()
         gui_elements_to_show = [
@@ -4335,10 +4387,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.table_pred_analysis_mono_prot_to_predict,
             self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
             self.ui.btn_pred_analysis_mono_seq_to_predict,
-
             self.ui.lbl_pred_mono_advanced_config_2,
             self.ui.btn_pred_mono_advanced_config_2,
-
             self.ui.btn_pred_analysis_mono_go_analysis_setup,
             self.ui.lbl_pred_analysis_mono_to_analysis_setup,
         ]
@@ -4349,7 +4399,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_mono_prot_name_status,
             self.ui.btn_pred_analysis_mono_back,
             self.ui.btn_pred_analysis_mono_next,
-
             self.ui.lbl_pred_analysis_mono_seq_name,
             self.ui.txt_pred_analysis_mono_seq_name,
             self.ui.lbl_pred_analysis_mono_seq_name_status,
@@ -4369,21 +4418,33 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def mono_pred_analysis_add_protein_to_predict(self) -> None:
         """Needs to be removed."""
-        self.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()+1)
-        self.ui.table_pred_analysis_mono_prot_to_predict.insertRow(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()+1)
-        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 0,
-                                                        QtWidgets.QTableWidgetItem("A"))
-        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()-1, 1,
-                                                        QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()))
-        self.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()-1,
-                                                                      QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()))
+        self.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.insertRow(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1, 0, QtWidgets.QTableWidgetItem("A"),
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_seq_name.toPlainText()),
+        )
+        self.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(
+            self.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_mono_prot_name.text()),
+        )
         self.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
         self.mono_pred_analysis_check_if_table_is_empty()
         self.setup_defaults_monomer_prediction_analysis()
 
     def mono_pred_analysis_remove_protein_to_predict(self) -> None:
         """Removes the selected protein from the list of proteins to predict."""
-        self.ui.table_pred_analysis_mono_prot_to_predict.removeRow(self.ui.table_pred_analysis_mono_prot_to_predict.currentRow())
+        self.ui.table_pred_analysis_mono_prot_to_predict.removeRow(
+            self.ui.table_pred_analysis_mono_prot_to_predict.currentRow(),
+        )
         self.mono_pred_analysis_check_if_table_is_empty()
         self.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
 
@@ -4470,8 +4531,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.list_pred_analysis_mono_ref_chains.setEnabled(True)
 
         for i in range(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
-            if self.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text() == \
-                    self.ui.box_pred_analysis_mono_prot_struct_1.currentText():
+            if (
+                self.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text()
+                == self.ui.box_pred_analysis_mono_prot_struct_1.currentText()
+            ):
                 self.ui.list_pred_analysis_mono_ref_chains.addItem(
                     self.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
                 )
@@ -4482,10 +4545,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.list_pred_analysis_mono_ref_chains.addItem(tmp_chain.chain_letter)
         if self.ui.list_pred_analysis_mono_ref_chains.count() == 1:
             self.ui.lbl_pred_analysis_mono_ref_chains.setText(
-                f"Select chain in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.")
+                f"Select chain in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.",
+            )
         else:
             self.ui.lbl_pred_analysis_mono_ref_chains.setText(
-                f"Select chains in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.")
+                f"Select chains in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.",
+            )
 
     def mono_pred_analysis_structure_analysis_back_3(self) -> None:
         """Hides the gui elements to select the two proteins."""
@@ -4540,7 +4605,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.list_pred_analysis_mono_model_chains,
             self.ui.btn_pred_analysis_mono_back_5,
             self.ui.btn_pred_analysis_mono_next_4,
-
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_mono_remove,
@@ -4563,8 +4627,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
 
         for i in range(self.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
-            if self.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text() == self.ui.box_pred_analysis_mono_prot_struct_2.currentText():
-                self.ui.list_pred_analysis_mono_model_chains.addItem(self.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text())
+            if (
+                self.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text()
+                == self.ui.box_pred_analysis_mono_prot_struct_2.currentText()
+            ):
+                self.ui.list_pred_analysis_mono_model_chains.addItem(
+                    self.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
+                )
         if self.ui.list_pred_analysis_mono_model_chains.count() == 0:
             tmp_protein = self.app_project.search_protein(self.ui.box_pred_analysis_mono_prot_struct_2.currentText())
             for tmp_chain in tmp_protein.chains:
@@ -4572,10 +4641,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.list_pred_analysis_mono_model_chains.addItem(tmp_chain.chain_letter)
         if self.ui.list_pred_analysis_mono_model_chains.count() == 1:
             self.ui.lbl_pred_analysis_mono_model_chains.setText(
-                f"Select chain in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.")
+                f"Select chain in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
+            )
         else:
             self.ui.lbl_pred_analysis_mono_model_chains.setText(
-                f"Select {len(self.ui.list_pred_analysis_mono_model_chains.selectedItems())} chains in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.")
+                f"Select {len(self.ui.list_pred_analysis_mono_model_chains.selectedItems())} chains in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
+            )
 
         # tmp_protein = self.app_project.search_protein(self.ui.box_pred_analysis_mono_prot_struct_2.currentText())
         # for tmp_chain in tmp_protein.chains:
@@ -4657,12 +4728,12 @@ class MainWindow(QtWidgets.QMainWindow):
         prot_1_chains = []
         for chain in self.ui.list_pred_analysis_mono_ref_chains.selectedItems():
             prot_1_chains.append(chain.text())
-        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
         prot_2_name = self.ui.lbl_pred_analysis_mono_prot_struct_2.text()
         prot_2_chains = []
         for chain in self.ui.list_pred_analysis_mono_model_chains.selectedItems():
             prot_2_chains.append(chain.text())
-        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
         item = QtWidgets.QListWidgetItem(analysis_name)
         self.ui.list_pred_analysis_mono_overview.addItem(item)
@@ -4708,7 +4779,7 @@ class MainWindow(QtWidgets.QMainWindow):
         #         self.ui.list_pred_analysis_mono_ref_chains.addItem(tmp_chain.chain_letter)
 
     def mono_pred_analysis_structure_analysis_overview_clicked(self) -> None:
-        """Enabels the remove button."""
+        """Enables the remove button."""
         self.ui.btn_pred_analysis_mono_remove.setEnabled(True)
 
     def fill_mono_pred_analysis_protein_boxes(self) -> None:
@@ -4780,12 +4851,12 @@ class MainWindow(QtWidgets.QMainWindow):
         prot_1_chains = []
         for chain in self.ui.list_pred_analysis_mono_ref_chains.selectedItems():
             prot_1_chains.append(chain.text())
-        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
         prot_2_name = self.ui.lbl_pred_analysis_mono_prot_struct_2.text()
         prot_2_chains = []
         for chain in self.ui.list_pred_analysis_mono_model_chains.selectedItems():
             prot_2_chains.append(chain.text())
-        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
         for tmp_row in range(self.ui.list_pred_analysis_mono_overview.count()):
             if analysis_name == self.ui.list_pred_analysis_mono_overview.item(tmp_row).text():
@@ -4795,8 +4866,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def check_mono_pred_analysis_if_prot_structs_are_filled(self) -> None:
         """Checks if two proteins were selected."""
-        prot_1 = self.ui.box_pred_analysis_mono_prot_struct_1.itemText(self.ui.box_pred_analysis_mono_prot_struct_1.currentIndex())
-        prot_2 = self.ui.box_pred_analysis_mono_prot_struct_2.itemText(self.ui.box_pred_analysis_mono_prot_struct_2.currentIndex())
+        prot_1 = self.ui.box_pred_analysis_mono_prot_struct_1.itemText(
+            self.ui.box_pred_analysis_mono_prot_struct_1.currentIndex(),
+        )
+        prot_2 = self.ui.box_pred_analysis_mono_prot_struct_2.itemText(
+            self.ui.box_pred_analysis_mono_prot_struct_2.currentIndex(),
+        )
         if prot_1 != "" and prot_2 != "":
             self.ui.btn_pred_analysis_mono_next_2.setEnabled(True)
         else:
@@ -4863,26 +4938,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 gui_elements_to_show = [
                     self.ui.lbl_pred_analysis_mono_prot_to_predict,
                     self.ui.table_pred_analysis_mono_prot_to_predict,
-
                     self.ui.btn_pred_analysis_mono_go_analysis_setup,
                     self.ui.lbl_pred_analysis_mono_to_analysis_setup,
                 ]
                 gui_elements_to_hide = [
                     self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
                     self.ui.btn_pred_analysis_mono_seq_to_predict,
-
                     self.ui.lbl_pred_analysis_mono_prot_name,
                     self.ui.txt_pred_analysis_mono_prot_name,
                     self.ui.lbl_pred_analysis_mono_prot_name_status,
                     self.ui.btn_pred_analysis_mono_back,
                     self.ui.btn_pred_analysis_mono_next,
-
                     self.ui.lbl_pred_analysis_mono_seq_name,
                     self.ui.txt_pred_analysis_mono_seq_name,
                     self.ui.lbl_pred_analysis_mono_seq_name_status,
                     self.ui.btn_pred_analysis_mono_back_2,
                     self.ui.btn_pred_analysis_mono_add_protein,
-
                     self.ui.lbl_pred_mono_advanced_config_2,
                     self.ui.btn_pred_mono_advanced_config_2,
                 ]
@@ -4892,13 +4963,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 gui_elements_to_show = [
                     self.ui.lbl_pred_analysis_mono_prot_to_predict,
                     self.ui.table_pred_analysis_mono_prot_to_predict,
-
                     self.ui.btn_pred_analysis_mono_seq_to_predict_remove,
                     self.ui.btn_pred_analysis_mono_seq_to_predict,
-
                     self.ui.lbl_pred_mono_advanced_config_2,
                     self.ui.btn_pred_mono_advanced_config_2,
-
                     self.ui.btn_pred_analysis_mono_go_analysis_setup,
                     self.ui.lbl_pred_analysis_mono_to_analysis_setup,
                 ]
@@ -4908,7 +4976,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.lbl_pred_analysis_mono_prot_name_status,
                     self.ui.btn_pred_analysis_mono_back,
                     self.ui.btn_pred_analysis_mono_next,
-
                     self.ui.lbl_pred_analysis_mono_seq_name,
                     self.ui.txt_pred_analysis_mono_seq_name,
                     self.ui.lbl_pred_analysis_mono_seq_name_status,
@@ -4995,18 +5062,18 @@ class MainWindow(QtWidgets.QMainWindow):
         #     return
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        #self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
+        # self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
         #                                                               self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        #self.threadpool.start(self.worker_prediction_analysis)
+        # self.threadpool.start(self.worker_prediction_analysis)
 
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_analysis_mono_prot_to_predict,
-                                                       self.prediction_configuration,
-                                                       self.app_project)
+        self.tmp_worker = task_workers.ColabfoldWorker(
+            self.ui.table_pred_analysis_mono_prot_to_predict, self.prediction_configuration, self.app_project,
+        )
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
         self.tmp_worker.finished.connect(self.post_prediction_process)
         self.tmp_thread.start()
@@ -5083,17 +5150,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # </editor-fold>
 
-        #self.multi_pred_analysis_show_protein_overview()
+        # self.multi_pred_analysis_show_protein_overview()
 
     def display_multimer_pred_analysis(self) -> None:
         """Displays the multimer prediction + analysis page."""
         self._init_multi_pred_analysis_page()
         self.ui.table_pred_analysis_multi_prot_to_predict.clear()
         self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
-            0, QtWidgets.QTableWidgetItem("Chain"),
+            0,
+            QtWidgets.QTableWidgetItem("Chain"),
         )
         self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
-            1, QtWidgets.QTableWidgetItem("Sequence"),
+            1,
+            QtWidgets.QTableWidgetItem("Sequence"),
         )
         self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
         gui_elements_to_show = [
@@ -5103,13 +5172,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-
             self.ui.lbl_pred_analysis_multi_prot_name,
             self.ui.txt_pred_analysis_multi_prot_name,
             self.ui.lbl_pred_analysis_multi_prot_name_status,
             self.ui.btn_pred_analysis_multi_back,
             self.ui.btn_pred_analysis_multi_next,
-
             self.ui.lbl_pred_analysis_multi_prot_seq,
             self.ui.txt_pred_analysis_multi_prot_seq,
             self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5121,10 +5188,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
             self.ui.btn_pred_analysis_multi_back_2,
             self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_analysis_multi_advanced_config,
             self.ui.btn_pred_analysis_multi_advanced_config,
-
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
             self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
@@ -5135,29 +5200,35 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.tabWidget_2.setTabEnabled(1, False)
         self.ui.tabWidget_2.setTabEnabled(0, True)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 22, "Multimer Prediction + Analysis")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_pred_analysis_multimer_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_pred_analysis_multimer_page,
+        )
         self.ui.table_pred_analysis_multi_prot_to_predict.setEnabled(True)
 
     # <editor-fold desc="Prediction section">
     def multi_pred_analysis_validate_protein_name(self) -> None:
         """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(self.ui.txt_pred_analysis_multi_prot_name.text(),
-                                                                   self.ui.table_pred_analysis_multi_prot_to_predict):
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self.ui.txt_pred_analysis_multi_prot_name.text(), self.ui.table_pred_analysis_multi_prot_to_predict,
+        ):
             self.ui.lbl_pred_analysis_multi_prot_name_status.setText("Protein name already used.")
             self.ui.btn_pred_analysis_multi_next.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_pred_analysis_multi_next)
         else:
             self.ui.btn_pred_analysis_multi_next.setEnabled(True)
-            tools.validate_protein_name(self.ui.txt_pred_analysis_multi_prot_name,
-                                        self.ui.lbl_pred_analysis_multi_prot_name_status,
-                                        self.ui.btn_pred_analysis_multi_next)
+            tools.validate_protein_name(
+                self.ui.txt_pred_analysis_multi_prot_name,
+                self.ui.lbl_pred_analysis_multi_prot_name_status,
+                self.ui.btn_pred_analysis_multi_next,
+            )
 
     def multi_pred_analysis_validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(self.ui.txt_pred_analysis_multi_prot_seq,
-                                        self.ui.lbl_pred_analysis_multi_prot_seq_status,
-                                        self.ui.btn_pred_analysis_multi_prot_seq_add)
+        tools.validate_protein_sequence(
+            self.ui.txt_pred_analysis_multi_prot_seq,
+            self.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self.ui.btn_pred_analysis_multi_prot_seq_add,
+        )
 
     def multi_pred_analysis_check_if_list_is_empty(self) -> None:
         """Checks if the list of sequences of the protein is empty."""
@@ -5171,12 +5242,15 @@ class MainWindow(QtWidgets.QMainWindow):
     def multi_pred_analysis_add_sequence_to_list(self) -> None:
         """Adds the entered sequence to the sequences of the protein."""
         self.ui.list_pred_analysis_multi_prot_seq_overview.addItem(
-            QtWidgets.QListWidgetItem(self.ui.txt_pred_analysis_multi_prot_seq.toPlainText()))
+            QtWidgets.QListWidgetItem(self.ui.txt_pred_analysis_multi_prot_seq.toPlainText()),
+        )
         self.multi_pred_analysis_check_if_list_is_empty()
 
     def multi_pred_analysis_remove_sequence_to_list(self) -> None:
         """Removes the entered sequence from the sequences of the protein."""
-        self.ui.list_pred_analysis_multi_prot_seq_overview.takeItem(self.ui.list_pred_analysis_multi_prot_seq_overview.currentRow())
+        self.ui.list_pred_analysis_multi_prot_seq_overview.takeItem(
+            self.ui.list_pred_analysis_multi_prot_seq_overview.currentRow(),
+        )
         self.multi_pred_analysis_check_if_list_is_empty()
         self.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
 
@@ -5191,13 +5265,11 @@ class MainWindow(QtWidgets.QMainWindow):
             ]
             gui_elements_to_hide = [
                 self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-
                 self.ui.lbl_pred_analysis_multi_prot_name,
                 self.ui.txt_pred_analysis_multi_prot_name,
                 self.ui.lbl_pred_analysis_multi_prot_name_status,
                 self.ui.btn_pred_analysis_multi_back,
                 self.ui.btn_pred_analysis_multi_next,
-
                 self.ui.lbl_pred_analysis_multi_prot_seq,
                 self.ui.txt_pred_analysis_multi_prot_seq,
                 self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5209,10 +5281,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
                 self.ui.btn_pred_analysis_multi_back_2,
                 self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-
                 self.ui.lbl_pred_analysis_multi_advanced_config,
                 self.ui.btn_pred_analysis_multi_advanced_config,
-
                 self.ui.btn_pred_analysis_multi_go_analysis_setup,
                 self.ui.lbl_pred_analysis_multi_to_analysis_setup,
             ]
@@ -5228,10 +5298,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.table_pred_analysis_multi_prot_to_predict,
                 self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
                 self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-
                 self.ui.lbl_pred_analysis_multi_advanced_config,
                 self.ui.btn_pred_analysis_multi_advanced_config,
-
                 self.ui.btn_pred_analysis_multi_go_analysis_setup,
                 self.ui.lbl_pred_analysis_multi_to_analysis_setup,
             ]
@@ -5241,7 +5309,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.lbl_pred_analysis_multi_prot_name_status,
                 self.ui.btn_pred_analysis_multi_back,
                 self.ui.btn_pred_analysis_multi_next,
-
                 self.ui.lbl_pred_analysis_multi_prot_seq,
                 self.ui.txt_pred_analysis_multi_prot_seq,
                 self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5262,19 +5329,29 @@ class MainWindow(QtWidgets.QMainWindow):
         """Adds the proteins to the list of proteins to predict."""
         for i in range(self.ui.list_pred_analysis_multi_prot_seq_overview.count()):
             self.ui.table_pred_analysis_multi_prot_to_predict.setRowCount(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1,
+            )
             self.ui.table_pred_analysis_multi_prot_to_predict.insertRow(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1)
-            tmp_chain_seq = (constants.chain_dict.get(i), self.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text())
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1,
+            )
+            tmp_chain_seq = (
+                constants.chain_dict.get(i),
+                self.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text(),
+            )
             self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 0,
-                QtWidgets.QTableWidgetItem(tmp_chain_seq[0]))
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
+                0,
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[0]),
+            )
             self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, 1,
-                QtWidgets.QTableWidgetItem(tmp_chain_seq[1]))
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
+                1,
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[1]),
+            )
             name_item = QtWidgets.QTableWidgetItem(self.ui.txt_pred_analysis_multi_prot_name.text())
             self.ui.table_pred_analysis_multi_prot_to_predict.setVerticalHeaderItem(
-                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, name_item)
+                self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, name_item,
+            )
         self.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
         self.multi_pred_analysis_check_if_table_is_empty()
         self.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
@@ -5284,13 +5361,17 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 1:
             self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(0)
         else:
-            self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(self.ui.table_pred_analysis_multi_prot_to_predict.currentRow())
+            self.ui.table_pred_analysis_multi_prot_to_predict.removeRow(
+                self.ui.table_pred_analysis_multi_prot_to_predict.currentRow(),
+            )
             prot_name = self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(
-                self.ui.table_pred_analysis_multi_prot_to_predict.currentRow()).text()
+                self.ui.table_pred_analysis_multi_prot_to_predict.currentRow(),
+            ).text()
             for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
                 if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                    self.ui.table_pred_analysis_multi_prot_to_predict.setItem(i, 0,
-                                                                     QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)))
+                    self.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                        i, 0, QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)),
+                    )
         self.multi_pred_analysis_check_if_table_is_empty()
         self.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
 
@@ -5299,7 +5380,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_multi_prot_to_predict,
             self.ui.table_pred_analysis_multi_prot_to_predict,
-
             self.ui.lbl_pred_analysis_multi_prot_name,
             self.ui.txt_pred_analysis_multi_prot_name,
             self.ui.lbl_pred_analysis_multi_prot_name_status,
@@ -5309,7 +5389,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
             self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_analysis_multi_prot_seq,
             self.ui.txt_pred_analysis_multi_prot_seq,
             self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5321,10 +5400,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
             self.ui.btn_pred_analysis_multi_back_2,
             self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_analysis_multi_advanced_config,
             self.ui.btn_pred_analysis_multi_advanced_config,
-
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
             self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
@@ -5350,13 +5427,11 @@ class MainWindow(QtWidgets.QMainWindow):
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-
             self.ui.lbl_pred_analysis_multi_prot_name,
             self.ui.txt_pred_analysis_multi_prot_name,
             self.ui.lbl_pred_analysis_multi_prot_name_status,
             self.ui.btn_pred_analysis_multi_back,
             self.ui.btn_pred_analysis_multi_next,
-
             self.ui.lbl_pred_analysis_multi_prot_seq,
             self.ui.txt_pred_analysis_multi_prot_seq,
             self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5368,10 +5443,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
             self.ui.btn_pred_analysis_multi_back_2,
             self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_analysis_multi_advanced_config,
             self.ui.btn_pred_analysis_multi_advanced_config,
-
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
             self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
@@ -5384,10 +5457,8 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_multi_prot_to_predict,
             self.ui.table_pred_analysis_multi_prot_to_predict,
-
             self.ui.lbl_pred_analysis_multi_prot_name,
             self.ui.txt_pred_analysis_multi_prot_name,
-
             self.ui.lbl_pred_analysis_multi_prot_seq,
             self.ui.txt_pred_analysis_multi_prot_seq,
             self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5403,14 +5474,11 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
             self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_analysis_multi_prot_name_status,
             self.ui.btn_pred_analysis_multi_back,
             self.ui.btn_pred_analysis_multi_next,
-
             self.ui.lbl_pred_analysis_multi_advanced_config,
             self.ui.btn_pred_analysis_multi_advanced_config,
-
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
             self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
@@ -5429,7 +5497,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_show = [
             self.ui.lbl_pred_analysis_multi_prot_to_predict,
             self.ui.table_pred_analysis_multi_prot_to_predict,
-
             self.ui.lbl_pred_analysis_multi_prot_name_status,
             self.ui.btn_pred_analysis_multi_back,
             self.ui.btn_pred_analysis_multi_next,
@@ -5439,7 +5506,6 @@ class MainWindow(QtWidgets.QMainWindow):
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
             self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-
             self.ui.lbl_pred_analysis_multi_prot_seq,
             self.ui.txt_pred_analysis_multi_prot_seq,
             self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5451,10 +5517,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.lbl_pred_analysis_multi_prot_to_predict_2,
             self.ui.btn_pred_analysis_multi_back_2,
             self.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-
             self.ui.lbl_pred_analysis_multi_advanced_config,
             self.ui.btn_pred_analysis_multi_advanced_config,
-
             self.ui.btn_pred_analysis_multi_go_analysis_setup,
             self.ui.lbl_pred_analysis_multi_to_analysis_setup,
         ]
@@ -5483,7 +5547,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #         self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
     #             [0, 3], [1, 2], show_specific_elements=gui_elements_to_show,
     #         )
-    # 
+    #
     # def multi_pred_analysis_show_protein_name(self):
     #     gui_elements_to_hide = [
     #         self.ui.btn_pred_multi_prot_to_predict_add,
@@ -5493,7 +5557,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #         [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
     #     gui_utils.enable_text_box(self.ui.txt_pred_analysis_multi_prot_name,
     #                               self.ui.lbl_pred_analysis_multi_prot_name)
-    # 
+    #
     # def multi_pred_analysis_show_protein_sequence(self):
     #     gui_elements_to_hide = [
     #         self.ui.btn_pred_multi_prot_to_predict_add,
@@ -5559,23 +5623,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 gui_elements_to_show = [
                     self.ui.lbl_pred_analysis_multi_prot_to_predict,
                     self.ui.table_pred_analysis_multi_prot_to_predict,
-
                     self.ui.btn_pred_analysis_multi_go_analysis_setup,
                     self.ui.lbl_pred_analysis_multi_to_analysis_setup,
                 ]
                 gui_elements_to_hide = [
                     self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
                     self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-
                     self.ui.lbl_pred_analysis_multi_advanced_config,
                     self.ui.btn_pred_analysis_multi_advanced_config,
-
                     self.ui.lbl_pred_analysis_multi_prot_name,
                     self.ui.txt_pred_analysis_multi_prot_name,
                     self.ui.lbl_pred_analysis_multi_prot_name_status,
                     self.ui.btn_pred_analysis_multi_back,
                     self.ui.btn_pred_analysis_multi_next,
-
                     self.ui.lbl_pred_analysis_multi_prot_seq,
                     self.ui.txt_pred_analysis_multi_prot_seq,
                     self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5596,10 +5656,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.table_pred_analysis_multi_prot_to_predict,
                     self.ui.btn_pred_analysis_multi_prot_to_predict_remove,
                     self.ui.btn_pred_analysis_multi_prot_to_predict_add,
-
                     self.ui.lbl_pred_analysis_multi_advanced_config,
                     self.ui.btn_pred_analysis_multi_advanced_config,
-
                     self.ui.btn_pred_analysis_multi_go_analysis_setup,
                     self.ui.lbl_pred_analysis_multi_to_analysis_setup,
                 ]
@@ -5609,7 +5667,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.lbl_pred_analysis_multi_prot_name_status,
                     self.ui.btn_pred_analysis_multi_back,
                     self.ui.btn_pred_analysis_multi_next,
-
                     self.ui.lbl_pred_analysis_multi_prot_seq,
                     self.ui.txt_pred_analysis_multi_prot_seq,
                     self.ui.lbl_pred_analysis_multi_prot_seq_status,
@@ -5701,15 +5758,24 @@ class MainWindow(QtWidgets.QMainWindow):
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.ui.lbl_pred_analysis_multi_prot_struct_1.setText(self.ui.box_pred_analysis_multi_prot_struct_1.currentText())
-        self.ui.lbl_pred_analysis_multi_prot_struct_2.setText(self.ui.box_pred_analysis_multi_prot_struct_2.currentText())
+        self.ui.lbl_pred_analysis_multi_prot_struct_1.setText(
+            self.ui.box_pred_analysis_multi_prot_struct_1.currentText(),
+        )
+        self.ui.lbl_pred_analysis_multi_prot_struct_2.setText(
+            self.ui.box_pred_analysis_multi_prot_struct_2.currentText(),
+        )
         self.ui.list_pred_analysis_multi_ref_chains.clear()
         self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
         self.ui.list_pred_analysis_multi_ref_chains.setEnabled(True)
 
         for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
-            if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == self.ui.box_pred_analysis_multi_prot_struct_1.currentText():
-                self.ui.list_pred_analysis_multi_ref_chains.addItem(self.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text())
+            if (
+                self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text()
+                == self.ui.box_pred_analysis_multi_prot_struct_1.currentText()
+            ):
+                self.ui.list_pred_analysis_multi_ref_chains.addItem(
+                    self.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text(),
+                )
         if self.ui.list_pred_analysis_multi_ref_chains.count() == 0:
             tmp_protein = self.app_project.search_protein(self.ui.box_pred_analysis_multi_prot_struct_1.currentText())
             for tmp_chain in tmp_protein.chains:
@@ -5717,10 +5783,12 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.list_pred_analysis_multi_ref_chains.addItem(tmp_chain.chain_letter)
         if self.ui.list_pred_analysis_multi_ref_chains.count() == 1:
             self.ui.lbl_pred_analysis_multi_ref_chains.setText(
-                f"Select chain in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.")
+                f"Select chain in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.",
+            )
         else:
             self.ui.lbl_pred_analysis_multi_ref_chains.setText(
-                f"Select chains in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.")
+                f"Select chains in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.",
+            )
 
     def multi_pred_analysis_structure_analysis_back_3(self) -> None:
         """Hides the gui elements to choose the two proteins."""
@@ -5775,7 +5843,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.list_pred_analysis_multi_model_chains,
             self.ui.btn_pred_analysis_multi_back_5,
             self.ui.btn_pred_analysis_multi_next_4,
-
         ]
         gui_elements_to_hide = [
             self.ui.btn_pred_analysis_multi_remove,
@@ -5798,8 +5865,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
 
         for i in range(self.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
-            if self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == \
-                    self.ui.box_pred_analysis_multi_prot_struct_2.currentText():
+            if (
+                self.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text()
+                == self.ui.box_pred_analysis_multi_prot_struct_2.currentText()
+            ):
                 self.ui.list_pred_analysis_multi_model_chains.addItem(
                     self.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text(),
                 )
@@ -5810,7 +5879,8 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.ui.list_pred_analysis_multi_model_chains.addItem(tmp_chain.chain_letter)
         if len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems()) == 1:
             self.ui.lbl_pred_analysis_multi_model_chains.setText(
-                f"Select 1 chain in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.")
+                f"Select 1 chain in protein structure {self.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.",
+            )
         else:
             self.ui.lbl_pred_analysis_multi_model_chains.setText(
                 f"Select {len(self.ui.list_pred_analysis_multi_ref_chains.selectedItems())} chains in "
@@ -5886,12 +5956,12 @@ class MainWindow(QtWidgets.QMainWindow):
         prot_1_chains = []
         for chain in self.ui.list_pred_analysis_multi_ref_chains.selectedItems():
             prot_1_chains.append(chain.text())
-        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
         prot_2_name = self.ui.lbl_pred_analysis_multi_prot_struct_2.text()
         prot_2_chains = []
         for chain in self.ui.list_pred_analysis_multi_model_chains.selectedItems():
             prot_2_chains.append(chain.text())
-        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
         item = QtWidgets.QListWidgetItem(analysis_name)
         self.ui.list_pred_analysis_multi_overview.addItem(item)
@@ -6010,12 +6080,12 @@ class MainWindow(QtWidgets.QMainWindow):
         prot_1_chains = []
         for chain in self.ui.list_pred_analysis_multi_ref_chains.selectedItems():
             prot_1_chains.append(chain.text())
-        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
         prot_2_name = self.ui.lbl_pred_analysis_multi_prot_struct_2.text()
         prot_2_chains = []
         for chain in self.ui.list_pred_analysis_multi_model_chains.selectedItems():
             prot_2_chains.append(chain.text())
-        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
         for tmp_row in range(self.ui.list_pred_analysis_multi_overview.count()):
             if analysis_name == self.ui.list_pred_analysis_multi_overview.item(tmp_row).text():
@@ -6025,8 +6095,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def check_multi_pred_analysis_if_prot_structs_are_filled(self) -> None:
         """Checks if two proteins were selected."""
-        prot_1 = self.ui.box_pred_analysis_multi_prot_struct_1.itemText(self.ui.box_pred_analysis_multi_prot_struct_1.currentIndex())
-        prot_2 = self.ui.box_pred_analysis_multi_prot_struct_2.itemText(self.ui.box_pred_analysis_multi_prot_struct_2.currentIndex())
+        prot_1 = self.ui.box_pred_analysis_multi_prot_struct_1.itemText(
+            self.ui.box_pred_analysis_multi_prot_struct_1.currentIndex(),
+        )
+        prot_2 = self.ui.box_pred_analysis_multi_prot_struct_2.itemText(
+            self.ui.box_pred_analysis_multi_prot_struct_2.currentIndex(),
+        )
         if prot_1 != "" and prot_2 != "":
             self.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
         else:
@@ -6051,7 +6125,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #                                                    self.ui.btn_pred_analysis_multi_remove,
     #                                                    self.ui.btn_pred_analysis_multi_add,
     #                                                    4)
-    # 
+    #
     # def show_multi_pred_analysis_stage_1(self):
     #     gui_page_management.show_analysis_page_stage_1(self.multimer_prediction_analysis_management,
     #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_1,
@@ -6060,7 +6134,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #                                                    self.ui.btn_pred_analysis_multi_add,
     #                                                    4,
     #                                                    self.fill_multi_pred_analysis_protein_boxes)
-    # 
+    #
     # def show_multi_pred_analysis_stage_2(self):
     #     gui_page_management.show_analysis_page_stage_2(self.app_project,
     #                                                    self.multimer_prediction_analysis_management,
@@ -6076,7 +6150,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #                                                    4,
     #                                                    table_prot_to_predict=self.ui.table_pred_analysis_multi_prot_to_predict,
     #                                                    state=constants.PREDICTION_ANALYSIS)
-    # 
+    #
     # def show_multi_pred_analysis_stage_3(self):
     #     gui_page_management.show_analysis_page_stage_3(self.app_project,
     #                                                    self.multimer_prediction_analysis_management,
@@ -6142,10 +6216,10 @@ class MainWindow(QtWidgets.QMainWindow):
         """Sets up the prediction process."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        #self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_analysis_multi_prot_to_predict,
+        # self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_analysis_multi_prot_to_predict,
         #                                                      self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        #self.threadpool.start(self.worker_prediction)
+        # self.threadpool.start(self.worker_prediction)
         gui_elements_to_show = [
             self.ui.btn_prediction_abort,
         ]
@@ -6160,9 +6234,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # TODO: test code below
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(self.ui.table_pred_analysis_multi_prot_to_predict,
-                                                       self.prediction_configuration,
-                                                       self.app_project)
+        self.tmp_worker = task_workers.ColabfoldWorker(
+            self.ui.table_pred_analysis_multi_prot_to_predict, self.prediction_configuration, self.app_project,
+        )
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
         self.tmp_worker.finished.connect(self.post_prediction_process)
         self.tmp_thread.start()
@@ -6203,7 +6277,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.box_analysis_batch_prot_struct_2,
             self.ui.btn_analysis_batch_back,
             self.ui.btn_analysis_batch_next,
-
         ]
         gui_elements_to_hide = [
             self.ui.btn_analysis_batch_remove,
@@ -6276,10 +6349,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
         if self.ui.list_analysis_batch_ref_chains.count() == 1:
             self.ui.lbl_analysis_batch_ref_chains.setText(
-                f"Select chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
+                f"Select chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.",
+            )
         else:
             self.ui.lbl_analysis_batch_ref_chains.setText(
-                f"Select chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.")
+                f"Select chains in protein structure {self.ui.lbl_analysis_batch_prot_struct_1.text()}.",
+            )
 
     def structure_analysis_back(self) -> None:
         """Hides the gui elements to choose the two proteins."""
@@ -6333,7 +6408,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.list_analysis_batch_model_chains,
             self.ui.btn_analysis_batch_back_3,
             self.ui.btn_analysis_batch_next_3,
-
         ]
         gui_elements_to_hide = [
             self.ui.btn_analysis_batch_remove,
@@ -6360,7 +6434,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.list_analysis_batch_model_chains.addItem(tmp_chain.chain_letter)
         if len(self.ui.list_analysis_batch_ref_chains.selectedItems()) == 1:
             self.ui.lbl_analysis_batch_model_chains.setText(
-                f"Select 1 chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.")
+                f"Select 1 chain in protein structure {self.ui.lbl_analysis_batch_prot_struct_2.text()}.",
+            )
         else:
             self.ui.lbl_analysis_batch_model_chains.setText(
                 f"Select {len(self.ui.list_analysis_batch_ref_chains.selectedItems())} chains in "
@@ -6379,7 +6454,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.box_analysis_batch_prot_struct_2,
             self.ui.btn_analysis_batch_back,
             self.ui.btn_analysis_batch_next,
-
         ]
         gui_elements_to_hide = [
             self.ui.btn_analysis_batch_remove,
@@ -6435,12 +6509,12 @@ class MainWindow(QtWidgets.QMainWindow):
         prot_1_chains = []
         for chain in self.ui.list_analysis_batch_ref_chains.selectedItems():
             prot_1_chains.append(chain.text())
-        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
         prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text()
         prot_2_chains = []
         for chain in self.ui.list_analysis_batch_model_chains.selectedItems():
             prot_2_chains.append(chain.text())
-        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
         item = QtWidgets.QListWidgetItem(analysis_name)
         self.ui.list_analysis_batch_overview.addItem(item)
@@ -6499,7 +6573,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #                                                    self.ui.btn_analysis_batch_remove,
     #                                                    self.ui.btn_analysis_batch_add,
     #                                                    0)
-    # 
+    #
     # def show_batch_analysis_stage_1(self):
     #     gui_page_management.show_analysis_page_stage_1(self.batch_analysis_management,
     #                                                    self.ui.lbl_analysis_batch_prot_struct_1,
@@ -6508,7 +6582,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #                                                    self.ui.btn_analysis_batch_add,
     #                                                    0,
     #                                                    self.fill_protein_boxes_batch)
-    # 
+    #
     # def show_batch_analysis_stage_2(self):
     #     gui_page_management.show_analysis_page_stage_2(self.app_project,
     #                                                    self.batch_analysis_management,
@@ -6522,7 +6596,7 @@ class MainWindow(QtWidgets.QMainWindow):
     #                                                    self.ui.btn_analysis_batch_next_2,
     #                                                    self.ui.btn_analysis_batch_back,
     #                                                    0)
-    # 
+    #
     # def show_batch_analysis_stage_3(self):
     #     gui_page_management.show_analysis_page_stage_3(self.app_project,
     #                                                    self.batch_analysis_management,
@@ -6611,12 +6685,12 @@ class MainWindow(QtWidgets.QMainWindow):
         prot_1_chains = []
         for chain in self.ui.list_analysis_batch_ref_chains.selectedItems():
             prot_1_chains.append(chain.text())
-        prot_1_chains = ','.join([str(elem) for elem in prot_1_chains])
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
         prot_2_name = self.ui.lbl_analysis_batch_prot_struct_2.text()
         prot_2_chains = []
         for chain in self.ui.list_analysis_batch_model_chains.selectedItems():
             prot_2_chains.append(chain.text())
-        prot_2_chains = ','.join([str(elem) for elem in prot_2_chains])
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
         analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
         for tmp_row in range(self.ui.list_analysis_batch_overview.count()):
             if analysis_name == self.ui.list_analysis_batch_overview.item(tmp_row).text():
@@ -6651,9 +6725,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
         self.block_box_analysis.destroy(True)
-        basic_boxes.ok("Structure analysis", 
-                       "All structure analysis' are done. Go to results to check the new results.",
-                       QtWidgets.QMessageBox.Information)
+        basic_boxes.ok(
+            "Structure analysis",
+            "All structure analysis' are done. Go to results to check the new results.",
+            QtWidgets.QMessageBox.Information,
+        )
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
@@ -6730,22 +6806,24 @@ class MainWindow(QtWidgets.QMainWindow):
         # analysis_thread = threading.Thread(target=self.thread_func_run_analysis, args=(self.analysis_callback,))
         # analysis_thread.start()
         # self.block_box_analysis.exec_()
-        #self.worker_analysis = workers.AnalysisWorkerPool(
+        # self.worker_analysis = workers.AnalysisWorkerPool(
         #    self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
         #    self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
         constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-        #self.threadpool.start(self.worker_analysis)
+        # self.threadpool.start(self.worker_analysis)
 
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.DistanceAnalysisWorker(self.ui.list_analysis_batch_overview,
-                                                              self.ui.cb_analysis_images,
-                                                              self.status_bar,
-                                                              self.app_project,
-                                                              self.app_settings,
-                                                              self._init_batch_analysis_page)
+        self.tmp_worker = task_workers.DistanceAnalysisWorker(
+            self.ui.list_analysis_batch_overview,
+            self.ui.cb_analysis_images,
+            self.status_bar,
+            self.app_project,
+            self.app_settings,
+            self._init_batch_analysis_page,
+        )
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_use_page)
         self.tmp_worker.finished.connect(self.post_analysis_process)
         self.tmp_thread.start()
@@ -6876,8 +6954,9 @@ class MainWindow(QtWidgets.QMainWindow):
         for tmp_protein_pair in self.app_project.protein_pairs:
             if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
                 self.ui.list_analysis_images_struct_analysis.addItem(tmp_protein_pair.name)
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-                                                                self.ui.btn_image_analysis_page)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button, self.ui.btn_image_analysis_page,
+        )
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 23, "Analysis Images")
         self.ui.btn_add_analysis_images_struct_analysis.setEnabled(False)
         self.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
@@ -6902,7 +6981,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def remove_protein_pair_from_image_creation_queue(self) -> None:
         """Removes a protein pair from the list of protein pairs to make images of."""
         protein_pair_to_remove = self.ui.list_analysis_images_creation_struct_analysis.currentItem()
-        self.ui.list_analysis_images_creation_struct_analysis.takeItem(self.ui.list_analysis_images_creation_struct_analysis.currentRow())
+        self.ui.list_analysis_images_creation_struct_analysis.takeItem(
+            self.ui.list_analysis_images_creation_struct_analysis.currentRow(),
+        )
         self.ui.list_analysis_images_struct_analysis.addItem(protein_pair_to_remove)
         self.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
         self.analysis_images_check_if_creation_can_start()
@@ -6921,9 +7002,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
         self.block_box_images.destroy(True)
-        basic_boxes.ok("Analysis Images",
-                       "All images of all analysis' have been created. Go to results to check the new results.",
-                       QtWidgets.QMessageBox.Information)
+        basic_boxes.ok(
+            "Analysis Images",
+            "All images of all analysis' have been created. Go to results to check the new results.",
+            QtWidgets.QMessageBox.Information,
+        )
         constants.PYSSA_LOGGER.info("All images of all analysis' have been created.")
         self._init_analysis_image_page()
         self.display_view_page()
@@ -6932,20 +7015,22 @@ class MainWindow(QtWidgets.QMainWindow):
     def start_automatic_image_creation(self) -> None:
         """Sets up the worker for the image creation process."""
         constants.PYSSA_LOGGER.info("Begin image creation process.")
-        #self.worker_image_creation = workers.BatchImageWorkerPool(
+        # self.worker_image_creation = workers.BatchImageWorkerPool(
         #    self.ui.list_analysis_images_struct_analysis, self.ui.list_analysis_images_creation_struct_analysis,
         #    self.status_bar, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for image creation process.")
-        #self.threadpool.start(self.worker_image_creation)
+        # self.threadpool.start(self.worker_image_creation)
 
         # <editor-fold desc="Worker setup">
         # TODO: test code below
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.BatchImageWorker(self.ui.list_analysis_images_struct_analysis,
-                                                        self.ui.list_analysis_images_creation_struct_analysis,
-                                                        self.status_bar,
-                                                        self.app_project)
+        self.tmp_worker = task_workers.BatchImageWorker(
+            self.ui.list_analysis_images_struct_analysis,
+            self.ui.list_analysis_images_creation_struct_analysis,
+            self.status_bar,
+            self.app_project,
+        )
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
         self.tmp_worker.finished.connect(self.post_image_creation_process)
         self.tmp_thread.start()
@@ -6990,15 +7075,18 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_results_interactions(self, gui_elements_to_show=None, gui_elements_to_hide=None) -> None:
         """Shows the gui elements of the results page."""
         if gui_elements_to_hide is not None:
-            self.results_management.show_gui_elements_stage_x([0, 1], [],
-                                                              show_specific_elements=[self.ui.lbl_results_analysis_options,
-                                                                                      self.ui.cb_results_analysis_options],
-                                                              hide_specific_elements=gui_elements_to_hide)
+            self.results_management.show_gui_elements_stage_x(
+                [0, 1],
+                [],
+                show_specific_elements=[self.ui.lbl_results_analysis_options, self.ui.cb_results_analysis_options],
+                hide_specific_elements=gui_elements_to_hide,
+            )
         else:
-            self.results_management.show_gui_elements_stage_x([0, 1], [],
-                                                              show_specific_elements=[
-                                                                  self.ui.lbl_results_analysis_options,
-                                                                  self.ui.cb_results_analysis_options])
+            self.results_management.show_gui_elements_stage_x(
+                [0, 1],
+                [],
+                show_specific_elements=[self.ui.lbl_results_analysis_options, self.ui.cb_results_analysis_options],
+            )
 
     @staticmethod
     def post_load_results() -> None:
@@ -7027,8 +7115,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # </editor-fold>
 
-        #distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
-        #distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
+        # distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
+        # distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
         self.ui.list_results_interest_regions.clear()
         self.status_bar.showMessage(f"Loading results of {self.results_name} ...")
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -7122,7 +7210,9 @@ class MainWindow(QtWidgets.QMainWindow):
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
         self.ui.list_results_interest_regions.sortItems()
         self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
-        self.ui.txt_results_aligned_residues.setText(str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa))
+        self.ui.txt_results_aligned_residues.setText(
+            str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa),
+        )
 
         # # <editor-fold desc="Histogram check">
         # # check if histogram can be created
@@ -7144,13 +7234,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
-        self.current_session = current_session.CurrentSession("protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session)
+        self.current_session = current_session.CurrentSession(
+            "protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session,
+        )
         QtWidgets.QApplication.restoreOverrideCursor()
         self.status_bar.showMessage(f"Current workspace: {str(self.workspace_path)}")
 
     def color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
-        tmp_protein_pair: 'protein_pair.ProteinPair' = self.app_project.search_protein_pair(self.results_name)
+        tmp_protein_pair: "protein_pair.ProteinPair" = self.app_project.search_protein_pair(self.results_name)
 
         cutoff_1 = 0.5
         cutoff_2 = 1.0
@@ -7171,13 +7263,18 @@ class MainWindow(QtWidgets.QMainWindow):
         for distance_value in tmp_protein_pair.distance_analysis.analysis_results.distance_data.get("distance"):
             if distance_value <= cutoff_1:
                 atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i,
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
+                    i,
                 )
                 # create two atoms for the get_distance command
-                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
+                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
+                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_1, atom1)
                 cmd.color(color_1, atom2)
@@ -7187,12 +7284,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
             elif distance_value <= cutoff_2:
                 atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i,
+                )
                 # create two atoms for the get_distance command
-                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
+                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
+                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_2, atom1)
                 cmd.color(color_2, atom2)
@@ -7200,12 +7302,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
             elif distance_value <= cutoff_3:
                 atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i,
+                )
                 # create two atoms for the get_distance command
-                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}/CA"
-                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
+                atom1: str = (
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
+                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}/CA"
+                )
+                atom2: str = (
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
+                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
+                )
                 # coloring
                 cmd.color(color_3, atom1)
                 cmd.color(color_3, atom2)
@@ -7213,12 +7320,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
             elif distance_value <= cutoff_4:
                 atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i,
+                )
                 # create two atoms for the get_distance command
-                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
+                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
+                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_4, atom1)
                 cmd.color(color_4, atom2)
@@ -7226,12 +7338,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
             elif distance_value <= cutoff_5:
                 atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i,
+                )
                 # create two atoms for the get_distance command
-                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
+                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
+                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_5, atom1)
                 cmd.color(color_5, atom2)
@@ -7239,12 +7356,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
             elif distance_value > cutoff_5:
                 atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i)
+                    tmp_protein_pair.distance_analysis.analysis_results.distance_data, i,
+                )
                 # create two atoms for the get_distance command
-                atom1: str = f"/{tmp_protein_pair.protein_1.get_molecule_object()}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{tmp_protein_pair.protein_2.get_molecule_object()}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
+                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
+                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_6, f"({atom1})")
                 cmd.color(color_6, f"({atom2})")
@@ -7259,10 +7381,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """Opens a window which displays the image of the structure alignment."""
         png_dialog = QtWidgets.QDialog(self)
         label = QtWidgets.QLabel(self)
-        pathlib.Path(
-            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
+        pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/results/{self.results_name}")
         self.ui.cb_results_analysis_options.currentText()
-        pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{self.ui.cb_results_analysis_options.currentText()}")
+        pixmap = QtGui.QPixmap(
+            f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{self.ui.cb_results_analysis_options.currentText()}",
+        )
         # TO-DO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
@@ -7295,7 +7418,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # if item is None:
         #     raise ValueError
         protein_pair_of_analysis = self.app_project.search_protein_pair(
-            self.ui.cb_results_analysis_options.currentText())
+            self.ui.cb_results_analysis_options.currentText(),
+        )
         dialog = dialog_distance_histogram.DialogDistanceHistogram(protein_pair_of_analysis)
         dialog.exec_()
 
@@ -7320,8 +7444,14 @@ class MainWindow(QtWidgets.QMainWindow):
         csv_model = QtGui.QStandardItemModel()
         csv_model.setColumnCount(7)
         labels = [
-            "Residue pair no.", "Protein 1 Chain", "Protein 1 Position", "Protein 1 Residue",
-            "Protein 2 Chain", "Protein 2 Position", "Protein 2 Residue", "Distance in Å",
+            "Residue pair no.",
+            "Protein 1 Chain",
+            "Protein 1 Position",
+            "Protein 1 Residue",
+            "Protein 2 Chain",
+            "Protein 2 Position",
+            "Protein 2 Residue",
+            "Distance in Å",
         ]
         csv_model.setHorizontalHeaderLabels(labels)
         table_dialog = QtWidgets.QDialog(self)
@@ -7336,24 +7466,29 @@ class MainWindow(QtWidgets.QMainWindow):
 
         distance_data = tmp_protein_pair.distance_analysis.analysis_results.distance_data
         distance_data_array = np.array(
-            [distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX], distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
-             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION],
-             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
-             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN],
-             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
-             distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI], distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]])
+            [
+                distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX],
+                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN],
+                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION],
+                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI],
+                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN],
+                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION],
+                distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI],
+                distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES],
+            ],
+        )
         distance_data_array_transpose = distance_data_array.transpose()
-        with open(csv_filepath, mode='w', newline='') as file:
-            writer = csv.writer(file, delimiter=',')
+        with open(csv_filepath, mode="w", newline="") as file:
+            writer = csv.writer(file, delimiter=",")
             writer.writerows(distance_data_array_transpose)
 
         file.close()
 
-        with open(csv_filepath, 'r', encoding="utf-8") as csv_file:
+        with open(csv_filepath, "r", encoding="utf-8") as csv_file:
             i = 0
             for line in csv_file:
                 tmp_list = line.split(",")
-               # tmp_list.pop(0)
+                # tmp_list.pop(0)
                 standard_item_list = []
                 pair_no_item = QtGui.QStandardItem()
                 pair_no_item.setData(int(tmp_list[0]), role=QtCore.Qt.DisplayRole)
@@ -7423,7 +7558,9 @@ class MainWindow(QtWidgets.QMainWindow):
         """Sets the protein color."""
         input = self.ui.box_manage_choose_protein.currentText()
         tmp_protein = self.app_project.search_protein(input)
-        tmp_protein.color_protein_in_pymol(self.ui.box_manage_choose_color.currentText(), f"/{tmp_protein.get_molecule_object()}")
+        tmp_protein.color_protein_in_pymol(
+            self.ui.box_manage_choose_color.currentText(), f"/{tmp_protein.get_molecule_object()}",
+        )
 
     def choose_manage_representation(self) -> None:
         """Sets the representation."""
@@ -7571,14 +7708,17 @@ class MainWindow(QtWidgets.QMainWindow):
             # --Begin: worker setup
             self.tmp_thread = QtCore.QThread()
             self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
-            self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
-                                                                 self.display_view_page)
+            self.tmp_thread = task_workers.setup_worker_for_work(
+                self.tmp_thread, self.tmp_worker, self.display_view_page,
+            )
             self.tmp_worker.finished.connect(self.post_preview_image)
             self.tmp_thread.start()
             # --End: worker setup
 
             # </editor-fold>
-            gui_utils.setup_standard_block_box(self.block_box_uni, "Preview ray-trace image", "Creating preview for the ray-traced image ...")
+            gui_utils.setup_standard_block_box(
+                self.block_box_uni, "Preview ray-trace image", "Creating preview for the ray-traced image ...",
+            )
             self.block_box_uni.exec_()
         else:
             self.status_bar.showMessage("Preview draw image ...")
@@ -7600,11 +7740,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.ui.cb_ray_tracing.isChecked():
             save_dialog = QtWidgets.QFileDialog()
             try:
-                full_file_name = save_dialog.getSaveFileName(caption="Save Image",
-                                                             filter="Image (*.png)")
+                full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
                 if full_file_name == ("", ""):
-                    tools.quick_log_and_display("info", "No file has been selected.",
-                                                self.status_bar, "No file has been selected.")
+                    tools.quick_log_and_display(
+                        "info", "No file has been selected.", self.status_bar, "No file has been selected.",
+                    )
                     return
                 self.status_bar.showMessage("Creating ray-traced image ...")
 
@@ -7612,48 +7752,56 @@ class MainWindow(QtWidgets.QMainWindow):
                 # --Begin: worker setup
                 self.tmp_thread = QtCore.QThread()
                 self.tmp_worker = task_workers.SaveRayImageWorker(self.renderer, full_file_name[0])
-                self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker,
-                                                                     self.display_view_page)
+                self.tmp_thread = task_workers.setup_worker_for_work(
+                    self.tmp_thread, self.tmp_worker, self.display_view_page,
+                )
                 self.tmp_worker.finished.connect(self.post_save_image)
                 self.tmp_thread.start()
                 # --End: worker setup
 
                 # </editor-fold>
-                gui_utils.setup_standard_block_box(self.block_box_uni, "Save ray-trace image",
-                                                   "Creating the ray-traced image ...")
+                gui_utils.setup_standard_block_box(
+                    self.block_box_uni, "Save ray-trace image", "Creating the ray-traced image ...",
+                )
                 self.block_box_uni.exec_()
 
-                #cmd.ray(2400, 2400, renderer=int(self.renderer))
-                #cmd.png(full_file_name[0], dpi=300)
+                # cmd.ray(2400, 2400, renderer=int(self.renderer))
+                # cmd.png(full_file_name[0], dpi=300)
 
             except FileExistsError:
-                tools.quick_log_and_display("error", "File exists already.",
-                                            self.status_bar, "File exists already.")
+                tools.quick_log_and_display("error", "File exists already.", self.status_bar, "File exists already.")
             except pymol.CmdException:
-                tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-                                                     "an image", self.status_bar,
-                                            "Unexpected Error from PyMOL")
+                tools.quick_log_and_display(
+                    "error",
+                    "Unexpected Error from PyMOL while saving the " "an image",
+                    self.status_bar,
+                    "Unexpected Error from PyMOL",
+                )
         else:
             save_dialog = QtWidgets.QFileDialog()
             try:
-                full_file_name = save_dialog.getSaveFileName(caption="Save Image",
-                                                             filter="Image (*.png)")
+                full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
                 if full_file_name == ("", ""):
-                    tools.quick_log_and_display("info", "No file has been selected.",
-                                                self.status_bar, "No file has been selected.")
+                    tools.quick_log_and_display(
+                        "info", "No file has been selected.", self.status_bar, "No file has been selected.",
+                    )
                     return
                 self.status_bar.showMessage("Creating draw image ...")
                 cmd.draw(2400, 2400)
                 cmd.png(full_file_name[0], dpi=300)
                 self.status_bar.showMessage("Finished image creation.")
-                basic_boxes.ok("Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information)
+                basic_boxes.ok(
+                    "Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information,
+                )
             except FileExistsError:
-                tools.quick_log_and_display("error", "File exists already.",
-                                            self.status_bar, "File exists already.")
+                tools.quick_log_and_display("error", "File exists already.", self.status_bar, "File exists already.")
             except pymol.CmdException:
-                tools.quick_log_and_display("error", "Unexpected Error from PyMOL while saving the "
-                                                     "an image", self.status_bar,
-                                            "Unexpected Error from PyMOL")
+                tools.quick_log_and_display(
+                    "error",
+                    "Unexpected Error from PyMOL while saving the " "an image",
+                    self.status_bar,
+                    "Unexpected Error from PyMOL",
+                )
             finally:
                 QtWidgets.QApplication.restoreOverrideCursor()
 
@@ -7742,17 +7890,20 @@ class MainWindow(QtWidgets.QMainWindow):
                 #     self.used_proteins.prot_2_seq_end = tools.check_seq_length(tmp_protein_pair.protein_2)
         self.ui.btn_manage_session.show()
 
-    def hide_resi_sticks(self) -> None:
+    @staticmethod
+    def hide_resi_sticks() -> None:
         """Hides the balls and sticks representation of the pymol selection."""
         session_util.check_if_sele_is_empty()
         cmd.hide(representation="sticks", selection="sele")
 
-    def show_resi_sticks(self) -> None:
+    @staticmethod
+    def show_resi_sticks() -> None:
         """Shows the pymol selection as balls and sticks."""
         session_util.check_if_sele_is_empty()
         cmd.show(representation="sticks", selection="sele")
-
-    def zoom_resi_position(self) -> None:
+    
+    @staticmethod
+    def zoom_resi_position() -> None:
         """Zooms to the pymol selection."""
         session_util.check_if_sele_is_empty()
         cmd.zoom(selection="sele", buffer=8.0, state=0, complete=0)
@@ -7760,7 +7911,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # </editor-fold>
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     styles.set_stylesheet(app)
     ex = MainWindow()
