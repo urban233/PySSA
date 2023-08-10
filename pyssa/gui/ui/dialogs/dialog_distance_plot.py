@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QKeySequence
+from PyQt5.QtGui import QIcon
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from pymol import cmd
@@ -39,7 +39,7 @@ from matplotlib import ticker
 
 
 class PlotWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
         super(PlotWidget, self).__init__(parent)
         self.figure = Figure(figsize=(18, 7.25))
         self.canvas = FigureCanvas(self.figure)
@@ -51,7 +51,7 @@ class PlotWidget(QWidget):
 class DialogDistancePlot(QtWidgets.QDialog):
 
     def __init__(self, protein_pair_from_project, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -115,7 +115,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
 
         self.ui.btn_distance_plot_save.hide()
         self.ui.btn_distance_plot_update.clicked.connect(self.update_plot)
-        self.ui.btn_distance_plot_save.clicked.connect(self.save_plot_to_file)
+        #self.ui.btn_distance_plot_save.clicked.connect(self.save_plot_to_file)
         self.ui.btn_distance_plot_reset.clicked.connect(self.reset_distance_plot)
         self.ui.cb_turn_on_grid.stateChanged.connect(self.turn_gird_on_off)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
@@ -157,9 +157,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
         self.update_distance_plot(self.ui.cb_turn_on_grid.checkState())
 
     def update_distance_plot(self, grid: bool):
-        """This function updates the distance plot
-
-        """
+        """This function updates the distance plot."""
         from_aa = int(self.ui.sp_distance_plot_from.text())
         to_aa = int(self.ui.sp_distance_plot_to.text())
         from_range = float(self.ui.dsp_distance_plot_from_range.text().replace(",", "."))
@@ -210,33 +208,31 @@ class DialogDistancePlot(QtWidgets.QDialog):
         self.plot_widget.canvas.draw()
 
         if self.ui.cb_sync_with_pymol.isChecked():
-            print("Sync is active.")
-            zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
-            cmd.select("zoom_sele", zoom_selection)
-            cmd.zoom("zoom_sele")
-
+            self.highlight_selection_in_pymol(from_aa, to_aa)
+    
+    def highlight_selection_in_pymol(self, from_aa: int, to_aa: int):
+        print("Sync is active.")
+        zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
+        cmd.select("zoom_sele", zoom_selection)
+        cmd.show("spheres", "zoom_sele")
+        cmd.alter("zoom_sele", "vdw=0.7")
+        cmd.rebuild()
+        cmd.zoom("zoom_sele")
+    
+    def hide_highlight_selection_in_pymol(self, from_aa: int, to_aa: int):
+        zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
+        cmd.select("zoom_sele", zoom_selection)
+        cmd.hide("spheres", "zoom_sele")
+    
     def reset_distance_plot(self):
+        from_aa = int(self.ui.sp_distance_plot_from.text())
+        to_aa = int(self.ui.sp_distance_plot_to.text())
         self.ui.cb_turn_on_grid.setChecked(False)
         self.plot_distance_data()
+        self.hide_highlight_selection_in_pymol(from_aa, to_aa)
 
     def turn_gird_on_off(self):
         if self.ui.cb_turn_on_grid.isChecked():
             self.update_distance_plot(True)
         else:
             self.update_distance_plot(False)
-
-    def save_plot_to_file(self):
-        # create an exporter instance, as an argument give it
-        # the item you wish to export
-        #exporter = pg.exporters.ImageExporter(self.graph_widget.plotItem)
-
-        # set export parameters if needed
-        exporter.parameters()['width'] = 1000  # (note this also affects height parameter)
-        exporter.parameters()['height'] = 1440
-        # save to file
-        file_dialog = QtWidgets.QFileDialog()
-        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
-        file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getSaveFileName(self, "Save Plot as image", "", "Portable Network Graphic (.png)")
-        if file_path:
-            exporter.export(f'{file_path}.png')

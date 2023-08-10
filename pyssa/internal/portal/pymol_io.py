@@ -19,18 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for in- and output processes in pymol"""
+"""Module for in- and output processes in pymol."""
 import pathlib
 import pymol
 import os
+from typing import TYPE_CHECKING
 from pymol import cmd
-
+from pyssa.util import exception
 from pyssa.internal.portal import graphic_operations
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import path_util
-from pyssa.util import constants
+from pyssa.util import constants, tools
 from pyssa.util import globals
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import protein
 
 
 def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
@@ -74,6 +78,25 @@ def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_objec
         cmd.fetch(code=molecule_object, type="pdb", path=filepath, file=filename)
     except pymol.CmdException:
         raise ValueError("PDB ID is invalid.")
+
+
+def get_protein_from_pdb(pdb_id: str) -> 'protein.Protein':
+    """Fetches a protein from the PDB and creates a protein object."""
+    if len(pdb_id) != 4:
+        raise exception.IllegalArgumentError("PDB ID is invalid!")
+    try:
+        # PDB ID as input: the pdb file gets saved in a scratch directory where it gets deleted immediately
+        cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
+        graphic_operations.setup_default_session_graphic_settings()
+        return protein.Protein(
+            molecule_object=pdb_id,
+            pdb_filepath=path_util.FilePath(pathlib.Path(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")),
+        )
+    except pymol.CmdException:
+        tools.clean_scratch_folder()
+        # TODO: add message that fetching the reference failed
+    except FileNotFoundError:
+        print("File could not be found.")
 
 
 def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str) -> None:

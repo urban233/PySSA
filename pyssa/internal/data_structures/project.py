@@ -32,7 +32,7 @@ from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
-
+from pyssa.util import exception
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures.data_classes import current_session
@@ -92,14 +92,25 @@ class Project:
             a_workspace_path (pathlib.Path): the path of the workspace
 
         Raises:
-            ValueError: if one of the arguments are None
+            exception.IllegalArgumentError: if one of the arguments are None
+            exception.DirectoryDoesNotExistError: if the workspace folder does not exist
         """
         # <editor-fold desc="Checks">
+        if not safeguard.Safeguard.check_if_value_is_not_none(a_project_name):
+            msg = "The project name is None!"
+            logger.error(msg)
+            raise exception.IllegalArgumentError(msg)
+        
+        if not safeguard.Safeguard.check_if_value_is_not_none(a_workspace_path):
+            msg = "The workspace path is None!"
+            logger.error(msg)
+            raise exception.DirectoryDoesNotExistError(msg)
+        
         if not safeguard.Safeguard.check_filepath(a_workspace_path):
             msg = "The given workspace path does not exists!"
             logger.error(msg)
-            raise ValueError(msg)
-
+            raise exception.IllegalArgumentError(msg)
+        
         # </editor-fold>
 
         self._project_name: str = a_project_name
@@ -205,11 +216,6 @@ class Project:
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(a_filepath):
             msg = "The given filepath object is None."
-            logger.error(msg)
-            raise ValueError(msg)
-        
-        if not safeguard.Safeguard.check_filepath(a_filepath):
-            msg = "The given filepath does not exists!"
             logger.error(msg)
             raise ValueError(msg)
 

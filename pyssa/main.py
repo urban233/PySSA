@@ -48,7 +48,7 @@ from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_structures.data_classes import stage
 from pyssa.internal.data_structures.data_classes import current_session
-from pyssa.internal.portal import graphic_operations
+from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import workers, task_workers
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.ui.dialogs import dialog_settings_global
@@ -64,7 +64,7 @@ from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
 from pyssa.util import globals
-from pyssa.util import protein_pair_util, session_util
+from pyssa.util import protein_pair_util, session_util, exception
 from pyssa.util import constants, input_validator, gui_page_management, tools, gui_utils
 
 
@@ -204,7 +204,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.prediction_type = 0
         self.current_session = current_session.CurrentSession("", "", "")
-
+        self.is_distance_plot_open = False
+        self.distance_plot_dialog = None
         # </editor-fold>
 
         # sets up the status bar
@@ -1471,6 +1472,9 @@ class MainWindow(QtWidgets.QMainWindow):
     # <editor-fold desc="Display page functions">
     def display_home_page(self) -> None:
         """Displays the homepage of the plugin."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 0, "Home")
 
     def display_single_analysis_page(self) -> None:
@@ -1498,6 +1502,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_results_page(self) -> None:
         """Displays the results work area."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         results = []
         results.insert(0, "")
         i = 0
@@ -1514,6 +1521,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_image_page(self) -> None:
         """Displays the image work area."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         self._init_image_page()
         if self.ui.box_renderer.currentText() == "":
             self.ui.cb_ray_tracing.hide()
@@ -1577,6 +1587,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_edit_page(self) -> None:
         """Displays the edit project page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         # pre-process
         self.status_bar.showMessage(self.workspace.text())
         self._init_edit_page()
@@ -1585,6 +1598,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def start_display_use_page(self) -> None:
         """Displays the use project page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+    
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
 
         # <editor-fold desc="Worker setup">
@@ -1653,6 +1670,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_hotspots_page(self) -> None:
         """Displays the hotspots page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         self.ui.list_hotspots_choose_protein.clear()
         gui_elements_to_hide = [
             self.ui.lbl_hotspots_resi_no,
@@ -1673,6 +1693,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_manage_pymol_session(self) -> None:
         """Displays the manage pymol session page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         self.ui.box_manage_choose_protein.clear()
         pymol_objs = cmd.get_object_list()
         pymol_objs.insert(0, "")
@@ -2079,22 +2102,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         new_project_name = self.ui.txt_new_project_name.text()
         self.app_project = project.Project(new_project_name, self.workspace_path)
-        if self.ui.cb_new_add_reference.checkState() == 2 and self.ui.btn_new_create_project.isEnabled() is True:
+        if self.ui.cb_new_add_reference.checkState() == 2:
             if len(self.ui.txt_new_choose_reference.text()) == 4:
-                # PDB ID as input
-                # the pdb file gets saved in a scratch directory where it gets deleted immediately
-                pdb_id = self.ui.txt_new_choose_reference.text().upper()
-                try:
-                    cmd.fetch(pdb_id, type="pdb", path=self.scratch_path)
-                except pymol.CmdException:
-                    tools.clean_scratch_folder()
-                    # TODO: add message that fetching the reference failed
-                    return
-                graphic_operations.setup_default_session_graphic_settings()
-                tmp_ref_protein = protein.Protein(
-                    molecule_object=pdb_id,
-                    pdb_filepath=path_util.FilePath(pathlib.Path(f"{self.scratch_path}/{pdb_id}.pdb")),
-                )
+                tmp_ref_protein = pymol_io.get_protein_from_pdb(self.ui.txt_new_choose_reference.text().upper())
             else:
                 # local pdb file as input
                 pdb_filepath = path_util.FilePath(pathlib.Path(self.ui.txt_new_choose_reference.text()))
@@ -2346,6 +2356,9 @@ class MainWindow(QtWidgets.QMainWindow):
     # <editor-fold desc="View project page functions">
     def display_view_page(self) -> None:
         """Displays the edit project page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         self.ui.list_view_project_proteins.clear()
         self.ui.txtedit_view_sequence.clear()
         # pre-process
@@ -2634,6 +2647,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def export_current_project(self) -> None:
         """Exports the current project to an importable format."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_export_project)
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
@@ -2650,6 +2666,9 @@ class MainWindow(QtWidgets.QMainWindow):
     # <editor-fold desc="Close project functions">
     def close_project(self) -> None:
         """Closes the current project."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         cmd.reinitialize()
         self._project_watcher.on_home_page = True
@@ -7095,6 +7114,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def pre_load_results(self) -> None:
         """Sets up the worker for the result loading process."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         shutil.rmtree(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_IMAGES)
@@ -7401,8 +7423,10 @@ class MainWindow(QtWidgets.QMainWindow):
         protein_pair_of_analysis = self.app_project.search_protein_pair(
             self.ui.cb_results_analysis_options.currentText(),
         )
-        dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
-        dialog.exec_()
+        self.distance_plot_dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
+        self.distance_plot_dialog.setWindowModality(Qt.WindowModal)
+        self.is_distance_plot_open = True
+        self.distance_plot_dialog.exec_()
         # try:
         #     protein_pair_of_analysis = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
         #     dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
@@ -7417,6 +7441,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # item = self.ui.project_list.selectedItems()
         # if item is None:
         #     raise ValueError
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         protein_pair_of_analysis = self.app_project.search_protein_pair(
             self.ui.cb_results_analysis_options.currentText(),
         )
@@ -7425,6 +7452,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_interesting_region(self) -> None:
         """Displays an image of an interesting region."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         png_dialog = QtWidgets.QDialog(self)
         label = QtWidgets.QLabel(self)
         file_name = self.ui.list_results_interest_regions.currentItem().text()
@@ -7441,6 +7471,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_distance_table(self) -> None:
         """Displays the distances in a table."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
         csv_model = QtGui.QStandardItemModel()
         csv_model.setColumnCount(7)
         labels = [

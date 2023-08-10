@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the protein class"""
+"""Module for the protein class."""
 import os
 import pathlib
 import logging
@@ -53,7 +53,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 class Protein:
-    """This class stores one protein in a PyMOL compatible form"""
+    """This class stores one protein in a PyMOL compatible form."""
 
     # <editor-fold desc="Class attributes">
     """
@@ -149,7 +149,7 @@ class Protein:
             self._pymol_molecule_object = pdb_filepath.get_filename()
             self.chains = protein_operations.get_protein_chains(molecule_object, pdb_filepath.get_dirname(), pdb_filepath.get_basename())
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
-                bio_data.convert_pdb_file_into_xml_element(pdb_filepath)
+                bio_data.convert_pdb_file_into_xml_element(pdb_filepath),
             )
             self.pymol_selection = selection.Selection(self._pymol_molecule_object)
             self.pymol_selection.selection_string = ""
@@ -260,15 +260,11 @@ class Protein:
         graphic_operations.color_protein(color, self.pymol_selection.selection_string)
 
     def set_selections_from_chains_ca(self) -> None:
-        """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
-
-        """
+        """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's."""
         self.pymol_selection.set_selections_from_chains_ca(protein_util.filter_chains_for_protein_chains(self.chains))
 
     def set_selection_without_chains_ca(self) -> None:
-        """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's.
-
-        """
+        """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's."""
         self.pymol_selection.set_selections_without_chains_ca()
 
     # def write_fasta_file(self) -> None:
@@ -290,7 +286,7 @@ class Protein:
     #     fasta_file.close()
 
     def clean_pdb_file(self) -> None:
-        """This function cleans a pdb file from the PDB
+        """This function cleans a pdb file from the PDB.
 
         Raises:
             AttributeError: If no export directory is given
@@ -357,7 +353,7 @@ class Protein:
     @staticmethod
     def deserialize_protein(protein_obj_json_file: path_util.FilePath):
         """This function constructs the protein object from
-        the json file
+        the json file.
 
         Returns:
             a complete protein object deserialized from a json file
@@ -374,9 +370,7 @@ class Protein:
         return tmp_protein
 
     def set_all_attributes(self, attrib_dict, pdb_data, pymol_session):
-        """
-            the unique identifier of the protein
-            """
+        """The unique identifier of the protein."""
         self._id = attrib_dict[attribute_names.ID]
         self._pymol_molecule_object = attrib_dict[attribute_names.PROTEIN_MOLECULE_OBJECT]
         self.pymol_selection.selection_string = attrib_dict[attribute_names.PROTEIN_SELECTION]
