@@ -137,15 +137,31 @@ class MainWindow(QtWidgets.QMainWindow):
                 sys.exit()
             self.app_settings.app_launch = 1
             self.app_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
+
+            import zipfile
+            with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), 'r') as zip_ref:
+                zip_ref.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
+            
+            path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
+            # for tmp_filename in os.listdir(path_of_demo_projects):
+            #     shutil.copy(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"),
+            #                 pathlib.Path(f"{self.app_settings.workspace_path}/{tmp_filename}"))
+            #     print(tmp_filename)
+
             tmp_project = project.Project("", dialog_startup.global_var_startup_workspace)
-            tmp_project = tmp_project.deserialize_project(
-                pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml"),
-                self.app_settings,
-            )
-            tmp_project.set_workspace_path(dialog_startup.global_var_startup_workspace)
-            new_filepath = pathlib.Path(f"{dialog_startup.global_var_startup_workspace}/bmp2-demo.xml")
-            tmp_project.serialize_project(new_filepath)
-            os.remove(str(pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml")))
+            for tmp_filename in os.listdir(path_of_demo_projects):
+                try:
+                    tmp_project = tmp_project.deserialize_project(
+                        pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"),
+                        self.app_settings,
+                    )
+                except exception.IllegalArgumentError:
+                    constants.PYSSA_LOGGER.warning("The workspace path does not exist on this system, "
+                                                   "but this is due to the demo projects.")
+                tmp_project.set_workspace_path(dialog_startup.global_var_startup_workspace)
+                new_filepath = pathlib.Path(f"{dialog_startup.global_var_startup_workspace}/{tmp_filename}")
+                tmp_project.serialize_project(new_filepath)
+            os.remove(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"))
             self.app_settings.serialize_settings()
             QtWidgets.QApplication.restoreOverrideCursor()
         try:

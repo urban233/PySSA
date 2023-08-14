@@ -106,10 +106,10 @@ class Project:
             logger.error(msg)
             raise exception.DirectoryDoesNotExistError(msg)
         
-        if not safeguard.Safeguard.check_filepath(a_workspace_path):
-            msg = "The given workspace path does not exists!"
-            logger.error(msg)
-            raise exception.IllegalArgumentError(msg)
+        # if not safeguard.Safeguard.check_filepath(a_workspace_path):
+        #     msg = "The given workspace path does not exists!"
+        #     logger.error(msg)
+        #     raise exception.IllegalArgumentError(msg)
         
         # </editor-fold>
 

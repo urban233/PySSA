@@ -39,7 +39,7 @@ global_var_terminate_app = 0
 class DialogStartup(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -80,9 +80,7 @@ class DialogStartup(QtWidgets.QDialog):
         self.close()
 
     def choose_workspace(self):
-        """This function opens a file dialog to choose a workspace directory
-
-        """
+        """This function opens a file dialog to choose a workspace directory."""
         self.workspace_dir = PyQt5.QtWidgets.QFileDialog.getExistingDirectory(
             self, "Open Workspace Directory", QtCore.QDir.homePath(),
             PyQt5.QtWidgets.QFileDialog.ShowDirsOnly | PyQt5.QtWidgets.QFileDialog.DontResolveSymlinks)
@@ -90,9 +88,7 @@ class DialogStartup(QtWidgets.QDialog):
             self.ui.txt_workspace.setText(self.workspace_dir)
 
     def launch_app(self):
-        """This function launches the plugin
-
-        """
+        """This function launches the plugin."""
         QApplication.setOverrideCursor(Qt.WaitCursor)
         global global_var_startup_workspace
         global_var_startup_workspace = self.ui.txt_workspace.text()
@@ -117,6 +113,6 @@ class DialogStartup(QtWidgets.QDialog):
             os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}"))
         if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
             os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
-        request.urlretrieve(constants.DEMO_PROJECT_SCIEBO_URL, str(pathlib.Path(f"{constants.SETTINGS_DIR}/bmp2-demo.xml")))
+        request.urlretrieve(constants.DEMO_PROJECT_SCIEBO_URL, str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")))
 
         self.close()

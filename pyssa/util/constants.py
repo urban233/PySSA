@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for storing project-wide constants"""
+"""Module for storing project-wide constants."""
 import logging
 import os
 import datetime
@@ -31,7 +31,7 @@ PLUGIN_NAME = "tmpPySSA"
 PLUGIN_PATH_OLD = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\{PLUGIN_NAME}")
 PLUGIN_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{PLUGIN_NAME}")
 PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-VERSION_NUMBER = "v0.9.15"
+VERSION_NUMBER = "v0.9.16"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
@@ -62,7 +62,7 @@ ESMFOLD_PDB_DIR = Path(f"{SCRATCH_DIR}/esmfold/pdb")
 UNIX_SCRIPTS_SCIEBO_URL = "https://w-hs.sciebo.de/s/X3L7pnr4wfqy6gu/download"
 UNIX_SCRIPTS_USER_DIR = pathlib.Path(f"{SETTINGS_DIR}/scripts/unix")
 
-DEMO_PROJECT_SCIEBO_URL = "https://w-hs.sciebo.de/s/4KxYeovy5t9Ycr1/download"
+DEMO_PROJECT_SCIEBO_URL = "https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download"
 
 POWERSHELL_EXE = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 # Constants for structure prediction
