@@ -341,7 +341,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.action_install_from_file.setVisible(True)
         else:
             self.ui.action_install_from_file.setVisible(False)
-
+        
+        # temp gui changes (need to be changed in the designer)
+        self.ui.lbl_hotspots_resi_show.setText("Residue(s) as sticks")
+        self.ui.lbl_hotspots_resi_hide.setText("Residue(s) as sticks")
+        
         # fixme: should the pdf documentation be accessible through the pyssa gui?
         self.ui.action_help_docs_pdf.setText("Documentation")
         self.ui.action_help_docs_pdf.setVisible(True)
