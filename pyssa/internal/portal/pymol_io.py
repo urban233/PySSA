@@ -56,6 +56,7 @@ def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) ->
         color_prot_1 = constants.CVM_TRITANOPIA_PROT_1_COLOR
     else:
         color_prot_1 = "green"
+    graphic_operations.setup_default_session_graphic_settings()
     cmd.color(color_prot_1, molecule_object)
 
 
