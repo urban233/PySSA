@@ -26,15 +26,13 @@ import os
 from typing import TYPE_CHECKING
 from pymol import cmd
 from pyssa.util import exception
+from pyssa.internal.data_structures import protein
 from pyssa.internal.portal import graphic_operations
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import path_util
 from pyssa.util import constants, tools
 from pyssa.util import globals
-
-if TYPE_CHECKING:
-    from pyssa.internal.data_structures import protein
 
 
 def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
@@ -88,10 +86,11 @@ def get_protein_from_pdb(pdb_id: str) -> 'protein.Protein':
         # PDB ID as input: the pdb file gets saved in a scratch directory where it gets deleted immediately
         cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
         graphic_operations.setup_default_session_graphic_settings()
-        return protein.Protein(
+        tmp_protein = protein.Protein(
             molecule_object=pdb_id,
             pdb_filepath=path_util.FilePath(pathlib.Path(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")),
         )
+        return tmp_protein
     except pymol.CmdException:
         tools.clean_scratch_folder()
         # TODO: add message that fetching the reference failed
