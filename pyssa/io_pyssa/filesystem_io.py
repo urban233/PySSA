@@ -142,12 +142,12 @@ class XmlDeserializer:
             tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(distance_data=result_hashtable,
                                                                                                       pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
                                                                                                       rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
-                                                                                                      aligned_aa=int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
+                                                                                                      aligned_aa=str(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
             tmp_protein_pair_obj.distance_analysis.cutoff = float(distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF])
             tmp_protein_pair_obj.distance_analysis.cycles = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CYCLES]
             tmp_protein_pair_obj.distance_analysis.name = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_NAME]
             tmp_protein_pair_obj.distance_analysis.rmsd_dict['rmsd'] = float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD])
-            tmp_protein_pair_obj.distance_analysis.rmsd_dict['aligned_residues'] = int(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA])
+            tmp_protein_pair_obj.distance_analysis.rmsd_dict['aligned_residues'] = str(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA])
             self.deserialize_analysis_images(tmp_protein_pair_obj.name, tmp_protein_pair_obj.distance_analysis.analysis_results)
             protein_pairs.append(tmp_protein_pair_obj)
 

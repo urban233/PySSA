@@ -49,7 +49,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 class DistanceAnalysis:
-    """This class contains information about the distance analysis"""
+    """This class contains information about the distance analysis."""
 
     # <editor-fold desc="Class attributes">
     """
@@ -102,7 +102,7 @@ class DistanceAnalysis:
     def __init__(self,
                  protein_pair_for_analysis: 'protein_pair.ProteinPair',
                  app_settings: 'settings.Settings'):
-        """Constructor
+        """Constructor.
 
         Args:
             protein_pair_for_analysis:
@@ -120,23 +120,17 @@ class DistanceAnalysis:
         self.alignment_file_name = "aln"
 
     def get_protein_pair(self):
-        """This function returns the protein_pair.
-
-        """
+        """This function returns the protein_pair."""
         return self._protein_pair_for_analysis
 
     def save_distance_analysis_session(self) -> None:
-        """This function saves the pymol session of the Protein pair distance analysis.
-
-        """
+        """This function saves the pymol session of the Protein pair distance analysis."""
         protein_pair_operations.save_session_of_protein_pair(self._protein_pair_for_analysis.name)
 
     def create_align_selections(self,
                                 protein_1_selection: 'selection.Selection',
                                 protein_2_selection: 'selection.Selection') -> None:
-        """This function creates the selection which are needed for the align command.
-
-        """
+        """This function creates the selection which are needed for the align command."""
         logger.debug(f"1st argument of <create_align_selections>: "
                      f"{protein_1_selection.selection_string} {protein_1_selection}")
         logger.debug(f"2nd argument of <create_align_selections>: "
@@ -187,9 +181,7 @@ class DistanceAnalysis:
         return results[0], results[1]
 
     def do_analysis_in_pymol(self, app_project: 'project.Project'):
-        """This function does the distance analysis of the protein pair.
-
-        """
+        """This function does the distance analysis of the protein pair."""
         logger.info("Start of do_analysis_in_pymol() method.")
         self._protein_pair_for_analysis.load_protein_pair_in_pymol()
         logger.info(f"Loaded protein pair: "
@@ -210,9 +202,25 @@ class DistanceAnalysis:
         align_results = self.align_protein_pair_for_analysis()
         logger.info(f"Aligned protein pair: "
                     f"{self._protein_pair_for_analysis.name} in pymol session.")
+
+        fasta_prot_1 = cmd.get_fastastr(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string)
+        logger.debug(fasta_prot_1)
+        logger.debug(fasta_prot_1[fasta_prot_1.find("\n"):])
+        seq_length_prot_1 = len(fasta_prot_1[fasta_prot_1.find("\n"):])
+        logger.debug(seq_length_prot_1)
+        # fasta_prot_2 = cmd.get_fastastr(self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string)
+        # fixme: This code below is if something needs to be changed for the total no. of residues
+        # seq_length_prot_2 = len(fasta_prot_2[fasta_prot_2.find("\n"):])
+        # number_of_total_residues = 0
+        # if seq_length_prot_1 > seq_length_prot_2:
+        #     number_of_total_residues = seq_length_prot_1
+        # elif seq_length_prot_1 < seq_length_prot_2:
+        #     number_of_total_residues = seq_length_prot_2
+        # else:
+        #     number_of_total_residues = seq_length_prot_1
         self.rmsd_dict = {
             "rmsd": str(round(align_results[0], 2)),
-            "aligned_residues": str(align_results[1]),
+            "aligned_residues": f"{str(align_results[1])} / {seq_length_prot_1}",
         }
 
         distances = protein_pair_util.calculate_distance_between_ca_atoms(
@@ -226,7 +234,7 @@ class DistanceAnalysis:
             self.distance_analysis_data,
             pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
             self.rmsd_dict['rmsd'],
-            self.rmsd_dict['aligned_residues']
+            self.rmsd_dict['aligned_residues'],
         )
 
     def take_image_of_protein_pair(self,
@@ -304,7 +312,7 @@ class DistanceAnalysis:
                                           ray_shadows: bool = False,
                                           opaque_background: int = 0,
                                           take_images=True):
-        """This function takes images of interesting regions of the alignment
+        """This function takes images of interesting regions of the alignment.
 
         Args:
             cutoff (float):
@@ -401,12 +409,10 @@ class DistanceAnalysis:
                 i += 1
 
     def serialize_distance_analysis(self, xml_distance_analysis_element):
-        """This function serialize the protein pair object
-
-        """
+        """This function serialize the protein pair object."""
         tmp_distance_analysis = ElementTree.SubElement(
             xml_distance_analysis_element,
-            element_names.DISTANCE_ANALYSIS
+            element_names.DISTANCE_ANALYSIS,
         )
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_NAME, str(self.name))
         tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CUTOFF, str(self.cutoff))
@@ -418,9 +424,9 @@ class DistanceAnalysis:
         self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
         tmp_session_data = ElementTree.SubElement(
             tmp_distance_analysis,
-            element_names.DISTANCE_ANALYSIS_SESSION
+            element_names.DISTANCE_ANALYSIS_SESSION,
         )
         tmp_session_data.set(
             attribute_names.PROTEIN_PAIR_SESSION,
-            pymol_io.convert_pymol_session_to_base64_string(self.name)
+            pymol_io.convert_pymol_session_to_base64_string(self.name),
         )

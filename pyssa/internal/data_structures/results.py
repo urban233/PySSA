@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the results class"""
+"""Module for the results class."""
 import pathlib
 from xml.etree import ElementTree
 import logging
@@ -46,7 +46,7 @@ class DistanceAnalysisResults:
     structure_aln_image: tuple[str, str] = ()
     interesting_regions_images: list[tuple[str, str]] = []
 
-    def __init__(self, distance_data: dict, pymol_session: str, rmsd: float, aligned_aa: int):
+    def __init__(self, distance_data: dict, pymol_session: str, rmsd: float, aligned_aa: str):
         self.distance_data = distance_data
         self.pymol_session = pymol_session
         self.rmsd = rmsd

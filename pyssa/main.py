@@ -7252,9 +7252,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
         self.ui.list_results_interest_regions.sortItems()
         self.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
-        self.ui.txt_results_aligned_residues.setText(
-            str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa),
-        )
+        
 
         # # <editor-fold desc="Histogram check">
         # # check if histogram can be created
@@ -7279,6 +7277,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_session = current_session.CurrentSession(
             "protein_pair", tmp_protein_pair.name, tmp_protein_pair.pymol_session,
         )
+        
+        self.ui.txt_results_aligned_residues.setText(
+            str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa),
+        )
+        cmd.scene(f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}",
+                  action="recall")
         QtWidgets.QApplication.restoreOverrideCursor()
         self.status_bar.showMessage(f"Current workspace: {str(self.workspace_path)}")
 

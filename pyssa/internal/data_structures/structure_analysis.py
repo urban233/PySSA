@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for structure analysis class"""
+"""Module for structure analysis class."""
 import logging
 import os.path
 import pathlib
@@ -40,7 +40,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 class Analysis:
-    """This class contains information about the type of analysis"""
+    """This class contains information about the type of analysis."""
 
     analysis_list: list[protein_pair.ProteinPair] = []
     app_project: 'project.Project'
@@ -74,8 +74,8 @@ class Analysis:
                 tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                     path_util.FilePath(
                         pathlib.Path(
-                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
-                    )
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png"),
+                    ),
                 )
                 logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
             tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
@@ -85,11 +85,13 @@ class Analysis:
                 for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                     interesting_region_filepaths.append(
                         path_util.FilePath(
-                            pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
-                        )
+                            pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}"),
+                        ),
                     )
                 tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(interesting_region_filepaths)
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
+            cmd.scene(f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}", 
+                      action="recall")
             tmp_protein_pair.save_session_of_protein_pair()
             self.app_project.add_protein_pair(tmp_protein_pair)
         self.analysis_list.clear()
