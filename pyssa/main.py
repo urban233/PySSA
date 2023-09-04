@@ -7955,9 +7955,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     @staticmethod
     def show_resi_sticks() -> None:
-        """Shows the pymol selection as balls and sticks."""
+        """Shows the pymol selection as sticks."""
         session_util.check_if_sele_is_empty()
         cmd.show(representation="sticks", selection="sele")
+        cmd.color(color="atomic", selection="sele and not elem C")
+        cmd.set("valence", 0)  # this needs to be better implemented
     
     @staticmethod
     def zoom_resi_position() -> None:
