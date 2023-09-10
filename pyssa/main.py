@@ -940,8 +940,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # </editor-fold>
 
         # <editor-fold desc="Open project page">
-        self.ui.btn_open_open_project.clicked.connect(self.open_project)
-        self.ui.list_open_projects.doubleClicked.connect(self.open_project)
+        self.ui.btn_open_open_project.clicked.connect(self.pre_open_project)
+        self.ui.list_open_projects.doubleClicked.connect(self.pre_open_project)
         self.ui.txt_open_search.textChanged.connect(self.validate_open_search)
         self.ui.txt_open_selected_project.textChanged.connect(self.activate_open_button)
         self.ui.list_open_projects.currentItemChanged.connect(self.select_project_from_open_list)
@@ -1246,6 +1246,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.box_ray_trace_mode.activated.connect(self.choose_ray_trace_mode)
         self.ui.box_ray_texture.activated.connect(self.choose_ray_texture)
         self.ui.cb_transparent_bg.stateChanged.connect(self.decide_transparent_bg)
+        self.ui.cb_ray_tracing.stateChanged.connect(self.decide_ray_tracing)
 
         # </editor-fold>
 
@@ -1466,6 +1467,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.box_ray_texture.setCurrentIndex(0)
         self.ui.cb_ray_tracing.setChecked(False)
         self.ui.cb_transparent_bg.setChecked(False)
+        self.ui.label_10.hide()
+        self.ui.box_ray_trace_mode.hide()
+        self.ui.label_14.hide()
+        self.ui.box_ray_texture.hide()
 
     def _init_batch_analysis_page(self) -> None:
         """Clears all text fields and hides everything which is needed."""
@@ -1693,20 +1698,23 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.is_distance_plot_open:
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
-        self.ui.list_hotspots_choose_protein.clear()
-        gui_elements_to_hide = [
-            self.ui.lbl_hotspots_resi_no,
-            self.ui.sp_hotspots_resi_no,
-            self.ui.lbl_hotspots_resi_show,
-            self.ui.btn_hotspots_resi_show,
-            self.ui.lbl_hotspots_resi_hide,
-            self.ui.btn_hotspots_resi_hide,
-            self.ui.lbl_hotspots_resi_zoom,
-            self.ui.btn_hotspots_resi_zoom,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_hotspots_choose_protein)
-        gui_utils.fill_list_view_with_protein_pair_names(self.app_project, self.ui.list_hotspots_choose_protein)
+        try:
+            print(self.ui.list_hotspots_choose_protein.currentItem().text())
+        except AttributeError:
+            self.ui.list_hotspots_choose_protein.clear()
+            gui_elements_to_hide = [
+                self.ui.lbl_hotspots_resi_no,
+                self.ui.sp_hotspots_resi_no,
+                self.ui.lbl_hotspots_resi_show,
+                self.ui.btn_hotspots_resi_show,
+                self.ui.lbl_hotspots_resi_hide,
+                self.ui.btn_hotspots_resi_hide,
+                self.ui.lbl_hotspots_resi_zoom,
+                self.ui.btn_hotspots_resi_zoom,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_hotspots_choose_protein)
+            gui_utils.fill_list_view_with_protein_pair_names(self.app_project, self.ui.list_hotspots_choose_protein)
         # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_hotspots_choose_protein)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 18, "Hotspots")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_hotspots_page)
@@ -2201,17 +2209,48 @@ class MainWindow(QtWidgets.QMainWindow):
         self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
 
-    def open_project(self) -> None:
+    def pre_open_project(self) -> None:
         """Opens an existing project."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-        tmp_thread = threading.Thread(target=self.thread_func_open_project, daemon=True)
-        tmp_thread.start()
-        tmp_thread.join()
+
+        # <editor-fold desc="Worker setup">
+        # --Begin: worker setup
+        self.tmp_thread = QtCore.QThread()
+        self.tmp_worker = task_workers.OpenProjectWorker(self.workspace_path, 
+                                                         self.ui.list_open_projects.currentItem().text(),
+                                                         self.app_settings)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.open_project)
+        self.tmp_thread.start()
+        # --End: worker setup
+
+        # </editor-fold>
+        
+        constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
+
+    def open_project(self, project_obj: project.Project):
+        self.app_project = project_obj
+        self._project_watcher.current_project = self.app_project
+        self.project_scanner.project = self.app_project
+        constants.PYSSA_LOGGER.info(
+            f"{self._project_watcher.current_project.get_project_name()} is the current project.",
+        )
+        self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
+        self._project_watcher.on_home_page = False
+        self._project_watcher.show_valid_options(self.ui)
+
+        # tmp_thread = threading.Thread(target=self.thread_func_open_project, daemon=True)
+        # tmp_thread.start()
+        # tmp_thread.join()
         cmd.reinitialize()
+        #self.ui.list_hotspots_choose_protein.clear()
+        # try:
+        #     self.ui.list_hotspots_choose_protein.currentItem().setText(None)
+        # except AttributeError:
+        #     print("")
         self.ui.btn_manage_session.hide()
         self.display_view_page()
         QtWidgets.QApplication.restoreOverrideCursor()
-
+    
     # </editor-fold>
 
     # <editor-fold desc="Delete project page functions">
@@ -2691,6 +2730,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.is_distance_plot_open = False
         tools.ask_to_save_pymol_session(self.app_project, self.current_session)
         cmd.reinitialize()
+        self.ui.list_hotspots_choose_protein.clear()
         self._project_watcher.on_home_page = True
         self._project_watcher.current_project = project.Project("", pathlib.Path(""))
         self._project_watcher.show_valid_options(self.ui)
@@ -7729,13 +7769,33 @@ class MainWindow(QtWidgets.QMainWindow):
             cmd.set("ray_texture", 5)
         else:
             print("Missing implementation!")
-
+    
+    def decide_ray_tracing(self) -> None:
+        """Sets the ray-tracing options."""
+        if self.ui.cb_ray_tracing.isChecked():
+            self.ui.cb_transparent_bg.hide()
+            self.ui.label_23.hide()
+            self.ui.box_renderer.setEnabled(False)
+            self.ui.label_10.show()
+            self.ui.box_ray_trace_mode.show()
+            self.ui.label_14.show()
+            self.ui.box_ray_texture.show()
+            cmd.set("ray_opaque_background", "off")
+        else:
+            self.ui.cb_transparent_bg.show()
+            self.ui.label_23.show()
+            self.ui.box_renderer.setEnabled(True)
+            self.ui.label_10.hide()
+            self.ui.box_ray_trace_mode.hide()
+            self.ui.label_14.hide()
+            self.ui.box_ray_texture.hide()
+    
     def decide_transparent_bg(self) -> None:
         """Sets the transparent background."""
         if self.ui.cb_transparent_bg.isChecked():
-            cmd.set("ray_opaque_background", "off")
+            cmd.set("opaque_background", "off")
         else:
-            cmd.set("ray_opaque_background", "on")
+            cmd.set("opaque_background", "on")
 
     @staticmethod
     def update_scene() -> None:
@@ -7867,6 +7927,10 @@ class MainWindow(QtWidgets.QMainWindow):
     # <editor-fold desc="Hotspots page functions">
     def open_protein(self) -> None:
         """Loads the selected protein's pymol session."""
+        try:
+            test = self.ui.list_hotspots_choose_protein.currentItem().text()
+        except AttributeError:
+            return
         if self.ui.list_hotspots_choose_protein.currentItem().text() != "":
             tools.ask_to_save_pymol_session(self.app_project, self.current_session)
 

@@ -37,10 +37,10 @@ from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import tools, constants, prediction_util
 from pyssa.internal.prediction_engines import esmfold
+from pyssa.internal.data_structures import project
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from pyssa.internal.data_structures import project
     from pyssa.internal.data_structures import settings
 
 logger = logging.getLogger(__file__)
@@ -194,7 +194,7 @@ class BatchImageWorker(QObject):
                  list_analysis_for_image_creation_overview: QtWidgets.QListWidget,
                  status_bar: QtWidgets.QStatusBar,
                  app_project: 'project.Project') -> None:
-        """Constructor
+        """Constructor.
 
         Args:
             list_analysis_images:
@@ -242,8 +242,8 @@ class BatchImageWorker(QObject):
             tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                 path_util.FilePath(
                     pathlib.Path(
-                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
-                )
+                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png"),
+                ),
             )
             logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
             tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
@@ -254,8 +254,8 @@ class BatchImageWorker(QObject):
                 interesting_region_filepaths.append(
                     path_util.FilePath(
                         pathlib.Path(
-                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
-                    )
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}"),
+                    ),
                 )
             tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
                 interesting_region_filepaths)
@@ -344,9 +344,7 @@ class ColabfoldWorker(QObject):
         self.app_project = app_project
 
     def run(self):
-        """This function is a reimplementation of the QObject run method. It does the structure prediction.
-
-        """
+        """This function is a reimplementation of the QObject run method. It does the structure prediction."""
         predictions: list[
             prediction_protein_info.PredictionProteinInfo] = prediction_util.get_prediction_name_and_seq_from_table(
             self.table)
@@ -409,7 +407,7 @@ class DistanceAnalysisWorker(QObject):
                  app_project: 'project.Project',
                  app_settings: 'settings.Settings',
                  _init_batch_analysis_page) -> None:
-        """Constructor
+        """Constructor.
 
         Args:
             list_analysis_overview:
@@ -457,7 +455,7 @@ class DistanceAnalysisWorker(QObject):
 
     def transform_gui_input_to_practical_data(self) -> list:
         """This function transforms the input from the gui to a practical data basis which can be used to setup
-        analysis runs
+        analysis runs.
 
         """
         distance_analysis_runs = []
@@ -466,7 +464,7 @@ class DistanceAnalysisWorker(QObject):
             input_transformer = data_transformer.DistanceAnalysisDataTransformer(
                 self.list_analysis_overview.item(row_no).text(),
                 self.app_project,
-                self.app_settings
+                self.app_settings,
             )
             logger.debug(f"Memory address of transformer: {input_transformer}")
             protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
@@ -481,9 +479,7 @@ class DistanceAnalysisWorker(QObject):
         return distance_analysis_runs
 
     def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':
-        """This function creates protein pairs and distance analysis objects for the analysis runs.
-
-        """
+        """This function creates protein pairs and distance analysis objects for the analysis runs."""
         analysis_runs = structure_analysis.Analysis(self.app_project)
         analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
         logger.debug(analysis_runs.analysis_list[
@@ -494,9 +490,7 @@ class DistanceAnalysisWorker(QObject):
         self.set_up_analysis_runs().run_analysis(self.cb_analysis_images)
 
     def run(self):
-        """This function is a reimplementation of the QRunnable run method.
-
-        """
+        """This function is a reimplementation of the QRunnable run method."""
         logger.debug(f"Memory address of worker {self}")
         # do the analysis runs
         self.run_analysis()
@@ -534,4 +528,28 @@ class SaveRayImageWorker(QObject):
     def run(self):
         cmd.ray(2400, 2400, renderer=int(self.renderer))
         cmd.png(self.full_file_name, dpi=300)
+        self.finished.emit()
+
+
+class OpenProjectWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(project.Project)
+    workspace_path: pathlib.Path
+    project_name: str
+    app_settings: 'settings.Settings'
+
+    def __init__(self, workspace_path, project_name, app_settings) -> None:
+        """Constructor."""
+        super().__init__()
+        self.workspace_path = workspace_path
+        self.project_name = project_name
+        self.app_settings = app_settings
+
+    def run(self) -> None:
+        """Logic of the open project process."""
+        # show project management options in side menu
+        tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.project_name}")
+        tmp_app_project = project.Project.deserialize_project(tmp_project_path, self.app_settings)
+        self.return_value.emit(tmp_app_project)
         self.finished.emit()
