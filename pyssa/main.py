@@ -7459,9 +7459,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 i += 1
 
         # hide unnecessary representations
-        cmd.hide("cartoon", tmp_protein_pair.protein_1.get_molecule_object())
-        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
-        cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
+        # fixme: it might be a problem to hide any representation at this point
+        # cmd.hide("cartoon", tmp_protein_pair.protein_1.get_molecule_object())
+        # cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
+        # cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
 
     def display_structure_alignment(self) -> None:
         """Opens a window which displays the image of the structure alignment."""
@@ -8021,7 +8022,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_resi_sticks() -> None:
         """Shows the pymol selection as sticks."""
         session_util.check_if_sele_is_empty()
-        cmd.show(representation="sticks", selection="sele")
+        cmd.show(representation="sticks", selection="sele and not hydrogens")
+        cmd.select(name="sele", selection="sele and not hydrogens")
         cmd.color(color="atomic", selection="sele and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
     
