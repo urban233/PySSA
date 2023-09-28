@@ -19,12 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for functions which can be used across the entire project"""
+"""Module for functions which can be used across the entire project."""
 import os
 import pathlib
 import shutil
 import logging
 import fnmatch
+from urllib.error import URLError
+from urllib.request import urlopen
+
 from Bio import PDB
 from pathlib import Path
 
@@ -50,8 +53,19 @@ if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
 
 
+def check_internet_connectivity() -> bool:
+    """Checks the connection to the internet."""
+    timeout: float = 3
+    try:
+        urlopen("https://www.google.com", timeout=timeout)
+    except URLError:
+        return False
+    else:
+        return True
+    
+
 def create_directory(parent_path, dir_name) -> None:
-    """This function creates a directory with a given path and directory name
+    """This function creates a directory with a given path and directory name.
 
     Args:
         parent_path:
@@ -67,7 +81,7 @@ def create_directory(parent_path, dir_name) -> None:
 def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir) -> None:
     """This function extracts the prediction.zip archive from the AlphaFold
     colab notebook and moves the selected_prediction.pdb to a different
-    directory
+    directory.
 
     Args:
         source_dir (str):
@@ -103,7 +117,7 @@ def extract_and_move_model_pdb(source_dir, tmp_dir, archive, target_dir) -> None
 
 def filter_prediction_zips(path) -> list[str]:
     """This function filters a list of file names to a new list which contains
-    only files starting with "prediction"
+    only files starting with "prediction".
 
     Args:
         path (str):
@@ -142,7 +156,7 @@ def get_prediction_file_name(path) -> list[str]:
 
 
 def get_file_path_and_name(text) -> tuple[str, str]:
-    """This function gets the file name and path from a QFileDialog
+    """This function gets the file name and path from a QFileDialog.
 
     Args:
         text (str):
@@ -170,7 +184,7 @@ def restore_default_settings(settings_obj: settings.Settings) -> None:
 
 def quick_log_and_display(log_type: str, log_message: str,
                           status_bar: QtWidgets.QStatusBar, status_bar_message: str) -> None:
-    """This function is used to quickly log, print and display a message
+    """This function is used to quickly log, print and display a message.
 
     Args:
         log_type (str):
@@ -199,12 +213,12 @@ def quick_log_and_display(log_type: str, log_message: str,
 
 
 def check_results_for_integrity(workspace_path, project_name) -> (bool, Path):
-    """This function checks if the results data is complete or not
+    """This function checks if the results data is complete or not.
 
-        Returns:
-            False if data is incomplete and therefore invalid
-                Path of the data which is missing
-            True if data is complete and therefore valid
+    Returns:
+    False if data is incomplete and therefore invalid
+    Path of the data which is missing
+    True if data is complete and therefore valid
     """
     results_dir_struct = [
         Path(f"{workspace_path}/{project_name}"),
@@ -245,7 +259,7 @@ def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
 
 
 def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> tuple[list[basic_protein_info], list[str]]:
-    """This function scans the workspace directory for protein structures and eliminates all duplicates
+    """This function scans the workspace directory for protein structures and eliminates all duplicates.
 
     Args:
         workspace_path (str):
@@ -291,7 +305,7 @@ def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> t
 def OLD_scan_workspace_for_non_duplicate_proteins(valid_projects: list, current_project_name: str,
                                               workspace_path: pathlib.Path,
                                               list_widget: QtWidgets.QListWidget) -> tuple[dict, list]:
-    """This function scans the workspace directory for protein structures and eliminates all duplicates
+    """This function scans the workspace directory for protein structures and eliminates all duplicates.
 
     Args:
         valid_projects (list):
@@ -409,7 +423,7 @@ def add_chains_from_pdb_file_to_list(project_path, protein_filename, list_widget
 
 def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status_project_name,
                           btn_for_next_step, cb_for_add_reference=None):
-    """This function validates the input of the project name in real-time
+    """This function validates the input of the project name in real-time.
 
     Args:
         list_of_projects:
@@ -480,7 +494,7 @@ def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status
 
 def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_search, status_message,
                           txt_for_selected_project=None):
-    """This function validates the input of the project name in real-time
+    """This function validates the input of the project name in real-time.
 
     Args:
         list_for_projects:
@@ -521,7 +535,7 @@ def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_sear
 
 def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
                           btn_next):
-    """This function validates the input of the protein name in real-time
+    """This function validates the input of the protein name in real-time.
 
     Args:
         txt_for_protein_name:
@@ -568,7 +582,7 @@ def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
 
 def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
                               btn_next):
-    """This function validates the input of the protein sequence in real-time
+    """This function validates the input of the protein sequence in real-time.
 
     Args:
         txt_protein_sequence:

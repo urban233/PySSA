@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for functions which reduce code duplicates in the main module"""
+"""Module for functions which reduce code duplicates in the main module."""
 import typing
 import os
 import pathlib
@@ -40,7 +40,7 @@ if typing.TYPE_CHECKING:
 
 
 def fill_combo_box(combo_box, item_list):
-    """This function fills a pyqt combobox
+    """This function fills a pyqt combobox.
 
     Args:
         combo_box (QtWidgets.QComboBox):
@@ -53,7 +53,7 @@ def fill_combo_box(combo_box, item_list):
 
 
 def create_directory(parent_path, dir_name):
-    """This function creates a directory with a given path and directory name
+    """This function creates a directory with a given path and directory name.
 
     Args:
         parent_path:
@@ -91,6 +91,17 @@ def choose_directory(self, txt_box_dir):
         txt_box_dir.setText(str(current_file_path))
     else:
         txt_box_dir.setText(str(current_file_path))
+
+
+def no_internet_dialog():
+    msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    styles.set_stylesheet(msg)
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText("You do not have a working internet connection but it is necessary for this operation!")
+    msg.setWindowTitle("Internet connection")
+    msg.setStandardButtons(QMessageBox.Ok)
+    msg.exec_()
 
 
 def critical_message(message, message_detail):
@@ -433,7 +444,7 @@ def error_prediction_progress_lost() -> bool:
 
 
 def hide_gui_elements(gui_elements: list):
-    """This function hides gui elements
+    """This function hides gui elements.
 
     Args:
         gui_elements:
@@ -445,7 +456,7 @@ def hide_gui_elements(gui_elements: list):
 
 
 def show_gui_elements(gui_elements: list):
-    """This function shows gui elements
+    """This function shows gui elements.
 
     Args:
         gui_elements:
@@ -458,7 +469,7 @@ def show_gui_elements(gui_elements: list):
 
 def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list):
     """This function is a combination of "show_gui_elements" and "hide_gui_elements" to quickly
-    manage the visibility of gui elements
+    manage the visibility of gui elements.
 
     Args:
         gui_elements_to_show:
@@ -471,7 +482,7 @@ def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list
 
 
 def disable_text_box(text_box, text_box_label):
-    """This function disables a text box and grays out the corresponding label
+    """This function disables a text box and grays out the corresponding label.
 
     Args:
         text_box:
@@ -485,7 +496,7 @@ def disable_text_box(text_box, text_box_label):
 
 
 def enable_text_box(text_box, text_box_label):
-    """This function enables a text box and colors the corresponding label black
+    """This function enables a text box and colors the corresponding label black.
 
     Args:
         text_box:
@@ -499,7 +510,7 @@ def enable_text_box(text_box, text_box_label):
 
 
 def get_prediction_name_and_seq_from_table(table) -> list[tuple[str, str]]:
-    """This function gets the names and sequences of the table which stores the predictions to run
+    """This function gets the names and sequences of the table which stores the predictions to run.
 
     Args:
         table:

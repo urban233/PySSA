@@ -2018,15 +2018,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_new_create_project.setEnabled(False)
             styles.color_button_not_ready(self.ui.btn_new_create_project)
             # check internet connectivity
-            timeout: float = 3
-            try:
-                urlopen("https://www.google.com", timeout=timeout)
-            except URLError:
+            if not tools.check_internet_connectivity():
+                gui_utils.no_internet_dialog()
                 self.ui.txt_new_choose_reference.setEnabled(False)
                 self.ui.lbl_new_status_choose_reference.setText("You cannot enter a PDB ID (no internet).")
                 return
             self.ui.txt_new_choose_reference.setEnabled(True)
-
+            self.ui.lbl_new_status_choose_reference.setText("")
         else:
             self.ui.lbl_new_choose_reference.hide()
             self.ui.txt_new_choose_reference.hide()
@@ -3115,6 +3113,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_local_pred_mono(self) -> None:
         """Displays the local prediction monomer page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
         self._init_local_pred_mono_page()
         gui_elements_to_show = [
             self.ui.lbl_pred_mono_prot_to_predict,
@@ -3628,6 +3630,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_local_pred_multi(self) -> None:
         """Displays the local prediction multimer page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
+        
         gui_elements_to_show = [
             self.ui.lbl_pred_multi_prot_to_predict,
             self.ui.table_pred_multi_prot_to_predict,
@@ -4178,6 +4185,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_monomer_pred_analysis(self) -> None:
         """Displays the monomer prediction + analysis page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
+        
         self._init_mono_pred_analysis_page()
         self.ui.table_pred_analysis_mono_prot_to_predict.clear()
         self.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem("Chain"))
@@ -5233,6 +5245,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def display_multimer_pred_analysis(self) -> None:
         """Displays the multimer prediction + analysis page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
+        
         self._init_multi_pred_analysis_page()
         self.ui.table_pred_analysis_multi_prot_to_predict.clear()
         self.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
