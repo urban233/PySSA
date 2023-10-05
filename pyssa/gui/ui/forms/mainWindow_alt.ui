@@ -6882,7 +6882,7 @@
              </layout>
             </widget>
             <widget class="QWidget" name="page_7">
-             <layout class="QVBoxLayout" name="verticalLayout_141">
+             <layout class="QVBoxLayout" name="verticalLayout_53">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_117">
                 <item>
@@ -6936,6 +6936,68 @@
                 </item>
                 <item>
                  <widget class="QComboBox" name="box_manage_choose_bg_color"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_101">
+                <item>
+                 <widget class="QLabel" name="lbl_disulfid_bond_1">
+                  <property name="text">
+                   <string>Disulfid bonds as sticks</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_79">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_disulfid_bond_show">
+                  <property name="text">
+                   <string>Show</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_105">
+                <item>
+                 <widget class="QLabel" name="lbl_disulfid_bond_2">
+                  <property name="text">
+                   <string>Disulfid bonds as sticks</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_95">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_disulfid_bond_hide">
+                  <property name="text">
+                   <string>Hide</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>

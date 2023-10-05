@@ -1232,7 +1232,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.box_manage_choose_color.activated.connect(self.choose_manage_color_selected_protein)
         self.ui.box_manage_choose_representation.activated.connect(self.choose_manage_representation)
         self.ui.box_manage_choose_bg_color.activated.connect(self.choose_manage_bg_color)
-
+        self.ui.btn_disulfid_bond_show.clicked.connect(self.show_disulfid_bonds_as_sticks)
+        self.ui.btn_disulfid_bond_hide.clicked.connect(self.hide_disulfid_bonds_as_sticks)
+        
         # </editor-fold>
 
         # <editor-fold desc="Image page">
@@ -1746,6 +1748,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.box_manage_choose_representation,
             self.ui.lbl_manage_choose_bg_color,
             self.ui.box_manage_choose_bg_color,
+            self.ui.lbl_disulfid_bond_1,
+            self.ui.lbl_disulfid_bond_2,
+            self.ui.btn_disulfid_bond_show,
+            self.ui.btn_disulfid_bond_hide,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
 
@@ -2138,6 +2144,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 tmp_ref_protein = protein.Protein(
                     molecule_object=pdb_filepath.get_filename(), pdb_filepath=pdb_filepath,
                 )
+            # fixme: should the disulfid-bonds be displayed globally
+            # cmd.select(name="disulfides", selection="byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
+            # cmd.color(color="atomic", selection="disulfides and not elem C")
+            # cmd.set("valence", 0)  # this needs to be better implemented
+            # cmd.show("sticks", "disulfides")
             self.app_project.add_existing_protein(tmp_ref_protein)
         self.ui.cb_new_add_reference.setCheckState(0)
 
@@ -7659,16 +7670,39 @@ class MainWindow(QtWidgets.QMainWindow):
     # <editor-fold desc="Manage page functions">
     def choose_manage_open_protein(self) -> None:
         """Shows the different configuration gui elements."""
-        gui_elements_to_show = [
-            self.ui.lbl_manage_choose_color,
-            self.ui.box_manage_choose_color,
-            self.ui.lbl_manage_choose_representation,
-            self.ui.box_manage_choose_representation,
-            self.ui.lbl_manage_choose_bg_color,
-            self.ui.box_manage_choose_bg_color,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-
+        if self.ui.box_manage_choose_protein.currentText() != "":
+            gui_elements_to_show = [
+                self.ui.lbl_manage_choose_color,
+                self.ui.box_manage_choose_color,
+                self.ui.lbl_manage_choose_representation,
+                self.ui.box_manage_choose_representation,
+                self.ui.lbl_manage_choose_bg_color,
+                self.ui.box_manage_choose_bg_color,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            if cmd.select(name="disulfides", selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)") > 0:
+                gui_elements_to_show = [
+                    self.ui.lbl_disulfid_bond_1,
+                    self.ui.lbl_disulfid_bond_2,
+                    self.ui.btn_disulfid_bond_show,
+                    self.ui.btn_disulfid_bond_hide,
+                ]
+                gui_utils.show_gui_elements(gui_elements_to_show)
+        else:
+            gui_elements_to_hide = [
+                self.ui.lbl_manage_choose_color,
+                self.ui.box_manage_choose_color,
+                self.ui.lbl_manage_choose_representation,
+                self.ui.box_manage_choose_representation,
+                self.ui.lbl_manage_choose_bg_color,
+                self.ui.box_manage_choose_bg_color,
+                self.ui.lbl_disulfid_bond_1,
+                self.ui.lbl_disulfid_bond_2,
+                self.ui.btn_disulfid_bond_show,
+                self.ui.btn_disulfid_bond_hide,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        
     def choose_manage_color_selected_protein(self) -> None:
         """Sets the protein color."""
         input = self.ui.box_manage_choose_protein.currentText()
@@ -7705,7 +7739,19 @@ class MainWindow(QtWidgets.QMainWindow):
             cmd.bg_color("white")
         else:
             print("Missing implementation!")
-
+    
+    def show_disulfid_bonds_as_sticks(self):
+        cmd.select(name="disulfides", selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
+        cmd.color(color="atomic", selection="disulfides and not elem C")
+        cmd.set("valence", 0)  # this needs to be better implemented
+        cmd.show("sticks", "disulfides")
+        cmd.hide("sticks", "elem H")
+    
+    def hide_disulfid_bonds_as_sticks(self):
+        cmd.select(name="disulfides",
+                   selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
+        cmd.hide("sticks", "disulfides")
+    
     # </editor-fold>
 
     # <editor-fold desc="Image page functions">
