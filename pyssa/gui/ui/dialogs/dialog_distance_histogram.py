@@ -50,7 +50,7 @@ class PlotWidget(QWidget):
 class DialogDistanceHistogram(QtWidgets.QDialog):
 
     def __init__(self, protein_pair_from_project, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -163,7 +163,7 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
             "Very large",
             "Large",
             "Medium",
-            "Small"
+            "Small",
         ]
         gui_utils.fill_combo_box(self.ui.cb_bar_size, items)
         self.ui.cb_bar_size.setCurrentIndex(2)
@@ -218,7 +218,7 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
 
         # Create an axis and plot a histogram
         ax = self.plot_widget.figure.add_subplot(111)
-        n, bins, patches = ax.hist(distance_list, bins=np.arange(0, max_distance, 0.25), orientation='horizontal', rwidth=0.7, color='#4B91F7')
+        n, bins, patches = ax.hist(distance_list, bins=np.arange(0, max_distance + 0.25, 0.25), orientation='horizontal', rwidth=0.7, color='#4B91F7')
 
         # Add labels to the non-zero frequency histogram bars
         for bin_value, patch in zip(n, patches):
