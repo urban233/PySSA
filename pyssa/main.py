@@ -2481,8 +2481,9 @@ class MainWindow(QtWidgets.QMainWindow):
             constants.PYSSA_LOGGER.error("Error while loading protein in PyMOL!")
             return
         self.current_session = current_session.CurrentSession(
-            "protein", protein_name, self.app_project.search_protein(protein_name).load_protein_pymol_session(),
+            "protein", protein_name, self.app_project.search_protein(protein_name).pymol_session,
         )
+        print(self.current_session)
 
     # </editor-fold>
 
@@ -8003,6 +8004,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 # one protein is selected
                 tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
                 tmp_protein.load_protein_pymol_session()
+                self.current_session.name = tmp_protein.get_molecule_object()
+                self.current_session.type = "protein"
+                self.current_session.session = tmp_protein.pymol_session
                 cmd.set("seq_view", 1)
                 # tmp_protein.pymol_selection.set_selections_without_chains_ca()
                 # tmp_model = cmd.get_model(tmp_protein.pymol_selection.selection_string)
@@ -8032,6 +8036,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
                 tmp_protein_pair.load_pymol_session()
+                self.current_session.name = tmp_protein_pair.name
+                self.current_session.type = "protein_pair"
+                self.current_session.session = tmp_protein_pair.pymol_session
                 cmd.set("seq_view", 1)
                 # prot1_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_1))
                 # prot2_no = int(tools.check_first_seq_no(tmp_protein_pair.protein_2))
