@@ -51,14 +51,12 @@ def is_local_colabfold_installed():
 
 
 class DialogSettingsGlobal(QtWidgets.QDialog):
-    """This class opens a settings customization dialog.
-
-    """
+    """This class opens a settings customization dialog."""
     """This variable is for controlling whether the dialog opens or not"""
     ERROR = False
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -116,7 +114,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
             "normal",
             "Red-green (green weak, deuteranopia)",
             "Red-green (red weak, protanopia)",
-            "Blue-yellow (tritanopia)"
+            "Blue-yellow (tritanopia)",
         ]
         gui_utils.fill_combo_box(self.ui.cb_color_vision_mode, item_list)
 
@@ -133,6 +131,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         styles.set_stylesheet(self)
         self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("Global Settings")
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
     # @SLOT()
     def choose_workspace_dir(self):

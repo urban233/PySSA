@@ -22,6 +22,7 @@
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
+from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_about import Ui_Dialog
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
@@ -30,7 +31,7 @@ from pyssa.util import constants
 class DialogAbout(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -49,6 +50,7 @@ class DialogAbout(QtWidgets.QDialog):
         styles.set_stylesheet(self)
         self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("About")
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
     # @SLOT
     def close_dialog(self):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'dlgSettingsGlobal.ui'
+# Form implementation generated from reading ui file '.\dlgSettingsGlobal.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -14,8 +14,17 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(383, 431)
+        Dialog.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem)
+        self.btn_info = QtWidgets.QPushButton(Dialog)
+        self.btn_info.setObjectName("btn_info")
+        self.horizontalLayout_2.addWidget(self.btn_info)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.label_3 = QtWidgets.QLabel(Dialog)
@@ -82,19 +91,19 @@ class Ui_Dialog(object):
         self.cb_color_vision_mode.setObjectName("cb_color_vision_mode")
         self.horizontalLayout.addWidget(self.cb_color_vision_mode)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
-        spacerItem = QtWidgets.QSpacerItem(20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
-        self.verticalLayout_2.addItem(spacerItem)
-        self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_8.setObjectName("horizontalLayout_8")
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_8.addItem(spacerItem1)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        self.verticalLayout_2.addItem(spacerItem1)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        spacerItem2 = QtWidgets.QSpacerItem(148, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(spacerItem2)
         self.btn_cancel = QtWidgets.QPushButton(Dialog)
         self.btn_cancel.setObjectName("btn_cancel")
-        self.horizontalLayout_8.addWidget(self.btn_cancel)
+        self.horizontalLayout_3.addWidget(self.btn_cancel)
         self.btn_ok = QtWidgets.QPushButton(Dialog)
         self.btn_ok.setObjectName("btn_ok")
-        self.horizontalLayout_8.addWidget(self.btn_ok)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_8)
+        self.horizontalLayout_3.addWidget(self.btn_ok)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -102,6 +111,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
+        self.btn_info.setText(_translate("Dialog", "Info"))
         self.label_3.setText(_translate("Dialog", "Current Workspace"))
         self.btn_workspace_dir.setText(_translate("Dialog", "..."))
         self.label_6.setText(_translate("Dialog", "Parameters for structure alignment"))
