@@ -51,7 +51,7 @@ from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import workers, task_workers
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.gui.ui.dialogs import dialog_settings_global
+from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
@@ -962,7 +962,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_edit_clean_new_prot.clicked.connect(self.clean_protein_new)
         self.ui.btn_edit_clean_update_prot.clicked.connect(self.clean_protein_update)
         self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
-
+        self.ui.btn_edit_existing_protein_struct.clicked.connect(self.add_existing_protein)
         # </editor-fold>
 
         # <editor-fold desc="View project page">
@@ -1622,6 +1622,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._init_edit_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_edit_page)
+        if len(self.ui.list_edit_project_proteins) > 2:
+            self.ui.btn_edit_existing_protein_struct.hide()
+            self.ui.lbl_edit_existing_protein_struct.hide()
+        else:
+            self.ui.btn_edit_existing_protein_struct.show()
+            self.ui.lbl_edit_existing_protein_struct.show()
 
     def start_display_use_page(self) -> None:
         """Displays the use project page."""
@@ -2419,6 +2425,22 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             constants.PYSSA_LOGGER.info("No protein was deleted.")
 
+    def add_existing_protein(self):
+        tmp_dialog = dialog_add_model.DialogAddModel()
+        tmp_dialog.exec_()
+        if len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is True:
+            tmp_ref_protein = pymol_io.get_protein_from_pdb(dialog_add_model.global_var_add_model[0].upper())
+        elif len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is False:
+            print("Unexpected Error.")
+        else:
+            # local pdb file as input
+            pdb_filepath = path_util.FilePath(pathlib.Path(dialog_add_model.global_var_add_model[0]))
+            graphic_operations.setup_default_session_graphic_settings()
+            tmp_ref_protein = protein.Protein(
+                molecule_object=pdb_filepath.get_filename(), pdb_filepath=pdb_filepath,
+            )
+        self.app_project.add_existing_protein(tmp_ref_protein)
+        self.display_edit_page()
     # </editor-fold>
 
     # <editor-fold desc="View project page functions">
@@ -8096,7 +8118,7 @@ class MainWindow(QtWidgets.QMainWindow):
         cmd.select(name="sele", selection="sele and not hydrogens")
         cmd.color(color="atomic", selection="sele and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
-    
+
     @staticmethod
     def zoom_resi_position() -> None:
         """Zooms to the pymol selection."""

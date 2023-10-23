@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>116</height>
+    <height>131</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,7 +19,7 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>116</height>
+    <height>131</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -31,30 +31,37 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Choose a model</string>
+        <string>Choose an existing .pdb file or enter a PDB ID</string>
        </property>
       </widget>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QLineEdit" name="txt_model">
+        <widget class="QLineEdit" name="txt_add_protein">
          <property name="frame">
           <bool>true</bool>
          </property>
          <property name="readOnly">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QToolButton" name="btn_choose_model">
+        <widget class="QToolButton" name="btn_choose_protein">
          <property name="text">
           <string>...</string>
          </property>
         </widget>
        </item>
       </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="lbl_status">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
@@ -81,9 +88,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btn_add_model">
+      <widget class="QPushButton" name="btn_add_protein">
        <property name="text">
-        <string>Add model to project</string>
+        <string>Add</string>
        </property>
       </widget>
      </item>

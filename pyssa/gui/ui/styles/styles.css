@@ -1632,6 +1632,12 @@ QToolButton:pressed {
     border-color: #276cea;
 }
 
+/* Settings for add protein dialog */
+QLabel#lbl_status {
+    color: #FC5457;
+    font-size: 10px;
+}
+
 /* Settings for startup dialog */
 QLabel#lbl_title {
     font-size: 14px;

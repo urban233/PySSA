@@ -2742,7 +2742,7 @@
                    <item>
                     <widget class="QLabel" name="lbl_new_choose_reference">
                      <property name="text">
-                      <string>Choose a existing .pdb file or enter a PDB ID</string>
+                      <string>Choose an existing .pdb file or enter a PDB ID</string>
                      </property>
                     </widget>
                    </item>
@@ -3559,7 +3559,7 @@
              </layout>
             </widget>
             <widget class="QWidget" name="edit_page">
-             <layout class="QVBoxLayout" name="verticalLayout_66">
+             <layout class="QVBoxLayout" name="verticalLayout_54">
               <item>
                <layout class="QVBoxLayout" name="verticalLayout_65">
                 <item>
@@ -3571,6 +3571,37 @@
                 </item>
                 <item>
                  <widget class="QListWidget" name="list_edit_project_proteins"/>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_120">
+                <item>
+                 <widget class="QLabel" name="lbl_edit_existing_protein_struct">
+                  <property name="text">
+                   <string>Existing protein structure</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_96">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_edit_existing_protein_struct">
+                  <property name="text">
+                   <string>Add</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </item>

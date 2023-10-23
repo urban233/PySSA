@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'dlgAddModel.ui'
+# Form implementation generated from reading ui file '.\dlgAddModel.ui'
 #
-# Created by: PyQt5 UI code generator 5.15.7
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(400, 116)
+        Dialog.resize(400, 131)
         Dialog.setMinimumSize(QtCore.QSize(400, 0))
-        Dialog.setMaximumSize(QtCore.QSize(16777215, 116))
+        Dialog.setMaximumSize(QtCore.QSize(16777215, 131))
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.verticalLayout = QtWidgets.QVBoxLayout()
@@ -23,15 +25,18 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.label)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.txt_model = QtWidgets.QLineEdit(Dialog)
-        self.txt_model.setFrame(True)
-        self.txt_model.setReadOnly(True)
-        self.txt_model.setObjectName("txt_model")
-        self.horizontalLayout.addWidget(self.txt_model)
-        self.btn_choose_model = QtWidgets.QToolButton(Dialog)
-        self.btn_choose_model.setObjectName("btn_choose_model")
-        self.horizontalLayout.addWidget(self.btn_choose_model)
+        self.txt_add_protein = QtWidgets.QLineEdit(Dialog)
+        self.txt_add_protein.setFrame(True)
+        self.txt_add_protein.setReadOnly(False)
+        self.txt_add_protein.setObjectName("txt_add_protein")
+        self.horizontalLayout.addWidget(self.txt_add_protein)
+        self.btn_choose_protein = QtWidgets.QToolButton(Dialog)
+        self.btn_choose_protein.setObjectName("btn_choose_protein")
+        self.horizontalLayout.addWidget(self.btn_choose_protein)
         self.verticalLayout.addLayout(self.horizontalLayout)
+        self.lbl_status = QtWidgets.QLabel(Dialog)
+        self.lbl_status.setObjectName("lbl_status")
+        self.verticalLayout.addWidget(self.lbl_status)
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
@@ -40,9 +45,9 @@ class Ui_Dialog(object):
         self.btn_cancel = QtWidgets.QPushButton(Dialog)
         self.btn_cancel.setObjectName("btn_cancel")
         self.horizontalLayout_2.addWidget(self.btn_cancel)
-        self.btn_add_model = QtWidgets.QPushButton(Dialog)
-        self.btn_add_model.setObjectName("btn_add_model")
-        self.horizontalLayout_2.addWidget(self.btn_add_model)
+        self.btn_add_protein = QtWidgets.QPushButton(Dialog)
+        self.btn_add_protein.setObjectName("btn_add_protein")
+        self.horizontalLayout_2.addWidget(self.btn_add_protein)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
 
         self.retranslateUi(Dialog)
@@ -51,8 +56,8 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.label.setText(_translate("Dialog", "Choose a model"))
-        self.btn_choose_model.setText(_translate("Dialog", "..."))
+        self.label.setText(_translate("Dialog", "Choose an existing .pdb file or enter a PDB ID"))
+        self.btn_choose_protein.setText(_translate("Dialog", "..."))
+        self.lbl_status.setText(_translate("Dialog", "TextLabel"))
         self.btn_cancel.setText(_translate("Dialog", "Cancel"))
-        self.btn_add_model.setText(_translate("Dialog", "Add model to project"))
-
+        self.btn_add_protein.setText(_translate("Dialog", "Add"))
