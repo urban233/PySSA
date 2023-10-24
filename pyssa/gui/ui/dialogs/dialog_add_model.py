@@ -27,7 +27,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants
+from pyssa.util import constants, tools, gui_utils
 
 global_var_add_model = ("", False)
 
@@ -50,12 +50,21 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
         self.ui.btn_add_protein.clicked.connect(self.add_model)
         self.ui.txt_add_protein.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
+        self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
         self.setWindowTitle("Add an existing protein to the current project")
         self.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         styles.set_stylesheet(self)
         styles.color_button_not_ready(self.ui.btn_add_protein)
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        # check internet connectivity
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog_with_custom_msg("You do not have a working internet connection which is "
+                                                         "necessary for connecting to the PDB!\n"
+                                                         "However you can add a protein structure from "
+                                                         "your local filesystem.")
+            self.ui.txt_add_protein.setEnabled(False)
+            self.ui.lbl_status.setText("You cannot enter a PDB ID (no internet).")
 
     # @SLOT
     def validate_reference_in_project(self) -> None:

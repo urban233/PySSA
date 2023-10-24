@@ -173,7 +173,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
     def open_page_information(self) -> None:
         """Opens the message box, to display extra information based on the page."""
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Question)
+        msg.setIcon(QtWidgets.QMessageBox.Information)
         msg.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         styles.set_stylesheet(msg)
         msg.setWindowTitle("Information")

@@ -104,6 +104,17 @@ def no_internet_dialog():
     msg.exec_()
 
 
+def no_internet_dialog_with_custom_msg(message):
+    msg = QMessageBox()
+    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    styles.set_stylesheet(msg)
+    msg.setIcon(QMessageBox.Critical)
+    msg.setText(message)
+    msg.setWindowTitle("Internet connection")
+    msg.setStandardButtons(QMessageBox.Ok)
+    msg.exec_()
+
+
 def critical_message(message, message_detail):
     """This function creates a basic critical message box, which can be customized.
 
