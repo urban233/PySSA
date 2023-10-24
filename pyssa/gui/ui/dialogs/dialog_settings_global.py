@@ -31,6 +31,7 @@ from PyQt5.QtWidgets import QMessageBox
 import PyQt5
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.messageboxes import settings_boxes
 
@@ -66,6 +67,16 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+
+        # <editor-fold desc="Info button changes">
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxInformation
+        icon = self.style().standardIcon(pixmapi)
+        self.ui.btn_info.setIcon(icon)
+        self.ui.btn_info.setText("")
+        self.ui.btn_info.setFixedWidth(50)
+
+        # </editor-fold>
+
         self.ui.label.hide()
         self.ui.lbl_color_vision_mode.hide()
         self.ui.cb_color_vision_mode.hide()
@@ -145,6 +156,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
         self.ui.btn_cancel.clicked.connect(self.cancel_dialog)
         self.ui.btn_ok.clicked.connect(self.ok_dialog)
+        self.ui.btn_info.clicked.connect(self.open_page_information)
 
     def cancel_dialog(self):
         self.close()
@@ -157,3 +169,20 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.settings.serialize_settings()
         logging.info("Settings were successfully saved.")
         self.close()
+
+    def open_page_information(self) -> None:
+        """Opens the message box, to display extra information based on the page."""
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Question)
+        msg.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        styles.set_stylesheet(msg)
+        msg.setWindowTitle("Information")
+        msg.setStyleSheet("QLabel{font-size: 11pt;}")
+
+        msg.setText(
+            "Global Settings\n\nCycles: Maximum number of outlier rejection cycles\n\n"
+            "Cutoff: Outlier rejection cutoff for sequence alignment\n\n"
+            "Note: Cutoff value is neglected unless numbers of cycles are more than 0.",
+        )
+        msg.exec_()
+        return
