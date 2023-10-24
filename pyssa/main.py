@@ -2430,6 +2430,7 @@ class MainWindow(QtWidgets.QMainWindow):
         tmp_dialog.exec_()
         if len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is True:
             tmp_ref_protein = pymol_io.get_protein_from_pdb(dialog_add_model.global_var_add_model[0].upper())
+            self.app_project.add_existing_protein(tmp_ref_protein)
         elif len(dialog_add_model.global_var_add_model[0]) == 0 and dialog_add_model.global_var_add_model[1] is False:
             print("Dialog closed.")
         elif len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is False:
@@ -2442,6 +2443,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 molecule_object=pdb_filepath.get_filename(), pdb_filepath=pdb_filepath,
             )
             self.app_project.add_existing_protein(tmp_ref_protein)
+        self._project_watcher.show_valid_options(self.ui)
         self.display_edit_page()
     # </editor-fold>
 
