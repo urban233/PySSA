@@ -1846,10 +1846,14 @@ class MainWindow(QtWidgets.QMainWindow):
             msg.setText(
                 "Page: Edit proteins of current project\n\n"
                 "Here you can clean or delete a protein structure of your current project. \n\n"
+                "To delete a protein structure, click on a protein name and on Delete.\n\n"
                 "To clean a protein structure, click on a protein name from the list.\n"
                 "Then you can either clean the selected one (Update current protein structure) \n"
                 "or create a duplicate and clean that one (Create new protein structure).\n\n"
-                "To delete a protein structure, click on a protein name and on Delete.",
+                "To add an existing protein to your project, tick the checkbox Add existing protein.\n"
+                "You can either type the PDB ID or choose an existing .pdb file in your filesystem, by clicking on the add button.\n\n"
+                "To use a protein from the PDB, you need to have an internet connection."
+                ,
             )
         elif self.ui.lbl_page_title.text() == "View proteins of current project":
             msg.setText(
