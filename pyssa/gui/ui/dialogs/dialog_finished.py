@@ -20,12 +20,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from pymol import Qt
+from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_finished import Ui_Form
-
 
 class DialogFinished(Qt.QtWidgets.QDialog):
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -37,7 +37,7 @@ class DialogFinished(Qt.QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.ui.btn_ok.clicked.connect(self.close_dialog)
-
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("Analysis Finished")
 
     # @SLOT()

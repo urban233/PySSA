@@ -29,7 +29,7 @@ global_var_pdb_files = []
 class DialogAddModels(QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -48,7 +48,7 @@ class DialogAddModels(QtWidgets.QDialog):
         self.ui.btn_remove.clicked.connect(self.remove_pdb_from_list)
         self.ui.btn_create_projects.clicked.connect(self.create_projects)
         self.ui.list_models.currentItemChanged.connect(self.activate_remove_button)
-
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("Add multiple models")
 
     # @SLOT

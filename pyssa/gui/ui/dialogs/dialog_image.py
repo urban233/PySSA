@@ -20,13 +20,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from pymol import Qt
+from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_image import Ui_Dialog
 
 
 class DialogImage(Qt.QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -36,6 +37,7 @@ class DialogImage(Qt.QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
         # image = Image.open(
         #     "/home/matt/Documents/test_pymol/Results/images/interesting_region_98.png")

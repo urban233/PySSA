@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import PyQt5
+from PyQt5 import QtCore
 from PyQt5.QtCore import QUrl
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -41,3 +42,5 @@ class WebViewDialog(QDialog):
         self.setWindowFlags(self.windowFlags() | Qt.WindowMaximizeButtonHint)
         # Add close button
         self.setWindowFlags(self.windowFlags() | Qt.WindowCloseButtonHint)
+
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

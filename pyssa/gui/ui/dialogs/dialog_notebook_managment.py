@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from pymol import Qt
+from PyQt5 import QtCore
 from datetime import datetime
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_notebook_managment import Ui_Dialog
 from pyssa.util import gui_utils
@@ -55,6 +56,7 @@ class DialogNotebookManagment(Qt.QtWidgets.QDialog):
         self.ui.btn_check_status.clicked.connect(self.check_current_status)
         self.ui.btn_abort.clicked.connect(self.close_interface)
         self.ui.btn_reconnect.clicked.connect(self.reconnect_session)
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("Warning")
 
 

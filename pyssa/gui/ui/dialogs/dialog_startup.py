@@ -71,6 +71,7 @@ class DialogStartup(QtWidgets.QDialog):
             # Windows path
             self.ui.txt_workspace.setText(str(constants.DEFAULT_WORKSPACE_PATH))
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("PySSA Launch")
 
     # @SLOT

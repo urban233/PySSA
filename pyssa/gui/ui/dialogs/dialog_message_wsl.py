@@ -21,6 +21,7 @@
 #
 import os
 from pymol import Qt
+from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_message_wsl import Ui_Dialog
 from pyssa.util import gui_utils
 
@@ -28,7 +29,7 @@ from pyssa.util import gui_utils
 class DialogMessageWsl(Qt.QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -39,7 +40,7 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
         # self.status = ""
-
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("WSL2 installation")
         self.ui.lbl_message_wsl.setText("Are you sure that you want the WSL2 installation?")
         # btn

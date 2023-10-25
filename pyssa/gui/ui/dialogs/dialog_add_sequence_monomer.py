@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from pymol import Qt
-
+from PyQt5 import QtCore
 from pyssa.util import input_validator, gui_utils
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_sequence_monomer import Ui_Dialog
 
@@ -46,7 +46,9 @@ class DialogAddSequenceMonomer(Qt.QtWidgets.QDialog):
         self.ui.txt_seq_name.textChanged.connect(self.validate_protein_sequence)
         self.ui.btn_next.clicked.connect(self.show_stage_protein_sequence)
         self.ui.btn_back.clicked.connect(self.show_stage_protein_name)
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.show()
+
 
     def validate_protein_name(self):
         input_validator.InputValidator.validate_protein_name(self.ui.txt_prot_name,

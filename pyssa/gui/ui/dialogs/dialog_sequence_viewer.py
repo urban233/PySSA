@@ -29,12 +29,10 @@ import PyQt5
 
 
 class SequenceViewer(Qt.QtWidgets.QDialog):
-    """This class opens a settings customization dialog.
-
-    """
+    """This class opens a settings customization dialog."""
 
     def __init__(self, sequence, filename, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -75,6 +73,7 @@ class SequenceViewer(Qt.QtWidgets.QDialog):
         self.setStyleSheet(stylesheet)
         self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("Sequence Viewer")
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.show()
 
     def on_context_menu(self, pos):

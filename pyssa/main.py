@@ -51,7 +51,7 @@ from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import workers, task_workers
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_add_model
+from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_add_model, dialog_display_docs
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
@@ -59,7 +59,7 @@ from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
-from pyssa.io_pyssa import safeguard
+from pyssa.io_pyssa import safeguard, bio_data
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 from pyssa.util import pyssa_keys
@@ -963,6 +963,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_edit_clean_update_prot.clicked.connect(self.clean_protein_update)
         self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
         self.ui.btn_edit_existing_protein_struct.clicked.connect(self.add_existing_protein)
+        self.ui.btn_edit_project_save.clicked.connect(self.save_selected_protein_structure_as_pdb_file)
         # </editor-fold>
 
         # <editor-fold desc="View project page">
@@ -1267,6 +1268,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_new_choose_reference.setToolTip("Click to add a .pdb file")
         # sidebar
         self.ui.lbl_current_project_name.setToolTip("Name of the current project")
+        # edit page
+        self.ui.btn_edit_project_save.setToolTip("Save as a .pdb file")
         # view page
         # fixme: is this important? self.ui.list_view_project_proteins.setToolTip("Proteins of the current project")
         self.ui.txtedit_view_sequence.setToolTip("Protein sequence of the selected protein")
@@ -1392,6 +1395,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_edit_clean_update_prot,
             self.ui.label_12,
             self.ui.btn_edit_project_delete,
+            self.ui.btn_edit_project_save,
+            self.ui.label_13,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_edit_project_proteins)
@@ -2378,6 +2383,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.btn_edit_project_delete,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
+        self.ui.btn_edit_project_save.show()
+        self.ui.label_13.show()
 
     def clean_protein_new(self) -> None:
         """Cleans the selected protein structure and creates a new cleaned structure."""
@@ -2425,7 +2432,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             constants.PYSSA_LOGGER.info("No protein was deleted.")
 
-    def add_existing_protein(self):
+    def add_existing_protein(self) -> None:
         tmp_dialog = dialog_add_model.DialogAddModel()
         tmp_dialog.exec_()
         if len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is True:
@@ -2445,6 +2452,27 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_project.add_existing_protein(tmp_ref_protein)
         self._project_watcher.show_valid_options(self.ui)
         self.display_edit_page()
+
+    def save_selected_protein_structure_as_pdb_file(self) -> None:
+        """Saves selected protein as pdb file."""
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(self, "Save protein structure", "", "Protein Data Bank File (*.pdb)")
+        if file_path:
+            tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text())
+            try:
+                bio_data.convert_xml_string_to_pdb_file(bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()), pathlib.Path(file_path))
+            except:
+                basic_boxes.ok(
+                    "Save protein structure",
+                    "Saving the protein as .pdb file failed!", QtWidgets.QMessageBox.Error,
+                )
+            else:
+                basic_boxes.ok(
+                    "Save protein structure",
+                    "The protein was successfully saved as .pdb file.", QtWidgets.QMessageBox.Information,
+                )
     # </editor-fold>
 
     # <editor-fold desc="View project page functions">

@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5 import QtCore
 from pymol import Qt
 from pyssa.util import input_validator
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_edit_prot_table import Ui_Dialog
@@ -28,7 +29,7 @@ from pyssa.gui.ui.forms.auto_generated.auto_dialog_edit_prot_table import Ui_Dia
 class DialogEditProtTable(Qt.QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
         """
@@ -60,7 +61,7 @@ class DialogEditProtTable(Qt.QtWidgets.QDialog):
         self.ui.btn_edit_prot_table_cancel.clicked.connect(self.close_dialog)
         self.ui.btn_edit_prot_table_save.clicked.connect(self.set_parameters_in_table)
         self.ui.txt_edit_prot_table_seq.textChanged.connect(self.check_sequence)
-
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setMaximumSize(500, 125)
         self.setWindowTitle("Edit protein")
 

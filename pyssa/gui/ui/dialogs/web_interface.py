@@ -2,6 +2,7 @@ import datetime
 from pymol import Qt
 from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout,
                              QPushButton, QLabel)
+from PyQt5 import QtCore
 from PyQt5.QtCore import QUrl
 from pyssa.util import constants, gui_utils
 from pyssa.gui.ui.dialogs import dialog_notebook_managment
@@ -39,7 +40,7 @@ class WebInterface(Qt.QtWidgets.QDialog):
     }
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -82,11 +83,12 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.setMinimumSize(575, 150)
         self.setMaximumSize(575, 150)
         self.setWindowTitle("Sign-In Google")
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.show()
 
     # @QtCore.pyqtSlot("QWebEngineDownloadItem*")
     def on_downloadRequested(self, download):
-        """This function is called if the notebook wants to download the results
+        """This function is called if the notebook wants to download the results.
 
         Args:
             download:
@@ -101,9 +103,7 @@ class WebInterface(Qt.QtWidgets.QDialog):
     # ----- JavaScript & Python Hierarchy
 
     def open_colab_notebook(self):
-        """This function opens the Google login page
-
-        """
+        """This function opens the Google login page."""
         url = QUrl(self.url_without_pre_login)
         self.web_page.setUrl(url)
         self.web_page.loadFinished.connect(self.check_authentication_status)
@@ -137,27 +137,27 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.web_page.runJavaScript(
             f"document.querySelectorAll('paper-input').item(0).setAttribute('value', '{self.prediction_params['seq']}')")
         self.web_page.runJavaScript(
-            "document.querySelectorAll('paper-input').item(0).dispatchEvent(new Event('change'))"
+            "document.querySelectorAll('paper-input').item(0).dispatchEvent(new Event('change'))",
         )
         # sets the job name
         self.web_page.runJavaScript(
             f"document.querySelectorAll('paper-input').item(1).setAttribute('value', '{self.prediction_params['job_name']}')")
         self.web_page.runJavaScript(
-            "document.querySelectorAll('paper-input').item(1).dispatchEvent(new Event('change'))"
+            "document.querySelectorAll('paper-input').item(1).dispatchEvent(new Event('change'))",
         )
         # checks the amber force field checkbox
         self.web_page.runJavaScript(
-            f"document.querySelectorAll('input[type=checkbox]').item(0).checked = '{self.prediction_params['amber']}'"
+            f"document.querySelectorAll('input[type=checkbox]').item(0).checked = '{self.prediction_params['amber']}'",
         )
         self.web_page.runJavaScript(
-            "document.querySelectorAll('input[type=checkbox]').item(0).dispatchEvent(new Event('change'))"
+            "document.querySelectorAll('input[type=checkbox]').item(0).dispatchEvent(new Event('change'))",
         )
         # sets the templates option to pdb70
         self.web_page.runJavaScript(
-            f"document.querySelectorAll('select').item(0).selectedIndex = {self.prediction_params['templates'][1]}"
+            f"document.querySelectorAll('select').item(0).selectedIndex = {self.prediction_params['templates'][1]}",
         )
         self.web_page.runJavaScript(
-            "document.querySelectorAll('select').item(0).dispatchEvent(new Event('change'))"
+            "document.querySelectorAll('select').item(0).dispatchEvent(new Event('change'))",
         )
         # runs all cells
         self.web_page.runJavaScript("colab.global.notebook.runAll()")
@@ -165,13 +165,11 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.web_page.runJavaScript("document.getElementsByTagName('paper-button').item(2).click()")
 
     def finished_prediction(self):
-        """This function does steps to finish the prediction with the google colab notebook
-
-        """
+        """This function does steps to finish the prediction with the google colab notebook."""
         gui_utils.warning_prediction_is_finished(self)
 
     def check_status(self) -> int:
-        """This function checks the state of the Google colab kernel and returns the exit code
+        """This function checks the state of the Google colab kernel and returns the exit code.
 
         Returns:
             exit code: defines in which state the kernel is
@@ -223,9 +221,7 @@ class WebInterface(Qt.QtWidgets.QDialog):
             self.setMaximumSize(1080, 900)
 
     def show_interface(self):
-        """This function is called from outside the class to initiate the opening of the interface
-
-        """
+        """This function is called from outside the class to initiate the opening of the interface."""
         self.open_colab_notebook()
         self.exec_()
 

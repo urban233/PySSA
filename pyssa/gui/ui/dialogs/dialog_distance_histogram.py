@@ -66,6 +66,7 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         custom_pyssa_styles.set_stylesheet(self)
         self.ui.btn_scroll_up.hide()
         self.ui.btn_scroll_down.hide()
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
         # <editor-fold desc="PyQtGraph">
         # self.graph_widget = pg.PlotWidget()

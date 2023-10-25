@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_advanced_prediction_configurations import Ui_Dialog
 from pyssa.util import gui_utils
 from pyssa.internal.data_structures.data_classes import prediction_configuration
@@ -28,7 +29,7 @@ from pyssa.internal.data_structures.data_classes import prediction_configuration
 class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
 
     def __init__(self, prediction_config, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -54,6 +55,7 @@ class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
         self.ui.btn_save.clicked.connect(self.save_config)
         self.ui.cb_amber.stateChanged.connect(self.change_amber_force_field)
         self.ui.combo_box_template.currentIndexChanged.connect(self.change_template_mode)
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("Advanced prediction configuration")
 
     # @SLOT

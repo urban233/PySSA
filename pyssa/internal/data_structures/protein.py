@@ -201,6 +201,9 @@ class Protein:
                 return tmp_chain.chain_sequence
         return None
 
+    def get_pdb_data(self):
+        return self._pdb_data
+
     def get_id(self):
         return self._id
 

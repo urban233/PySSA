@@ -64,7 +64,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
         #self.graph_widget = pg.PlotWidget()
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         custom_pyssa_styles.set_stylesheet(self)
-
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         # <editor-fold desc="PyQtGraph">
         # creates actual distance plot line
         # distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data

@@ -29,12 +29,10 @@ import PyQt5
 
 
 class DialogDistanceTable(Qt.QtWidgets.QDialog):
-    """This class opens a settings customization dialog.
-
-    """
+    """This class opens a settings customization dialog."""
 
     def __init__(self, path, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args
@@ -44,10 +42,10 @@ class DialogDistanceTable(Qt.QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.labels = [
             "Residue pair no.", "Protein 1 Chain", "Protein 1 Position", "Protein 1 Residue",
-            "Protein 2 Chain", "Protein 2 Position", "Protein 2 Residue", "Distance in Å"
+            "Protein 2 Chain", "Protein 2 Position", "Protein 2 Residue", "Distance in Å",
         ]
         self.standard_item_list = []
         with open(path, 'r', encoding="utf-8") as csv_file:
