@@ -32,7 +32,7 @@ global_var_terminate_app = 0
 class DialogNotebookManagment(Qt.QtWidgets.QDialog):
 
     def __init__(self, parent=None):
-        """Constructor
+        """Constructor.
 
         Args:
             args

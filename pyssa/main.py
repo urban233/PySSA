@@ -51,7 +51,7 @@ from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import workers, task_workers
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_add_model, dialog_display_docs
+from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_add_model, dialog_display_docs, dialog_help
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
@@ -1811,214 +1811,108 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_page_information(self) -> None:
         """Opens the message box, to display extra information based on the page."""
-        msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Question)
-        msg.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-        styles.set_stylesheet(msg)
-        msg.setWindowTitle("Information")
-        msg.setStyleSheet("QLabel{font-size: 11pt;}")
-
         if self.ui.lbl_page_title.text() == "Home":
-            msg.setText(
-                "Page: Home\n\n" "Here you can use the sidebar to create, open, delete or import a project.",
-            )
+            with open(f'{constants.HELP_HOME_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Create new project":
-            msg.setText(
-                "Page: Create new project\n\n"
-                "Here you can create either an empty project or one with an existing protein.\n\n"
-                "To create a new project, type your project name in the text box. \n"
-                "The valid characters are: A-Z, a-z, 0-9, _ and -. \n\n"
-                "To add an existing protein to your project, tick the checkbox Add existing protein.\n"
-                "You can either type the PDB ID or choose an existing .pdb file in your filesystem, by clicking on the "
-                "tree dots.\n\n"
-                "To use a protein from the PDB, you need to have an internet connection.",
-            )
+            with open(f'{constants.HELP_CREATE_NEW_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Open existing project":
-            msg.setText(
-                "Page: Open existing project\n\n"
-                "To open a project, click on a project name from the list and click on Open.\n\n"
-                "To search a project, type the project name in the text box.\n\n"
-                "The selected project is displayed in the text box below the list.",
-            )
+            with open(f'{constants.HELP_OPEN_EXISTING_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Delete existing project":
-            msg.setText(
-                "Page: Delete existing project.\n\n"
-                "To delete a project, click on a project name from the list and click on Delete.\n\n"
-                "To search a project, type the project name in the text box.\n\n"
-                "The selected project is displayed in the text box below the list.",
-            )
+            with open(f'{constants.HELP_DELETE_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Edit proteins of current project":
-            msg.setText(
-                "Page: Edit proteins of current project\n\n"
-                "Here you can clean or delete a protein structure of your current project. \n\n"
-                "To clean a protein structure, click on a protein name from the list.\n"
-                "Then you can either clean the selected one (Update current protein structure) \n"
-                "or create a duplicate and clean that one (Create new protein structure).\n\n"
-                "To delete a protein structure, click on a protein name and on Delete.",
-            )
+            with open(f'{constants.HELP_EDIT_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "View proteins of current project":
-            msg.setText(
-                "Page: View proteins of current project\n\n"
-                "Here you can show the sequence or the structure of a selected protein.\n\n"
-                "To show the sequence, click on a protein name from the list and on Show (Sequence of selected protein).\n\n"
-                "To show the structure, click on a protein name from the list and on Show (Structure of selected protein).",
-            )
+            with open(f'{constants.HELP_VIEW_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Use existing project":
-            msg.setText(
-                "Page: Use existing project\n\n"
-                "Here you can create a new project based on the current one (use). \n\n"
-                "To use the current project, type a new project name in the text box.\n\n"
-                "Then add the proteins you want in your new project to the list Protein structures in new project and "
-                "click on Create (New project).\n\n"
-                "To add a protein to the list, click on a protein name in the Available protein structures list and "
-                "click on Add.\n\n"
-                "To remove a protein from the list, click on a protein name in the list Protein structures in new project "
-                "and click on Remove.",
-            )
+            with open(f'{constants.HELP_USE_EXISTING_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Structure Analysis":
-            msg.setText(
-                "Page: Structure Analysis\n\n"
-                "Here you can create a structure analysis job.\n\n"
-                "To create a structure analysis job, you have to add at least one structure analysis run.\n\n"
-                "To create a structure analysis run, click on Add to configure the run.\n"
-                "First, you need to select for each combo box a protein structure you want to analyze. \n"
-                "After that, you select the chain(s) of protein structure 1 and then of protein structure 2. \n"
-                "IMPORTANT: You must select as many chains in structure 2 as you selected in structure 1.\n"
-                "After that you added your structure analysis run to the list.\n\n"
-                "Before you start, you can decide if during the analysis images should be created. \n"
-                "To enable the image creation, tick the checkbox Create ray-traced images (slow).\n"
-                "IMPORTANT: The image creation can take a long time, depending on your job configuration.\n"
-                "You can also create the images afterwards!",
-            )
+            with open(f'{constants.HELP_STRUCTURE_ANALYSIS_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Results":
-            msg.setText(
-                "Page: Results\n\n"
-                "Here you can see the results from a protein pair. You can choose the protein pair "
-                "using the combo box.\n\n"
-                "RMSD in Å: displays the root-mean squared deviation of the structure alignment.\n\n"
-                "Color (By RMSD): click to color the protein based on the RMSD value.\n\n"
-                "No. of aligned residues: displays the number of residues which were aligned during the structure alignment.\n\n"
-                "View (Distance Plot): click to open the distance plot, which is a x-y plot of the residue pair no. and distances.\n\n"
-                "View (Distance Histogram): click to open the distance histogram, which shows the frequency of certain distance intervals.\n\n"
-                "View (Table): click to open the distance table, which shows a detailed table of the analysis.\n\n"
-                "View (Structure alignment): click to open the image of the structure alignment.\n\n"
-                "View (Interesting regions): click to open the image of the selected interesting region.",
-            )
+            with open(f'{constants.HELP_RESULTS_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Analysis Images":
-            msg.setText(
-                "Page: Analysis Images\n\n"
-                "Here you can create an analysis images job which creates the images that would be created during the "
-                "analysis.\n\n"
-                "To create an analysis images job, you have to add at least one protein pair.\n"
-                "To add a protein pair, click on a protein pair name in the list Protein structure analysis' and "
-                "click on Add.\n\n"
-                "To remove a protein pair, click on a protein pair name in the list Protein structure analysis' "
-                "for image creation and click on Remove.\n\n"
-                "To start the analysis images job, click on Start (Automatic image creation).",
-            )
+            with open(f'{constants.HELP_ANALYSIS_IMAGES_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Image":
-            msg.setText(
-                "Page: Image\n\n"
-                "Here you can configure different options which impact the PyMOL session and the creation of an image."
-                "You can also create and update PyMOL scenes on this page.\n\n"
-                "Representation: defines how the protein or protein pair is displayed.\n\n"
-                "Background color: defines the background color of the current PyMOL session.\n\n"
-                "Renderer: defines which renderer should be used, needs to be defined if you want to make ray-tracing images.\n\n"
-                "Ray-Trace-Mode: defines how the protein or protein pair is displayed in the final image.\n\n"
-                "Ray Texture: defines what texture PyMol applies to the surface of your object during ray tracing.\n\n"
-                "Ray-Tracing: create images which are ray-traced.\n\n"
-                "Transparent Background: creates images with a transparent background.\n\n"
-                "Save (New scene): saves a new PyMOL scene.\n"
-                "Update (Current scene): updates the current PyMOL scene.\n"
-                "Preview (Image): creates a preview of the image, which would get created.\n"
-                "Save (Image): creates the image and saves it as .png file.",
-            )
+            with open(f'{constants.HELP_IMAGE_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Hotspots":
-            msg.setText(
-                "Page: Hotspots\n\n"
-                "Here you can display specific hotspots of a selected protein.\n\n"
-                "To display a hotspot, click on a protein or protein pair name of the list.\n"
-                "To define the hotspot region, click on the residues in PyMOLs protein sequence view. \n\n"
-                "To display the selected hotspot as balls and sticks, click on Show (Residues as balls and sticks). \n\n"
-                "To hide the balls and sticks representation of the selected hotspot, click on Hide (Residues as balls and sticks). \n\n"
-                "To zoom to the selected hotspot, click on Zoom (Residue position). \n\n",
-            )
+            with open(f'{constants.HELP_HOTSPOTS_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Manage PyMOL session":
-            msg.setText(
-                "Page: Manage PyMOL session\n\n"
-                "Here you can change specific settings which change the current PyMOL session."
-                "To change the PyMOL session settings, select a protein or protein pair in the combo box.\n\n"
-                "To change the color of the protein, select the color in the combo box.\n\n"
-                "To change the representation of the selected protein, select the representation in the combo box.\n\n"
-                "To change the background color of the session, select the color in the combo box.",
-            )
+            with open(f'{constants.HELP_MANAGE_PYMOL_SESSION_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Local Monomer Prediction":
-            msg.setText(
-                "Page: Local Monomer Prediction\n\n"
-                "Here you can create a prediction job for monomer proteins.\n\n"
-                "To create a prediction job, you have to add at least one prediction run.\n\n"
-                "To create a prediction run, click on Add and type a new protein name in the text box.\n"
-                "Then paste the sequence you want to predict into the text field and click on Add to add the run to the job.\n\n"
-                "To start the prediction job, click on Predict.\n\n"
-                "NOTE FOR EXPERTS: If you don't want to use the force field or want to change the template mode "
-                "you can click on Edit, to configurate this.",
-            )
+            with open(f'{constants.HELP_LOCAL_MONOMER_PREDICTION_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Local Multimer Prediction":
-            msg.setText(
-                "Page: Local Multimer Prediction\n\n"
-                "Here you can create a prediction job for multimer proteins.\n\n"
-                "To create a prediction job, you have to add at least one prediction run.\n\n"
-                "To create a prediction run, click on Add and type a new protein name in the text box.\n"
-                "Then paste the sequence you want to predict into the text field (Enter new protein sequence) and "
-                "click on Add to add the sequence to your protein (Add twice to create a homo-dimer).\n\n"
-                "After that, click on Add, to add the prediction run to the prediction job.\n\n"
-                "To start the prediction job, click on Predict.\n\n"
-                "NOTE FOR EXPERTS: If you don't want to use the force field or want to change the template mode "
-                "you can click on Edit, to configurate this.",
-            )
+            with open(f'{constants.HELP_LOCAL_MULTIMER_PREDICTION_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Monomer Prediction + Analysis":
-            msg.setText(
-                "Page: Monomer Prediction + Analysis\n\n"
-                "Here you can create a prediction + analysis job for monomer proteins. "
-                "This combines the prediction with a structure analysis afterwards.\n\n"
-                "To create a prediction + analysis job, you have to first create prediction runs and then "
-                "structure analysis runs.\n\n"
-                "To create a prediction run, click on Add and type your protein name in the text box and add the sequence "
-                "to your protein.\n"
-                "To create a structure analysis run, click on Go (To analysis setup).\n"
-                "Then click on Add, and choose a protein for protein structure 1 and 2.\n"
-                "After that, select the chain(s), first in protein structure 1 and then in 2.\n"
-                "You have to select the same number of chains in both protein structures.\n"
-                "Then click on Next, to add the run to the job.\n\n"
-                "To enable the image creation, tick the checkbox Create ray-traced images (slow).\n"
-                "IMPORTANT: The image creation can take a long time, depending on your job configuration.\n"
-                "You can also create the images afterwards!\n\n"
-                "To start the prediction + analysis job, click on Start.\n\n"
-                "NOTE: For a step-by-step explanation, consult the tutorial which is accessable through the Help menu "
-                "within the PySSA plugin.",
-            )
+            with open(f'{constants.HELP_MONOMER_PREDICTION_ANALYSIS_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         elif self.ui.lbl_page_title.text() == "Multimer Prediction + Analysis":
-            msg.setText(
-                "Page: Multimer Prediction + Analysis\n\n"
-                "Here you can create a prediction + analysis job for multimer proteins. "
-                "This combines the prediction with a structure analysis afterwards.\n\n"
-                "To create a prediction + analysis job, you have to first create prediction runs and then "
-                "structure analysis runs.\n\n"
-                "To create a prediction run, click on Add and type your protein name in the text box and "
-                "add the sequences to your protein.\n"
-                "To create a structure analysis run, click on Go (To analysis setup).\n"
-                "Then click on Add, and choose a protein for protein structure 1 and 2.\n"
-                "After that, select the chain(s), first in protein structure 1 and then in 2.\n"
-                "You have to select the same number of chains in both protein structures.\n"
-                "Then click on Next, to add the run to the job.\n\n"
-                "To enable the image creation, tick the checkbox Create ray-traced images (slow).\n"
-                "IMPORTANT: The image creation can take a long time, depending on your job configuration.\n"
-                "You can also create the images afterwards!\n\n"
-                "To start the prediction + analysis job, click on Start.\n\n"
-                "NOTE: For a step-by-step explanation, consult the tutorial which is accessable through the Help menu "
-                "within the PySSA plugin.",
-            )
-        msg.exec_()
+            with open(f'{constants.HELP_MULTIMER_PREDICTION_ANALYSIS_HTML_PATH}', 'r', encoding='utf-8') as file:
+                html_content = file.read()
+                file.close()
+            tmp_dialog = dialog_help.DialogHelp(html_content)
+            tmp_dialog.exec_()
         return
 
     # <editor-fold desc="New project page functions">

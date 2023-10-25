@@ -134,6 +134,26 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 DOCS_PDF = ""
 DOCS_HTML = pathlib.Path(f"{PLUGIN_PATH}/docs/html/index.html")
 
+# help paths
+HELP_HOME_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/home.html")
+HELP_ANALYSIS_IMAGES_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/analysis_images.html")
+HELP_GLOBAL_SETTINGS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/global_settings.html")
+HELP_HOTSPOTS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/hotspots.html")
+HELP_IMAGE_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/image.html")
+HELP_LOCAL_MONOMER_PREDICTION_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/local_monomer_prediction.html")
+HELP_LOCAL_MULTIMER_PREDICTION_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/local_multimer_prediction.html")
+HELP_MANAGE_PYMOL_SESSION_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/manage_pymol_session.html")
+HELP_MONOMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/monomer_prediction_analysis.html")
+HELP_MULTIMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/multimer_prediction_analysis.html")
+HELP_VIEW_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/view_proteins_of_current_project.html")
+HELP_CREATE_NEW_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/create_new_project.html")
+HELP_DELETE_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/delete_project.html")
+HELP_EDIT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/edit_proteins_of_current_project.html")
+HELP_OPEN_EXISTING_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/open_existing_project.html")
+HELP_STRUCTURE_ANALYSIS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/structure_analysis.html")
+HELP_USE_EXISTING_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/use_existing_project.html")
+HELP_RESULTS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/results.html")
+
 # pymol parameters
 PYMOL_COLORS = [
             "",

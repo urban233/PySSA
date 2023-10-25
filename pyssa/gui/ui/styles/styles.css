@@ -1575,6 +1575,9 @@ QPushButton::pressed {
     color: #276cea;
 }
 
+QTextBrowser {
+    background-color: white;
+}
 
 QListWidget {
     border-style: solid;
@@ -1631,6 +1634,8 @@ QToolButton:pressed {
                                 stop: 0.5 #0047c8, stop: 1.0 #276cea);
     border-color: #276cea;
 }
+
+
 
 /* Settings for add protein dialog */
 QLabel#lbl_status {
