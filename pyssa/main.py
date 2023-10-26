@@ -355,7 +355,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lbl_logo.setPixmap(QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
         self.setWindowTitle("PySSA")
-        constants.PYSSA_LOGGER.info("PySSA started.")
+        constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
 
     # <editor-fold desc="GUI page management functions">
     def _create_local_pred_monomer_management(self) -> None:
@@ -897,7 +897,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.action_help_docs.triggered.connect(self.open_tutorial)
         self.ui.action_help_docs_pdf.triggered.connect(self.open_documentation)
         self.ui.action_help_about.triggered.connect(self.open_about)
-
+        self.ui.action_settings_open_logs.triggered.connect(self.open_logs)
+        self.ui.action_settings_clear_logs.triggered.connect(self.clear_all_log_files)
         # </editor-fold>
 
         self.ui.btn_info.clicked.connect(self.open_page_information)
@@ -1792,6 +1793,36 @@ class MainWindow(QtWidgets.QMainWindow):
         self.workspace_path = globals.g_settings.workspace_path
         self.workspace = QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self._setup_statusbar()
+
+    def open_logs(self):
+        file_dialog = QtWidgets.QFileDialog()
+        log_path = str(constants.LOG_PATH)
+        file_dialog.setDirectory(log_path)
+        file_path, _ = file_dialog.getOpenFileName(self, "Select a log file to open", "", "LOG File (*.log)")
+        if file_path:
+            os.startfile(file_path)
+
+    def clear_all_log_files(self):
+        response = basic_boxes.yes_or_no(
+            "Clear log files",
+            "Are you sure you want to delete all log files?",
+            QtWidgets.QMessageBox.Information,
+        )
+        if response:
+            try:
+                shutil.rmtree(str(constants.LOG_PATH))
+            except PermissionError:
+                print("The active log file was not deleted.")
+            if len(os.listdir(str(constants.LOG_PATH))) == 1:
+                basic_boxes.ok("Clear log files",
+                               "All log files could be deleted.",
+                               QtWidgets.QMessageBox.Information)
+                constants.PYSSA_LOGGER.info("All log files were deleted.")
+            else:
+                basic_boxes.ok("Clear log files",
+                               "Not all log files could be deleted.",
+                               QtWidgets.QMessageBox.Warning)
+                constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
 
     @staticmethod
     def open_tutorial() -> None:
