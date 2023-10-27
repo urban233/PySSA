@@ -355,7 +355,7 @@ class ColabfoldWorker(QObject):
         structure_prediction_obj.create_fasta_files_for_prediction()
         logger.info("Fasta files were created.")
         structure_prediction_obj.run_prediction()
-        logger.info("Prediction ran successfully.")
+        logger.info("Prediction process finished.")
         structure_prediction_obj.move_best_prediction_models()
         logger.info("Saved predicted pdb file into XML file.")
         subprocess.run(["wsl", "--shutdown"])

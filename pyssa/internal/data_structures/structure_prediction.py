@@ -24,6 +24,10 @@ import os
 import pathlib
 import shutil
 import logging
+
+from PyQt5 import QtWidgets
+
+from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
@@ -100,29 +104,31 @@ class StructurePrediction:
             raise FileNotFoundError
 
     def run_prediction(self) -> None:
-        """This function runs a structure prediction.
-
-        """
+        """This function runs a structure prediction."""
         colabbatch.Colabbatch(self.prediction_configuration).run_prediction()
 
-    def move_best_prediction_models(self):
-        """This function moves the best prediction model(s) to the project directory
-
-        """
+    def move_best_prediction_models(self) -> None:
+        """This function moves the best prediction model(s) to the project directory."""
         logger.debug(self.predictions)
         best_prediction_models: list[tuple[prediction_protein_info.PredictionProteinInfo, str]] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
-        logger.debug(best_prediction_models)
-        for tmp_prediction in best_prediction_models:
-            logger.debug(tmp_prediction)
-            logger.debug(tmp_prediction[1])
-            try:
-                src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
-            except FileNotFoundError:
-                logger.error("This path does not exists: %s", path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}").get_filepath())
-                return
-            dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
-            os.rename(src.get_filepath(), dest)
-            logger.debug(tmp_prediction[0].name)
-            self.project.add_existing_protein(protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)))
-            logger.debug(self.project.proteins)
-        shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        if len(best_prediction_models) == 0:
+            basic_boxes.ok("Prediction status",
+                           "The prediction process finished but no rank 1 model could be found.",
+                           QtWidgets.QMessageBox.Critical)
+            logger.critical("The prediction process finished but no rank 1 model could be found.")
+        else:
+            logger.debug(best_prediction_models)
+            for tmp_prediction in best_prediction_models:
+                logger.debug(tmp_prediction)
+                logger.debug(tmp_prediction[1])
+                try:
+                    src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
+                except FileNotFoundError:
+                    logger.error("This path does not exists: %s", path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}").get_filepath())
+                    return
+                dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
+                os.rename(src.get_filepath(), dest)
+                logger.debug(tmp_prediction[0].name)
+                self.project.add_existing_protein(protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)))
+                logger.debug(self.project.proteins)
+            shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))

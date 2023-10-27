@@ -32,7 +32,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 def get_prediction_name_and_seq_from_table(table) -> list[prediction_protein_info.PredictionProteinInfo]:
-    """This function gets the names and sequences of the table which stores the predictions to run
+    """This function gets the names and sequences of the table which stores the predictions to run.
 
     Args:
         table:
@@ -65,7 +65,7 @@ def get_prediction_name_and_seq_from_table(table) -> list[prediction_protein_inf
 
 
 def get_relaxed_rank_1_pdb_file(proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo]) -> list[tuple]:
-    """This function gets the prediction models which were relaxed and ranked number one
+    """This function gets the prediction models which were relaxed and ranked number one.
 
     Args:
         proteins_to_predict:
@@ -87,6 +87,7 @@ def get_relaxed_rank_1_pdb_file(proteins_to_predict: list[prediction_protein_inf
     logger.debug(proteins_to_predict)
     for tmp_protein_to_predict in proteins_to_predict:
         logger.debug(tmp_protein_to_predict)
+        logger.info(os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR)))
         for tmp_filename in os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR)):
             if tmp_filename.find(f"{tmp_protein_to_predict.name}_relaxed_rank_001") != -1:
                 filenames.append((tmp_protein_to_predict, tmp_filename))
