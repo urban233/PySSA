@@ -86,6 +86,7 @@ COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/sc
 INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/installation_colabfold.sh"
 COLABFOLD_PREDICT_NO_AMBER_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber.sh"
 COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
+COLABFOLD_LOG_FILE_PATH = pathlib.Path(f"{PREDICTION_PDB_DIR}/log.txt")
 #COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
 #COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
 #COLABFOLD_PREDICT_NO_AMBER_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber.sh"

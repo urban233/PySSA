@@ -57,7 +57,15 @@ class FilePath:
 
     # </editor-fold>
 
-    def __init__(self, filepath):
+    def __init__(self, filepath) -> None:
+        """Constructor.
+
+        Args:
+            filepath: an existing filepath
+
+        Raises:
+            FileNotFoundError if given filepath does not exists
+        """
         if os.path.exists(filepath):
             # complete file path was given
             self._filepath = filepath
