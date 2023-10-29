@@ -57,7 +57,7 @@ class Colabbatch:
     # </editor-fold>
 
     def __init__(self, prediction_configuration: prediction_configuration.PredictionConfiguration) -> None:
-        """Constructor
+        """Constructor.
 
         Args:
             prediction_configuration:
@@ -79,10 +79,7 @@ class Colabbatch:
         self.prediction_configuration = prediction_configuration
 
     def run_prediction(self):
-        """This function starts the wsl and runs a prediction.
-
-        """
-
+        """This function starts the wsl and runs a prediction."""
         #subprocess.run([constants.POWERSHELL_EXE, str(constants.CONVERT_DOS_TO_UNIX_EXE), str(constants.COLABFOLD_PREDICT_SCRIPT_WIN)])
         #subprocess.run([constants.POWERSHELL_EXE, "-ExecutionPolicy", "Bypass", "-File", constants.CONVERT_DOS_TO_UNIX])
         #subprocess.run([str(constants.CONVERT_DOS_TO_UNIX)])
@@ -124,15 +121,38 @@ class Colabbatch:
                 return
         elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is True:
             logger.info("Run prediction with default pdb70 templates and with amber force field correction.")
-            try:
-                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
-                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
-                                self.fasta_path, self.pdb_path])
-                subprocess.run(["wsl", "--shutdown"])
-            except OSError:
-                logger.error("Something went wrong during the prediction process.")
-                shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-                return
+            # new idea --------
+            shell_result = subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME], stdout=subprocess.PIPE, text=True)
+            if shell_result.returncode == 0:
+                print("Command executed successfully")
+                output = shell_result.stdout
+                # Process the output as needed
+                lines = output.split('\n')
+                for line in lines:
+                    print(line)
+            else:
+                print(f"Command failed with return code {shell_result.returncode}")
+            shell_result = subprocess.run(
+                ["wsl", "/home/ubuntu_colabfold/.pyssa/localcolabfold/colabfold-conda/bin/colabfold_batch", self.fasta_path, self.pdb_path, "--amber", "--templates"], stdout=subprocess.PIPE, text=True)
+            if shell_result.returncode == 0:
+                print("Colabfold_batch command executed successfully")
+            else:
+                print(f"Command failed with return code {shell_result.returncode}")
+            with open(constants.COLABFOLD_LOG_FILE_PATH) as tmp_file:
+                contents = tmp_file.read()
+                logger.debug(contents)
+            subprocess.run(["wsl", "--shutdown"])
+
+            # old idea --------
+            # try:
+            #     subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+            #     subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
+            #                     self.fasta_path, self.pdb_path])
+            #     subprocess.run(["wsl", "--shutdown"])
+            # except OSError:
+            #     logger.error("Something went wrong during the prediction process.")
+            #     shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+            #     return
         else:
             logger.error(f"Invalid prediction configuration. templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
             raise ValueError("Invalid prediction configuration.")

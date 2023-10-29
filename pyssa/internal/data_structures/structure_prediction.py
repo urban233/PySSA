@@ -112,29 +112,32 @@ class StructurePrediction:
         logger.debug(self.predictions)
         best_prediction_models: list[tuple[prediction_protein_info.PredictionProteinInfo, str]] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
         if len(best_prediction_models) == 0:
-            tmp_response = basic_boxes.yes_or_no("Prediction status",
-                                                 "The prediction process finished but no rank 1 model could be found. "
-                                                 "Do you want to save the Colabfold log file?",
-                                                 QtWidgets.QMessageBox.Critical)
-            if tmp_response is True:
-                file_dialog = QtWidgets.QFileDialog()
-                desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
-                file_dialog.setDirectory(desktop_path)
-                file_path, _ = file_dialog.getSaveFileName(caption="Save Colabfold log file", directory="", filter="LOG Files (*.log)")
-                if file_path:
-                    shutil.copyfile(constants.COLABFOLD_LOG_FILE_PATH, file_path)
-                    if os.path.exists(file_path):
-                        basic_boxes.ok(
-                            "Save log file", "The Colabfold log file was successfully saved.",
-                            QtWidgets.QMessageBox.Information,
-                        )
-                        logger.info("The Colabfold log file was successfully saved.")
-                    else:
-                        basic_boxes.ok(
-                            "Save log file", "Saving the Colabfold log file failed.",
-                            QtWidgets.QMessageBox.Critical,
-                        )
-                        logger.critical("Saving the Colabfold log file failed.")
+            basic_boxes.ok("Prediction status",
+                           "The prediction process finished but no rank 1 model could be found.",
+                           QtWidgets.QMessageBox.Critical)
+            # tmp_response = basic_boxes.yes_or_no("Prediction status",
+            #                                      "The prediction process finished but no rank 1 model could be found. "
+            #                                      "Do you want to save the Colabfold log file?",
+            #                                      QtWidgets.QMessageBox.Critical)
+            # if tmp_response is True:
+            #     file_dialog = QtWidgets.QFileDialog()
+            #     desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+            #     file_dialog.setDirectory(desktop_path)
+            #     file_path, _ = file_dialog.getSaveFileName(caption="Save Colabfold log file", directory="", filter="LOG Files (*.log)")
+            #     if file_path:
+            #         shutil.copyfile(constants.COLABFOLD_LOG_FILE_PATH, file_path)
+            #         if os.path.exists(file_path):
+            #             basic_boxes.ok(
+            #                 "Save log file", "The Colabfold log file was successfully saved.",
+            #                 QtWidgets.QMessageBox.Information,
+            #             )
+            #             logger.info("The Colabfold log file was successfully saved.")
+            #         else:
+            #             basic_boxes.ok(
+            #                 "Save log file", "Saving the Colabfold log file failed.",
+            #                 QtWidgets.QMessageBox.Critical,
+            #             )
+            #             logger.critical("Saving the Colabfold log file failed.")
             logger.critical("The prediction process finished but no rank 1 model could be found.")
         else:
             logger.debug(best_prediction_models)
