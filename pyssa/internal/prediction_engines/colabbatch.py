@@ -44,11 +44,11 @@ class Colabbatch:
     """
     path where the fasta files will be stored, in unix path format
     """
-    fasta_path: str = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
+    fasta_path: str = f"/home/ubuntu_colabfold/{user_name}/scratch/local_predictions/fasta"
     """
     path where the pdb files will be stored, in unix path format
     """
-    pdb_path: str = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
+    pdb_path: str = f"/home/ubuntu_colabfold/{user_name}/scratch/local_predictions/pdb"
     """
     the configuration settings for the prediction
     """
@@ -78,81 +78,187 @@ class Colabbatch:
 
         self.prediction_configuration = prediction_configuration
 
-    def run_prediction(self):
-        """This function starts the wsl and runs a prediction."""
-        #subprocess.run([constants.POWERSHELL_EXE, str(constants.CONVERT_DOS_TO_UNIX_EXE), str(constants.COLABFOLD_PREDICT_SCRIPT_WIN)])
-        #subprocess.run([constants.POWERSHELL_EXE, "-ExecutionPolicy", "Bypass", "-File", constants.CONVERT_DOS_TO_UNIX])
-        #subprocess.run([str(constants.CONVERT_DOS_TO_UNIX)])
-        os.startfile(str(constants.CONVERT_DOS_TO_UNIX))
-        # running prediction script
-        logger.debug(f"templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
-        if self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is True:
+    def run_prediction(self) -> None:
+        """This function starts the wsl2, podman machine, podman container and runs a prediction.
+
+        Raises:
+            RuntimeError: if powershell command fails
+        """
+        # string conversion
+        str_conversion_1 = constants.SETTINGS_DIR.replace("\\", "/")
+        str_conversion_2 = str_conversion_1.replace(":", "")
+        str_conversion_3 = str_conversion_2.replace("C", "c")
+        settings_dir_unix_notation = f"/mnt/{str_conversion_3}"
+        # new way
+        # lists with podman commands which need to be used for the prediction process
+        podman_machine_start_command = ["podman", "machine", "start"]
+        podman_machine_stop_command = ["podman", "machine", "stop"]
+        podman_container_delete_command = ["podman", "container", "rm", constants.CONTAINER_NAME]
+        podman_container_stop_command = ["podman", "container", "stop", constants.CONTAINER_NAME]
+        podman_container_create_command = ["podman", "run", "-itd", "-v", f"{settings_dir_unix_notation}:/home/ubuntu_colabfold/{os.getlogin()}", "--name", "localcolabfold-container", "localhost/localcolabfold-ubuntu2204:1.5.1.2"]
+        podman_container_start_command = ["podman", "container", "start", constants.CONTAINER_NAME]
+        podman_container_exec_colabbatch_command = ["podman", "container", "exec", constants.CONTAINER_NAME,
+                                                    "/home/ubuntu_colabfold/localcolabfold/colabfold-conda/bin/colabfold_batch"]
+        # list of paths of the fasta dir and pdb dir which is needed by colabbatch
+        colabbatch_paths = [self.fasta_path, self.pdb_path]
+        # podman virtual machine gets started to be able to run containers
+        powershell_result = subprocess.run(podman_machine_start_command)
+        if powershell_result.returncode == 0:
+            logger.info("Podman machine started.")
+        if powershell_result.returncode == 125:
+            logger.warning("Podman machine is already running.")
+        else:
+            logger.error(f"Podman machine could not be started! "
+                         f"Command exited with code: {powershell_result.returncode}")
+            raise RuntimeError("Podman machine could not be started!")
+            
+        powershell_result = subprocess.run(podman_container_stop_command)
+        # if powershell_result.returncode != 0:
+        #     logger.error(f"Podman container could not be stopped! "
+        #                  f"Command exited with code: {powershell_result.returncode}")
+        #     raise RuntimeError("Podman container could not be stopped!")
+        powershell_result = subprocess.run(podman_container_delete_command)
+        # if powershell_result.returncode != 0:
+        #     logger.error(f"Podman container could not be deleted! "
+        #                  f"Command exited with code: {powershell_result.returncode}")
+        #     raise RuntimeError("Podman container could not be deleted")
+        powershell_result = subprocess.run(podman_container_create_command)
+        if powershell_result.returncode != 0:
+            logger.error(f"Podman container could not be created! "
+                         f"Command exited with code: {powershell_result.returncode}")
+            raise RuntimeError("Podman container could not be created!")
+
+        # checks cases for args to use in colabbatch command
+        if self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is True:
+            logger.info("Run prediction with default pdb70 templates and with amber force field correction.")
+            colabbatch_args = ["--amber", "--templates"]
+        elif self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is True:
             logger.info("Run prediction with no templates and with amber force field correction.")
-            try:
-                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
-                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
-                                self.fasta_path, self.pdb_path])
-                subprocess.run(["wsl", "--shutdown"])
-            except OSError:
-                logger.error("Something went wrong during the prediction process.")
-                shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-                return
-        elif self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is False:
-            logger.info("Run prediction with no templates and with no amber force field correction.")
-            try:
-                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
-                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT,
-                                self.fasta_path, self.pdb_path])
-                subprocess.run(["wsl", "--shutdown"])
-            except OSError:
-                logger.error("Something went wrong during the prediction process.")
-                shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-                return
+            colabbatch_args = ["--amber"]
         elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is False:
             logger.info("Run prediction with default pdb70 templates and with no amber force field correction.")
-            try:
-                subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
-                subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_SCRIPT,
-                                self.fasta_path, self.pdb_path])
-                subprocess.run(["wsl", "--shutdown"])
-            except OSError:
-                logger.error("Something went wrong during the prediction process.")
-                shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-                return
-        elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is True:
-            logger.info("Run prediction with default pdb70 templates and with amber force field correction.")
-            # new idea --------
-            shell_result = subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME], stdout=subprocess.PIPE, text=True)
-            if shell_result.returncode == 0:
-                print("Command executed successfully")
-                output = shell_result.stdout
-                # Process the output as needed
-                lines = output.split('\n')
-                for line in lines:
-                    print(line)
-            else:
-                print(f"Command failed with return code {shell_result.returncode}")
-            shell_result = subprocess.run(
-                ["wsl", "/home/ubuntu_colabfold/.pyssa/localcolabfold/colabfold-conda/bin/colabfold_batch", self.fasta_path, self.pdb_path, "--amber", "--templates"], stdout=subprocess.PIPE, text=True)
-            if shell_result.returncode == 0:
-                print("Colabfold_batch command executed successfully")
-            else:
-                print(f"Command failed with return code {shell_result.returncode}")
-            with open(constants.COLABFOLD_LOG_FILE_PATH) as tmp_file:
-                contents = tmp_file.read()
-                logger.debug(contents)
-            subprocess.run(["wsl", "--shutdown"])
-
-            # old idea --------
-            # try:
-            #     subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
-            #     subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
-            #                     self.fasta_path, self.pdb_path])
-            #     subprocess.run(["wsl", "--shutdown"])
-            # except OSError:
-            #     logger.error("Something went wrong during the prediction process.")
-            #     shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-            #     return
+            colabbatch_args = ["--templates"]
+        elif self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is False:
+            logger.info("Run prediction with no templates and with no amber force field correction.")
+            colabbatch_args = []
         else:
-            logger.error(f"Invalid prediction configuration. templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
+            logger.error(
+                f"Invalid prediction configuration. templates: {self.prediction_configuration.templates}, "
+                f"amber: {self.prediction_configuration.amber_force_field}",
+            )
             raise ValueError("Invalid prediction configuration.")
+
+        # starts localcolabfold-container, which runs the prediction
+        powershell_result = subprocess.run(podman_container_start_command)
+        if powershell_result.returncode != 0:
+            logger.error(f"Podman localcolabfold-container could not be started! "
+                         f"Command exited with code: {powershell_result.returncode}")
+            raise RuntimeError("Podman localcolabfold-container could not be started!")
+
+        # concatenating lists to create the complete prediction command run in the container
+        powershell_result = subprocess.run(podman_container_exec_colabbatch_command + colabbatch_paths + colabbatch_args)
+        if powershell_result.returncode != 0:
+            logger.error(f"Podman exec command which runs colabbatch failed! "
+                         f"Command exited with code: {powershell_result.returncode}")
+            raise RuntimeError("Podman exec command which runs colabbatch failed!")
+
+        powershell_result = subprocess.run(podman_container_stop_command)
+        if powershell_result.returncode != 0:
+            logger.error(f"Podman container could not be stopped! "
+                         f"Command exited with code: {powershell_result.returncode}")
+            raise RuntimeError("Podman container could not be stopped!")
+        powershell_result = subprocess.run(podman_container_delete_command)
+        # if powershell_result.returncode != 0:
+        #     logger.error(f"Podman container could not be deleted! "
+        #                  f"Command exited with code: {powershell_result.returncode}")
+        #     raise RuntimeError("Podman container could not be deleted")
+
+        # stops podman virtual machine after completing prediction process
+        powershell_result = subprocess.run(podman_machine_stop_command)
+        if powershell_result.returncode != 0:
+            logger.error(f"Podman machine could not be shutdown! "
+                         f"Command exited with code: {powershell_result.returncode}")
+            raise RuntimeError("Podman machine could not be shutdown!")
+
+        # shuts down the WSL2 environment used by the podman virtual machine
+        powershell_result = subprocess.run(["wsl", "--shutdown"])
+        if powershell_result.returncode != 0:
+            logger.error(f"WSL2 could not be shutdown! "
+                         f"Command exited with code: {powershell_result.returncode}")
+            raise RuntimeError("WSL2 could not be shutdown!")
+
+
+        # old way
+        # os.startfile(str(constants.CONVERT_DOS_TO_UNIX))
+        # # running prediction script
+        # logger.debug(f"templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
+        # if self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is True:
+        #     logger.info("Run prediction with no templates and with amber force field correction.")
+        #     try:
+        #         subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
+        #                         self.fasta_path, self.pdb_path])
+        #         subprocess.run(["wsl", "--shutdown"])
+        #     except OSError:
+        #         logger.error("Something went wrong during the prediction process.")
+        #         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        #         return
+        # elif self.prediction_configuration.templates == "none" and self.prediction_configuration.amber_force_field is False:
+        #     logger.info("Run prediction with no templates and with no amber force field correction.")
+        #     try:
+        #         subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT,
+        #                         self.fasta_path, self.pdb_path])
+        #         subprocess.run(["wsl", "--shutdown"])
+        #     except OSError:
+        #         logger.error("Something went wrong during the prediction process.")
+        #         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        #         return
+        # elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is False:
+        #     logger.info("Run prediction with default pdb70 templates and with no amber force field correction.")
+        #     try:
+        #         subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_AMBER_SCRIPT,
+        #                         self.fasta_path, self.pdb_path])
+        #         subprocess.run(["wsl", "--shutdown"])
+        #     except OSError:
+        #         logger.error("Something went wrong during the prediction process.")
+        #         shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        #         return
+        # elif self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is True:
+        #     logger.info("Run prediction with default pdb70 templates and with amber force field correction.")
+        #     # new idea --------
+        #     shell_result = subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME], stdout=subprocess.PIPE, text=True)
+        #     if shell_result.returncode == 0:
+        #         print("Command executed successfully")
+        #         output = shell_result.stdout
+        #         # Process the output as needed
+        #         lines = output.split('\n')
+        #         for line in lines:
+        #             print(line)
+        #     else:
+        #         print(f"Command failed with return code {shell_result.returncode}")
+        #     shell_result = subprocess.run(
+        #         ["wsl", "/home/ubuntu_colabfold/.pyssa/localcolabfold/colabfold-conda/bin/colabfold_batch", self.fasta_path, self.pdb_path, "--amber", "--templates"], stdout=subprocess.PIPE, text=True)
+        #     if shell_result.returncode == 0:
+        #         print("Colabfold_batch command executed successfully")
+        #     else:
+        #         print(f"Command failed with return code {shell_result.returncode}")
+        #     with open(constants.COLABFOLD_LOG_FILE_PATH) as tmp_file:
+        #         contents = tmp_file.read()
+        #         logger.debug(contents)
+        #     subprocess.run(["wsl", "--shutdown"])
+        #
+        #     # old idea --------
+        #     # try:
+        #     #     subprocess.run(["wsl", "--set-default", constants.WSL_DISTRO_NAME])
+        #     #     subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
+        #     #                     self.fasta_path, self.pdb_path])
+        #     #     subprocess.run(["wsl", "--shutdown"])
+        #     # except OSError:
+        #     #     logger.error("Something went wrong during the prediction process.")
+        #     #     shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        #     #     return
+        # else:
+        #     logger.error(f"Invalid prediction configuration. templates: {self.prediction_configuration.templates}, amber: {self.prediction_configuration.amber_force_field}")
+        #     raise ValueError("Invalid prediction configuration.")

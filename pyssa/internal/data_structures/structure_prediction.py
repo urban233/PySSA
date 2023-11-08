@@ -80,9 +80,7 @@ class StructurePrediction:
 
     @staticmethod
     def create_tmp_directories() -> None:
-        """This function creates tmp directories in a scratch folder to organize prediction inputs and outputs
-
-        """
+        """This function creates tmp directories in a scratch folder to organize prediction inputs and outputs."""
         # TODO: is there a more elegant way to do it?
         if not os.path.exists(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions")):
             os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
@@ -92,9 +90,7 @@ class StructurePrediction:
             os.mkdir(constants.PREDICTION_PDB_DIR)
 
     def create_fasta_files_for_prediction(self) -> None:
-        """This function creates fasta file based on the predictions in the object
-
-        """
+        """This function creates fasta file based on the predictions in the object."""
         protein_objects: list[protein.Protein] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
         logger.debug(f"Variable: protein_sequences; Value: {protein_objects} in function create_fasta_files_for_prediction")
         for tmp_protein_to_predict in protein_objects:

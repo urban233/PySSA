@@ -31,15 +31,18 @@ PLUGIN_NAME = "tmpPySSA"
 PLUGIN_PATH_OLD = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\{PLUGIN_NAME}")
 PLUGIN_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{PLUGIN_NAME}")
 PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-VERSION_NUMBER = "v0.9.32"
+VERSION_NUMBER = "v0.9.34"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
+SETTINGS_DIR_UNIX_NOTATION = SETTINGS_DIR.replace("\\", "/")
 SETTINGS_FILE_NAME = "settings"
 SETTINGS_FILENAME = "settings.json"
 SETTINGS_FULL_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/{SETTINGS_FILENAME}")
 
 DEFAULT_WORKSPACE_PATH = pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/default_workspace")
+
+CONTAINER_NAME = "localcolabfold-container"
 
 SCRATCH_DIR = Path(f"{SETTINGS_DIR}/scratch")
 SCRATCH_DIR_ANALYSIS = Path(f"{SCRATCH_DIR}/analysis")

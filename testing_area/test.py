@@ -18,49 +18,27 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextBrowser
-
+import subprocess
 from pyssa.util import constants
 
-
-class HTMLViewer(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.setWindowTitle("HTML Viewer")
-        self.setGeometry(100, 100, 800, 600)
-
-        self.text_browser = QTextBrowser(self)
-        self.text_browser.setGeometry(10, 10, 780, 580)
-
-        # Load the static HTML content
-        html_content = """
-        <html>
-            <head>
-                <style>
-                    h1 {
-                        color: blue;
-                    }
-                    p {
-                        font-size: 18px;
-                    }
-                </style>
-            </head>
-            <body>
-                <h1>Hello, World!</h1>
-                <p>This is a static HTML page styled with CSS.</p>
-            </body>
-        </html>
-        """
-        # Load an existing HTML file
-        with open(f'{constants.DOCS_HTML}', 'r', encoding='utf-8') as file:
-            html_content = file.read()
-        self.text_browser.setHtml(html_content)
-
-
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = HTMLViewer()
-    window.show()
-    sys.exit(app.exec_())
+    print(constants.SETTINGS_DIR)
+    tmp = constants.SETTINGS_DIR.replace("\\", "/")
+    tmp2 = tmp.replace(":", "")
+    tmp3 = tmp2.replace("C", "c")
+    SETTINGS_DIR_UNIX_NOTATION = f"/mnt/{tmp3}"
+    print(SETTINGS_DIR_UNIX_NOTATION)
+    #subprocess.run(["podman", "machine", "start"])
+    #subprocess.run(["podman", "run", "-itd", "--name", "localcolabfold-container",
+    #                "localhost/localcolabfold-ubuntu2204:1.5.1.2", "exit"])
+
+    #subprocess.run(["podman", "stop", "localcolabfold-container"])
+    #subprocess.run(["podman", "container", "start", "localcolabfold-container"])
+    #subprocess.run(["podman", "container", "list"])
+    #subprocess.run(["podman", "container", "exec", "localcolabfold-container",
+    #                "/home/ubuntu_colabfold/localcolabfold/colabfold-conda/bin/colabfold_batch", "--help"])
+    # subprocess.run(["podman", "container", "exec", "busy_hugle",
+    #                 "/home/ubuntu_colabfold/localcolabfold/colabfold-conda/bin/colabfold_batch",
+    #                 "/home/ubuntu_colabfold/test/fasta", "/home/ubuntu_colabfold/test/pdb",
+    #                 "--amber", "--templates"])
+    #subprocess.run(["podman", "machine", "stop"])

@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the protein pair class"""
+"""Module for the protein pair class."""
 import os
 import pathlib
 import logging
@@ -101,16 +101,12 @@ class ProteinPair:
         # self.pymol_session_filepath = path_util.FilePath(f"{self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR)}/{self.name}_session.pse")
 
     def load_protein_pair_in_pymol(self):
-        """This function loads to proteins into a NEW pymol session.
-
-        """
+        """This function loads to proteins into a NEW pymol session."""
         self.protein_1.load_protein_in_pymol()
         self.protein_2.load_protein_in_pymol()
 
     def load_pymol_session(self):
-        """This function loads the existing pymol session of the pair.
-
-        """
+        """This function loads the existing pymol session of the pair."""
         session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}_session.pse")
         if not os.path.exists(constants.CACHE_PYMOL_SESSION_DIR):
             os.mkdir(constants.CACHE_PYMOL_SESSION_DIR)
@@ -156,9 +152,7 @@ class ProteinPair:
         self.distance_analysis = value
 
     def serialize_protein_pair(self, xml_protein_pairs_element: ElementTree.Element):
-        """This function serialize the protein pair object
-
-        """
+        """This function serialize the protein pair object."""
         tmp_protein_pair = ElementTree.SubElement(xml_protein_pairs_element, element_names.PROTEIN_PAIR)
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_NAME, str(self.name))
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT,
@@ -175,7 +169,7 @@ class ProteinPair:
     @staticmethod
     def deserialize_protein_pair(protein_obj_json_file: path_util.FilePath):
         """This function constructs the protein pair object from
-        the json file
+        the json file.
 
         Returns:
             two complete protein objects and a protein pair object deserialized from a json file

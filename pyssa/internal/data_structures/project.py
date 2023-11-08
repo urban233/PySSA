@@ -65,10 +65,6 @@ class Project:
     """
     _operating_system = platform.system()
     """
-    a list which contains all ATOM and HETATM lines of the .pdb file
-    """
-    _pdb_data: list[str]
-    """
     all top layer folder paths of the project
     """
     folder_paths: dict[str, pathlib.Path]

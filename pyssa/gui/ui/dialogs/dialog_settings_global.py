@@ -48,7 +48,11 @@ def is_wsl2_installed():
 
 
 def is_local_colabfold_installed():
-    return os.path.exists(constants.WSL_DISK_PATH)
+    powershell_results = subprocess.run(["podman", "--version"])
+    if powershell_results.returncode == 0:
+        return True
+    else:
+        return False
 
 
 class DialogSettingsGlobal(QtWidgets.QDialog):
