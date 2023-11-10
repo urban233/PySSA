@@ -1,4 +1,4 @@
-# tmpPySSA
+# PySSA
 
 <img align="center" src="https://github.com/urban233/tmpPySSA/blob/main/pyssa_github.gif" alt="pyssa_intro" />
 
