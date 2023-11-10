@@ -1,4 +1,4 @@
-#
+    #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
