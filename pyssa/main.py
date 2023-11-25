@@ -113,7 +113,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMinimumWidth(580)
         self.setMinimumHeight(200)
 
-        # <editor-fold desc="Info button changes">
+        # check which os is used
+        if sys.platform.startswith("win32"):
+            # Windows path
+            globals.g_os = "win32"
+            globals.g_plugin_path = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}")
+        elif sys.platform.startswith("linux"):
+            # Linux path
+            globals.g_os = "linux"
+            globals.g_plugin_path = f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/{constants.PLUGIN_NAME}"
+
+            # <editor-fold desc="Info button changes">
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_info.setIcon(icon)
@@ -126,6 +136,7 @@ class MainWindow(QtWidgets.QMainWindow):
             os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa")))
         if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs"))):
             os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs")))
+
         # <editor-fold desc="Setup app settings">
         self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
@@ -171,10 +182,13 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_utils.error_dialog_settings(
                 "The settings file is corrupted. Please restore the settings!", "", self.app_settings,
             )
-        if dialog_settings_global.is_wsl2_installed():
-            self.app_settings.wsl_install = 1
+        if globals.g_os == "win32":
+            if dialog_settings_global.is_wsl2_installed():
+                self.app_settings.wsl_install = 1
+            else:
+                self.app_settings.wsl_install = 0
         else:
-            self.app_settings.wsl_install = 0
+            self.app_settings.wsl_install = 1
 
         if dialog_settings_global.is_local_colabfold_installed():
             self.app_settings.local_colabfold = 1

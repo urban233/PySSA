@@ -26,7 +26,7 @@ from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dia
 from pyssa.internal.data_structures import settings
 from pyssa.util import constants, gui_utils
 from pyssa.gui.ui.styles import styles
-from pyssa.internal.thread import workers
+from pyssa.util import globals
 from PyQt5.QtWidgets import QMessageBox
 import PyQt5
 from PyQt5 import QtCore
@@ -96,11 +96,13 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         # </editor-fold>
 
         # <editor-fold desc="Check WSL status">
-        if is_wsl2_installed():
-            self.settings.wsl_install = 1
+        if globals.g_os == "win32":
+            if is_wsl2_installed():
+                self.settings.wsl_install = 1
+            else:
+                self.settings.wsl_install = 0
         else:
-            self.settings.wsl_install = 0
-
+            self.settings.wsl_install = 1
         # </editor-fold>
 
         # <editor-fold desc="Check local colabfold status">

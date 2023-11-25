@@ -26,29 +26,23 @@ from PyQt5.QtCore import Qt
 
 # appending the plugin path to the python search path
 # this is necessary to be able to use import (submodules) statements
-# sys.path.append("/home/matt/snap/pymol-oss/107/.pymol/startup/pyssa")
 
 # linux, macOS, Windows path
 path_list = [
-    f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
-    f"{os.path.expanduser('~')}/opt/anaconda3/envs/pyssa/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
+    f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/PySSA"
     f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA",
 ]
 styles_path_list = [
-    f"{path_list[0]}/styles/styles_alt.css",
-    f"{path_list[1]}/styles/styles_alt.css",
-    pathlib.Path(f"{path_list[2]}/pyssa/gui/ui/styles/styles.css"),
+    pathlib.Path(f"{path_list[0]}/pyssa/gui/ui/styles/styles.css"),
+    pathlib.Path(f"{path_list[1]}/pyssa/gui/ui/styles/styles.css"),
 ]
 # appends the os specific python path
-if sys.platform.startswith("darwin"):
-    # macOS path
-    sys.path.append(path_list[1])
-elif sys.platform.startswith("linux"):
+if sys.platform.startswith("linux"):
     # Linux path
     sys.path.append(path_list[0])
 elif sys.platform.startswith("win32"):
     # Windows path
-    sys.path.append(path_list[2])
+    sys.path.append(path_list[1])
 
 
 def __init_plugin__(app=None):
@@ -82,14 +76,11 @@ def run_plugin_gui():
     if mainWindow is None:
         mainWindow = MainWindow()
         # Open the qss styles file and read in the css-alike styling code
-        if sys.platform.startswith("darwin"):
-            with open(styles_path_list[1], 'r', encoding="utf-8") as file:
-                style = file.read()
-        elif sys.platform.startswith("linux"):
+        if sys.platform.startswith("linux"):
             with open(styles_path_list[0], 'r', encoding="utf-8") as file:
                 style = file.read()
         elif sys.platform.startswith("win32"):
-            with open(styles_path_list[2], 'r', encoding="utf-8") as file:
+            with open(styles_path_list[1], 'r', encoding="utf-8") as file:
                 style = file.read()
         # Set the stylesheet of the application
         mainWindow.setStyleSheet(style)
