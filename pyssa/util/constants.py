@@ -27,7 +27,7 @@ import pathlib
 from pathlib import Path
 
 
-PLUGIN_NAME = "tmpPySSA"
+PLUGIN_NAME = "PySSA"
 PLUGIN_PATH_OLD = pathlib.Path(f"{os.path.expanduser('~')}\\AppData\\Roaming\\pymol\\startup\\{PLUGIN_NAME}")
 PLUGIN_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{PLUGIN_NAME}")
 PLUGIN_ROOT_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -43,7 +43,7 @@ SETTINGS_FULL_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/{SETTINGS_FILENAME}")
 DEFAULT_WORKSPACE_PATH = pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/default_workspace")
 
 CONTAINER_NAME = "localcolabfold-container"
-
+IMAGE_NAME = "localhost/localcolabfold-ubuntu2204:1.5.1.2"
 SCRATCH_DIR = Path(f"{SETTINGS_DIR}/scratch")
 SCRATCH_DIR_ANALYSIS = Path(f"{SCRATCH_DIR}/analysis")
 SCRATCH_DIR_IMAGES = Path(f"{SCRATCH_DIR_ANALYSIS}/images")

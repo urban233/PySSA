@@ -32,8 +32,7 @@ from PyQt5.QtCore import Qt
 path_list = [
     f"{os.path.expanduser('~')}/anaconda3/envs/pymol_plugin/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
     f"{os.path.expanduser('~')}/opt/anaconda3/envs/pyssa/lib/python3.9/site-packages/pmg_tk/startup/tmpPySSA/",
-    # TODO: needs to be updated with the correct name
-    f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\tmpPySSA",
+    f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA",
 ]
 styles_path_list = [
     f"{path_list[0]}/styles/styles_alt.css",
