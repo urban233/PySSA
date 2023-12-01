@@ -1,23 +1,16 @@
 # PySSA
-
-<img align="center" src="https://github.com/urban233/tmpPySSA/blob/main/pyssa_github.gif" alt="pyssa_intro" />
-
-This is the temporary repo for the PySSA-PyMOL-Plugin.
-
-### Code checked with: 
+<!-- [![DOI](https://zenodo.org/badge/220207097.svg)](https://zenodo.org/badge/latestdoi/220207097) -->
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://GitHub.com/urban233/PySSA/graphs/commit-activity)
+[![GitHub issues](https://img.shields.io/github/issues/urban233/PySSA)](https://GitHub.com/urban233/PySSA/issues/)
+[![GitHub contributors](https://img.shields.io/github/contributors/urban233/PySSA.svg)](https://GitHub.com/urban233/PySSA/graphs/contributors/)
+[![GitHub release](https://img.shields.io/github/release/urban233/PySSA.svg)](https://github.com/urban233/PySSA/releases/)
 
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-<!-- [![DOI](https://zenodo.org/badge/220207097.svg)](https://zenodo.org/badge/latestdoi/220207097) -->
-DOI: 
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-blue.svg)](https://GitHub.com/urban233/PySSA/graphs/commit-activity)
-[![GitHub issues](https://img.shields.io/github/issues/FelixBaensch/MORTAR.svg)](https://GitHub.com/urban233/PySSA/issues/)
-[![GitHub contributors](https://img.shields.io/github/contributors/FelixBaensch/MORTAR.svg)](https://GitHub.com/urban233/PySSA/graphs/contributors/)
-[![GitHub release](https://img.shields.io/github/release/FelixBaensch/MORTAR.svg)](https://github.com/urban233/PySSA/releases/)
 
-![PySSA_logo](https://github.com/urban233/PySSA/blob/main/graphical_abstract_pyssa.tiff)
+![PySSA_logo](https://github.com/urban233/PySSA/blob/main/graphical_abstract_pyssa.png)
 # Python plugin for protein Sequence to Structure Analysis (PySSA)
 
 ## Contents of this document
@@ -144,12 +137,8 @@ into it (i.e. sub-folders of "AdoptOpenJDK\jdk-17.0.4_8_jre\" need to be "bin", 
   * License: Apache-2.0 license
 
 ## Citation
-You can cite this software or this repository as it is defined in the CITATION.cff file. Also, please cite our scientific 
-article (<a href= "https://doi.org/10.1186/s13321-022-00674-9"> MORTAR: a rich client application for in silico molecule 
-fragmentation (Baensch et al. 2023)).
 
 ## References and useful links
-* None
 
 ## Acknowledgements
 **Developers:**
