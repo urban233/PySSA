@@ -23,6 +23,8 @@
 import os
 import logging
 import subprocess
+import sys
+
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.util import constants
@@ -42,11 +44,11 @@ class Colabbatch:
     """
     path where the fasta files will be stored, in unix path format
     """
-    fasta_path: str = f"/home/ubuntu_colabfold/{user_name}/scratch/local_predictions/fasta"
+    fasta_path: str = f"/home/rhel_user/scratch/local_predictions/fasta"
     """
     path where the pdb files will be stored, in unix path format
     """
-    pdb_path: str = f"/home/ubuntu_colabfold/{user_name}/scratch/local_predictions/pdb"
+    pdb_path: str = f"/home/rhel_user/scratch/local_predictions/pdb"
     """
     the configuration settings for the prediction
     """
@@ -88,6 +90,9 @@ class Colabbatch:
         str_conversion_3 = str_conversion_2.replace("C", "c")
         settings_dir_unix_notation = f"/mnt/{str_conversion_3}"
         # new way
+
+
+        # <editor-fold desc="Linux pre-process">
         # lists with podman commands which need to be used for the prediction process
         podman_machine_start_command = ["podman", "machine", "start"]
         podman_machine_stop_command = ["podman", "machine", "stop"]
@@ -110,21 +115,14 @@ class Colabbatch:
                          f"Command exited with code: {powershell_result.returncode}")
             raise RuntimeError("Podman machine could not be started!")
             
-        powershell_result = subprocess.run(podman_container_stop_command)
-        # if powershell_result.returncode != 0:
-        #     logger.error(f"Podman container could not be stopped! "
-        #                  f"Command exited with code: {powershell_result.returncode}")
-        #     raise RuntimeError("Podman container could not be stopped!")
-        powershell_result = subprocess.run(podman_container_delete_command)
-        # if powershell_result.returncode != 0:
-        #     logger.error(f"Podman container could not be deleted! "
-        #                  f"Command exited with code: {powershell_result.returncode}")
-        #     raise RuntimeError("Podman container could not be deleted")
+        subprocess.run(podman_container_stop_command)
+        subprocess.run(podman_container_delete_command)
         powershell_result = subprocess.run(podman_container_create_command)
         if powershell_result.returncode != 0:
             logger.error(f"Podman container could not be created! "
                          f"Command exited with code: {powershell_result.returncode}")
             raise RuntimeError("Podman container could not be created!")
+        # </editor-fold>
 
         # checks cases for args to use in colabbatch command
         if self.prediction_configuration.templates == "pdb70" and self.prediction_configuration.amber_force_field is True:
@@ -146,38 +144,50 @@ class Colabbatch:
             )
             raise ValueError("Invalid prediction configuration.")
 
-        # starts localcolabfold-container, which runs the prediction
-        powershell_result = subprocess.run(podman_container_start_command)
-        if powershell_result.returncode != 0:
-            logger.error(f"Podman localcolabfold-container could not be started! "
-                         f"Command exited with code: {powershell_result.returncode}")
-            raise RuntimeError("Podman localcolabfold-container could not be started!")
+        if sys.platform.startswith("linux"):
+            # starts localcolabfold-container, which runs the prediction
+            powershell_result = subprocess.run(podman_container_start_command)
+            if powershell_result.returncode != 0:
+                logger.error(f"Podman localcolabfold-container could not be started! "
+                             f"Command exited with code: {powershell_result.returncode}")
+                raise RuntimeError("Podman localcolabfold-container could not be started!")
 
-        # concatenating lists to create the complete prediction command run in the container
-        powershell_result = subprocess.run(podman_container_exec_colabbatch_command + colabbatch_paths + colabbatch_args)
-        if powershell_result.returncode != 0:
-            logger.error(f"Podman exec command which runs colabbatch failed! "
-                         f"Command exited with code: {powershell_result.returncode}")
-            raise RuntimeError("Podman exec command which runs colabbatch failed!")
+            # concatenating lists to create the complete prediction command run in the container
+            powershell_result = subprocess.run(podman_container_exec_colabbatch_command + colabbatch_paths + colabbatch_args)
+            if powershell_result.returncode != 0:
+                logger.error(f"Podman exec command which runs colabbatch failed! "
+                             f"Command exited with code: {powershell_result.returncode}")
+                raise RuntimeError("Podman exec command which runs colabbatch failed!")
 
-        powershell_result = subprocess.run(podman_container_stop_command)
-        if powershell_result.returncode != 0:
-            logger.error(f"Podman container could not be stopped! "
-                         f"Command exited with code: {powershell_result.returncode}")
-            raise RuntimeError("Podman container could not be stopped!")
-        powershell_result = subprocess.run(podman_container_delete_command)
-        # if powershell_result.returncode != 0:
-        #     logger.error(f"Podman container could not be deleted! "
-        #                  f"Command exited with code: {powershell_result.returncode}")
-        #     raise RuntimeError("Podman container could not be deleted")
+            powershell_result = subprocess.run(podman_container_stop_command)
+            if powershell_result.returncode != 0:
+                logger.error(f"Podman container could not be stopped! "
+                             f"Command exited with code: {powershell_result.returncode}")
+                raise RuntimeError("Podman container could not be stopped!")
+            powershell_result = subprocess.run(podman_container_delete_command)
+            # if powershell_result.returncode != 0:
+            #     logger.error(f"Podman container could not be deleted! "
+            #                  f"Command exited with code: {powershell_result.returncode}")
+            #     raise RuntimeError("Podman container could not be deleted")
 
-        # stops podman virtual machine after completing prediction process
-        powershell_result = subprocess.run(podman_machine_stop_command)
-        if powershell_result.returncode != 0:
-            logger.error(f"Podman machine could not be shutdown! "
-                         f"Command exited with code: {powershell_result.returncode}")
-            raise RuntimeError("Podman machine could not be shutdown!")
-
+            # stops podman virtual machine after completing prediction process
+            powershell_result = subprocess.run(podman_machine_stop_command)
+            if powershell_result.returncode != 0:
+                logger.error(f"Podman machine could not be shutdown! "
+                             f"Command exited with code: {powershell_result.returncode}")
+                raise RuntimeError("Podman machine could not be shutdown!")
+        elif sys.platform.startswith("win32"):
+            # concatenating lists to create the complete prediction command run in the container
+            wsl_almacolabfold_exec_colabbatch_command = ["wsl", "-d", "almaColabfold9", "/home/rhel_user/.pyssa/localcolabfold/colabfold-conda/bin/colabfold_batch"]
+            powershell_result = subprocess.run(
+                wsl_almacolabfold_exec_colabbatch_command + colabbatch_paths + colabbatch_args
+            )
+            if powershell_result.returncode != 0:
+                logger.error(f"WSL2 almaColabfold9 exec command which runs colabbatch failed! "
+                             f"Command exited with code: {powershell_result.returncode}")
+                raise RuntimeError("WSL2 almaColabfold9 exec command which runs colabbatch failed!")
+        else:
+            print("Unsupported operating system detected.")
         # shuts down the WSL2 environment used by the podman virtual machine
         powershell_result = subprocess.run(["wsl", "--shutdown"])
         if powershell_result.returncode != 0:
