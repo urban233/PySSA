@@ -56,7 +56,10 @@ CACHE_IMAGES = Path(f"{CACHE_DIR}/images")
 CACHE_STRUCTURE_ALN_IMAGES_DIR = Path(f"{CACHE_DIR}/images/structure_alignment")
 CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = Path(f"{CACHE_STRUCTURE_ALN_IMAGES_DIR}/interesting_regions")
 PREDICTION_FASTA_DIR = Path(f"{SCRATCH_DIR}/local_predictions/fasta")
+WSL_SCRATCH_DIR = r"\\wsl.localhost\almaColabfold9\home\rhel_user\scratch"
+WSL_PREDICTION_FASTA_DIR = r"\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\fasta"
 PREDICTION_PDB_DIR = Path(f"{SCRATCH_DIR}/local_predictions/pdb")
+WSL_PREDICTION_PDB_DIR = r"\\wsl.localhost\almaColabfold9\home\rhel_user\scratch\local_predictions\pdb"
 
 ESMFOLD_DIR = Path(f"{SCRATCH_DIR}/esmfold")
 ESMFOLD_PDB_DIR = Path(f"{SCRATCH_DIR}/esmfold/pdb")
