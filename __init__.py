@@ -29,7 +29,7 @@ from PyQt5.QtCore import Qt
 
 # linux, macOS, Windows path
 path_list = [
-    f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/PySSA"
+    f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/PySSA",
     f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA",
 ]
 styles_path_list = [

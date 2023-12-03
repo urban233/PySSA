@@ -21,10 +21,9 @@
 #
 import os
 import pathlib
-from pyssa.internal.data_structures import settings
 
 
-g_settings = settings.Settings("", "")
+g_settings = None
 
 g_plugin_path = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA")
 g_plugin_root_path = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))

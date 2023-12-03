@@ -123,6 +123,7 @@ class MainWindow(QtWidgets.QMainWindow):
             globals.g_os = "linux"
             globals.g_plugin_path = f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/{constants.PLUGIN_NAME}"
 
+        globals.g_settings = settings.Settings("", "")
             # <editor-fold desc="Info button changes">
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
@@ -201,12 +202,9 @@ class MainWindow(QtWidgets.QMainWindow):
         url = "https://w-hs.sciebo.de/s/0kR11n8PkLDo1gB/download"
         try:
             response = requests.get(url)
-            print(response.text)
-            current_version_filepath = "C:\\ProgramData\\pyssa\\plugin\\pyssa_version_current.txt"
-            with open(current_version_filepath, "r") as file:
-                line = file.readline()
-            file.close()
-            if response.text != line:
+            print(f"Current version: {constants.VERSION_NUMBER[1:]}")
+            print(f"Latest version: {response.text}")
+            if response.text != constants.VERSION_NUMBER[1:]:
                 basic_boxes.ok(
                     "New version",
                     f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.",

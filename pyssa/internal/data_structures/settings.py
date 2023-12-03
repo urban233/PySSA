@@ -23,9 +23,8 @@
 import json
 import os
 import pathlib
-import subprocess
-from pyssa.util import constants
 from pyssa.io_pyssa import safeguard
+from pyssa.util import constants
 
 
 class Settings:
