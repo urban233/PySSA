@@ -209,10 +209,4 @@ class TutorialVideosDialog(QtWidgets.QDialog):
                 try:
                     subprocess.Popen(['start', 'wmplayer', file_name], shell=True)
                 except Exception as exc:
-                    print(f"Fail to start Videoplayer: {exc}")
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = TutorialVideosDialog()
-    ex.show()
-    sys.exit(app.exec_())
+                    print(f"Fail to start videoplayer: {exc}")
