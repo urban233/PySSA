@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/tmpPySSA.iml" filepath="$PROJECT_DIR$/.idea/tmpPySSA.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/PySSA.iml" filepath="$PROJECT_DIR$/.idea/PySSA.iml" />
     </modules>
   </component>
 </project>

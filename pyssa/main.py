@@ -40,7 +40,9 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt  # pylint: disable=no-name-in-module
+from PyQt5 import QtMultimedia
 
+from pyssa.gui.ui.dialogs.dialog_tutorial_videos import TutorialVideosDialog
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import project_watcher
@@ -349,7 +351,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # fixme: should the pdf documentation be accessible through the pyssa gui?
         self.ui.action_help_docs_pdf.setText("Documentation")
         self.ui.action_help_docs_pdf.setVisible(True)
-        self.ui.action_help_docs.setText("Tutorial")
+        self.ui.action_help_docs.setText("Tutorials")
         self.ui.action_help_docs.setVisible(True)
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
@@ -1827,7 +1829,9 @@ class MainWindow(QtWidgets.QMainWindow):
     @staticmethod
     def open_tutorial() -> None:
         """Opens the official tutorial pdf file."""
-        os.startfile(constants.TUTORIAL_PATH)
+        # os.startfile(constants.TUTORIAL_PATH)
+        tmp_dialog = TutorialVideosDialog()
+        tmp_dialog.exec_()
 
     @staticmethod
     def open_documentation() -> None:
