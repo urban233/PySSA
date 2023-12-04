@@ -104,7 +104,7 @@ LOG_FILENAME = f"{current_time.year}-{current_time.month:02d}-{current_time.day:
 LOG_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/logs/{LOG_FILENAME}")
 LOG_PATH = pathlib.Path(f"{SETTINGS_DIR}/logs")
 
-TUTORIAL_PATH = "C:\\ProgramData\\pyssa\\plugin\\pyssa-demo-tutorial.pdf"
+TUTORIAL_PATH = "C:\\ProgramData\\pyssa\\plugin\\tutorials"
 DOCS_PATH = "C:\\ProgramData\\pyssa\\plugin\\user_guide.pdf"
 
 # OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
