@@ -117,7 +117,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if sys.platform.startswith("win32"):
             # Windows path
             globals.g_os = "win32"
-            globals.g_plugin_path = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}")
+            globals.g_plugin_path = pathlib.Path(f"C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}")
         elif sys.platform.startswith("linux"):
             # Linux path
             globals.g_os = "linux"
