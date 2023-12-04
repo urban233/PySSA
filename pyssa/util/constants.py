@@ -30,7 +30,7 @@ from pyssa.util import globals
 PLUGIN_NAME = "PySSA"
 PLUGIN_PATH = globals.g_plugin_path
 PLUGIN_ROOT_PATH = globals.g_plugin_root_path
-VERSION_NUMBER = "v0.9.45"
+VERSION_NUMBER = "v0.9.46"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
