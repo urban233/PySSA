@@ -25,7 +25,6 @@ import logging
 import subprocess
 import sys
 
-from pyssa.internal.data_structures import structure_prediction
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.util import constants
@@ -202,22 +201,11 @@ class Colabbatch:
             elif powershell_result.returncode == 0:
                 logger.info("Prediction process was successful, copying results ...")
                 subprocess.run(
-                    ["wsl", "-d", "almaColabfold9", "mkdir", f"{settings_dir_unix_notation}/scratch"]
-                )
-                subprocess.run(
-                    ["wsl", "-d", "almaColabfold9", "mkdir", f"{settings_dir_unix_notation}/scratch/local_predictions"]
-                )
-                subprocess.run(
-                    ["wsl", "-d", "almaColabfold9", "mkdir", f"{settings_dir_unix_notation}/scratch/local_predictions/pdb"]
-                )
-                structure_prediction.StructurePrediction.create_tmp_directories()
-                subprocess.run(
                     [
                         "wsl", "-d", "almaColabfold9", "cp", "-r", "/home/rhel_user/scratch/local_predictions/pdb",
                         f"{settings_dir_unix_notation}/scratch/local_predictions"
                      ]
                 )
-                subprocess.run(["wsl", "-d", "almaColabfold9", "rm", "-rf", f"{settings_dir_unix_notation}/scratch"])
         else:
             print("Unsupported operating system detected.")
         # shuts down the WSL2 environment used by the podman virtual machine

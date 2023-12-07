@@ -1,8 +1,0 @@
-#[settings]
-#docstyle.convention = "google"
-
-#select = ["E", "F", "G", "W"]
-#ignore = ["D401"]
-
-#[tool.ruff]
-#select = ["google", "F841"]
