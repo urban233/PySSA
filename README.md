@@ -73,31 +73,24 @@ Pandas, Matplotlib, Biopython and the open-source version of PyMOL.
 **Managed by PySSA-Installer:**
 * Windows Subsystem for Linux 2
   * WSL2
-  * License: 
+  * License: Microsoft Software License Terms
 * Colabfold
-  * LocalColabfold
-  * License: 
-* Mamba
-  * Mambaforge
-  * License: 
-* PyQt5
-  * License:
-* NumPy
-  * License:
-* Pandas
-  * License:
-* Matplotlib
-  * License:
-* Biopython
-  * License:
-* PyMOL Open-Source
-  * License:
-* JavaFX version 17.0.2
-  * [Open JavaFX](https://openjfx.io)
-  * GNU General Public License (GPL) Version 2
-* Chemistry Development Kit (CDK) version 2.8
-    * [Chemistry Development Kit on GitHub](https://cdk.github.io/)
-    * License: GNU Lesser General Public License 2.1
+  * [LocalColabfold](https://github.com/YoshitakaMo/localcolabfold)
+  * License: MIT License
+* [Mamba](https://github.com/mamba-org/mamba)
+  * License: BSD 3-Clause "New" or "Revised" License
+* [PyQt5](https://riverbankcomputing.com/software/pyqt/intro) 
+  * License: GNU General Public License (GPL)
+* [NumPy](https://numpy.org/)
+  * License: BSD 3-Clause "New" or "Revised" License
+* [Pandas](https://github.com/pandas-dev/pandas)
+  * License: BSD 3-Clause "New" or "Revised" License
+* [Matplotlib](https://matplotlib.org/)
+  * License: Python Software Foundation License (PSF) 
+* [Biopython](https://biopython.org/)
+  * License: BSD 3-Clause License
+* [PyMOL Open-Source](https://github.com/schrodinger/pymol-open-source)
+  * License: [BSD-like license](https://github.com/schrodinger/pymol-open-source/blob/master/LICENSE)
 
 ## Citation
 

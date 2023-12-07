@@ -146,7 +146,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
             self.ui.cb_color_vision_mode.setCurrentIndex(3)
 
         styles.set_stylesheet(self)
-        self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Global Settings")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 

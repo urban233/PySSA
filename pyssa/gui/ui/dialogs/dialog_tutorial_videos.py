@@ -38,7 +38,7 @@ class TutorialVideosDialog(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.setGeometry(200, 200, 850, 700)
         self.setWindowTitle("PySSA Tutorials")
-        self.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
 
         # connect btn
         self.ui.btn_tutorial_videos.clicked.connect(self.load_file)

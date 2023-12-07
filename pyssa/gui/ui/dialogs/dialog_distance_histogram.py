@@ -173,7 +173,7 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         self.ui.cb_bar_size.currentTextChanged.connect(self.update_bar_width)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
-        self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Distance Histogram")
 
     def update_bar_width(self):
