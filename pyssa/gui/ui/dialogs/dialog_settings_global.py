@@ -48,10 +48,12 @@ def is_wsl2_installed():
 
 
 def is_local_colabfold_installed():
-    powershell_results = subprocess.run(["podman", "--version"])
+    powershell_results = subprocess.run(["wsl", "-d", "almaColabfold9", "ls"])
     if powershell_results.returncode == 0:
+        subprocess.run(["wsl", "--shutdown"])
         return True
     else:
+        subprocess.run(["wsl", "--shutdown"])
         return False
 
 

@@ -34,3 +34,11 @@ class DirectoryDoesNotExistError(Exception):
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
+
+
+class FastaFilesNotFoundError(Exception):
+    """Class for an empty WSL fasta directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)

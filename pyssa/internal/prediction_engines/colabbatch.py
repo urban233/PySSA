@@ -28,6 +28,7 @@ import sys
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.util import constants
+from pyssa.util import exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -187,18 +188,39 @@ class Colabbatch:
 
             print(settings_dir_unix_notation)
             subprocess.run(["wsl", "-d", "almaColabfold9", "cp", "-r", f"{settings_dir_unix_notation}/scratch/local_predictions/fasta", "/home/rhel_user/scratch/local_predictions/"])
+            try:
+                # Run the 'ls' command in WSL to list the directory
+                command = ["wsl", "-d", "almaColabfold9", "ls", "/home/rhel_user/scratch/local_predictions/fasta"]
+
+                # Run the command and capture the output
+                result = subprocess.run(command, capture_output=True, text=True, shell=True)
+
+                # Check if the command was successful
+                if result.returncode == 0:
+                    # Print the output
+                    logger.info(result.stdout)
+                    if result.stdout == "":
+                        logger.critical("There are no fasta files in the WSL2 fasta directory!")
+                        raise exception.FastaFilesNotFoundError("There are no fasta files in the WSL2 fasta directory!")
+                else:
+                    # Print an error message
+                    print(f"Error: {result.stderr}")
+            except Exception as e:
+                print(f"An error occurred: {e}")
+
             # concatenating lists to create the complete prediction command run in the container
             wsl_almacolabfold_exec_colabbatch_command = ["wsl", "-d", "almaColabfold9", "/home/rhel_user/localcolabfold/colabfold-conda/bin/colabfold_batch"]
             complete_command = wsl_almacolabfold_exec_colabbatch_command + colabbatch_paths + colabbatch_args
-            print(complete_command)
+            logger.info(f"complete shell command: {complete_command}")
             powershell_result = subprocess.run(
-                wsl_almacolabfold_exec_colabbatch_command + colabbatch_paths + colabbatch_args
+                complete_command, capture_output=True, text=True, shell=True
             )
             if powershell_result.returncode != 0:
                 logger.error(f"WSL2 almaColabfold9 exec command which runs colabbatch failed! "
                              f"Command exited with code: {powershell_result.returncode}")
                 raise RuntimeError("WSL2 almaColabfold9 exec command which runs colabbatch failed!")
             elif powershell_result.returncode == 0:
+                logger.info(f"Shell output: {powershell_result.stdout}")
                 logger.info("Prediction process was successful, copying results ...")
                 subprocess.run(
                     [
@@ -206,6 +228,7 @@ class Colabbatch:
                         f"{settings_dir_unix_notation}/scratch/local_predictions"
                      ]
                 )
+                subprocess.run(["wsl", "-d", "almaColabfold9", "rm", "-rf", "/home/rhel_user/scratch"])
         else:
             print("Unsupported operating system detected.")
         # shuts down the WSL2 environment used by the podman virtual machine

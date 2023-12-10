@@ -1,6 +1,0 @@
-File Organization
-=================
-This page explains how all files are stored.
-
-The file concept of the plugin is to work with a dedicated "workspace" and
-"project files".
