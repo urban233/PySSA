@@ -52,7 +52,7 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
         self.ui.lbl_status.setText("")
         self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
         self.setWindowTitle("Add an existing protein to the current project")
-        self.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         styles.color_button_not_ready(self.ui.btn_add_protein)
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden

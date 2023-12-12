@@ -48,10 +48,12 @@ def is_wsl2_installed():
 
 
 def is_local_colabfold_installed():
-    powershell_results = subprocess.run(["podman", "--version"])
+    powershell_results = subprocess.run(["wsl", "-d", "almaColabfold9", "ls"])
     if powershell_results.returncode == 0:
+        subprocess.run(["wsl", "--shutdown"])
         return True
     else:
+        subprocess.run(["wsl", "--shutdown"])
         return False
 
 
@@ -146,7 +148,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
             self.ui.cb_color_vision_mode.setCurrentIndex(3)
 
         styles.set_stylesheet(self)
-        self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Global Settings")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 

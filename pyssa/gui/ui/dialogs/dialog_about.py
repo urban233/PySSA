@@ -48,7 +48,7 @@ class DialogAbout(QtWidgets.QDialog):
         self.ui.lbl_pyssa_logo.setPixmap(scaled_pixmap)
         self.ui.label_2.setText(f"Version: {constants.VERSION_NUMBER}")
         styles.set_stylesheet(self)
-        self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("About")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 

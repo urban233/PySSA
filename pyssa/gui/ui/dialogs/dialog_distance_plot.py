@@ -120,7 +120,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
         self.ui.cb_turn_on_grid.stateChanged.connect(self.turn_gird_on_off)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
-        self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Distance Plot")
 
     def keyPressEvent(self, event):

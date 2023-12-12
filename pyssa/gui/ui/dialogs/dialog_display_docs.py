@@ -36,7 +36,7 @@ class WebViewDialog(QDialog):
         self.web_view = PyQt5.QtWebEngineWidgets.QWebEngineView()
         self.web_view.load(QUrl.fromLocalFile(url))
         layout.addWidget(self.web_view)
-        self.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
 
         # Add maximize button
         self.setWindowFlags(self.windowFlags() | Qt.WindowMaximizeButtonHint)

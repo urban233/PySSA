@@ -55,7 +55,7 @@ class DialogHelp(QtWidgets.QDialog):
         self.text_browser = QtWidgets.QTextBrowser(self)
         self.text_browser.setGeometry(10, 10, 780, 580)
         self.text_browser.setHtml(html_content)
-        self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         styles.set_stylesheet(self)
         self.text_browser.setStyleSheet("""background-color: white;""")

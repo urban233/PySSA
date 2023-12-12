@@ -106,7 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self) -> None:
         """Constructor."""
-        # ----- Initialize the ui building process
+        # <editor-fold desc="Initialize the ui building process">
         super().__init__()
         # build ui object
         self.ui = Ui_MainWindow()
@@ -115,52 +115,62 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMinimumWidth(580)
         self.setMinimumHeight(200)
 
-        # check which os is used
+        constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
+        # </editor-fold>
+
+        # <editor-fold desc="OS Check">
         if sys.platform.startswith("win32"):
             # Windows path
             globals.g_os = "win32"
-            globals.g_plugin_path = pathlib.Path(f"C:\\ProgramData\\pyssa\\plugin\\Miniconda3\\envs\\pyssa_colab\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}")
+            globals.g_plugin_path = pathlib.Path(f"C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}")
         elif sys.platform.startswith("linux"):
             # Linux path
             globals.g_os = "linux"
             globals.g_plugin_path = f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/{constants.PLUGIN_NAME}"
 
-            # <editor-fold desc="Info button changes">
+        constants.PYSSA_LOGGER.info(f"Started on platform: {globals.g_os}")
+        # </editor-fold>
+
+        globals.g_settings = settings.Settings("", "")
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_info.setIcon(icon)
         self.ui.btn_info.setText("")
         self.ui.btn_info.setFixedWidth(50)
 
-        # </editor-fold>
-
+        # <editor-fold desc="Program directory check">
         if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa"))):
             os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa")))
         if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs"))):
             os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs")))
 
-        # <editor-fold desc="Setup app settings">
+        constants.PYSSA_LOGGER.info(f"Checked program and logs directory.")
+        # </editor-fold>
+
+        # <editor-fold desc="Setup App Settings">
         self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
+            constants.PYSSA_LOGGER.info(f"Settings file not found, open configuration dialog.")
+            # Configuration dialog to setup setting file
             dialog = dialog_startup.DialogStartup()
             dialog.exec_()
+
             # checks if the cancel button was pressed
             if dialog_startup.global_var_terminate_app == 1:
                 os.remove(constants.SETTINGS_FULL_FILEPATH)
+                constants.PYSSA_LOGGER.info(f"Configuration dialog closed, and removed new settings file.")
                 sys.exit()
+
             self.app_settings.app_launch = 1
             self.app_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
 
+            constants.PYSSA_LOGGER.info(f"Demo projects are getting downloaded and extracted ...")
             import zipfile
             with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), 'r') as zip_ref:
                 zip_ref.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
-            
-            path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
-            # for tmp_filename in os.listdir(path_of_demo_projects):
-            #     shutil.copy(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"),
-            #                 pathlib.Path(f"{self.app_settings.workspace_path}/{tmp_filename}"))
-            #     print(tmp_filename)
+            constants.PYSSA_LOGGER.info(f"Demo projects are downloaded and extracted.\n Import of demo projects started ...")
 
+            path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
             tmp_project = project.Project("", dialog_startup.global_var_startup_workspace)
             for tmp_filename in os.listdir(path_of_demo_projects):
                 try:
@@ -174,48 +184,72 @@ class MainWindow(QtWidgets.QMainWindow):
                 tmp_project.set_workspace_path(dialog_startup.global_var_startup_workspace)
                 new_filepath = pathlib.Path(f"{dialog_startup.global_var_startup_workspace}/{tmp_filename}")
                 tmp_project.serialize_project(new_filepath)
-            os.remove(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"))
+            constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
+            try:
+                os.remove(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"))
+            except FileNotFoundError:
+                constants.PYSSA_LOGGER.warning("Zip archive of demo projects could not be found!")
+            constants.PYSSA_LOGGER.info("Serialize settings ...")
             self.app_settings.serialize_settings()
+            constants.PYSSA_LOGGER.info("Serialize settings finished.")
+
             QtWidgets.QApplication.restoreOverrideCursor()
+
         try:
             self.app_settings = self.app_settings.deserialize_settings()
         except ValueError:
-            print("The settings file is corrupted. Please restore the settings!")
+            constants.PYSSA_LOGGER.warning("The settings file is damaged.")
             gui_utils.error_dialog_settings(
-                "The settings file is corrupted. Please restore the settings!", "", self.app_settings,
+                "The settings file is damaged. You have to restore the settings to use PySSA!", "", self.app_settings,
             )
         if globals.g_os == "win32":
+            constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
             if dialog_settings_global.is_wsl2_installed():
                 self.app_settings.wsl_install = 1
+                constants.PYSSA_LOGGER.info("WSL2 is installed.")
             else:
                 self.app_settings.wsl_install = 0
+                constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
         else:
             self.app_settings.wsl_install = 1
 
+        constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
         if dialog_settings_global.is_local_colabfold_installed():
             self.app_settings.local_colabfold = 1
+            constants.PYSSA_LOGGER.info("Local Colabfold is installed.")
         else:
             self.app_settings.local_colabfold = 0
+            constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
 
         globals.g_settings = self.app_settings
         # </editor-fold>
 
+        constants.PYSSA_LOGGER.info("Checking version of localhost with remote ...")
         url = "https://w-hs.sciebo.de/s/0kR11n8PkLDo1gB/download"
         try:
             response = requests.get(url)
-            print(response.text)
-            current_version_filepath = "C:\\ProgramData\\pyssa\\plugin\\pyssa_version_current.txt"
-            with open(current_version_filepath, "r") as file:
-                line = file.readline()
-            file.close()
-            if response.text != line:
+            print(f"Current version: {constants.VERSION_NUMBER[1:]}")
+            print(f"Status code: {response.status_code}")
+            if response.status_code == 503:
+                constants.PYSSA_LOGGER.warning("The connection to the update servers failed. If could not determine if a new version is avaliable.")
                 basic_boxes.ok(
-                    "New version",
-                    f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.",
+                    "No connection",
+                    f"The connection to the update servers failed. If could not determine if a new version is avaliable. You can start the PySSA now.",
                     QtWidgets.QMessageBox.Information,
                 )
+            else:
+                print(f"Latest version: {response.text}")
+                if response.text != constants.VERSION_NUMBER[1:]:
+                    constants.PYSSA_LOGGER.info("here is a new version of PySSA available.")
+                    basic_boxes.ok(
+                        "New version",
+                        f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.",
+                        QtWidgets.QMessageBox.Information,
+                    )
         except requests.exceptions.RequestException as e:
+            constants.PYSSA_LOGGER.error("Downloading the version file of the remote failed!")
             print("Failed to download the file:", e)
+        constants.PYSSA_LOGGER.info("Checking version of localhost with remote finished.")
 
         # <editor-fold desc="Class attributes">
         self.app_project = project.Project("", pathlib.Path(""))
@@ -238,12 +272,16 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_session = current_session.CurrentSession("", "", "")
         self.is_distance_plot_open = False
         self.distance_plot_dialog = None
+
+        constants.PYSSA_LOGGER.info("Setup class attributes finished.")
         # </editor-fold>
 
         # sets up the status bar
         self._setup_statusbar()
         tools.create_directory(constants.SETTINGS_DIR, "scratch")
         self._setup_default_configuration()
+
+        constants.PYSSA_LOGGER.info("Setup rest of GUI related elements ...")
 
         # <editor-fold desc="GUI page management">
         # -- Gui page management vars
@@ -266,6 +304,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # </editor-fold>
 
+        # <editor-fold desc="Worker definitions">
         self.worker_prediction = workers.PredictionWorkerPool(
             self.ui.table_pred_analysis_mono_prot_to_predict, self.prediction_configuration, self.app_project,
         )
@@ -291,6 +330,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker_image_creation.signals.finished.connect(self.post_image_creation_process)
         self.worker_image_creation.setAutoDelete(True)
 
+        # </editor-fold>
+
+        # <editor-fold desc="Block box definitions">
         self.block_box_analysis = basic_boxes.no_buttons(
             "Analysis", "An analysis is currently running, please wait.", QtWidgets.QMessageBox.Information,
         )
@@ -299,6 +341,9 @@ class MainWindow(QtWidgets.QMainWindow):
             "Analysis Images", "Images getting created, please wait.", QtWidgets.QMessageBox.Information,
         )
         self.block_box_uni = basic_boxes.no_buttons("Generic", "Generic", QtWidgets.QMessageBox.Information)
+
+        # </editor-fold>
+
         # configure gui element properties
         self.ui.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignRight)
         self.ui.table_pred_mono_prot_to_predict.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -368,8 +413,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.action_help_docs.setText("Tutorials")
         self.ui.action_help_docs.setVisible(True)
         # sets additional parameters
-        self.ui.lbl_logo.setPixmap(QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-        self.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.ui.lbl_logo.setPixmap(QtGui.QPixmap(str(pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("PySSA")
         constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
 
@@ -3098,7 +3143,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.block_box_prediction.setStandardButtons(QtWidgets.QMessageBox.NoButton)
         # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
         # self.block_box_prediction.setWindowIcon(
-        #     PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        #     PyQt5.constants.PLUGIN_LOGO_ICON_OBJ)
         # styles.set_stylesheet(self.block_box_prediction)
         # self.block_box_prediction.setWindowTitle("Structure Prediction")
         # self.block_box_prediction.setText("A prediction is currently running.")
@@ -3597,7 +3642,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
@@ -4115,7 +4160,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
@@ -5209,7 +5254,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # #self._project_watcher.show_valid_options(self.ui)
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")
@@ -6219,104 +6264,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
 
-    # <editor-fold desc="old">
-    # def show_multi_pred_analysis_stage_0(self):
-    #     gui_page_management.show_analysis_page_stage_0(self.multimer_prediction_analysis_management,
-    #                                                    self.ui.list_pred_analysis_multi_ref_chains,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_1,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_2,
-    #                                                    self.ui.list_pred_analysis_multi_model_chains,
-    #                                                    self.ui.list_pred_analysis_multi_overview,
-    #                                                    self.ui.btn_pred_analysis_multi_remove,
-    #                                                    self.ui.btn_pred_analysis_multi_add,
-    #                                                    4)
-    #
-    # def show_multi_pred_analysis_stage_1(self):
-    #     gui_page_management.show_analysis_page_stage_1(self.multimer_prediction_analysis_management,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_1,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_2,
-    #                                                    self.ui.btn_pred_analysis_multi_remove,
-    #                                                    self.ui.btn_pred_analysis_multi_add,
-    #                                                    4,
-    #                                                    self.fill_multi_pred_analysis_protein_boxes)
-    #
-    # def show_multi_pred_analysis_stage_2(self):
-    #     gui_page_management.show_analysis_page_stage_2(self.app_project,
-    #                                                    self.multimer_prediction_analysis_management,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_1,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_2,
-    #                                                    self.ui.box_pred_analysis_multi_prot_struct_1,
-    #                                                    self.ui.box_pred_analysis_multi_prot_struct_2,
-    #                                                    self.ui.lbl_pred_analysis_multi_ref_chains,
-    #                                                    self.ui.list_pred_analysis_multi_ref_chains,
-    #                                                    self.ui.btn_pred_analysis_multi_next_2,
-    #                                                    self.ui.btn_pred_analysis_multi_next_3,
-    #                                                    self.ui.btn_pred_analysis_multi_back_3,
-    #                                                    4,
-    #                                                    table_prot_to_predict=self.ui.table_pred_analysis_multi_prot_to_predict,
-    #                                                    state=constants.PREDICTION_ANALYSIS)
-    #
-    # def show_multi_pred_analysis_stage_3(self):
-    #     gui_page_management.show_analysis_page_stage_3(self.app_project,
-    #                                                    self.multimer_prediction_analysis_management,
-    #                                                    self.ui.list_pred_analysis_multi_overview,
-    #                                                    self.ui.btn_pred_analysis_multi_add,
-    #                                                    self.ui.btn_pred_analysis_multi_remove,
-    #                                                    self.ui.btn_pred_analysis_multi_next_2,
-    #                                                    self.ui.btn_pred_analysis_multi_back_3,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_1,
-    #                                                    self.ui.lbl_pred_analysis_multi_prot_struct_2,
-    #                                                    self.ui.box_pred_analysis_multi_prot_struct_1,
-    #                                                    self.ui.box_pred_analysis_multi_prot_struct_2,
-    #                                                    self.ui.btn_pred_analysis_multi_next_3,
-    #                                                    self.ui.btn_pred_analysis_multi_back_4,
-    #                                                    self.ui.lbl_pred_analysis_multi_model_chains,
-    #                                                    self.ui.list_pred_analysis_multi_model_chains,
-    #                                                    self.ui.btn_pred_analysis_multi_next_4,
-    #                                                    self.no_of_selected_chains,
-    #                                                    4,
-    #                                                    table_prot_to_predict=self.ui.table_pred_analysis_multi_prot_to_predict,
-    #                                                    state=constants.PREDICTION_ANALYSIS)
-    # </editor-fold>
-
-    # </editor-fold>
-
-    # def post_multi_analysis_process(self):
-    #     constants.PYSSA_LOGGER.debug("post_multi_analysis_process() started ...")
-    #     self.app_project.serialize_project(self.app_project.get_project_xml_path())
-    #     constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
-    #     self.block_box_analysis.destroy(True)
-    #     basic_boxes.ok("Structure analysis",
-    #                    "All structure analysis' are done. Go to results to check the new results.",
-    #                    QtWidgets.QMessageBox.Information)
-    #     constants.PYSSA_LOGGER.info("All multimer structure analysis' are done.")
-    #     self._project_watcher.show_valid_options(self.ui)
-    #     self._init_batch_analysis_page()
-    #
-    # def post_multi_prediction_analysis_process(self):
-    #     constants.PYSSA_LOGGER.debug("post_multi_prediction_analysis_process() started ...")
-    #     if len(self.app_project.proteins) <= 1:
-    #         basic_boxes.ok("Prediction", "Prediction failed due to an unexpected error.", QtWidgets.QMessageBox.Critical)
-    #         self.display_view_page()
-    #         self._project_watcher.show_valid_options(self.ui)
-    #     else:
-    #         self.app_project.serialize_project(self.app_project.get_project_xml_path())
-    #         constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
-    #         constants.PYSSA_LOGGER.info("All structure predictions are done.")
-    #         constants.PYSSA_LOGGER.info("Begin analysis process.")
-    #         constants.PYSSA_LOGGER.debug(f"Thread count before analysis worker: {self.threadpool.activeThreadCount()}")
-    #         self.worker_multi_analysis = workers.AnalysisWorkerPool(
-    #             self.ui.list_pred_analysis_multi_overview, self.ui.cb_pred_analysis_multi_images,
-    #             self.status_bar, self.app_project, self.app_settings, self._init_multi_pred_analysis_page)
-    #         constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-    #         self.threadpool.start(self.worker_multi_analysis)
-    #         constants.PYSSA_LOGGER.debug(f"Thread count after analysis worker: {self.threadpool.activeThreadCount()}")
-    #         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
-    #             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-    #         self.block_box_analysis.exec_()
-    #         self.display_view_page()
-    #         self._project_watcher.show_valid_options(self.ui)
-
     def start_multimer_prediction_analysis(self) -> None:
         """Sets up the prediction process."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
@@ -6353,7 +6300,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self.block_box_prediction)
         self.block_box_prediction.setWindowTitle("Structure Prediction")
         self.block_box_prediction.setText("A prediction is currently running.")

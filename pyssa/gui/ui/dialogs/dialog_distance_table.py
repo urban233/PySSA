@@ -106,7 +106,7 @@ class DialogDistanceTable(Qt.QtWidgets.QDialog):
         QTableWidget {background-color: white;}
         """
         self.setStyleSheet(stylesheet)
-        self.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Sequence Viewer")
         self.show()
 

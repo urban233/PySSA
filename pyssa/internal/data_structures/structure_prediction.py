@@ -26,7 +26,6 @@ import shutil
 import logging
 
 from PyQt5 import QtWidgets
-from PyQt5 import QtCore
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
@@ -36,6 +35,7 @@ from pyssa.internal.data_processing import data_transformer
 from pyssa.internal.prediction_engines import colabbatch
 from pyssa.util import constants
 from pyssa.util import prediction_util
+from pyssa.util import exception
 from pyssa.io_pyssa import path_util
 from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
@@ -101,7 +101,12 @@ class StructurePrediction:
 
     def run_prediction(self) -> None:
         """This function runs a structure prediction."""
-        colabbatch.Colabbatch(self.prediction_configuration).run_prediction()
+        try:
+            colabbatch.Colabbatch(self.prediction_configuration).run_prediction()
+        except RuntimeError:
+            logger.error("WSL2 almaColabfold9 exec command which runs colabbatch failed!")
+        except exception.FastaFilesNotFoundError:
+            logger.error("WSL2 fasta directory is empty!")
 
     def move_best_prediction_models(self) -> None:
         """This function moves the best prediction model(s) to the project directory."""

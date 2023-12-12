@@ -19,12 +19,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for handling everything related to the settings.xml."""
+"""Module for handling everything related to the settings.xml"""
 import json
 import os
 import pathlib
-from pyssa.util import constants
 from pyssa.io_pyssa import safeguard
+from pyssa.util import constants
 
 
 class Settings:
@@ -208,7 +208,9 @@ class Settings:
         self.app_launch = value
 
     def restore_settings(self, dir_settings, filename):
-        """This function resets the settings to the default values."""
+        """This function resets the settings to the default values
+
+        """
         self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self.prediction_path = pathlib.Path(f"{os.path.expanduser('~')}/Downloads")
         self.cycles: int = 0
