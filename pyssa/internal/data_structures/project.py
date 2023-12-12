@@ -100,7 +100,7 @@ class Project:
         if not safeguard.Safeguard.check_if_value_is_not_none(a_workspace_path):
             msg = "The workspace path is None!"
             logger.error(msg)
-            raise exception.DirectoryDoesNotExistError(msg)
+            raise exception.DirectoryNotFoundError(msg)
         
         # if not safeguard.Safeguard.check_filepath(a_workspace_path):
         #     msg = "The given workspace path does not exists!"

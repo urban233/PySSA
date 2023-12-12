@@ -29,7 +29,7 @@ class IllegalArgumentError(Exception):
         super().__init__(message)
 
 
-class DirectoryDoesNotExistError(Exception):
+class DirectoryNotFoundError(Exception):
     """Class for a directory does not exist exception type."""
     def __init__(self, message: str) -> None:
         """Constructor."""
@@ -38,6 +38,14 @@ class DirectoryDoesNotExistError(Exception):
 
 class FastaFilesNotFoundError(Exception):
     """Class for an empty WSL fasta directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToOpenFileError(Exception):
+    """Class for an unable to open file exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""
