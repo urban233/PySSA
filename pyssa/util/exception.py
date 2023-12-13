@@ -50,3 +50,26 @@ class UnableToOpenFileError(Exception):
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
+
+
+class UnableToCreatePdbFileError(Exception):
+    """Class for an unable to create pdb file exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToLoadPdbFileError(Exception):
+    """Class for an unable to load pdb file exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+class UnableToLoadProteinError(Exception):
+    """Class for an unable to load pdb file exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
