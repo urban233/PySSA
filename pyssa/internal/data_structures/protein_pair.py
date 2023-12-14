@@ -101,7 +101,17 @@ class ProteinPair:
         # self.pymol_session_filepath = path_util.FilePath(f"{self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR)}/{self.name}_session.pse")
 
     def load_protein_pair_in_pymol(self):
-        """This function loads to proteins into a NEW pymol session."""
+        """Load a protein pair in PyMOL.
+        Args:
+            fill
+
+        Raises:
+            fill
+
+        """
+
+
+
         self.protein_1.load_protein_in_pymol()
         self.protein_2.load_protein_in_pymol()
 

@@ -245,6 +245,7 @@ class Protein:
         Raises:
             UnableToCreatePdbFileError:If the pdb file cannot be created.
             UnableToOpenPdbFileError:If the pdb file cannot be opened.
+            UnableToLoadPdbFileError:If the pdb file cannot be loaded.
         """
         # <editor-fold desc="Checks">
         pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
@@ -271,7 +272,6 @@ class Protein:
         except exception.UnableToLoadProteinError:
             logger.error("Protein can not be loaded in PyMOL!")
             raise exception.UnableToLoadProteinError
-
 
     def load_protein_pymol_session(self):
         tmp_session_path = f"{constants.CACHE_PYMOL_SESSION_DIR}/{self._pymol_molecule_object}_session.pse"
