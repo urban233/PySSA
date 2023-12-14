@@ -68,7 +68,14 @@ class UnableToLoadPdbFileError(Exception):
         super().__init__(message)
 
 class UnableToLoadProteinError(Exception):
-    """Class for an unable to load pdb file exception type."""
+    """Class for an unable to load a protein exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+class UnableToLoadProteinPairError(Exception):
+    """Class for an unable to load a protein exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""

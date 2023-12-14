@@ -180,9 +180,10 @@ class DistanceAnalysis:
         # cmd.save(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files/{self.alignment_file_name}.aln"))
         return results[0], results[1]
 
-    def do_analysis_in_pymol(self, app_project: 'project.Project'):
+    def do_analysis_in_pymol(self):
         """This function does the distance analysis of the protein pair."""
         logger.info("Start of do_analysis_in_pymol() method.")
+        # TODO: enclose in try-except block
         self._protein_pair_for_analysis.load_protein_pair_in_pymol()
         logger.info(f"Loaded protein pair: "
                     f"{self._protein_pair_for_analysis.name} in pymol session.")

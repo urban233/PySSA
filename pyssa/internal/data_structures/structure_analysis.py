@@ -57,7 +57,7 @@ class Analysis:
         for tmp_protein_pair in self.analysis_list:
             logger.info(f"The protein pair: {tmp_protein_pair.name} gets analyzed.")
             cmd.reinitialize()
-            tmp_protein_pair.distance_analysis.do_analysis_in_pymol(self.app_project)
+            tmp_protein_pair.distance_analysis.do_analysis_in_pymol()
             take_images = False
             # make images if checked
             if cb_analysis_images.isChecked():
