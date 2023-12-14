@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains helper functions for specific data transformations."""
-import gc
 import logging
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import sequence, selection
@@ -29,7 +28,8 @@ from pyssa.internal.data_structures.data_classes import analysis_run_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.analysis_types import distance_analysis
-from pyssa.util import analysis_util, protein_util
+from pyssa.util import analysis_util
+from pyssa.util import exception
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -41,40 +41,27 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 def transform_protein_name_seq_tuple_to_sequence_obj(proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo]) -> list[protein.Protein]:
-    """
+    """Transforms the list of proteins to a list of protein objects.
 
     Args:
         proteins_to_predict:
             list of tuples which consists of the protein name and sequence
     Raises:
-        ValueError: raised if an argument is illegal
+        IllegalArgumentError: If an argument is illegal
     Returns:
-
+        a list of protein objects
     """
     # <editor-fold desc="Checks">
     if proteins_to_predict[0].name == "":
         logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
+        raise exception.IllegalArgumentError("An argument is illegal.")
     if not proteins_to_predict[0].sequences:
         logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
+        raise exception.IllegalArgumentError("An argument is illegal.")
 
     # </editor-fold>
 
     protein_objects: list[protein.Protein] = []
-    #
-    # # create an empty dictionary
-    # groups = {}
-    #
-    # # loop over the tuples in the list
-    # for t in proteins_to_predict:
-    #     key = t[0]
-    #     value = t[1]
-    #     # if the key is not already in the dictionary, add it with an empty list
-    #     if key not in groups:
-    #         groups[key] = []
-    #     # add the tuple's second element to the list associated with the key
-    #     groups[key].append(value)
 
     for tmp_protein_to_predict in proteins_to_predict:
         protein_with_sequence = protein.Protein(tmp_protein_to_predict.name)
@@ -86,112 +73,11 @@ def transform_protein_name_seq_tuple_to_sequence_obj(proteins_to_predict: list[p
         protein_with_sequence.add_chain_names_to_chains()
         protein_objects.append(protein_with_sequence)
 
-    # for tmp_prot_name, tmp_seqs in groups.items():
-    #     logger.debug("tmp_prot_name: %s, tmp_seqs: %r", tmp_prot_name, tmp_seqs)
-    #     protein_with_sequence = protein.Protein(tmp_prot_name)
-    #     protein_with_sequence.chains = []
-    #     logger.debug("Chains of protein_with_sequence: %r", protein_with_sequence.chains)
-    #     logger.debug("Name of protein_with_sequence: %s", protein_with_sequence.get_molecule_object())
-    #     logger.debug("Memory address of protein_with_sequence: %r", protein_with_sequence)
-    #     for tmp_seq in tmp_seqs:
-    #         logger.debug("tmp_seq: %s, tmp_seqs: %r", tmp_seq, tmp_seqs)
-    #         protein_seq = sequence.Sequence(tmp_prot_name, tmp_seq)
-    #         protein_with_sequence.append_chain(chain_name="", chain_sequence=protein_seq, chain_type="protein_chain")
-    #     logger.debug("Chains of protein_with_sequence after seq loop: %r", protein_with_sequence.chains)
-    #     protein_with_sequence.add_chain_names_to_chains()
-    #     protein_objects.append(protein_with_sequence)
     logger.debug(protein_objects)
-
-    # last_protein_name = protein_name_seq_tuples[0][0]
-    # protein_sequence = sequence.Sequence("", "")
-    # protein_with_sequence = protein.Protein("generic")
-    # if len(protein_name_seq_tuples) == 1:
-    #     # single prediction
-    #     logger.debug("Create protein object for single prediction.")
-    #     protein_sequence.name = protein_name_seq_tuples[0][0]
-    #     protein_sequence.sequence = protein_name_seq_tuples[0][1]
-    #     logger.debug("protein_sequence.sequence: %s", protein_sequence.sequence)
-    #     protein_with_sequence.set_molecule_object(protein_sequence.name)
-    #     protein_seq = sequence.Sequence(protein_sequence.name, protein_sequence.sequence)
-    #     protein_with_sequence.append_chain(chain_name="", chain_sequence=protein_seq, chain_type="protein_chain")
-    #     protein_with_sequence.add_chain_names_to_chains()
-    #     protein_objects.append(protein_with_sequence)
-    # else:
-    #     # batch prediction
-    #     logger.debug("Create protein objects for batch prediction.")
-    #     for tmp_protein_name_seq_tuple in protein_name_seq_tuples:
-    #         logger.debug("tmp_protein_name_seq_tuple: %r", tmp_protein_name_seq_tuple)
-    #         logger.debug("protein_name_seq_tuples: %r", protein_name_seq_tuples)
-    #         current_protein_name = tmp_protein_name_seq_tuple[0]
-    #         if last_protein_name == current_protein_name:
-    #             protein_sequence.name = tmp_protein_name_seq_tuple[0]
-    #             protein_sequence.sequence = tmp_protein_name_seq_tuple[1]
-    #             protein_with_sequence = protein.Protein(protein_sequence.name)
-    #             #protein_with_sequence.set_molecule_object(protein_sequence.name)
-    #             logger.debug(protein_with_sequence.get_molecule_object())
-    #             logger.debug(protein_name_seq_tuples)
-    #             protein_seq = sequence.Sequence(protein_sequence.name, protein_sequence.sequence)
-    #             protein_with_sequence.append_chain("", protein_seq, "protein_chain")
-    #
-    #             # protein_with_sequence.set_molecule_object(protein_name_seq_tuples[0])
-    #             # logger.debug(protein_with_sequence.get_molecule_object())
-    #             # logger.debug(protein_name_seq_tuples)
-    #             # protein_seq = sequence.Sequence(protein_name_seq_tuples[0][0], protein_name_seq_tuples[0][1])
-    #             # protein_with_sequence.append_chain("", protein_seq, "protein_chain")
-    #         else:
-    #             protein_with_sequence.add_chain_names_to_chains()
-    #             protein_objects.append(protein_with_sequence)
-    #             protein_sequence = sequence.Sequence("", "")
-    #             protein_with_sequence = protein.Protein("generic")
-    #             last_protein_name = current_protein_name
-    # logger.debug(protein_objects)
     return protein_objects
 
 
-# class DataTransformer:
-#
-#     def __init__(self,
-#                  project,
-#                  proteins_for_analysis: list[tuple[types.PROTEIN_ANALYSIS_INFO, types.PROTEIN_ANALYSIS_INFO]]):
-#         self.project = project
-#         self.proteins_for_analysis = proteins_for_analysis
-#         print(self.project.proteins)
-#     # def transform_to_analysis(self, project):
-#     #     prot_1_name = self.ui.lbl_analysis_prot_struct_1.text().replace(".pdb", "")
-#     #     prot_2_name = self.ui.lbl_analysis_prot_struct_2.text().replace(".pdb", "")
-#     #     prot_1: protein.Protein = project.search_protein(prot_1_name)
-#     #     if prot_1_name == prot_2_name:
-#     #         prot_2: protein.Protein = prot_1.duplicate_protein()
-#     #         prot_1.molecule_object = f"{prot_1.molecule_object}_1"
-#     #         prot_2.molecule_object = f"{prot_2.molecule_object}_2"
-#     #     else:
-#     #         prot_2: protein.Protein = project.search_protein(prot_2_name)
-#     #
-#     #     prot_1_chains_selected = self.ui.list_analysis_ref_chains.selectedItems()
-#     #     prot_1_chains = []
-#     #     for tmp_chain in prot_1_chains_selected:
-#     #         prot_1_chains.append(tmp_chain.text())
-#     #     prot_1.set_chains(prot_1_chains)
-#     #
-#     #     prot_2_chains_selected = self.ui.list_analysis_model_chains.selectedItems()
-#     #     prot_2_chains = []
-#     #     for tmp_chain in prot_2_chains_selected:
-#     #         prot_2_chains.append(tmp_chain.text())
-#     #     prot_2.set_chains(prot_2_chains)
-#     #
-#     #     if len(prot_1.chains) != 0:
-#     #         analysis_name = f"{prot_1.molecule_object};{prot_1_chains}_vs_{prot_2.molecule_object};{prot_2_chains}"
-#     #         analysis_name = analysis_name.replace(";", "_")
-#     #         analysis_name = analysis_name.replace(",", "_")
-#     #         analysis_name = analysis_name.replace("[", "")
-#     #         analysis_name = analysis_name.replace("]", "")
-#     #         analysis_name = analysis_name.replace("'", "")
-#     #     else:
-#     #         analysis_name = f"{prot_1.molecule_object}_vs_{prot_2.molecule_object}"
-#     #     export_dir = pathlib.Path(
-#     #         f"{project.get_results_path()}/{analysis_name}")
-#     #     return prot_1, prot_2, export_dir, analysis_name
-#
+
 
 
 class DistanceAnalysisDataTransformer:

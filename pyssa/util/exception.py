@@ -29,6 +29,13 @@ class IllegalArgumentError(Exception):
         super().__init__(message)
 
 
+class PredictionEndedWithError(Exception):
+    """Class for a prediction ended with errors exception type."""
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
 class DirectoryDoesNotExistError(Exception):
     """Class for a directory does not exist exception type."""
     def __init__(self, message: str) -> None:
@@ -38,6 +45,14 @@ class DirectoryDoesNotExistError(Exception):
 
 class FastaFilesNotFoundError(Exception):
     """Class for an empty WSL fasta directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class FastaFilesNotCreatedError(Exception):
+    """Class for fasta files could not be created exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""

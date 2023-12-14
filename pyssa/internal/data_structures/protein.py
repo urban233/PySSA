@@ -38,8 +38,9 @@ from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
+from pyssa.util import exception
 from pyssa.io_pyssa import path_util
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 from xml.etree import ElementTree
 from pyssa.internal.data_structures import chain
 
@@ -207,11 +208,32 @@ class Protein:
     def get_id(self):
         return self._id
 
-    def write_fasta_file(self, filepath: pathlib.Path):
-        fasta_file = open(f"{filepath}/{self._pymol_molecule_object}.fasta", "w")
+    def write_fasta_file(self, a_filepath: pathlib.Path) -> None:
+        """Writes a fasta file the specified filepath.
+
+        Raises:
+            IllegalArgumentError: If the file is None or the file could not be found.
+            DirectoryDoesNotExistError: If the parent directory of the filepath could not be found.
+        """
+        # <editor-fold desc="Checks">
+        if a_filepath is None or not os.path.exists(a_filepath):
+            exception.IllegalArgumentError("")
+        if not os.path.exists(a_filepath.parent):
+            raise exception.DirectoryDoesNotExistError("")
+
+        # </editor-fold>
+
+        try:
+            fasta_file: TextIO = open(f"{a_filepath}/{self._pymol_molecule_object}.fasta", "w")
+        except OSError:
+            raise exception.FastaFilesNotCreatedError("")
+
+        # Writes fasta file header
         fasta_file.write(f">{self._pymol_molecule_object}\n")
-        i = 0
-        seq_objs = self.get_protein_sequences()
+
+        # Writes fasta file sequence content
+        i: int = 0
+        seq_objs: list[sequence.Sequence] = self.get_protein_sequences()
         for tmp_sequence in seq_objs:
             if i == len(self.get_protein_sequences()) - 1:
                 # should be the last entry
@@ -219,6 +241,7 @@ class Protein:
             else:
                 fasta_file.write(f"{tmp_sequence.sequence}:")
             i += 1
+
         logger.info(f"Fasta file for sequence {self._pymol_molecule_object} written.")
         fasta_file.close()
 

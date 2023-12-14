@@ -24,7 +24,7 @@ import os
 import logging
 import subprocess
 import sys
-
+import zmq
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.util import constants
@@ -79,12 +79,168 @@ class Colabbatch:
 
         self.prediction_configuration = prediction_configuration
 
+        str_conversion_1 = constants.SETTINGS_DIR.replace("\\", "/")
+        str_conversion_2 = str_conversion_1.replace(":", "")
+        str_conversion_3 = str_conversion_2.replace("C", "c")
+        self.settings_dir_unix_notation = f"/mnt/{str_conversion_3}"
+
+    def setup_prediction_service(self) -> None:
+        """Sets up the structure prediction service in WSL2 almaColabfold9 distro."""
+        # Copy script from pyssa plugin to WSL2 filesystem
+        subprocess.run(
+            ["wsl", "-d", "almaColabfold9",
+             "-u", "rhel_user",
+             "cp", "-f", f"{constants.PLUGIN_PATH_WSL_NOTATION}/scripts/prepare_prediction_env.sh", "/home/rhel_user/.pyssa/prepare_prediction_env.sh",
+             ],
+        )
+        # Change file owner of script
+        subprocess.run(
+            ["wsl", "-d", "almaColabfold9",
+             "-u", "rhel_user",
+             "sudo", "chown", "rhel_user", "/home/rhel_user/.pyssa/prepare_prediction_env.sh",
+             ],
+        )
+        # Change execution policy of script
+        subprocess.run(
+            ["wsl", "-d", "almaColabfold9",
+             "-u", "rhel_user",
+             "sudo", "chmod", "+x","/home/rhel_user/.pyssa/prepare_prediction_env.sh",
+             ],
+        )
+        subprocess.run(
+            ["wsl", "-d", "almaColabfold9",
+             "-u", "rhel_user",
+             "bash", "/home/rhel_user/.pyssa/prepare_prediction_env.sh",
+             ],
+        )
+        #
+        # subprocess.run(
+        #     ["wsl", "-d", "almaColabfold9",
+        #      "-u", "root",
+        #      "rm", "-r", "/home/rhel_user/pyssa_colabfold",
+        #      ],
+        # )
+        # subprocess.run(
+        #     ["wsl", "-d", "almaColabfold9",
+        #      "-u", "root",
+        #      "rm", "-r", "/home/rhel_user/scratch",
+        #      ],
+        # )
+        # subprocess.run(
+        #     ["wsl", "-d", "almaColabfold9",
+        #      "-u", "rhel_user",
+        #      "cp", "-r",
+        #      f"{constants.PLUGIN_PATH_WSL_NOTATION}/pyssa_colabfold",
+        #      "/home/rhel_user/",
+        #      ],
+        # )
+        # # Remove original batch.py of Colabfold
+        # subprocess.run(
+        #     ["wsl", "-d", "almaColabfold9",
+        #      "-u", "root",
+        #      "rm",
+        #      "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py",
+        #      ],
+        # )
+        # # Copy modified batch.py of Colabfold
+        # subprocess.run(
+        #     ["wsl", "-d", "almaColabfold9",
+        #      "-u", "root",
+        #      "cp",
+        #      f"{constants.PLUGIN_PATH_WSL_NOTATION}/pyssa_colabfold/colabfold_sub/batch.py",
+        #      "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py",
+        #      ],
+        # )
+        # subprocess.run(
+        #     ["wsl", "-d", "almaColabfold9",
+        #      "-u", "rhel_user",
+        #      "mkdir", "-p", self.fasta_path,
+        #      ],
+        # )
+        # subprocess.run(
+        #     ["wsl", "-d", "almaColabfold9",
+        #      "-u", "rhel_user",
+        #      "mkdir", "-p", self.pdb_path,
+        #      ],
+        # )
+
+        # Copy fasta files from Windows host to WSL2 filesystem
+        subprocess.run(
+            ["wsl", "-d", "almaColabfold9",
+             "-u", "rhel_user",
+             "cp", "-r", f"{self.settings_dir_unix_notation}/scratch/local_predictions/fasta/*.fasta", self.fasta_path,
+             ],
+        )
+
+    def send_prediction_request(self) -> bool:
+        """Sends structure prediction request based on custom arguments.
+
+        Raises:
+            PredictionEndedWithError: if prediction ended with any kind of error
+        """
+        # Start service process in WSL2
+        service_process = subprocess.Popen(
+            ["wsl", "-d", "almaColabfold9", "-u", "rhel_user",
+             "/home/rhel_user/localcolabfold/colabfold-conda/bin/python3",
+             "/home/rhel_user/pyssa_colabfold/service.py"])
+
+        context = zmq.Context()
+        socket = context.socket(zmq.REQ)
+        # Connect to the WSL2 IP address and port
+        socket.connect("tcp://127.0.0.1:7016")
+
+        message = {
+            "fasta_dir": self.fasta_path,
+            "pdb_dir": self.pdb_path,
+            "use_amber": self.prediction_configuration.amber_force_field,
+            "use_templates": self.prediction_configuration.templates,
+        }
+        socket.send_json(message)
+
+        result = socket.recv_json()
+        # Check results for any errors
+        for tmp_key in result.keys():
+            logger.debug(f"Response from service: {result}")
+            if tmp_key == "error":
+                service_process.terminate()
+                raise exception.PredictionEndedWithError(f"Prediction run into the error: {result[tmp_key]}!")
+        tmp_output: bool = True
+        service_process.terminate()
+        return tmp_output
+
     def run_prediction(self) -> None:
         """This function starts the wsl2, podman machine, podman container and runs a prediction.
 
         Raises:
-            RuntimeError: if powershell command fails
+            PredictionEndedWithError: if prediction ended with any kind of error
         """
+        self.setup_prediction_service()
+
+        try:
+            tmp_output = self.send_prediction_request()
+        except exception.PredictionEndedWithError:
+            subprocess.run(["wsl", "--shutdown"])
+            raise exception.PredictionEndedWithError("")
+        subprocess.run(["wsl", "--shutdown"])
+        if tmp_output:
+            logger.info("Prediction process finished, copying results ...")
+            powershell_result = subprocess.run(
+                [
+                    "wsl", "-d", "almaColabfold9",
+                    "-u", "rhel_user",
+                    "cp", "-r", "/home/rhel_user/scratch/local_predictions/pdb",
+                    f"{self.settings_dir_unix_notation}/scratch/local_predictions",
+                ],
+            )
+            if powershell_result.returncode != 0:
+                logger.error("Could not copy prediction results to Windows host!")
+                raise exception.PredictionEndedWithError("Could not copy prediction results to Windows host!")
+        else:
+            logger.error("Prediction finished with errors.")
+            raise exception.PredictionEndedWithError("")
+        return
+
+
         # string conversion
         str_conversion_1 = constants.SETTINGS_DIR.replace("\\", "/")
         str_conversion_2 = str_conversion_1.replace(":", "")
@@ -213,7 +369,7 @@ class Colabbatch:
             complete_command = wsl_almacolabfold_exec_colabbatch_command + colabbatch_paths + colabbatch_args
             logger.info(f"complete shell command: {complete_command}")
             powershell_result = subprocess.run(
-                complete_command, capture_output=True, text=True, shell=True
+                complete_command, capture_output=True, text=True, shell=True,
             )
             if powershell_result.returncode != 0:
                 logger.error(f"WSL2 almaColabfold9 exec command which runs colabbatch failed! "
@@ -225,8 +381,8 @@ class Colabbatch:
                 subprocess.run(
                     [
                         "wsl", "-d", "almaColabfold9", "cp", "-r", "/home/rhel_user/scratch/local_predictions/pdb",
-                        f"{settings_dir_unix_notation}/scratch/local_predictions"
-                     ]
+                        f"{settings_dir_unix_notation}/scratch/local_predictions",
+                     ],
                 )
                 subprocess.run(["wsl", "-d", "almaColabfold9", "rm", "-rf", "/home/rhel_user/scratch"])
         else:

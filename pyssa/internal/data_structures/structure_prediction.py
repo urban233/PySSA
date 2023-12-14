@@ -90,23 +90,55 @@ class StructurePrediction:
             os.mkdir(constants.PREDICTION_PDB_DIR)
 
     def create_fasta_files_for_prediction(self) -> None:
-        """This function creates fasta file based on the predictions in the object."""
-        protein_objects: list[protein.Protein] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
+        """This function creates fasta file based on the predictions in the object.
+
+        Raises:
+            FastaFilesCouldNotBeCreatedError: If a fasta file could not be created.
+            FastaFilesNotFoundError: If a fasta file could not be found.
+        """
+        try:
+            protein_objects: list[protein.Protein] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
+        except exception.IllegalArgumentError:
+            logger.error("Invalid argument")
+            raise exception.FastaFilesNotCreatedError("")
+        except Exception as e:
+            logger.error("Unexpected error:", e)
+            raise exception.FastaFilesNotCreatedError("")
+
         logger.debug(f"Variable: protein_sequences; Value: {protein_objects} in function create_fasta_files_for_prediction")
+
         for tmp_protein_to_predict in protein_objects:
-            tmp_protein_to_predict.write_fasta_file(constants.PREDICTION_FASTA_DIR)
+            try:
+                tmp_protein_to_predict.write_fasta_file(constants.PREDICTION_FASTA_DIR)
+            except exception.IllegalArgumentError:
+                logger.error("Invalid argument")
+                raise exception.FastaFilesNotCreatedError("")
+            except exception.DirectoryDoesNotExistError:
+                logger.error("Directory does not exists of given filepath.")
+                raise exception.FastaFilesNotCreatedError("")
+            except Exception as e:
+                logger.error("Unexpected error:", e)
+                raise exception.FastaFilesNotCreatedError("")
+
         if len(os.listdir(constants.PREDICTION_FASTA_DIR)) == 0:
             logger.error("No fasta files were created!")
-            raise FileNotFoundError
+            raise exception.FastaFilesNotFoundError("")
 
     def run_prediction(self) -> None:
-        """This function runs a structure prediction."""
+        """This function runs a structure prediction.
+
+        Raises:
+            PredictionEndedWithError: If the prediction ended with an error.
+        """
         try:
             colabbatch.Colabbatch(self.prediction_configuration).run_prediction()
-        except RuntimeError:
-            logger.error("WSL2 almaColabfold9 exec command which runs colabbatch failed!")
-        except exception.FastaFilesNotFoundError:
-            logger.error("WSL2 fasta directory is empty!")
+        except exception.IllegalArgumentError:
+            logger.error(f"The Prediction configuration: ({self.prediction_configuration.amber_force_field}, "
+                         f"{self.prediction_configuration.amber_force_field}) is invalid!")
+            raise exception.PredictionEndedWithError("")
+        except exception.PredictionEndedWithError:
+            logger.error("Prediction ended with errors!")
+            raise exception.PredictionEndedWithError("")
 
     def move_best_prediction_models(self) -> None:
         """This function moves the best prediction model(s) to the project directory."""
@@ -116,29 +148,6 @@ class StructurePrediction:
             basic_boxes.ok("Prediction status",
                            "The prediction process finished but no rank 1 model could be found.",
                            QtWidgets.QMessageBox.Critical)
-            # tmp_response = basic_boxes.yes_or_no("Prediction status",
-            #                                      "The prediction process finished but no rank 1 model could be found. "
-            #                                      "Do you want to save the Colabfold log file?",
-            #                                      QtWidgets.QMessageBox.Critical)
-            # if tmp_response is True:
-            #     file_dialog = QtWidgets.QFileDialog()
-            #     desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
-            #     file_dialog.setDirectory(desktop_path)
-            #     file_path, _ = file_dialog.getSaveFileName(caption="Save Colabfold log file", directory="", filter="LOG Files (*.log)")
-            #     if file_path:
-            #         shutil.copyfile(constants.COLABFOLD_LOG_FILE_PATH, file_path)
-            #         if os.path.exists(file_path):
-            #             basic_boxes.ok(
-            #                 "Save log file", "The Colabfold log file was successfully saved.",
-            #                 QtWidgets.QMessageBox.Information,
-            #             )
-            #             logger.info("The Colabfold log file was successfully saved.")
-            #         else:
-            #             basic_boxes.ok(
-            #                 "Save log file", "Saving the Colabfold log file failed.",
-            #                 QtWidgets.QMessageBox.Critical,
-            #             )
-            #             logger.critical("Saving the Colabfold log file failed.")
             logger.critical("The prediction process finished but no rank 1 model could be found.")
         else:
             logger.debug(best_prediction_models)

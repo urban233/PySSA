@@ -3612,10 +3612,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """Sets tup the worker for the prediction with the colabfold."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        # self.worker_prediction = workers.PredictionWorkerPool(self.ui.table_pred_mono_prot_to_predict,
-        #                                                       self.prediction_configuration, self.app_project)
-        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        # self.threadpool.start(self.worker_prediction)
 
         # <editor-fold desc="Worker setup">
         # --Begin: worker setup
@@ -3626,6 +3622,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tmp_worker.finished.connect(self.post_prediction_process)
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
         self.tmp_thread.start()
+        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
         # --End: worker setup
 
         # </editor-fold>

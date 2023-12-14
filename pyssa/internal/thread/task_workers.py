@@ -35,7 +35,7 @@ from pyssa.internal.data_structures.data_classes import prediction_protein_info,
 from pyssa.io_pyssa import filesystem_io, safeguard, path_util
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import tools, constants, prediction_util
+from pyssa.util import tools, constants, prediction_util, exception
 from pyssa.internal.prediction_engines import esmfold
 from pyssa.internal.data_structures import project
 from typing import TYPE_CHECKING
@@ -343,19 +343,45 @@ class ColabfoldWorker(QObject):
         self.prediction_configuration = prediction_config
         self.app_project = app_project
 
-    def run(self):
+    def run(self) -> None:
         """This function is a reimplementation of the QObject run method. It does the structure prediction."""
         predictions: list[
-            prediction_protein_info.PredictionProteinInfo] = prediction_util.get_prediction_name_and_seq_from_table(
-            self.table)
-        structure_prediction_obj = structure_prediction.StructurePrediction(predictions, self.prediction_configuration,
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
+        structure_prediction_obj = structure_prediction.StructurePrediction(predictions,
+                                                                            self.prediction_configuration,
                                                                             self.app_project)
         structure_prediction_obj.create_tmp_directories()
         logger.info("Tmp directories were created.")
-        structure_prediction_obj.create_fasta_files_for_prediction()
-        logger.info("Fasta files were created.")
-        structure_prediction_obj.run_prediction()
-        logger.info("Prediction process finished.")
+
+        # Create fasta files for prediction
+        try:
+            structure_prediction_obj.create_fasta_files_for_prediction()
+        except exception.FastaFilesNotCreatedError:
+            logger.error("Fasta files were not created.")
+            self.finished.emit()
+            return
+        except exception.FastaFilesNotFoundError:
+            logger.error("Fasta files were not found.")
+            self.finished.emit()
+            return
+        except Exception as e:
+            logger.error("Unexpected error:", e)
+            self.finished.emit()
+            return
+        else:
+            logger.info("Fasta files were successfully created.")
+
+        # Run structure prediction
+        try:
+            structure_prediction_obj.run_prediction()
+        except exception.PredictionEndedWithError:
+            logger.error("Prediction ended with error.")
+            self.finished.emit()
+            return
+        else:
+            logger.info("Prediction process finished.")
+
         structure_prediction_obj.move_best_prediction_models()
         logger.info("Saved predicted pdb file into XML file.")
         subprocess.run(["wsl", "--shutdown"])
