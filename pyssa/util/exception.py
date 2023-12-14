@@ -80,3 +80,10 @@ class UnableToLoadProteinPairError(Exception):
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
+
+class UnableToDoAnalysisError(Exception):
+    """Class for an unable to load a protein exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
