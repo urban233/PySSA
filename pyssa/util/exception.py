@@ -67,6 +67,7 @@ class UnableToLoadPdbFileError(Exception):
         """Constructor."""
         super().__init__(message)
 
+
 class UnableToLoadProteinError(Exception):
     """Class for an unable to load a protein exception type."""
 
@@ -74,15 +75,49 @@ class UnableToLoadProteinError(Exception):
         """Constructor."""
         super().__init__(message)
 
+
 class UnableToLoadProteinPairError(Exception):
-    """Class for an unable to load a protein exception type."""
+    """Class for an unable to load a protein pair exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
 
+
+class UnableToAddProteinPairError(Exception):
+    """Class for an unable to load a protein pair exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
 class UnableToDoAnalysisError(Exception):
-    """Class for an unable to load a protein exception type."""
+    """Class for an unable to do analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToTakeImageError(Exception):
+    """Class for an unable to do analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToSetImageError(Exception):
+    """Class for an unable to do analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToSafeSessionError(Exception):
+    """Class for an unable to load a protein pair exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""

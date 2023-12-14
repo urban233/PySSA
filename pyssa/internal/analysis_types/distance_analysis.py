@@ -243,7 +243,7 @@ class DistanceAnalysis:
                                    selection: str = "",
                                    ray_shadows: bool = False,
                                    opaque_background: int = 0,
-                                   take_images=True) -> None:
+                                   take_images: bool = True) -> None:
         """This function takes an image of the whole Protein/Protein pair.
 
         Note:
