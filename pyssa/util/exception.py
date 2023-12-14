@@ -36,6 +36,13 @@ class DirectoryNotFoundError(Exception):
         super().__init__(message)
 
 
+class FileNotFoundError(Exception):
+    """Class for a file does not exist exception type."""
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
 class FastaFilesNotFoundError(Exception):
     """Class for an empty WSL fasta directory exception type."""
 
@@ -85,7 +92,7 @@ class UnableToLoadProteinPairError(Exception):
 
 
 class UnableToAddProteinPairError(Exception):
-    """Class for an unable to load a protein pair exception type."""
+    """Class for an unable to add a protein pair exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""

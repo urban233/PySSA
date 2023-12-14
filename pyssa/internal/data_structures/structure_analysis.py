@@ -28,7 +28,6 @@ from pymol import cmd
 from typing import TYPE_CHECKING
 from pyssa.io_pyssa import path_util
 from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.data_structures import protein_pair
 from pyssa.util import constants
 from pyssa.util import exception
 from PyQt5.QtWidgets import QCheckBox
@@ -62,6 +61,10 @@ class Analysis:
             UnableToTakeImageError: If no image was taken.
             UnableToSetImageError: If no image was setting.
             UnableToSafeSessionError: If session could not be saved.
+            UnableToOpenFileError: If file could not be opened.
+            FileNotFoundError: If file could not be founded.
+            DirectoryNotFoundError: If directory could not be founded.
+            IllegalArgumentError: If an invalid argument was used.
         """
         logger.debug(f"self.analysis_list: {self.analysis_list}")
         # <editor-fold desc="Checks">
@@ -91,8 +94,9 @@ class Analysis:
                     os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
                 if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                     os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
-                tmp_protein_pair.distance_analysis.take_image_of_protein_pair(filename=f"structure_aln_{tmp_protein_pair.name}",
-                                                                              representation="cartoon", take_images=take_images)
+                tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
+                                                                    filename=f"structure_aln_{tmp_protein_pair.name}",
+                                                                    representation="cartoon", take_images=take_images)
         except exception.UnableToTakeImageError:
             logger.error("Could not take image of the protein pair!")
             raise exception.UnableToTakeImageError("")
@@ -102,20 +106,30 @@ class Analysis:
                 tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                     path_util.FilePath(
                         pathlib.Path(
-                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png"),
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
+                            f"structure_aln_{tmp_protein_pair.name}.png"),
                     ),
                 )
                 logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
         except exception.UnableToTakeImageError:
             logger.error("Could not take image of the structure alignment!")
             raise exception.UnableToTakeImageError("")
+        except exception.FileNotFoundError:
+            logger.error("Image file could not be found!")
+            raise exception.UnableToOpenFileError(f"Image file: {constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
+                                                  f"structure_aln_{tmp_protein_pair.name}.png")
 
         try:
-            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(tmp_protein_pair.distance_analysis.cutoff,
-                                                                                 f"interesting_reg_{tmp_protein_pair.name}", take_images=take_images)
+            tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
+                                                                        tmp_protein_pair.distance_analysis.cutoff,
+                                                                f"interesting_reg_{tmp_protein_pair.name}",
+                                                                        take_images=take_images)
         except exception.UnableToTakeImageError:
             logger.error("Could not take images of interesting regions!")
             raise exception.UnableToTakeImageError("")
+        except exception.IllegalArgumentError:
+            logger.error("The argument filename is illegal.")
+            raise exception.UnableToOpenFileError(f"filename: {tmp_protein_pair.name}")
 
         try:
             if take_images is True:
@@ -123,26 +137,33 @@ class Analysis:
                 for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                     interesting_region_filepaths.append(
                         path_util.FilePath(
-                            pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}"),
+                            pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/"
+                                         f"{tmp_filename}"),
                         ),
                     )
-                tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(interesting_region_filepaths)
+                (tmp_protein_pair.distance_analysis.analysis_results.
+                 set_interesting_region_images(interesting_region_filepaths))
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
-            cmd.scene(f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}", 
-                      action="recall")
+            cmd.scene(f"{tmp_protein_pair.protein_1.get_molecule_object()}"
+                        f"{tmp_protein_pair.protein_2.get_molecule_object()}",
+                        action="recall")
         except exception.UnableToSetImageError:
             logger.error("Could not set images of interesting regions!")
             raise exception.UnableToSetImageError("")
+        except exception.DirectoryNotFoundError:
+            logger.error(f"Could not find directory: "
+                         f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}.")
+            raise exception.DirectoryNotFoundError("")
 
         try:
             tmp_protein_pair.save_session_of_protein_pair()
         except exception.UnableToSafeSessionError:
             logger.error("Could not save session of the protein pair!")
-            raise exception.UnableToSafeSessionError
+            raise exception.UnableToSafeSessionError("")
 
         try:
             self.app_project.add_protein_pair(tmp_protein_pair)
         except exception.UnableToAddProteinPairError:
             logger.error("Could not add protein pair!")
-
+            raise exception.UnableToAddProteinPairError("")
         self.analysis_list.clear()

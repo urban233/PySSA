@@ -263,6 +263,7 @@ class DistanceAnalysis:
                 false if no shadows, true if shadows should be displayed
             opaque_background (int, optional):
                 0 for a transparent background and 1 for a white background
+            take_images: Is a boolean, indicating to take images or not.
 
         Raises:
             ValueError: If opaque_background is not 0 or 1.
