@@ -307,12 +307,12 @@ class DistanceAnalysis:
             cmd.png(f'{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png',
                     dpi=300)
 
-    def take_image_of_interesting_regions(self,
+    def take_image_of_interesting_regions(self,  
                                           cutoff: float,
                                           filename: str,
                                           ray_shadows: bool = False,
                                           opaque_background: int = 0,
-                                          take_images=True):
+                                          take_images: bool = True) -> None:
         """This function takes images of interesting regions of the alignment.
 
         Args:
