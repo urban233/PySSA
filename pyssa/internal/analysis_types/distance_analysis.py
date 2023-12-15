@@ -36,6 +36,7 @@ from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import graphic_operations
 from pyssa.util import constants
+from pyssa.util import exception
 from pyssa.internal.data_structures import results
 
 if TYPE_CHECKING:
@@ -180,62 +181,61 @@ class DistanceAnalysis:
         # cmd.save(pathlib.Path(f"{self.protein_pair_for_analysis.analysis_results}/alignment_files/{self.alignment_file_name}.aln"))
         return results[0], results[1]
 
-    def do_analysis_in_pymol(self, app_project: 'project.Project'):
-        """This function does the distance analysis of the protein pair."""
+    def do_analysis_in_pymol(self) -> None:
+        """This function does the distance analysis of the protein pair.
+
+        Raises:
+            UnableToDoAnalysisError: If the analysis fails in PyMOL.
+        """
         logger.info("Start of do_analysis_in_pymol() method.")
-        self._protein_pair_for_analysis.load_protein_pair_in_pymol()
-        logger.info(f"Loaded protein pair: "
-                    f"{self._protein_pair_for_analysis.name} in pymol session.")
-        self._protein_pair_for_analysis.color_protein_pair()
-        logger.info(f"Colored protein pair: "
-                    f"{self._protein_pair_for_analysis.name} in pymol session.")
+        try:
+            self._protein_pair_for_analysis.load_protein_pair_in_pymol()
+            logger.info(f"Loaded protein pair: "
+                        f"{self._protein_pair_for_analysis.name} in pymol session.")
+            self._protein_pair_for_analysis.color_protein_pair()
+            logger.info(f"Colored protein pair: "
+                        f"{self._protein_pair_for_analysis.name} in pymol session.")
 
-        logger.debug(
-            f"Protein 1 selection string: "
-            f"{self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} "
-            f"{self._protein_pair_for_analysis.protein_1.pymol_selection}")
-        logger.debug(
-            f"Protein 2 selection string: "
-            f"{self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} "
-            f"{self._protein_pair_for_analysis.protein_2.pymol_selection}")
+            logger.debug(
+                f"Protein 1 selection string: "
+                f"{self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} "
+                f"{self._protein_pair_for_analysis.protein_1.pymol_selection}")
+            logger.debug(
+                f"Protein 2 selection string: "
+                f"{self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} "
+                f"{self._protein_pair_for_analysis.protein_2.pymol_selection}")
 
-        align_results = self.align_protein_pair_for_analysis()
-        logger.info(f"Aligned protein pair: "
-                    f"{self._protein_pair_for_analysis.name} in pymol session.")
+            align_results = self.align_protein_pair_for_analysis()
+            logger.info(f"Aligned protein pair: "
+                        f"{self._protein_pair_for_analysis.name} in pymol session.")
 
-        fasta_prot_1 = cmd.get_fastastr(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string)
-        logger.debug(fasta_prot_1)
-        logger.debug(fasta_prot_1[fasta_prot_1.find("\n"):])
-        seq_length_prot_1 = len(fasta_prot_1[fasta_prot_1.find("\n"):])
-        logger.debug(seq_length_prot_1)
-        # fasta_prot_2 = cmd.get_fastastr(self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string)
-        # fixme: This code below is if something needs to be changed for the total no. of residues
-        # seq_length_prot_2 = len(fasta_prot_2[fasta_prot_2.find("\n"):])
-        # number_of_total_residues = 0
-        # if seq_length_prot_1 > seq_length_prot_2:
-        #     number_of_total_residues = seq_length_prot_1
-        # elif seq_length_prot_1 < seq_length_prot_2:
-        #     number_of_total_residues = seq_length_prot_2
-        # else:
-        #     number_of_total_residues = seq_length_prot_1
-        self.rmsd_dict = {
-            "rmsd": str(round(align_results[0], 2)),
-            "aligned_residues": f"{str(align_results[1])} / {seq_length_prot_1}",
-        }
+            fasta_prot_1 = cmd.get_fastastr(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string)
+            logger.debug(fasta_prot_1)
+            logger.debug(fasta_prot_1[fasta_prot_1.find("\n"):])
+            seq_length_prot_1 = len(fasta_prot_1[fasta_prot_1.find("\n"):])
+            logger.debug(seq_length_prot_1)
+            # Total no. of residues
+            self.rmsd_dict = {
+                "rmsd": str(round(align_results[0], 2)),
+                "aligned_residues": f"{str(align_results[1])} / {seq_length_prot_1}",
+            }
 
-        distances = protein_pair_util.calculate_distance_between_ca_atoms(
-            self._protein_pair_for_analysis.protein_1.get_molecule_object(),
-            self._protein_pair_for_analysis.protein_2.get_molecule_object(),
-        )
-        logger.info(f"Calculated distances of protein pair: "
-                    f"{self._protein_pair_for_analysis.name}.")
-        self.distance_analysis_data = distances
-        self.analysis_results = results.DistanceAnalysisResults(
-            self.distance_analysis_data,
-            pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
-            self.rmsd_dict['rmsd'],
-            self.rmsd_dict['aligned_residues'],
-        )
+            distances = protein_pair_util.calculate_distance_between_ca_atoms(
+                self._protein_pair_for_analysis.protein_1.get_molecule_object(),
+                self._protein_pair_for_analysis.protein_2.get_molecule_object(),
+            )
+            logger.info(f"Calculated distances of protein pair: "
+                        f"{self._protein_pair_for_analysis.name}.")
+            self.distance_analysis_data = distances
+            self.analysis_results = results.DistanceAnalysisResults(
+                self.distance_analysis_data,
+                pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
+                self.rmsd_dict['rmsd'],
+                self.rmsd_dict['aligned_residues'],
+            )
+        except exception.UnableToDoAnalysisError:
+            logger.error("The analysis in PyMOL failed!")
+            raise exception.UnableToDoAnalysisError
 
     def take_image_of_protein_pair(self,
                                    representation: str,
@@ -243,7 +243,7 @@ class DistanceAnalysis:
                                    selection: str = "",
                                    ray_shadows: bool = False,
                                    opaque_background: int = 0,
-                                   take_images=True) -> None:
+                                   take_images: bool = True) -> None:
         """This function takes an image of the whole Protein/Protein pair.
 
         Note:
@@ -263,6 +263,7 @@ class DistanceAnalysis:
                 false if no shadows, true if shadows should be displayed
             opaque_background (int, optional):
                 0 for a transparent background and 1 for a white background
+            take_images: Is a boolean, indicating to take images or not.
 
         Raises:
             ValueError: If opaque_background is not 0 or 1.
@@ -306,12 +307,12 @@ class DistanceAnalysis:
             cmd.png(f'{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png',
                     dpi=300)
 
-    def take_image_of_interesting_regions(self,
+    def take_image_of_interesting_regions(self,  
                                           cutoff: float,
                                           filename: str,
                                           ray_shadows: bool = False,
                                           opaque_background: int = 0,
-                                          take_images=True):
+                                          take_images: bool = True) -> None:
         """This function takes images of interesting regions of the alignment.
 
         Args:

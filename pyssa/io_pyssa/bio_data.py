@@ -19,12 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import logging
+import os.path
 import typing
 import pathlib
 from xml.etree import ElementTree
 
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception
+
 if typing.TYPE_CHECKING:
     from pyssa.io_pyssa import path_util
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 def convert_pdb_file_into_xml_element(filepath: 'path_util.FilePath') -> ElementTree.Element:
@@ -75,9 +83,42 @@ def convert_pdb_xml_string_to_list(root):
     return pdb_lines
 
 
-def convert_pdb_data_list_to_pdb_file(path_pdb, pdb_data):
-    pdb_file = open(path_pdb, "w")
-    for tmp_line in pdb_data:
+def convert_pdb_data_list_to_pdb_file(a_pdb_filepath: pathlib.Path, a_pdb_data: list) -> None:
+    """Convert pdb data into a pdb file.
+
+    Args:
+        a_pdb_filepath: A filepath of a pdb file.
+        a_pdb_data: A list of pdb file content.
+
+    Raises:
+        IllegalArgumentError: If the argument is not usable.
+        DirectoryNotFoundError: If the parent directory of the pdb file path is not found.
+        PermissionError: If the parent directory of the pdb file path has no writing permission.
+        UnableToOpenFileError: If the pdb file could not be open.
+    """
+    # <editor-fold desc="Checks">
+    if a_pdb_filepath is None:
+        logger.error(f"The argument a_pdb_filepath is illegal: {a_pdb_filepath}!")
+        raise exception.IllegalArgumentError("An argument is illegal.")
+    if not os.path.exists(a_pdb_filepath.parent):
+        logger.error(f"The argument a_pdb_filepath is illegal: {a_pdb_filepath}!")
+        raise exception.DirectoryNotFoundError("")
+    if not os.access(a_pdb_filepath.parent, os.W_OK):
+        logger.error(f"The argument a_pdb_filepath is illegal: {a_pdb_filepath}!")
+        raise PermissionError()
+    if a_pdb_data is None or len(a_pdb_data) == 0:
+        logger.error(f"The argument a_pdb_data is illegal: {a_pdb_data}!")
+        raise exception.IllegalArgumentError("An argument is illegal.")
+
+    # </editor-fold>
+
+    try:
+        pdb_file = open(a_pdb_filepath, "w")
+    except OSError:
+        logger.error("pdb file could not be opened for writing.")
+        raise exception.UnableToOpenFileError("")
+
+    for tmp_line in a_pdb_data:
         pdb_file.write(f"{tmp_line} \n")
     pdb_file.close()
 

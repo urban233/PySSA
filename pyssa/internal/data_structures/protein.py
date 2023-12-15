@@ -30,7 +30,7 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.data_structures import selection
-from pyssa.util import protein_util
+from pyssa.util import protein_util, exception
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
@@ -259,11 +259,42 @@ class Protein:
                 raise ValueError("Chain name exists.")
 
     def load_protein_in_pymol(self) -> None:
+        """Load a protein in PyMOL.
+
+        Args:
+            pdb_filepath: A filepath of a pdb file.
+            self._pdb_data: A list of pdb file content.
+
+        Raises:
+            UnableToCreatePdbFileError:If the pdb file cannot be created.
+            UnableToOpenPdbFileError:If the pdb file cannot be opened.
+            UnableToLoadPdbFileError:If the pdb file cannot be loaded.
+        """
+        # <editor-fold desc="Checks">
         pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
         if not os.path.exists(constants.CACHE_PROTEIN_DIR):
             os.mkdir(constants.CACHE_PROTEIN_DIR)
-        bio_data.convert_pdb_data_list_to_pdb_file(pdb_filepath, self._pdb_data)
-        pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb", self._pymol_molecule_object)
+        try:
+            bio_data.convert_pdb_data_list_to_pdb_file(pdb_filepath, self._pdb_data)
+        except exception.IllegalArgumentError:
+            logger.error(f"The argument pdb data is not usable: {self._pdb_data}.")
+            raise exception.UnableToCreatePdbFileError("")
+        except exception.DirectoryNotFoundError:
+            logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+            raise exception.UnableToCreatePdbFileError("")
+        except PermissionError:
+            logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+            raise exception.UnableToCreatePdbFileError("")
+        except exception.UnableToOpenFileError:
+            logger.error("pdb file could not be opened for writing.")
+            raise exception.UnableToOpenFileError("")
+        # </editor-fold>
+
+        try:
+            pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb", self._pymol_molecule_object)
+        except exception.UnableToLoadProteinError:
+            logger.error("Protein can not be loaded in PyMOL!")
+            raise exception.UnableToLoadProteinError
 
     def load_protein_pymol_session(self):
         tmp_session_path = f"{constants.CACHE_PYMOL_SESSION_DIR}/{self._pymol_molecule_object}_session.pse"

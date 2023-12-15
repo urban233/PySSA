@@ -29,15 +29,15 @@ class IllegalArgumentError(Exception):
         super().__init__(message)
 
 
-class PredictionEndedWithError(Exception):
-    """Class for a prediction ended with errors exception type."""
+class DirectoryNotFoundError(Exception):
+    """Class for a directory does not exist exception type."""
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
 
 
-class DirectoryDoesNotExistError(Exception):
-    """Class for a directory does not exist exception type."""
+class FileNotFoundError(Exception):
+    """Class for a file does not exist exception type."""
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
@@ -51,8 +51,80 @@ class FastaFilesNotFoundError(Exception):
         super().__init__(message)
 
 
-class FastaFilesNotCreatedError(Exception):
-    """Class for fasta files could not be created exception type."""
+class UnableToOpenFileError(Exception):
+    """Class for an unable to open file exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToCreatePdbFileError(Exception):
+    """Class for an unable to create pdb file exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToLoadPdbFileError(Exception):
+    """Class for an unable to load pdb file exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToLoadProteinError(Exception):
+    """Class for an unable to load a protein exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToLoadProteinPairError(Exception):
+    """Class for an unable to load a protein pair exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToAddProteinPairError(Exception):
+    """Class for an unable to add a protein pair exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToDoAnalysisError(Exception):
+    """Class for an unable to do analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToTakeImageError(Exception):
+    """Class for an unable to do analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToSetImageError(Exception):
+    """Class for an unable to do analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToSafeSessionError(Exception):
+    """Class for an unable to load a protein pair exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""

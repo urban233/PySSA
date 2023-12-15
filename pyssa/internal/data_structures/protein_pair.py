@@ -30,6 +30,7 @@ from pyssa.internal.portal import protein_pair_operations
 from pyssa.io_pyssa import filesystem_io
 from pyssa.util import protein_util
 from pyssa.util import pyssa_keys
+from pyssa.util import exception
 from xml.etree import ElementTree
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
@@ -100,10 +101,18 @@ class ProteinPair:
         # self.export_dirname = self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR)
         # self.pymol_session_filepath = path_util.FilePath(f"{self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR)}/{self.name}_session.pse")
 
-    def load_protein_pair_in_pymol(self):
-        """This function loads to proteins into a NEW pymol session."""
-        self.protein_1.load_protein_in_pymol()
-        self.protein_2.load_protein_in_pymol()
+    def load_protein_pair_in_pymol(self) -> None:
+        """Load a protein pair in PyMOL.
+
+        Raises:
+            UnableToLoadProteinPair: If the protein pair is unable to be loaded.
+        """
+        try:
+            self.protein_1.load_protein_in_pymol()
+            self.protein_2.load_protein_in_pymol()
+        except exception.UnableToLoadProteinPairError:
+            logger.error("Protein pair could not be loaded in PyMOL!")
+            raise exception.UnableToLoadProteinPairError("")
 
     def load_pymol_session(self):
         """This function loads the existing pymol session of the pair."""
