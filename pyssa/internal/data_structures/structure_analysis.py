@@ -33,8 +33,8 @@ from pyssa.util import exception
 from PyQt5.QtWidgets import QCheckBox
 
 if TYPE_CHECKING:
-    from pyssa.internal.data_structures import protein_pair
     from pyssa.internal.data_structures import project
+    from pyssa.internal.data_structures import protein_pair
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -43,13 +43,13 @@ logger.addHandler(log_handlers.log_file_handler)
 class Analysis:
     """This class contains information about the type of analysis."""
 
-    analysis_list: list[protein_pair.ProteinPair] = []
+    analysis_list: list['protein_pair.ProteinPair'] = []
     app_project: 'project.Project'
 
-    def __init__(self, app_project: project.Project) -> None:
+    def __init__(self, app_project: 'project.Project') -> None:
         self.app_project = app_project
 
-    def run_analysis(self, cb_analysis_images: QCheckBox, tmp_protein_pair: protein_pair) -> None:
+    def run_analysis(self, cb_analysis_images: QCheckBox, tmp_protein_pair: 'protein_pair.ProteinPair') -> None:
         """This function is used to run the analysis.
 
         Args:
@@ -114,7 +114,7 @@ class Analysis:
         except exception.UnableToTakeImageError:
             logger.error("Could not take image of the structure alignment!")
             raise exception.UnableToTakeImageError("")
-        except exception.FileNotFoundError:
+        except FileNotFoundError:
             logger.error("Image file could not be found!")
             raise exception.UnableToOpenFileError(f"Image file: {constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
                                                   f"structure_aln_{tmp_protein_pair.name}.png")

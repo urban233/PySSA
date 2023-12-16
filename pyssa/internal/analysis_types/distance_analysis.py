@@ -43,7 +43,6 @@ if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
     from pyssa.internal.data_structures import settings
     from pyssa.internal.data_structures import selection
-    from pyssa.internal.data_structures import project
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -252,17 +251,11 @@ class DistanceAnalysis:
             ``data/results/images``
 
         Args:
-            representation (str):
-                defines the type of molecular representation
-                like cartoon or ribbon
-            filename (str):
-                name of the png image file
-            selection (str, optional):
-                the atoms which MUST NOT displayed in the image
-            ray_shadows (bool, optional):
-                false if no shadows, true if shadows should be displayed
-            opaque_background (int, optional):
-                0 for a transparent background and 1 for a white background
+            representation (str): defines the type of molecular representation like cartoon or ribbon.
+            filename (str): name of the png image file.
+            selection (str, optional): the atoms which MUST NOT displayed in the image.
+            ray_shadows (bool, optional): false if no shadows, true if shadows should be displayed.
+            opaque_background (int, optional): 0 for a transparent background and 1 for a white background.
             take_images: Is a boolean, indicating to take images or not.
 
         Raises:
@@ -274,8 +267,8 @@ class DistanceAnalysis:
         else:
             opt_ray_shadows: str = "on"
 
-        REPRESENTATION: str = "cartoon"  # pylint: disable=invalid-name
-        cmd.show(REPRESENTATION)
+        representation: str = "cartoon"
+        cmd.show(representation)
 
         if selection != "":
             cmd.hide(representation, selection)
@@ -291,7 +284,12 @@ class DistanceAnalysis:
         cmd.set("ray_shadows", opt_ray_shadows)
         cmd.set('ray_opaque_background', opaque_background)
         graphic_operations.setup_default_session_graphic_settings()
-        self._protein_pair_for_analysis.color_protein_pair()
+
+        try:
+            self._protein_pair_for_analysis.color_protein_pair()
+        except exception.UnableToColorProteinPairError:
+            logger.error("Unable color protein pair.")
+            raise exception.UnableToColorProteinPairError("")
 
         cmd.scene(key=f"{self._protein_pair_for_analysis.protein_1.get_molecule_object()}-"
                       f"{self._protein_pair_for_analysis.protein_2.get_molecule_object()}",
