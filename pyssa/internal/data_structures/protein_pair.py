@@ -117,7 +117,7 @@ class ProteinPair:
             logger.error("Protein pair could not be loaded in PyMOL!")
             raise exception.UnableToLoadProteinPairError("")
 
-    def load_pymol_session(self):
+    def load_pymol_session(self) -> None:
         """This function loads the existing pymol session of the pair."""
         session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}_session.pse")
         if not os.path.exists(constants.CACHE_PYMOL_SESSION_DIR):
@@ -154,7 +154,6 @@ class ProteinPair:
             ``data/results/sessions``
 
             The file name (filename) MUST NOT have the file extension .pse!
-
         """
         self.pymol_session = protein_pair_operations.save_session_of_protein_pair(self.name)
 

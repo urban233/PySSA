@@ -45,8 +45,14 @@ class Analysis:
 
     analysis_list: list['protein_pair.ProteinPair'] = []
     app_project: 'project.Project'
+    directory_path: 'pathlib.Path'
 
     def __init__(self, app_project: 'project.Project') -> None:
+        """Initialize the app project.
+
+        Args:
+            app_project(project.Project): The project that this analysis is used.
+        """
         self.app_project = app_project
 
     def run_analysis(self, cb_analysis_images: QCheckBox, tmp_protein_pair: 'protein_pair.ProteinPair') -> None:
@@ -83,20 +89,25 @@ class Analysis:
             logger.error("The analysis in PyMOL failed!")
             raise exception.UnableToDoAnalysisError("")
 
+        take_images = False
+
+        # make images if checked
+        def create_directory(directory_path: 'pathlib.Path') -> None:
+            if not os.path.exists(directory_path):
+                os.mkdir(directory_path)
+
+        # make images if checked
+        for tmp_protein_pair in self.analysis_list:
+            if cb_analysis_images.isChecked():
+                take_images = True
+            create_directory(constants.SCRATCH_DIR_IMAGES)
+            create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
+            create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+
         try:
-            # make images if checked
-            for tmp_protein_pair in self.analysis_list:
-                if cb_analysis_images.isChecked():
-                    take_images = True
-                if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
-                    os.mkdir(constants.SCRATCH_DIR_IMAGES)
-                if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR):
-                    os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
-                if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                    os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
-                tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
-                                                                    filename=f"structure_aln_{tmp_protein_pair.name}",
-                                                                    representation="cartoon", take_images=take_images)
+            tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
+                filename=f"structure_aln_{tmp_protein_pair.name}",
+                representation="cartoon", take_images=take_images)
         except exception.UnableToTakeImageError:
             logger.error("Could not take image of the protein pair!")
             raise exception.UnableToTakeImageError("")
@@ -121,9 +132,9 @@ class Analysis:
 
         try:
             tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
-                                                                        tmp_protein_pair.distance_analysis.cutoff,
-                                                                f"interesting_reg_{tmp_protein_pair.name}",
-                                                                        take_images=take_images)
+                tmp_protein_pair.distance_analysis.cutoff,
+                f"interesting_reg_{tmp_protein_pair.name}",
+                take_images=take_images)
         except exception.UnableToTakeImageError:
             logger.error("Could not take images of interesting regions!")
             raise exception.UnableToTakeImageError("")
@@ -145,8 +156,8 @@ class Analysis:
                  set_interesting_region_images(interesting_region_filepaths))
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
             cmd.scene(f"{tmp_protein_pair.protein_1.get_molecule_object()}"
-                        f"{tmp_protein_pair.protein_2.get_molecule_object()}",
-                        action="recall")
+                      f"{tmp_protein_pair.protein_2.get_molecule_object()}",
+                      action="recall")
         except exception.UnableToSetImageError:
             logger.error("Could not set images of interesting regions!")
             raise exception.UnableToSetImageError("")

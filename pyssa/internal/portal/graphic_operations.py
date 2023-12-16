@@ -93,10 +93,8 @@ def color_protein(pymol_color: str, a_selection_string: str):
         print("Color process was unsuccessful.")
 
 
-def setup_default_session_graphic_settings():
-    """This functions modifies the pymol session to look fancy.
-
-    """
+def setup_default_session_graphic_settings() -> None:
+    """This functions modifies the pymol session to look fancy."""
     cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
     cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
     cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)

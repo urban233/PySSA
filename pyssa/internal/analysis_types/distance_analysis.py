@@ -105,10 +105,8 @@ class DistanceAnalysis:
         """Constructor.
 
         Args:
-            protein_pair_for_analysis:
-                a pair of proteins which get analyzed
-            app_settings:
-                the settings from pyssa
+            protein_pair_for_analysis: A pair of proteins which get analyzed.
+            app_settings: The settings from PySSA.
         """
         self._protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_for_analysis
         self.name = f"dist_analysis_{self._protein_pair_for_analysis.name}"
@@ -116,7 +114,6 @@ class DistanceAnalysis:
         self.cutoff: float = app_settings.cutoff
         self.cycles: int = app_settings.cycles
         self.figure_size = (11.0, 6.0)
-        #self.alignment_file_name = f"{self._protein_pair_for_analysis.name}_alignment"
         self.alignment_file_name = "aln"
 
     def get_protein_pair(self):
@@ -253,13 +250,14 @@ class DistanceAnalysis:
         Args:
             representation (str): defines the type of molecular representation like cartoon or ribbon.
             filename (str): name of the png image file.
-            selection (str, optional): the atoms which MUST NOT displayed in the image.
-            ray_shadows (bool, optional): false if no shadows, true if shadows should be displayed.
+            selection (str): the atoms which MUST NOT displayed in the image.
+            ray_shadows (bool): false if no shadows, true if shadows should be displayed.
             opaque_background (int, optional): 0 for a transparent background and 1 for a white background.
             take_images: Is a boolean, indicating to take images or not.
 
         Raises:
             ValueError: If opaque_background is not 0 or 1.
+            UnableToColorProteinPairError: If the protein pair is not able to colored.
         """
         # determine the option for ray_shadows
         if not ray_shadows:
@@ -267,7 +265,7 @@ class DistanceAnalysis:
         else:
             opt_ray_shadows: str = "on"
 
-        representation: str = "cartoon"
+        representation = "cartoon"
         cmd.show(representation)
 
         if selection != "":
@@ -314,19 +312,15 @@ class DistanceAnalysis:
         """This function takes images of interesting regions of the alignment.
 
         Args:
-            cutoff (float):
-                defines a border of which the specific regions begin,
-                if the distance is greater than the cutoff, the amino acid is
-                categorized as "interesting"
-            filename (str):
-                name of the png image file
-            ray_shadows (bool, optional):
-                false if no shadows, true if shadows should be displayed
-            opaque_background (int, optional):
-                0 for a transparent background and 1 for a white background
-            take_images (bool):
-                a flag if images should be made or not
+            cutoff (float): Defines a border of which the specific regions begin, if the distance is greater than
+                            the cutoff, the amino acid is categorized as "interesting".
+            filename (str): Is the name of the png image file.
+            ray_shadows (bool): Is false if no shadows, true if shadows should be displayed.
+            opaque_background (int): 0 for a transparent background and 1 for a white background.
+            take_images (bool): Flag if images should be made or not.
 
+        Raises:
+            UnableToColorProteinPairError: If the protein pair is not able to colored.
         """
         # set default parameters
         cmd.set("label_size", 14)
@@ -337,13 +331,17 @@ class DistanceAnalysis:
         cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
 
         j: int = 0
-        measurement_obj: str = f"measure{j}"
-        REPRESENTATION: str = "ribbon"  # pylint: disable=invalid-name
+        representation: str = "ribbon"
 
         cmd.hide("cartoon", "all")
-        cmd.show(REPRESENTATION, "all")
+        cmd.show(representation, "all")
         graphic_operations.setup_default_session_graphic_settings()
-        self._protein_pair_for_analysis.color_protein_pair()
+
+        try:
+            self._protein_pair_for_analysis.color_protein_pair()
+        except exception.UnableToColorProteinPairError:
+            logger.error("Unable color protein pair.")
+            raise exception.UnableToColorProteinPairError("")
 
         i: int = 0
         for distance_value in self.analysis_results.distance_data.get("distance"):
