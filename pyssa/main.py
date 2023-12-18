@@ -4181,45 +4181,6 @@ class MainWindow(QtWidgets.QMainWindow):
             print("Unexpected Error.")
             self.block_box_prediction.close()
 
-    # def validate_local_pred_multi(self):
-    #     self.local_pred_multimer_management.create_validation()
-    #
-    # def show_local_pred_multi_stage_prediction_mode(self):
-    #     self.local_pred_multimer_management.show_stage_x(0)
-    #
-    # # --- single prediction
-    # def show_local_pred_multi_stage_protein_name(self):
-    #     if self.ui.table_local_pred_multi_prot_overview.isVisible():
-    #         self.local_pred_multimer_management.show_stage_x(0)
-    #     else:
-    #         self.local_pred_multimer_management.show_stage_x(1)
-    #
-    # def show_local_pred_multi_stage_protein_sequence_single(self):
-    #     gui_elements_to_show = [
-    #         self.ui.btn_local_pred_multi_add_seq_single
-    #     ]
-    #     gui_elements_to_hide = [
-    #         self.ui.btn_local_pred_multi_next,
-    #         self.ui.btn_local_pred_multi_back_prediction_mode,
-    #     ]
-    #     self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2], [0, 3, 4, 5],
-    #                                                                   hide_specific_elements=gui_elements_to_hide,
-    #                                                                   show_specific_elements=gui_elements_to_show)
-    #     self.local_pred_multimer_management.disable_text_boxes_stage_x([1])
-    #     self.local_pred_multimer_management.enable_text_boxes_stage_x([2])
-    #
-    # def show_local_pred_multi_stage_prediction_single(self):
-    #     gui_elements_to_hide = [
-    #         self.ui.btn_local_pred_multi_add_seq_single
-    #     ]
-    #     self.local_pred_multimer_management.show_gui_elements_stage_x([1, 2, 4], [0, 3, 5], hide_specific_elements=gui_elements_to_hide)
-    #     self.local_pred_multimer_management.disable_text_boxes_stage_x([1, 2])
-    #     self.local_pred_multimer_management.activate_specific_button(self.ui.btn_local_pred_multi_predict)
-    #
-    # # --- batch prediction
-    # def show_local_pred_multi_stage_protein_sequence_batch(self):
-    #     self.local_pred_multimer_management.show_gui_elements_stage_x([3], [0, 1, 2, 4, 5])
-
     # </editor-fold>
 
     # <editor-fold desc="Monomer Prediction + Analysis functions">
@@ -6322,6 +6283,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.block_box_prediction.close()
 
     # </editor-fold>
+    # </editor-fold>
 
     # <editor-fold desc="Structure Analysis functions">
     def structure_analysis_add(self) -> None:
@@ -6620,62 +6582,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def structure_analysis_overview_clicked(self) -> None:
         """Enables the remove button."""
         self.ui.btn_analysis_batch_remove.setEnabled(True)
-
-    # <editor-fold desc="Old">
-    # def show_batch_analysis_stage_0(self):
-    #     gui_page_management.show_analysis_page_stage_0(self.batch_analysis_management,
-    #                                                    self.ui.list_analysis_batch_ref_chains,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_1,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_2,
-    #                                                    self.ui.list_analysis_batch_model_chains,
-    #                                                    self.ui.list_analysis_batch_overview,
-    #                                                    self.ui.btn_analysis_batch_remove,
-    #                                                    self.ui.btn_analysis_batch_add,
-    #                                                    0)
-    #
-    # def show_batch_analysis_stage_1(self):
-    #     gui_page_management.show_analysis_page_stage_1(self.batch_analysis_management,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_1,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_2,
-    #                                                    self.ui.btn_analysis_batch_remove,
-    #                                                    self.ui.btn_analysis_batch_add,
-    #                                                    0,
-    #                                                    self.fill_protein_boxes_batch)
-    #
-    # def show_batch_analysis_stage_2(self):
-    #     gui_page_management.show_analysis_page_stage_2(self.app_project,
-    #                                                    self.batch_analysis_management,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_1,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_2,
-    #                                                    self.ui.box_analysis_batch_prot_struct_1,
-    #                                                    self.ui.box_analysis_batch_prot_struct_2,
-    #                                                    self.ui.lbl_analysis_batch_ref_chains,
-    #                                                    self.ui.list_analysis_batch_ref_chains,
-    #                                                    self.ui.btn_analysis_batch_next,
-    #                                                    self.ui.btn_analysis_batch_next_2,
-    #                                                    self.ui.btn_analysis_batch_back,
-    #                                                    0)
-    #
-    # def show_batch_analysis_stage_3(self):
-    #     gui_page_management.show_analysis_page_stage_3(self.app_project,
-    #                                                    self.batch_analysis_management,
-    #                                                    self.ui.list_analysis_batch_overview,
-    #                                                    self.ui.btn_analysis_batch_add,
-    #                                                    self.ui.btn_analysis_batch_remove,
-    #                                                    self.ui.btn_analysis_batch_next,
-    #                                                    self.ui.btn_analysis_batch_back,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_1,
-    #                                                    self.ui.lbl_analysis_batch_prot_struct_2,
-    #                                                    self.ui.box_analysis_batch_prot_struct_1,
-    #                                                    self.ui.box_analysis_batch_prot_struct_2,
-    #                                                    self.ui.btn_analysis_batch_next_2,
-    #                                                    self.ui.btn_analysis_batch_back_2,
-    #                                                    self.ui.lbl_analysis_batch_model_chains,
-    #                                                    self.ui.list_analysis_batch_model_chains,
-    #                                                    self.ui.btn_analysis_batch_next_3,
-    #                                                    self.no_of_selected_chains,
-    #                                                    0)
-    # </editor-fold>
 
     def fill_protein_boxes_batch(self) -> None:
         """Fills the combo boxes with the protein names."""
