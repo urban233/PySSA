@@ -1,27 +1,142 @@
-## PySSA Code Rules
+# PySSA Code Rules
+Authors: Hannah Kullik & Martin Urban
 
-### Type annotation
-#### Annotations of python builtins
+## Contents of this document
+* [Description](#Description)
+* [Linting](#Linting)
+* [Type annotation](#Type-annotation)
+* [Imports](#Imports)
+* [Exception handling](#Exception-handling)
+* [Terminology](#Terminology)
+* [Code formatting](#Code-formatting)
+
+## Description
+Python is the main programming language of the PySSA project. 
+This document describes the rules which must be followed if the 
+source code gets extended.
+
+## Linting
+You have to run `ruff` over your code to check any static errors.
+The configuration to use is defined in the `pyproject.toml`.
+
+## Type annotation
+Python is a dynamically typed language, but in this project 
+Python is used as a **statically typed** language.
+The decision emphasizes robust and less error-prone code.
+Therefore, you have to use Python's type annotation feature.
+
+### Annotations of python builtins
+Annotating variables using python builtins where it is possible.
 ```python
 i: int = 0
 ```
-
-#### Annotations of pyssa builtins
+### Annotations of pyssa builtins
+Annotating variables using pyssa builtins where data structures of 
+pyssa are used.
 ```python
-analysis_list: list['protein_pair.ProteinPair'] = []
+protein_pairs_for_analysis: list['protein_pair.ProteinPair'] = []
+```
+### Annotations of library builtins
+Annotating variables using library builtins where data types of 
+libraries are used.
+```python
+import numpy as np
+
+distances_of_amino_acid_pairs: np.ndarray = np.ndarray([])
 ```
 
-### Exception handling
+## Naming conventions
+* Package: snake_case
+* Module: snake_case
+* Class: PascalCase
+* Method: snake_case
+  * private: _ prefix (single underscore)
+  ```python
+  def _create_directory_structure(self) -> None:
+  ```
+* Function: snake_case
+* Variable: snake_case
+  * argument: a/an_var_name, if no specific variable is meant.
+  ```python
+  def export_protein_as_pdb_file(a_filepath: str) -> None:
+  ```
+  * argument: the_var_name, if a specific variable is meant.
+  ```python
+  def load_settings(the_app_settings: 'settings.Settings') -> None:
+  ```
+  * method/function scope: tmp_ prefix
+  ```python
+  ...
+  tmp_destination_filepath: str = "/home/rhel_user/scratch/log.txt"
+  ...
+  ```
+* Global variable: g_ prefix + snake_case
 
-#### Argument checks
-Raise **IllegalArgumentError** if 
-* *unmodified* argument is not usable for the function/method
+## Imports
+Never use wildcard imports. Always import the module **not** the class itself.
+```python
+from pymol import cmd # Correct: Module is imported
 
-Raise custom exception if
-* argument value is *modified* **and** is not usable for the function/method
-  * e.g.: a_filepath.parent -> DirectoryNotFoundError
+from pymol import * # Wrong! Wildcard import
+from os.path import exists # Wrong! Function/Class import
+```
+Use official abbreviations for common python libraries.
+```python
+import numpy as np
+import pandas as pd
+```
 
-##### Styling
+## Exception handling
+
+### Argument checks
+Always check for None:
+```python
+def copy_fasta_file(a_source_filepath, a_destination_filepath):
+    if a_source_filepath is None:
+        raise exceptions.IllegalArgumentError("")
+    if a_destination_filepath is None:
+        raise exceptions.IllegalArgumentError("")
+```
+
+Raise **IllegalArgumentError** if *unmodified* argument 
+is **not** usable for the function/method:
+```python
+import os
+
+
+def copy_fasta_file(a_source_filepath: pathlib.Path, a_destination_filepath: pathlib.Path):
+  ...
+  if not os.path.exists(a_source_filepath): # argument is unmodified
+    raise FileNotFoundError()
+```
+
+Raise custom exception if argument
+is *modified* **and** is **not** usable for the function/method
+```python
+import os
+
+
+def copy_fasta_file(a_source_filepath: pathlib.Path, a_destination_filepath: pathlib.Path):
+  ...
+  if not os.path.exists(a_source_filepath.parent): # .parent is a modified version of the argument
+    raise exceptions.DirectoryNotFoundError("")
+```
+
+### try-except blocks
+
+
+## Terminology
+### Path, dir, file & filepath
+* Always use `path` if a directory path is meant.
+* Always use `dir` if a directory name is meant.
+* Always use `filepath` if an absolute path to a file is meant.
+* Always use `file` if a name of a file is meant.
+
+### Difference between TODO and fixme
+* Add a `# TODO` if there is a task which needs to be done.
+* Add a `# fixme` if there is an important note which needs to be quickly found.
+
+## Code formatting
 Always wrap argument checks into an editor-fold (Ctrl+Alt+T) and 
 insert a line break before **and** after the ending of the editor-fold.
 Example:
@@ -34,12 +149,3 @@ if the_fasta_path is None:
 # </editor-fold>
 
 ```
-
-#### try-except blocks
-
-
-### TODO's
-#### Difference between TODO and fixme
-Add a # TODO if there is a task which needs to be done.
-
-Add a # fixme if there is an important note which needs to be quickly found.
