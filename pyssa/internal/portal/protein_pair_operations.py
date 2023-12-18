@@ -113,7 +113,7 @@ def color_protein_pair(pymol_molecule_object_ref, pymol_molecule_object_model, c
 
 
 def save_session_of_protein_pair(name_of_protein_pair: str) -> str:
-    """This function saves the pymol session of the Protein pair.
+    """This function saves the pymol session of the protein pair.
 
     Note:
         The pse file will be saved under the relative path
@@ -123,9 +123,7 @@ def save_session_of_protein_pair(name_of_protein_pair: str) -> str:
         The file name (filename) MUST NOT have the file extension .pse!
 
     Args:
-        filename (str):
-            name of the session file
-
+        name_of_protein_pair (str): Name of the protein pair.
     """
     return pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
 

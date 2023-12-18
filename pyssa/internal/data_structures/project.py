@@ -161,17 +161,16 @@ class Project:
         """Adds an existing protein_pair object to the project.
 
         Args:
-            a_protein_pair (protein_pair.ProteinPair): an existing protein pair object.
+            a_protein_pair (protein_pair.ProteinPair): An existing protein pair object.
 
         Raises:
-            ValueError: if one of the arguments are None
+            ValueError: If one of the arguments are None
         """
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(a_protein_pair):
             msg = "The given protein pair is None."
             logger.error(msg)
             raise ValueError(msg)
-
         # </editor-fold>
 
         self.protein_pairs.append(a_protein_pair)

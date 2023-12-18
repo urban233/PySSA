@@ -52,10 +52,16 @@ class DistanceAnalysisResults:
         self.rmsd = rmsd
         self.aligned_aa = aligned_aa
 
-    def set_structure_aln_image(self, filepath: path_util.FilePath):
+    def set_structure_aln_image(self, filepath: path_util.FilePath) -> None:
+        """This function sets the structure alignment image."""
         self.structure_aln_image = (filepath.get_basename(), binary_data.create_base64_string_from_file(filepath))
 
-    def set_interesting_region_images(self, filepaths: list[path_util.FilePath]):
+    def set_interesting_region_images(self, filepaths: list[path_util.FilePath]) -> None:
+        """This function sets the interesting region images.
+
+        Args:
+            filepaths (list[path_util.FilePath]): List of file paths.
+        """
         for tmp_filepath in filepaths:
             self.interesting_regions_images.append((tmp_filepath.get_basename(), binary_data.create_base64_string_from_file(tmp_filepath)))
 

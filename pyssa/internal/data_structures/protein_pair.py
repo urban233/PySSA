@@ -23,6 +23,9 @@
 import os
 import pathlib
 import logging
+
+import pymol
+
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
@@ -114,7 +117,7 @@ class ProteinPair:
             logger.error("Protein pair could not be loaded in PyMOL!")
             raise exception.UnableToLoadProteinPairError("")
 
-    def load_pymol_session(self):
+    def load_pymol_session(self) -> None:
         """This function loads the existing pymol session of the pair."""
         session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}_session.pse")
         if not os.path.exists(constants.CACHE_PYMOL_SESSION_DIR):
@@ -126,23 +129,21 @@ class ProteinPair:
         """This function colors both the reference and the model Protein.
 
         Note:
-            Only the official colors from PyMOL are supported. These can
-            be looked up under the `color values`_ page.
+            Only the official colors from PyMOL are supported. These can be looked up under the `color values`_ page.
 
         Args:
-            color_ref (str, optional):
-                defines color for the reference Protein
-            color_model (str, optional):
-                defines color for the model Protein
+            color_ref (str, optional): defines color for the reference Protein.
+            color_model (str, optional): defines color for the model Protein.
 
         Raises:
-            pymol.CmdException:
-                Exception is raised if one or both proteins
-                does not exist as pymol objects.
+            pymol.CmdException: Exception is raised if one or both proteins does not exist as pymol objects.
 
         """
-        protein_pair_operations.color_protein_pair(self.protein_1.get_molecule_object(),
-                                                   self.protein_2.get_molecule_object())
+        try:
+            protein_pair_operations.color_protein_pair(self.protein_1.get_molecule_object(),
+                                                       self.protein_2.get_molecule_object())
+        except pymol.CmdException:
+            pymol.CmdException("One Protein or both proteins does not exist as pymol objects.")
 
     def save_session_of_protein_pair(self) -> None:
         """This function saves the pymol session of the Protein pair.
@@ -153,7 +154,6 @@ class ProteinPair:
             ``data/results/sessions``
 
             The file name (filename) MUST NOT have the file extension .pse!
-
         """
         self.pymol_session = protein_pair_operations.save_session_of_protein_pair(self.name)
 
