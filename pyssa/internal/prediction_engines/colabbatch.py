@@ -27,7 +27,7 @@ import sys
 import zmq
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import prediction_configuration
-from pyssa.util import constants
+from pyssa.util import constants, prediction_util
 from pyssa.util import exception
 
 logger = logging.getLogger(__file__)
@@ -85,92 +85,31 @@ class Colabbatch:
         self.settings_dir_unix_notation = f"/mnt/{str_conversion_3}"
 
     def setup_prediction_service(self) -> None:
-        """Sets up the structure prediction service in WSL2 almaColabfold9 distro."""
-        # Copy script from pyssa plugin to WSL2 filesystem
-        subprocess.run(
-            ["wsl", "-d", "almaColabfold9",
-             "-u", "rhel_user",
-             "cp", "-f", f"{constants.PLUGIN_PATH_WSL_NOTATION}/scripts/prepare_prediction_env.sh", "/home/rhel_user/.pyssa/prepare_prediction_env.sh",
-             ],
-        )
-        # Change file owner of script
-        subprocess.run(
-            ["wsl", "-d", "almaColabfold9",
-             "-u", "rhel_user",
-             "sudo", "chown", "rhel_user", "/home/rhel_user/.pyssa/prepare_prediction_env.sh",
-             ],
-        )
-        # Change execution policy of script
-        subprocess.run(
-            ["wsl", "-d", "almaColabfold9",
-             "-u", "rhel_user",
-             "sudo", "chmod", "+x","/home/rhel_user/.pyssa/prepare_prediction_env.sh",
-             ],
-        )
-        subprocess.run(
-            ["wsl", "-d", "almaColabfold9",
-             "-u", "rhel_user",
-             "bash", "/home/rhel_user/.pyssa/prepare_prediction_env.sh",
-             ],
-        )
-        #
-        # subprocess.run(
-        #     ["wsl", "-d", "almaColabfold9",
-        #      "-u", "root",
-        #      "rm", "-r", "/home/rhel_user/pyssa_colabfold",
-        #      ],
-        # )
-        # subprocess.run(
-        #     ["wsl", "-d", "almaColabfold9",
-        #      "-u", "root",
-        #      "rm", "-r", "/home/rhel_user/scratch",
-        #      ],
-        # )
-        # subprocess.run(
-        #     ["wsl", "-d", "almaColabfold9",
-        #      "-u", "rhel_user",
-        #      "cp", "-r",
-        #      f"{constants.PLUGIN_PATH_WSL_NOTATION}/pyssa_colabfold",
-        #      "/home/rhel_user/",
-        #      ],
-        # )
-        # # Remove original batch.py of Colabfold
-        # subprocess.run(
-        #     ["wsl", "-d", "almaColabfold9",
-        #      "-u", "root",
-        #      "rm",
-        #      "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py",
-        #      ],
-        # )
-        # # Copy modified batch.py of Colabfold
-        # subprocess.run(
-        #     ["wsl", "-d", "almaColabfold9",
-        #      "-u", "root",
-        #      "cp",
-        #      f"{constants.PLUGIN_PATH_WSL_NOTATION}/pyssa_colabfold/colabfold_sub/batch.py",
-        #      "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py",
-        #      ],
-        # )
-        # subprocess.run(
-        #     ["wsl", "-d", "almaColabfold9",
-        #      "-u", "rhel_user",
-        #      "mkdir", "-p", self.fasta_path,
-        #      ],
-        # )
-        # subprocess.run(
-        #     ["wsl", "-d", "almaColabfold9",
-        #      "-u", "rhel_user",
-        #      "mkdir", "-p", self.pdb_path,
-        #      ],
-        # )
+        """Sets up the structure prediction service in WSL2 almaColabfold9 distro.
 
-        # Copy fasta files from Windows host to WSL2 filesystem
-        subprocess.run(
-            ["wsl", "-d", "almaColabfold9",
-             "-u", "rhel_user",
-             "cp", "-r", f"{self.settings_dir_unix_notation}/scratch/local_predictions/fasta/*.fasta", self.fasta_path,
-             ],
-        )
+        Raises:
+            Wsl2PreparationFailedError: If an error occurs during prediction service setup
+        """
+        try:
+            prediction_util.delete_pyssa_colabfold_directory_in_wsl2()
+            prediction_util.delete_scratch_directory_in_wsl2()
+            prediction_util.copy_pyssa_colabfold_directory_to_wsl2()
+            prediction_util.delete_original_batch_py_file()
+            prediction_util.copy_modified_batch_py_file()
+            prediction_util.create_fasta_directory_in_wsl2(self.fasta_path)
+            prediction_util.create_pdb_directory_in_wsl2(self.pdb_path)
+            prediction_util.copy_fasta_files_from_windows_to_wsl2(self.settings_dir_unix_notation, self.fasta_path)
+        except exception.SubprocessExecutionError:
+            logger.error("An error occurred during subprocess execution!")
+            raise exception.Wsl2PreparationFailedError("")
+        except exception.IllegalArgumentError:
+            logger.error("An argument is illegal!")
+            raise exception.Wsl2PreparationFailedError("")
+        except Exception as e:
+            logger.error("Unexpected error!", e)
+            raise exception.Wsl2PreparationFailedError(f"Unexpected error!: {e}")
+        else:
+            logger.info("Prediction service setup was successful.")
 
     def send_prediction_request(self) -> bool:
         """Sends structure prediction request based on custom arguments.
@@ -214,30 +153,42 @@ class Colabbatch:
         Raises:
             PredictionEndedWithError: if prediction ended with any kind of error
         """
-        self.setup_prediction_service()
+        logger.info("Setup of prediction service.")
+        try:
+            self.setup_prediction_service()
+        except exception.Wsl2PreparationFailedError:
+            logger.error("Prediction service setup failed!")
+            raise exception.PredictionEndedWithError("")
 
+        logger.info("Send prediction request to WSL2.")
         try:
             tmp_output = self.send_prediction_request()
         except exception.PredictionEndedWithError:
+            logger.error("Prediction ended with error.")
             subprocess.run(["wsl", "--shutdown"])
             raise exception.PredictionEndedWithError("")
-        subprocess.run(["wsl", "--shutdown"])
-        if tmp_output:
-            logger.info("Prediction process finished, copying results ...")
-            powershell_result = subprocess.run(
-                [
-                    "wsl", "-d", "almaColabfold9",
-                    "-u", "rhel_user",
-                    "cp", "-r", "/home/rhel_user/scratch/local_predictions/pdb",
-                    f"{self.settings_dir_unix_notation}/scratch/local_predictions",
-                ],
-            )
-            if powershell_result.returncode != 0:
-                logger.error("Could not copy prediction results to Windows host!")
-                raise exception.PredictionEndedWithError("Could not copy prediction results to Windows host!")
         else:
-            logger.error("Prediction finished with errors.")
-            raise exception.PredictionEndedWithError("")
+            logger.info("Received success message of prediction service.")
+            subprocess.run(["wsl", "--shutdown"])
+            if tmp_output:
+                logger.info("Prediction process finished, copying results ...")
+                try:
+                    subprocess.run(
+                        [
+                            "wsl", "-d", "almaColabfold9",
+                            "-u", "rhel_user",
+                            "cp", "-r", "/home/rhel_user/scratch/local_predictions/pdb",
+                            f"{self.settings_dir_unix_notation}/scratch/local_predictions",
+                        ], check=True,
+                    )
+                except subprocess.CalledProcessError:
+                    logger.error("Could not copy prediction results to Windows host!")
+                    raise exception.PredictionEndedWithError("Could not copy prediction results to Windows host!")
+                else:
+                    logger.info("Copying prediction results to Windows host was successful.")
+            else:
+                logger.error("Prediction finished with errors! No results were copied to the Windows host!")
+                raise exception.PredictionEndedWithError("")
         return
 
 

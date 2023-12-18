@@ -35,7 +35,7 @@ from pyssa.internal.data_structures.data_classes import prediction_protein_info,
 from pyssa.io_pyssa import filesystem_io, safeguard, path_util
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import tools, constants, prediction_util, exception
+from pyssa.util import tools, constants, prediction_util, exception, exit_codes
 from pyssa.internal.prediction_engines import esmfold
 from pyssa.internal.data_structures import project
 from typing import TYPE_CHECKING
@@ -302,9 +302,13 @@ class ColabfoldWorker(QObject):
     the current project in use
     """
     app_project: 'project.Project'
-    finished = pyqtSignal()
+    finished = pyqtSignal(int, str)
     progress = pyqtSignal(int)
     return_value = pyqtSignal(list)
+    """
+    a signal which gets used if a process failed due to an error
+    """
+    non_zero_exit_code = pyqtSignal()
 
     # </editor-fold>
 
@@ -359,15 +363,16 @@ class ColabfoldWorker(QObject):
             structure_prediction_obj.create_fasta_files_for_prediction()
         except exception.FastaFilesNotCreatedError:
             logger.error("Fasta files were not created.")
-            self.finished.emit()
+            self.finished.emit(exit_codes.ERROR_WRITING_FASTA_FILES[0], exit_codes.ERROR_WRITING_FASTA_FILES[1])
             return
         except exception.FastaFilesNotFoundError:
             logger.error("Fasta files were not found.")
-            self.finished.emit()
+            self.finished.emit(exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
             return
+
         except Exception as e:
             logger.error("Unexpected error:", e)
-            self.finished.emit()
+            self.finished.emit(exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
             return
         else:
             logger.info("Fasta files were successfully created.")
@@ -377,7 +382,7 @@ class ColabfoldWorker(QObject):
             structure_prediction_obj.run_prediction()
         except exception.PredictionEndedWithError:
             logger.error("Prediction ended with error.")
-            self.finished.emit()
+            self.finished.emit(exit_codes.ERROR_PREDICTION_FAILED[0], exit_codes.ERROR_PREDICTION_FAILED[1])
             return
         else:
             logger.info("Prediction process finished.")
@@ -386,7 +391,7 @@ class ColabfoldWorker(QObject):
         logger.info("Saved predicted pdb file into XML file.")
         subprocess.run(["wsl", "--shutdown"])
         logger.info("WSL gets shutdown.")
-        self.finished.emit()
+        self.finished.emit(exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
 
 
 class DistanceAnalysisWorker(QObject):

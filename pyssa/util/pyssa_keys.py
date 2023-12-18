@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for storing project-wide constants"""
+"""Module for storing project-wide constants."""
 
 ARRAY_DISTANCE_INDEX = "index"
 ARRAY_DISTANCE_PROT_1_CHAIN = "ref_chain"

@@ -64,7 +64,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.io_pyssa import safeguard, bio_data
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
-from pyssa.util import pyssa_keys
+from pyssa.util import pyssa_keys, exit_codes
 from pyssa.util import globals
 from pyssa.util import protein_pair_util, session_util, exception
 from pyssa.util import constants, input_validator, gui_page_management, tools, gui_utils
@@ -3476,17 +3476,43 @@ class MainWindow(QtWidgets.QMainWindow):
             styles.color_button_ready(self.ui.btn_pred_mono_predict)
             self.ui.btn_pred_mono_predict.setEnabled(True)
 
-    def post_prediction_process(self) -> None:
+    def post_prediction_process(self, an_exit_code: int, an_exit_code_description: str) -> None:
         """Process which runs after each prediction job."""
-        if self.prediction_type == constants.PREDICTION_TYPE_PRED:
-            if len(self.app_project.proteins) == 0:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical,
-                )
-                self.display_view_page()
-                self._project_watcher.show_valid_options(self.ui)
-            else:
+        if an_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction", "Prediction failed because there was an error writing the fasta file(s)!", QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+            constants.PYSSA_LOGGER.error(f"Prediction ended with exit code {an_exit_code}: {an_exit_code_description}")
+        elif an_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction", "Prediction failed because the fasta file(s) could not be found!", QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+            constants.PYSSA_LOGGER.error(f"Prediction ended with exit code {an_exit_code}: {an_exit_code_description}")
+        elif an_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction", "Prediction failed because a subprocess failed!", QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+            constants.PYSSA_LOGGER.error(f"Prediction ended with exit code {an_exit_code}: {an_exit_code_description}")
+        elif an_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction", "Prediction failed because of an unknown error!", QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self.ui)
+            constants.PYSSA_LOGGER.error(f"Prediction ended with exit code {an_exit_code}: {an_exit_code_description}")
+        elif an_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            if self.prediction_type == constants.PREDICTION_TYPE_PRED:
                 self.app_project.serialize_project(self.app_project.get_project_xml_path())
                 constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
                 self.block_box_prediction.destroy(True)
@@ -3500,15 +3526,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._init_local_pred_mono_page()
                 self._init_local_pred_multi_page()
                 self.display_view_page()
-        elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS:
-            if len(self.app_project.proteins) == 1:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical,
-                )
-                self.display_view_page()
-                self._project_watcher.show_valid_options(self.ui)
-            else:
+            elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS:
                 # executes if monomers were successfully predicted
                 self.app_project.serialize_project(self.app_project.get_project_xml_path())
                 constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
@@ -3554,15 +3572,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.block_box_analysis.exec_()
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
-        elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS:
-            if len(self.app_project.proteins) == 1:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction", "Prediction failed due to an unknown error.", QtWidgets.QMessageBox.Critical,
-                )
-                self.display_view_page()
-                self._project_watcher.show_valid_options(self.ui)
-            else:
+            elif self.prediction_type == constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS:
                 self.app_project.serialize_project(self.app_project.get_project_xml_path())
                 constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
                 constants.PYSSA_LOGGER.info("All structure predictions are done.")

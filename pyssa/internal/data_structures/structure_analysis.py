@@ -43,13 +43,13 @@ logger.addHandler(log_handlers.log_file_handler)
 class Analysis:
     """This class contains information about the type of analysis."""
 
-    analysis_list: list[protein_pair.ProteinPair] = []
+    analysis_list: list['protein_pair.ProteinPair'] = []
     app_project: 'project.Project'
 
-    def __init__(self, app_project: project.Project) -> None:
+    def __init__(self, app_project: 'project.Project') -> None:
         self.app_project = app_project
 
-    def run_analysis(self, cb_analysis_images: QCheckBox, tmp_protein_pair: protein_pair) -> None:
+    def run_analysis(self, cb_analysis_images: QCheckBox, tmp_protein_pair: 'protein_pair.ProteinPair') -> None:
         """This function is used to run the analysis.
 
         Args:

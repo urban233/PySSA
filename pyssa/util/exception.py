@@ -51,6 +51,22 @@ class FastaFilesNotFoundError(Exception):
         super().__init__(message)
 
 
+class FastaFilesNotCreatedError(Exception):
+    """Class for an empty WSL fasta directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class PredictionEndedWithError(Exception):
+    """Class for an empty WSL fasta directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+        
+
 class UnableToOpenFileError(Exception):
     """Class for an unable to open file exception type."""
 
@@ -125,6 +141,22 @@ class UnableToSetImageError(Exception):
 
 class UnableToSafeSessionError(Exception):
     """Class for an unable to load a protein pair exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class SubprocessExecutionError(Exception):
+    """Class for a subprocess execution exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class Wsl2PreparationFailedError(Exception):
+    """Class for a failed wsl2 preparation exception type."""
 
     def __init__(self, message: str) -> None:
         """Constructor."""

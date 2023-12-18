@@ -113,7 +113,7 @@ class StructurePrediction:
             except exception.IllegalArgumentError:
                 logger.error("Invalid argument")
                 raise exception.FastaFilesNotCreatedError("")
-            except exception.DirectoryDoesNotExistError:
+            except exception.DirectoryNotFoundError:
                 logger.error("Directory does not exists of given filepath.")
                 raise exception.FastaFilesNotCreatedError("")
             except Exception as e:
