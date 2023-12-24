@@ -1,7 +1,120 @@
 import os.path
-
+import shutil
 import zmq
 import colabfold_run
+import subprocess
+
+
+def change_ownership_recursive(directory_path):
+    try:
+        # Run the chown command recursively on the specified directory
+        subprocess.run(["sudo", "chown", "-R", "rhel_user", directory_path], check=True)
+        print(f"Ownership changed successfully for {directory_path}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+
+
+def delete_scratch_directory_in_wsl2() -> bool:
+    """Deletes the scratch directory in WSL2.
+
+    Raises:
+        SubprocessExecutionError: If return code of subprocess is non-zero
+    """
+    tmp_scratch_path: str = "/home/rhel_user/scratch"
+    try:
+        if os.path.exists(tmp_scratch_path):
+            shutil.rmtree(tmp_scratch_path)
+            return True
+    except Exception as e:
+        raise OSError(f"Scratch directory could not be deleted! {e}")
+    return False
+
+
+def delete_original_batch_py_file() -> None:
+    """Deletes the original batch.py file of colabfold.
+
+    Raises:
+        SubprocessExecutionError: If return code of subprocess is non-zero
+    """
+    # Remove original batch.py of Colabfold
+    tmp_batch_py_filepath: str = "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+    try:
+        if os.path.exists(tmp_batch_py_filepath):
+            os.remove(tmp_batch_py_filepath)
+    except Exception as e:
+        raise OSError(f"Original batch.py file could not be deleted! {e}")
+
+
+def copy_modified_batch_py_file() -> None:
+    """Copies the modified batch.py file to the WSL2.
+
+    Raises:
+        SubprocessExecutionError: If return code of subprocess is non-zero
+    """
+    PLUGIN_PATH = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
+    tmp_batch_py_filepath_wsl: str = "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+    tmp_batch_py_filepath_windows: str = f"{PLUGIN_PATH}/pyssa_colabfold/colabfold_sub/batch.py"
+    try:
+        shutil.copy2(tmp_batch_py_filepath_windows, tmp_batch_py_filepath_wsl)
+    except Exception as e:
+        raise OSError(f"Modified batch.py file could not be copied! {e}")
+
+
+def create_fasta_directory_in_wsl2() -> None:
+    """Creates the fasta directory inside the WSL2.
+
+    Raises:
+        IllegalArgumentError: If the argument is None.
+        SubprocessExecutionError: If return code of subprocess is non-zero.
+    """
+    try:
+        os.makedirs("/home/rhel_user/scratch/local_predictions/fasta")
+    except Exception as e:
+        raise OSError(f"Fasta directory could not be created! {e}")
+
+
+def create_pdb_directory_in_wsl2() -> None:
+    """Creates the pdb directory inside the WSL2.
+
+    Raises:
+        IllegalArgumentError: If the argument is None.
+        SubprocessExecutionError: If return code of subprocess is non-zero
+    """
+    try:
+        os.makedirs("/home/rhel_user/scratch/local_predictions/pdb")
+    except Exception as e:
+        raise OSError(f"Pdb directory could not be created! {e}")
+
+
+def copy_fasta_files_from_windows_to_wsl2(the_fasta_path: str) -> None:
+    """Copies fasta files from Windows host to WSL2.
+
+    Raises:
+        IllegalArgumentError: If an argument is None.
+        SubprocessExecutionError: If return code of subprocess is non-zero
+    """
+    try:
+        shutil.copytree(f"{the_fasta_path}", "/home/rhel_user/scratch/local_predictions/fasta/")
+    except Exception as e:
+        raise OSError(f"Fasta files from Windows host could not be copied to WSL2! {e}")
+
+
+def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str):
+    """Prepares the environment needed for the computation inside the WSL2."""
+    str_conversion_1 = the_scratch_fasta_dir_of_windows_host.replace("\\", "/")
+    str_conversion_2 = str_conversion_1.replace(":", "")
+    str_conversion_3 = str_conversion_2.replace("C", "c")
+    the_scratch_fasta_dir_of_windows_host = f"/mnt/{str_conversion_3}"
+    try:
+        change_ownership_recursive("/home/rhel_user/")
+        delete_scratch_directory_in_wsl2()
+        delete_original_batch_py_file()
+        copy_modified_batch_py_file()
+        create_pdb_directory_in_wsl2()
+        change_ownership_recursive("/home/rhel_user/scratch")
+        copy_fasta_files_from_windows_to_wsl2(the_scratch_fasta_dir_of_windows_host)
+    except OSError as e:
+        raise EnvironmentError(e)
 
 
 def read_log_file():
@@ -22,11 +135,16 @@ def start_computation(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templat
         use_templates: true if pdb70 templates should be used for prediction
     """
     try:
-        colabfold_run.run_prediction(fasta_dir, pdb_dir, use_amber, use_templates)
+        prepare_computation_environment(fasta_dir)
+        tmp_fasta_dir: str = "/home/rhel_user/scratch/local_predictions/fasta"
+        tmp_pdb_dir: str = "/home/rhel_user/scratch/local_predictions/pdb"
+        colabfold_run.run_prediction(tmp_fasta_dir, tmp_pdb_dir, use_amber, use_templates)
+    except RuntimeError as e:
+        return {"error": str(e), "log": read_log_file(), "exit_code": 2}
     except Exception as e:
-        return {"error": str(e), "log": read_log_file()}
+        return {"error": str(e), "log": read_log_file(), "exit_code": 1}
     success = "Prediction finished without errors."
-    return {"success": success, "log": read_log_file()}
+    return {"success": success, "log": read_log_file(), "exit_code": 0}
 
 
 if __name__ == "__main__":

@@ -393,6 +393,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # sets threadpool
         self.threadpool = QtCore.QThreadPool()
         # create scratch and cache dir
+        try:
+            shutil.rmtree(constants.SCRATCH_DIR)
+        except Exception as e:
+            constants.PYSSA_LOGGER.warning(f"Scratch path could not be deleted. {e}")
         if not os.path.exists(constants.SCRATCH_DIR):
             os.mkdir(constants.SCRATCH_DIR)
         if not os.path.exists(constants.CACHE_DIR):
@@ -3617,6 +3621,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.block_box_analysis.exec_()
                 self.display_view_page()
                 self._project_watcher.show_valid_options(self.ui)
+        try:
+            shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        except Exception as e:
+            constants.PYSSA_LOGGER.warning(f"Local predictions scratch path could not be deleted. {e}")
 
     def predict_local_monomer(self) -> None:
         """Sets tup the worker for the prediction with the colabfold."""
@@ -5104,75 +5112,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def start_monomer_prediction_analysis(self) -> None:
         """Sets up the worker for the prediction of the proteins."""
-        # # creating tmp directories in scratch folder to organize prediction inputs and outputs
-        # # TODO: is there a more elegant way to do it?
-        # if not os.path.exists(pathlib.Path(f"{self.scratch_path}/local_predictions")):
-        #     os.mkdir(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        # if not os.path.exists(constants.PREDICTION_FASTA_DIR):
-        #     os.mkdir(constants.PREDICTION_FASTA_DIR)
-        # if not os.path.exists(constants.PREDICTION_PDB_DIR):
-        #     os.mkdir(constants.PREDICTION_PDB_DIR)
-        # # creating fasta file
-        # predictions: list[tuple[str, str]] = gui_utils.get_prediction_name_and_seq_from_table(self.ui.table_pred_mono_prot_to_predict)
-        # prot_entries = []
-        # last_header = predictions[0][0]
-        # pred_list = prediction_list.PredictionList("", [])
-        # for tmp_prediction in predictions:
-        #     current_header = tmp_prediction[0]
-        #     if last_header == current_header:
-        #         pred_list.protein_name = tmp_prediction[0]
-        #         pred_list.protein_sequence.append(tmp_prediction[1])
-        #     else:
-        #         prot_entries.append(pred_list)
-        #         pred_list = prediction_list.PredictionList("", [])
-        #         last_header = current_header
-        # for tmp_prot_to_predict in prot_entries:
-        #     tmp_prot_to_predict.write_fasta_file()
-        # user_name = os.getlogin()
-        # fasta_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/fasta"
-        # pdb_path = f"/mnt/c/Users/{user_name}/.pyssa/scratch/local_predictions/pdb"
-        # # running prediction script
-        # if self.prediction_configuration.templates == "none":
-        #     try:
-        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
-        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT,
-        #                         fasta_path, pdb_path])
-        #         subprocess.run(["wsl", "--shutdown"])
-        #     except OSError:
-        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        #         return
-        # else:
-        #     try:
-        #         subprocess.run([constants.POWERSHELL_EXE, constants.CONVERT_DOS_TO_UNIX])
-        #         subprocess.run(["wsl", constants.COLABFOLD_PREDICT_SCRIPT,
-        #                         fasta_path, pdb_path])
-        #         subprocess.run(["wsl", "--shutdown"])
-        #     except OSError:
-        #         shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        #         return
-        # # moving best prediction model
-        # prediction_results: list[str] = os.listdir(pathlib.Path(constants.PREDICTION_PDB_DIR))
-        # for tmp_prediction in predictions:
-        #     for filename in prediction_results:
-        #         check = filename.find(f"{tmp_prediction[0]}_relaxed_rank_1")
-        #         if check != -1:
-        #             src = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{filename}")
-        #             dest = pathlib.Path(
-        #                 f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
-        #             shutil.copy(src, dest)
-        #             os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
-        #                       f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_prediction[0]}.pdb")
-        #             tmp_protein = protein.Protein(tmp_prediction[0], pathlib.Path(self.app_project.get_pdb_path()))
-        #             self.app_project.add_existing_protein(tmp_protein)
-        #             break
-        # shutil.rmtree(pathlib.Path(f"{self.scratch_path}/local_predictions"))
-        # try:
-        #     tmp_first_prediction = predictions[0]
-        #     cmd.load(
-        #         f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{tmp_first_prediction[0]}.pdb")
-        # except pymol.CmdException:
-        #     print("Loading the model failed.")
-        #     return
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
         # self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
@@ -5204,22 +5143,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_pred_local_multimer_page,
         ]
         gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        # constants.PYSSA_LOGGER.info("Begin prediction process.")
-        # self.prediction_thread = QThread()
-        # constants.PYSSA_LOGGER.info("Created a new prediction thread.")
-        # self.prediction_worker = workers.PredictionWorker(self.ui.table_pred_mono_prot_to_predict,
-        #                                                   self.prediction_configuration, self.app_project)
-        # constants.PYSSA_LOGGER.info("Created a new prediction worker.")
-        # self._thread_controller.thread_worker_pairs.get(constants.PREDICTION_TASK).setup_and_run_thread(display_self.block_box_prediction_box2)
-        # gui_elements_to_show = [
-        #     self.ui.btn_prediction_abort,
-        # ]
-        # gui_elements_to_hide = [
-        #     self.ui.btn_use_page,
-        #     self.ui.btn_close_project,
-        # ]
-        # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-        # #self._project_watcher.show_valid_options(self.ui)
+        
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
         self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
@@ -6684,31 +6608,35 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             self.ui.btn_analysis_batch_next_2.setEnabled(False)
 
-    def post_analysis_process(self) -> None:
+    def post_analysis_process(self, an_exit_code: int, an_exit_code_description: str) -> None:
         """Post process after the analysis thread finished."""
         constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
-        self.app_project.serialize_project(self.app_project.get_project_xml_path())
-        constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
-        self.block_box_analysis.destroy(True)
-        basic_boxes.ok(
-            "Structure analysis",
-            "All structure analysis' are done. Go to results to check the new results.",
-            QtWidgets.QMessageBox.Information,
-        )
-        constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+        if an_exit_code == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
+            self.block_box_analysis.destroy(True)
+            basic_boxes.ok(
+                "Distance analysis", "Distance analysis failed because there was an error during the analysis!", QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(f"Distance analysis ended with exit code {an_exit_code}: {an_exit_code_description}")
+        elif an_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_analysis.destroy(True)
+            basic_boxes.ok(
+                "Distance analysis", "Distance analysis failed because of an unknown error!", QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(f"Distance analysis ended with exit code {an_exit_code}: {an_exit_code_description}")
+        elif an_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            self.app_project.serialize_project(self.app_project.get_project_xml_path())
+            constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+            self.block_box_analysis.destroy(True)
+            basic_boxes.ok(
+                "Structure analysis",
+                "All structure analysis' are done. Go to results to check the new results.",
+                QtWidgets.QMessageBox.Information,
+            )
+            constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+
         self._project_watcher.show_valid_options(self.ui)
         self.display_view_page()
         self._init_batch_analysis_page()
-
-    # def thread_func_run_analysis(self, callback):
-    #     worker = workers.AnalysisWorkerPool(
-    #         self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
-    #         self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
-    #     worker.run()
-    #     callback()
-    #
-    # def analysis_callback(self):
-    #     self.post_analysis_process()
 
     def start_process_batch(self) -> None:
         """Sets up the worker for the analysis task."""

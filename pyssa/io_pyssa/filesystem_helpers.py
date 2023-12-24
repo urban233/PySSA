@@ -92,6 +92,7 @@ def filter_directory_for_filetype(path, filetype: str) -> list[str]:
             full path of the directory to filter
         filetype:
             file extension which should get filtered, WITHOUT .
+
     Returns:
         a list with all files which match the given extension
     """
@@ -129,3 +130,8 @@ def create_generic_dictionary_from_directory(path) -> dict:
         tmp_generic_dict.update({f"token_{i}": item})
         i += 1
     return tmp_generic_dict
+
+
+def create_directory(a_directory_path: 'pathlib.Path') -> None:
+    if not os.path.exists(a_directory_path):
+        os.mkdir(a_directory_path)

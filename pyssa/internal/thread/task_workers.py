@@ -369,7 +369,6 @@ class ColabfoldWorker(QObject):
             logger.error("Fasta files were not found.")
             self.finished.emit(exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
             return
-
         except Exception as e:
             logger.error("Unexpected error:", e)
             self.finished.emit(exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
@@ -387,8 +386,22 @@ class ColabfoldWorker(QObject):
         else:
             logger.info("Prediction process finished.")
 
-        structure_prediction_obj.move_best_prediction_models()
-        logger.info("Saved predicted pdb file into XML file.")
+        try:
+            structure_prediction_obj.move_best_prediction_models()
+            logger.info("Saved predicted pdb file into XML file.")
+        except exception.UnableToFindColabfoldModelError:
+            logger.error("Could not move rank 1 model, because it does not exists.")
+            self.finished.emit(exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1])
+            return
+        except FileNotFoundError:
+            logger.error("Could not move rank 1 model, because it does not exists.")
+            self.finished.emit(exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1])
+            return
+        except Exception as e:
+            logger.error("Unexpected error:", e)
+            logger.error("Could not move rank 1 model, because it does not exists.")
+            self.finished.emit(exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+            return
         subprocess.run(["wsl", "--shutdown"])
         logger.info("WSL gets shutdown.")
         self.finished.emit(exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
@@ -425,7 +438,7 @@ class DistanceAnalysisWorker(QObject):
     """
     the signals to use, for the worker
     """
-    finished = pyqtSignal()
+    finished = pyqtSignal(int, str)
     progress = pyqtSignal(int)
     return_value = pyqtSignal(list)
 
@@ -485,48 +498,69 @@ class DistanceAnalysisWorker(QObject):
         self._init_batch_analysis_page = _init_batch_analysis_page
 
     def transform_gui_input_to_practical_data(self) -> list:
-        """This function transforms the input from the gui to a practical data basis which can be used to setup
-        analysis runs.
+        """Transforms the input from the gui to a practical data basis that can be used to set up analysis runs.
 
+        Raises:
+            UnableToTransformDataForAnalysis: If the transformation process failed.
         """
         distance_analysis_runs = []
-        logger.debug(f"list count: {self.list_analysis_overview.count()}")
-        for row_no in range(self.list_analysis_overview.count()):
-            input_transformer = data_transformer.DistanceAnalysisDataTransformer(
-                self.list_analysis_overview.item(row_no).text(),
-                self.app_project,
-                self.app_settings,
-            )
-            logger.debug(f"Memory address of transformer: {input_transformer}")
-            protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
-            logger.debug(f"Memory address of protein_pair_for_analysis: {protein_pair_for_analysis}")
-            new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
-            distance_analysis_runs.append(new_protein_pair)
-            logger.debug(
-                f"Protein selection: {protein_pair_for_analysis.distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
-        logger.debug(f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}")
-        logger.debug(
-            f"Protein 1 from distance_analysis_runs: {distance_analysis_runs[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
+        logger.debug(f"Count of distance analysis runs: {self.list_analysis_overview.count()}")
+
+        try:
+            for row_no in range(self.list_analysis_overview.count()):
+                input_transformer = data_transformer.DistanceAnalysisDataTransformer(
+                    self.list_analysis_overview.item(row_no).text(),
+                    self.app_project,
+                    self.app_settings,
+                )
+                protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
+                new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
+                distance_analysis_runs.append(new_protein_pair)
+            logger.debug(f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}.")
+        except exception.IllegalArgumentError:
+            logger.error("Transformation of data failed because an argument was illegal.")
+            raise exception.UnableToTransformDataForAnalysisError("")
+        except exception.UnableToTransformDataForAnalysisError:
+            logger.error("Transformation of data failed because the transformation process failed.")
+            raise exception.UnableToTransformDataForAnalysisError("")
+        except Exception as e:
+            logger.error(f"Unknown error: {e}")
+            raise exception.UnableToTransformDataForAnalysisError("")
         return distance_analysis_runs
 
     def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':
-        """This function creates protein pairs and distance analysis objects for the analysis runs."""
-        analysis_runs = structure_analysis.Analysis(self.app_project)
-        analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
-        logger.debug(analysis_runs.analysis_list[
-                         0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
-        return analysis_runs
+        """This function creates protein pairs and distance analysis objects for the analysis runs.
 
-    def run_analysis(self) -> None:
-        self.set_up_analysis_runs().run_analysis(self.cb_analysis_images)
+        Raises:
+            UnableToSetupAnalysisError: If the analysis runs setup failed.
+        """
+        try:
+            analysis_runs = structure_analysis.Analysis(self.app_project)
+            analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
+            logger.debug(analysis_runs.analysis_list[
+                             0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
+        except exception.UnableToTransformDataForAnalysisError:
+            logger.error("Setting up the analysis runs failed.")
+            raise exception.UnableToSetupAnalysisError("")
+        except Exception as e:
+            logger.error(f"Unknown error: {e}")
+            raise exception.UnableToSetupAnalysisError("")
+        else:
+            return analysis_runs
 
-    def run(self):
+    def run(self) -> None:
         """This function is a reimplementation of the QRunnable run method."""
         logger.debug(f"Memory address of worker {self}")
-        # do the analysis runs
-        self.run_analysis()
-        # emit finish signal
-        self.finished.emit()
+        try:
+            self.set_up_analysis_runs().run_analysis(self.cb_analysis_images)
+        except exception.UnableToSetupAnalysisError:
+            logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
+            self.finished.emit(exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0], exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1])
+        except Exception as e:
+            logger.error(f"Unknown error: {e}")
+            self.finished.emit(exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+        else:
+            self.finished.emit(exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
 
 
 class PreviewRayImageWorker(QObject):

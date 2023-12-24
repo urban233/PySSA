@@ -30,7 +30,7 @@ from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.analysis_types import distance_analysis
 from pyssa.util import analysis_util
 from pyssa.util import exception
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
@@ -77,9 +77,6 @@ def transform_protein_name_seq_tuple_to_sequence_obj(proteins_to_predict: list[p
     return protein_objects
 
 
-
-
-
 class DistanceAnalysisDataTransformer:
     """This class is used to transform data from the gui to a manageable format."""
 
@@ -115,21 +112,64 @@ class DistanceAnalysisDataTransformer:
 
     # </editor-fold>
 
-    def __init__(self, analysis_run_name: str, app_project: 'project.Project', app_settings: 'settings.Settings'):
-        self.analysis_run_name = analysis_run_name
-        self.current_project = app_project
-        self.settings = app_settings
+    def __init__(self, an_analysis_run_name: str,
+                 the_app_project: 'project.Project',
+                 the_app_settings: 'settings.Settings') -> None:
+        """Constructor.
 
-    def _create_analysis_run_info(self):
-        tmp_analysis_run_infos: list = analysis_util.split_analysis_run_name_in_protein_name_and_chain(self.analysis_run_name)
-        logger.debug(f"tmp_analysis_run_infos: {tmp_analysis_run_infos}")
-        self.analysis_run = analysis_run_info.AnalysisRunInfo(tmp_analysis_run_infos[0], tmp_analysis_run_infos[1],
-                                                              tmp_analysis_run_infos[2], tmp_analysis_run_infos[3],
-                                                              self.analysis_run_name)
+        Args:
+            an_analysis_run_name (str): the name of the analysis run
+            the_app_project: the project of the main window
+            the_app_settings: the settings of the application
 
-    def _create_proteins_for_analysis(self):
+        Raises:
+            IllegalArgumentError: If an argument is unusable.
+        """
+        # <editor-fold desc="Checks">
+        if an_analysis_run_name is None:
+            logger.error(f"The argument 'an_analysis_run_name' is illegal: {an_analysis_run_name}")
+            raise exception.IllegalArgumentError("An argument is illegal.")
+        if the_app_project is None:
+            logger.error(f"The argument 'the_app_project' is illegal: {the_app_project}")
+            raise exception.IllegalArgumentError("An argument is illegal.")
+        if the_app_settings is None:
+            logger.error(f"The argument 'the_app_settings' is illegal: {the_app_settings}")
+            raise exception.IllegalArgumentError("An argument is illegal.")
+
+        # </editor-fold>
+
+        self.analysis_run_name: str = an_analysis_run_name
+        self.current_project: 'project.Project' = the_app_project
+        self.settings: 'settings.Settings' = the_app_settings
+
+    def _create_analysis_run_info(self) -> None:
+        """Create the analysis run info based on the analysis run name.
+
+        Raises:
+            UnableToCreateAnalysisRunInfoError: If the analysis run name is illegal and no analysis run info
+            can be created.
+        """
+        try:
+            tmp_analysis_run_infos: list[Union[str, list[str]]] = analysis_util.split_analysis_run_name_in_protein_name_and_chain(self.analysis_run_name)
+            logger.debug(f"tmp_analysis_run_infos: {tmp_analysis_run_infos}")
+            self.analysis_run = analysis_run_info.AnalysisRunInfo(tmp_analysis_run_infos[0], tmp_analysis_run_infos[1],
+                                                                  tmp_analysis_run_infos[2], tmp_analysis_run_infos[3],
+                                                                  self.analysis_run_name)
+        except exception.IllegalArgumentError:
+            logger.error("Creating the analysis run info failed.")
+            raise exception.UnableToCreateAnalysisRunInfoError("")
+
+    def _create_proteins_for_analysis(self) -> None:
+        """Creates protein objects for distance analysis.
+
+        Raises:
+            ProteinNotFoundInCurrentProjectError: If a protein is not found in the current project.
+        """
         protein_1: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_1())
-        logger.debug(protein_1.chains)
+        if protein_1 is None:
+            logger.error(f"No protein with the given protein name: {self.analysis_run.get_protein_name_1()} found in the current project.")
+            raise exception.ProteinNotFoundInCurrentProjectError("")
+
         if self.analysis_run.are_protein_names_identical():
             protein_2: protein.Protein = protein_1.duplicate_protein()
             protein_1: protein.Protein = protein_2.duplicate_protein()
@@ -137,9 +177,13 @@ class DistanceAnalysisDataTransformer:
             protein_2.set_molecule_object(f"{protein_2.get_molecule_object()}_2")
         else:
             protein_2: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_2())
+            if protein_2 is None:
+                logger.error(f"No protein with the given protein name: {self.analysis_run.get_protein_name_2()} found in the current project.")
+                raise exception.ProteinNotFoundInCurrentProjectError("")
         self.proteins = (protein_1, protein_2)
 
-    def _create_analysis_name(self):
+    def _create_analysis_name(self) -> str:
+        """Creates the name of the analysis."""
         if len(self.proteins[0].chains) != 0:
             analysis_name = f"{self.proteins[0].get_molecule_object()};{self.analysis_run.protein_chains_1}_vs_{self.proteins[1].get_molecule_object()};{self.analysis_run.protein_chains_2}"
             analysis_name = analysis_name.replace(";", "_")
@@ -151,25 +195,66 @@ class DistanceAnalysisDataTransformer:
             analysis_name = f"{self.proteins[0].get_molecule_object()}_vs_{self.proteins[1].get_molecule_object()}"
         return analysis_name
 
-    def _create_protein_pair(self):
-        self.analysis_protein_pair = protein_pair.ProteinPair(self.proteins[0], self.proteins[1])
-        self.analysis_protein_pair.name = self._create_analysis_name()
+    def _create_protein_pair(self) -> None:
+        """Creates the protein pair for the distance analysis.
 
-    def _create_distance_analysis(self):
-        self.analysis_protein_pair.set_distance_analysis(distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings))
-        logger.debug(f"Memory address of distance analysis object: {self.analysis_protein_pair.distance_analysis}")
+        Raises:
+            UnableToCreateProteinPairError: If the creation of the protein pair failed.
+        """
+        try:
+            self.analysis_protein_pair = protein_pair.ProteinPair(self.proteins[0], self.proteins[1])
+            self.analysis_protein_pair.name = self._create_analysis_name()
+        except exception.IllegalArgumentError:
+            logger.error("Creating the protein pair for the analysis failed.")
+            raise exception.UnableToCreateProteinPairError("")
 
-    def _set_selection_for_analysis(self):
+    def _create_distance_analysis(self) -> None:
+        """Creates distance analysis object and sets the object into the protein pair.
+
+        Raises:
+            UnableToCreateDistanceAnalysis: If the creation of the distance analysis or setting the object failed.
+        """
+        try:
+            self.analysis_protein_pair.set_distance_analysis(
+                distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings)
+            )
+        except exception.IllegalArgumentError:
+            logger.error("Creating and setting the distance analysis into the protein pair faild.")
+            raise exception.UnableToCreateDistanceAnalysisObjectError("")
+
+    def _set_selection_for_analysis(self) -> None:
+        """Sets the selection for the analysis into the distance analysis object."""
         prot_1_selection = analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_1,
                                                                                           self.analysis_run.protein_chains_1)
         prot_2_selection = analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_2,
                                                                                           self.analysis_run.protein_chains_2)
         self.analysis_protein_pair.distance_analysis.create_align_selections(prot_1_selection, prot_2_selection)
 
-    def transform_gui_input_to_distance_analysis_object(self):
-        self._create_analysis_run_info()
-        self._create_proteins_for_analysis()
-        self._create_protein_pair()
-        self._create_distance_analysis()
-        self._set_selection_for_analysis()
+    def transform_gui_input_to_distance_analysis_object(self) -> 'protein_pair.ProteinPair':
+        """Transforms the gui data into a distance analysis object.
+
+        Raises:
+            UnableToTransformDataForAnalysisError: If an error occurs during the transformation process.
+        """
+        try:
+            self._create_analysis_run_info()
+            self._create_proteins_for_analysis()
+            self._create_protein_pair()
+            self._create_distance_analysis()
+            self._set_selection_for_analysis()
+        except exception.UnableToCreateAnalysisRunInfoError:
+            logger.error("Unable to create analysis run info for distance analysis.")
+            raise exception.UnableToTransformDataForAnalysisError("")
+        except exception.ProteinNotFoundInCurrentProjectError:
+            logger.error("Unable to find one of the proteins for the distance analysis.")
+            raise exception.UnableToTransformDataForAnalysisError("")
+        except exception.UnableToCreateProteinPairError:
+            logger.error("Unable to create protein pair for distance analysis.")
+            raise exception.UnableToTransformDataForAnalysisError("")
+        except exception.UnableToCreateDistanceAnalysisObjectError:
+            logger.error("Unable to create or set the distance analysis object for distance analysis.")
+            raise exception.UnableToTransformDataForAnalysisError("")
+        except Exception as e:
+            logger.error(f"Unknown error: {e}.")
+            raise exception.UnableToTransformDataForAnalysisError("")
         return self.analysis_protein_pair

@@ -141,27 +141,34 @@ class StructurePrediction:
             raise exception.PredictionEndedWithError("")
 
     def move_best_prediction_models(self) -> None:
-        """This function moves the best prediction model(s) to the project directory."""
+        """This function moves the best prediction model(s) to the project directory.
+
+        Raises:
+            UnableToFindColabfoldModelError: If the prediction rank 1 model could not be found.
+            FileNotFoundError: If the filepath of the rank 1 model could not be found.
+        """
         logger.debug(self.predictions)
         best_prediction_models: list[tuple[prediction_protein_info.PredictionProteinInfo, str]] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
+        logger.debug(f"These are the models created by ColabFold: {best_prediction_models}")
         if len(best_prediction_models) == 0:
-            basic_boxes.ok("Prediction status",
-                           "The prediction process finished but no rank 1 model could be found.",
-                           QtWidgets.QMessageBox.Critical)
-            logger.critical("The prediction process finished but no rank 1 model could be found.")
+            logger.error("The prediction process finished but no rank 1 model could be found.")
+            shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+            raise exception.UnableToFindColabfoldModelError("")
+
+        for tmp_prediction in best_prediction_models:
+            try:
+                src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
+            except FileNotFoundError:
+                logger.error("This path does not exists: %s", path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}").get_filepath())
+                raise FileNotFoundError()
+            dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
+            os.rename(src.get_filepath(), dest)
+            logger.debug(tmp_prediction[0].name)
+            self.project.add_existing_protein(protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)))
+            logger.debug(self.project.proteins)
+        try:
+            shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        except Exception as e:
+            logger.warning("Scratch dir could not be deleted: %s", e)
         else:
-            logger.debug(best_prediction_models)
-            for tmp_prediction in best_prediction_models:
-                logger.debug(tmp_prediction)
-                logger.debug(tmp_prediction[1])
-                try:
-                    src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
-                except FileNotFoundError:
-                    logger.error("This path does not exists: %s", path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}").get_filepath())
-                    return
-                dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
-                os.rename(src.get_filepath(), dest)
-                logger.debug(tmp_prediction[0].name)
-                self.project.add_existing_protein(protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)))
-                logger.debug(self.project.proteins)
-        shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+            logger.info("Scratch dir for prediction process deleted successfully.")

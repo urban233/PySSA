@@ -269,20 +269,20 @@ class Project:
         
         return filesystem_io.XmlDeserializer(a_filepath).deserialize_project(app_settings)
 
-    def search_protein(self, a_protein_name: str) -> "protein.Protein":
+    def search_protein(self, a_protein_name: str) -> 'protein.Protein':
         """Searches the project for a specific protein name.
 
         Args:
             a_protein_name (str): the name of the protein to search
 
         Raises:
-            ValueError: if one of the arguments are None
+            IllegalArgumentError: If the argument is None.
         """
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(a_protein_name):
-            msg = "The given protein name object is None."
+            msg = "The given protein name is None."
             logger.error(msg)
-            raise ValueError(msg)
+            raise exception.IllegalArgumentError(msg)
         
         # </editor-fold>
         

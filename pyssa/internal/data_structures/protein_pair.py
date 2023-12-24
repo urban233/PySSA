@@ -84,25 +84,19 @@ class ProteinPair:
                 model Protein object
 
         Raises:
-            NotADirectoryError: If directory not found.
+            IllegalArgumentError: If an argument is None.
         """
+        if protein_1 is None:
+            logger.error(f"The argument 'protein_1' is illegal: {protein_1}!")
+            raise exception.IllegalArgumentError("An argument is illegal.")
+        if protein_2 is None:
+            logger.error(f"The argument 'protein_2' is illegal: {protein_2}!")
+            raise exception.IllegalArgumentError("An argument is illegal.")
+
         self.protein_1: protein.Protein = protein_1
         self.protein_2: protein.Protein = protein_2
         self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
         self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self.name)
-        # protein_pair_dirname = f"{protein_pairs_dirname}/{self.name}"
-        #
-        # self.protein_pair_subdirs = {
-        #     pyssa_keys.PROTEIN_PAIR_SUBDIR: pathlib.Path(f"{protein_pair_dirname}"),
-        #     pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/session"),
-        #     pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/results"),
-        #     pyssa_keys.PROTEIN_PAIR_OBJECTS_SUBDIR: pathlib.Path(f"{protein_pair_dirname}/.objects"),
-        # }
-        # for key in self.protein_pair_subdirs:
-        #     if not os.path.exists(self.protein_pair_subdirs.get(key)):
-        #         os.mkdir(self.protein_pair_subdirs.get(key))
-        # self.export_dirname = self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_RESULTS_SUBDIR)
-        # self.pymol_session_filepath = path_util.FilePath(f"{self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SESSION_SUBDIR)}/{self.name}_session.pse")
 
     def load_protein_pair_in_pymol(self) -> None:
         """Load a protein pair in PyMOL.
@@ -157,8 +151,19 @@ class ProteinPair:
         """
         self.pymol_session = protein_pair_operations.save_session_of_protein_pair(self.name)
 
-    def set_distance_analysis(self, value):
-        self.distance_analysis = value
+    def set_distance_analysis(self, a_value: 'distance_analysis.DistanceAnalysis') -> None:
+        """Sets the distance analysis object.
+
+        Args:
+            a_value (distance_analysis.DistanceAnalysis): a distance analysis object
+
+        Raises:
+            IllegalArgumentError: If the argument is None.
+        """
+        if a_value is None:
+            logger.error(f"The argument 'a_value' is illegal: {a_value}!")
+            raise exception.IllegalArgumentError("")
+        self.distance_analysis = a_value
 
     def serialize_protein_pair(self, xml_protein_pairs_element: ElementTree.Element):
         """This function serialize the protein pair object."""

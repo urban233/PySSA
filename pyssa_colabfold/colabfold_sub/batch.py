@@ -1263,26 +1263,35 @@ def run(
     feature_dict_callback: Callable[[Any], Any] = None,
     **kwargs,
 ):
-    # check what device is available
-    try:
-        # check if TPU is available
-        import jax.tools.colab_tpu
-        jax.tools.colab_tpu.setup_tpu()
-        logger.info('Running on TPU')
-        DEVICE = "tpu"
+    # # check what device is available
+    # try:
+    #     # check if TPU is available
+    #     import jax.tools.colab_tpu
+    #     jax.tools.colab_tpu.setup_tpu()
+    #     logger.info('Running on TPU')
+    #     DEVICE = "tpu"
+    #     use_gpu_relax = False
+    # except:
+    #     if jax.local_devices()[0].platform == 'cpu':
+    #         logger.info("WARNING: no GPU detected, will be using CPU")
+    #         DEVICE = "cpu"
+    #         use_gpu_relax = False
+    #     else:
+    #         import tensorflow as tf
+    #         tf.get_logger().setLevel(logging.ERROR)
+    #         logger.info('Running on GPU')
+    #         DEVICE = "gpu"
+    #         # disable GPU on tensorflow
+    #         tf.config.set_visible_devices([], 'GPU')
+
+    logger.info(f"Jax local devices platform: {jax.local_devices()[0].platform}")  # fixme: this needs to be tested!!
+    if jax.local_devices()[0].platform != 'cpu':
+        jax.default_device(jax.devices("cpu")[0])
+        DEVICE = "cpu"
         use_gpu_relax = False
-    except:
-        if jax.local_devices()[0].platform == 'cpu':
-            logger.info("WARNING: no GPU detected, will be using CPU")
-            DEVICE = "cpu"
-            use_gpu_relax = False
-        else:
-            import tensorflow as tf
-            tf.get_logger().setLevel(logging.ERROR)
-            logger.info('Running on GPU')
-            DEVICE = "gpu"
-            # disable GPU on tensorflow
-            tf.config.set_visible_devices([], 'GPU')
+        import tensorflow as tf
+        tf.config.set_visible_devices([], 'GPU')
+        logger.info("Prediction process should now run on CPU only.")
 
     from alphafold.notebooks.notebook_utils import get_pae_json
     from colabfold.alphafold.models import load_models_and_params

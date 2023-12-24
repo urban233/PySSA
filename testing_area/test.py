@@ -18,27 +18,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import subprocess
-from pyssa.util import constants
+import os
+import shutil
 
 if __name__ == "__main__":
-    print(constants.SETTINGS_DIR)
-    tmp = constants.SETTINGS_DIR.replace("\\", "/")
-    tmp2 = tmp.replace(":", "")
-    tmp3 = tmp2.replace("C", "c")
-    SETTINGS_DIR_UNIX_NOTATION = f"/mnt/{tmp3}"
-    print(SETTINGS_DIR_UNIX_NOTATION)
-    #subprocess.run(["podman", "machine", "start"])
-    #subprocess.run(["podman", "run", "-itd", "--name", "localcolabfold-container",
-    #                "localhost/localcolabfold-ubuntu2204:1.5.1.2", "exit"])
+    tmp_pyssa_colabfold_path: str = r"\\wsl$\almaColabfold9\home\rhel_user\pyssa_colabfold"
 
-    #subprocess.run(["podman", "stop", "localcolabfold-container"])
-    #subprocess.run(["podman", "container", "start", "localcolabfold-container"])
-    #subprocess.run(["podman", "container", "list"])
-    #subprocess.run(["podman", "container", "exec", "localcolabfold-container",
-    #                "/home/ubuntu_colabfold/localcolabfold/colabfold-conda/bin/colabfold_batch", "--help"])
-    # subprocess.run(["podman", "container", "exec", "busy_hugle",
-    #                 "/home/ubuntu_colabfold/localcolabfold/colabfold-conda/bin/colabfold_batch",
-    #                 "/home/ubuntu_colabfold/test/fasta", "/home/ubuntu_colabfold/test/pdb",
-    #                 "--amber", "--templates"])
-    #subprocess.run(["podman", "machine", "stop"])
+    print(os.listdir(r"\\wsl$\almaColabfold9\home\rhel_user"))
+    if os.path.exists(tmp_pyssa_colabfold_path):
+        shutil.rmtree(tmp_pyssa_colabfold_path)
+    print(os.listdir(r"\\wsl$\almaColabfold9\home\rhel_user"))

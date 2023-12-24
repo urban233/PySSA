@@ -25,3 +25,6 @@ EXIT_CODE_ONE_UNKNOWN_ERROR = (1, "Unknown error occurred.")
 ERROR_WRITING_FASTA_FILES = (99, "Error while writing FASTA file(s).")
 ERROR_FASTA_FILES_NOT_FOUND = (98, "Error not found FASTA file(s)")
 ERROR_PREDICTION_FAILED = (97, "Error while running prediction.")
+ERROR_COLABFOLD_MODEL_NOT_FOUND = (96, "Error not found colabfold rank 1 model.")
+
+ERROR_DISTANCE_ANALYSIS_FAILED = (87, "Error while running the distance analysis.")

@@ -162,3 +162,99 @@ class Wsl2PreparationFailedError(Exception):
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
+
+
+class UnableToCreateAnalysisRunInfoError(Exception):
+    """Class for an unable to create analysis run info exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToCreateProteinPairError(Exception):
+    """Class for an unable to create a protein pair object exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToCreateDistanceAnalysisObjectError(Exception):
+    """Class for an unable to create a distance analysis object exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToTransformDataForAnalysisError(Exception):
+    """Class for an unable to transform data for analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToDeleteDirectoryError(Exception):
+    """Class for an unable to delete a directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToCopyDirectoryError(Exception):
+    """Class for an unable to copy a directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToCreateDirectoryError(Exception):
+    """Class for an unable to create a directory exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToCopyFileError(Exception):
+    """Class for an unable to copy a file exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToSetupAnalysisError(Exception):
+    """Class for an unable to set up analysis exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class UnableToFindColabfoldModelError(Exception):
+    """Class for an unable to find colabfold model exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class DistanceAnalysisFailedError(Exception):
+    """Class for a distance analysis failed exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
+class ProteinNotFoundInCurrentProjectError(Exception):
+    """Class for protein not found in current project exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)

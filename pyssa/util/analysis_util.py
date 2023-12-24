@@ -22,93 +22,85 @@
 """This module contains helper function for the analysis process."""
 import pathlib
 import logging
+from typing import Union
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import selection
-from pyssa.util import protein_util
+from pyssa.util import protein_util, exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def split_analysis_run_name_in_protein_name_and_chain(analysis_run_name):
-    separator_index = analysis_run_name.find("_vs_")
-    prot_1 = analysis_run_name[:separator_index]
+def split_analysis_run_name_in_protein_name_and_chain(an_analysis_run_name: str) -> list[Union[str, list[str]]]:
+    """Splits the analysis run name into protein name and chain.
 
-    if prot_1.find(";") != -1:
-        prot_1_name = prot_1[:prot_1.find(";")]
-        prot_1_chains: list = prot_1[prot_1.find(";") + 1:].split(",")
-    else:
-        prot_1_name = prot_1
-        prot_1_chains: list = []
-    prot_2 = analysis_run_name[separator_index + 4:]
-    if prot_2.find(";") != -1:
-        prot_2_name = prot_2[:prot_2.find(";")]
-        prot_2_chains: list = prot_2[prot_2.find(";") + 1:].split(",")
-    else:
-        prot_2_name = prot_2
-        prot_2_chains: list = []
-    return [prot_1_name, prot_1_chains, prot_2_name, prot_2_chains]
-
-
-def create_protein_analysis_info_objects(analysis_name: str) -> tuple:
-    protein_names_chains = split_analysis_run_name_in_protein_name_and_chain(analysis_name)
-    prot_info_1 = protein_analysis_info.ProteinAnalysisInfo(protein_names_chains[0], protein_names_chains[1], analysis_name)
-    prot_info_2 = protein_analysis_info.ProteinAnalysisInfo(protein_names_chains[2], protein_names_chains[3], analysis_name)
-    return prot_info_1, prot_info_2
-
-
-def get_analysis_runs(self):
-    """This function creates a data format which is used for the analysis
-
+    Raises:
+        IllegalArgumentException: If the argument is None or an empty string or does not contain the _vs_.
     """
-    batch_analysis = []
-    for row_no in range(self.list_analysis_overview.count()):
-        tmp_batch_analysis = self.list_analysis_overview.item(row_no).text()
-        separator_index = tmp_batch_analysis.find("_vs_")
-        prot_1 = tmp_batch_analysis[:separator_index]
+    # <editor-fold desc="Checks">
+    if an_analysis_run_name is None or an_analysis_run_name == "":
+        logger.error(f"The argument 'an_analysis_run_name' is illegal: {an_analysis_run_name}!")
+        raise exception.IllegalArgumentError("An argument is illegal.")
+    if an_analysis_run_name.find("_vs_") == -1:
+        logger.error("The argument 'an_analysis_run_name' is invalid because no '_vs_' is present.")
+        raise exception.IllegalArgumentError("An argument is illegal")
 
-        if prot_1.find(";") != -1:
-            prot_1_name = prot_1[:prot_1.find(";")]
-            prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
-        else:
-            prot_1_name = prot_1
-            prot_1_chains = None
-        prot_2 = tmp_batch_analysis[separator_index + 4:]
-        if prot_2.find(";") != -1:
-            prot_2_name = prot_2[:prot_2.find(";")]
-            prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
-        else:
-            prot_2_name = prot_2
-            prot_2_chains = None
-        tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
-        tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
-        batch_analysis.append((tmp_prot_1, tmp_prot_2))
+    # </editor-fold>
 
-    transformer = data_transformer.DataTransformer(self.app_project, batch_analysis)
-    # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir, name), ...)
-    return transformer.transform_data_for_analysis()
+    tmp_separator_index: int = an_analysis_run_name.find("_vs_")
+
+    tmp_prot_1: str = an_analysis_run_name[:tmp_separator_index]
+    if tmp_prot_1.find(";") != -1:
+        tmp_prot_1_name: str = tmp_prot_1[:tmp_prot_1.find(";")]
+        tmp_prot_1_chains: list[str] = tmp_prot_1[tmp_prot_1.find(";") + 1:].split(",")
+    else:
+        tmp_prot_1_name: str = tmp_prot_1
+        tmp_prot_1_chains: list[str] = []
+
+    tmp_prot_2 = an_analysis_run_name[tmp_separator_index + 4:]
+    if tmp_prot_2.find(";") != -1:
+        tmp_prot_2_name: str = tmp_prot_2[:tmp_prot_2.find(";")]
+        tmp_prot_2_chains: list[str] = tmp_prot_2[tmp_prot_2.find(";") + 1:].split(",")
+    else:
+        tmp_prot_2_name: str = tmp_prot_2
+        tmp_prot_2_chains: list[str] = []
+    return [tmp_prot_1_name, tmp_prot_1_chains, tmp_prot_2_name, tmp_prot_2_chains]
 
 
-def create_selection_strings_for_structure_alignment(protein, selected_chains: list) -> selection.Selection:
-    protein_selection = selection.Selection(protein.get_molecule_object())
+def create_selection_strings_for_structure_alignment(a_protein: 'protein.Protein', selected_chains: list) -> selection.Selection:
+    """Creates the selection string for the structure alignment for a single protein.
+
+    Raises:
+        IllegalArgumentError: If an argument is None.
+    """
+    # <editor-fold desc="Checks">
+    if a_protein is None:
+        logger.error(f"The argument 'a_value' is illegal: {a_protein}!")
+        raise exception.IllegalArgumentError("")
+    if selected_chains is None:
+        logger.error(f"The argument 'a_value' is illegal: {selected_chains}!")
+        raise exception.IllegalArgumentError("")
+
+    # </editor-fold>
+
+    tmp_protein_selection = selection.Selection(a_protein.get_molecule_object())
     if len(selected_chains) != 0:
         protein_chains = []
         for tmp_chain in selected_chains:
             protein_chains.append(tmp_chain)
-        protein_selection.set_selections_from_chains_ca(
-            protein_util.get_chains_from_list_of_chain_names(protein, protein_chains))
+        tmp_protein_selection.set_selections_from_chains_ca(
+            protein_util.get_chains_from_list_of_chain_names(a_protein, protein_chains))
         logger.debug(
-            f"This is one selection created with <create_selection_strings_for_structure_alignment>: {protein_selection.selection_string}")
-        #protein_selection.set_selections_from_chains_ca(protein_chains)
+            f"This is one selection created with <create_selection_strings_for_structure_alignment>: {tmp_protein_selection.selection_string}")
     else:
         all_protein_chains = []
-        for tmp_chain in protein.chains:
+        for tmp_chain in a_protein.chains:
             if tmp_chain.chain_type != "non_protein_chain":
                 all_protein_chains.append(tmp_chain)
-        protein_selection.set_selections_from_chains_ca(all_protein_chains)
-    return protein_selection
+        tmp_protein_selection.set_selections_from_chains_ca(all_protein_chains)
+    return tmp_protein_selection
 
 
 def transform_data_for_analysis(proteins_for_analysis, project) -> list[tuple['protein.Protein', 'protein.Protein', pathlib.Path, str]]:

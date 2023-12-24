@@ -93,9 +93,11 @@ Always check for None:
 ```python
 def copy_fasta_file(a_source_filepath, a_destination_filepath):
     if a_source_filepath is None:
-        raise exceptions.IllegalArgumentError("")
+        logger.error(f"The argument 'a_source_filepath' is illegal: {a_source_filepath}!")
+        raise exceptions.IllegalArgumentError("An argument is illegal.")
     if a_destination_filepath is None:
-        raise exceptions.IllegalArgumentError("")
+        logger.error(f"The argument 'a_destination_filepath' is illegal: {a_destination_filepath}!")
+        raise exceptions.IllegalArgumentError("An argument is illegal.")
 ```
 
 Raise **IllegalArgumentError** if *unmodified* argument 
@@ -106,7 +108,7 @@ import os
 
 def copy_fasta_file(a_source_filepath: pathlib.Path, a_destination_filepath: pathlib.Path):
   ...
-  if not os.path.exists(a_source_filepath): # argument is unmodified
+  if not os.path.exists(a_source_filepath):  # argument is unmodified
     raise FileNotFoundError()
 ```
 
@@ -118,11 +120,24 @@ import os
 
 def copy_fasta_file(a_source_filepath: pathlib.Path, a_destination_filepath: pathlib.Path):
   ...
-  if not os.path.exists(a_source_filepath.parent): # .parent is a modified version of the argument
+  if not os.path.exists(a_source_filepath.parent):  # .parent is a modified version of the argument
     raise exceptions.DirectoryNotFoundError("")
 ```
 
 ### try-except blocks
+Always wrap `cmd` commands of the PyMOL api into a try-except block.
+
+```python
+import pymol
+
+try:
+  cmd.scene(f"{tmp_protein_pair.protein_1.get_molecule_object()}"
+            f"{tmp_protein_pair.protein_2.get_molecule_object()}",
+            action="recall")
+except pymol.CmdException:
+    logger.error("...")
+    raise ...
+```
 
 
 ## Terminology

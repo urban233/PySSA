@@ -91,19 +91,13 @@ class Colabbatch:
             Wsl2PreparationFailedError: If an error occurs during prediction service setup
         """
         try:
-            prediction_util.delete_pyssa_colabfold_directory_in_wsl2()
-            prediction_util.delete_scratch_directory_in_wsl2()
+            if prediction_util.delete_pyssa_colabfold_directory_in_wsl2():
+                logger.info("The pyssa_colabfold directory has been successfully deleted.")
+            else:
+                logger.warning("The pyssa_colabfold directory was not found.")
             prediction_util.copy_pyssa_colabfold_directory_to_wsl2()
-            prediction_util.delete_original_batch_py_file()
-            prediction_util.copy_modified_batch_py_file()
-            prediction_util.create_fasta_directory_in_wsl2(self.fasta_path)
-            prediction_util.create_pdb_directory_in_wsl2(self.pdb_path)
-            prediction_util.copy_fasta_files_from_windows_to_wsl2(self.settings_dir_unix_notation, self.fasta_path)
         except exception.SubprocessExecutionError:
             logger.error("An error occurred during subprocess execution!")
-            raise exception.Wsl2PreparationFailedError("")
-        except exception.IllegalArgumentError:
-            logger.error("An argument is illegal!")
             raise exception.Wsl2PreparationFailedError("")
         except Exception as e:
             logger.error("Unexpected error!", e)
@@ -129,8 +123,8 @@ class Colabbatch:
         socket.connect("tcp://127.0.0.1:7016")
 
         message = {
-            "fasta_dir": self.fasta_path,
-            "pdb_dir": self.pdb_path,
+            "fasta_dir": str(constants.PREDICTION_FASTA_DIR),
+            "pdb_dir": str(constants.PREDICTION_PDB_DIR),
             "use_amber": self.prediction_configuration.amber_force_field,
             "use_templates": self.prediction_configuration.templates,
         }
