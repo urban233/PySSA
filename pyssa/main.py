@@ -2516,13 +2516,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def view_show_options(self) -> None:
         """Controls which gui elements get shown."""
         gui_elements_to_show = [
-            self.ui.btn_view_project_show,
+            #self.ui.btn_view_project_show,
             self.ui.btn_view_project_show_structure,
             self.ui.txtedit_view_sequence,
-            self.ui.label_9,
+            #self.ui.label_9,
             self.ui.label_11,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
+        self.view_sequence()
 
     def view_sequence(self) -> None:
         """Displays the sequence of the selected protein in a text box."""
