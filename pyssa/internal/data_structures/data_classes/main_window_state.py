@@ -18,8 +18,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from pymol import cmd
+#
+from dataclasses import dataclass
+from pyssa.internal.data_structures.data_classes import results_state, image_state
 
 
-if __name__ == "__main__":
-    print(cmd.get_version())
+@dataclass
+class MainWindowState:
+    """Contains the current state of the main window."""
+    results_page: results_state.ResultsState
+    image_page: image_state.ImageState

@@ -18,8 +18,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from pymol import cmd
+#
+from dataclasses import dataclass
 
 
-if __name__ == "__main__":
-    print(cmd.get_version())
+@dataclass
+class ResultsState:
+    """Contains the current state of the results page."""
+    results_name: str
+
+    def __init__(self) -> None:
+        """Empty constructor."""
+        self.results_name = ""

@@ -20,54 +20,66 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main window of the pyssa plugin."""
-from typing import TYPE_CHECKING
-from urllib.request import urlopen
-from urllib.error import URLError
 import logging
 import os
 import shutil
 import subprocess
 import sys
-import threading
 import pathlib
 import csv
 import requests
-
 import numpy as np
 import pymol
+
+from typing import TYPE_CHECKING
 from pymol import cmd
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt  # pylint: disable=no-name-in-module
-from PyQt5 import QtMultimedia
+from PyQt5.QtCore import Qt
+
+from pyssa.gui.ui.dialogs import dialog_settings_global
+from pyssa.gui.ui.dialogs import dialog_add_model
+from pyssa.gui.ui.dialogs import dialog_help
+from pyssa.gui.ui.dialogs import dialog_startup
+from pyssa.gui.ui.dialogs import dialog_distance_plot
+from pyssa.gui.ui.dialogs import dialog_distance_histogram
+from pyssa.gui.ui.dialogs import dialog_about
+from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
+from pyssa.gui.ui.dialogs import dialog_tutorial_videos
+from pyssa.gui.ui.messageboxes import basic_boxes
+from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
+from pyssa.gui.ui.styles import styles
 
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import project_watcher
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures.data_classes import prediction_configuration
+from pyssa.internal.data_structures.data_classes import image_state
 from pyssa.internal.data_structures.data_classes import stage
 from pyssa.internal.data_structures.data_classes import current_session
+from pyssa.internal.data_structures.data_classes import main_window_state
+from pyssa.internal.data_structures.data_classes import results_state
 from pyssa.internal.portal import graphic_operations, pymol_io
-from pyssa.internal.thread import workers, task_workers
-from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
-from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_add_model, dialog_display_docs, dialog_help
-from pyssa.gui.ui.dialogs import dialog_startup
-from pyssa.gui.ui.dialogs import dialog_distance_plot
-from pyssa.gui.ui.dialogs import dialog_distance_histogram
-from pyssa.gui.ui.dialogs import dialog_about
-from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.dialogs.dialog_tutorial_videos import TutorialVideosDialog
-from pyssa.gui.ui.messageboxes import basic_boxes
-from pyssa.gui.ui.styles import styles
+from pyssa.internal.thread import workers
+from pyssa.internal.thread import task_workers
+
 from pyssa.io_pyssa import safeguard, bio_data
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
-from pyssa.util import pyssa_keys, exit_codes
+
+from pyssa.util import pyssa_keys
+from pyssa.util import exit_codes
 from pyssa.util import globals
-from pyssa.util import protein_pair_util, session_util, exception
-from pyssa.util import constants, input_validator, gui_page_management, tools, gui_utils
+from pyssa.util import protein_pair_util
+from pyssa.util import session_util
+from pyssa.util import exception
+from pyssa.util import constants
+from pyssa.util import input_validator
+from pyssa.util import gui_page_management
+from pyssa.util import tools
+from pyssa.util import gui_utils
 
 
 if TYPE_CHECKING:
@@ -75,34 +87,7 @@ if TYPE_CHECKING:
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """This class contains all information about the MainWindow in the application.
-
-    Args:
-        app_project:
-            The active project.Project object which contains all information about the currently loaded project.
-        _project_watcher:
-            The project watcher object to determine the status of the project.
-        scratch_path:
-            The path where all files are stored temporarily before being copied in the project directory.
-        workspace_path:
-            The path where all projects are stored.
-        workspace:
-            A QLabel which holds information from workspace_path.
-        status_bar:
-            The status_bar object for the main window.
-        no_of_selected_chains:
-            Holds the number of selected chains from the single analysis page.
-        plot_dialog:
-            Is a Qt dialog window which is used in combination with pyqtgraph.
-        view_box:
-            The view box object from pyqtgraph, to manipulate the graphs view.
-        local_pred_monomer_management:
-            The object which contains information in form of stages of the page.
-        local_pred_multimer_management:
-            The object which contains information in form of stages of the page.
-        single_analysis_management:
-            The object which contains information in form of stages of the page.
-    """
+    """This class contains all information about the MainWindow in the application."""
 
     def __init__(self) -> None:
         """Constructor."""
@@ -144,13 +129,13 @@ class MainWindow(QtWidgets.QMainWindow):
         if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs"))):
             os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs")))
 
-        constants.PYSSA_LOGGER.info(f"Checked program and logs directory.")
+        constants.PYSSA_LOGGER.info("Checked program and logs directory.")
         # </editor-fold>
 
         # <editor-fold desc="Setup App Settings">
         self.app_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
-            constants.PYSSA_LOGGER.info(f"Settings file not found, open configuration dialog.")
+            constants.PYSSA_LOGGER.info("Settings file not found, open configuration dialog.")
             # Configuration dialog to setup setting file
             dialog = dialog_startup.DialogStartup()
             dialog.exec_()
@@ -158,17 +143,17 @@ class MainWindow(QtWidgets.QMainWindow):
             # checks if the cancel button was pressed
             if dialog_startup.global_var_terminate_app == 1:
                 os.remove(constants.SETTINGS_FULL_FILEPATH)
-                constants.PYSSA_LOGGER.info(f"Configuration dialog closed, and removed new settings file.")
+                constants.PYSSA_LOGGER.info("Configuration dialog closed, and removed new settings file.")
                 sys.exit()
 
             self.app_settings.app_launch = 1
             self.app_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
 
-            constants.PYSSA_LOGGER.info(f"Demo projects are getting downloaded and extracted ...")
+            constants.PYSSA_LOGGER.info("Demo projects are getting downloaded and extracted ...")
             import zipfile
             with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), 'r') as zip_ref:
                 zip_ref.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
-            constants.PYSSA_LOGGER.info(f"Demo projects are downloaded and extracted.\n Import of demo projects started ...")
+            constants.PYSSA_LOGGER.info("Demo projects are downloaded and extracted.\n Import of demo projects started ...")
 
             path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
             tmp_project = project.Project("", dialog_startup.global_var_startup_workspace)
@@ -234,7 +219,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 constants.PYSSA_LOGGER.warning("The connection to the update servers failed. If could not determine if a new version is avaliable.")
                 basic_boxes.ok(
                     "No connection",
-                    f"The connection to the update servers failed. If could not determine if a new version is avaliable. You can start the PySSA now.",
+                    "The connection to the update servers failed. If could not determine if a new version is avaliable. You can start the PySSA now.",
                     QtWidgets.QMessageBox.Information,
                 )
             else:
@@ -272,6 +257,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.current_session = current_session.CurrentSession("", "", "")
         self.is_distance_plot_open = False
         self.distance_plot_dialog = None
+
+        self.main_window_state = main_window_state.MainWindowState(results_state.ResultsState(),
+                                                                   image_state.ImageState())
 
         constants.PYSSA_LOGGER.info("Setup class attributes finished.")
         # </editor-fold>
@@ -1532,14 +1520,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.display_image_analysis_page()
 
     def _init_image_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        self.ui.box_representation.setCurrentIndex(0)
-        self.ui.box_bg_color.setCurrentIndex(0)
-        self.ui.box_renderer.setCurrentIndex(0)
-        self.ui.box_ray_trace_mode.setCurrentIndex(0)
-        self.ui.box_ray_texture.setCurrentIndex(0)
-        self.ui.cb_ray_tracing.setChecked(False)
-        self.ui.cb_transparent_bg.setChecked(False)
+        """Hides everything which is needed."""
         self.ui.label_10.hide()
         self.ui.box_ray_trace_mode.hide()
         self.ui.label_14.hide()
@@ -1613,9 +1594,18 @@ class MainWindow(QtWidgets.QMainWindow):
             i += 1
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
+
+        desired_string: str = self.main_window_state.results_page.results_name
+        # Find the index of the string in the combo box
+        index = self.ui.cb_results_analysis_options.findText(desired_string)
+        # Set the current index of the combo box
+        if index != -1:
+            self.ui.cb_results_analysis_options.setCurrentIndex(index)
+        else:
+            print(f"String '{desired_string}' not found in the combo box.")
+
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 5, "Results")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_results_page)
-        # self.ui.cb_results_analysis_options.setCurrentIndex(current_results_index + 1)
 
     def display_image_page(self) -> None:
         """Displays the image work area."""
@@ -1623,12 +1613,44 @@ class MainWindow(QtWidgets.QMainWindow):
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
         self._init_image_page()
+
+        if self.main_window_state.image_page.transparent_background:
+            self.ui.cb_transparent_bg.setChecked(True)
+        else:
+            self.ui.cb_transparent_bg.setChecked(False)
+        if self.main_window_state.image_page.ray_tracing:
+            self.ui.cb_ray_tracing.setChecked(True)
+        else:
+            self.ui.cb_ray_tracing.setChecked(False)
+        try:
+            self.ui.box_representation.setCurrentIndex(
+                self.ui.box_representation.findText(self.main_window_state.image_page.representation))
+            self.ui.box_bg_color.setCurrentIndex(
+                self.ui.box_bg_color.findText(self.main_window_state.image_page.background_color))
+            self.ui.box_renderer.setCurrentIndex(self.main_window_state.image_page.renderer)
+            self.ui.box_ray_trace_mode.setCurrentIndex(self.main_window_state.image_page.ray_trace_mode)
+            self.ui.box_ray_texture.setCurrentIndex(self.main_window_state.image_page.ray_texture)
+        except IndexError:
+            constants.PYSSA_LOGGER.error("An option is invalid.")
+
         if self.ui.box_renderer.currentText() == "":
             self.ui.cb_ray_tracing.hide()
             self.ui.label_26.hide()
         else:
             self.ui.cb_ray_tracing.show()
             self.ui.label_26.show()
+
+        if self.ui.cb_ray_tracing.isChecked():
+            self.ui.label_10.show()
+            self.ui.box_ray_trace_mode.show()
+            self.ui.label_14.show()
+            self.ui.box_ray_texture.show()
+        else:
+            self.ui.label_10.hide()
+            self.ui.box_ray_trace_mode.hide()
+            self.ui.label_14.hide()
+            self.ui.box_ray_texture.hide()
+
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_image_page)
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 6, "Image")
 
@@ -1859,7 +1881,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.workspace = QtWidgets.QLabel(f"Current Workspace: {self.workspace_path}")
         self._setup_statusbar()
 
-    def open_logs(self):
+    def open_logs(self) -> None:
+        """Opens a file explorer with all log files and can open a log file in the default application."""
         file_dialog = QtWidgets.QFileDialog()
         log_path = str(constants.LOG_PATH)
         file_dialog.setDirectory(log_path)
@@ -1867,7 +1890,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if file_path:
             os.startfile(file_path)
 
-    def clear_all_log_files(self):
+    def clear_all_log_files(self) -> None:
+        """Clears all log files generated under .pyssa/logs."""
         response = basic_boxes.yes_or_no(
             "Clear log files",
             "Are you sure you want to delete all log files?",
@@ -1893,7 +1917,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_tutorial() -> None:
         """Opens the official tutorial pdf file."""
         # os.startfile(constants.TUTORIAL_PATH)
-        tmp_dialog = TutorialVideosDialog()
+        tmp_dialog = dialog_tutorial_videos.TutorialVideosDialog()
         tmp_dialog.exec_()
 
     @staticmethod
@@ -2173,6 +2197,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._project_watcher.show_valid_options(self.ui)
         self.ui.lbl_current_project_name.setText(new_project_name)
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{new_project_name}")
+        self.main_window_state = main_window_state.MainWindowState(results_state.ResultsState(),
+                                                                   image_state.ImageState())
         self.display_view_page()
 
     # </editor-fold>
@@ -2239,7 +2265,8 @@ class MainWindow(QtWidgets.QMainWindow):
         
         constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
 
-    def open_project(self, project_obj: project.Project):
+    def open_project(self, project_obj: project.Project) -> None:
+        """Opens a project."""
         self.app_project = project_obj
         self._project_watcher.current_project = self.app_project
         self.project_scanner.project = self.app_project
@@ -2249,19 +2276,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lbl_current_project_name.setText(self.app_project.get_project_name())
         self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
-
-        # tmp_thread = threading.Thread(target=self.thread_func_open_project, daemon=True)
-        # tmp_thread.start()
-        # tmp_thread.join()
         cmd.reinitialize()
-        #self.ui.list_hotspots_choose_protein.clear()
-        # try:
-        #     self.ui.list_hotspots_choose_protein.currentItem().setText(None)
-        # except AttributeError:
-        #     print("")
         self.ui.btn_manage_session.hide()
         self.display_view_page()
         QtWidgets.QApplication.restoreOverrideCursor()
+        self.main_window_state = main_window_state.MainWindowState(results_state.ResultsState(),
+                                                                   image_state.ImageState())
     
     # </editor-fold>
 
@@ -2425,6 +2445,7 @@ class MainWindow(QtWidgets.QMainWindow):
             constants.PYSSA_LOGGER.info("No protein was deleted.")
 
     def add_existing_protein(self) -> None:
+        """Adds an existing protein structure to the project either by id or from the filesystem."""
         tmp_dialog = dialog_add_model.DialogAddModel()
         tmp_dialog.exec_()
         if len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is True:
@@ -2455,10 +2476,10 @@ class MainWindow(QtWidgets.QMainWindow):
             tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text())
             try:
                 bio_data.convert_xml_string_to_pdb_file(bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()), pathlib.Path(file_path))
-            except:
+            except Exception as e:
                 basic_boxes.ok(
                     "Save protein structure",
-                    "Saving the protein as .pdb file failed!", QtWidgets.QMessageBox.Error,
+                    f"Saving the protein as .pdb file failed with the error: {e}!", QtWidgets.QMessageBox.Error,
                 )
             else:
                 basic_boxes.ok(
@@ -3667,7 +3688,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.abort_prediction()
             self.block_box_prediction.close()
             return
-        else:
+        else:  # noqa: RET505
             print("Unexpected Error.")
             self.block_box_prediction.close()
 
@@ -3757,7 +3778,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def local_pred_multi_validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
         tools.validate_protein_sequence(
-            self.ui.txt_pred_multi_prot_seq, self.ui.lbl_pred_multi_prot_seq_status, self.ui.btn_pred_multi_prot_seq_add,
+            self.ui.txt_pred_multi_prot_seq,
+            self.ui.lbl_pred_multi_prot_seq_status,
+            self.ui.btn_pred_multi_prot_seq_add,
         )
 
     def local_pred_multi_check_if_table_is_empty(self) -> None:
@@ -6640,74 +6663,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def start_process_batch(self) -> None:
         """Sets up the worker for the analysis task."""
-        # batch_analysis = []
-        # for row_no in range(self.ui.list_analysis_batch_overview.count()):
-        #     tmp_batch_analysis = self.ui.list_analysis_batch_overview.item(row_no).text()
-        #     separator_index = tmp_batch_analysis.find("_vs_")
-        #     prot_1 = tmp_batch_analysis[:separator_index]
-        #     if prot_1.find(";") != -1:
-        #         prot_1_name = prot_1[:prot_1.find(";")]
-        #         prot_1_chains = prot_1[prot_1.find(";") + 1:].split(",")
-        #     else:
-        #         prot_1_name = prot_1
-        #         prot_1_chains = None
-        #     prot_2 = tmp_batch_analysis[separator_index + 4:]
-        #     if prot_2.find(";") != -1:
-        #         prot_2_name = prot_2[:prot_2.find(";")]
-        #         prot_2_chains = prot_2[prot_2.find(";") + 1:].split(",")
-        #     else:
-        #         prot_2_name = prot_2
-        #         prot_2_chains = None
-        #
-        #     tmp_prot_1 = protein_analysis_info.ProteinAnalysisInfo(prot_1_name, prot_1_chains, tmp_batch_analysis)
-        #     tmp_prot_2 = protein_analysis_info.ProteinAnalysisInfo(prot_2_name, prot_2_chains, tmp_batch_analysis)
-        #     batch_analysis.append((tmp_prot_1, tmp_prot_2))
-        #
-        # transformer = data_transformer.DataTransformer(self.ui)
-        # # contains analysis-ready data format: list(tuple(prot_1, prot_2, export_dir), ...)
-        # batch_data = transformer.transform_data_for_analysis(self.app_project, batch_analysis)
-        #
-        # for analysis_data in batch_data:
-        #     if not os.path.exists(analysis_data[2]):
-        #         os.mkdir(analysis_data[2])
-        #     else:
-        #         basic_boxes.ok("Single Analysis", f"The structure analysis: {analysis_data[3]} already exists!", QtWidgets.QMessageBox.Critical)
-        #         self._init_batch_analysis_page()
-        #         return
-        #
-        #     cmd.reinitialize()
-        #     structure_analysis_obj = structure_analysis.StructureAnalysis(
-        #         reference_protein=[analysis_data[0]], model_proteins=[analysis_data[1]],
-        #         ref_chains=analysis_data[0].chains, model_chains=analysis_data[1].chains,
-        #         export_dir=analysis_data[2], cycles=self.app_settings.get_cycles(),
-        #         cutoff=self.app_settings.get_cutoff(),
-        #     )
-        #     if self.ui.cb_analysis_images.isChecked():
-        #         structure_analysis_obj.response_create_images = True
-        #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.ref_chains,
-        #                                                          structure_analysis_obj.reference_protein)
-        #     structure_analysis_obj.create_selection_for_proteins(structure_analysis_obj.model_chains,
-        #                                                          structure_analysis_obj.model_proteins)
-        #     protein_pairs = structure_analysis_obj.create_protein_pairs()
-        #     structure_analysis_obj.do_analysis_in_pymol(protein_pairs, self.status_bar)
-        #     protein_pairs[0].name = analysis_data[3]
-        #     protein_pairs[0].cutoff = self.app_settings.cutoff
-        #     self.app_project.add_protein_pair(protein_pairs[0])
-        #     protein_pairs[0].serialize_protein_pair(self.app_project.get_objects_protein_pairs_path())
-        #     self.app_project.serialize_project(self.app_project.folder_paths["project"], "project")
         constants.PYSSA_LOGGER.info("Begin analysis process.")
-        # analysis_thread = threading.Thread(target=self.thread_func_run_analysis, args=(self.analysis_callback,))
-        # analysis_thread.start()
-        # self.block_box_analysis.exec_()
-        # self.worker_analysis = workers.AnalysisWorkerPool(
-        #    self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
-        #    self.status_bar, self.app_project, self.app_settings, self._init_batch_analysis_page)
         constants.PYSSA_LOGGER.info("Thread started for analysis process.")
-        # self.threadpool.start(self.worker_analysis)
 
         # <editor-fold desc="Worker setup">
-        # TODO: test code below
-        # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.DistanceAnalysisWorker(
             self.ui.list_analysis_batch_overview,
@@ -6720,121 +6679,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_use_page)
         self.tmp_worker.finished.connect(self.post_analysis_process)
         self.tmp_thread.start()
-        # --End: worker setup
 
         # </editor-fold>
 
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
-        # gui_elements_to_show = [
-        #     self.ui.btn_analysis_abort,
-        # ]
-        # gui_elements_to_hide = [
-        #     self.ui.btn_save_project,
-        #     self.ui.btn_edit_page,
-        #     self.ui.btn_view_page,
-        #     self.ui.btn_use_page,
-        #     self.ui.btn_export_project,
-        #     self.ui.btn_close_project,
-        #     self.ui.btn_batch_analysis_page,
-        #     self.ui.btn_image_analysis_page,
-        #     self.ui.btn_results_page,
-        #     self.ui.lbl_handle_pymol_session,
-        #     self.ui.btn_image_page,
-        #     self.ui.btn_hotspots_page,
-        # ]
-        # gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
-
-        # constants.PYSSA_LOGGER.info("Begin analysis process.")
-        # analysis_thread = QThread()
-        # constants.PYSSA_LOGGER.info("Created a new analysis thread.")
-        # analysis_worker = workers.AnalysisWorker(self.ui.list_analysis_batch_overview,
-        #                                               self.ui.cb_analysis_images,
-        #                                               self.status_bar,
-        #                                               self.app_project,
-        #                                               self.app_settings,
-        #                                               self._init_batch_analysis_page)
-        # constants.PYSSA_LOGGER.info("Created a new analysis worker.")
-        # try:
-        #     self._thread_controller.create_and_add_new_thread_worker_pair(constants.ANALYSIS_TASK,
-        #                                                                   analysis_thread,
-        #                                                                   analysis_worker)
-        # except ValueError:
-        #     constants.PYSSA_LOGGER.info("A valid thread_worker_pair already exists.")
-        # for key in self._thread_controller.thread_worker_pairs:
-        #     constants.PYSSA_LOGGER.debug(f"The main task {key} is currently controlled by the _thread_controller.")
-
-        # self._thread_controller.thread_worker_pairs.get(constants.ANALYSIS_TASK).worker.update_attributes(
-        #     self.ui.list_analysis_batch_overview, self.ui.cb_analysis_images,
-        #     self.status_bar, self.app_project, self.app_settings,
-        # )
-        # self._thread_controller.thread_worker_pairs.get(constants.ANALYSIS_TASK).setup_and_run_thread(self.post_analysis_process)
         self.block_box_analysis.exec_()
         self.display_view_page()
-
-        # self.ui.btn_analysis_start.setEnabled(False)
-        # self.status_bar.showMessage("Protein structure analysis started ...")
-        # cmd.reinitialize()
-        # data_transformer_analysis = data_transformer.DataTransformer(self.ui)
-        # transformed_analysis_data = data_transformer_analysis.transform_to_analysis(self.app_project)
-        #
-
-        #
-        #
-        # self.status_bar.showMessage("Checking user input ...")
-        # job = job_utils.Job(self.ui.txt_batch_job_name.text(), self.workspace_path)
-        # raw_models_input = self.ui.txt_batch_load_model.toPlainText()
-        # models = raw_models_input.split("\n")
-        #
-        #
-        #
-        # # runs analysis with project creation
-        # for model in models:
-        #     cmd.reinitialize()
-        #     model_file_info = Qt.QtCore.QFileInfo(model)
-        #     MODEL_OBJ_NAME = model_file_info.baseName()
-        #     MODEL_DIR = model_file_info.canonicalPath()
-        #
-        #     project = project.Project(f"project_of_{MODEL_OBJ_NAME}",
-        #                                           f"{self.workspace_path}/{job.get_job_name()}")
-        #     project.create_project_tree()
-        #     project.set_job_name(job.get_job_name())
-        #     project.set_pdb_file(self.ui.txt_batch_load_reference.text())
-        #     project.set_pdb_id(self.ui.txt_batch_load_reference.text())
-        #     project.set_pdb_model(MODEL_OBJ_NAME)
-        #     project.set_ref_chains(self.ui.txt_batch_chain_ref.text())
-        #     project.set_model_chains((self.ui.txt_batch_chain_model.text()))
-        #     project.create_xml_file()
-        #     job.add_project_to_job(project)
-        #
-        #     # gets reference filename and filepath
-        #     if len(self.ui.txt_batch_load_reference.text()) == 4:
-        #         tmp_protein = core.Protein(self.ui.txt_batch_load_reference.text(),
-        #                                    export_data_dir=project.get_pdb_path())
-        #         tmp_protein.clean_pdb_file()
-        #         REFERENCE_OBJ_NAME = self.ui.txt_batch_load_reference.text()
-        #         REFERENCE_DIR = project.get_pdb_path()
-        #     else:
-        #         ref_file_info = Qt.QtCore.QFileInfo(self.ui.txt_batch_load_reference.text())
-        #         REFERENCE_OBJ_NAME = ref_file_info.baseName()
-        #         REFERENCE_DIR = ref_file_info.canonicalPath()
-        #     reference_protein: list[core.Protein] = [core.Protein(REFERENCE_OBJ_NAME, REFERENCE_DIR)]
-        #     model_proteins: list[core.Protein] = [core.Protein(MODEL_OBJ_NAME, MODEL_DIR)]
-        #     export_dir = project.get_results_path()
-        #     structure_analysis = structure_analysis.StructureAnalysis(
-        #         reference_protein, model_proteins,
-        #         project.get_ref_chains().split(","), project.get_model_chains().split(","),
-        #         export_dir, cycles=global_variables.global_var_settings_obj.get_cycles(),
-        #         cutoff=global_variables.global_var_settings_obj.get_cutoff(),
-        #     )
-        #     structure_analysis.create_selection_for_proteins(structure_analysis.ref_chains,
-        #                                                      structure_analysis.reference_protein)
-        #     structure_analysis.create_selection_for_proteins(structure_analysis.model_chains,
-        #                                                      structure_analysis.model_proteins)
-        #     structure_analysis.do_analysis_in_pymol(structure_analysis.create_protein_pairs(),
-        #                                             self.status_bar, self.ui.progress_bar_batch)
-        # job.create_xml_file()
 
     # </editor-fold>
 
@@ -6981,19 +6833,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 show_specific_elements=[self.ui.lbl_results_analysis_options, self.ui.cb_results_analysis_options],
             )
 
-    @staticmethod
-    def post_load_results() -> None:
-        """Prints that the results were loaded."""
-        print("Results were loaded.")
-
     def pre_load_results(self) -> None:
         """Sets up the worker for the result loading process."""
         if self.is_distance_plot_open:
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
-        shutil.rmtree(constants.CACHE_DIR)
-        os.mkdir(constants.CACHE_DIR)
-        os.mkdir(constants.CACHE_IMAGES)
         self.results_name = self.ui.cb_results_analysis_options.currentText()
         if self.results_name == "":
             self.show_analysis_results_options()
@@ -7011,8 +6855,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # </editor-fold>
 
-        # distance_data: dict[str, np.ndarray] = tmp_protein_pair.distance_analysis.analysis_results.distance_data
-        # distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
         self.ui.list_results_interest_regions.clear()
         self.status_bar.showMessage(f"Loading results of {self.results_name} ...")
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -7139,6 +6981,7 @@ class MainWindow(QtWidgets.QMainWindow):
                   action="recall")
         QtWidgets.QApplication.restoreOverrideCursor()
         self.status_bar.showMessage(f"Current workspace: {str(self.workspace_path)}")
+        self.main_window_state.results_page.results_name = self.ui.cb_results_analysis_options.currentText()
 
     def color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
@@ -7491,16 +7334,16 @@ class MainWindow(QtWidgets.QMainWindow):
         
     def choose_manage_color_selected_protein(self) -> None:
         """Sets the protein color."""
-        input = self.ui.box_manage_choose_protein.currentText()
-        tmp_protein = self.app_project.search_protein(input)
+        tmp_input = self.ui.box_manage_choose_protein.currentText()
+        tmp_protein = self.app_project.search_protein(tmp_input)
         tmp_protein.color_protein_in_pymol(
             self.ui.box_manage_choose_color.currentText(), f"/{tmp_protein.get_molecule_object()}",
         )
 
     def choose_manage_representation(self) -> None:
         """Sets the representation."""
-        input = self.ui.box_manage_choose_protein.currentText()
-        tmp_protein = self.app_project.search_protein(input)
+        tmp_input = self.ui.box_manage_choose_protein.currentText()
+        tmp_protein = self.app_project.search_protein(tmp_input)
         tmp_selection = f"/{tmp_protein.get_molecule_object()}"
         if self.ui.box_manage_choose_representation.currentIndex() == 0:
             print("Please select a representation.")
@@ -7526,14 +7369,16 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             print("Missing implementation!")
     
-    def show_disulfid_bonds_as_sticks(self):
+    def show_disulfid_bonds_as_sticks(self) -> None:
+        """Shows all disulfid bonds within the pymol session."""
         cmd.select(name="disulfides", selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
         cmd.color(color="atomic", selection="disulfides and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
         cmd.show("sticks", "disulfides")
         cmd.hide("sticks", "elem H")
     
-    def hide_disulfid_bonds_as_sticks(self):
+    def hide_disulfid_bonds_as_sticks(self) -> None:
+        """Hides all disulfid bonds within the pymol session."""
         cmd.select(name="disulfides",
                    selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
         cmd.hide("sticks", "disulfides")
@@ -7544,26 +7389,30 @@ class MainWindow(QtWidgets.QMainWindow):
     def show_representation(self) -> None:
         """Sets the representation."""
         if self.ui.box_representation.currentIndex() == 0:
-            print("Please select a representation.")
+            self.main_window_state.image_page.representation = ""
             self.status_bar.showMessage("Please select a representation.")
         elif self.ui.box_representation.currentIndex() == 1:
             cmd.show("cartoon", "all")
             cmd.hide("ribbon", "all")
+            self.main_window_state.image_page.representation = "cartoon"
         elif self.ui.box_representation.currentIndex() == 2:
             cmd.show("ribbon", "all")
             cmd.hide("cartoon", "all")
+            self.main_window_state.image_page.representation = "ribbon"
         else:
             print("Missing implementation!")
 
     def choose_bg_color(self) -> None:
         """Sets the background color."""
         if self.ui.box_bg_color.currentIndex() == 0:
-            print("Please select a background color.")
+            self.main_window_state.image_page.background_color = ""
             self.status_bar.showMessage("Please select a background color.")
         elif self.ui.box_bg_color.currentIndex() == 1:
             cmd.bg_color("black")
+            self.main_window_state.image_page.background_color = "black"
         elif self.ui.box_bg_color.currentIndex() == 2:
             cmd.bg_color("white")
+            self.main_window_state.image_page.background_color = "white"
         else:
             print("Missing implementation!")
 
@@ -7583,11 +7432,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.label_26.show()
         else:
             print("Missing implementation!")
+        self.main_window_state.image_page.renderer = self.ui.box_renderer.currentIndex()
 
     def choose_ray_trace_mode(self) -> None:
         """Sets the ray-trace mode."""
         if self.ui.box_ray_trace_mode.currentIndex() == 0:
-            print("Please select a Ray-Trace-Mode.")
             self.status_bar.showMessage("Please select a Ray-Trace-Mode.")
         elif self.ui.box_ray_trace_mode.currentIndex() == 1:
             cmd.set("ray_trace_mode", 0)
@@ -7599,6 +7448,7 @@ class MainWindow(QtWidgets.QMainWindow):
             cmd.set("ray_trace_mode", 3)
         else:
             print("Missing implementation!")
+        self.main_window_state.image_page.ray_trace_mode = self.ui.box_ray_trace_mode.currentIndex()
 
     def choose_ray_texture(self) -> None:
         """Sets the ray texture."""
@@ -7619,9 +7469,11 @@ class MainWindow(QtWidgets.QMainWindow):
             cmd.set("ray_texture", 5)
         else:
             print("Missing implementation!")
-    
+        self.main_window_state.image_page.ray_texture = self.ui.box_ray_texture.currentIndex()
+
     def decide_ray_tracing(self) -> None:
         """Sets the ray-tracing options."""
+        print(self.ui.cb_ray_tracing.isChecked())
         if self.ui.cb_ray_tracing.isChecked():
             self.ui.cb_transparent_bg.hide()
             self.ui.label_23.hide()
@@ -7639,6 +7491,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.box_ray_trace_mode.hide()
             self.ui.label_14.hide()
             self.ui.box_ray_texture.hide()
+        self.main_window_state.image_page.ray_tracing = self.ui.cb_ray_tracing.isChecked()
     
     def decide_transparent_bg(self) -> None:
         """Sets the transparent background."""
@@ -7646,6 +7499,7 @@ class MainWindow(QtWidgets.QMainWindow):
             cmd.set("opaque_background", "off")
         else:
             cmd.set("opaque_background", "on")
+        self.main_window_state.image_page.transparent_background = self.ui.cb_transparent_bg.isChecked()
 
     @staticmethod
     def update_scene() -> None:
@@ -7778,16 +7632,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def open_protein(self) -> None:
         """Loads the selected protein's pymol session."""
         try:
-            test = self.ui.list_hotspots_choose_protein.currentItem().text()
+            self.ui.list_hotspots_choose_protein.currentItem().text()
         except AttributeError:
             return
         if self.ui.list_hotspots_choose_protein.currentItem().text() != "":
             tools.ask_to_save_pymol_session(self.app_project, self.current_session)
 
-            input = self.ui.list_hotspots_choose_protein.currentItem().text()
-            if input.find("_vs_") == -1:
+            tmp_input = self.ui.list_hotspots_choose_protein.currentItem().text()
+            if tmp_input.find("_vs_") == -1:
                 # one protein is selected
-                tmp_protein = self.app_project.search_protein(input.replace(".pdb", ""))
+                tmp_protein = self.app_project.search_protein(tmp_input.replace(".pdb", ""))
                 tmp_protein.load_protein_pymol_session()
                 self.current_session.name = tmp_protein.get_molecule_object()
                 self.current_session.type = "protein"
@@ -7810,7 +7664,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 gui_utils.show_gui_elements(gui_elements_to_show)
             else:
                 # protein pair is selected
-                tmp_protein_pair = self.app_project.search_protein_pair(input)
+                tmp_protein_pair = self.app_project.search_protein_pair(tmp_input)
                 gui_elements_to_show = [
                     self.ui.lbl_hotspots_resi_show,
                     self.ui.btn_hotspots_resi_show,

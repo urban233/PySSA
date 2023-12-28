@@ -18,8 +18,27 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from pymol import cmd
+#
+from dataclasses import dataclass
 
 
-if __name__ == "__main__":
-    print(cmd.get_version())
+@dataclass
+class ImageState:
+    """Contains the current state of the image page."""
+    representation: str
+    background_color: str
+    renderer: int
+    transparent_background: bool
+    ray_tracing: bool
+    ray_trace_mode: int
+    ray_texture: int
+
+    def __init__(self) -> None:
+        """Empty constructor."""
+        self.representation: str = ""
+        self.background_color: str = ""
+        self.renderer: int = 0
+        self.transparent_background: bool = False
+        self.ray_tracing: bool = False
+        self.ray_trace_mode: int = 0
+        self.ray_texture: int = 0

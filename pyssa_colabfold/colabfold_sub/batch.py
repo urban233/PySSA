@@ -1292,6 +1292,9 @@ def run(
         import tensorflow as tf
         tf.config.set_visible_devices([], 'GPU')
         logger.info("Prediction process should now run on CPU only.")
+    else:
+        logger.info("Prediction process runs on CPU by default.")
+
 
     from alphafold.notebooks.notebook_utils import get_pae_json
     from colabfold.alphafold.models import load_models_and_params

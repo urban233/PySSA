@@ -21,7 +21,7 @@
 #
 import copy
 import numpy as np
-from PyQt5.QtGui import QIcon
+from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
 

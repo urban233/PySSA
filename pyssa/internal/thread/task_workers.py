@@ -132,6 +132,10 @@ class LoadResultsWorker(QObject):
         self.app_project_xml_filepath = app_project_xml_filepath
 
     def run(self):
+        shutil.rmtree(constants.CACHE_DIR)
+        os.mkdir(constants.CACHE_DIR)
+        os.mkdir(constants.CACHE_IMAGES)
+
         filesystem_io.XmlDeserializer(self.app_project_xml_filepath).deserialize_analysis_images(
             self.protein_pair_of_results.name, self.protein_pair_of_results.distance_analysis.analysis_results)
         if len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0 and len(
