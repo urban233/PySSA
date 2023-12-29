@@ -627,7 +627,8 @@ def clean_scratch_folder():
     os.mkdir(constants.SCRATCH_DIR)
 
 
-def ask_to_save_pymol_session(app_project: 'project.Project', current_session: current_session.CurrentSession):
+def ask_to_save_pymol_session(app_project: 'project.Project', current_session: current_session.CurrentSession,
+                              app_settings: 'settings.Settings'):
     """This function asks to save the current pymol session.
 
     Args:
@@ -635,11 +636,12 @@ def ask_to_save_pymol_session(app_project: 'project.Project', current_session: c
         current_session: the current pymol session, as data class object
 
     """
-    session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
-                                        QMessageBox.Information)
-    if session_msg is True:
-        current_session.session = pymol_io.convert_pymol_session_to_base64_string(current_session.name)
-        app_project.save_pymol_session(current_session)
+    if app_settings.ask_save_pymol_session == 1:
+        session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
+                                            QMessageBox.Information)
+        if session_msg is True:
+            current_session.session = pymol_io.convert_pymol_session_to_base64_string(current_session.name)
+            app_project.save_pymol_session(current_session)
 
 
 def check_first_seq_no(tmp_protein):

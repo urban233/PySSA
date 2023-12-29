@@ -83,7 +83,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
 
         # </editor-fold>
 
-        self.ui.label.hide()
+        #self.ui.label.hide()
         self.ui.lbl_color_vision_mode.hide()
         self.ui.cb_color_vision_mode.hide()
 
@@ -174,6 +174,10 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.settings.set_cycles(str(self.ui.spb_cycles.value()))
         self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))
         self.settings.color_vision_mode = self.ui.cb_color_vision_mode.currentText()
+        if self.ui.cb_ask_to_save_pymol_session.isChecked():
+            self.settings.ask_save_pymol_session = 1
+        else:
+            self.settings.ask_save_pymol_session = 0
         self.settings.serialize_settings()
         logging.info("Settings were successfully saved.")
         self.close()

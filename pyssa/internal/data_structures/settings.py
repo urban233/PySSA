@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for handling everything related to the settings.xml"""
+"""Module for handling everything related to the settings.xml."""
 import json
 import os
 import pathlib
@@ -29,6 +29,7 @@ from pyssa.util import constants
 
 class Settings:
     """This class is for the handling of the settings.xml file.
+
     Var:
         workspace_path:
             path of the workspace
@@ -42,7 +43,7 @@ class Settings:
             cutoff of the structure alignment
     """
     def __init__(self, dir_settings: str, filename: str) -> None:
-        """Constructor
+        """Constructor.
 
         Args:
             dir_settings:
@@ -66,11 +67,10 @@ class Settings:
         self.wsl_username: str = "no_user_name"
         self.wsl_install: int = 0
         self.color_vision_mode: str = "normal"
+        self.ask_save_pymol_session: int = 0
 
     def serialize_settings(self) -> None:
-        """This function serialize the protein object
-
-        """
+        """This function serialize the protein object."""
         if not os.path.exists(constants.SETTINGS_DIR):
             os.mkdir(constants.SETTINGS_DIR)
         settings_dict = self.__dict__
@@ -85,8 +85,7 @@ class Settings:
 
     @staticmethod
     def deserialize_settings():
-        """This function constructs the protein object from
-        the json file
+        """This function constructs the protein object from the json file.
 
         Returns:
             a complete project object deserialized from a json file
@@ -135,10 +134,14 @@ class Settings:
             tmp_settings.color_vision_mode = settings_dict.get("color_vision_mode")
         else:
             raise ValueError
+        if settings_dict.get("ask_save_pymol_session") == 0 or settings_dict.get("ask_save_pymol_session") == 1:
+            tmp_settings.ask_save_pymol_session = settings_dict.get("ask_save_pymol_session")
+        else:
+            raise ValueError
         return tmp_settings
 
     def get_workspace_path(self) -> pathlib.Path:
-        """This function gets the value of the workspace_path variable
+        """This function gets the value of the workspace_path variable.
 
         Returns (str):
             workspace_path
@@ -146,13 +149,13 @@ class Settings:
         return self.workspace_path
 
     def set_workspace_path(self, value) -> None:
-        """This function gets the value of the workspace_path variable
+        """This function gets the value of the workspace_path variable.
 
         """
         self.workspace_path = value
 
     def get_prediction_path(self) -> pathlib.Path:
-        """This function gets the value of the prediction_path variable
+        """This function gets the value of the prediction_path variable.
 
         Returns (str):
             prediction_path
@@ -160,13 +163,13 @@ class Settings:
         return self.prediction_path
 
     def set_prediction_path(self, value) -> None:
-        """This function gets the value of the prediction_path variable
+        """This function gets the value of the prediction_path variable.
 
         """
         self.prediction_path = value
 
     def get_cycles(self) -> int:
-        """This function gets the value of the cycles variable
+        """This function gets the value of the cycles variable.
 
         Returns (int):
             cycles
@@ -174,13 +177,13 @@ class Settings:
         return int(self.cycles)
 
     def set_cycles(self, value) -> None:
-        """This function gets the value of the cycles variable
+        """This function gets the value of the cycles variable.
 
         """
         self.cycles = value
 
     def get_cutoff(self) -> float:
-        """This function gets the value of the cutoff variable
+        """This function gets the value of the cutoff variable.
 
         Returns (float):
             cutoff
@@ -188,27 +191,27 @@ class Settings:
         return float(self.cutoff)
 
     def set_cutoff(self, value) -> None:
-        """This function gets the value of the cutoff variable
+        """This function gets the value of the cutoff variable.
 
         """
         self.cutoff = value
 
     def get_app_launch(self) -> int:
-        """This function gets the value of the app_launch variable
+        """This function gets the value of the app_launch variable.
 
-       Returns (int):
+        Returns (int):
            app_launch
-       """
+        """
         return int(self.app_launch)
 
     def set_app_launch(self, value) -> None:
-        """This function gets the value of the app_launch variable
+        """This function gets the value of the app_launch variable.
 
         """
         self.app_launch = value
 
     def restore_settings(self, dir_settings, filename):
-        """This function resets the settings to the default values
+        """This function resets the settings to the default values.
 
         """
         self.workspace_path = constants.DEFAULT_WORKSPACE_PATH

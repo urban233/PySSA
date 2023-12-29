@@ -47,7 +47,7 @@ from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.dialogs import dialog_tutorial_videos
-from pyssa.gui.ui.dialogs import dialog_process_progress
+from pyssa.gui.ui.dialogs import dialog_rename_protein
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.ui.styles import styles
@@ -184,9 +184,9 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             self.app_settings = self.app_settings.deserialize_settings()
         except ValueError:
-            constants.PYSSA_LOGGER.warning("The settings file is damaged.")
+            constants.PYSSA_LOGGER.warning("The settings file is damaged or outdated.")
             gui_utils.error_dialog_settings(
-                "The settings file is damaged. You have to restore the settings to use PySSA!", "", self.app_settings,
+                "The settings file is damaged or outdated. You have to restore the settings to use PySSA!", "", self.app_settings,
             )
         if globals.g_os == "win32":
             constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
@@ -1025,6 +1025,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_edit_project_delete.clicked.connect(self.delete_protein)
         self.ui.btn_edit_existing_protein_struct.clicked.connect(self.add_existing_protein)
         self.ui.btn_edit_project_save.clicked.connect(self.save_selected_protein_structure_as_pdb_file)
+        self.ui.btn_edit_protein_rename.clicked.connect(self.rename_selected_protein_structure)
         # </editor-fold>
 
         # <editor-fold desc="View project page">
@@ -1456,6 +1457,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_edit_clean_update_prot,
             self.ui.label_12,
             self.ui.btn_edit_project_delete,
+            self.ui.label_15,
+            self.ui.btn_edit_protein_rename,
             self.ui.btn_edit_project_save,
             self.ui.label_13,
         ]
@@ -1722,7 +1725,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._init_edit_page()
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 13, "Edit proteins of current project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_edit_page)
-        if len(self.ui.list_edit_project_proteins) > 2:
+        if len(self.ui.list_edit_project_proteins) >= 2:
             self.ui.btn_edit_existing_protein_struct.hide()
             self.ui.lbl_edit_existing_protein_struct.hide()
         else:
@@ -1740,7 +1743,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.start_worker_thread(task_workers.LoadUsePageWorker(self.workspace_path, self.app_project.convert_list_of_proteins_to_list_of_protein_infos()),
                                  self.post_display_use_page)
         self._init_use_page()
-        #gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
 
     def post_display_use_page(self, return_value) -> None:
         """Displays the use project page, after cpu intense task (post thread method).
@@ -2319,7 +2321,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Saves the project.xml."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_save_project)
-        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session, self.app_settings)
         self.app_project.serialize_project(self.app_project.get_project_xml_path())
         QtWidgets.QApplication.restoreOverrideCursor()
         basic_boxes.ok("Save Project", "The project was successfully saved.", QtWidgets.QMessageBox.Information)
@@ -2333,7 +2335,7 @@ class MainWindow(QtWidgets.QMainWindow):
             protein_name = self.ui.list_edit_project_proteins.currentItem().text()
         except AttributeError:
             return
-        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session, self.app_settings)
         cmd.reinitialize()
         self.ui.btn_manage_session.show()
         tmp_protein = self.app_project.search_protein(protein_name.replace(".pdb", ""))
@@ -2370,6 +2372,8 @@ class MainWindow(QtWidgets.QMainWindow):
             gui_utils.show_gui_elements(gui_elements_to_show)
         self.ui.btn_edit_project_save.show()
         self.ui.label_13.show()
+        self.ui.label_15.show()
+        self.ui.btn_edit_protein_rename.show()
 
     def clean_protein_new(self) -> None:
         """Cleans the selected protein structure and creates a new cleaned structure."""
@@ -2459,6 +2463,16 @@ class MainWindow(QtWidgets.QMainWindow):
                     "Save protein structure",
                     "The protein was successfully saved as .pdb file.", QtWidgets.QMessageBox.Information,
                 )
+
+    def rename_selected_protein_structure(self) -> None:
+        """Renames a selected protein structure."""
+        tmp_dialog = dialog_rename_protein.DialogRenameProtein(self.workspace_path)
+        tmp_dialog.exec_()
+        if dialog_rename_protein.global_var_rename_protein[1] is True and dialog_rename_protein.global_var_rename_protein[0] != "":
+            tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text())
+            tmp_protein.set_molecule_object(dialog_rename_protein.global_var_rename_protein[0])
+            self._init_edit_page()
+
     # </editor-fold>
 
     # <editor-fold desc="View project page functions">
@@ -2512,7 +2526,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def view_structure(self) -> None:
         """Displays the structure of the selected protein in pymol."""
         protein_name = self.ui.list_view_project_proteins.currentItem().text()
-        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session, self.app_settings)
         cmd.reinitialize()
         self.ui.btn_manage_session.show()
         try:
@@ -2779,7 +2793,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.is_distance_plot_open:
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
-        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session, self.app_settings)
         cmd.reinitialize()
         self.ui.list_hotspots_choose_protein.clear()
         self._project_watcher.on_home_page = True
@@ -6816,7 +6830,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.results_name == "":
             self.show_analysis_results_options()
             return
-        tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+        tools.ask_to_save_pymol_session(self.app_project, self.current_session, self.app_settings)
         tmp_protein_pair = self.app_project.search_protein_pair(self.results_name)
 
         # <editor-fold desc="Worker setup">
@@ -7610,7 +7624,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except AttributeError:
             return
         if self.ui.list_hotspots_choose_protein.currentItem().text() != "":
-            tools.ask_to_save_pymol_session(self.app_project, self.current_session)
+            tools.ask_to_save_pymol_session(self.app_project, self.current_session, self.app_settings)
 
             tmp_input = self.ui.list_hotspots_choose_protein.currentItem().text()
             if tmp_input.find("_vs_") == -1:

@@ -1584,6 +1584,7 @@ QListWidget {
     border-width: 2px;
     border-radius: 8px;
     border-color: #DCDBE3;
+    background: #ffffff;
 }
 
 QStatusBar {

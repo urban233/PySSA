@@ -146,7 +146,7 @@ class InputValidator:
     @staticmethod
     def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
                               btn_next=None):
-        """This function validates the input of the protein name in real-time
+        """This function validates the input of the protein name in real-time.
 
         Args:
             txt_for_protein_name:
@@ -165,12 +165,12 @@ class InputValidator:
                 btn_next.setEnabled(False)
                 styles.color_button_not_ready(btn_next)
             return
-        elif len(txt_for_protein_name.text()) > 20:
-            lbl_for_status_protein_name.setText("Project name is too long (max. 20 characters).")
-            if btn_next is not None:
-                btn_next.setEnabled(False)
-                styles.color_button_not_ready(btn_next)
-            return
+        # elif len(txt_for_protein_name.text()) > 20:
+        #     lbl_for_status_protein_name.setText("Protein name is too long (max. 20 characters).")
+        #     if btn_next is not None:
+        #         btn_next.setEnabled(False)
+        #         styles.color_button_not_ready(btn_next)
+        #     return
         else:
             regex = Qt.QtCore.QRegularExpression()
             regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")

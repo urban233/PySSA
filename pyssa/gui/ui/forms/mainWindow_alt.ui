@@ -182,8 +182,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>142</width>
-                  <height>962</height>
+                  <width>163</width>
+                  <height>870</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_115">
@@ -3638,6 +3638,37 @@
               </item>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_121">
+                <item>
+                 <widget class="QLabel" name="label_15">
+                  <property name="text">
+                   <string>Current selected protein structure</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_98">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="btn_edit_protein_rename">
+                  <property name="text">
+                   <string>Rename</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_122">
                 <item>
                  <widget class="QLabel" name="label_13">
                   <property name="text">
@@ -7094,7 +7125,7 @@
      <x>0</x>
      <y>0</y>
      <width>540</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
