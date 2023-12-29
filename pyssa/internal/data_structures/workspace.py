@@ -19,20 +19,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from dataclasses import dataclass
+"""Module for the workspace class."""
 
 
-@dataclass
-class BasicProteinInfo:
-    name: str
-    id: str
-    project_name: str
+class Workspace:
+    """Class for the workspace used in the plugin."""
 
-    def __eq__(self, other):
-        if not isinstance(other, BasicProteinInfo):
-            return False
-        return (self.name, self.id, self.project_name) == (other.name, other.id, other.project_name)
+    projects: dict
+    proteins: dict
 
-    def __hash__(self):
-        # Combine the hash values of the attributes to create a unique hash
-        return hash((self.name, self.id, self.project_name))
+    def __init__(self, the_workspace_path) -> None:
+        """Constructor.
+
+        Args:
+            the_workspace_path (pathlib.Path): the path of the workspace
+
+        """
+        self.workspace_path = the_workspace_path

@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import collections
 import copy
 import logging
 import os
@@ -26,6 +27,7 @@ import pathlib
 import shutil
 import subprocess
 
+import numpy as np
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5 import QtWidgets
 from pymol import cmd
@@ -35,7 +37,7 @@ from pyssa.internal.data_structures.data_classes import prediction_protein_info,
 from pyssa.io_pyssa import filesystem_io, safeguard, path_util
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import tools, constants, prediction_util, exception, exit_codes
+from pyssa.util import tools, constants, prediction_util, exception, exit_codes, workspace_util
 from pyssa.internal.prediction_engines import esmfold
 from pyssa.internal.data_structures import project
 from typing import TYPE_CHECKING
@@ -70,6 +72,65 @@ class Worker(QObject):
     def run(self):
         protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path))
         self.return_value.emit((protein_dict, protein_names))
+        self.finished.emit()
+
+
+class LoadUsePageWorker(QObject):
+    finished = pyqtSignal()
+    progress = pyqtSignal(int)
+    return_value = pyqtSignal(tuple)
+    workspace_path: str
+
+    def __init__(self, the_workspace_path, the_protein_infos_of_current_project) -> None:
+        """Constructor.
+
+        Raises:
+            IllegalArgumentError: If an argument is illegal.
+        """
+        # <editor-fold desc="Checks">
+        if not os.path.exists(the_workspace_path) or the_workspace_path is None:
+            logger.error(f"An argument the_workspace_path: {the_workspace_path}  is illegal!")
+            raise exception.IllegalArgumentError("")
+        if the_protein_infos_of_current_project is None:
+            logger.error(f"An argument the_proteins_of_current_project: {the_protein_infos_of_current_project} is illegal!")
+
+        # </editor-fold>
+        
+        super().__init__()
+        self.workspace_path = the_workspace_path
+        self.protein_infos_of_current_project = the_protein_infos_of_current_project
+
+    def create_q_list_widget_items_from_protein_infos(self, the_protein_infos: np.ndarray) -> np.ndarray:
+        tmp_items: collections.deque = collections.deque()
+        print(the_protein_infos)
+        for tmp_protein_info in the_protein_infos:
+            tmp_item = QtWidgets.QListWidgetItem(tmp_protein_info.name)
+            tmp_item.setData(1000, (tmp_protein_info.id, tmp_protein_info.project_name))
+            tmp_items.append(tmp_item)
+        return np.array(tmp_items)
+
+    def run(self) -> None:
+        # scan workspace for non duplicated proteins
+        tmp_protein_infos = workspace_util.scan_workspace_for_non_duplicate_proteins(self.workspace_path)
+        if len(tmp_protein_infos) > 0:
+            protein_items = self.create_q_list_widget_items_from_protein_infos(
+                tmp_protein_infos,
+            )
+        else:
+            protein_items = []
+        if len(self.protein_infos_of_current_project) > 0:
+            project_protein_items = self.create_q_list_widget_items_from_protein_infos(
+                self.protein_infos_of_current_project,
+            )
+        else:
+            project_protein_items = []
+        # scan workspace for valid projects
+        projects = workspace_util.scan_workspace_for_valid_projects(self.workspace_path)
+        # return
+        self.return_value.emit((project_protein_items, protein_items, projects))
+        # finished
+        #protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path))
+        #self.return_value.emit((protein_infos, protein_names))
         self.finished.emit()
 
 

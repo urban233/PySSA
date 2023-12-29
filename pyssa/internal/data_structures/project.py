@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the project class."""
+import collections
 import logging
 import pathlib
 import platform
@@ -27,12 +28,16 @@ from datetime import datetime
 from xml.etree import ElementTree
 from xml.dom import minidom
 from typing import TYPE_CHECKING
+
+import numpy as np
+
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.util import exception
+from pyssa.internal.data_structures.data_classes import basic_protein_info
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures.data_classes import current_session
@@ -387,3 +392,15 @@ class Project:
             self.serialize_project(self.get_project_xml_path())
         else:
             raise ValueError("An argument is not in the list.")
+
+    def convert_list_of_proteins_to_list_of_protein_infos(self) -> np.ndarray:
+        """Converts the list of proteins into an array of basic_protein_info objects."""
+        tmp_protein_infos: collections.deque = collections.deque()
+        for tmp_protein in self.proteins:
+            tmp_protein_infos.append(
+                basic_protein_info.BasicProteinInfo(
+                    tmp_protein.get_molecule_object(),
+                    tmp_protein.get_id(),
+                    self._project_name),
+            )
+        return np.array(list(tmp_protein_infos))

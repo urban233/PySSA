@@ -47,6 +47,7 @@ from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.dialogs import dialog_tutorial_videos
+from pyssa.gui.ui.dialogs import dialog_process_progress
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.ui.styles import styles
@@ -69,7 +70,7 @@ from pyssa.io_pyssa import safeguard, bio_data
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 
-from pyssa.util import pyssa_keys
+from pyssa.util import pyssa_keys, workspace_util
 from pyssa.util import exit_codes
 from pyssa.util import globals
 from pyssa.util import protein_pair_util
@@ -409,6 +410,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("PySSA")
         constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
+
+    def start_worker_thread(self, worker_obj, post_process_func):
+        self.tmp_thread = QtCore.QThread()
+        self.tmp_worker = worker_obj
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, post_process_func)
+        self.tmp_thread.start()
 
     # <editor-fold desc="GUI page management functions">
     def _create_local_pred_monomer_management(self) -> None:
@@ -963,7 +970,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_save_project.clicked.connect(self.save_project)
         self.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self.ui.btn_view_page.clicked.connect(self.display_view_page)
-        self.ui.btn_use_page.clicked.connect(self.start_display_use_page)
+        self.ui.btn_use_page.clicked.connect(self.display_use_page)
         self.ui.btn_import_project.clicked.connect(self.import_project)
         self.ui.btn_export_project.clicked.connect(self.export_current_project)
         self.ui.btn_close_project.clicked.connect(self.close_project)
@@ -1722,31 +1729,20 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.btn_edit_existing_protein_struct.show()
             self.ui.lbl_edit_existing_protein_struct.show()
 
-    def start_display_use_page(self) -> None:
+    def display_use_page(self) -> None:
         """Displays the use project page."""
         if self.is_distance_plot_open:
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
-    
+
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        # <editor-fold desc="Worker setup">
-        # --Begin: worker setup
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.Worker(self.workspace_path)
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_use_page)
-        self.tmp_thread.start()
-        # --End: worker setup
-
-        # </editor-fold>
-
+        self.start_worker_thread(task_workers.LoadUsePageWorker(self.workspace_path, self.app_project.convert_list_of_proteins_to_list_of_protein_infos()),
+                                 self.post_display_use_page)
         self._init_use_page()
-        self.ui.list_use_available_protein_structures.clear()
-        self.ui.list_use_selected_protein_structures.clear()
-        tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
-        gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
+        #gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
 
-    def display_use_page(self, return_value) -> None:
+    def post_display_use_page(self, return_value) -> None:
         """Displays the use project page, after cpu intense task (post thread method).
 
         Args:
@@ -1754,45 +1750,22 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
         # are available
+        for tmp_item in return_value[0]:
+            self.ui.list_use_available_protein_structures.addItem(tmp_item)
         for i in range(self.ui.list_use_selected_protein_structures.count()):
             self.ui.list_use_selected_protein_structures.setCurrentRow(i)
             tmp_prot_name = self.ui.list_use_selected_protein_structures.currentItem().text()
             if tmp_prot_name in return_value[1]:
                 return_value[1].remove(tmp_prot_name)
 
-        self.ui.list_use_available_protein_structures.addItems(return_value[1])
+        for tmp_item in return_value[1]:
+            self.ui.list_use_available_protein_structures.addItem(tmp_item)
+        for tmp_project_name in return_value[2]:
+            self.ui.list_use_existing_projects.addItem(QtWidgets.QListWidgetItem(tmp_project_name))
 
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_use_page)
         QtWidgets.QApplication.restoreOverrideCursor()
-        # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
-        # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-        #                                                         self.ui.btn_use_page)
-        # QtWidgets.QApplication.restoreOverrideCursor()
-
-        # QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-        # self._init_use_page()
-        # self.ui.list_use_available_protein_structures.clear()
-        # self.ui.list_use_selected_protein_structures.clear()
-        # valid_projects = tools.scan_workspace_for_valid_projects(self.workspace_path, self.ui.list_use_existing_projects)
-        # # filesystem operations
-        # gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_use_selected_protein_structures)
-        # # self.project_scanner.scan_project_for_valid_proteins(self.ui.list_use_selected_protein_structures)
-        # protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path)
-        # global_variables.global_var_workspace_proteins = protein_dict
-        # # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
-        # # are available
-        # for i in range(self.ui.list_use_selected_protein_structures.count()):
-        #     self.ui.list_use_selected_protein_structures.setCurrentRow(i)
-        #     tmp_prot_name = self.ui.list_use_selected_protein_structures.currentItem().text()
-        #     if tmp_prot_name in protein_names:
-        #         protein_names.remove(tmp_prot_name)
-        #
-        # self.ui.list_use_available_protein_structures.addItems(protein_names)
-        # tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 14, "Use existing project")
-        # self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button,
-        #                                                         self.ui.btn_use_page)
-        # QtWidgets.QApplication.restoreOverrideCursor()
 
     def display_hotspots_page(self) -> None:
         """Displays the hotspots page."""
@@ -6677,7 +6650,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_settings,
             self._init_batch_analysis_page,
         )
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_use_page)
+        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.post_display_use_page)
         self.tmp_worker.finished.connect(self.post_analysis_process)
         self.tmp_thread.start()
 
