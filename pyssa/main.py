@@ -30,7 +30,7 @@ import csv
 import requests
 import numpy as np
 import pymol
-
+import re
 from typing import TYPE_CHECKING
 from pymol import cmd
 from PyQt5 import QtGui
@@ -410,6 +410,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("PySSA")
         constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
+        if len(os.listdir(constants.LOG_PATH)) > 0:
+            self.open_change_log()
 
     def start_worker_thread(self, worker_obj, post_process_func):
         self.tmp_thread = QtCore.QThread()
@@ -959,6 +961,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.action_help_about.triggered.connect(self.open_about)
         self.ui.action_settings_open_logs.triggered.connect(self.open_logs)
         self.ui.action_settings_clear_logs.triggered.connect(self.clear_all_log_files)
+        self.ui.action_help_changelog.triggered.connect(self.open_constant_change_log)
         # </editor-fold>
 
         self.ui.btn_info.clicked.connect(self.open_page_information)
@@ -2011,6 +2014,46 @@ class MainWindow(QtWidgets.QMainWindow):
             tmp_dialog = dialog_help.DialogHelp(html_content)
             tmp_dialog.exec_()
         return
+
+    def open_constant_change_log(self):
+        os.startfile(constants.CHANGELOG_HTML_PATH)
+
+    def open_change_log(self) -> None:
+        last_version = f"v{self.get_version_from_latest_log_file(self.get_latest_log_file())}"
+        if last_version != constants.VERSION_NUMBER:
+            os.startfile(constants.CHANGELOG_HTML_PATH)
+
+    def get_version_from_latest_log_file(self, a_filepath) -> str:
+        with open(a_filepath, 'r', encoding='utf-8') as file:
+            file_content = file.read()
+            file.close()
+        # Define the regex pattern to extract the version number
+        pattern = r"PySSA started with version v(\d+\.\d+\.\d+)"
+        # Search for the pattern in the text
+        match = re.search(pattern, file_content)
+        # Check if a match is found
+        if match:
+            version_number = match.group(1)
+            print("Extracted version number:", version_number)
+        else:
+            print("Version number not found in the text.")
+            version_number = None
+        return version_number
+
+    def get_latest_log_file(self) -> str:
+        # Get a list of files in the directory
+        files = [f for f in os.listdir(constants.LOG_PATH) if os.path.isfile(os.path.join(constants.LOG_PATH, f))]
+        # Filter files to include only log files (adjust the extension accordingly)
+        log_files = [f for f in files if f.endswith(".log")]
+        # Check if there are any log files
+        if not log_files:
+            print("No log files found in the directory.")
+            return None
+        # Get the full path of each log file
+        log_files_paths = [os.path.join(constants.LOG_PATH, f) for f in log_files]
+        # Get the latest log file based on modification time
+        latest_log_file = max(log_files_paths, key=os.path.getmtime)
+        return latest_log_file
 
     # <editor-fold desc="New project page functions">
     def show_add_reference(self) -> None:

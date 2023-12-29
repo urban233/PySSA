@@ -2986,6 +2986,8 @@ class Ui_MainWindow(object):
         self.action_settings_open_logs.setObjectName("action_settings_open_logs")
         self.action_settings_clear_logs = QtWidgets.QAction(MainWindow)
         self.action_settings_clear_logs.setObjectName("action_settings_clear_logs")
+        self.action_help_changelog = QtWidgets.QAction(MainWindow)
+        self.action_help_changelog.setObjectName("action_help_changelog")
         self.menuSettings.addAction(self.action_settings_edit_all)
         self.menuSettings.addAction(self.action_settings_model_w_off_colab_notebook)
         self.menuSettings.addSeparator()
@@ -2996,6 +2998,7 @@ class Ui_MainWindow(object):
         self.menuHelp.addAction(self.action_help_docs)
         self.menuHelp.addAction(self.action_help_docs_pdf)
         self.menuHelp.addAction(self.action_help_about)
+        self.menuHelp.addAction(self.action_help_changelog)
         self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
@@ -3426,3 +3429,4 @@ class Ui_MainWindow(object):
         self.action_toggle_notebook_visibility.setText(_translate("MainWindow", "Toggle notebook visibility"))
         self.action_settings_open_logs.setText(_translate("MainWindow", "Open log file"))
         self.action_settings_clear_logs.setText(_translate("MainWindow", "Clear logs"))
+        self.action_help_changelog.setText(_translate("MainWindow", "Changelog"))

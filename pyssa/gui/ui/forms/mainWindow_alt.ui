@@ -7147,6 +7147,7 @@
     <addaction name="action_help_docs"/>
     <addaction name="action_help_docs_pdf"/>
     <addaction name="action_help_about"/>
+    <addaction name="action_help_changelog"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -7243,6 +7244,11 @@
   <action name="action_settings_clear_logs">
    <property name="text">
     <string>Clear logs</string>
+   </property>
+  </action>
+  <action name="action_help_changelog">
+   <property name="text">
+    <string>Changelog</string>
    </property>
   </action>
  </widget>

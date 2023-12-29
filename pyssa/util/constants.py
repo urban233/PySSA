@@ -31,7 +31,7 @@ PLUGIN_NAME = "PySSA"
 PLUGIN_PATH = globals.g_plugin_path
 PLUGIN_ROOT_PATH = globals.g_plugin_root_path
 PLUGIN_LOGO_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))
-VERSION_NUMBER = "v0.9.65"
+VERSION_NUMBER = "v0.9.67"
 PLUGIN_PATH_WSL_NOTATION = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
@@ -161,6 +161,7 @@ HELP_OPEN_EXISTING_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/interna
 HELP_STRUCTURE_ANALYSIS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/structure_analysis.html")
 HELP_USE_EXISTING_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/use_existing_project.html")
 HELP_RESULTS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/results.html")
+CHANGELOG_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/changelog/changelog.html")
 
 # pymol parameters
 PYMOL_COLORS = [
