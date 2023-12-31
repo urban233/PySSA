@@ -140,3 +140,13 @@ def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain
     for tmp_chain in protein_util.filter_chains_for_protein_chains(chains):
         protein_sequences.append(tmp_chain.chain_sequence)
     return protein_sequences
+
+
+def get_protein_sequence_length_from_protein(a_protein: "protein.Protein") -> int:
+    """Gets the length of the protein sequence.
+
+    Args:
+        a_protein: a protein object of which the sequence length is calculated.
+    """
+    fasta_prot_1 = cmd.get_fastastr(a_protein.pymol_selection.selection_string)
+    return len(fasta_prot_1[fasta_prot_1.find("\n"):])

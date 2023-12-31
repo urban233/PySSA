@@ -163,6 +163,7 @@ def transform_data_for_analysis(proteins_for_analysis, project) -> list[tuple['p
         tmp_data.append(transformed_data)
     return tmp_data
 
+
 def count_atoms_in_selection(pymol_obj):
     """This function counts the atoms within a pymol molecule object."""
     count = 0

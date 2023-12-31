@@ -38,15 +38,40 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 class DistanceAnalysisResults:
+    """Contains the results of the distance analysis done in PyMOL."""
 
+    """
+    The data of the distance analysis including: position, chain, residue, residue number and distance.
+    """
     distance_data: dict[str, np.ndarray]
+
+    """ 
+    The base64 string of the pymol session used for the distance analysis
+    """
     pymol_session: str
+
+    """
+    The RMSD value of the protein pair.
+    """
     rmsd: float
-    aligned_aa: int
+
+    """
+    The aligned residues of the protein pair.
+    """
+    aligned_aa: str
+
+    """
+    A tuple with the basename and the base64 string of the structure alignment image
+    """
     structure_aln_image: tuple[str, str] = ()
+
+    """
+    A list of tuples with the basename and the base64 string of the interesting region image
+    """
     interesting_regions_images: list[tuple[str, str]] = []
 
-    def __init__(self, distance_data: dict, pymol_session: str, rmsd: float, aligned_aa: str):
+    def __init__(self, distance_data: dict, pymol_session: str, rmsd: float, aligned_aa: str) -> None:
+        """Constructor."""
         self.distance_data = distance_data
         self.pymol_session = pymol_session
         self.rmsd = rmsd
@@ -65,12 +90,14 @@ class DistanceAnalysisResults:
         for tmp_filepath in filepaths:
             self.interesting_regions_images.append((tmp_filepath.get_basename(), binary_data.create_base64_string_from_file(tmp_filepath)))
 
-    def create_image_png_files_from_base64(self):
+    def create_image_png_files_from_base64(self) -> None:
+        """Creates png files from the base64 data."""
         binary_data.write_binary_file_from_base64_string(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{self.structure_aln_image[0]}"), self.structure_aln_image[1])
         for tmp_interesting_reg in self.interesting_regions_images:
             binary_data.write_binary_file_from_base64_string(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_interesting_reg[0]}"), tmp_interesting_reg[1])
 
-    def serialize_distance_analysis_results(self, tmp_distance_analysis):
+    def serialize_distance_analysis_results(self, tmp_distance_analysis) -> None:
+        """Serializes the distance analysis results object."""
         tmp_results_data = ElementTree.SubElement(tmp_distance_analysis, element_names.DISTANCE_ANALYSIS_RESULTS)
         tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_RMSD, str(self.rmsd))
         tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA, str(self.aligned_aa))

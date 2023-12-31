@@ -116,6 +116,14 @@ class UnableToColorProteinPairError(Exception):
         super().__init__(message)
 
 
+class UnableToReinitializePymolSessionError(Exception):
+    """Class for an unable to reinitialize the pymol session exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
 class UnableToDoAnalysisError(Exception):
     """Class for an unable to do analysis exception type."""
 

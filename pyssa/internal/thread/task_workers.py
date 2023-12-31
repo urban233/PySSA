@@ -37,7 +37,7 @@ from pyssa.internal.data_structures.data_classes import prediction_protein_info,
 from pyssa.io_pyssa import filesystem_io, safeguard, path_util
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import tools, constants, prediction_util, exception, exit_codes, workspace_util
+from pyssa.util import tools, constants, prediction_util, exception, exit_codes, workspace_util, constant_messages
 from pyssa.internal.prediction_engines import esmfold
 from pyssa.internal.data_structures import project
 from typing import TYPE_CHECKING
@@ -129,8 +129,6 @@ class LoadUsePageWorker(QObject):
         # return
         self.return_value.emit((project_protein_items, protein_items, projects))
         # finished
-        #protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path))
-        #self.return_value.emit((protein_infos, protein_names))
         self.finished.emit()
 
 
@@ -277,12 +275,12 @@ class BatchImageWorker(QObject):
         super().__init__()
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(status_bar):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
         if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
-
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
+        
         # </editor-fold>
 
         self.list_analysis_images = list_analysis_images
@@ -397,14 +395,14 @@ class ColabfoldWorker(QObject):
         super().__init__()
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(table_prot_to_predict):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
         if not safeguard.Safeguard.check_if_value_is_not_none(prediction_config):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
         if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
 
         # </editor-fold>
 
@@ -435,7 +433,7 @@ class ColabfoldWorker(QObject):
             self.finished.emit(exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
             return
         except Exception as e:
-            logger.error("Unexpected error:", e)
+            logger.error(f"Unexpected error: {e}")
             self.finished.emit(exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
             return
         else:
@@ -463,7 +461,7 @@ class ColabfoldWorker(QObject):
             self.finished.emit(exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1])
             return
         except Exception as e:
-            logger.error("Unexpected error:", e)
+            logger.error(f"Unexpected error: {e}")
             logger.error("Could not move rank 1 model, because it does not exists.")
             self.finished.emit(exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
             return
@@ -538,20 +536,20 @@ class DistanceAnalysisWorker(QObject):
         super().__init__()
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(list_analysis_overview):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
         if not safeguard.Safeguard.check_if_value_is_not_none(cb_analysis_images):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
         if not safeguard.Safeguard.check_if_value_is_not_none(status_bar):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
         if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
         if not safeguard.Safeguard.check_if_value_is_not_none(app_settings):
-            logger.error("An argument is illegal.")
-            raise ValueError("An argument is illegal.")
+            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
+            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
 
         # </editor-fold>
 
@@ -602,8 +600,7 @@ class DistanceAnalysisWorker(QObject):
         try:
             analysis_runs = structure_analysis.Analysis(self.app_project)
             analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
-            logger.debug(analysis_runs.analysis_list[
-                             0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
+            logger.debug(analysis_runs.analysis_list[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
         except exception.UnableToTransformDataForAnalysisError:
             logger.error("Setting up the analysis runs failed.")
             raise exception.UnableToSetupAnalysisError("")
@@ -617,7 +614,7 @@ class DistanceAnalysisWorker(QObject):
         """This function is a reimplementation of the QRunnable run method."""
         logger.debug(f"Memory address of worker {self}")
         try:
-            self.set_up_analysis_runs().run_analysis(self.cb_analysis_images)
+            self.set_up_analysis_runs().run_analysis("distance", self.cb_analysis_images.isChecked())
         except exception.UnableToSetupAnalysisError:
             logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
             self.finished.emit(exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0], exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1])

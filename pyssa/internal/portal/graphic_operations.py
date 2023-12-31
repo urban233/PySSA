@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for graphic operations in pymol"""
+"""Module for graphic operations in pymol."""
 import pymol
 from pymol import cmd
 from pyssa.internal.portal import pymol_safeguard
@@ -109,3 +109,32 @@ def setup_default_session_graphic_settings() -> None:
     cmd.set("ray_transparency_oblique_power", constants.PYMOL_DEFAULT_RAY_OBLIQUE_POWER)
     cmd.set("ray_trace_color", constants.PYMOL_DEFAULT_RAY_COLOR)
     cmd.unset("depth_cue")
+
+
+def setup_default_image_graphic_settings(ray_shadows: bool, opaque_background: int = 0) -> None:
+    """Sets up the default image graphic settings for PyMOL.
+
+    Args:
+        ray_shadows (bool): false if no shadows, true if shadows should be displayed.
+        opaque_background (int, optional): 0 for a transparent background and 1 for a white background.
+    """
+    if not ray_shadows:
+        opt_ray_shadows: str = "off"
+    else:
+        opt_ray_shadows: str = "on"
+    cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+    cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
+    cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
+    cmd.set("ray_shadows", opt_ray_shadows)
+    cmd.set('ray_opaque_background', opaque_background)
+
+def setup_default_graphic_settings_for_interesting_regions() -> None:
+    """Sets up the default graphic settings for interesting regions."""
+    cmd.set("label_size", 14)
+    cmd.set("label_font_id", 13)
+    cmd.set("label_color", "hotpink")
+    cmd.set("depth_cue", 0)
+    cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+    # interacts directly with molecule objects in the session
+    cmd.hide("cartoon", "all")
+    cmd.show("ribbon", "all")

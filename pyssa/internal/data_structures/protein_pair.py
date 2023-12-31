@@ -43,7 +43,7 @@ from pyssa.io_pyssa import binary_data
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein
-    from pyssa.internal.analysis_types import distance_analysis
+    from pyssa.internal.data_structures import structure_analysis
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -57,18 +57,22 @@ class ProteinPair:
     the first protein of the protein pair
     """
     protein_1: 'protein.Protein'
+
     """
     the second protein of the protein pair
     """
     protein_2: 'protein.Protein'
+
     """
     a directory where all results related to the protein will be stored
     """
-    distance_analysis: 'distance_analysis.DistanceAnalysis' = None
+    distance_analysis: 'structure_analysis.DistanceAnalysis' = None
+
     """
     the full filepath where the session file is stored
     """
     pymol_session_filepath: path_util.FilePath
+
     """
     a base64 string of the pymol session
     """
@@ -165,7 +169,7 @@ class ProteinPair:
             raise exception.IllegalArgumentError("")
         self.distance_analysis = a_value
 
-    def serialize_protein_pair(self, xml_protein_pairs_element: ElementTree.Element):
+    def serialize_protein_pair(self, xml_protein_pairs_element: ElementTree.Element) -> None:
         """This function serialize the protein pair object."""
         tmp_protein_pair = ElementTree.SubElement(xml_protein_pairs_element, element_names.PROTEIN_PAIR)
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_NAME, str(self.name))
@@ -179,16 +183,6 @@ class ProteinPair:
         tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, self.pymol_session)
         if self.distance_analysis is not None:
             self.distance_analysis.serialize_distance_analysis(tmp_protein_pair)
-
-    @staticmethod
-    def deserialize_protein_pair(protein_obj_json_file: path_util.FilePath):
-        """This function constructs the protein pair object from
-        the json file.
-
-        Returns:
-            two complete protein objects and a protein pair object deserialized from a json file
-        """
-        return filesystem_io.ObjectDeserializer(protein_obj_json_file.get_dirname(), protein_obj_json_file.get_filename()).deserialize_protein_pair()
 
     def create_plain_text_memory_mirror(self):
         mirror = [

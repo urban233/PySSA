@@ -299,7 +299,7 @@ class ObjectDeserializer:
 
     def deserialize_distance_analysis(self, app_settings: 'settings.Settings', app_project: 'project.Project') -> 'distance_analysis.DistanceAnalysis':
         tmp_protein_pair = app_project.search_protein_pair(self.object_dict.get("protein_pair_for_analysis_name"))
-        tmp_distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair, app_settings, self.object_dict.get("distance_analysis_dirname"))
+        tmp_distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair, app_settings)
         tmp_distance_analysis.cutoff = self.object_dict.get("cutoff")
         tmp_distance_analysis.cycles = self.object_dict.get("cycles")
         tmp_distance_analysis.export_dirname = self.object_dict.get("export_dirname")
@@ -330,7 +330,7 @@ class ObjectDeserializer:
             raise ValueError
         if not safeguard.Safeguard.check_filepath(self.object_dict.get("dir_settings")):
             raise ValueError
-        if not self.object_dict.get("filename") == "settings.json":
+        if self.object_dict.get("filename") != "settings.json":
             raise ValueError
         if int(self.object_dict.get("wsl_install")) == 0 or int(self.object_dict.get("wsl_install")) == 1:
             tmp_settings.wsl_install = int(self.object_dict.get("wsl_install"))
