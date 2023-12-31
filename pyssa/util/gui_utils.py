@@ -178,17 +178,12 @@ def error_dialog_settings(message, message_detail, settings_obj):
     msg.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
     msg.setWindowTitle("Error")
 
-    #open_global_settings_button = msg.addButton("Open Settings", QMessageBox.ActionRole)
     restore_settings_button = msg.addButton("Restore Settings", QMessageBox.ActionRole)
     msg.exec_()
 
     # button logic
     if msg.clickedButton() == restore_settings_button:
         tools.restore_default_settings(settings_obj)
-    #elif msg.clickedButton() == open_global_settings_button:
-        #tools.open_global_settings()
-    # elif msg.clickedButton() == help_button:
-    #     webbrowser.open_new("docs/pyssa/build/html/index.html")
 
 
 def warning_dialog_restore_settings(message):

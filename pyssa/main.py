@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main window of the pyssa plugin."""
+import collections
 import logging
 import os
 import shutil
@@ -66,11 +67,11 @@ from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import workers
 from pyssa.internal.thread import task_workers
 
-from pyssa.io_pyssa import safeguard, bio_data
+from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 
-from pyssa.util import pyssa_keys, workspace_util
+from pyssa.util import pyssa_keys, workspace_util, main_window_util
 from pyssa.util import exit_codes
 from pyssa.util import globals
 from pyssa.util import protein_pair_util
@@ -81,6 +82,7 @@ from pyssa.util import input_validator
 from pyssa.util import gui_page_management
 from pyssa.util import tools
 from pyssa.util import gui_utils
+from pyssa.util.void import void
 
 
 if TYPE_CHECKING:
@@ -104,18 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
         constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
         # </editor-fold>
 
-        # <editor-fold desc="OS Check">
-        if sys.platform.startswith("win32"):
-            # Windows path
-            globals.g_os = "win32"
-            globals.g_plugin_path = pathlib.Path(f"C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}")
-        elif sys.platform.startswith("linux"):
-            # Linux path
-            globals.g_os = "linux"
-            globals.g_plugin_path = f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/{constants.PLUGIN_NAME}"
-
-        constants.PYSSA_LOGGER.info(f"Started on platform: {globals.g_os}")
-        # </editor-fold>
+        main_window_util.check_operating_system()
 
         globals.g_settings = settings.Settings("", "")
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
@@ -125,12 +116,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.btn_info.setFixedWidth(50)
 
         # <editor-fold desc="Program directory check">
-        if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa"))):
-            os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa")))
-        if not os.path.exists(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs"))):
-            os.mkdir(str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs")))
-
+        filesystem_helpers.create_directory(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa"))
+        filesystem_helpers.create_directory(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/logs"))
         constants.PYSSA_LOGGER.info("Checked program and logs directory.")
+
         # </editor-fold>
 
         # <editor-fold desc="Setup App Settings">
@@ -181,61 +170,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
             QtWidgets.QApplication.restoreOverrideCursor()
 
-        try:
-            self.app_settings = self.app_settings.deserialize_settings()
-        except ValueError:
-            constants.PYSSA_LOGGER.warning("The settings file is damaged or outdated.")
-            gui_utils.error_dialog_settings(
-                "The settings file is damaged or outdated. You have to restore the settings to use PySSA!", "", self.app_settings,
-            )
-        if globals.g_os == "win32":
-            constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
-            if dialog_settings_global.is_wsl2_installed():
-                self.app_settings.wsl_install = 1
-                constants.PYSSA_LOGGER.info("WSL2 is installed.")
-            else:
-                self.app_settings.wsl_install = 0
-                constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
-        else:
-            self.app_settings.wsl_install = 1
-
-        constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
-        if dialog_settings_global.is_local_colabfold_installed():
-            self.app_settings.local_colabfold = 1
-            constants.PYSSA_LOGGER.info("Local Colabfold is installed.")
-        else:
-            self.app_settings.local_colabfold = 0
-            constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
-
-        globals.g_settings = self.app_settings
+        globals.g_settings = main_window_util.setup_app_settings(self.app_settings)
         # </editor-fold>
 
-        constants.PYSSA_LOGGER.info("Checking version of localhost with remote ...")
-        url = "https://w-hs.sciebo.de/s/0kR11n8PkLDo1gB/download"
-        try:
-            response = requests.get(url)
-            print(f"Current version: {constants.VERSION_NUMBER[1:]}")
-            print(f"Status code: {response.status_code}")
-            if response.status_code == 503:
-                constants.PYSSA_LOGGER.warning("The connection to the update servers failed. If could not determine if a new version is avaliable.")
-                basic_boxes.ok(
-                    "No connection",
-                    "The connection to the update servers failed. If could not determine if a new version is avaliable. You can start the PySSA now.",
-                    QtWidgets.QMessageBox.Information,
-                )
-            else:
-                print(f"Latest version: {response.text}")
-                if response.text != constants.VERSION_NUMBER[1:]:
-                    constants.PYSSA_LOGGER.info("here is a new version of PySSA available.")
-                    basic_boxes.ok(
-                        "New version",
-                        f"There is a new version for your PySSA!\nTo install the latest version {response.text}, open the PySSA Installer and click on update.",
-                        QtWidgets.QMessageBox.Information,
-                    )
-        except requests.exceptions.RequestException as e:
-            constants.PYSSA_LOGGER.error("Downloading the version file of the remote failed!")
-            print("Failed to download the file:", e)
-        constants.PYSSA_LOGGER.info("Checking version of localhost with remote finished.")
+        main_window_util.check_version_number()
 
         # <editor-fold desc="Class attributes">
         self.app_project = project.Project("", pathlib.Path(""))
@@ -386,10 +324,8 @@ class MainWindow(QtWidgets.QMainWindow):
             shutil.rmtree(constants.SCRATCH_DIR)
         except Exception as e:
             constants.PYSSA_LOGGER.warning(f"Scratch path could not be deleted. {e}")
-        if not os.path.exists(constants.SCRATCH_DIR):
-            os.mkdir(constants.SCRATCH_DIR)
-        if not os.path.exists(constants.CACHE_DIR):
-            os.mkdir(constants.CACHE_DIR)
+        filesystem_helpers.create_directory(constants.SCRATCH_DIR)
+        filesystem_helpers.create_directory(constants.CACHE_DIR)
 
         if self.app_settings.wsl_install == 1 and self.app_settings.local_colabfold == 0:
             self.ui.action_install_from_file.setVisible(True)
@@ -1599,12 +1535,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.is_distance_plot_open = False
         results = []
         results.insert(0, "")
-        i = 0
+
         for tmp_protein_pair in self.app_project.protein_pairs:
             results.append(tmp_protein_pair.name)
             if tmp_protein_pair.name == self.results_name:
                 pass
-            i += 1
         self.ui.cb_results_analysis_options.clear()
         gui_utils.fill_combo_box(self.ui.cb_results_analysis_options, results)
 
@@ -1911,109 +1846,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def open_page_information(self) -> None:
         """Opens the message box, to display extra information based on the page."""
-        if self.ui.lbl_page_title.text() == "Home":
-            with open(f'{constants.HELP_HOME_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Create new project":
-            with open(f'{constants.HELP_CREATE_NEW_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Open existing project":
-            with open(f'{constants.HELP_OPEN_EXISTING_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Delete existing project":
-            with open(f'{constants.HELP_DELETE_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Edit proteins of current project":
-            with open(f'{constants.HELP_EDIT_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "View proteins of current project":
-            with open(f'{constants.HELP_VIEW_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Use existing project":
-            with open(f'{constants.HELP_USE_EXISTING_PROJECT_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Structure Analysis":
-            with open(f'{constants.HELP_STRUCTURE_ANALYSIS_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Results":
-            with open(f'{constants.HELP_RESULTS_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Analysis Images":
-            with open(f'{constants.HELP_ANALYSIS_IMAGES_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Image":
-            with open(f'{constants.HELP_IMAGE_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Hotspots":
-            with open(f'{constants.HELP_HOTSPOTS_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Manage PyMOL session":
-            with open(f'{constants.HELP_MANAGE_PYMOL_SESSION_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Local Monomer Prediction":
-            with open(f'{constants.HELP_LOCAL_MONOMER_PREDICTION_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Local Multimer Prediction":
-            with open(f'{constants.HELP_LOCAL_MULTIMER_PREDICTION_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Monomer Prediction + Analysis":
-            with open(f'{constants.HELP_MONOMER_PREDICTION_ANALYSIS_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        elif self.ui.lbl_page_title.text() == "Multimer Prediction + Analysis":
-            with open(f'{constants.HELP_MULTIMER_PREDICTION_ANALYSIS_HTML_PATH}', 'r', encoding='utf-8') as file:
-                html_content = file.read()
-                file.close()
-            tmp_dialog = dialog_help.DialogHelp(html_content)
-            tmp_dialog.exec_()
-        return
+        with open(f'{constants.PAGE_HELP_PATHS_DICT[self.ui.lbl_page_title.text()]}', 'r', encoding='utf-8') as file:
+            html_content = file.read()
+            file.close()
+        tmp_dialog = dialog_help.DialogHelp(html_content)
+        tmp_dialog.exec_()
 
     def open_constant_change_log(self):
         os.startfile(constants.CHANGELOG_HTML_PATH)
@@ -2041,14 +1878,18 @@ class MainWindow(QtWidgets.QMainWindow):
         return version_number
 
     def get_latest_log_file(self) -> str:
+        """Gets the filepath of the latest log file.
+
+        Raises:
+            FileNotFoundError: If no log files can be found in the log directory.
+        """
         # Get a list of files in the directory
         files = [f for f in os.listdir(constants.LOG_PATH) if os.path.isfile(os.path.join(constants.LOG_PATH, f))]
         # Filter files to include only log files (adjust the extension accordingly)
         log_files = [f for f in files if f.endswith(".log")]
         # Check if there are any log files
         if not log_files:
-            print("No log files found in the directory.")
-            return None
+            raise FileNotFoundError("No log files found in the directory.")
         # Get the full path of each log file
         log_files_paths = [os.path.join(constants.LOG_PATH, f) for f in log_files]
         # Get the latest log file based on modification time
@@ -2355,7 +2196,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._project_watcher.check_workspace_for_projects(self.workspace_path, self.ui)
         else:
             constants.PYSSA_LOGGER.info("No project has been deleted. No changes were made.")
-            return
 
     # </editor-fold>
 
@@ -2445,7 +2285,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self._init_edit_page()
         else:
             constants.PYSSA_LOGGER.info("No protein has been cleaned.")
-            return
 
     def delete_protein(self) -> None:
         """Deletes the selected protein structure."""
@@ -2691,7 +2530,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def use_enable_remove(self) -> None:
         """Enables the remove button."""
         self.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
-
+    
     def pre_create_use_project(self) -> None:
         """Sets up the worker for the create_use_project task."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -2724,30 +2563,6 @@ class MainWindow(QtWidgets.QMainWindow):
         Args:
             proteins_for_new_project (list): the proteins which are in the new project
         """
-        # protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(self.workspace_path))[0]
-        # for tmp_protein in proteins_to_copy:
-        #     for tmp_protein_info in protein_infos:
-        #         if tmp_protein_info.name == tmp_protein:
-        #             """Var: project_proteins is a list which contains all proteins from a single project"""
-        #             xml_deserializer = filesystem_io.XmlDeserializer(
-        #                 pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml"))
-        #             for xml_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
-        #                 if xml_protein.attrib[attribute_names.ID] == tmp_protein_info.id:
-        #                     basic_information = xml_protein.attrib
-        #                     pdb_lines = []
-        #                     session_data_base64 = ""
-        #                     for tmp_data in xml_protein:
-        #                         if tmp_data.tag == "pdb_data":
-        #                             for tmp_atom in tmp_data.findall("atom"):
-        #                                 pdb_lines.append(tmp_atom.text)
-        #                         elif tmp_data.tag == "session_data":
-        #                             session_data_base64 = tmp_data.attrib[attribute_names.PROTEIN_SESSION]
-        #                         else:
-        #                             raise ValueError
-        #                     tmp_protein_obj = protein.Protein(
-        #                         molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
-        #                         pdb_xml_string=xml_protein)
-        #                     tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
         for tmp_protein_obj in proteins_for_new_project:
             self.app_project.add_existing_protein(tmp_protein_obj)
         self.app_project.serialize_project(

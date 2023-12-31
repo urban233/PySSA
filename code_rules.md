@@ -45,6 +45,19 @@ import numpy as np
 distances_of_amino_acid_pairs: np.ndarray = np.ndarray([])
 ```
 
+### Annotations of return values
+If a function/ method has a return value that will not be used, that 
+function call needs to be wrapped inside the `void` function.
+The `void` function is the only function which gets imported as function 
+and not as module:
+```python
+from pyssa.util.void import void
+from pyssa.util import main_window_util
+
+void(main_window_util.setup_app_settings(self.app_settings))  # void indicates that there is a 
+                                                              # return value but it is not used
+```
+
 ## Naming conventions
 * Package: snake_case
 * Module: snake_case

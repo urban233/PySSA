@@ -31,7 +31,7 @@ PLUGIN_NAME = "PySSA"
 PLUGIN_PATH = globals.g_plugin_path
 PLUGIN_ROOT_PATH = globals.g_plugin_root_path
 PLUGIN_LOGO_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))
-VERSION_NUMBER = "v0.9.67"
+VERSION_NUMBER = "v0.9.68"
 PLUGIN_PATH_WSL_NOTATION = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
@@ -142,7 +142,7 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 DOCS_PDF = ""
 DOCS_HTML = pathlib.Path(f"{PLUGIN_PATH}/docs/html/index.html")
 
-# help paths
+# Paths of help html files
 HELP_HOME_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/home.html")
 HELP_ANALYSIS_IMAGES_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/analysis_images.html")
 HELP_GLOBAL_SETTINGS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/global_settings.html")
@@ -162,6 +162,46 @@ HELP_STRUCTURE_ANALYSIS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_h
 HELP_USE_EXISTING_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/use_existing_project.html")
 HELP_RESULTS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/results.html")
 CHANGELOG_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/changelog/changelog.html")
+
+# page header names
+PAGE_HOME = "Home"
+PAGE_ANALYSIS_IMAGES = "Analysis Images"
+PAGE_HOTSPOTS = "Hotspots"
+PAGE_IMAGE = "Image"
+PAGE_LOCAL_MONOMER_PREDICTION = "Local Monomer Prediction"
+PAGE_LOCAL_MULTIMER_PREDICTION = "Local Multimer Prediction"
+PAGE_MANAGE_PYMOL_SESSION = "Manage PyMOL session"
+PAGE_MONOMER_PREDICTION_ANALYSIS = "Monomer Prediction + Analysis"
+PAGE_MULTIMER_PREDICTION_ANALYSIS = "Multimer Prediction + Analysis"
+PAGE_VIEW = "View proteins of current project"
+PAGE_CREATE_NEW_PROJECT = "Create new project"
+PAGE_DELETE_PROJECT = "Delete existing project"
+PAGE_EDIT = "Edit proteins of current project"
+PAGE_OPEN_EXISTING_PROJECT = "Open existing project"
+PAGE_STRUCTURE_ANALYSIS = "Structure Analysis"
+PAGE_USE_EXISTING_PROJECT = "Use existing project"
+PAGE_RESULTS = "Results"
+
+# help paths
+PAGE_HELP_PATHS_DICT = {
+    PAGE_HOME: HELP_HOME_HTML_PATH,
+    PAGE_ANALYSIS_IMAGES: HELP_ANALYSIS_IMAGES_HTML_PATH,
+    PAGE_HOTSPOTS: HELP_HOTSPOTS_HTML_PATH,
+    PAGE_IMAGE: HELP_IMAGE_HTML_PATH,
+    PAGE_LOCAL_MONOMER_PREDICTION: HELP_LOCAL_MONOMER_PREDICTION_HTML_PATH,
+    PAGE_LOCAL_MULTIMER_PREDICTION: HELP_LOCAL_MULTIMER_PREDICTION_HTML_PATH,
+    PAGE_MANAGE_PYMOL_SESSION: HELP_MANAGE_PYMOL_SESSION_HTML_PATH,
+    PAGE_MONOMER_PREDICTION_ANALYSIS: HELP_MONOMER_PREDICTION_ANALYSIS_HTML_PATH,
+    PAGE_MULTIMER_PREDICTION_ANALYSIS: HELP_MULTIMER_PREDICTION_ANALYSIS_HTML_PATH,
+    PAGE_VIEW: HELP_VIEW_HTML_PATH,
+    PAGE_CREATE_NEW_PROJECT: HELP_CREATE_NEW_PROJECT_HTML_PATH,
+    PAGE_DELETE_PROJECT: HELP_DELETE_PROJECT_HTML_PATH,
+    PAGE_EDIT: HELP_EDIT_HTML_PATH,
+    PAGE_OPEN_EXISTING_PROJECT: HELP_OPEN_EXISTING_PROJECT_HTML_PATH,
+    PAGE_STRUCTURE_ANALYSIS: HELP_STRUCTURE_ANALYSIS_HTML_PATH,
+    PAGE_USE_EXISTING_PROJECT: HELP_USE_EXISTING_PROJECT_HTML_PATH,
+    PAGE_RESULTS: HELP_RESULTS_HTML_PATH,
+}
 
 # pymol parameters
 PYMOL_COLORS = [

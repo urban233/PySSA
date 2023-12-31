@@ -133,5 +133,6 @@ def create_generic_dictionary_from_directory(path) -> dict:
 
 
 def create_directory(a_directory_path: 'pathlib.Path') -> None:
-    if not os.path.exists(a_directory_path):
-        os.mkdir(a_directory_path)
+    """Creates a directory if it doesn't already exist."""
+    if not os.path.exists(str(a_directory_path)):
+        os.mkdir(str(a_directory_path))

@@ -1,58 +1,234 @@
-<!doctype html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PySSA - Release Notes</title>
     <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Segoe UI, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            padding-top: 125px; /* Adjust this value to match the height of your header */
+        }
+
         header {
-            padding-top: 10px; /* Add padding to the header */
-            padding-left: 300px;
+            background-color: #ffffff;
+            color: #4B91F7;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000; /* Ensure the header is on top of other elements */
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #4B91F7;
+            margin: 0 15px;
+            cursor: pointer;
+        }
+
+        section {
+            max-width: 1000px;
+            margin: 0 auto 30px; /* Adjust the bottom margin */
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            color: #444444;
+        }
+
+        section .note-title {
+            font-size: 26px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        section .note-content {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 20px;
+            font-family: "Helvetica Neue", sans-serif;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 26px;
+            font-family: "Helvetica Neue", sans-serif;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #4B91F7;
+            color: #fff;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            position: fixed;
+            width: 100%;
+        }
+
+        footer p {
+            font-size: 14px;
+        }
+
+        a {
+            color: #037aff;
+            text-decoration: none;
+        }
+
+        /* My own css style */
+        .list-image-block {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10em;
+        }
+        .list-image {
+            width: 55%;
+        }
+        .list-image-gif-background {
+            padding: 2em;
+          background-color: white;
+          display: inline-block;
+          border-radius: 1em;
+          margin-left: 7em;
+          box-shadow: 0px 13px 34px 0px rgba(0,0,0,0.12);
+        }
+        .list {
+            display: flex;
+            flex-direction: column;
+            width: 39%;
         }
         h1 {
-            font-family: Helvetica;
-			color: #4B91F7;
+            font-size: 34px;
         }
-        h2 {
-            font-family: Helvetica;
-        }
-        h3 {
-            font-family: Helvetica;
-        }
-        p {
-            font-family: Helvetica;
-            font-size: large;
+        ul {
+            font-size: 21px;
         }
     </style>
 </head>
-
-
 <body>
+
     <header>
-        <h1>Changelog of version 0.9.67</h1>
-        <p>Here are the latest features and bug fixes described.</p>
-        
-        <h2>Features</h2>
-        <h3>Changelog</h3>
+        <h1>PySSA - Release Notes</h1>
+        <nav>
+            <a href="#features">Features</a>
+            <a href="#bugfixes">Bug fixes</a>
+            <a href="#known_issues">Known issues</a>
+            <a href="#support">Support</a>
+        </nav>
+    </header>
+
+    <section>
+        <h1>Information</h1>
         <p>
-            With this version and onwards there will be a changelog with the
-            most important updates and bug fixes.
-            The changelog will open automatically if you first start a new
+            These are the official release notes of PySSA and the PySSA Installer.
+            These release notes will open automatically if you first start a new
             PySSA version. In addition, the changelog can be accessed through
             the "Help" menu.
         </p>
-        <h3>Rename proteins</h3>
-        <p>
-            It is now possible to rename protein structures from the edit page.
-        </p>
-        <img src="rename_ani.gif" alt="gif which shows rename animation">
-        <h3>Turn on saving of pymol session</h3>
-        <p>
-            If you want to get notified when the session gets switched and progress
-            of the active session will be lost, check the checkbox in the global
-            settings.
-        </p>
-        <h2>Bugs</h2>
-        <p>
-            Minor bug fixes.
-        </p>
-    </header>        
+    </section>
+
+    <section>
+        <div id="features">
+            <h1>Features</h1>
+            <p class="note-date" style="color: #4B91F7; font-size: 24px">What's new in <b>v0.9.69</b></p>
+            <div class="list-image-block">
+                <div class="list">
+                    <h2>Rename proteins</h2>
+                    <ul>
+                        <li>It is now possible to rename protein structures from the edit page.</li>
+                    </ul>
+                </div>
+                <div class="list-image">
+                    <div class="list-image-gif-background">
+                        <img src="rename_ani.gif" alt="gif which shows rename animation" width="100%">
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-image-block">
+                <div class="list">
+                    <h2>Ask to save pymol session</h2>
+                    <ul>
+                        <li>You can now decide, if you want a warning, to save your current pymol session should pop up or not.</li>
+                    </ul>
+                </div>
+                <div class="list-image">
+                    <div class="list-image-gif-background">
+                        <img src="ask_pymol_session_ani.gif" alt="gif which shows rename animation" width="100%">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="bugfixes">
+        <div class="note-title">
+            <h1>Bug fixes</h1>
+            <p class="note-date" style="color: #4B91F7; font-size: 24px">What's new in <b>v0.9.69</b></p>
+            <ul>
+                <li>The internal help of the Use page were falsely also on the View page.</li>
+                <li>Minor bug fixes.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="known_issues">
+        <div class="note-title">
+            <h1>Known issues</h1>
+            <p class="note-date" style="color: #4B91F7; font-size: 24px">What's new in <b>v0.9.69</b></p>
+            <ul>
+                <li>Structure prediction does not work on every computer</li>
+                <li>The first structure prediction fails after updating the ColabFold <b>---Workaround---></b> Run the first prediction until it fails,
+                and then you should be able to run your prediction like before the update.</li>
+                <li>Structure analysis fails if more than one analysis run is added to the job <b>---Workaround---></b> Run only jobs with one analysis run.</li>
+            </ul>
+        </div>
+    </section>
+
+
+    <section id="support">
+        <div class="note-title">
+            <h1>Support</h1>
+            <p>
+                If you run into any issues using PySSA, write an email or open an issue on GitHub. Be aware that we can only deliver support if a log file is available.
+                The log files can be accessed through the "Settings" menu.
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2024 PySSA - Release Notes - Hannah Kullik & Martin Urban
+    </footer>
+
 </body>
 </html>
