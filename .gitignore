@@ -130,6 +130,4 @@ dmypy.json
 
 # custom
 testing_area
-tmp_storage
-.pylintrc_google
 .idea
