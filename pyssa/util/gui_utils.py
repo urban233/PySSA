@@ -34,6 +34,7 @@ from PyQt5 import QtCore
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.util import tools, constants
+from pyssa.util.void import rvoid
 
 if typing.TYPE_CHECKING:
     from pyssa.internal.data_structures import project
@@ -80,14 +81,23 @@ def choose_directory(self, txt_box_dir):
             qt textbox object which holds the current path
     """
     current_file_path = pathlib.Path(txt_box_dir.text())
-    new_file_path = pathlib.Path(Qt.QtWidgets.QFileDialog.getExistingDirectory(
-        self, "Open Directory", str(current_file_path),
-        options=Qt.QtWidgets.QFileDialog.ShowDirsOnly))
-    test = os.access(new_file_path, os.W_OK)
+    new_file_path = pathlib.Path(
+        Qt.QtWidgets.QFileDialog.getExistingDirectory(
+            self,
+            "Open Directory",
+            str(current_file_path),
+            options=Qt.QtWidgets.QFileDialog.ShowDirsOnly,
+        ),
+    )
+    rvoid(os.access(new_file_path, os.W_OK))
     if new_file_path != pathlib.Path(".") and os.access(new_file_path, os.W_OK):
         txt_box_dir.setText(str(new_file_path))
     elif new_file_path != pathlib.Path(".") and not os.access(new_file_path, os.W_OK):
-        basic_boxes.ok("Permission error", "You do not have write permissions for this directroy. Please choose another one.", QMessageBox.Warning)
+        basic_boxes.ok(
+            "Permission error",
+            "You do not have write permissions for this directroy. Please choose another one.",
+            QMessageBox.Warning,
+        )
         txt_box_dir.setText(str(current_file_path))
     else:
         txt_box_dir.setText(str(current_file_path))
@@ -174,7 +184,7 @@ def error_dialog_settings(message, message_detail, settings_obj):
     msg.setIcon(QMessageBox.Critical)
     msg.setText(message)
     msg.setInformativeText(message_detail)
-    #msg.setDetailedText()
+    # msg.setDetailedText()
     msg.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
     msg.setWindowTitle("Error")
 
@@ -227,8 +237,7 @@ def warning_message_prediction_exists(message_detail, path):
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
-    msg.setInformativeText("A prediction already exists! Please delete it or "
-                           "move it to another location.")
+    msg.setInformativeText("A prediction already exists! Please delete it or " "move it to another location.")
     msg.setDetailedText(message_detail)
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
@@ -258,8 +267,9 @@ def warning_message_project_exists(project_name, message_detail, path):
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
-    msg.setInformativeText(f"A project with the name {project_name} already exists! "
-                           f"Please delete it or move it to another location.")
+    msg.setInformativeText(
+        f"A project with the name {project_name} already exists! " f"Please delete it or move it to another location.",
+    )
     msg.setDetailedText(message_detail)
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
@@ -288,7 +298,7 @@ def warning_message_project_gets_deleted() -> bool:
     msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
-    msg.setText(f"Are you sure you want to delete this project?")
+    msg.setText("Are you sure you want to delete this project?")
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)
@@ -298,6 +308,7 @@ def warning_message_project_gets_deleted() -> bool:
         return False
     if msg.clickedButton() == ok_button:
         return True
+    return False
 
 
 def warning_message_protein_gets_deleted() -> bool:
@@ -315,7 +326,7 @@ def warning_message_protein_gets_deleted() -> bool:
     msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
-    msg.setText(f"Are you sure you want to delete this protein?")
+    msg.setText("Are you sure you want to delete this protein?")
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)
@@ -325,6 +336,7 @@ def warning_message_protein_gets_deleted() -> bool:
         return False
     if msg.clickedButton() == ok_button:
         return True
+    return False
 
 
 def error_project_data_is_invalid(path) -> bool:
@@ -339,17 +351,15 @@ def error_project_data_is_invalid(path) -> bool:
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Critical)
     msg.setText("Error")
-    msg.setInformativeText(f"Your project data is corrupted.")
+    msg.setInformativeText("Your project data is corrupted.")
     msg.setDetailedText(f"Data is missing in the following path: {path}")
     msg.setWindowTitle("Error")
-    # cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)
     msg.exec_()
     # button logic
-    # if msg.clickedButton() == cancel_button:
-    #     return False
     if msg.clickedButton() == ok_button:
         return True
+    return False
 
 
 def warning_switch_pymol_session(message_detail) -> bool:
@@ -365,7 +375,7 @@ def warning_switch_pymol_session(message_detail) -> bool:
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Warning")
-    msg.setInformativeText(f"Do you want to save the current PyMOL session?")
+    msg.setInformativeText("Do you want to save the current PyMOL session?")
     msg.setDetailedText(message_detail)
     msg.setWindowTitle("Warning")
     no_button = msg.addButton("No", QMessageBox.ActionRole)
@@ -376,6 +386,7 @@ def warning_switch_pymol_session(message_detail) -> bool:
         return False
     if msg.clickedButton() == yes_button:
         return True
+    return False
 
 
 def warning_prediction_is_running(dialog_obj):
@@ -439,7 +450,7 @@ def error_prediction_progress_lost() -> bool:
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Critical)
     msg.setText("Error")
-    msg.setInformativeText(f"Your prediction data was not saved!")
+    msg.setInformativeText("Your prediction data was not saved!")
     # msg.setDetailedText(f"Due to an error the prediction process was aborted.")
     msg.setWindowTitle("Error")
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)
@@ -447,6 +458,7 @@ def error_prediction_progress_lost() -> bool:
     # button logic
     if msg.clickedButton() == ok_button:
         return True
+    return False
 
 
 def hide_gui_elements(gui_elements: list):
@@ -537,12 +549,12 @@ def write_fasta_file_from_table():
     pass
 
 
-def fill_list_view_with_protein_names(app_project: 'project.Project', list_view_project_proteins):
+def fill_list_view_with_protein_names(app_project: "project.Project", list_view_project_proteins):
     for tmp_protein in app_project.proteins:
         list_view_project_proteins.addItem(tmp_protein.get_molecule_object())
 
 
-def fill_list_view_with_protein_pair_names(app_project: 'project.Project', list_view_project_proteins):
+def fill_list_view_with_protein_pair_names(app_project: "project.Project", list_view_project_proteins):
     for tmp_protein_pair in app_project.protein_pairs:
         list_view_project_proteins.addItem(tmp_protein_pair.name)
 
@@ -550,8 +562,7 @@ def fill_list_view_with_protein_pair_names(app_project: 'project.Project', list_
 def setup_standard_block_box(block_box, window_title, msg_text):
     block_box.setStandardButtons(QMessageBox.NoButton)
     block_box.setIcon(QMessageBox.Information)
-    block_box.setWindowIcon(
-        QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    block_box.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(block_box)
     block_box.setWindowTitle(window_title)
     block_box.setText(msg_text)

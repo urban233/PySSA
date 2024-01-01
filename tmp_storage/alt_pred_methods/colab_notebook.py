@@ -4,13 +4,14 @@ import sys
 import PyQt5
 from PyQt5 import QtCore
 from pymol.Qt import QtWidgets
+
 try:
     from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineDownloadItem
 except ImportError:
     print("QtWebEngineWidgets could not be imported correctly! In the colab_notebook.py file.")
 import datetime
 from pymol import Qt
-from PyQt5.QtWidgets import (QHBoxLayout, QPushButton, QLabel)
+from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import QUrl
 from gui.utilities import constants
 
@@ -20,9 +21,11 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
     colab_login_page = "https://accounts.google.com/ServiceLogin?passive=true&continue=https%3A%2F%2Fcolab.research.google.com%2Fgithub%2Fsokrypton%2FColabFold%2Fblob%2Fmain%2FAlphaFold2.ipynb&ec=GAZAqQM"
     login_page = "https://accounts.google.com/v3/signin/identifier?dsh=S-301988812%3A1672417305836195&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&hl=de&passive=true&flowName=GlifWebSignIn&flowEntry=ServiceLogin&ifkv=AeAAQh6nGazOofUFZXEEKfU4PB58c6ZxzdbUX2maYjsI4mCm7wqSvzZ3SCIux6lnC0hiRjVaT4p97w"
     url_without_pre_login = QUrl(
-        "https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb")
+        "https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb"
+    )
     url_with_pre_login = QUrl(
-        'https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb?pli=1')
+        "https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb?pli=1"
+    )
     account_page = QUrl("https://myaccount.google.com/?hl=de&utm_source=OGB&utm_medium=act&pli=1")
 
     abort_msg_box = None
@@ -97,8 +100,8 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
         params_file.close()
         print(self.prediction_params)
         # window settings
-        #self.setMinimumSize(575, 150)
-        #self.setMaximumSize(575, 150)
+        # self.setMinimumSize(575, 150)
+        # self.setMaximumSize(575, 150)
         self.setWindowTitle("Cloud Prediction")
         self.show()
 
@@ -119,27 +122,27 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
     # ----- JavaScript & Python Hierarchy
 
     def open_colab_notebook(self):
-        """This function opens the Google login page
-
-        """
+        """This function opens the Google login page"""
         url = QUrl(self.url_without_pre_login)
         self.web_page.setUrl(url)
         self.web_page.loadFinished.connect(self.check_authentication_status)
 
     def check_authentication_status(self):
-        self.web_page.runJavaScript("""
+        self.web_page.runJavaScript(
+            """
                     if (document.querySelectorAll('a')[2].className === "gb_7 gb_8 gb_de gb_dd") {
                         document.title = "login needed";
                     } else if (document.querySelectorAll('a')[2].className === "gb_d gb_Ra gb_l") {
                         document.title = "no login needed";
-                    } 
-                    """, self.process_authentication_status)
-
+                    }
+                    """,
+            self.process_authentication_status,
+        )
 
     def process_authentication_status(self, value) -> None:
         if value == "login needed":
             # Login is needed to proceed!
-            #TODO: finish this branch
+            # TODO: finish this branch
             self.web_page.setUrl(QUrl(self.colab_login_page))
         elif value == "no login needed":
             # Login already happened.
@@ -148,19 +151,21 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
             print("Unexpected case happened.")
 
     def run_colab_notebook_js(self):
-        #self.browser.hide()
+        # self.browser.hide()
         self.label.show()
         self.button.show()
         self.current_time = datetime.datetime.now().strftime("%H:%M:%S")
-        #self.web_page.runJavaScript("colab.global.notebook.kernel.attemptAutoconnect()")
+        # self.web_page.runJavaScript("colab.global.notebook.kernel.attemptAutoconnect()")
         self.web_page.runJavaScript(
-            f"document.querySelectorAll('paper-input').item(0).setAttribute('value', '{self.prediction_params['seq']}')")
+            f"document.querySelectorAll('paper-input').item(0).setAttribute('value', '{self.prediction_params['seq']}')"
+        )
         self.web_page.runJavaScript(
             "document.querySelectorAll('paper-input').item(0).dispatchEvent(new Event('change'))"
         )
         # sets the job name
         self.web_page.runJavaScript(
-            f"document.querySelectorAll('paper-input').item(1).setAttribute('value', '{self.prediction_params['job_name']}')")
+            f"document.querySelectorAll('paper-input').item(1).setAttribute('value', '{self.prediction_params['job_name']}')"
+        )
         self.web_page.runJavaScript(
             "document.querySelectorAll('paper-input').item(1).dispatchEvent(new Event('change'))"
         )
@@ -175,19 +180,15 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
         self.web_page.runJavaScript(
             f"document.querySelectorAll('select').item(0).selectedIndex = {self.prediction_params['templates'][1]}"
         )
-        self.web_page.runJavaScript(
-            "document.querySelectorAll('select').item(0).dispatchEvent(new Event('change'))"
-        )
+        self.web_page.runJavaScript("document.querySelectorAll('select').item(0).dispatchEvent(new Event('change'))")
         # runs all cells
         self.web_page.runJavaScript("colab.global.notebook.runAll()")
         # confirm to "run anyway" -> reason: notebook from GitHub
         self.web_page.runJavaScript("document.getElementsByTagName('paper-button').item(2).click()")
 
     def finished_prediction(self):
-        """This function does steps to finish the prediction with the google colab notebook
-
-        """
-        #gui_utils.warning_prediction_is_finished(self)
+        """This function does steps to finish the prediction with the google colab notebook"""
+        # gui_utils.warning_prediction_is_finished(self)
         print("Finished")
 
     def check_status(self) -> int:
@@ -196,7 +197,8 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
         Returns:
             exit code: defines in which state the kernel is
         """
-        self.web_page.runJavaScript("""
+        self.web_page.runJavaScript(
+            """
                     if (colab.global.notebook.kernel.getState() === "kernel idle") {
                         document.title = "error";
                     } else if (colab.global.notebook.kernel.getState() === "allocating") {
@@ -206,7 +208,8 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
                     } else if (colab.global.notebook.kernel.getState() === "connect") {
                         document.title = "need_to_connect";
                     }
-                    """)
+                    """
+        )
         if self.web_page.title() == "error":
             self.exit_code = 1
             self.close()
@@ -222,11 +225,17 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
         exit_code = self.check_status()
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         if exit_code == 2:
-            self.label.setText(f"Prediction runs normal. Prediction started at: {self.current_time} and last checked: {current_time}")
+            self.label.setText(
+                f"Prediction runs normal. Prediction started at: {self.current_time} and last checked: {current_time}"
+            )
         elif exit_code == 3:
-            self.label.setText(f"Google Colab resources need to be allocated. Prediction started at: {self.current_time} and last checked: {current_time}")
+            self.label.setText(
+                f"Google Colab resources need to be allocated. Prediction started at: {self.current_time} and last checked: {current_time}"
+            )
         elif exit_code == 4:
-            self.label.setText(f"You have to reconnect the session! Prediction started at: {self.current_time} and last checked: {current_time}")
+            self.label.setText(
+                f"You have to reconnect the session! Prediction started at: {self.current_time} and last checked: {current_time}"
+            )
 
     def set_protein_sequence(self, sequence):
         self.prediction_params.update(seq=sequence)
@@ -258,7 +267,7 @@ class WebInterface(Qt.QtWidgets.QMainWindow):
         self.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = PyQt5.QtWidgets.QApplication(sys.argv)
     window = WebInterface()
     if not window.exit_code == 1:

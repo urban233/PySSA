@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains tests about the different default values for the pages."""
-import os
 import pathlib
 import shutil
 import sys
@@ -45,9 +44,7 @@ class TestNewPageFunctionality(unittest.TestCase):
         del self.app
 
     def test_if_project_list_is_correctly_filled(self):
-        """This function test if the project list, is filled correctly.
-
-        """
+        """This function test if the project list, is filled correctly."""
         helpers.change_page(self.window.ui.btn_new_page, self.window.ui.lbl_page_title, "Create new project")
         scanner = filesystem_io.WorkspaceScanner(self.window.workspace_path)
         item_list = []
@@ -64,9 +61,7 @@ class TestNewPageFunctionality(unittest.TestCase):
             self.assertTrue(False)
 
     def test_invalid_characters_in_project_name(self):
-        """This function test if the gui page behaves correctly, if an invalid character is entered.
-
-        """
+        """This function test if the gui page behaves correctly, if an invalid character is entered."""
         helpers.change_page(self.window.ui.btn_new_page, self.window.ui.lbl_page_title, "Create new project")
         chars_to_test = [Qt.Key_Space, Qt.Key_Exclam, Qt.Key_Udiaeresis]
         for tmp_char_to_test in chars_to_test:
@@ -86,9 +81,7 @@ class TestNewPageFunctionality(unittest.TestCase):
         self.assertTrue(True)
 
     def test_project_already_exists_in_project_name(self):
-        """This function test if the gui page behaves correctly, if the project name overlaps with an existing one.
-
-        """
+        """This function test if the gui page behaves correctly, if the project name overlaps with an existing one."""
         # <editor-fold desc="Check if underscore project exists">
         helpers.change_page(self.window.ui.btn_new_page, self.window.ui.lbl_page_title, "Create new project")
         underscore_project_exists = False
@@ -118,13 +111,14 @@ class TestNewPageFunctionality(unittest.TestCase):
         if self.window.ui.btn_new_create_project.isEnabled():
             self.assertTrue(False)
         # Check if the correct row is highlighted
-        self.assertEqual(self.window.ui.list_new_projects.item(self.window.ui.list_new_projects.currentRow()).text(), "test1")
+        self.assertEqual(
+            self.window.ui.list_new_projects.item(self.window.ui.list_new_projects.currentRow()).text(),
+            "test1",
+        )
         self.assertTrue(True)
 
     def test_valid_characters_in_project_name(self):
-        """This function test if the gui page behaves correctly, if a valid character is entered.
-
-        """
+        """This function test if the gui page behaves correctly, if a valid character is entered."""
         # <editor-fold desc="Check if underscore project exists">
         helpers.change_page(self.window.ui.btn_new_page, self.window.ui.lbl_page_title, "Create new project")
         underscore_project_exists = False
@@ -237,5 +231,5 @@ class TestNewPageFunctionality(unittest.TestCase):
             self.assertTrue(True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

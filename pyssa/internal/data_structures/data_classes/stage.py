@@ -52,6 +52,6 @@ class Stage:
             - single_button
             - batch_button
     """
+
     primary_elements: dict
     control_elements: dict
-

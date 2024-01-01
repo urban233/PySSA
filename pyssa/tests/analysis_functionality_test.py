@@ -25,7 +25,6 @@ import sys
 import unittest
 from PyQt5.QtWidgets import QApplication
 from pyssa.main import MainWindow
-from pyssa.tests import helpers
 
 
 class TestMainWindow(unittest.TestCase):
@@ -40,5 +39,5 @@ class TestMainWindow(unittest.TestCase):
         del self.app
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -38,7 +38,7 @@ class TestMainWindow(unittest.TestCase):
         self.window.hide()
         del self.window
         del self.app
-    
+
     def test_clicking_new_button_opens_create_new_project_page(self):
         # Click the button
         self.window.ui.btn_new_page.animateClick()
@@ -48,8 +48,9 @@ class TestMainWindow(unittest.TestCase):
         helpers.check_if_label_changed_in_500_ms(self.window.ui.lbl_page_title, label_text_to_check)
 
         # Verify that the label text has been updated
-        self.assertEqual(self.window.ui.lbl_page_title.text(), label_text_to_check,
-                         "Page title does not match expected value.")
+        self.assertEqual(
+            self.window.ui.lbl_page_title.text(), label_text_to_check, "Page title does not match expected value."
+        )
 
     def test_clicking_open_button_opens_open_project_page(self):
         # Click the button
@@ -60,8 +61,9 @@ class TestMainWindow(unittest.TestCase):
         helpers.check_if_label_changed_in_500_ms(self.window.ui.lbl_page_title, label_text_to_check)
 
         # Verify that the label text has been updated
-        self.assertEqual(self.window.ui.lbl_page_title.text(), label_text_to_check,
-                         "Page title does not match expected value.")
+        self.assertEqual(
+            self.window.ui.lbl_page_title.text(), label_text_to_check, "Page title does not match expected value."
+        )
 
     def test_clicking_delete_button_opens_delete_project_page(self):
         # Click the button
@@ -72,13 +74,12 @@ class TestMainWindow(unittest.TestCase):
         helpers.check_if_label_changed_in_500_ms(self.window.ui.lbl_page_title, label_text_to_check)
 
         # Verify that the label text has been updated
-        self.assertEqual(self.window.ui.lbl_page_title.text(), label_text_to_check,
-                         "Page title does not match expected value.")
+        self.assertEqual(
+            self.window.ui.lbl_page_title.text(), label_text_to_check, "Page title does not match expected value."
+        )
 
     def test_delete_page_defaults(self):
-        """This test method checks if the delete page is set up with the correct default values
-
-        """
+        """This test method checks if the delete page is set up with the correct default values"""
         # Click the button
         self.window.ui.btn_delete_page.animateClick()
 
@@ -110,9 +111,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertFalse(expr=False)
 
     def test_open_page_defaults(self):
-        """This test method checks if the open page is set up with the correct default values
-
-        """
+        """This test method checks if the open page is set up with the correct default values"""
         # Click the button
         self.window.ui.btn_open_page.animateClick()
 
@@ -144,9 +143,7 @@ class TestMainWindow(unittest.TestCase):
         self.assertFalse(expr=False)
 
     def test_new_page_defaults(self):
-        """This test method checks if the new page is set up with the correct default values
-
-        """
+        """This test method checks if the new page is set up with the correct default values"""
         # Click the button
         self.window.ui.btn_new_page.animateClick()
 
@@ -178,5 +175,5 @@ class TestMainWindow(unittest.TestCase):
         self.assertFalse(expr=False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

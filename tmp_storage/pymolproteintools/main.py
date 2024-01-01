@@ -3,19 +3,19 @@
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
-# 
+#
 # Source code is available at <https://github.com/urban233/PySSA>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -74,7 +74,10 @@ if __name__ == "__main__":
 
     # create the Protein object for the reference
     reference_protein = core.Protein(REFERENCE_OBJ_NAME, IMPORT_SUBDIR)
-    reference_selection = "/%s//G//CA, /%s//H//CA" % (reference_protein.molecule_object, reference_protein.molecule_object)
+    reference_selection = "/%s//G//CA, /%s//H//CA" % (
+        reference_protein.molecule_object,
+        reference_protein.molecule_object,
+    )
     reference_protein.set_selection(reference_selection)
 
     # create model Protein object
@@ -93,8 +96,7 @@ if __name__ == "__main__":
     bmp2_pair.color_protein_pair()
     print("Finished coloring proteins.")
     # do the structure alignment
-    align_results = bmp2_pair.align_protein_pair(CYCLES, CUTOFF,
-                                                 ALIGNMENT_FILE_NAME)
+    align_results = bmp2_pair.align_protein_pair(CYCLES, CUTOFF, ALIGNMENT_FILE_NAME)
     print("Finished aligning proteins.")
     # do the distance calculation
     distance_results = bmp2_pair.calculate_distance_between_ca_atoms(ALIGNMENT_FILE_NAME)
@@ -126,8 +128,7 @@ if __name__ == "__main__":
     # take image of whole structure alignment
     # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
     #                                              "test")
-    print("Finished creation of image which shows the whole structure "
-          "alignment.")
+    print("Finished creation of image which shows the whole structure " "alignment.")
     # take image of interesting regions
     # graphics_instance.take_image_of_interesting_regions(5.0,
     #                                                     "interesting_region",
@@ -141,8 +142,7 @@ if __name__ == "__main__":
     # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
     #                                              "coloredByRMSD")
     graphics_instance.create_gif()
-    print("Finished creation of gif which shows the whole predicted "
-          "structure colored by distance.")
+    print("Finished creation of gif which shows the whole predicted " "structure colored by distance.")
     # save pymol session
     bmp2_pair.save_session_of_protein_pair(SESSION_FILE_NAME)
     print("Finished saving of pymol session file.")

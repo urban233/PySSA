@@ -37,7 +37,9 @@ def delete_original_batch_py_file() -> None:
         SubprocessExecutionError: If return code of subprocess is non-zero
     """
     # Remove original batch.py of Colabfold
-    tmp_batch_py_filepath: str = "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+    tmp_batch_py_filepath: str = (
+        "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+    )
     try:
         if os.path.exists(tmp_batch_py_filepath):
             os.remove(tmp_batch_py_filepath)
@@ -52,7 +54,9 @@ def copy_modified_batch_py_file() -> None:
         SubprocessExecutionError: If return code of subprocess is non-zero
     """
     PLUGIN_PATH = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
-    tmp_batch_py_filepath_wsl: str = "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+    tmp_batch_py_filepath_wsl: str = (
+        "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+    )
     tmp_batch_py_filepath_windows: str = f"{PLUGIN_PATH}/pyssa_colabfold/colabfold_sub/batch.py"
     try:
         shutil.copy2(tmp_batch_py_filepath_windows, tmp_batch_py_filepath_wsl)
@@ -160,5 +164,7 @@ if __name__ == "__main__":
         message = socket.recv_json()
 
         # Perform the computation and send back the result
-        result = start_computation(message["fasta_dir"], message["pdb_dir"], message["use_amber"], message["use_templates"])
+        result = start_computation(
+            message["fasta_dir"], message["pdb_dir"], message["use_amber"], message["use_templates"]
+        )
         socket.send_json(result)

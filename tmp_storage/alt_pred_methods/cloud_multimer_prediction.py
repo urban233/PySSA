@@ -46,7 +46,7 @@ def _create_cloud_pred_multimer_management(self):
             },
             {
                 "next_button": self.ui.btn_cloud_pred_multi_next,
-            }
+            },
         ),
         # protein sequence stage
         stage.Stage(
@@ -65,7 +65,7 @@ def _create_cloud_pred_multimer_management(self):
             {
                 "back_button": self.ui.btn_cloud_pred_multi_back,
                 "next_button": self.ui.btn_cloud_pred_multi_next_2,
-            }
+            },
         ),
         # prediction stage (with advanced configurations)
         stage.Stage(
@@ -78,10 +78,11 @@ def _create_cloud_pred_multimer_management(self):
             {
                 "back_button": self.ui.btn_cloud_pred_multi_back_2,
                 "predict_button": self.ui.btn_cloud_pred_multi_predict,
-            }
+            },
         ),
     ]
     self.cloud_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
 
 # connections
 self.ui.btn_pred_cloud_multimer_page.clicked.connect(self.display_cloud_pred_multi)
@@ -104,17 +105,19 @@ def _init_cloud_pred_multi_page(self):
     self.cloud_pred_multimer_management.disable_all_next_buttons()
     self.cloud_pred_multimer_management.set_empty_string_in_label()
 
+
 def display_cloud_pred_multi(self):
     tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 17, "Cloud Multimer Prediction")
-    item = self.ui.list_cloud_pred_multi_seq_notebooks.findItems("AlphaFold",
-                                                                 Qt.QtCore.Qt.MatchContains |
-                                                                 Qt.QtCore.Qt.MatchExactly
-                                                                 )
+    item = self.ui.list_cloud_pred_multi_seq_notebooks.findItems(
+        "AlphaFold", Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly
+    )
     self.ui.list_cloud_pred_multi_seq_notebooks.setCurrentItem(item[0])
+
 
 # ----- Functions for Multimer Cloud Prediction
 def show_cloud_pred_multi_stage_0(self):
     self.cloud_pred_multimer_management.show_stage_x(0)
+
 
 def show_cloud_pred_multi_stage_1(self):
     self.cloud_pred_multimer_management.show_stage_x(1)
@@ -124,11 +127,14 @@ def show_cloud_pred_multi_stage_1(self):
             new_item = QTableWidgetItem(self.ui.txt_cloud_pred_multi_protein_name.text())
             self.ui.table_cloud_pred_multi_prot_overview.setItem(row, 0, new_item)
 
+
 def show_cloud_pred_multi_stage_2(self):
     self.cloud_pred_multimer_management.show_stage_x(2)
 
+
 def validate_cloud_pred_multi(self):
     self.cloud_pred_multimer_management.create_validation()
+
 
 def add_sequence_cloud_pred_multi(self):
     no_of_rows = self.ui.table_cloud_pred_multi_prot_overview.rowCount()
@@ -143,6 +149,7 @@ def add_sequence_cloud_pred_multi(self):
     else:
         self.ui.btn_cloud_pred_multi_add_seq_single.setEnabled(False)
 
+
 def edit_protein_cloud_pred_multi(self):
     dialog = dialog_edit_prot_table.DialogEditProtTable()
     dialog.protein_name = self.ui.table_cloud_pred_multi_prot_overview.item(
@@ -154,21 +161,23 @@ def edit_protein_cloud_pred_multi(self):
     dialog.sequence = self.ui.table_cloud_pred_multi_prot_overview.item(
         self.ui.table_cloud_pred_multi_prot_overview.currentRow(), 2
     )
-    dialog.set_all_parameters(self.ui.table_cloud_pred_multi_prot_overview,
-                              self.ui.table_cloud_pred_multi_prot_overview.currentRow())
+    dialog.set_all_parameters(
+        self.ui.table_cloud_pred_multi_prot_overview, self.ui.table_cloud_pred_multi_prot_overview.currentRow()
+    )
     dialog.exec_()
+
 
 def remove_protein_cloud_pred_multi(self):
     self.ui.table_cloud_pred_multi_prot_overview.removeRow(self.ui.table_cloud_pred_multi_prot_overview.currentRow())
+
 
 def enable_cloud_predict_button(self):
     self.ui.btn_cloud_pred_multi_predict.setEnabled(True)
     styles.color_button_ready(self.ui.btn_prediction_only_start)
 
-def cloud_multi_predict(self):
-    """This function is used to predict with any google colab notebook.
 
-    """
+def cloud_multi_predict(self):
+    """This function is used to predict with any google colab notebook."""
     self.ui.action_toggle_notebook_visibility.setVisible(True)
     self.web_gui = web_interface.WebInterface()
     # prepare sequences
@@ -176,7 +185,7 @@ def cloud_multi_predict(self):
     for row in range(self.ui.table_cloud_pred_multi_prot_overview.rowCount()):
         tmp_seq = self.ui.table_cloud_pred_multi_prot_overview.item(row, 2).text()
         seqs.append(tmp_seq)
-    complete_sequence = ':'.join(seqs)
+    complete_sequence = ":".join(seqs)
 
     self.web_gui.set_protein_sequence(complete_sequence)
     self.web_gui.set_job_name(self.ui.lbl_current_project_name.text())
@@ -187,30 +196,41 @@ def cloud_multi_predict(self):
     self.ui.action_toggle_notebook_visibility.setVisible(False)
     # colabfold: AlphaFold2_mmseqs2 notebook specific process
     archive = f"{constants.NOTEBOOK_RESULTS_ZIP_NAME}.zip"
-    shutil.unpack_archive(f"{self.scratch_path}/{archive}",
-                          f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}", "zip")
+    shutil.unpack_archive(
+        f"{self.scratch_path}/{archive}", f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}", "zip"
+    )
     prediction_results: list[str] = os.listdir(
-        pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}"))
+        pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}")
+    )
     for filename in prediction_results:
         check = filename.find("_relaxed_rank_1")
         if check != -1:
             src = pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}/{filename}")
             dest = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
             shutil.copy(src, dest)
-            os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
-                      f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
+            os.rename(
+                f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
+                f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb",
+            )
             break
     shutil.rmtree(f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}")
     os.remove(f"{self.scratch_path}/{archive}")
     try:
         cmd.load(
-            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
+            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb"
+        )
     except pymol.CmdException:
         print("Loading the model failed.")
         return
     self._project_watcher.show_valid_options(self.ui)
     self.display_view_page()
 
+
 @staticmethod
 def activate_second_python():
-        subprocess.run(["python.exe", f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\tmpPySSA\\pyssa\\colab_notebook.py"])
+    subprocess.run(
+        [
+            "python.exe",
+            f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\tmpPySSA\\pyssa\\colab_notebook.py",
+        ]
+    )

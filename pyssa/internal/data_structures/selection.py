@@ -45,7 +45,7 @@ class Selection:
     """
     molecule_object: str
     """
-    a list of all current chains from the selection 
+    a list of all current chains from the selection
     """
     selection_chain_letters: list[str]
 
@@ -67,7 +67,7 @@ class Selection:
 
         self.molecule_object = molecule_object
 
-    def set_selections_from_chains_ca(self, chains: list['chain.Chain']) -> None:
+    def set_selections_from_chains_ca(self, chains: list["chain.Chain"]) -> None:
         """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's.
 
         Args:
@@ -81,12 +81,10 @@ class Selection:
             tmp_selection = f"/{self.molecule_object}//{tmp_chain.chain_letter}//CA"
             self.selection_chain_letters.append(tmp_chain.chain_letter)
             tmp_list.append(tmp_selection)
-            self.selection_string = (seperator.join(tmp_list))
+            self.selection_string = seperator.join(tmp_list)
 
     def set_selections_without_chains_ca(self) -> None:
-        """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's.
-
-        """
+        """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's."""
         self.selection_string = f"/{self.molecule_object}////CA"
 
     def set_single_selection(self, segi: str, chain: str, resi: str, atom_name: str):

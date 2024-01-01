@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -46,6 +47,5 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.label.setText(_translate("Form", "Analysis has finished."))
-        self.label_2.setText(_translate("Form", "The results can be viewed under the \"Results\" tab"))
+        self.label_2.setText(_translate("Form", 'The results can be viewed under the "Results" tab'))
         self.btn_ok.setText(_translate("Form", "OK"))
-

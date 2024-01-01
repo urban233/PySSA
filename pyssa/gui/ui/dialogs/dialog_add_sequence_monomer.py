@@ -26,7 +26,6 @@ from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_sequence_monomer import U
 
 
 class DialogAddSequenceMonomer(Qt.QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         """Constructor
 
@@ -49,15 +48,13 @@ class DialogAddSequenceMonomer(Qt.QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.show()
 
-
     def validate_protein_name(self):
-        input_validator.InputValidator.validate_protein_name(self.ui.txt_prot_name,
-                                                             self.ui.lbl_prot_name_status)
+        input_validator.InputValidator.validate_protein_name(self.ui.txt_prot_name, self.ui.lbl_prot_name_status)
 
     def validate_protein_sequence(self):
-        input_validator.InputValidator.validate_protein_sequence(self.ui.txt_seq_name,
-                                                                 self.ui.lbl_seq_name_status,
-                                                                 self.ui.btn_add_protein)
+        input_validator.InputValidator.validate_protein_sequence(
+            self.ui.txt_seq_name, self.ui.lbl_seq_name_status, self.ui.btn_add_protein
+        )
 
     def show_stage_protein_name(self):
         gui_elements_to_hide = [
@@ -89,8 +86,6 @@ class DialogAddSequenceMonomer(Qt.QtWidgets.QDialog):
             self.ui.lbl_seq_name_status,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
-
-
 
 
 # class DialogAddSequenceMonomer(Qt.QtWidgets.QDialog):

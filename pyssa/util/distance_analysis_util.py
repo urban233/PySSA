@@ -81,23 +81,27 @@ def do_distance_analysis_in_pymol(tmp_protein_pair: "protein_pair.ProteinPair") 
         analysis_results = results.DistanceAnalysisResults(
             distances,
             pymol_io.convert_pymol_session_to_base64_string(tmp_protein_pair.name),
-            float(rmsd_dict['rmsd']),
-            rmsd_dict['aligned_residues'],
+            float(rmsd_dict["rmsd"]),
+            rmsd_dict["aligned_residues"],
         )
     except Exception as e:
         tmp_msg: str = f"The analysis in PyMOL failed with the error: {e}"
         logger.error(tmp_msg)
         raise exception.UnableToDoAnalysisError(tmp_msg)
-    logger.info(f"Packed results into the DistanceAnalysisResults object for the protein pair: {tmp_protein_pair.name}.")
+    logger.info(
+        f"Packed results into the DistanceAnalysisResults object for the protein pair: {tmp_protein_pair.name}."
+    )
     return analysis_results
 
 
-def create_scene_of_protein_pair(a_protein_pair: "protein_pair.ProteinPair",
-                                 selection: str = "",
-                                 ray_shadows: bool = False,
-                                 opaque_background: int = 0,
-                                 take_images: bool = False,
-                                 filename: str = "") -> None:
+def create_scene_of_protein_pair(
+    a_protein_pair: "protein_pair.ProteinPair",
+    selection: str = "",
+    ray_shadows: bool = False,
+    opaque_background: int = 0,
+    take_images: bool = False,
+    filename: str = "",
+) -> None:
     """This function takes an image of the whole protein pair.
 
     Args:
@@ -123,25 +127,28 @@ def create_scene_of_protein_pair(a_protein_pair: "protein_pair.ProteinPair",
     graphic_operations.setup_default_image_graphic_settings(ray_shadows, opaque_background)
     graphic_operations.setup_default_session_graphic_settings()
 
-    cmd.scene(key=f"{a_protein_pair.protein_1.get_molecule_object()}-{a_protein_pair.protein_2.get_molecule_object()}",
-              action="store")
+    cmd.scene(
+        key=f"{a_protein_pair.protein_1.get_molecule_object()}-{a_protein_pair.protein_2.get_molecule_object()}",
+        action="store",
+    )
 
     if take_images is True:
         if not os.path.exists(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}"):
             os.mkdir(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}")
         # save image as 300 dpi png image
         cmd.ray(2400, 2400, renderer=0)
-        cmd.png(f'{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png',
-                dpi=300)
+        cmd.png(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/{filename}.png", dpi=300)
 
 
-def create_scenes_of_interesting_regions(the_distance_data: dict[str, np.ndarray],
-                                         protein_1_molecule_object: str,
-                                         protein_2_molecule_object: str,
-                                         cutoff: float,
-                                         ray_shadows: bool = False,
-                                         take_images: bool = False,
-                                         filename: str = "") -> None:
+def create_scenes_of_interesting_regions(
+    the_distance_data: dict[str, np.ndarray],
+    protein_1_molecule_object: str,
+    protein_2_molecule_object: str,
+    cutoff: float,
+    ray_shadows: bool = False,
+    take_images: bool = False,
+    filename: str = "",
+) -> None:
     """Creates scenes of interesting regions of the alignment and optionally ray-traced images.
 
     Args:
@@ -199,14 +206,14 @@ def create_scenes_of_interesting_regions(the_distance_data: dict[str, np.ndarray
             graphic_operations.setup_default_image_graphic_settings(ray_shadows)
             cmd.scene(key=f"{ref_pos}-{model_pos}", action="store")
             if take_images is True:
-                if not os.path.exists(
-                       constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                     os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
                 # save image as 300 dpi png image
                 cmd.ray(2400, 2400, renderer=0)
                 cmd.png(
-                    f'{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{filename}_{ref_pos}.png',
-                    dpi=300)
+                    f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{filename}_{ref_pos}.png",
+                    dpi=300,
+                )
             # hide created labels
             cmd.hide("labels", atom1)
             cmd.hide("labels", atom2)

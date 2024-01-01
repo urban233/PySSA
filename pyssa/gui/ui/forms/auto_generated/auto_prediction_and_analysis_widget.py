@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
@@ -80,4 +81,3 @@ class Ui_Form(object):
         self.label_17.setText(_translate("Form", "Chains in models (input style: A,B)"))
         self.btn_prediction_cancel.setText(_translate("Form", "Cancel"))
         self.btn_prediction_start.setText(_translate("Form", "Predict with Colab Notebook"))
-

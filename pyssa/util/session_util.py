@@ -31,12 +31,18 @@ def check_if_sele_is_empty():
         tmp_selection = cmd.get_model("sele")
     except pymol.CmdException:
         # gets thrown if no sele object exists in pymol
-        basic_boxes.ok("PyMOL session", "Please select at least one residue from the sequence view.",
-                       QMessageBox.Information)
+        basic_boxes.ok(
+            "PyMOL session",
+            "Please select at least one residue from the sequence view.",
+            QMessageBox.Information,
+        )
         return
     try:
-        tmp = tmp_selection.atom[0].resi
+        tmp_selection.atom[0].resi
     except IndexError:
         # gets thrown if sele object is empty
-        basic_boxes.ok("PyMOL session", "Please select at least one residue from the sequence view.",
-                       QMessageBox.Information)
+        basic_boxes.ok(
+            "PyMOL session",
+            "Please select at least one residue from the sequence view.",
+            QMessageBox.Information,
+        )

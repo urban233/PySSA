@@ -126,7 +126,8 @@ def setup_default_image_graphic_settings(ray_shadows: bool, opaque_background: i
     cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
     cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
     cmd.set("ray_shadows", opt_ray_shadows)
-    cmd.set('ray_opaque_background', opaque_background)
+    cmd.set("ray_opaque_background", opaque_background)
+
 
 def setup_default_graphic_settings_for_interesting_regions() -> None:
     """Sets up the default graphic settings for interesting regions."""

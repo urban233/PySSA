@@ -26,13 +26,17 @@ from pyssa.gui.ui.styles import styles
 
 
 class InputValidator:
-
     def __init__(self):
         pass
 
     @staticmethod
-    def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status_project_name,
-                              btn_for_next_step, cb_for_add_reference=None):
+    def validate_project_name(
+        list_of_projects,
+        txt_for_project_name,
+        lbl_for_status_project_name,
+        btn_for_next_step,
+        cb_for_add_reference=None,
+    ):
         """This function validates the input of the project name in real-time
 
         Args:
@@ -88,9 +92,9 @@ class InputValidator:
                     btn_for_next_step.setEnabled(False)
                     styles.color_button_not_ready(btn_for_next_step)
                     return
-            item = list_of_projects.findItems(txt_for_project_name.text(),
-                                              Qt.QtCore.Qt.MatchContains |
-                                              Qt.QtCore.Qt.MatchExactly)
+            item = list_of_projects.findItems(
+                txt_for_project_name.text(), Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly
+            )
             if len(item) != 0:
                 list_of_projects.setCurrentItem(item[0])
                 txt_for_project_name.setStyleSheet("color: #f44336")
@@ -102,7 +106,9 @@ class InputValidator:
                 styles.color_button_not_ready(btn_for_next_step)
 
     @staticmethod
-    def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_search, txt_for_selected_project=None, status_message=None):
+    def validate_search_input(
+        list_for_projects, txt_for_search, lbl_for_status_search, txt_for_selected_project=None, status_message=None
+    ):
         """This function validates the input of the project name in real-time
 
         Args:
@@ -126,9 +132,9 @@ class InputValidator:
                 txt_for_selected_project.setText("")
             return
         else:
-            item = list_for_projects.findItems(txt_for_search.text(),
-                                               Qt.QtCore.Qt.MatchContains |
-                                               Qt.QtCore.Qt.MatchExactly)
+            item = list_for_projects.findItems(
+                txt_for_search.text(), Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly
+            )
             if len(item) != 0:
                 list_for_projects.setCurrentItem(item[0])
                 lbl_for_status_search.setText("")
@@ -144,8 +150,7 @@ class InputValidator:
                     txt_for_selected_project.setText("")
 
     @staticmethod
-    def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
-                              btn_next=None):
+    def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name, btn_next=None):
         """This function validates the input of the protein name in real-time.
 
         Args:
@@ -192,8 +197,7 @@ class InputValidator:
                     return
 
     @staticmethod
-    def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
-                                  btn_next):
+    def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence, btn_next):
         """This function validates the input of the protein sequence in real-time
 
         Args:

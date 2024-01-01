@@ -77,11 +77,10 @@ class FilePath:
     def split_filepath(self) -> tuple[pathlib.Path, str]:
         string_version = str(self._filepath)
         file_info = QtCore.QFileInfo(string_version)
-        src = pathlib.Path(file_info.canonicalPath())
         return pathlib.Path(file_info.canonicalPath()), f"{file_info.baseName()}.{file_info.suffix()}"
 
     def merge_filepath_to_filename(self) -> pathlib.Path:
-        return pathlib.Path(str(self._filepath)+str(self._filename))
+        return pathlib.Path(str(self._filepath) + str(self._filename))
 
     def split_file_extension_from_name(self) -> tuple[str, str]:
         file_info = QtCore.QFileInfo(str(self._filepath))

@@ -37,11 +37,12 @@ logger.addHandler(log_handlers.log_file_handler)
 
 class EsmFold:
     """This class contains information about the ESMFold prediction engine."""
+
     """
     a list of protein sequences which should get predicted
     """
     protein_prediction_infos: list[prediction_protein_info.PredictionProteinInfo]
-    
+
     def __init__(self, protein_prediction_infos):
         """Constructor.
 
@@ -124,28 +125,37 @@ class EsmFold:
         failed_predictions = []
         for tmp_protein_prediction_info in self.protein_prediction_infos:
             try:
-                self.predict_single_protein(tmp_protein_prediction_info.sequences[0],
-                                            str(pathlib.Path(f"{constants.ESMFOLD_PDB_DIR}/{tmp_protein_prediction_info.name}.pdb")))
+                self.predict_single_protein(
+                    tmp_protein_prediction_info.sequences[0],
+                    str(pathlib.Path(f"{constants.ESMFOLD_PDB_DIR}/{tmp_protein_prediction_info.name}.pdb")),
+                )
             except ConnectionError:
                 failed_predictions.append(tmp_protein_prediction_info.sequences[0])
-                logger.error(f"Prediction with protein name: {tmp_protein_prediction_info.name} failed. "
-                             f"Prediction will be retried one more time after all others finished.")
+                logger.error(
+                    f"Prediction with protein name: {tmp_protein_prediction_info.name} failed. "
+                    f"Prediction will be retried one more time after all others finished."
+                )
             finally:
-                logger.info(f"Prediction with protein name: {tmp_protein_prediction_info.name} finished. "
-                            f"Run {i} of {len(self.protein_prediction_infos)} finished.")
+                logger.info(
+                    f"Prediction with protein name: {tmp_protein_prediction_info.name} finished. "
+                    f"Run {i} of {len(self.protein_prediction_infos)} finished."
+                )
                 i += 1
         failed_multiple_attempts = []
         if len(failed_predictions) > 0:
             for tmp_protein_prediction_info in failed_predictions:
                 logger.info("Retry previously failed predictions ...")
                 try:
-                    self.predict_single_protein(tmp_protein_prediction_info.sequences[0],
-                                                str(pathlib.Path(
-                                                    f"{constants.ESMFOLD_PDB_DIR}/{tmp_protein_prediction_info.name}.pdb")))
+                    self.predict_single_protein(
+                        tmp_protein_prediction_info.sequences[0],
+                        str(pathlib.Path(f"{constants.ESMFOLD_PDB_DIR}/{tmp_protein_prediction_info.name}.pdb")),
+                    )
                 except ConnectionError:
                     failed_multiple_attempts.append(tmp_protein_prediction_info)
-                    logger.error(f"Prediction with protein name: {tmp_protein_prediction_info.name} failed. "
-                                 f"Prediction cannot be completed at the moment.")
+                    logger.error(
+                        f"Prediction with protein name: {tmp_protein_prediction_info.name} failed. "
+                        f"Prediction cannot be completed at the moment."
+                    )
             logger.debug(f"In the first run these predictions failed: {failed_predictions}")
             logger.debug(f"In the second run these predictions failed: {failed_multiple_attempts}")
 

@@ -25,6 +25,7 @@ from dataclasses import dataclass
 @dataclass
 class ResultsState:
     """Contains the current state of the results page."""
+
     results_name: str
 
     def __init__(self) -> None:

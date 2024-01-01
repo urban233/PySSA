@@ -48,7 +48,6 @@ class PlotWidget(QWidget):
 
 
 class DialogDistanceHistogram(QtWidgets.QDialog):
-
     def __init__(self, protein_pair_from_project, parent=None):
         """Constructor.
 
@@ -67,73 +66,6 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         self.ui.btn_scroll_up.hide()
         self.ui.btn_scroll_down.hide()
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
-        # <editor-fold desc="PyQtGraph">
-        # self.graph_widget = pg.PlotWidget()
-        # self.view_box = self.graph_widget.plotItem.getViewBox()
-        # # read csv file
-        # # TODO: Needs correction for xml model
-        # # path = pathlib.Path(f"{self.protein_pair_for_analysis.results_dir}/distance_csv/distances.csv")
-        # # distance_list = []
-        # # with open(path, 'r', encoding="utf-8") as csv_file:
-        # #     i = 0
-        # #     for line in csv_file:
-        # #         cleaned_line = line.replace("\n", "")
-        # #         if cleaned_line.split(",")[8] != 'distance':
-        # #             distance_list.append(float(cleaned_line.split(",")[8]))
-        # distance_data: dict[str, np.ndarray] = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
-        # distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
-        # distance_list.sort()
-        # length = len(distance_list)
-        # max_distance = distance_list[length - 1]
-        # x, y = np.histogram(distance_list, bins=np.arange(0, max_distance, 0.25))
-        # if x.size != y.size:
-        #     x = np.resize(x, (1, y.size))
-        # # this conversion is needed for the pyqtgraph library!
-        # x = x.tolist()
-        # try:
-        #     x = x[0]
-        # except IndexError:
-        #     # Error got raised where the distances where all 0
-        #     # tools.quick_log_and_display("error", "The histogram could not be created.",
-        #     #                             self.status_bar, "The histogram could not be created. "
-        #     #                                              " Check the distance table!")
-        #     return
-        #
-        # y = y.tolist()
-        # color = QtGui.QColor.fromRgb(255, 128, 128)
-        # # creates bar chart item
-        # graph_bar_item = pg.BarGraphItem(x0=0, y=y, height=0.2, width=x,
-        #                                  pen=pg.mkPen(color="#4B91F7"), brush=pg.mkBrush(color="#4B91F7"))
-        # # creates y-labels for bar chart
-        # y_labels = []
-        # for i in range(len(y)):
-        #     try:
-        #         label = f"{y[i]} - {y[i + 1]}"
-        #     except IndexError:
-        #         # detects if a last label is necessary
-        #         label = f"{y[i]} - {y[i] + 0.25}"
-        #     y_labels.append(label)
-        # y_values = y
-        # ticks = []
-        # for i, item in enumerate(y_labels):
-        #     ticks.append((y_values[i], item))
-        # ticks = [ticks]
-        #
-        # # styling the plot
-        # self.graph_widget.setBackground('w')
-        # self.graph_widget.setTitle(f"Distance Histogram of {self.protein_pair_for_analysis.name}", size="23pt")
-        # styles = {'font-size': '14px'}
-        # ax_label_x = "Distance in Å"
-        # self.graph_widget.setLabel('left', ax_label_x, **styles)
-        # self.graph_widget.setLabel('bottom', "Frequency of C-α distances", **styles)
-        # self.graph_widget.addItem(graph_bar_item)
-        # bar_ax = self.graph_widget.getAxis('left')
-        # bar_ax.setTicks(ticks)
-        # self.view_box.invertY(True)
-        # self.ui.main_Layout.addWidget(self.graph_widget)
-
-        # </editor-fold>
 
         # <editor-fold desc="Matplotlib">
         self.scroll_area = QScrollArea()
@@ -211,7 +143,9 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         self.plot_widget.figure.clear()
 
         distance_data: dict[
-            str, np.ndarray] = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
+            str,
+            np.ndarray,
+        ] = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
         distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
         distance_list.sort()
         length = len(distance_list)
@@ -219,18 +153,31 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
 
         # Create an axis and plot a histogram
         ax = self.plot_widget.figure.add_subplot(111)
-        n, bins, patches = ax.hist(distance_list, bins=np.arange(0, max_distance + 0.25, 0.25), orientation='horizontal', rwidth=0.7, color='#4B91F7')
+        n, bins, patches = ax.hist(
+            distance_list,
+            bins=np.arange(0, max_distance + 0.25, 0.25),
+            orientation="horizontal",
+            rwidth=0.7,
+            color="#4B91F7",
+        )
 
         # Add labels to the non-zero frequency histogram bars
         for bin_value, patch in zip(n, patches):
             x = patch.get_x() + patch.get_width() + 0.1
             y = patch.get_y() + patch.get_height() / 2
-            ax.annotate(f"{bin_value}", xy=(x, y), xycoords='data',
-                        xytext=(3, 0), textcoords='offset points', ha='left', va='center')
+            ax.annotate(
+                f"{bin_value}",
+                xy=(x, y),
+                xycoords="data",
+                xytext=(3, 0),
+                textcoords="offset points",
+                ha="left",
+                va="center",
+            )
 
         # Move the entire x-axis to the top
         ax.xaxis.tick_top()
-        ax.xaxis.set_label_position('top')
+        ax.xaxis.set_label_position("top")
 
         # Calculate the midpoints between bin edges
         bin_midpoints = (bins[:-1] + bins[1:]) / 2
@@ -240,21 +187,21 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         custom_labels = [f"{bin_start} - {bin_end}" for bin_start, bin_end in zip(bins[:-1], bins[1:])]
         ax.set_yticklabels(custom_labels)
         # Set axis labels
-        ax.set_xlabel('Count')
-        ax.set_ylabel('Bins')
+        ax.set_xlabel("Count")
+        ax.set_ylabel("Bins")
         # Invert the y-axis
         ax.invert_yaxis()
         # Remove the spines where no axis are present
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
 
         # Remove the spines where no axis are present
-        ax.spines['right'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
 
         # Set axis labels
-        ax.set_xlabel('Frequency of C-α distances')
-        ax.set_ylabel('Distance in Å')
+        ax.set_xlabel("Frequency of C-α distances")
+        ax.set_ylabel("Distance in Å")
 
         # Adjust subplot parameters to reduce white space
         self.plot_widget.figure.tight_layout()

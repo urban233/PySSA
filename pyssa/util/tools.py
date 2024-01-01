@@ -43,7 +43,6 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_structures import settings
 from pyssa.util import constants
 from pyssa.gui.ui.styles import styles
-from pyssa.internal.data_structures.data_classes import protein_info
 from pyssa.internal.data_structures.data_classes import basic_protein_info
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
@@ -62,7 +61,7 @@ def check_internet_connectivity() -> bool:
         return False
     else:
         return True
-    
+
 
 def create_directory(parent_path, dir_name) -> None:
     """This function creates a directory with a given path and directory name.
@@ -182,8 +181,12 @@ def restore_default_settings(settings_obj: settings.Settings) -> None:
     settings_obj.restore_settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
 
 
-def quick_log_and_display(log_type: str, log_message: str,
-                          status_bar: QtWidgets.QStatusBar, status_bar_message: str) -> None:
+def quick_log_and_display(
+    log_type: str,
+    log_message: str,
+    status_bar: QtWidgets.QStatusBar,
+    status_bar_message: str,
+) -> None:
     """This function is used to quickly log, print and display a message.
 
     Args:
@@ -252,13 +255,15 @@ def check_results_for_integrity(workspace_path, project_name) -> (bool, Path):
 def scan_workspace_for_valid_projects(workspace_path, list_new_projects):
     directory_content = os.listdir(workspace_path)
     directory_content.sort()
-    xml_files = [file for file in directory_content if file.endswith('.xml')]
+    xml_files = [file for file in directory_content if file.endswith(".xml")]
     for tmp_project in xml_files:
         list_new_projects.addItem(tmp_project)
     return xml_files
 
 
-def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> tuple[list[basic_protein_info], list[str]]:
+def scan_workspace_for_non_duplicate_proteins(
+    workspace_path: pathlib.Path,
+) -> tuple[list[basic_protein_info], list[str]]:
     """This function scans the workspace directory for protein structures and eliminates all duplicates.
 
     Args:
@@ -269,9 +274,7 @@ def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> t
         dict which contains all proteins without duplicates
     """
     """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
-    workspace_proteins = []
     protein_names = []
-    protein_tuples_notation = []
     protein_infos: list[basic_protein_info] = []
 
     for tmp_project_file in os.listdir(workspace_path):
@@ -283,68 +286,19 @@ def scan_workspace_for_non_duplicate_proteins(workspace_path: pathlib.Path) -> t
                 molecule_object = tmp_protein.attrib[attribute_names.PROTEIN_MOLECULE_OBJECT]
                 if molecule_object not in protein_names:
                     protein_names.append(molecule_object)
-                    protein_infos.append(basic_protein_info.BasicProteinInfo(molecule_object, tmp_protein.attrib[attribute_names.ID], project_name))
-
-    #
-    #
-    #     project_proteins = scan_project_for_valid_proteins(pathlib.Path(f"{workspace_path}/{valid_project}"), list_widget)
-    #     list_widget.clear()
-    #     for protein in project_proteins:
-    #         tmp_protein = protein_info.ProteinInfo(protein, pathlib.Path(f"{workspace_path}/{valid_project}/pdb/{protein}"))
-    #         workspace_proteins.append(tmp_protein)
-    #         if tmp_protein.name not in protein_names:
-    #             protein_names.append(tmp_protein.name)
-    # # this for-loop is necessary for the creation of the protein dictionary
-    # for protein in workspace_proteins:
-    #     protein_tuples_notation.append(protein.get_tuple_notation())
-    # protein_dict = dict(protein_tuples_notation)
-
+                    protein_infos.append(
+                        basic_protein_info.BasicProteinInfo(
+                            molecule_object,
+                            tmp_protein.attrib[attribute_names.ID],
+                            project_name,
+                        ),
+                    )
     return protein_infos, protein_names
-
-
-def OLD_scan_workspace_for_non_duplicate_proteins(valid_projects: list, current_project_name: str,
-                                              workspace_path: pathlib.Path,
-                                              list_widget: QtWidgets.QListWidget) -> tuple[dict, list]:
-    """This function scans the workspace directory for protein structures and eliminates all duplicates.
-
-    Args:
-        valid_projects (list):
-            a list of all projects within the workspace
-        current_project_name (str):
-            name of the currently loaded project
-        workspace_path (str):
-            path of the current workspace
-        list_widget (Qt.QtWidgets.QListWidget)
-            list widget which is needed to temporarily store the results from the function "scan_project_for_valid_proteins"
-
-    Returns:
-        dict which contains all proteins without duplicates
-    """
-    """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
-    workspace_proteins = []
-    protein_names = []
-    protein_tuples_notation = []
-    for valid_project in valid_projects:
-        # if valid_project != current_project_name: # I don't know why this if-statement should be important
-        """Var: project_proteins is a list which contains all proteins from a single project"""
-        project_proteins = scan_project_for_valid_proteins(pathlib.Path(f"{workspace_path}/{valid_project}"), list_widget)
-        list_widget.clear()
-        for protein in project_proteins:
-            tmp_protein = protein_info.ProteinInfo(protein, pathlib.Path(f"{workspace_path}/{valid_project}/pdb/{protein}"))
-            workspace_proteins.append(tmp_protein)
-            if tmp_protein.name not in protein_names:
-                protein_names.append(tmp_protein.name)
-    # this for-loop is necessary for the creation of the protein dictionary
-    for protein in workspace_proteins:
-        protein_tuples_notation.append(protein.get_tuple_notation())
-    protein_dict = dict(protein_tuples_notation)
-    return protein_dict, protein_names
 
 
 def scan_project_for_valid_proteins(project_path: pathlib.Path, list_view_project_proteins=None) -> list[str]:
     directory = "pdb"
     project_proteins: list[str] = os.listdir(pathlib.Path(f"{project_path}/{directory}"))
-    valid_proteins = []
     pattern = "*.pdb"
     # iterates over possible project directories
     if list_view_project_proteins is not None:
@@ -354,7 +308,12 @@ def scan_project_for_valid_proteins(project_path: pathlib.Path, list_view_projec
     return project_proteins
 
 
-def switch_page(stackedWidget: QtWidgets.QStackedWidget, lbl_page_title: QtWidgets.QLabel, index: int, text: str) -> None:
+def switch_page(
+    stackedWidget: QtWidgets.QStackedWidget,
+    lbl_page_title: QtWidgets.QLabel,
+    index: int,
+    text: str,
+) -> None:
     """This function switches a given stackedWidget page.
 
     Args:
@@ -374,10 +333,28 @@ def switch_page(stackedWidget: QtWidgets.QStackedWidget, lbl_page_title: QtWidge
 
 def get_sequence_from_pdb_file(file_path):
     # You can use a dict to convert three letter code to one letter code
-    d3to1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
-             'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
-             'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
-             'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+    d3to1 = {
+        "CYS": "C",
+        "ASP": "D",
+        "SER": "S",
+        "GLN": "Q",
+        "LYS": "K",
+        "ILE": "I",
+        "PRO": "P",
+        "THR": "T",
+        "PHE": "F",
+        "ASN": "N",
+        "GLY": "G",
+        "HIS": "H",
+        "LEU": "L",
+        "ARG": "R",
+        "TRP": "W",
+        "ALA": "A",
+        "VAL": "V",
+        "GLU": "E",
+        "TYR": "Y",
+        "MET": "M",
+    }
     parser_pdb = PDB.PDBParser()
     structure = parser_pdb.get_structure("struct", file_path)
     sequence_list = []
@@ -388,7 +365,7 @@ def get_sequence_from_pdb_file(file_path):
                     sequence_list.append(d3to1[residue.resname])
                 except KeyError:
                     print(f"Residue {residue} is not a valid residue!")
-    sequence = ''.join(sequence_list)
+    sequence = "".join(sequence_list)
     return sequence
 
 
@@ -402,10 +379,28 @@ def remove_pdb_file(file_path):
 def add_chains_from_pdb_file_to_list(project_path, protein_filename, list_widget=None) -> list:
     cmd.load(f"{project_path}/pdb/{protein_filename}", object="tmp_protein")
     tmp_chains: list = cmd.get_chains("tmp_protein")
-    d3to1 = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
-             'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
-             'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
-             'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+    d3to1 = {
+        "CYS": "C",
+        "ASP": "D",
+        "SER": "S",
+        "GLN": "Q",
+        "LYS": "K",
+        "ILE": "I",
+        "PRO": "P",
+        "THR": "T",
+        "PHE": "F",
+        "ASN": "N",
+        "GLY": "G",
+        "HIS": "H",
+        "LEU": "L",
+        "ARG": "R",
+        "TRP": "W",
+        "ALA": "A",
+        "VAL": "V",
+        "GLU": "E",
+        "TYR": "Y",
+        "MET": "M",
+    }
     if list_widget is not None:
         list_widget.clear()
     for chain in tmp_chains:
@@ -421,8 +416,13 @@ def add_chains_from_pdb_file_to_list(project_path, protein_filename, list_widget
     return tmp_chains
 
 
-def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status_project_name,
-                          btn_for_next_step, cb_for_add_reference=None):
+def validate_project_name(
+    list_of_projects,
+    txt_for_project_name,
+    lbl_for_status_project_name,
+    btn_for_next_step,
+    cb_for_add_reference=None,
+):
     """This function validates the input of the project name in real-time.
 
     Args:
@@ -478,9 +478,7 @@ def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status
                 btn_for_next_step.setEnabled(False)
                 styles.color_button_not_ready(btn_for_next_step)
                 return
-        item = list_of_projects.findItems(txt_for_project_name.text(),
-                                          QtCore.Qt.MatchContains |
-                                          QtCore.Qt.MatchExactly)
+        item = list_of_projects.findItems(txt_for_project_name.text(), QtCore.Qt.MatchContains | QtCore.Qt.MatchExactly)
         if len(item) != 0:
             list_of_projects.setCurrentItem(item[0])
             txt_for_project_name.setStyleSheet("color: #f44336")
@@ -492,8 +490,13 @@ def validate_project_name(list_of_projects, txt_for_project_name, lbl_for_status
             styles.color_button_not_ready(btn_for_next_step)
 
 
-def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_search, status_message,
-                          txt_for_selected_project=None):
+def validate_search_input(
+    list_for_projects,
+    txt_for_search,
+    lbl_for_status_search,
+    status_message,
+    txt_for_selected_project=None,
+):
     """This function validates the input of the project name in real-time.
 
     Args:
@@ -518,9 +521,7 @@ def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_sear
             txt_for_selected_project.setText("")
         return
     else:
-        item = list_for_projects.findItems(txt_for_search.text(),
-                                            QtCore.Qt.MatchContains |
-                                            QtCore.Qt.MatchExactly)
+        item = list_for_projects.findItems(txt_for_search.text(), QtCore.Qt.MatchContains | QtCore.Qt.MatchExactly)
         if len(item) != 0:
             list_for_projects.setCurrentItem(item[0])
             lbl_for_status_search.setText("")
@@ -533,8 +534,7 @@ def validate_search_input(list_for_projects, txt_for_search, lbl_for_status_sear
                 txt_for_selected_project.setText("")
 
 
-def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
-                          btn_next):
+def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name, btn_next):
     """This function validates the input of the protein name in real-time.
 
     Args:
@@ -547,8 +547,7 @@ def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
 
     """
     # set color for lineEdit
-    txt_for_protein_name.setStyleSheet("color: #f44336;"
-                                       "background-color: white;")
+    txt_for_protein_name.setStyleSheet("color: #f44336;" "background-color: white;")
     if len(txt_for_protein_name.text()) == 0:
         lbl_for_status_protein_name.setText("")
         btn_next.setEnabled(False)
@@ -566,22 +565,19 @@ def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name,
         for i in range(len(txt_for_protein_name.text())):
             result = validator.validate(txt_for_protein_name.text(), i)
             if result[0] > 0:
-                txt_for_protein_name.setStyleSheet("color: #000000;"
-                                                   "background-color: white;")
+                txt_for_protein_name.setStyleSheet("color: #000000;" "background-color: white;")
                 lbl_for_status_protein_name.setText("")
                 btn_next.setEnabled(True)
                 styles.color_button_ready(btn_next)
             else:
-                txt_for_protein_name.setStyleSheet("color: #f44336;"
-                                                   "background-color: white;")
+                txt_for_protein_name.setStyleSheet("color: #f44336;" "background-color: white;")
                 lbl_for_status_protein_name.setText("Invalid character.")
                 btn_next.setEnabled(False)
                 styles.color_button_not_ready(btn_next)
                 return
 
 
-def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
-                              btn_next):
+def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence, btn_next):
     """This function validates the input of the protein sequence in real-time.
 
     Args:
@@ -594,8 +590,7 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
 
     """
     # set color for lineEdit
-    txt_protein_sequence.setStyleSheet("color: #f44336;"
-                                       "background-color: white;")
+    txt_protein_sequence.setStyleSheet("color: #f44336;" "background-color: white;")
     if len(txt_protein_sequence.toPlainText()) == 0:
         lbl_status_protein_sequence.setText("")
         btn_next.setEnabled(False)
@@ -608,14 +603,12 @@ def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence,
         for i in range(len(txt_protein_sequence.toPlainText())):
             result = validator.validate(txt_protein_sequence.toPlainText(), i)
             if result[0] > 0:
-                txt_protein_sequence.setStyleSheet("color: #000000;"
-                                                   "background-color: white;")
+                txt_protein_sequence.setStyleSheet("color: #000000;" "background-color: white;")
                 lbl_status_protein_sequence.setText("")
                 btn_next.setEnabled(True)
                 styles.color_button_ready(btn_next)
             else:
-                txt_protein_sequence.setStyleSheet("color: #f44336;"
-                                                   "background-color: white;")
+                txt_protein_sequence.setStyleSheet("color: #f44336;" "background-color: white;")
                 lbl_status_protein_sequence.setText("Invalid character.")
                 btn_next.setEnabled(False)
                 styles.color_button_not_ready(btn_next)
@@ -627,8 +620,11 @@ def clean_scratch_folder():
     os.mkdir(constants.SCRATCH_DIR)
 
 
-def ask_to_save_pymol_session(app_project: 'project.Project', current_session: current_session.CurrentSession,
-                              app_settings: 'settings.Settings'):
+def ask_to_save_pymol_session(
+    app_project: "project.Project",
+    current_session: current_session.CurrentSession,
+    app_settings: "settings.Settings",
+):
     """This function asks to save the current pymol session.
 
     Args:
@@ -637,8 +633,11 @@ def ask_to_save_pymol_session(app_project: 'project.Project', current_session: c
 
     """
     if app_settings.ask_save_pymol_session == 1:
-        session_msg = basic_boxes.yes_or_no("PyMOL Session", "Do you want to save your current pymol session?",
-                                            QMessageBox.Information)
+        session_msg = basic_boxes.yes_or_no(
+            "PyMOL Session",
+            "Do you want to save your current pymol session?",
+            QMessageBox.Information,
+        )
         if session_msg is True:
             current_session.session = pymol_io.convert_pymol_session_to_base64_string(current_session.name)
             app_project.save_pymol_session(current_session)
@@ -655,10 +654,11 @@ def check_first_seq_no(tmp_protein):
 
 
 def check_seq_length(tmp_protein) -> int:
-    #tmp_protein.pymol_selection.set_selections_without_chains_ca()
+    # tmp_protein.pymol_selection.set_selections_without_chains_ca()
     tmp_protein.load_protein_pymol_session()
     tmp_sequence = cmd.get_fastastr(tmp_protein.pymol_selection.selection_string)
     return len(tmp_sequence)
+
 
 # def create_histogram(results_hashtable):
 #     y: np.ndarray = results_hashtable.get("distance")

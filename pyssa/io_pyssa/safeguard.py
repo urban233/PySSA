@@ -28,6 +28,7 @@ from pyssa.util import constants
 
 class Safeguard:
     """This class is used to collect all safeguard functions in one place."""
+
     def __init__(self) -> None:
         """Constructor."""
         pass

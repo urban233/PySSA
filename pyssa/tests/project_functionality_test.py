@@ -31,6 +31,7 @@ from pyssa.main import MainWindow
 
 class TestMainWindow(unittest.TestCase):
     """Test class."""
+
     def setUp(self) -> None:
         """Sets up the gui for the tests."""
         self.app = QApplication(sys.argv)
@@ -58,7 +59,7 @@ class TestMainWindow(unittest.TestCase):
         if check:
             os.remove(project_path)
         self.assertTrue(check)
-    
+
     def test_create_open_project(self) -> None:
         """Tests if an existing project can be opened."""
         # parameters for the test
@@ -77,11 +78,11 @@ class TestMainWindow(unittest.TestCase):
         if self.window.ui.lbl_current_project_name.text() == project_name:
             check = True
         else:
-            check = False 
+            check = False
         if os.path.exists(project_path):
             os.remove(project_path)
         self.assertTrue(check)
-    
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

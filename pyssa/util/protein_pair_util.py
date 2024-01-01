@@ -48,7 +48,7 @@ def calculate_distance_between_ca_atoms(ref_prot_name: str, model_prot_name: str
     distance_list = []
 
     idx2resi = []
-    cmd.iterate('aln', 'idx2resi.append((model, chain, resi, resn))', space={'idx2resi': idx2resi})
+    cmd.iterate("aln", "idx2resi.append((model, chain, resi, resn))", space={"idx2resi": idx2resi})
     prot_1_indices = []
     prot_2_indices = []
     for tmp_prot_atom in idx2resi:
@@ -80,15 +80,16 @@ def calculate_distance_between_ca_atoms(ref_prot_name: str, model_prot_name: str
     model_resi_array: np.ndarray = np.array(model_resi_list)
     distance_array: np.ndarray = np.array(distance_list)
 
-    result_hashtable: dict[str, np.ndarray] = {pyssa_keys.ARRAY_DISTANCE_INDEX: index_array,
-                                               pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN: ref_chain_array,
-                                               pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION: ref_pos_array,
-                                               pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI: ref_resi_array,
-                                               pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN: model_chain_array,
-                                               pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION: model_pos_array,
-                                               pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI: model_resi_array,
-                                               pyssa_keys.ARRAY_DISTANCE_DISTANCES: distance_array,
-                                               }
+    result_hashtable: dict[str, np.ndarray] = {
+        pyssa_keys.ARRAY_DISTANCE_INDEX: index_array,
+        pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN: ref_chain_array,
+        pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION: ref_pos_array,
+        pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI: ref_resi_array,
+        pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN: model_chain_array,
+        pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION: model_pos_array,
+        pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI: model_resi_array,
+        pyssa_keys.ARRAY_DISTANCE_DISTANCES: distance_array,
+    }
 
     # return the hast table with all results
     return result_hashtable

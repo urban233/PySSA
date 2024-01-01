@@ -32,7 +32,7 @@ class ProcessProgress(QtWidgets.QDialog):
         super().__init__()
 
         self.progress_bar = QtWidgets.QProgressBar(self)
-        self.label = QtWidgets.QLabel('Status: ')
+        self.label = QtWidgets.QLabel("Status: ")
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.progress_bar)
@@ -42,7 +42,7 @@ class ProcessProgress(QtWidgets.QDialog):
         self.setGeometry(100, 100, 600, 50)
         styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle('Progress')
+        self.setWindowTitle("Progress")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
     def update_progress_bar(self, value):

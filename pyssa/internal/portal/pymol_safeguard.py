@@ -1,4 +1,4 @@
-    #
+#
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
@@ -24,13 +24,10 @@ from pymol import cmd
 
 
 class PymolSafeguard:
-    """This class is used to collect all safeguard functions in one place for pymol.
+    """This class is used to collect all safeguard functions in one place for pymol."""
 
-    """
     def __init__(self):
-        """Constructor
-
-        """
+        """Constructor"""
         pass
 
     @staticmethod

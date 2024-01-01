@@ -26,5 +26,6 @@ from pyssa.internal.data_structures.data_classes import results_state, image_sta
 @dataclass
 class MainWindowState:
     """Contains the current state of the main window."""
+
     results_page: results_state.ResultsState
     image_page: image_state.ImageState

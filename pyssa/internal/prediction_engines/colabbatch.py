@@ -113,9 +113,16 @@ class Colabbatch:
         """
         # Start service process in WSL2
         service_process = subprocess.Popen(
-            ["wsl", "-d", "almaColabfold9", "-u", "rhel_user",
-             "/home/rhel_user/localcolabfold/colabfold-conda/bin/python3",
-             "/home/rhel_user/pyssa_colabfold/service.py"])
+            [
+                "wsl",
+                "-d",
+                "almaColabfold9",
+                "-u",
+                "rhel_user",
+                "/home/rhel_user/localcolabfold/colabfold-conda/bin/python3",
+                "/home/rhel_user/pyssa_colabfold/service.py",
+            ]
+        )
 
         context = zmq.Context()
         socket = context.socket(zmq.REQ)
@@ -169,11 +176,17 @@ class Colabbatch:
                 try:
                     subprocess.run(
                         [
-                            "wsl", "-d", "almaColabfold9",
-                            "-u", "rhel_user",
-                            "cp", "-r", "/home/rhel_user/scratch/local_predictions/pdb",
+                            "wsl",
+                            "-d",
+                            "almaColabfold9",
+                            "-u",
+                            "rhel_user",
+                            "cp",
+                            "-r",
+                            "/home/rhel_user/scratch/local_predictions/pdb",
                             f"{self.settings_dir_unix_notation}/scratch/local_predictions",
-                        ], check=True,
+                        ],
+                        check=True,
                     )
                 except subprocess.CalledProcessError:
                     logger.error("Could not copy prediction results to Windows host!")

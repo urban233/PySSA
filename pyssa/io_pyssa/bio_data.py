@@ -35,7 +35,7 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def convert_pdb_file_into_xml_element(filepath: 'path_util.FilePath') -> ElementTree.Element:
+def convert_pdb_file_into_xml_element(filepath: "path_util.FilePath") -> ElementTree.Element:
     """This function creates a xml string of an existing pdb file.
 
     Args:
@@ -58,7 +58,7 @@ def convert_pdb_file_into_xml_element(filepath: 'path_util.FilePath') -> Element
     return root
 
 
-def convert_xml_string_to_pdb_file(xml_contents: 'ElementTree.ElementTree', path_pdb: 'pathlib.Path') -> None:
+def convert_xml_string_to_pdb_file(xml_contents: "ElementTree.ElementTree", path_pdb: "pathlib.Path") -> None:
     """This function writes a pdb file based on a xml string which contains the pdb information
 
     Args:

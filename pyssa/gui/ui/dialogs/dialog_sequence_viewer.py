@@ -20,7 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 from pymol import Qt
-from PyQt5.QtWidgets import (QHBoxLayout)
+from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
 from pyssa.util import constants
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_sequence_viewer import Ui_Dialog
@@ -78,7 +78,7 @@ class SequenceViewer(Qt.QtWidgets.QDialog):
 
     def on_context_menu(self, pos):
         menu = PyQt5.QtWidgets.QMenu()
-        color_action = menu.addAction('Color residue')
+        color_action = menu.addAction("Color residue")
         color_action.triggered.connect(self.color_residue)
         menu.exec_(self.ui.table_seq_viewer.viewport().mapToGlobal(pos))
 
@@ -89,7 +89,7 @@ class SequenceViewer(Qt.QtWidgets.QDialog):
     def duplicate_sequence(self):
         items = self.ui.table_seq_viewer.selectedItems()
         row_count = self.ui.table_seq_viewer.rowCount()
-        self.ui.table_seq_viewer.setRowCount(row_count+1)
+        self.ui.table_seq_viewer.setRowCount(row_count + 1)
         i = 0
         for amino_acid in items:
             new_item = QTableWidgetItem(amino_acid.text())

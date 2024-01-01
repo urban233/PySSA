@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -63,9 +64,10 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.lbl_title.setText(_translate("Dialog", "Select a directory as workspace"))
-        self.lbl_description.setText(_translate("Dialog", "The PySSA uses the workspace directory to store all projects"))
+        self.lbl_description.setText(
+            _translate("Dialog", "The PySSA uses the workspace directory to store all projects")
+        )
         self.label_3.setText(_translate("Dialog", "Workspace"))
         self.btn_choose_workspace.setText(_translate("Dialog", "Browse ..."))
         self.btn_cancel.setText(_translate("Dialog", "Cancel"))
         self.btn_launch.setText(_translate("Dialog", "Launch"))
-

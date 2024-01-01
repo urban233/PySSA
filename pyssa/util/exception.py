@@ -24,6 +24,7 @@
 
 class IllegalArgumentError(Exception):
     """Class for an illegal argument exception type."""
+
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
@@ -31,6 +32,7 @@ class IllegalArgumentError(Exception):
 
 class DirectoryNotFoundError(Exception):
     """Class for a directory does not exist exception type."""
+
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
@@ -58,7 +60,7 @@ class PredictionEndedWithError(Exception):
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
-        
+
 
 class UnableToOpenFileError(Exception):
     """Class for an unable to open file exception type."""

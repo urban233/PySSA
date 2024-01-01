@@ -37,12 +37,8 @@ class ProjectWatcher:
             number of how many results are in the project
 
     """
-    def __init__(self,
-                 current_project: project.Project,
-                 no_of_pdb_files=0,
-                 no_of_results=0,
-                 make_images=False
-                 ):
+
+    def __init__(self, current_project: project.Project, no_of_pdb_files=0, no_of_results=0, make_images=False):
         self.current_project: project.Project = current_project
         self.no_of_pdb_files: int = no_of_pdb_files
         self.no_of_results: int = no_of_results

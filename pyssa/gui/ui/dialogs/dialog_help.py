@@ -19,21 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import os
 import logging
-import subprocess
-from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
-from pyssa.internal.data_structures import settings
-from pyssa.util import constants, gui_utils
-from pyssa.gui.ui.styles import styles
-from pyssa.internal.thread import workers
-from PyQt5.QtWidgets import QMessageBox
-import PyQt5
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-from pyssa.gui.ui.messageboxes import basic_boxes
-from pyssa.gui.ui.messageboxes import settings_boxes
+
+from pyssa.util import constants
+from pyssa.gui.ui.styles import styles
 
 # setup logger
 logging.basicConfig(level=logging.DEBUG)
@@ -41,6 +33,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 class DialogHelp(QtWidgets.QDialog):
     """This class opens a help dialog."""
+
     """This variable is for controlling whether the dialog opens or not"""
     ERROR = False
 
@@ -60,6 +53,3 @@ class DialogHelp(QtWidgets.QDialog):
         styles.set_stylesheet(self)
         self.text_browser.setStyleSheet("""background-color: white;""")
         self.setWindowTitle("Help")
-
-
-

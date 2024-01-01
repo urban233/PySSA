@@ -3,19 +3,19 @@
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
-# 
+#
 # Source code is available at <https://github.com/urban233/PySSA>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -31,10 +31,9 @@ import numpy as np
 
 
 class Graphics:
-
-    def __init__(self, protein_pair: core.ProteinPair,
-                 results_hashtable: Dict[str, np.ndarray],
-                 figure_size: Tuple[float, float]):
+    def __init__(
+        self, protein_pair: core.ProteinPair, results_hashtable: Dict[str, np.ndarray], figure_size: Tuple[float, float]
+    ):
         """Constructor
 
         Args:
@@ -50,14 +49,16 @@ class Graphics:
         self.results_hashtable: Dict[str, np.ndarray] = results_hashtable
         self.figure_size: Tuple[float, float] = figure_size
 
-    def take_image_of_protein_pair(self,
-                                   alignment_filename: str,
-                                   representation: str,
-                                   filename: str,
-                                   selection: str = "",
-                                   ray_shadows: bool = False,
-                                   opaque_background: int = 0,
-                                   take_images=True) -> None:
+    def take_image_of_protein_pair(
+        self,
+        alignment_filename: str,
+        representation: str,
+        filename: str,
+        selection: str = "",
+        ray_shadows: bool = False,
+        opaque_background: int = 0,
+        take_images=True,
+    ) -> None:
         """This function takes an image of the whole Protein/Protein pair.
 
         Note:
@@ -109,9 +110,12 @@ class Graphics:
         cmd.set("ray_trace_mode", 3)
         cmd.set("antialias", 2)
         cmd.set("ray_shadows", opt_ray_shadows)
-        cmd.set('ray_opaque_background', opaque_background)
+        cmd.set("ray_opaque_background", opaque_background)
 
-        cmd.scene(key=f"{self.protein_pair.ref_obj.molecule_object}-{self.protein_pair.model_obj.molecule_object}", action="store")
+        cmd.scene(
+            key=f"{self.protein_pair.ref_obj.molecule_object}-{self.protein_pair.model_obj.molecule_object}",
+            action="store",
+        )
 
         if take_images is True:
             # check if path exists where the data will be exported,
@@ -120,15 +124,11 @@ class Graphics:
                 os.mkdir(f"{self.protein_pair.results_dir}/images")
             # save image as 300 dpi png image
             cmd.ray(2400, 2400, renderer=0)
-            cmd.png(f'{self.protein_pair.results_dir}/images/{filename}.png',
-                    dpi=300)
+            cmd.png(f"{self.protein_pair.results_dir}/images/{filename}.png", dpi=300)
 
-    def take_image_of_interesting_regions(self,
-                                          cutoff: float,
-                                          filename: str,
-                                          ray_shadows: bool = False,
-                                          opaque_background: int = 0,
-                                          take_images=True):
+    def take_image_of_interesting_regions(
+        self, cutoff: float, filename: str, ray_shadows: bool = False, opaque_background: int = 0, take_images=True
+    ):
         """This function takes images of interesting regions of the alignment
 
         Args:
@@ -175,18 +175,15 @@ class Graphics:
 
                 measurement_obj: str = f"measure{j}"
                 # create two atoms for the get_distance command
-                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" \
-                             f"{ref_chain}/{ref_pos}/CA"
-                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" \
-                             f"{model_chain}/{model_pos}/CA"
+                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" f"{ref_chain}/{ref_pos}/CA"
+                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" f"{model_chain}/{model_pos}/CA"
                 # zoom to reference amino acid
-                cmd.zoom(f"/{self.protein_pair.ref_obj.molecule_object}//"
-                         f"{ref_chain}/{ref_pos}", 10)
+                cmd.zoom(f"/{self.protein_pair.ref_obj.molecule_object}//" f"{ref_chain}/{ref_pos}", 10)
                 # create distance object with get_distance command
                 cmd.distance(measurement_obj, atom1, atom2)
                 cmd.label(atom1, "'%s-%s' % (resn, resi)")
                 cmd.label(atom2, "'%s-%s' % (resn, resi)")
-                cmd.set("label_position", (0,0,10))
+                cmd.set("label_position", (0, 0, 10))
                 # determine the option for ray_shadows
                 if ray_shadows == False:
                     opt_ray_shadows: str = "off"
@@ -197,21 +194,20 @@ class Graphics:
                 cmd.set("ray_trace_mode", 3)
                 cmd.set("antialias", 2)
                 cmd.set("ray_shadows", opt_ray_shadows)
-                cmd.set('ray_opaque_background', opaque_background)
+                cmd.set("ray_opaque_background", opaque_background)
 
                 cmd.scene(key=f"{ref_pos}-{model_pos}", action="store")
 
                 if take_images is True:
                     # check if path exists where the data will be exported,
                     # if not the directory will be created
-                    if not os.path.exists(
-                            f"{self.protein_pair.results_dir}/images"):
+                    if not os.path.exists(f"{self.protein_pair.results_dir}/images"):
                         os.mkdir(f"{self.protein_pair.results_dir}/images")
                     # save image as 300 dpi png image
                     cmd.ray(2400, 2400, renderer=0)
                     cmd.png(
-                        f'{self.protein_pair.results_dir}/images/interesting_regions/{filename}_{ref_pos}.png',
-                        dpi=300)
+                        f"{self.protein_pair.results_dir}/images/interesting_regions/{filename}_{ref_pos}.png", dpi=300
+                    )
                 # hide created labels
                 cmd.hide("labels", atom1)
                 cmd.hide("labels", atom2)
@@ -222,8 +218,7 @@ class Graphics:
             else:
                 i += 1
 
-    def create_distance_plot(self, distance_label: str, cutoff: float,
-                             limit_y_axis: Tuple[float, float] = (0, 0)):
+    def create_distance_plot(self, distance_label: str, cutoff: float, limit_y_axis: Tuple[float, float] = (0, 0)):
         """This function creates a distance plot.
 
         Args:
@@ -253,22 +248,20 @@ class Graphics:
         # create a figure with a single Axes
         fig, ax = plt.subplots(figsize=self.figure_size)
         # creates a basic scatter plot
-        ax.scatter(x, y,
-                   label=f"Distance {distance_label} pair")
+        ax.scatter(x, y, label=f"Distance {distance_label} pair")
         # creates a basic line plot
         ax.plot(x, y, linewidth=2.0)
         # creates a basic line plot for the cutoff
-        ax.plot(x, y_cutoff, color='red',
-                label="Cutoff = " + str(cutoff) + " $\mathring{A}$")
+        ax.plot(x, y_cutoff, color="red", label="Cutoff = " + str(cutoff) + " $\mathring{A}$")
 
         # sets the label for the x-axis
-        ax.set_xlabel('Residue no.')
+        ax.set_xlabel("Residue no.")
         # sets the label for the y-axis
         ax.set_ylabel("Distance [$\mathring{A}$ngstrom]")
         # sets ticks for the x-axis
         ax.set_xticks(np.arange(0, x.size, 20))
 
-        if limit_y_axis != (0,0):
+        if limit_y_axis != (0, 0):
             ax.set_ylim(limit_y_axis)
         else:
             # sets the y-axis limit
@@ -349,10 +342,12 @@ class Graphics:
             if distance_value <= cutoff_1:
                 atom_info = utility.get_chain_and_position(self.results_hashtable, i)
                 # create two atoms for the get_distance command
-                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{self.protein_pair.ref_obj.molecule_object}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{self.protein_pair.model_obj.molecule_object}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_1, atom1)
                 cmd.color(color_1, atom2)
@@ -361,65 +356,71 @@ class Graphics:
                 i += 1
 
             elif distance_value <= cutoff_2:
-                atom_info = utility.get_chain_and_position(
-                    self.results_hashtable, i)
+                atom_info = utility.get_chain_and_position(self.results_hashtable, i)
                 # create two atoms for the get_distance command
-                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{self.protein_pair.ref_obj.molecule_object}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{self.protein_pair.model_obj.molecule_object}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_2, atom1)
                 cmd.color(color_2, atom2)
                 i += 1
 
             elif distance_value <= cutoff_3:
-                atom_info = utility.get_chain_and_position(
-                    self.results_hashtable, i)
+                atom_info = utility.get_chain_and_position(self.results_hashtable, i)
                 # create two atoms for the get_distance command
-                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}/CA"
-                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
+                atom1: str = (
+                    f"/{self.protein_pair.ref_obj.molecule_object}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}/CA"
+                )
+                atom2: str = (
+                    f"/{self.protein_pair.model_obj.molecule_object}//"
+                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
+                )
                 # coloring
                 cmd.color(color_3, atom1)
                 cmd.color(color_3, atom2)
                 i += 1
 
             elif distance_value <= cutoff_4:
-                atom_info = utility.get_chain_and_position(
-                    self.results_hashtable, i)
+                atom_info = utility.get_chain_and_position(self.results_hashtable, i)
                 # create two atoms for the get_distance command
-                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{self.protein_pair.ref_obj.molecule_object}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{self.protein_pair.model_obj.molecule_object}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_4, atom1)
                 cmd.color(color_4, atom2)
                 i += 1
 
             elif distance_value <= cutoff_5:
-                atom_info = utility.get_chain_and_position(
-                    self.results_hashtable, i)
+                atom_info = utility.get_chain_and_position(self.results_hashtable, i)
                 # create two atoms for the get_distance command
-                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{self.protein_pair.ref_obj.molecule_object}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{self.protein_pair.model_obj.molecule_object}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_5, atom1)
                 cmd.color(color_5, atom2)
                 i += 1
 
             elif distance_value > cutoff_5:
-                atom_info = utility.get_chain_and_position(
-                    self.results_hashtable, i)
+                atom_info = utility.get_chain_and_position(self.results_hashtable, i)
                 # create two atoms for the get_distance command
-                atom1: str = f"/{self.protein_pair.ref_obj.molecule_object}//" \
-                             f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                atom2: str = f"/{self.protein_pair.model_obj.molecule_object}//" \
-                             f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                atom1: str = (
+                    f"/{self.protein_pair.ref_obj.molecule_object}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+                )
+                atom2: str = (
+                    f"/{self.protein_pair.model_obj.molecule_object}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+                )
                 # coloring
                 cmd.color(color_6, f"({atom1})")
                 cmd.color(color_6, f"({atom2})")
@@ -434,9 +435,7 @@ class Graphics:
         cmd.hide("cgo", alignment_filename)
 
     def create_gif(self):
-        """This function creates a gif where the protein alignment rotates.
-
-        """
+        """This function creates a gif where the protein alignment rotates."""
         # create first scene
         cmd.scene("001", "store")
         # turn camera 180 degrees
@@ -454,8 +453,7 @@ class Graphics:
 
         # check if path exists where the data will be exported,
         # if not the directory will be created
-        if not os.path.exists(
-                f"{self.protein_pair.results_dir}/gifs"):
+        if not os.path.exists(f"{self.protein_pair.results_dir}/gifs"):
             os.mkdir(f"{self.protein_pair.results_dir}/gifs")
         # save movie as gif
         cmd.movie.produce(f"{self.protein_pair.results_dir}/gifs/rotation.gif", quality=1.0)

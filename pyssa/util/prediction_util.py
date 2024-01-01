@@ -24,7 +24,6 @@ import os
 import pathlib
 import logging
 import shutil
-import subprocess
 from pyssa.util import constants
 from pyssa.util import exception
 from pyssa.internal.data_structures.data_classes import prediction_protein_info

@@ -30,7 +30,6 @@ global_var_terminate_app = 0
 
 
 class DialogNotebookManagment(Qt.QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         """Constructor.
 
@@ -59,7 +58,6 @@ class DialogNotebookManagment(Qt.QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("Warning")
 
-
     # @SLOT
     def disable_gpu(self):
         self.web_page.runJavaScript("document.getElementsByTagName('paper-button').item(2).click()")
@@ -78,9 +76,11 @@ class DialogNotebookManagment(Qt.QtWidgets.QDialog):
         if self.check_status() == 2:
             self.ui.lbl_current_status.setText(f"Predictions runs normal. Last checked: {current_time}")
         elif self.check_status() == 3:
-            self.ui.lbl_current_status.setText(f"The GPU cannot be used, due to an account timeout. "
-                                               f"You can still run the prediction without a GPU."
-                                               f"Last checked: {current_time}")
+            self.ui.lbl_current_status.setText(
+                f"The GPU cannot be used, due to an account timeout. "
+                f"You can still run the prediction without a GPU."
+                f"Last checked: {current_time}"
+            )
             self.ui.btn_disable_gpu.show()
             self.ui.btn_check_status.setEnabled(False)
         elif self.check_status() == 4:

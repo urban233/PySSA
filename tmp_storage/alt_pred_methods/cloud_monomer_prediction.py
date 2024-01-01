@@ -45,7 +45,7 @@ def _create_cloud_pred_monomer_management(self):
             },
             {
                 "next_button": self.ui.btn_prediction_only_next,
-            }
+            },
         ),
         # protein sequence stage
         stage.Stage(
@@ -57,7 +57,7 @@ def _create_cloud_pred_monomer_management(self):
             {
                 "back_button": self.ui.btn_cloud_pred_mono_back,
                 "next_button": self.ui.btn_cloud_pred_mono_next_2,
-            }
+            },
         ),
         # prediction stage (with advanced configurations)
         stage.Stage(
@@ -70,10 +70,11 @@ def _create_cloud_pred_monomer_management(self):
             {
                 "back_button": self.ui.btn_prediction_only_back,
                 "predict_button": self.ui.btn_prediction_only_start,
-            }
+            },
         ),
     ]
     self.cloud_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
+
 
 # connections
 self.ui.btn_pred_cloud_monomer_page.clicked.connect(self.display_prediction_only_page)
@@ -87,10 +88,9 @@ self.ui.btn_prediction_only_back.clicked.connect(self.show_cloud_pred_mono_stage
 self.ui.btn_cloud_pred_mono_advanced_config.clicked.connect(self.show_prediction_configuration)
 self.ui.btn_prediction_only_start.clicked.connect(self.predict_only)
 
-def _init_new_sequence_page(self):
-    """This function clears all text fields and hides everything which is needed
 
-    """
+def _init_new_sequence_page(self):
+    """This function clears all text fields and hides everything which is needed"""
     self.cloud_pred_monomer_management.show_stage_x(0)
     self.cloud_pred_monomer_management.disable_all_next_buttons()
     self.cloud_pred_monomer_management.set_empty_string_in_label()
@@ -119,35 +119,37 @@ def _init_new_sequence_page(self):
     # ]
     # gui_utils.hide_gui_elements(gui_elements)
 
-def display_prediction_only_page(self):
-    """This function displays the prediction only work area
 
-    """
+def display_prediction_only_page(self):
+    """This function displays the prediction only work area"""
     tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 1, "New Sequence")
-    item = self.ui.list_new_seq_notebooks.findItems("AlphaFold",
-                                                    Qt.QtCore.Qt.MatchContains |
-                                                    Qt.QtCore.Qt.MatchExactly
-                                                    )
+    item = self.ui.list_new_seq_notebooks.findItems("AlphaFold", Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly)
     self.ui.list_new_seq_notebooks.setCurrentItem(item[0])
+
 
 # ----- Functions for Monomer Cloud Prediction
 def show_cloud_pred_mono_stage_0(self):
     self.cloud_pred_monomer_management.show_stage_x(0)
     self.ui.btn_cloud_pred_mono_advanced_config.hide()
 
+
 def show_cloud_pred_mono_stage_1(self):
     self.cloud_pred_monomer_management.show_stage_x(1)
+
 
 def show_cloud_pred_mono_stage_2(self):
     self.cloud_pred_monomer_management.show_stage_x(2)
 
+
 def validate_cloud_mono(self):
     self.cloud_pred_monomer_management.create_validation()
+
 
 @staticmethod
 def show_prediction_configuration():
     config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations()
     config.exec_()
+
 
 # def validate_protein_name(self):
 #     """This function validates the input of the project name in real-time
@@ -290,18 +292,17 @@ def show_prediction_configuration():
 #         #     styles.color_button_ready(self.ui.btn_prediction_next_1)
 #         print("Check successful.")
 
-def predict_only(self):
-    """This function is used to predict with any google colab notebook.
 
-    """
+def predict_only(self):
+    """This function is used to predict with any google colab notebook."""
     # create prediction_params file for colab notebook
     seq = self.ui.txt_cloud_pred_mono_prot_seq.text()
     job_name = self.ui.lbl_current_project_name.text()
     prediction_params = {
         "seq": seq,
         "job_name": job_name,
-        "amber": 'false',
-        "templates": ('pdb70', '1'),
+        "amber": "false",
+        "templates": ("pdb70", "1"),
     }
     params_file = open(f"{constants.SCRATCH_DIR}\\prediction_params.json", "w", encoding="utf-8")
     json.dump(prediction_params, params_file, indent=4)
@@ -313,26 +314,41 @@ def predict_only(self):
         os.remove(f"{constants.SCRATCH_DIR}\\prediction_params.json")
         return
     # colabfold: AlphaFold2_mmseqs2 notebook specific process
-    shutil.unpack_archive(f"{self.scratch_path}/{archive}", f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}", "zip")
-    prediction_results: list[str] = os.listdir(pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}"))
+    shutil.unpack_archive(
+        f"{self.scratch_path}/{archive}", f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}", "zip"
+    )
+    prediction_results: list[str] = os.listdir(
+        pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}")
+    )
     for filename in prediction_results:
         check = filename.find("_relaxed_rank_1")
         if check != -1:
             src = pathlib.Path(f"{constants.SCRATCH_DIR}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}/{filename}")
             dest = pathlib.Path(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}")
             shutil.copy(src, dest)
-            os.rename(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}", f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
+            os.rename(
+                f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{filename}",
+                f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb",
+            )
             break
     shutil.rmtree(f"{self.scratch_path}/{constants.NOTEBOOK_RESULTS_ZIP_NAME}")
     os.remove(f"{self.scratch_path}/{archive}")
     try:
-        cmd.load(f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb")
+        cmd.load(
+            f"{self.workspace_path}/{self.ui.lbl_current_project_name.text()}/pdb/{self.ui.txt_prediction_only_protein_name.text()}.pdb"
+        )
     except pymol.CmdException:
         print("Loading the model failed.")
         return
     self._project_watcher.show_valid_options(self.ui)
     self.display_view_page()
 
+
 @staticmethod
 def activate_second_python():
-        subprocess.run(["python.exe", f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\tmpPySSA\\pyssa\\colab_notebook.py"])
+    subprocess.run(
+        [
+            "python.exe",
+            f"{os.path.expanduser('~')}\\anaconda3\\envs\\pyssa\\lib\\site-packages\\pmg_tk\\startup\\tmpPySSA\\pyssa\\colab_notebook.py",
+        ]
+    )

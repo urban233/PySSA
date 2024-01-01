@@ -47,11 +47,7 @@ class TutorialVideosDialog(QtWidgets.QDialog):
         self.populate_list_with_mp4_files()
 
         # Set window flags
-        self.setWindowFlags(
-            QtCore.Qt.Window |
-            QtCore.Qt.WindowMaximizeButtonHint |
-            QtCore.Qt.WindowCloseButtonHint
-        )
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowMaximizeButtonHint | QtCore.Qt.WindowCloseButtonHint)
         # Hide help button
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
@@ -65,5 +61,7 @@ class TutorialVideosDialog(QtWidgets.QDialog):
                     self.ui.list_tutorial_videos.addItem(item)
 
     def load_file(self):
-        tmp_video_filepath = pathlib.Path(f"{constants.TUTORIAL_PATH}/{self.ui.list_tutorial_videos.currentItem().text()}")
+        tmp_video_filepath = pathlib.Path(
+            f"{constants.TUTORIAL_PATH}/{self.ui.list_tutorial_videos.currentItem().text()}"
+        )
         os.startfile(tmp_video_filepath)

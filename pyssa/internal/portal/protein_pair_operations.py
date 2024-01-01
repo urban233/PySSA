@@ -61,14 +61,23 @@ def align_protein_pair(target_selection, mobile_selection, alignment_filename) -
 
     # </editor-fold>
 
-    tmp_settings = filesystem_io.ObjectDeserializer(constants.SETTINGS_DIR, constants.SETTINGS_FILE_NAME).deserialize_settings()
-    results = cmd.align(target=target_selection, mobile=mobile_selection,
-                        cutoff=tmp_settings.cutoff, cycles=tmp_settings.cycles,
-                        object=alignment_filename, quiet=0)
+    tmp_settings = filesystem_io.ObjectDeserializer(
+        constants.SETTINGS_DIR, constants.SETTINGS_FILE_NAME
+    ).deserialize_settings()
+    results = cmd.align(
+        target=target_selection,
+        mobile=mobile_selection,
+        cutoff=tmp_settings.cutoff,
+        cycles=tmp_settings.cycles,
+        object=alignment_filename,
+        quiet=0,
+    )
     return results
 
 
-def color_protein_pair(pymol_molecule_object_ref, pymol_molecule_object_model, color_ref="green", color_model="blue") -> None:
+def color_protein_pair(
+    pymol_molecule_object_ref, pymol_molecule_object_model, color_ref="green", color_model="blue"
+) -> None:
     """This function colors both the reference and the model Protein.
 
     Note:

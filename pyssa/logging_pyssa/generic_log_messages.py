@@ -62,4 +62,3 @@ def log_single_variable_value(logger, logging_level, step: str, variable_name: s
     """
     message = f"Filepath: {__file__}; Step: {step}; {variable_name}: {variable}"
     loggers.prediction_worker.log(logging_level, msg=message)
-

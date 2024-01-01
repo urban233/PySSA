@@ -35,7 +35,7 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def get_all_filepaths_from_project(app_project: 'project.Project', subfolder, extension):
+def get_all_filepaths_from_project(app_project: "project.Project", subfolder, extension):
     tmp_dirnames = []
     folder = os.path.join(app_project.folder_paths["project"], subfolder)
     if len(os.listdir(folder)) > 0:
@@ -51,17 +51,17 @@ def get_all_filepaths_from_project(app_project: 'project.Project', subfolder, ex
     return filepaths
 
 
-def get_all_protein_json_filepaths_from_project(app_project: 'project.Project'):
+def get_all_protein_json_filepaths_from_project(app_project: "project.Project"):
     return get_all_filepaths_from_project(app_project, "proteins", ".objects")
 
 
-def get_all_pdb_filepaths_from_project(app_project: 'project.Project'):
+def get_all_pdb_filepaths_from_project(app_project: "project.Project"):
     return get_all_filepaths_from_project(app_project, "proteins", "pdb")
 
 
-def get_all_protein_pair_json_filepaths_from_project(app_project: 'project.Project'):
+def get_all_protein_pair_json_filepaths_from_project(app_project: "project.Project"):
     return get_all_filepaths_from_project(app_project, "protein_pairs", ".objects")
 
 
-def get_all_distance_analysis_json_filepaths_from_project(app_project: 'project.Project'):
+def get_all_distance_analysis_json_filepaths_from_project(app_project: "project.Project"):
     return get_all_filepaths_from_project(app_project, pathlib.Path("analysis/distance_analysis"), ".objects")

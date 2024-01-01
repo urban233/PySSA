@@ -40,5 +40,5 @@ class TestMainWindow(unittest.TestCase):
         del self.app
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

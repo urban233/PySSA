@@ -27,7 +27,6 @@ from pyssa.util import gui_utils
 
 
 class DialogMessageWsl(Qt.QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         """Constructor.
 
@@ -55,7 +54,7 @@ class DialogMessageWsl(Qt.QtWidgets.QDialog):
         self.ui.btn_message_wsl_restart_later.clicked.connect(self.restart_later)
         self.ui.btn_message_wsl_restart.clicked.connect(self.restart_system)
 
-    def installation_wsl (self):
+    def installation_wsl(self):
         # installation is started
         self.ui.lbl_message_wsl.setText("Don't close the window and wait!")
         gui_elements_to_hide = [

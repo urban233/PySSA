@@ -27,7 +27,6 @@ from pyssa.gui.ui.forms.auto_generated.auto_dialog_edit_prot_table import Ui_Dia
 
 
 class DialogEditProtTable(Qt.QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         """Constructor.
 
@@ -83,6 +82,6 @@ class DialogEditProtTable(Qt.QtWidgets.QDialog):
         self.close()
 
     def check_sequence(self):
-        self.validator.validate_protein_sequence(self.ui.txt_edit_prot_table_seq,
-                                                 self.ui.lbl_edit_prot_table_status_seq,
-                                                 self.ui.btn_edit_prot_table_save)
+        self.validator.validate_protein_sequence(
+            self.ui.txt_edit_prot_table_seq, self.ui.lbl_edit_prot_table_status_seq, self.ui.btn_edit_prot_table_save
+        )

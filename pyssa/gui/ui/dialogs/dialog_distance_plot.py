@@ -47,7 +47,6 @@ class PlotWidget(QWidget):
 
 
 class DialogDistancePlot(QtWidgets.QDialog):
-
     def __init__(self, protein_pair_from_project, parent=None):
         """Constructor.
 
@@ -59,7 +58,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-        #self.graph_widget = pg.PlotWidget()
+        # self.graph_widget = pg.PlotWidget()
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         custom_pyssa_styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
@@ -113,7 +112,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
 
         self.ui.btn_distance_plot_save.hide()
         self.ui.btn_distance_plot_update.clicked.connect(self.update_plot)
-        #self.ui.btn_distance_plot_save.clicked.connect(self.save_plot_to_file)
+        # self.ui.btn_distance_plot_save.clicked.connect(self.save_plot_to_file)
         self.ui.btn_distance_plot_reset.clicked.connect(self.reset_distance_plot)
         self.ui.cb_turn_on_grid.stateChanged.connect(self.turn_gird_on_off)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
@@ -140,8 +139,8 @@ class DialogDistancePlot(QtWidgets.QDialog):
         ax.plot(distance_list)
         ax.plot(cutoff_line)
         # Set axis labels
-        ax.set_xlabel('Residue pair no.')
-        ax.set_ylabel('Distance in Å')
+        ax.set_xlabel("Residue pair no.")
+        ax.set_ylabel("Distance in Å")
         # Adjust subplot parameters to reduce white space
         self.plot_widget.figure.tight_layout()
         # Set the x-axis limits with minimum value set to 0
@@ -179,8 +178,8 @@ class DialogDistancePlot(QtWidgets.QDialog):
         ax.plot(cutoff_line)
 
         # Set axis labels
-        ax.set_xlabel('Residue pair no.')
-        ax.set_ylabel('Distance in Å')
+        ax.set_xlabel("Residue pair no.")
+        ax.set_ylabel("Distance in Å")
         # Adjust subplot parameters to reduce white space
         self.plot_widget.figure.tight_layout()
 
@@ -189,14 +188,14 @@ class DialogDistancePlot(QtWidgets.QDialog):
         # Set the number of ticks for the x and y axes
         x_locator = ticker.MultipleLocator(1)
         ax.xaxis.set_major_locator(x_locator)
-        ax.xaxis.set_tick_params(which='major', pad=15)
+        ax.xaxis.set_tick_params(which="major", pad=15)
         # Set the number of ticks for the y-axis and adjust spacing
         y_locator = ticker.MultipleLocator(1)
         ax.yaxis.set_major_locator(y_locator)
-        ax.yaxis.set_tick_params(which='major', pad=15)
+        ax.yaxis.set_tick_params(which="major", pad=15)
         # Set axis labels
-        ax.set_xlabel('Residue pair no.')
-        ax.set_ylabel('Distance in Å')
+        ax.set_xlabel("Residue pair no.")
+        ax.set_ylabel("Distance in Å")
         # Zoom into the plot by setting the limits for x and y axes
         ax.set_xlim(from_aa, to_aa)  # Set the desired x-axis limits
         ax.set_ylim(from_range, to_range)  # Set the desired y-axis limits
@@ -207,7 +206,7 @@ class DialogDistancePlot(QtWidgets.QDialog):
 
         if self.ui.cb_sync_with_pymol.isChecked():
             self.highlight_selection_in_pymol(from_aa, to_aa)
-    
+
     def highlight_selection_in_pymol(self, from_aa: int, to_aa: int):
         print("Sync is active.")
         zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
@@ -216,12 +215,12 @@ class DialogDistancePlot(QtWidgets.QDialog):
         cmd.alter("zoom_sele", "vdw=0.7")
         cmd.rebuild()
         cmd.zoom("zoom_sele")
-    
+
     def hide_highlight_selection_in_pymol(self, from_aa: int, to_aa: int):
         zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
         cmd.select("zoom_sele", zoom_selection)
         cmd.hide("spheres", "zoom_sele")
-    
+
     def reset_distance_plot(self):
         from_aa = int(self.ui.sp_distance_plot_from.text())
         to_aa = int(self.ui.sp_distance_plot_to.text())

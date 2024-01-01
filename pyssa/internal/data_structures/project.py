@@ -77,11 +77,11 @@ class Project:
     """
     a list of all protein objects of the project
     """
-    proteins: list['protein.Protein']
+    proteins: list["protein.Protein"]
     """
     a list of all protein_pair objects of the project
     """
-    protein_pairs: list['protein_pair.ProteinPair']
+    protein_pairs: list["protein_pair.ProteinPair"]
 
     # </editor-fold>
 
@@ -101,23 +101,23 @@ class Project:
             msg = "The project name is None!"
             logger.error(msg)
             raise exception.IllegalArgumentError(msg)
-        
+
         if not safeguard.Safeguard.check_if_value_is_not_none(a_workspace_path):
             msg = "The workspace path is None!"
             logger.error(msg)
             raise exception.DirectoryNotFoundError(msg)
-        
+
         # if not safeguard.Safeguard.check_filepath(a_workspace_path):
         #     msg = "The given workspace path does not exists!"
         #     logger.error(msg)
         #     raise exception.IllegalArgumentError(msg)
-        
+
         # </editor-fold>
 
         self._project_name: str = a_project_name
         self._workspace: pathlib.Path = a_workspace_path
-        self.proteins: list['protein.Protein'] = []
-        self.protein_pairs: list['protein_pair.ProteinPair'] = []
+        self.proteins: list["protein.Protein"] = []
+        self.protein_pairs: list["protein_pair.ProteinPair"] = []
 
     def set_workspace_path(self, a_workspace_path: pathlib.Path) -> None:
         """Setter for the workspace path.
@@ -143,7 +143,7 @@ class Project:
 
         self._workspace = a_workspace_path
 
-    def add_existing_protein(self, a_protein: 'protein.Protein') -> None:
+    def add_existing_protein(self, a_protein: "protein.Protein") -> None:
         """Adds an existing protein object to the project.
 
         Args:
@@ -162,7 +162,7 @@ class Project:
 
         self.proteins.append(a_protein)
 
-    def add_protein_pair(self, a_protein_pair: 'protein_pair.ProteinPair') -> None:
+    def add_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
         """Adds an existing protein_pair object to the project.
 
         Args:
@@ -211,7 +211,7 @@ class Project:
             a_filepath (pathlib.Path): the filepath of the project xml
 
         Raises:
-            ValueError: if one of the arguments are None or path not exist 
+            ValueError: if one of the arguments are None or path not exist
         """
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(a_filepath):
@@ -220,7 +220,7 @@ class Project:
             raise ValueError(msg)
 
         # </editor-fold>
-        
+
         project_root = ElementTree.Element(element_names.PROJECT)
         # setup project information tree
         project_info = ElementTree.SubElement(project_root, element_names.PROJECT_INFO)
@@ -237,7 +237,7 @@ class Project:
             tmp_protein_pair.serialize_protein_pair(xml_protein_pairs_element)
 
         xml_string = minidom.parseString(ElementTree.tostring(project_root)).toprettyxml(indent="   ")
-        with open(a_filepath, "w", encoding='utf-8') as tmp_file:
+        with open(a_filepath, "w", encoding="utf-8") as tmp_file:
             tmp_file.write(xml_string)
 
     @staticmethod
@@ -259,22 +259,22 @@ class Project:
             msg = "The given filepath object is None."
             logger.error(msg)
             raise ValueError(msg)
-        
+
         if not safeguard.Safeguard.check_filepath(a_filepath):
             msg = "The given filepath does not exists!"
             logger.error(msg)
             raise ValueError(msg)
-        
+
         if not safeguard.Safeguard.check_if_value_is_not_none(app_settings):
             msg = "The given settings object is None."
             logger.error(msg)
             raise ValueError(msg)
-        
+
         # </editor-fold>
-        
+
         return filesystem_io.XmlDeserializer(a_filepath).deserialize_project(app_settings)
 
-    def search_protein(self, a_protein_name: str) -> 'protein.Protein':
+    def search_protein(self, a_protein_name: str) -> "protein.Protein":
         """Searches the project for a specific protein name.
 
         Args:
@@ -288,15 +288,15 @@ class Project:
             msg = "The given protein name is None."
             logger.error(msg)
             raise exception.IllegalArgumentError(msg)
-        
+
         # </editor-fold>
-        
+
         for tmp_protein in self.proteins:
             if tmp_protein.get_molecule_object() == a_protein_name:
                 return tmp_protein
         print(f"No matching protein with the name {a_protein_name} found.")  # noqa: RET503
 
-    def search_protein_pair(self, a_protein_pair_name: str) -> 'protein_pair.ProteinPair':
+    def search_protein_pair(self, a_protein_pair_name: str) -> "protein_pair.ProteinPair":
         """Searches all protein_pairs within the project and returns true if the project contains the pair.
 
         Args:
@@ -313,15 +313,15 @@ class Project:
             msg = "The given protein pair name object is None."
             logger.error(msg)
             raise ValueError(msg)
-        
+
         # </editor-fold>
-        
+
         for tmp_protein_pair in self.protein_pairs:
             if tmp_protein_pair.name == a_protein_pair_name:
                 return tmp_protein_pair
-        print(f"No matching protein with the name {a_protein_pair_name} found.")   # noqa: RET503
+        print(f"No matching protein with the name {a_protein_pair_name} found.")  # noqa: RET503
 
-    def save_pymol_session(self, a_current_session: 'current_session.CurrentSession') -> None:
+    def save_pymol_session(self, a_current_session: "current_session.CurrentSession") -> None:
         """Saves the pymol session.
 
         Args:
@@ -335,9 +335,9 @@ class Project:
             msg = "The given current session object is None."
             logger.error(msg)
             raise ValueError(msg)
-        
+
         # </editor-fold>
-        
+
         if a_current_session.type == "protein":
             tmp_protein = self.search_protein(a_current_session.name)
             tmp_protein.pymol_session = a_current_session.session
@@ -359,9 +359,9 @@ class Project:
             msg = "The given protein name object is None."
             logger.error(msg)
             raise ValueError(msg)
-        
+
         # </editor-fold>
-        
+
         protein_obj = self.search_protein(a_protein_name)
         for tmp_protein_pair in self.protein_pairs:
             if protein_obj == tmp_protein_pair.protein_1 or tmp_protein_pair.protein_2:
@@ -385,7 +385,7 @@ class Project:
             logger.error(msg)
             raise ValueError(msg)
         # </editor-fold>
-        
+
         protein_obj = self.search_protein(a_protein_name)
         if protein_obj in self.proteins:
             self.proteins.remove(protein_obj)
@@ -399,8 +399,7 @@ class Project:
         for tmp_protein in self.proteins:
             tmp_protein_infos.append(
                 basic_protein_info.BasicProteinInfo(
-                    tmp_protein.get_molecule_object(),
-                    tmp_protein.get_id(),
-                    self._project_name),
+                    tmp_protein.get_molecule_object(), tmp_protein.get_id(), self._project_name
+                ),
             )
         return np.array(list(tmp_protein_infos))

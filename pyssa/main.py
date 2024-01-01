@@ -82,7 +82,7 @@ from pyssa.util import input_validator
 from pyssa.util import gui_page_management
 from pyssa.util import tools
 from pyssa.util import gui_utils
-from pyssa.util.void import void
+from pyssa.util.void import rvoid
 
 
 if TYPE_CHECKING:
@@ -202,7 +202,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.distance_plot_dialog = None
 
         self.main_window_state = main_window_state.MainWindowState(
-            results_state.ResultsState(), image_state.ImageState(),
+            results_state.ResultsState(),
+            image_state.ImageState(),
         )
 
         constants.PYSSA_LOGGER.info("Setup class attributes finished.")
@@ -1701,7 +1702,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.start_worker_thread(
             task_workers.LoadUsePageWorker(
-                self.workspace_path, self.app_project.convert_list_of_proteins_to_list_of_protein_infos(),
+                self.workspace_path,
+                self.app_project.convert_list_of_proteins_to_list_of_protein_infos(),
             ),
             self.post_display_use_page,
         )
@@ -2082,7 +2084,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.lbl_current_project_name.setText(new_project_name)
         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{new_project_name}")
         self.main_window_state = main_window_state.MainWindowState(
-            results_state.ResultsState(), image_state.ImageState(),
+            results_state.ResultsState(),
+            image_state.ImageState(),
         )
         self.display_view_page()
 
@@ -2140,7 +2143,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # --Begin: worker setup
         self.tmp_thread = QtCore.QThread()
         self.tmp_worker = task_workers.OpenProjectWorker(
-            self.workspace_path, self.ui.list_open_projects.currentItem().text(), self.app_settings,
+            self.workspace_path,
+            self.ui.list_open_projects.currentItem().text(),
+            self.app_settings,
         )
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.open_project)
         self.tmp_thread.start()
@@ -2166,7 +2171,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.display_view_page()
         QtWidgets.QApplication.restoreOverrideCursor()
         self.main_window_state = main_window_state.MainWindowState(
-            results_state.ResultsState(), image_state.ImageState(),
+            results_state.ResultsState(),
+            image_state.ImageState(),
         )
 
     # </editor-fold>
@@ -2364,7 +2370,8 @@ class MainWindow(QtWidgets.QMainWindow):
             tmp_protein = self.app_project.search_protein(self.ui.list_edit_project_proteins.currentItem().text())
             try:
                 bio_data.convert_xml_string_to_pdb_file(
-                    bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()), pathlib.Path(file_path),
+                    bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()),
+                    pathlib.Path(file_path),
                 )
             except Exception as e:
                 basic_boxes.ok(
@@ -6634,7 +6641,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self._init_batch_analysis_page,
         )
         self.tmp_thread = task_workers.setup_worker_for_work(
-            self.tmp_thread, self.tmp_worker, self.post_display_use_page,
+            self.tmp_thread,
+            self.tmp_worker,
+            self.post_display_use_page,
         )
         self.tmp_worker.finished.connect(self.post_analysis_process)
         self.tmp_thread.start()

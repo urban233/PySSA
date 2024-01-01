@@ -3,6 +3,7 @@ Authors: Hannah Kullik & Martin Urban
 
 ## Contents of this document
 * [Description](#Description)
+* [Pre-commit hook](#pre-commit-hook)
 * [Linting](#Linting)
 * [Type annotation](#Type-annotation)
 * [Imports](#Imports)
@@ -11,16 +12,25 @@ Authors: Hannah Kullik & Martin Urban
 * [Code formatting](#Code-formatting)
 
 ## Description
-Python is the main programming language of the PySSA project. 
-This document describes the rules which must be followed if the 
+Python is the main programming language of the PySSA project.
+This document describes the rules which must be followed if the
 source code gets extended.
+
+## Pre-commit hook
+Before committing any changes, run the pre-commit hook configuration.
+All available pre-commit hooks are listed here: https://pre-commit.com/hooks.html.
+The addition of a pre-commit hook needs an author approval.
+
+To be able to run the pre-commit hooks on Windows, it could be
+possible to update the SSL lib. To do this download this [OpenSSL
+Installer](https://w-hs.sciebo.de/s/8F0rm9ChFAYRZu9/download).
 
 ## Linting
 You have to run `ruff` over your code to check any static errors.
 The configuration to use is defined in the `pyproject.toml`.
 
 ## Type annotation
-Python is a dynamically typed language, but in this project 
+Python is a dynamically typed language, but in this project
 Python is used as a **statically typed** language.
 The decision emphasizes robust and less error-prone code.
 Therefore, you have to use Python's type annotation feature.
@@ -31,13 +41,13 @@ Annotating variables using python builtins where it is possible.
 i: int = 0
 ```
 ### Annotations of pyssa builtins
-Annotating variables using pyssa builtins where data structures of 
+Annotating variables using pyssa builtins where data structures of
 pyssa are used.
 ```python
 protein_pairs_for_analysis: list['protein_pair.ProteinPair'] = []
 ```
 ### Annotations of library builtins
-Annotating variables using library builtins where data types of 
+Annotating variables using library builtins where data types of
 libraries are used.
 ```python
 import numpy as np
@@ -46,16 +56,17 @@ distances_of_amino_acid_pairs: np.ndarray = np.ndarray([])
 ```
 
 ### Annotations of return values
-If a function/ method has a return value that will not be used, that 
+If a function/ method has a return value that will not be used, that
 function call needs to be wrapped inside the `void` function.
-The `void` function is the only function which gets imported as function 
+The `void` function is the only function which gets imported as function
 and not as module:
+
 ```python
-from pyssa.util.void import void
+from pyssa.util.void import rvoid
 from pyssa.util import main_window_util
 
-void(main_window_util.setup_app_settings(self.app_settings))  # void indicates that there is a 
-                                                              # return value but it is not used
+rvoid(main_window_util.setup_app_settings(self.app_settings))  # void indicates that there is a
+# return value but it is not used
 ```
 
 ## Naming conventions
@@ -113,7 +124,7 @@ def copy_fasta_file(a_source_filepath, a_destination_filepath):
         raise exceptions.IllegalArgumentError("An argument is illegal.")
 ```
 
-Raise **IllegalArgumentError** if *unmodified* argument 
+Raise **IllegalArgumentError** if *unmodified* argument
 is **not** usable for the function/method:
 ```python
 import os
@@ -165,7 +176,11 @@ except pymol.CmdException:
 * Add a `# fixme` if there is an important note which needs to be quickly found.
 
 ## Code formatting
-Always wrap argument checks into an editor-fold (Ctrl+Alt+T) and 
+The overall code formatting is done with the auto-formatter black.
+This will be done if the pre-commit hooks are ran.
+
+### Editor folds
+Always wrap argument checks into an editor-fold (Ctrl+Alt+T) and
 insert a line break before **and** after the ending of the editor-fold.
 Example:
 ```python

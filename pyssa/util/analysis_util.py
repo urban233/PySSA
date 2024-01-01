@@ -53,23 +53,25 @@ def split_analysis_run_name_in_protein_name_and_chain(an_analysis_run_name: str)
 
     tmp_prot_1: str = an_analysis_run_name[:tmp_separator_index]
     if tmp_prot_1.find(";") != -1:
-        tmp_prot_1_name: str = tmp_prot_1[:tmp_prot_1.find(";")]
-        tmp_prot_1_chains: list[str] = tmp_prot_1[tmp_prot_1.find(";") + 1:].split(",")
+        tmp_prot_1_name: str = tmp_prot_1[: tmp_prot_1.find(";")]
+        tmp_prot_1_chains: list[str] = tmp_prot_1[tmp_prot_1.find(";") + 1 :].split(",")
     else:
         tmp_prot_1_name: str = tmp_prot_1
         tmp_prot_1_chains: list[str] = []
 
-    tmp_prot_2 = an_analysis_run_name[tmp_separator_index + 4:]
+    tmp_prot_2 = an_analysis_run_name[tmp_separator_index + 4 :]
     if tmp_prot_2.find(";") != -1:
-        tmp_prot_2_name: str = tmp_prot_2[:tmp_prot_2.find(";")]
-        tmp_prot_2_chains: list[str] = tmp_prot_2[tmp_prot_2.find(";") + 1:].split(",")
+        tmp_prot_2_name: str = tmp_prot_2[: tmp_prot_2.find(";")]
+        tmp_prot_2_chains: list[str] = tmp_prot_2[tmp_prot_2.find(";") + 1 :].split(",")
     else:
         tmp_prot_2_name: str = tmp_prot_2
         tmp_prot_2_chains: list[str] = []
     return [tmp_prot_1_name, tmp_prot_1_chains, tmp_prot_2_name, tmp_prot_2_chains]
 
 
-def create_selection_strings_for_structure_alignment(a_protein: 'protein.Protein', selected_chains: list) -> selection.Selection:
+def create_selection_strings_for_structure_alignment(
+    a_protein: "protein.Protein", selected_chains: list
+) -> selection.Selection:
     """Creates the selection string for the structure alignment for a single protein.
 
     Raises:
@@ -91,9 +93,11 @@ def create_selection_strings_for_structure_alignment(a_protein: 'protein.Protein
         for tmp_chain in selected_chains:
             protein_chains.append(tmp_chain)
         tmp_protein_selection.set_selections_from_chains_ca(
-            protein_util.get_chains_from_list_of_chain_names(a_protein, protein_chains))
+            protein_util.get_chains_from_list_of_chain_names(a_protein, protein_chains)
+        )
         logger.debug(
-            f"This is one selection created with <create_selection_strings_for_structure_alignment>: {tmp_protein_selection.selection_string}")
+            f"This is one selection created with <create_selection_strings_for_structure_alignment>: {tmp_protein_selection.selection_string}"
+        )
     else:
         all_protein_chains = []
         for tmp_chain in a_protein.chains:
@@ -103,7 +107,9 @@ def create_selection_strings_for_structure_alignment(a_protein: 'protein.Protein
     return tmp_protein_selection
 
 
-def transform_data_for_analysis(proteins_for_analysis, project) -> list[tuple['protein.Protein', 'protein.Protein', pathlib.Path, str]]:
+def transform_data_for_analysis(
+    proteins_for_analysis, project
+) -> list[tuple["protein.Protein", "protein.Protein", pathlib.Path, str]]:
     """This function transforms the data from a protein list to a usable format for the analysis algorithm
 
     Returns:
@@ -132,12 +138,12 @@ def transform_data_for_analysis(proteins_for_analysis, project) -> list[tuple['p
             prot_1_chains = []
             for tmp_chain in prot_1_chains_selected:
                 prot_1_chains.append(tmp_chain)
-            prot_1_selection.set_selections_from_chains_ca(protein_util.get_chains_from_list_of_chain_names(prot_1, prot_1_chains))
+            prot_1_selection.set_selections_from_chains_ca(
+                protein_util.get_chains_from_list_of_chain_names(prot_1, prot_1_chains)
+            )
         else:
             prot_1_selection.set_selections_without_chains_ca()
         prot_1.pymol_selection.selection_string = prot_1_selection.selection_string
-
-
 
         prot_2_chains_selected = protein_pair_tuple[1].protein_chains
         if prot_2_chains_selected is not None:
@@ -157,8 +163,7 @@ def transform_data_for_analysis(proteins_for_analysis, project) -> list[tuple['p
             analysis_name = analysis_name.replace("'", "")
         else:
             analysis_name = f"{prot_1.molecule_object}_vs_{prot_2.molecule_object}"
-        export_dir = pathlib.Path(
-            f"{project.get_protein_pairs_path()}/{analysis_name}")
+        export_dir = pathlib.Path(f"{project.get_protein_pairs_path()}/{analysis_name}")
         transformed_data: tuple = prot_1, prot_2, export_dir, analysis_name
         tmp_data.append(transformed_data)
     return tmp_data

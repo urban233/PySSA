@@ -33,7 +33,6 @@ from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
-from pyssa.gui.ui.dialogs import dialog_display_docs
 from pyssa.gui.ui.messageboxes import basic_boxes, settings_boxes
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.io_pyssa import path_util
@@ -98,7 +97,7 @@ class PredictionWorkerPool(QtCore.QRunnable):
     """
     the current project in use
     """
-    app_project: 'project.Project'
+    app_project: "project.Project"
     """
     the signals to use, for the worker
     """
@@ -106,10 +105,12 @@ class PredictionWorkerPool(QtCore.QRunnable):
 
     # </editor-fold>
 
-    def __init__(self,
-                 table_prot_to_predict: QtWidgets.QTableWidget,
-                 prediction_config: prediction_configuration.PredictionConfiguration,
-                 app_project: 'project.Project') -> None:
+    def __init__(
+        self,
+        table_prot_to_predict: QtWidgets.QTableWidget,
+        prediction_config: prediction_configuration.PredictionConfiguration,
+        app_project: "project.Project",
+    ) -> None:
         """Constructor.
 
         Args:
@@ -142,12 +143,15 @@ class PredictionWorkerPool(QtCore.QRunnable):
         self.app_project = app_project
 
     def run(self):
-        """This function is a reimplementation of the QRunnable run method. It does the structure prediction.
-
-        """
-        predictions: list[prediction_protein_info.PredictionProteinInfo] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
-        structure_prediction_obj = structure_prediction.StructurePrediction(predictions, self.prediction_configuration,
-                                                                            self.app_project)
+        """This function is a reimplementation of the QRunnable run method. It does the structure prediction."""
+        predictions: list[
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
+        structure_prediction_obj = structure_prediction.StructurePrediction(
+            predictions,
+            self.prediction_configuration,
+            self.app_project,
+        )
         structure_prediction_obj.create_tmp_directories()
         logger.info("Tmp directories were created.")
         structure_prediction_obj.create_fasta_files_for_prediction()
@@ -184,11 +188,11 @@ class AnalysisWorkerPool(QtCore.QRunnable):
     """
     the current project in use
     """
-    app_project: 'project.Project'
+    app_project: "project.Project"
     """
     the settings of pyssa
     """
-    app_settings: 'settings.Settings'
+    app_settings: "settings.Settings"
     """
     the signals to use, for the worker
     """
@@ -196,13 +200,15 @@ class AnalysisWorkerPool(QtCore.QRunnable):
 
     # </editor-fold>
 
-    def __init__(self,
-                 list_analysis_overview: QtWidgets.QListWidget,
-                 cb_analysis_images: QtWidgets.QCheckBox,
-                 status_bar: QtWidgets.QStatusBar,
-                 app_project: 'project.Project',
-                 app_settings: 'settings.Settings',
-                 _init_batch_analysis_page) -> None:
+    def __init__(
+        self,
+        list_analysis_overview: QtWidgets.QListWidget,
+        cb_analysis_images: QtWidgets.QCheckBox,
+        status_bar: QtWidgets.QStatusBar,
+        app_project: "project.Project",
+        app_settings: "settings.Settings",
+        _init_batch_analysis_page,
+    ) -> None:
         """Constructor
 
         Args:
@@ -258,36 +264,40 @@ class AnalysisWorkerPool(QtCore.QRunnable):
         logger.debug(f"list count: {self.list_analysis_overview.count()}")
         for row_no in range(self.list_analysis_overview.count()):
             input_transformer = data_transformer.DistanceAnalysisDataTransformer(
-                    self.list_analysis_overview.item(row_no).text(),
-                    self.app_project,
-                    self.app_settings
+                self.list_analysis_overview.item(row_no).text(),
+                self.app_project,
+                self.app_settings,
             )
             logger.debug(f"Memory address of transformer: {input_transformer}")
             protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
             logger.debug(f"Memory address of protein_pair_for_analysis: {protein_pair_for_analysis}")
             new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
             distance_analysis_runs.append(new_protein_pair)
-            logger.debug(f"Protein selection: {protein_pair_for_analysis.distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
+            logger.debug(
+                f"Protein selection: {protein_pair_for_analysis.distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}",
+            )
         logger.debug(f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}")
-        logger.debug(f"Protein 1 from distance_analysis_runs: {distance_analysis_runs[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}")
+        logger.debug(
+            f"Protein 1 from distance_analysis_runs: {distance_analysis_runs[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string}",
+        )
         return distance_analysis_runs
 
-    def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':
-        """This function creates protein pairs and distance analysis objects for the analysis runs.
-
-        """
+    def set_up_analysis_runs(self) -> "structure_analysis.Analysis":
+        """This function creates protein pairs and distance analysis objects for the analysis runs."""
         analysis_runs = structure_analysis.Analysis(self.app_project)
         analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
-        logger.debug(analysis_runs.analysis_list[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
+        logger.debug(
+            analysis_runs.analysis_list[0]
+            .distance_analysis.get_protein_pair()
+            .protein_1.pymol_selection.selection_string,
+        )
         return analysis_runs
 
     def run_analysis(self) -> None:
         self.set_up_analysis_runs().run_analysis(self.cb_analysis_images)
 
     def run(self):
-        """This function is a reimplementation of the QRunnable run method.
-
-        """
+        """This function is a reimplementation of the QRunnable run method."""
         logger.debug(f"Memory address of worker {self}")
         # do the analysis runs
         self.run_analysis()
@@ -321,11 +331,11 @@ class BatchImageWorkerPool(QtCore.QRunnable):
     """
     the current project in use
     """
-    app_project: 'project.Project'
+    app_project: "project.Project"
     """
     the settings of pyssa
     """
-    app_settings: 'settings.Settings'
+    app_settings: "settings.Settings"
     """
     the signals to use, for the worker
     """
@@ -333,11 +343,13 @@ class BatchImageWorkerPool(QtCore.QRunnable):
 
     # </editor-fold>
 
-    def __init__(self,
-                 list_analysis_images: QtWidgets.QListWidget,
-                 list_analysis_for_image_creation_overview: QtWidgets.QListWidget,
-                 status_bar: QtWidgets.QStatusBar,
-                 app_project: 'project.Project') -> None:
+    def __init__(
+        self,
+        list_analysis_images: QtWidgets.QListWidget,
+        list_analysis_for_image_creation_overview: QtWidgets.QListWidget,
+        status_bar: QtWidgets.QStatusBar,
+        app_project: "project.Project",
+    ) -> None:
         """Constructor
 
         Args:
@@ -371,7 +383,9 @@ class BatchImageWorkerPool(QtCore.QRunnable):
 
     def run(self):
         for i in range(self.list_analysis_for_image_creation_overview.count()):
-            tmp_protein_pair = self.app_project.search_protein_pair(self.list_analysis_for_image_creation_overview.item(i).text())
+            tmp_protein_pair = self.app_project.search_protein_pair(
+                self.list_analysis_for_image_creation_overview.item(i).text(),
+            )
             cmd.reinitialize()
             tmp_protein_pair.load_pymol_session()
             if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
@@ -382,30 +396,36 @@ class BatchImageWorkerPool(QtCore.QRunnable):
                 os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
             tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
                 filename=f"structure_aln_{tmp_protein_pair.name}",
-                representation="cartoon")
+                representation="cartoon",
+            )
             tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                 path_util.FilePath(
                     pathlib.Path(
-                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png")
-                )
+                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png",
+                    ),
+                ),
             )
             logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
             tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
                 tmp_protein_pair.distance_analysis.cutoff,
-                f"interesting_reg_{tmp_protein_pair.name}")
+                f"interesting_reg_{tmp_protein_pair.name}",
+            )
             interesting_region_filepaths = []
             for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 interesting_region_filepaths.append(
                     path_util.FilePath(
                         pathlib.Path(
-                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}")
-                    )
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}",
+                        ),
+                    ),
                 )
             tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
-                interesting_region_filepaths)
+                interesting_region_filepaths,
+            )
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
             # emit finish signal
             self.signals.finished.emit()
+
 
 # class ResultsWorkerPool(QtCore.QRunnable):
 #

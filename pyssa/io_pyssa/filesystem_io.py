@@ -49,8 +49,9 @@ logger.addHandler(log_handlers.log_file_handler)
 
 class XmlDeserializer:
     """"""
+
     """
-    
+
     """
     xml_root: ElementTree.Element
 
@@ -74,14 +75,15 @@ class XmlDeserializer:
                     session_data_base64 = tmp_data.attrib[attribute_names.PROTEIN_SESSION]
                 else:
                     raise ValueError
-            tmp_protein_obj = protein.Protein(molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
-                                              pdb_xml_string=tmp_protein)
+            tmp_protein_obj = protein.Protein(
+                molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT], pdb_xml_string=tmp_protein
+            )
             tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
 
             proteins.append(tmp_protein_obj)
         return proteins
 
-    def create_all_protein_pairs(self, tmp_project: 'project.Project', app_settings: 'settings.Settings'):
+    def create_all_protein_pairs(self, tmp_project: "project.Project", app_settings: "settings.Settings"):
         protein_pairs = []
         if len(self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}")) == 0:
             return
@@ -89,34 +91,46 @@ class XmlDeserializer:
             basic_information = tmp_protein_pair.attrib
             prot_1_molecule_object = basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT]
             if prot_1_molecule_object.find("_1") != -1:
-                org_prot_1_molecule_object = prot_1_molecule_object[:prot_1_molecule_object.find("_1")]
+                org_prot_1_molecule_object = prot_1_molecule_object[: prot_1_molecule_object.find("_1")]
                 protein_2: protein.Protein = tmp_project.search_protein(org_prot_1_molecule_object).duplicate_protein()
                 protein_1: protein.Protein = protein_2.duplicate_protein()
                 protein_1.set_molecule_object(f"{protein_1.get_molecule_object()}_1")
                 protein_2.set_molecule_object(f"{protein_2.get_molecule_object()}_2")
             else:
-                protein_1 = tmp_project.search_protein(basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT])
-                protein_2 = tmp_project.search_protein(basic_information[attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT])
+                protein_1 = tmp_project.search_protein(
+                    basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT]
+                )
+                protein_2 = tmp_project.search_protein(
+                    basic_information[attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT]
+                )
 
             tmp_protein_pair_obj = protein_pair.ProteinPair(protein_1=protein_1, protein_2=protein_2)
-            tmp_protein_pair_obj.name = tmp_protein_pair.attrib['name']
+            tmp_protein_pair_obj.name = tmp_protein_pair.attrib["name"]
             pymol_session = tmp_protein_pair.find(element_names.PROTEIN_PAIR_SESSION).attrib
             tag_distance_analysis = tmp_protein_pair.find(element_names.DISTANCE_ANALYSIS)
             tmp_protein_pair_obj.pymol_session = pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION]
             distance_analysis_settings = tag_distance_analysis.attrib
             tag_results = tag_distance_analysis.find(element_names.DISTANCE_ANALYSIS_RESULTS)
             rmsd_aligned_aa = tag_results.attrib
-            for tmp_tag_results_distance in tag_results.findall(f".//{element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS}"):
+            for tmp_tag_results_distance in tag_results.findall(
+                f".//{element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS}"
+            ):
                 indexes = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_INDEX_LIST).text
                 prot_1_chains = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST).text
-                prot_1_positions = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST).text
-                prot_1_residues = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST).text
+                prot_1_positions = tmp_tag_results_distance.find(
+                    element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST
+                ).text
+                prot_1_residues = tmp_tag_results_distance.find(
+                    element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST
+                ).text
 
                 prot_2_chains = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST).text
                 prot_2_positions = tmp_tag_results_distance.find(
-                    element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST).text
+                    element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST
+                ).text
                 prot_2_residues = tmp_tag_results_distance.find(
-                    element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST).text
+                    element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST
+                ).text
 
                 distances = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_DISTANCES_LIST).text
                 index_array: np.ndarray = np.array(ast.literal_eval(indexes))
@@ -128,27 +142,44 @@ class XmlDeserializer:
                 model_resi_array: np.ndarray = np.array(ast.literal_eval(prot_2_residues))
                 distance_array: np.ndarray = np.array(ast.literal_eval(distances))
 
-                result_hashtable: dict[str, np.ndarray] = {'index': index_array,
-                                                           'ref_chain': ref_chain_array,
-                                                           'ref_pos': ref_pos_array,
-                                                           'ref_resi': ref_resi_array,
-                                                           'model_chain': model_chain_array,
-                                                           'model_pos': model_pos_array,
-                                                           'model_resi': model_resi_array,
-                                                           'distance': distance_array,
-                                                           }
+                result_hashtable: dict[str, np.ndarray] = {
+                    "index": index_array,
+                    "ref_chain": ref_chain_array,
+                    "ref_pos": ref_pos_array,
+                    "ref_resi": ref_resi_array,
+                    "model_chain": model_chain_array,
+                    "model_pos": model_pos_array,
+                    "model_resi": model_resi_array,
+                    "distance": distance_array,
+                }
 
-            tmp_protein_pair_obj.distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair_obj, app_settings)
-            tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(distance_data=result_hashtable,
-                                                                                                      pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
-                                                                                                      rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
-                                                                                                      aligned_aa=str(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]))
-            tmp_protein_pair_obj.distance_analysis.cutoff = float(distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF])
-            tmp_protein_pair_obj.distance_analysis.cycles = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CYCLES]
-            tmp_protein_pair_obj.distance_analysis.name = distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_NAME]
-            tmp_protein_pair_obj.distance_analysis.rmsd_dict['rmsd'] = float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD])
-            tmp_protein_pair_obj.distance_analysis.rmsd_dict['aligned_residues'] = str(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA])
-            self.deserialize_analysis_images(tmp_protein_pair_obj.name, tmp_protein_pair_obj.distance_analysis.analysis_results)
+            tmp_protein_pair_obj.distance_analysis = distance_analysis.DistanceAnalysis(
+                tmp_protein_pair_obj, app_settings
+            )
+            tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(
+                distance_data=result_hashtable,
+                pymol_session=pymol_session[attribute_names.DISTANCE_ANALYSIS_SESSION],
+                rmsd=float(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]),
+                aligned_aa=str(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]),
+            )
+            tmp_protein_pair_obj.distance_analysis.cutoff = float(
+                distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF]
+            )
+            tmp_protein_pair_obj.distance_analysis.cycles = distance_analysis_settings[
+                attribute_names.DISTANCE_ANALYSIS_CYCLES
+            ]
+            tmp_protein_pair_obj.distance_analysis.name = distance_analysis_settings[
+                attribute_names.DISTANCE_ANALYSIS_NAME
+            ]
+            tmp_protein_pair_obj.distance_analysis.rmsd_dict["rmsd"] = float(
+                rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]
+            )
+            tmp_protein_pair_obj.distance_analysis.rmsd_dict["aligned_residues"] = str(
+                rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]
+            )
+            self.deserialize_analysis_images(
+                tmp_protein_pair_obj.name, tmp_protein_pair_obj.distance_analysis.analysis_results
+            )
             protein_pairs.append(tmp_protein_pair_obj)
 
         return protein_pairs
@@ -157,7 +188,10 @@ class XmlDeserializer:
         project_dict = {}
         for info in self.xml_root.iter(element_names.PROJECT_INFO):
             project_dict = info.attrib
-        tmp_project = project.Project(project_dict[attribute_names.PROJECT_NAME], pathlib.Path(project_dict[attribute_names.PROJECT_WORKSPACE_PATH]))
+        tmp_project = project.Project(
+            project_dict[attribute_names.PROJECT_NAME],
+            pathlib.Path(project_dict[attribute_names.PROJECT_WORKSPACE_PATH]),
+        )
         protein_objs = self.create_all_proteins_from_xml()
         for tmp_protein_obj in protein_objs:
             tmp_project.add_existing_protein(tmp_protein_obj)
@@ -169,17 +203,29 @@ class XmlDeserializer:
                 tmp_project.add_protein_pair(tmp_protein_pair_obj)
             return tmp_project
 
-    def deserialize_analysis_images(self, protein_pair_name: str, analysis_results: 'results.DistanceAnalysisResults'):
+    def deserialize_analysis_images(self, protein_pair_name: str, analysis_results: "results.DistanceAnalysisResults"):
         for tmp_protein_pair in self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}"):
             if tmp_protein_pair.attrib["name"] == protein_pair_name:
-                structure_aln_images = tmp_protein_pair.findall(f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE}")
+                structure_aln_images = tmp_protein_pair.findall(
+                    f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE}"
+                )
                 try:
-                    analysis_results.structure_aln_image = (structure_aln_images[0].attrib[attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME], structure_aln_images[0].text)
+                    analysis_results.structure_aln_image = (
+                        structure_aln_images[0].attrib[attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME],
+                        structure_aln_images[0].text,
+                    )
                 except IndexError:
                     analysis_results.structure_aln_image = ()
-                interesting_reg_images = tmp_protein_pair.findall(f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS}")
+                interesting_reg_images = tmp_protein_pair.findall(
+                    f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS}"
+                )
                 for tmp_image in interesting_reg_images:
-                    analysis_results.interesting_regions_images.append((tmp_image.attrib[attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME], tmp_image.text))
+                    analysis_results.interesting_regions_images.append(
+                        (
+                            tmp_image.attrib[attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME],
+                            tmp_image.text,
+                        )
+                    )
 
 
 class ObjectSerializer:
@@ -203,13 +249,13 @@ class ObjectSerializer:
 
     def create_standard_object_dict(self):
         self.object_dict = self.object.__dict__
-    
+
     def set_custom_object_dict(self, custom_dict: dict):
         self.object_dict = custom_dict
-    
+
     def update_object_dict(self, dict_with_updates: dict):
         self.object_dict.update(dict_with_updates)
-    
+
     def serialize_object(self):
         tmp_object_file = open(pathlib.Path(f"{self.filepath}/{self.filename}.json"), "w", encoding="utf-8")
         json.dump(self.object_dict, tmp_object_file, indent=4)
@@ -217,28 +263,31 @@ class ObjectSerializer:
 
 
 class ObjectDeserializer:
-    
     def __init__(self, filepath, filename):
         tmp_object_file = open(pathlib.Path(f"{filepath}/{filename}.json"), "r", encoding="utf-8")
         self.object_dict = json.load(tmp_object_file)
-    
-    def deserialize_protein(self) -> 'protein.Protein':
+
+    def deserialize_protein(self) -> "protein.Protein":
         if self.object_dict.get("export_data_dir") == "None":
             update = {"export_data_dir": None}
             self.object_dict.update(update)
-        tmp_protein = protein.Protein(molecule_object=self.object_dict.get("filename"), # important for duplicated proteins
-                                      proteins_dirname=self.object_dict.get("proteins_dirname"),
-                                      pdb_filepath=path_util.FilePath(self.object_dict.get("import_data_dir")))
+        tmp_protein = protein.Protein(
+            molecule_object=self.object_dict.get("filename"),  # important for duplicated proteins
+            proteins_dirname=self.object_dict.get("proteins_dirname"),
+            pdb_filepath=path_util.FilePath(self.object_dict.get("import_data_dir")),
+        )
         tmp_protein.molecule_object = self.object_dict.get("molecule_object")
         tmp_protein.pymol_selection.selection_string = self.object_dict.get("selection")
         tmp_protein.chains = protein_util.create_chains_from_list_of_tuples(self.object_dict.get("chains"))
         tmp_protein.pymol_session_file = self.object_dict.get("pymol_session_file")
         return tmp_protein
-    
-    def deserialize_protein_pair(self) -> 'protein_pair.ProteinPair':
-        tmp_protein_pair = protein_pair.ProteinPair(self.object_dict.get("prot_1_molecule_object"),
-                                                    self.object_dict.get("prot_2_molecule_object"),
-                                                    pathlib.Path(self.object_dict.get("export_dirname")))
+
+    def deserialize_protein_pair(self) -> "protein_pair.ProteinPair":
+        tmp_protein_pair = protein_pair.ProteinPair(
+            self.object_dict.get("prot_1_molecule_object"),
+            self.object_dict.get("prot_2_molecule_object"),
+            pathlib.Path(self.object_dict.get("export_dirname")),
+        )
         tmp_protein_pair.pymol_session_file = self.object_dict.get("pymol_session_file")
         tmp_protein_pair.name = self.object_dict.get("name")
 
@@ -247,9 +296,11 @@ class ObjectDeserializer:
         else:
             export_data_dir = self.object_dict.get("prot_1_export_data_dir")
 
-        tmp_protein_1 = protein.Protein(molecule_object=self.object_dict.get("prot_1_filename"), # important for duplicated proteins
-                                        proteins_dirname=self.object_dict.get("proteins_dirname"),
-                                        pdb_filepath=self.object_dict.get("prot_1_import_data_dir"))
+        tmp_protein_1 = protein.Protein(
+            molecule_object=self.object_dict.get("prot_1_filename"),  # important for duplicated proteins
+            proteins_dirname=self.object_dict.get("proteins_dirname"),
+            pdb_filepath=self.object_dict.get("prot_1_import_data_dir"),
+        )
         tmp_protein_1.molecule_object = self.object_dict.get("prot_1_molecule_object")
         tmp_protein_1.pymol_selection.selection_string = self.object_dict.get("prot_1_selection")
         tmp_protein_1.chains = protein_util.create_chains_from_list_of_tuples(self.object_dict.get("prot_1_chains"))
@@ -259,19 +310,23 @@ class ObjectDeserializer:
             export_data_dir = None
         else:
             export_data_dir = self.object_dict.get("prot_2_export_data_dir")
-        tmp_protein_2 = protein.Protein(molecule_object=self.object_dict.get("prot_2_filename"),
-                                        # important for duplicated proteins
-                                        proteins_dirname=self.object_dict.get("proteins_dirname"),
-                                        pdb_filepath=self.object_dict.get("prot_2_import_data_dir"))
+        tmp_protein_2 = protein.Protein(
+            molecule_object=self.object_dict.get("prot_2_filename"),
+            # important for duplicated proteins
+            proteins_dirname=self.object_dict.get("proteins_dirname"),
+            pdb_filepath=self.object_dict.get("prot_2_import_data_dir"),
+        )
         tmp_protein_2.molecule_object = self.object_dict.get("prot_2_molecule_object")
         tmp_protein_2.pymol_selection.selection_string = self.object_dict.get("prot_2_selection")
         tmp_protein_2.chains = protein_util.create_chains_from_list_of_tuples(self.object_dict.get("prot_2_chains"))
         tmp_protein_pair.model_obj = tmp_protein_2
 
         return tmp_protein_pair
-    
-    def deserialize_project(self, app_settings: 'settings.Settings') -> 'project.Project':
-        tmp_project: project.Project = project.Project(self.object_dict.get("_project_name"), self.object_dict.get("_workspace"))
+
+    def deserialize_project(self, app_settings: "settings.Settings") -> "project.Project":
+        tmp_project: project.Project = project.Project(
+            self.object_dict.get("_project_name"), self.object_dict.get("_workspace")
+        )
         tmp_project.set_folder_paths(self.object_dict.get("_folder_paths"))
         tmp_project.project_path = self.object_dict.get("project_path")
         for tmp_protein_json_filepath in project_util.get_all_protein_json_filepaths_from_project(tmp_project):
@@ -281,14 +336,18 @@ class ObjectDeserializer:
                     tmp_protein_json_filepath.get_filename(),
                 ).deserialize_protein(),
             )
-        for tmp_protein_pair_json_filepath in project_util.get_all_protein_pair_json_filepaths_from_project(tmp_project):
+        for tmp_protein_pair_json_filepath in project_util.get_all_protein_pair_json_filepaths_from_project(
+            tmp_project
+        ):
             tmp_project.add_protein_pair(
                 ObjectDeserializer(
                     tmp_protein_pair_json_filepath.get_dirname(),
                     tmp_protein_pair_json_filepath.get_filename(),
                 ).deserialize_protein_pair(),
             )
-        for tmp_distance_analysis_json_filepath in project_util.get_all_distance_analysis_json_filepaths_from_project(tmp_project):
+        for tmp_distance_analysis_json_filepath in project_util.get_all_distance_analysis_json_filepaths_from_project(
+            tmp_project
+        ):
             tmp_project.add_distance_analysis(
                 ObjectDeserializer(
                     tmp_distance_analysis_json_filepath.get_dirname(),
@@ -297,7 +356,9 @@ class ObjectDeserializer:
             )
         return tmp_project
 
-    def deserialize_distance_analysis(self, app_settings: 'settings.Settings', app_project: 'project.Project') -> 'distance_analysis.DistanceAnalysis':
+    def deserialize_distance_analysis(
+        self, app_settings: "settings.Settings", app_project: "project.Project"
+    ) -> "distance_analysis.DistanceAnalysis":
         tmp_protein_pair = app_project.search_protein_pair(self.object_dict.get("protein_pair_for_analysis_name"))
         tmp_distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair, app_settings)
         tmp_distance_analysis.cutoff = self.object_dict.get("cutoff")
@@ -306,8 +367,10 @@ class ObjectDeserializer:
         tmp_distance_analysis.pymol_session_filepath = self.object_dict.get("pymol_session_filepath")
         return tmp_distance_analysis
 
-    def deserialize_settings(self) -> 'settings.Settings':
-        tmp_settings: settings.Settings = settings.Settings(self.object_dict.get("dir_settings"), self.object_dict.get("filename"))
+    def deserialize_settings(self) -> "settings.Settings":
+        tmp_settings: settings.Settings = settings.Settings(
+            self.object_dict.get("dir_settings"), self.object_dict.get("filename")
+        )
         if safeguard.Safeguard.check_filepath(self.object_dict.get("workspace_path")):
             tmp_settings.workspace_path = self.object_dict.get("workspace_path")
         else:
@@ -343,7 +406,7 @@ class ObjectDeserializer:
         tmp_settings.wsl_username = self.object_dict.get("wsl_username")
         return tmp_settings
 
-    def deserialize_sequence(self) -> 'sequence.Sequence':
+    def deserialize_sequence(self) -> "sequence.Sequence":
         """This function deserializes the sequence object from a .json file.
 
         Returns:
@@ -353,8 +416,7 @@ class ObjectDeserializer:
 
 
 class ProjectScanner:
-
-    def __init__(self, project_obj: 'project.Project'):
+    def __init__(self, project_obj: "project.Project"):
         self.project = project_obj
 
     def scan_project_for_valid_proteins(self, list_view_project_proteins=None) -> list[str]:
@@ -375,15 +437,20 @@ class ProjectScanner:
                 if len(os.listdir(pathlib.Path(f"{path}/pdb"))) > 1:
                     logger.error("Too many pdb files in one directory.")
                     raise ValueError("Too many pdb files in one directory.")
-                if fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern) and list_view_project_proteins is not None:
+                if (
+                    fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern)
+                    and list_view_project_proteins is not None
+                ):
                     list_view_project_proteins.addItem(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]))
-                elif fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern) and list_view_project_proteins is None:
+                elif (
+                    fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern)
+                    and list_view_project_proteins is None
+                ):
                     protein_basenames.append(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]))
         return protein_basenames
 
 
 class WorkspaceScanner:
-
     def __init__(self, workspace_path):
         self.workspace_path = workspace_path
 
@@ -416,11 +483,17 @@ class WorkspaceScanner:
         pdb_basenames_filepaths = []
         for tmp_project_name in os.listdir(self.workspace_path):
             for tmp_protein_name in os.listdir(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins")):
-                pdb_basename = os.listdir(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb"))
+                pdb_basename = os.listdir(
+                    pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb")
+                )
                 if len(pdb_basename) > 1:
                     logger.error("Too many pdb files in one directory.")
                     raise ValueError("Too many pdb files in one directory.")
-                pdb_filepath = path_util.FilePath(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb/{pdb_basename[0]}"))
+                pdb_filepath = path_util.FilePath(
+                    pathlib.Path(
+                        f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb/{pdb_basename[0]}"
+                    )
+                )
                 pdb_basenames_filepaths.append((pdb_basename[0], pdb_filepath))
         return dict(list(set(pdb_basenames_filepaths)))
         # """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
@@ -447,7 +520,6 @@ class WorkspaceScanner:
 
 
 class FilesystemCleaner:
-
     def __int__(self):
         pass
 

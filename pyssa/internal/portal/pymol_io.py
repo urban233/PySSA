@@ -79,7 +79,7 @@ def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_objec
         raise ValueError("PDB ID is invalid.")
 
 
-def get_protein_from_pdb(pdb_id: str) -> 'protein.Protein':
+def get_protein_from_pdb(pdb_id: str) -> "protein.Protein":
     """Fetches a protein from the PDB and creates a protein object."""
     if len(pdb_id) != 4:
         raise exception.IllegalArgumentError("PDB ID is invalid!")

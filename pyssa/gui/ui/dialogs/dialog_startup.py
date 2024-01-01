@@ -37,7 +37,6 @@ global_var_terminate_app = 0
 
 
 class DialogStartup(QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         """Constructor.
 
@@ -83,8 +82,11 @@ class DialogStartup(QtWidgets.QDialog):
     def choose_workspace(self):
         """This function opens a file dialog to choose a workspace directory."""
         self.workspace_dir = PyQt5.QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Open Workspace Directory", QtCore.QDir.homePath(),
-            PyQt5.QtWidgets.QFileDialog.ShowDirsOnly | PyQt5.QtWidgets.QFileDialog.DontResolveSymlinks)
+            self,
+            "Open Workspace Directory",
+            QtCore.QDir.homePath(),
+            PyQt5.QtWidgets.QFileDialog.ShowDirsOnly | PyQt5.QtWidgets.QFileDialog.DontResolveSymlinks,
+        )
         if self.workspace_dir != "":
             self.ui.txt_workspace.setText(self.workspace_dir)
 
@@ -106,14 +108,18 @@ class DialogStartup(QtWidgets.QDialog):
         request.urlretrieve(url, str(destination))
 
         zip_file_path = str(destination)  # Replace with the actual path to your downloaded zip file
-        destination_folder = str(pathlib.Path(f"{constants.SETTINGS_DIR}/scripts"))  # Replace with the desired folder to extract the contents
-        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        destination_folder = str(
+            pathlib.Path(f"{constants.SETTINGS_DIR}/scripts")
+        )  # Replace with the desired folder to extract the contents
+        with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
             zip_ref.extractall(destination_folder)
 
         if not os.path.exists(pathlib.Path(f"{constants.SCRATCH_DIR}")):
             os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}"))
         if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
             os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
-        request.urlretrieve(constants.DEMO_PROJECT_SCIEBO_URL, str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")))
+        request.urlretrieve(
+            constants.DEMO_PROJECT_SCIEBO_URL, str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"))
+        )
 
         self.close()

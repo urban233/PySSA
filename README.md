@@ -27,9 +27,9 @@
 * [Acknowledgements](#Acknowledgements)
 
 ## Description
-PySSA ('Python plugin for protein Sequence to Structure Analysis') is an open software project that 
-enables protein structure predictions and analysis on a local computer. The GUI-Plugin offers 
-extensive graphical functions for visualising and evaluating the quality of structure prediction. 
+PySSA ('Python plugin for protein Sequence to Structure Analysis') is an open software project that
+enables protein structure predictions and analysis on a local computer. The GUI-Plugin offers
+extensive graphical functions for visualising and evaluating the quality of structure prediction.
 In addition, it is possible to create high quality images of protein structures in a few clicks.
 <!-- The scientific article describing PySSA can be found here: <a href="doi"> Title </a> -->
 
@@ -38,7 +38,7 @@ In addition, it is possible to create high quality images of protein structures 
 The <a href="https://github.com/urban233/PySSA/tree/main/pyssa">"pyssa"</a> subfolder contains all source code packages.
 
 ### Documentation
-The <a href="https://github.com/urban233/PySSA/tree/main/docs">"docs"</a> folder contains the documentation as PDF document, 
+The <a href="https://github.com/urban233/PySSA/tree/main/docs">"docs"</a> folder contains the documentation as PDF document,
 as well as all html pages of the internal help.
 Use cases can be found here. <!-- TODO: Add reference to use cases here -->
 
@@ -50,11 +50,11 @@ the subfolder <a href="https://github.com/urban233/PySSA/tree/main/assets">"imag
 ## Installation
 Until now, PySSA is tested and available for Windows 10 and 11.
 ### Windows
-For a convenient and user-friendly installation, the <a href="https://github.com/urban233/PySSAInstaller">"PySSA-Installer"</a> is available 
-(click <a href="https://github.com/urban233/PySSAInstaller">here</a> to 
+For a convenient and user-friendly installation, the <a href="https://github.com/urban233/PySSAInstaller">"PySSA-Installer"</a> is available
+(click <a href="https://github.com/urban233/PySSAInstaller">here</a> to
 automatically download the installer .exe of the latest version).
-Download the installer 
-executable, start, and follow the instructions to install the PySSA-Installer. 
+Download the installer
+executable, start, and follow the instructions to install the PySSA-Installer.
 After that, open the installer and install each component (WSL2, LocalColabfold and PySSA)
 one after the other.
 To start PySSA, double-click the created shortcut on the desktop.
@@ -62,11 +62,11 @@ To uninstall PySSA, open the PySSA-Installer and uninstall the components which
 should get removed.
 
 ### Source code
-It is also possible to install PySSA without the help of the PySSA-Installer. 
+It is also possible to install PySSA without the help of the PySSA-Installer.
 In order to install PySSA a WSL2 environment needs to be setup and a WSL2
-distro with a LocalColabfold installation is necessary to be able to run 
+distro with a LocalColabfold installation is necessary to be able to run
 structure predictions.
-Mamba can be used to create a conda environment with the dependencies PyQt5, NumPy, 
+Mamba can be used to create a conda environment with the dependencies PyQt5, NumPy,
 Pandas, Matplotlib, Biopython and the open-source version of PyMOL.
 
 ## Dependencies
@@ -79,14 +79,14 @@ Pandas, Matplotlib, Biopython and the open-source version of PyMOL.
   * License: MIT License
 * [Mamba](https://github.com/mamba-org/mamba)
   * License: BSD 3-Clause "New" or "Revised" License
-* [PyQt5](https://riverbankcomputing.com/software/pyqt/intro) 
+* [PyQt5](https://riverbankcomputing.com/software/pyqt/intro)
   * License: GNU General Public License (GPL)
 * [NumPy](https://numpy.org/)
   * License: BSD 3-Clause "New" or "Revised" License
 * [Pandas](https://github.com/pandas-dev/pandas)
   * License: BSD 3-Clause "New" or "Revised" License
 * [Matplotlib](https://matplotlib.org/)
-  * License: Python Software Foundation License (PSF) 
+  * License: Python Software Foundation License (PSF)
 * [Biopython](https://biopython.org/)
   * License: BSD 3-Clause License
 * [PyMOL Open-Source](https://github.com/schrodinger/pymol-open-source)
@@ -119,6 +119,6 @@ Pandas, Matplotlib, Biopython and the open-source version of PyMOL.
 <br>August-Schmidt-Ring 10
 <br>D-45665 Recklinghausen Germany
 
-**The PySSA project team would like to thank 
-the communities behind the open software libraries and especially Warren L. DeLano 
+**The PySSA project team would like to thank
+the communities behind the open software libraries and especially Warren L. DeLano
 for their amazing work.**

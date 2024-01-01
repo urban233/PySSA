@@ -48,10 +48,10 @@ logger.addHandler(log_handlers.log_file_handler)
 class Analysis:
     """Contains information about the type of analysis."""
 
-    analysis_list: list['protein_pair.ProteinPair'] = []
-    app_project: 'project.Project'
+    analysis_list: list["protein_pair.ProteinPair"] = []
+    app_project: "project.Project"
 
-    def __init__(self, app_project: 'project.Project') -> None:
+    def __init__(self, app_project: "project.Project") -> None:
         """Initialize the app project.
 
         Args:
@@ -76,7 +76,8 @@ class Analysis:
             IllegalArgumentError: If an invalid argument was used.
         """
         logger.debug(
-            f"The function argument of the value for the image_creation_option is: {the_image_creation_option}")
+            f"The function argument of the value for the image_creation_option is: {the_image_creation_option}"
+        )
         # create scratch dirs
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
@@ -92,14 +93,17 @@ class Analysis:
                 raise exception.UnableToReinitializePymolSessionError(tmp_msg)
             try:
                 # do distance analysis in PyMOL
-                tmp_protein_pair.distance_analysis.analysis_results = distance_analysis_util.do_distance_analysis_in_pymol(
-                    tmp_protein_pair,
+                tmp_protein_pair.distance_analysis.analysis_results = (
+                    distance_analysis_util.do_distance_analysis_in_pymol(
+                        tmp_protein_pair,
+                    )
                 )
                 # create scene for structure alignment // take images of structure alignment if necessary
                 distance_analysis_util.create_scene_of_protein_pair(
                     a_protein_pair=tmp_protein_pair,
                     filename=f"structure_aln_{tmp_protein_pair.name}",
-                    take_images=the_image_creation_option)
+                    take_images=the_image_creation_option,
+                )
                 # create scenes for interesting regions // take image of interesting regions if necessary
                 distance_analysis_util.create_scenes_of_interesting_regions(
                     tmp_protein_pair.distance_analysis.analysis_results.distance_data,
@@ -109,14 +113,17 @@ class Analysis:
                     take_images=the_image_creation_option,
                     filename=f"interesting_reg_{tmp_protein_pair.name}",
                 )
-                logger.debug(f"For the protein pair {tmp_protein_pair.name} the value for the image_creation_option is: {the_image_creation_option}")
+                logger.debug(
+                    f"For the protein pair {tmp_protein_pair.name} the value for the image_creation_option is: {the_image_creation_option}"
+                )
                 if the_image_creation_option is True:
                     logger.info("Setting the structure alignment image into the results object ...")
                     tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                         path_util.FilePath(
                             pathlib.Path(
                                 f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
-                                f"structure_aln_{tmp_protein_pair.name}.png"),
+                                f"structure_aln_{tmp_protein_pair.name}.png"
+                            ),
                         ),
                     )
                     logger.info("Setting all image of the interesting regions into the results object ...")
@@ -124,12 +131,17 @@ class Analysis:
                     for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                         interesting_region_filepaths.append(
                             path_util.FilePath(
-                                pathlib.Path(f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/"
-                                             f"{tmp_filename}"),
+                                pathlib.Path(
+                                    f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/"
+                                    f"{tmp_filename}"
+                                ),
                             ),
                         )
-                    (tmp_protein_pair.distance_analysis.analysis_results.
-                     set_interesting_region_images(interesting_region_filepaths))
+                    (
+                        tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
+                            interesting_region_filepaths
+                        )
+                    )
             except FileNotFoundError:
                 tmp_path: str = str(
                     pathlib.Path(
@@ -147,7 +159,8 @@ class Analysis:
             filesystem_helpers.delete_directory(constants.SCRATCH_DIR_IMAGES)
             cmd.scene(
                 f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}",
-                action="recall")
+                action="recall",
+            )
             # save pymol session of distance analysis
             tmp_protein_pair.save_session_of_protein_pair()
             self.app_project.add_protein_pair(tmp_protein_pair)
@@ -205,11 +218,9 @@ class DistanceAnalysis:
     """
     The object which contains all results from the distance analysis done in PyMOL.
     """
-    analysis_results: 'results.DistanceAnalysisResults' = None
+    analysis_results: "results.DistanceAnalysisResults" = None
 
-    def __init__(self,
-                 the_app_settings: "settings.Settings",
-                 protein_pair_name: str) -> None:
+    def __init__(self, the_app_settings: "settings.Settings", protein_pair_name: str) -> None:
         """Constructor."""
         self.name: str = f"dist_analysis_{protein_pair_name}"
         self.cutoff: float = the_app_settings.cutoff

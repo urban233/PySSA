@@ -7,12 +7,12 @@ from pathlib import Path
 
 
 def run_prediction(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templates: bool):
-    input_dir = '/home/rhel_user/pyssa_colabfold/fasta'  # @param {type:"string"}
-    result_dir = '/home/rhel_user/pyssa_colabfold/pdb'  # @param {type:"string"}
+    input_dir = "/home/rhel_user/pyssa_colabfold/fasta"  # @param {type:"string"}
+    result_dir = "/home/rhel_user/pyssa_colabfold/pdb"  # @param {type:"string"}
 
     input_dir = fasta_dir
     result_dir = pdb_dir
-    
+
     # number of models to use
     # @markdown ---
     # @markdown ### Advanced settings
@@ -23,9 +23,9 @@ def run_prediction(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templates:
     # @markdown - early stop computing models once score > threshold (avg. plddt for "structures" and ptmscore for "complexes")
     use_custom_msa = False
     num_relax = 1  # @param [0, 1, 5] {type:"raw"}
-    #use_amber = num_relax > 0
+    # use_amber = num_relax > 0
     relax_max_iterations = 200  # @param [0,200,2000] {type:"raw"}
-    #use_templates = False  # @param {type:"boolean"}
+    # use_templates = False  # @param {type:"boolean"}
     do_not_overwrite_results = True  # @param {type:"boolean"}
     zip_results = False  # @param {type:"boolean"}
 
@@ -34,7 +34,7 @@ def run_prediction(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templates:
         sys.path.insert(0, f"/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages")
 
     setup_logging(Path(result_dir).joinpath("log.txt"))
-    
+
     queries, is_complex = get_queries(input_dir)
     run(
         queries=queries,

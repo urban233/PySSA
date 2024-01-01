@@ -2,15 +2,15 @@ CLUSTAL
 
 pymol_6omn          SSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLV
 selected_prediction MAQAKHKQRKRL--------------------------------------------
-                                                                            
+
 
 pymol_6omn          NSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRRLKSSCKRH
 selected_prediction --------------------------------------------------------
-                                                                            
+
 
 pymol_6omn          PLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSK
 selected_prediction --------------------------------------------------------
-                                                                            
+
 
 pymol_6omn          IPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRRKRLKSSCKRHPLYV
 selected_prediction ---------------------------------------------KSSCKRHPLYV
@@ -28,7 +28,7 @@ pymol_6omn          PLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSK
 selected_prediction PLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSK
                     **********************************  ********************
 
-pymol_6omn          IPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR               
-selected_prediction IPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR               
-                    *****************************************               
+pymol_6omn          IPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR
+selected_prediction IPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR
+                    *****************************************
 

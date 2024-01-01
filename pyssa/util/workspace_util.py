@@ -44,16 +44,21 @@ def get_proteins_of_project_xml(xml_filepath: pathlib.Path, result_queue, lock):
         if molecule_object not in tmp_protein_names:
             tmp_protein_names.append(molecule_object)
             tmp_protein_infos.append(
-                basic_protein_info.BasicProteinInfo(molecule_object, tmp_protein.attrib[attribute_names.ID],
-                                                    project_name))
+                basic_protein_info.BasicProteinInfo(
+                    molecule_object, tmp_protein.attrib[attribute_names.ID], project_name
+                )
+            )
     with lock:
         result_queue.put((list(tmp_protein_names), list(tmp_protein_infos)))
 
 
 def scan_workspace_for_non_duplicate_proteins(the_workspace_path) -> np.ndarray:
     # List of XML file paths
-    xml_files = [f"{the_workspace_path}/{tmp_project_file}" for tmp_project_file in os.listdir(the_workspace_path)
-                 if not os.path.isdir(pathlib.Path(f"{the_workspace_path}/{tmp_project_file}"))]
+    xml_files = [
+        f"{the_workspace_path}/{tmp_project_file}"
+        for tmp_project_file in os.listdir(the_workspace_path)
+        if not os.path.isdir(pathlib.Path(f"{the_workspace_path}/{tmp_project_file}"))
+    ]
     # Using ThreadPoolExecutor to read XML files in parallel
     with concurrent.futures.ThreadPoolExecutor() as executor:
         # Create a queue and a lock for thread safety
@@ -61,7 +66,10 @@ def scan_workspace_for_non_duplicate_proteins(the_workspace_path) -> np.ndarray:
         lock = Lock()
 
         # Map each XML file to the read_xml_file function in parallel
-        futures = [executor.submit(get_proteins_of_project_xml, pathlib.Path(file_path), result_queue, lock) for file_path in xml_files]
+        futures = [
+            executor.submit(get_proteins_of_project_xml, pathlib.Path(file_path), result_queue, lock)
+            for file_path in xml_files
+        ]
 
         # Wait for all tasks to complete
         concurrent.futures.wait(futures)
@@ -72,7 +80,7 @@ def scan_workspace_for_non_duplicate_proteins(the_workspace_path) -> np.ndarray:
             result = result_queue.get()
             protein_name, protein_info = result
             all_proteins_of_workspace.append(result[1])
-            #print(f"Name: {protein_name}, Info: {protein_info}")
+            # print(f"Name: {protein_name}, Info: {protein_info}")
         flatten_proteins = list(itertools.chain(*all_proteins_of_workspace))
         print(flatten_proteins)
         # Use a set to store unique elements
@@ -87,5 +95,5 @@ def scan_workspace_for_non_duplicate_proteins(the_workspace_path) -> np.ndarray:
 def scan_workspace_for_valid_projects(the_workspace_path):
     directory_content = os.listdir(the_workspace_path)
     # directory_content.sort()
-    xml_files = [file for file in directory_content if file.endswith('.xml')]
+    xml_files = [file for file in directory_content if file.endswith(".xml")]
     return xml_files

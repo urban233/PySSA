@@ -32,7 +32,9 @@ PLUGIN_PATH = globals.g_plugin_path
 PLUGIN_ROOT_PATH = globals.g_plugin_root_path
 PLUGIN_LOGO_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))
 VERSION_NUMBER = "v0.9.70"
-PLUGIN_PATH_WSL_NOTATION = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
+PLUGIN_PATH_WSL_NOTATION = (
+    "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
+)
 # important PATHs
 # settings path: /home/$USER/.pyssa/settings.xml
 SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
@@ -49,7 +51,9 @@ SCRATCH_DIR = Path(f"{SETTINGS_DIR}/scratch")
 SCRATCH_DIR_ANALYSIS = Path(f"{SCRATCH_DIR}/analysis")
 SCRATCH_DIR_IMAGES = Path(f"{SCRATCH_DIR_ANALYSIS}/images")
 SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR = Path(f"{SCRATCH_DIR_IMAGES}/structure_alignment")
-SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = Path(f"{SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/interesting_regions")
+SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR = Path(
+    f"{SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/interesting_regions",
+)
 CACHE_DIR = Path(f"{SETTINGS_DIR}/.cache")
 CACHE_PROTEIN_DIR = Path(f"{CACHE_DIR}/pdb_files")
 CACHE_PYMOL_SESSION_DIR = Path(f"{CACHE_DIR}/sessions")
@@ -84,21 +88,29 @@ INSTALL_WSL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/install_wsl.bat")
 INSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/import_distro.bat")
 UNINSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/batch/uninstall_distro.bat")
 # TODO: original paths, please uncomment before deployment!!!
-COLABFOLD_PREDICT_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
+COLABFOLD_PREDICT_SCRIPT_OLD = (
+    f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
+)
 COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
-INSTALLATION_COLABFOLD_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
+INSTALLATION_COLABFOLD_SCRIPT_OLD = (
+    f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
+)
 
 COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict.sh"
-COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_templates.sh"
+COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = (
+    f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_templates.sh"
+)
 INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/installation_colabfold.sh"
 COLABFOLD_PREDICT_NO_AMBER_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber.sh"
-COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
+COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = (
+    f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
+)
 COLABFOLD_LOG_FILE_PATH = pathlib.Path(f"{PREDICTION_PDB_DIR}/log.txt")
-#COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
-#COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
-#COLABFOLD_PREDICT_NO_AMBER_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber.sh"
-#COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
-#INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
+# COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
+# COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
+# COLABFOLD_PREDICT_NO_AMBER_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber.sh"
+# COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
+# INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
 NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
 
 current_time = datetime.datetime.now()
@@ -119,8 +131,8 @@ ADD_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/add_ws
 # WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
 WSL_CONF_PATH = f"/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
 WSL_DISTRO_NAME = "UbuntuColabfold"
-WSL_STORAGE_PATH = pathlib.Path(f"C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold")
-#WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
+WSL_STORAGE_PATH = pathlib.Path("C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold")
+# WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")
 WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/")
 DISTRO_DOWNLOAD_URL = "https://mega.nz/file/tz9wlLIQ#1qRxBdslCnOuUmLk2ytYHhSkItBsbuet3PTkZuvo-to"
 WSL_DISK_PATH = pathlib.Path(f"{WSL_STORAGE_PATH}/ext4.vhdx")
@@ -148,11 +160,19 @@ HELP_ANALYSIS_IMAGES_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help
 HELP_GLOBAL_SETTINGS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/global_settings.html")
 HELP_HOTSPOTS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/hotspots.html")
 HELP_IMAGE_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/image.html")
-HELP_LOCAL_MONOMER_PREDICTION_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/local_monomer_prediction.html")
-HELP_LOCAL_MULTIMER_PREDICTION_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/local_multimer_prediction.html")
+HELP_LOCAL_MONOMER_PREDICTION_HTML_PATH = pathlib.Path(
+    f"{PLUGIN_PATH}/docs/internal_help/html/local_monomer_prediction.html",
+)
+HELP_LOCAL_MULTIMER_PREDICTION_HTML_PATH = pathlib.Path(
+    f"{PLUGIN_PATH}/docs/internal_help/html/local_multimer_prediction.html",
+)
 HELP_MANAGE_PYMOL_SESSION_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/manage_pymol_session.html")
-HELP_MONOMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/monomer_prediction_analysis.html")
-HELP_MULTIMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/multimer_prediction_analysis.html")
+HELP_MONOMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(
+    f"{PLUGIN_PATH}/docs/internal_help/html/monomer_prediction_analysis.html",
+)
+HELP_MULTIMER_PREDICTION_ANALYSIS_HTML_PATH = pathlib.Path(
+    f"{PLUGIN_PATH}/docs/internal_help/html/multimer_prediction_analysis.html",
+)
 HELP_VIEW_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/view_proteins_of_current_project.html")
 HELP_CREATE_NEW_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/create_new_project.html")
 HELP_DELETE_PROJECT_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/delete_project.html")
@@ -205,28 +225,46 @@ PAGE_HELP_PATHS_DICT = {
 
 # pymol parameters
 PYMOL_COLORS = [
-            "",
-            "red",
-            "green",
-            "limegreen",
-            "blue",
-            "skyblue",
-            "yellow",
-            "limon",
-            "magenta",
-            "hotpink",
-            "violet",
-            "cyan",
-            "greencyan",
-            "orange",
-            "lightorange",
-            "white",
-        ]
+    "",
+    "red",
+    "green",
+    "limegreen",
+    "blue",
+    "skyblue",
+    "yellow",
+    "limon",
+    "magenta",
+    "hotpink",
+    "violet",
+    "cyan",
+    "greencyan",
+    "orange",
+    "lightorange",
+    "white",
+]
 
-AMINO_ACID_CODE = {'CYS': 'C', 'ASP': 'D', 'SER': 'S', 'GLN': 'Q', 'LYS': 'K',
-                   'ILE': 'I', 'PRO': 'P', 'THR': 'T', 'PHE': 'F', 'ASN': 'N',
-                   'GLY': 'G', 'HIS': 'H', 'LEU': 'L', 'ARG': 'R', 'TRP': 'W',
-                   'ALA': 'A', 'VAL': 'V', 'GLU': 'E', 'TYR': 'Y', 'MET': 'M'}
+AMINO_ACID_CODE = {
+    "CYS": "C",
+    "ASP": "D",
+    "SER": "S",
+    "GLN": "Q",
+    "LYS": "K",
+    "ILE": "I",
+    "PRO": "P",
+    "THR": "T",
+    "PHE": "F",
+    "ASN": "N",
+    "GLY": "G",
+    "HIS": "H",
+    "LEU": "L",
+    "ARG": "R",
+    "TRP": "W",
+    "ALA": "A",
+    "VAL": "V",
+    "GLU": "E",
+    "TYR": "Y",
+    "MET": "M",
+}
 
 PYMOL_DEFAULT_BACKGROUND_COLOR = "black"
 PYMOL_DEFAULT_RAY_TRACE_MODE = 1

@@ -1,11 +1,11 @@
 import datetime
 from pymol import Qt
-from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout,
-                             QPushButton, QLabel)
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QPushButton, QLabel
 from PyQt5 import QtCore
 from PyQt5.QtCore import QUrl
 from pyssa.util import constants, gui_utils
 from pyssa.gui.ui.dialogs import dialog_notebook_managment
+
 try:
     from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineDownloadItem
 except ImportError:
@@ -17,9 +17,11 @@ class WebInterface(Qt.QtWidgets.QDialog):
     colab_login_page = "https://accounts.google.com/ServiceLogin?passive=true&continue=https%3A%2F%2Fcolab.research.google.com%2Fgithub%2Fsokrypton%2FColabFold%2Fblob%2Fmain%2FAlphaFold2.ipynb&ec=GAZAqQM"
     login_page = "https://accounts.google.com/v3/signin/identifier?dsh=S-301988812%3A1672417305836195&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&hl=de&passive=true&flowName=GlifWebSignIn&flowEntry=ServiceLogin&ifkv=AeAAQh6nGazOofUFZXEEKfU4PB58c6ZxzdbUX2maYjsI4mCm7wqSvzZ3SCIux6lnC0hiRjVaT4p97w"
     url_without_pre_login = QUrl(
-        "https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb")
+        "https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb"
+    )
     url_with_pre_login = QUrl(
-        'https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb?pli=1')
+        "https://colab.research.google.com/github/sokrypton/ColabFold/blob/main/AlphaFold2.ipynb?pli=1"
+    )
     account_page = QUrl("https://myaccount.google.com/?hl=de&utm_source=OGB&utm_medium=act&pli=1")
 
     abort_msg_box = None
@@ -33,10 +35,10 @@ class WebInterface(Qt.QtWidgets.QDialog):
     exit_code = 2
     # the values need to be in single quotes!
     prediction_params = {
-        "seq": 'AFRGQEAFRGQEAFRGQEAFRGQEAFRGQE',
-        "job_name": '',
-        "amber": 'false',
-        "templates": ('pdb70', '1'),
+        "seq": "AFRGQEAFRGQEAFRGQEAFRGQEAFRGQE",
+        "job_name": "",
+        "amber": "false",
+        "templates": ("pdb70", "1"),
     }
 
     def __init__(self, parent=None):
@@ -109,18 +111,21 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.web_page.loadFinished.connect(self.check_authentication_status)
 
     def check_authentication_status(self):
-        self.web_page.runJavaScript("""
+        self.web_page.runJavaScript(
+            """
                     if (document.querySelectorAll('a')[2].className === "gb_7 gb_8 gb_de gb_dd") {
                         document.title = "login needed";
                     } else if (document.querySelectorAll('a')[2].className === "gb_d gb_Ra gb_l") {
                         document.title = "no login needed";
-                    } 
-                    """, self.process_authentication_status)
+                    }
+                    """,
+            self.process_authentication_status,
+        )
 
     def process_authentication_status(self, value) -> None:
         if value == "login needed":
             # Login is needed to proceed!
-            #TODO: finish this branch
+            # TODO: finish this branch
             self.web_page.setUrl(QUrl(self.colab_login_page))
         elif value == "no login needed":
             # Login already happened.
@@ -133,15 +138,17 @@ class WebInterface(Qt.QtWidgets.QDialog):
         self.label.show()
         self.button.show()
         self.current_time = datetime.datetime.now().strftime("%H:%M:%S")
-        #self.web_page.runJavaScript("colab.global.notebook.kernel.attemptAutoconnect()")
+        # self.web_page.runJavaScript("colab.global.notebook.kernel.attemptAutoconnect()")
         self.web_page.runJavaScript(
-            f"document.querySelectorAll('paper-input').item(0).setAttribute('value', '{self.prediction_params['seq']}')")
+            f"document.querySelectorAll('paper-input').item(0).setAttribute('value', '{self.prediction_params['seq']}')"
+        )
         self.web_page.runJavaScript(
             "document.querySelectorAll('paper-input').item(0).dispatchEvent(new Event('change'))",
         )
         # sets the job name
         self.web_page.runJavaScript(
-            f"document.querySelectorAll('paper-input').item(1).setAttribute('value', '{self.prediction_params['job_name']}')")
+            f"document.querySelectorAll('paper-input').item(1).setAttribute('value', '{self.prediction_params['job_name']}')"
+        )
         self.web_page.runJavaScript(
             "document.querySelectorAll('paper-input').item(1).dispatchEvent(new Event('change'))",
         )
@@ -174,7 +181,8 @@ class WebInterface(Qt.QtWidgets.QDialog):
         Returns:
             exit code: defines in which state the kernel is
         """
-        self.web_page.runJavaScript("""
+        self.web_page.runJavaScript(
+            """
                     if (colab.global.notebook.kernel.getState() === "kernel idle") {
                         document.title = "error";
                     } else if (colab.global.notebook.kernel.getState() === "allocating") {
@@ -184,7 +192,8 @@ class WebInterface(Qt.QtWidgets.QDialog):
                     } else if (colab.global.notebook.kernel.getState() === "connect") {
                         document.title = "need_to_connect";
                     }
-                    """)
+                    """
+        )
         if self.web_page.title() == "error":
             self.exit_code = 1
             self.close()
@@ -200,11 +209,17 @@ class WebInterface(Qt.QtWidgets.QDialog):
         exit_code = self.check_status()
         current_time = datetime.datetime.now().strftime("%H:%M:%S")
         if exit_code == 2:
-            self.label.setText(f"Prediction runs normal. Prediction started at: {self.current_time} and last checked: {current_time}")
+            self.label.setText(
+                f"Prediction runs normal. Prediction started at: {self.current_time} and last checked: {current_time}"
+            )
         elif exit_code == 3:
-            self.label.setText(f"Google Colab resources need to be allocated. Prediction started at: {self.current_time} and last checked: {current_time}")
+            self.label.setText(
+                f"Google Colab resources need to be allocated. Prediction started at: {self.current_time} and last checked: {current_time}"
+            )
         elif exit_code == 4:
-            self.label.setText(f"You have to reconnect the session! Prediction started at: {self.current_time} and last checked: {current_time}")
+            self.label.setText(
+                f"You have to reconnect the session! Prediction started at: {self.current_time} and last checked: {current_time}"
+            )
 
     def set_protein_sequence(self, sequence):
         self.prediction_params.update(seq=sequence)

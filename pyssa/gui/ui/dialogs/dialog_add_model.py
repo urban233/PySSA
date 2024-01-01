@@ -33,7 +33,6 @@ global_var_add_model = ("", False)
 
 
 class DialogAddModel(Qt.QtWidgets.QDialog):
-
     def __init__(self, parent=None) -> None:
         """Constructor.
 
@@ -59,10 +58,12 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         # check internet connectivity
         if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog_with_custom_msg("You do not have a working internet connection which is "
-                                                         "necessary for connecting to the PDB!\n"
-                                                         "However you can add a protein structure from "
-                                                         "your local filesystem.")
+            gui_utils.no_internet_dialog_with_custom_msg(
+                "You do not have a working internet connection which is "
+                "necessary for connecting to the PDB!\n"
+                "However you can add a protein structure from "
+                "your local filesystem."
+            )
             self.ui.txt_add_protein.setEnabled(False)
             self.ui.lbl_status.setText("You cannot enter a PDB ID (no internet).")
 
@@ -111,16 +112,16 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
                 self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
                 self.ui.btn_add_protein.setEnabled(False)
                 styles.color_button_not_ready(self.ui.btn_add_protein)
-    
+
     def close_dialog(self):
         self.close()
 
     def load_model(self):
         try:
             # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(self, "Open existing protein",
-                                                                 Qt.QtCore.QDir.homePath(),
-                                                                 "PDB Files (*.pdb)")
+            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(
+                self, "Open existing protein", Qt.QtCore.QDir.homePath(), "PDB Files (*.pdb)"
+            )
             if file_name == ("", ""):
                 self.ui.lbl_status.setText("No file has been selected.")
             else:

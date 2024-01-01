@@ -42,6 +42,7 @@ class Settings:
         cutoff:
             cutoff of the structure alignment
     """
+
     def __init__(self, dir_settings: str, filename: str) -> None:
         """Constructor.
 
@@ -75,9 +76,9 @@ class Settings:
             os.mkdir(constants.SETTINGS_DIR)
         settings_dict = self.__dict__
         update = {
-            'workspace_path': str(self.workspace_path),
-            'prediction_path': str(self.prediction_path),
-            'dir_settings': str(self.dir_settings),
+            "workspace_path": str(self.workspace_path),
+            "prediction_path": str(self.prediction_path),
+            "dir_settings": str(self.dir_settings),
         }
         settings_dict.update(update)
         settings_file = open(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}", "w", encoding="utf-8")
@@ -91,9 +92,13 @@ class Settings:
             a complete project object deserialized from a json file
         """
         try:
-            settings_obj_file = open(pathlib.Path(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}"), "r", encoding="utf-8")
+            settings_obj_file = open(
+                pathlib.Path(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}"), "r", encoding="utf-8"
+            )
         except FileNotFoundError:
-            print(f"There is no valid json file under: {constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}. Please restore the settings!")
+            print(
+                f"There is no valid json file under: {constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}. Please restore the settings!"
+            )
             return
         settings_dict = json.load(settings_obj_file)
         tmp_settings: Settings = Settings(settings_dict.get("dir_settings"), settings_dict.get("filename"))
@@ -149,9 +154,7 @@ class Settings:
         return self.workspace_path
 
     def set_workspace_path(self, value) -> None:
-        """This function gets the value of the workspace_path variable.
-
-        """
+        """This function gets the value of the workspace_path variable."""
         self.workspace_path = value
 
     def get_prediction_path(self) -> pathlib.Path:
@@ -163,9 +166,7 @@ class Settings:
         return self.prediction_path
 
     def set_prediction_path(self, value) -> None:
-        """This function gets the value of the prediction_path variable.
-
-        """
+        """This function gets the value of the prediction_path variable."""
         self.prediction_path = value
 
     def get_cycles(self) -> int:
@@ -177,9 +178,7 @@ class Settings:
         return int(self.cycles)
 
     def set_cycles(self, value) -> None:
-        """This function gets the value of the cycles variable.
-
-        """
+        """This function gets the value of the cycles variable."""
         self.cycles = value
 
     def get_cutoff(self) -> float:
@@ -191,9 +190,7 @@ class Settings:
         return float(self.cutoff)
 
     def set_cutoff(self, value) -> None:
-        """This function gets the value of the cutoff variable.
-
-        """
+        """This function gets the value of the cutoff variable."""
         self.cutoff = value
 
     def get_app_launch(self) -> int:
@@ -205,15 +202,11 @@ class Settings:
         return int(self.app_launch)
 
     def set_app_launch(self, value) -> None:
-        """This function gets the value of the app_launch variable.
-
-        """
+        """This function gets the value of the app_launch variable."""
         self.app_launch = value
 
     def restore_settings(self, dir_settings, filename):
-        """This function resets the settings to the default values.
-
-        """
+        """This function resets the settings to the default values."""
         self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self.prediction_path = pathlib.Path(f"{os.path.expanduser('~')}/Downloads")
         self.cycles: int = 0

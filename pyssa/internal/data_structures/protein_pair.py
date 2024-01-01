@@ -56,17 +56,17 @@ class ProteinPair:
     """
     the first protein of the protein pair
     """
-    protein_1: 'protein.Protein'
+    protein_1: "protein.Protein"
 
     """
     the second protein of the protein pair
     """
-    protein_2: 'protein.Protein'
+    protein_2: "protein.Protein"
 
     """
     a directory where all results related to the protein will be stored
     """
-    distance_analysis: 'structure_analysis.DistanceAnalysis' = None
+    distance_analysis: "structure_analysis.DistanceAnalysis" = None
 
     """
     the full filepath where the session file is stored
@@ -78,7 +78,7 @@ class ProteinPair:
     """
     pymol_session: str
 
-    def __init__(self, protein_1: 'protein.Protein', protein_2: 'protein.Protein') -> None:
+    def __init__(self, protein_1: "protein.Protein", protein_2: "protein.Protein") -> None:
         """Constructor.
 
         Args:
@@ -138,8 +138,9 @@ class ProteinPair:
 
         """
         try:
-            protein_pair_operations.color_protein_pair(self.protein_1.get_molecule_object(),
-                                                       self.protein_2.get_molecule_object())
+            protein_pair_operations.color_protein_pair(
+                self.protein_1.get_molecule_object(), self.protein_2.get_molecule_object()
+            )
         except pymol.CmdException:
             pymol.CmdException("One Protein or both proteins does not exist as pymol objects.")
 
@@ -155,7 +156,7 @@ class ProteinPair:
         """
         self.pymol_session = protein_pair_operations.save_session_of_protein_pair(self.name)
 
-    def set_distance_analysis(self, a_value: 'distance_analysis.DistanceAnalysis') -> None:
+    def set_distance_analysis(self, a_value: "distance_analysis.DistanceAnalysis") -> None:
         """Sets the distance analysis object.
 
         Args:
@@ -173,11 +174,13 @@ class ProteinPair:
         """This function serialize the protein pair object."""
         tmp_protein_pair = ElementTree.SubElement(xml_protein_pairs_element, element_names.PROTEIN_PAIR)
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_NAME, str(self.name))
-        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT,
-                             str(self.protein_1.get_molecule_object()))
+        tmp_protein_pair.set(
+            attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT, str(self.protein_1.get_molecule_object())
+        )
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_1_ID, str(self.protein_1.get_id()))
-        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT,
-                             str(self.protein_2.get_molecule_object()))
+        tmp_protein_pair.set(
+            attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT, str(self.protein_2.get_molecule_object())
+        )
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_2_ID, str(self.protein_2.get_id()))
         tmp_session_data = ElementTree.SubElement(tmp_protein_pair, element_names.PROTEIN_PAIR_SESSION)
         tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, self.pymol_session)

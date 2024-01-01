@@ -28,7 +28,9 @@ class Ui_Dialog(object):
         self.verticalLayout_2.addLayout(self.verticalLayout)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        spacerItem2 = QtWidgets.QSpacerItem(17, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(
+            17, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout.addItem(spacerItem2)
         self.btn_message_localcolabfold_restart_later = QtWidgets.QPushButton(Dialog)
         self.btn_message_localcolabfold_restart_later.setObjectName("btn_message_localcolabfold_restart_later")

@@ -22,7 +22,7 @@
 """This module contains helper functions for specific data transformations."""
 import logging
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
-from pyssa.internal.data_structures import sequence, selection
+from pyssa.internal.data_structures import sequence
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures.data_classes import analysis_run_info
 from pyssa.internal.data_structures import protein
@@ -40,7 +40,9 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def transform_protein_name_seq_tuple_to_sequence_obj(proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo]) -> list[protein.Protein]:
+def transform_protein_name_seq_tuple_to_sequence_obj(
+    proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo],
+) -> list[protein.Protein]:
     """Transforms the list of proteins to a list of protein objects.
 
     Args:
@@ -88,33 +90,36 @@ class DistanceAnalysisDataTransformer:
     """
     the current project of the main window
     """
-    current_project: 'project.Project'
+    current_project: "project.Project"
     """
     the settings of pyssa
     """
-    settings: 'settings.Settings'
+    settings: "settings.Settings"
     """
     the information about the analysis run, includes the names and chains and analysis name
     """
-    analysis_run: 'analysis_run_info.AnalysisRunInfo'
+    analysis_run: "analysis_run_info.AnalysisRunInfo"
     """
     a tuple of two proteins
     """
-    proteins: tuple['protein.Protein', 'protein.Protein']
+    proteins: tuple["protein.Protein", "protein.Protein"]
     """
     the protein pair for the distance analysis
     """
-    analysis_protein_pair: 'protein_pair.ProteinPair'
+    analysis_protein_pair: "protein_pair.ProteinPair"
     """
     the distance analysis object
     """
-    analysis_distance: 'distance_analysis.DistanceAnalysis'
+    analysis_distance: "distance_analysis.DistanceAnalysis"
 
     # </editor-fold>
 
-    def __init__(self, an_analysis_run_name: str,
-                 the_app_project: 'project.Project',
-                 the_app_settings: 'settings.Settings') -> None:
+    def __init__(
+        self,
+        an_analysis_run_name: str,
+        the_app_project: "project.Project",
+        the_app_settings: "settings.Settings",
+    ) -> None:
         """Constructor.
 
         Args:
@@ -139,8 +144,8 @@ class DistanceAnalysisDataTransformer:
         # </editor-fold>
 
         self.analysis_run_name: str = an_analysis_run_name
-        self.current_project: 'project.Project' = the_app_project
-        self.settings: 'settings.Settings' = the_app_settings
+        self.current_project: "project.Project" = the_app_project
+        self.settings: "settings.Settings" = the_app_settings
 
     def _create_analysis_run_info(self) -> None:
         """Create the analysis run info based on the analysis run name.
@@ -150,11 +155,17 @@ class DistanceAnalysisDataTransformer:
             can be created.
         """
         try:
-            tmp_analysis_run_infos: list[Union[str, list[str]]] = analysis_util.split_analysis_run_name_in_protein_name_and_chain(self.analysis_run_name)
+            tmp_analysis_run_infos: list[
+                Union[str, list[str]]
+            ] = analysis_util.split_analysis_run_name_in_protein_name_and_chain(self.analysis_run_name)
             logger.debug(f"tmp_analysis_run_infos: {tmp_analysis_run_infos}")
-            self.analysis_run = analysis_run_info.AnalysisRunInfo(tmp_analysis_run_infos[0], tmp_analysis_run_infos[1],
-                                                                  tmp_analysis_run_infos[2], tmp_analysis_run_infos[3],
-                                                                  self.analysis_run_name)
+            self.analysis_run = analysis_run_info.AnalysisRunInfo(
+                tmp_analysis_run_infos[0],
+                tmp_analysis_run_infos[1],
+                tmp_analysis_run_infos[2],
+                tmp_analysis_run_infos[3],
+                self.analysis_run_name,
+            )
         except exception.IllegalArgumentError:
             logger.error("Creating the analysis run info failed.")
             raise exception.UnableToCreateAnalysisRunInfoError("")
@@ -167,7 +178,9 @@ class DistanceAnalysisDataTransformer:
         """
         protein_1: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_1())
         if protein_1 is None:
-            logger.error(f"No protein with the given protein name: {self.analysis_run.get_protein_name_1()} found in the current project.")
+            logger.error(
+                f"No protein with the given protein name: {self.analysis_run.get_protein_name_1()} found in the current project.",
+            )
             raise exception.ProteinNotFoundInCurrentProjectError("")
 
         if self.analysis_run.are_protein_names_identical():
@@ -178,7 +191,9 @@ class DistanceAnalysisDataTransformer:
         else:
             protein_2: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_2())
             if protein_2 is None:
-                logger.error(f"No protein with the given protein name: {self.analysis_run.get_protein_name_2()} found in the current project.")
+                logger.error(
+                    f"No protein with the given protein name: {self.analysis_run.get_protein_name_2()} found in the current project.",
+                )
                 raise exception.ProteinNotFoundInCurrentProjectError("")
         self.proteins = (protein_1, protein_2)
 
@@ -216,7 +231,7 @@ class DistanceAnalysisDataTransformer:
         """
         try:
             self.analysis_protein_pair.set_distance_analysis(
-                distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings)
+                distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings),
             )
         except exception.IllegalArgumentError:
             logger.error("Creating and setting the distance analysis into the protein pair faild.")
@@ -224,13 +239,17 @@ class DistanceAnalysisDataTransformer:
 
     def _set_selection_for_analysis(self) -> None:
         """Sets the selection for the analysis into the distance analysis object."""
-        prot_1_selection = analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_1,
-                                                                                          self.analysis_run.protein_chains_1)
-        prot_2_selection = analysis_util.create_selection_strings_for_structure_alignment(self.analysis_protein_pair.protein_2,
-                                                                                          self.analysis_run.protein_chains_2)
+        prot_1_selection = analysis_util.create_selection_strings_for_structure_alignment(
+            self.analysis_protein_pair.protein_1,
+            self.analysis_run.protein_chains_1,
+        )
+        prot_2_selection = analysis_util.create_selection_strings_for_structure_alignment(
+            self.analysis_protein_pair.protein_2,
+            self.analysis_run.protein_chains_2,
+        )
         self.analysis_protein_pair.distance_analysis.create_align_selections(prot_1_selection, prot_2_selection)
 
-    def transform_gui_input_to_distance_analysis_object(self) -> 'protein_pair.ProteinPair':
+    def transform_gui_input_to_distance_analysis_object(self) -> "protein_pair.ProteinPair":
         """Transforms the gui data into a distance analysis object.
 
         Raises:

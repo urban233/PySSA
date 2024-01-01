@@ -27,12 +27,12 @@ if typing.TYPE_CHECKING:
     from pyssa.io_pyssa import path_util
 
 
-def create_base64_string_from_file(filepath: 'path_util.FilePath') -> str:
-    with open(filepath.get_filepath(), 'rb') as binary_file:
+def create_base64_string_from_file(filepath: "path_util.FilePath") -> str:
+    with open(filepath.get_filepath(), "rb") as binary_file:
         binary_data = binary_file.read()
         binary_file.close()
     # Encode binary data to base64 and decode to utf-8 string
-    return base64.b64encode(binary_data).decode('utf-8')
+    return base64.b64encode(binary_data).decode("utf-8")
 
 
 def write_binary_file_from_base64_string(filepath, base64_data) -> None:
@@ -43,5 +43,5 @@ def write_binary_file_from_base64_string(filepath, base64_data) -> None:
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    with open(filepath, 'wb') as f:
+    with open(filepath, "wb") as f:
         f.write(binary_data_export)

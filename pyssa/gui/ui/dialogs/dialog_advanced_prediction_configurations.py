@@ -27,7 +27,6 @@ from pyssa.internal.data_structures.data_classes import prediction_configuration
 
 
 class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
-
     def __init__(self, prediction_config, parent=None):
         """Constructor.
 
@@ -49,7 +48,9 @@ class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
             # "custom", TODO: implement a way to add a custom MSA
         ]
         gui_utils.fill_combo_box(self.ui.combo_box_template, item_list_templates)
-        self.ui.combo_box_template.setCurrentIndex(self.ui.combo_box_template.findText(self.prediction_config.templates))
+        self.ui.combo_box_template.setCurrentIndex(
+            self.ui.combo_box_template.findText(self.prediction_config.templates)
+        )
 
         self.ui.btn_cancel.clicked.connect(self.close_dialog)
         self.ui.btn_save.clicked.connect(self.save_config)

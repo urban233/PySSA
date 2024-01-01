@@ -92,10 +92,12 @@ class LoadUsePageWorker(QObject):
             logger.error(f"An argument the_workspace_path: {the_workspace_path}  is illegal!")
             raise exception.IllegalArgumentError("")
         if the_protein_infos_of_current_project is None:
-            logger.error(f"An argument the_proteins_of_current_project: {the_protein_infos_of_current_project} is illegal!")
+            logger.error(
+                f"An argument the_proteins_of_current_project: {the_protein_infos_of_current_project} is illegal!"
+            )
 
         # </editor-fold>
-        
+
         super().__init__()
         self.workspace_path = the_workspace_path
         self.protein_infos_of_current_project = the_protein_infos_of_current_project
@@ -152,7 +154,8 @@ class CreateUseProjectWorker(QObject):
                 if tmp_protein_info.name == tmp_protein:
                     """Var: project_proteins is a list which contains all proteins from a single project"""
                     xml_deserializer = filesystem_io.XmlDeserializer(
-                        pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml"))
+                        pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml")
+                    )
                     for xml_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
                         if xml_protein.attrib[attribute_names.ID] == tmp_protein_info.id:
                             basic_information = xml_protein.attrib
@@ -168,7 +171,8 @@ class CreateUseProjectWorker(QObject):
                                     raise ValueError
                             tmp_protein_obj = protein.Protein(
                                 molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
-                                pdb_xml_string=xml_protein)
+                                pdb_xml_string=xml_protein,
+                            )
                             tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
             proteins_for_new_project.append(tmp_protein_obj)
 
@@ -196,14 +200,19 @@ class LoadResultsWorker(QObject):
         os.mkdir(constants.CACHE_IMAGES)
 
         filesystem_io.XmlDeserializer(self.app_project_xml_filepath).deserialize_analysis_images(
-            self.protein_pair_of_results.name, self.protein_pair_of_results.distance_analysis.analysis_results)
-        if len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0 and len(
-                self.protein_pair_of_results.distance_analysis.analysis_results.interesting_regions_images) != 0:
+            self.protein_pair_of_results.name, self.protein_pair_of_results.distance_analysis.analysis_results
+        )
+        if (
+            len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0
+            and len(self.protein_pair_of_results.distance_analysis.analysis_results.interesting_regions_images) != 0
+        ):
             # if both image types were made during analysis
             self.protein_pair_of_results.distance_analysis.analysis_results.create_image_png_files_from_base64()
             self.image_type = constants.IMAGES_ALL
-        elif len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0 and len(
-                self.protein_pair_of_results.distance_analysis.analysis_results.interesting_regions_images) == 0:
+        elif (
+            len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0
+            and len(self.protein_pair_of_results.distance_analysis.analysis_results.interesting_regions_images) == 0
+        ):
             # only struct align image were made
             self.protein_pair_of_results.distance_analysis.analysis_results.create_image_png_files_from_base64()
             self.image_type = constants.IMAGES_STRUCT_ALN_ONLY
@@ -238,11 +247,11 @@ class BatchImageWorker(QObject):
     """
     the current project in use
     """
-    app_project: 'project.Project'
+    app_project: "project.Project"
     """
     the settings of pyssa
     """
-    app_settings: 'settings.Settings'
+    app_settings: "settings.Settings"
     """
     the signals to use, for the worker
     """
@@ -252,11 +261,13 @@ class BatchImageWorker(QObject):
 
     # </editor-fold>
 
-    def __init__(self,
-                 list_analysis_images: QtWidgets.QListWidget,
-                 list_analysis_for_image_creation_overview: QtWidgets.QListWidget,
-                 status_bar: QtWidgets.QStatusBar,
-                 app_project: 'project.Project') -> None:
+    def __init__(
+        self,
+        list_analysis_images: QtWidgets.QListWidget,
+        list_analysis_for_image_creation_overview: QtWidgets.QListWidget,
+        status_bar: QtWidgets.QStatusBar,
+        app_project: "project.Project",
+    ) -> None:
         """Constructor.
 
         Args:
@@ -280,7 +291,7 @@ class BatchImageWorker(QObject):
         if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
             logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
             raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        
+
         # </editor-fold>
 
         self.list_analysis_images = list_analysis_images
@@ -290,7 +301,9 @@ class BatchImageWorker(QObject):
 
     def run(self):
         for i in range(self.list_analysis_for_image_creation_overview.count()):
-            tmp_protein_pair = self.app_project.search_protein_pair(self.list_analysis_for_image_creation_overview.item(i).text())
+            tmp_protein_pair = self.app_project.search_protein_pair(
+                self.list_analysis_for_image_creation_overview.item(i).text()
+            )
             cmd.reinitialize()
             tmp_protein_pair.load_pymol_session()
             if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
@@ -300,28 +313,31 @@ class BatchImageWorker(QObject):
             if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
             tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
-                filename=f"structure_aln_{tmp_protein_pair.name}",
-                representation="cartoon")
+                filename=f"structure_aln_{tmp_protein_pair.name}", representation="cartoon"
+            )
             tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                 path_util.FilePath(
                     pathlib.Path(
-                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png"),
+                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png"
+                    ),
                 ),
             )
             logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
             tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
-                tmp_protein_pair.distance_analysis.cutoff,
-                f"interesting_reg_{tmp_protein_pair.name}")
+                tmp_protein_pair.distance_analysis.cutoff, f"interesting_reg_{tmp_protein_pair.name}"
+            )
             interesting_region_filepaths = []
             for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 interesting_region_filepaths.append(
                     path_util.FilePath(
                         pathlib.Path(
-                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}"),
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}"
+                        ),
                     ),
                 )
             tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
-                interesting_region_filepaths)
+                interesting_region_filepaths
+            )
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
             # emit finish signal
             self.finished.emit()
@@ -338,8 +354,9 @@ class EsmFoldWorker(QObject):
         self.table = table_prot_to_predict
 
     def run(self):
-        predictions: list[prediction_protein_info.PredictionProteinInfo] = prediction_util.get_prediction_name_and_seq_from_table(
-            self.table)
+        predictions: list[
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
         output = esmfold.EsmFold(predictions).run_prediction()
         self.return_value.emit(output)
         self.finished.emit()
@@ -364,7 +381,7 @@ class ColabfoldWorker(QObject):
     """
     the current project in use
     """
-    app_project: 'project.Project'
+    app_project: "project.Project"
     finished = pyqtSignal(int, str)
     progress = pyqtSignal(int)
     return_value = pyqtSignal(list)
@@ -375,10 +392,12 @@ class ColabfoldWorker(QObject):
 
     # </editor-fold>
 
-    def __init__(self,
-                 table_prot_to_predict: QtWidgets.QTableWidget,
-                 prediction_config: prediction_configuration.PredictionConfiguration,
-                 app_project: 'project.Project') -> None:
+    def __init__(
+        self,
+        table_prot_to_predict: QtWidgets.QTableWidget,
+        prediction_config: prediction_configuration.PredictionConfiguration,
+        app_project: "project.Project",
+    ) -> None:
         """Constructor.
 
         Args:
@@ -415,9 +434,9 @@ class ColabfoldWorker(QObject):
         predictions: list[
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
-        structure_prediction_obj = structure_prediction.StructurePrediction(predictions,
-                                                                            self.prediction_configuration,
-                                                                            self.app_project)
+        structure_prediction_obj = structure_prediction.StructurePrediction(
+            predictions, self.prediction_configuration, self.app_project
+        )
         structure_prediction_obj.create_tmp_directories()
         logger.info("Tmp directories were created.")
 
@@ -454,11 +473,15 @@ class ColabfoldWorker(QObject):
             logger.info("Saved predicted pdb file into XML file.")
         except exception.UnableToFindColabfoldModelError:
             logger.error("Could not move rank 1 model, because it does not exists.")
-            self.finished.emit(exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1])
+            self.finished.emit(
+                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1]
+            )
             return
         except FileNotFoundError:
             logger.error("Could not move rank 1 model, because it does not exists.")
-            self.finished.emit(exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1])
+            self.finished.emit(
+                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1]
+            )
             return
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
@@ -493,11 +516,11 @@ class DistanceAnalysisWorker(QObject):
     """
     the current project in use
     """
-    app_project: 'project.Project'
+    app_project: "project.Project"
     """
     the settings of pyssa
     """
-    app_settings: 'settings.Settings'
+    app_settings: "settings.Settings"
     """
     the signals to use, for the worker
     """
@@ -507,13 +530,15 @@ class DistanceAnalysisWorker(QObject):
 
     # </editor-fold>
 
-    def __init__(self,
-                 list_analysis_overview: QtWidgets.QListWidget,
-                 cb_analysis_images: QtWidgets.QCheckBox,
-                 status_bar: QtWidgets.QStatusBar,
-                 app_project: 'project.Project',
-                 app_settings: 'settings.Settings',
-                 _init_batch_analysis_page) -> None:
+    def __init__(
+        self,
+        list_analysis_overview: QtWidgets.QListWidget,
+        cb_analysis_images: QtWidgets.QCheckBox,
+        status_bar: QtWidgets.QStatusBar,
+        app_project: "project.Project",
+        app_settings: "settings.Settings",
+        _init_batch_analysis_page,
+    ) -> None:
         """Constructor.
 
         Args:
@@ -579,7 +604,9 @@ class DistanceAnalysisWorker(QObject):
                 protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
                 new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
                 distance_analysis_runs.append(new_protein_pair)
-            logger.debug(f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}.")
+            logger.debug(
+                f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}."
+            )
         except exception.IllegalArgumentError:
             logger.error("Transformation of data failed because an argument was illegal.")
             raise exception.UnableToTransformDataForAnalysisError("")
@@ -591,7 +618,7 @@ class DistanceAnalysisWorker(QObject):
             raise exception.UnableToTransformDataForAnalysisError("")
         return distance_analysis_runs
 
-    def set_up_analysis_runs(self) -> 'structure_analysis.Analysis':
+    def set_up_analysis_runs(self) -> "structure_analysis.Analysis":
         """This function creates protein pairs and distance analysis objects for the analysis runs.
 
         Raises:
@@ -600,7 +627,11 @@ class DistanceAnalysisWorker(QObject):
         try:
             analysis_runs = structure_analysis.Analysis(self.app_project)
             analysis_runs.analysis_list = self.transform_gui_input_to_practical_data()
-            logger.debug(analysis_runs.analysis_list[0].distance_analysis.get_protein_pair().protein_1.pymol_selection.selection_string)
+            logger.debug(
+                analysis_runs.analysis_list[0]
+                .distance_analysis.get_protein_pair()
+                .protein_1.pymol_selection.selection_string
+            )
         except exception.UnableToTransformDataForAnalysisError:
             logger.error("Setting up the analysis runs failed.")
             raise exception.UnableToSetupAnalysisError("")
@@ -617,7 +648,9 @@ class DistanceAnalysisWorker(QObject):
             self.set_up_analysis_runs().run_analysis("distance", self.cb_analysis_images.isChecked())
         except exception.UnableToSetupAnalysisError:
             logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
-            self.finished.emit(exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0], exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1])
+            self.finished.emit(
+                exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0], exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1]
+            )
         except Exception as e:
             logger.error(f"Unknown error: {e}")
             self.finished.emit(exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
@@ -664,7 +697,7 @@ class OpenProjectWorker(QObject):
     return_value = pyqtSignal(project.Project)
     workspace_path: pathlib.Path
     project_name: str
-    app_settings: 'settings.Settings'
+    app_settings: "settings.Settings"
 
     def __init__(self, workspace_path, project_name, app_settings) -> None:
         """Constructor."""

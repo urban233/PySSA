@@ -3,19 +3,19 @@
 # Copyright (C) 2022
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
-# 
+#
 # Source code is available at <https://github.com/urban233/PySSA>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -39,11 +39,11 @@ class Protein:
             a pymol selection string which needs to conform with the selection algebra
             from pymol
     """
+
     selection: str = None
     sequence: str = None
 
-    def __init__(self, molecule_object: str, import_data_dir: str = None,
-                 export_data_dir: str = None):
+    def __init__(self, molecule_object: str, import_data_dir: str = None, export_data_dir: str = None):
         """Constructor.
 
         Args:
@@ -70,16 +70,13 @@ class Protein:
         # argument test
         if import_data_dir is not None:
             if not os.path.exists(f"{import_data_dir}"):
-                raise NotADirectoryError(f"The path {import_data_dir} was not "
-                                         f"found.")
+                raise NotADirectoryError(f"The path {import_data_dir} was not " f"found.")
         if export_data_dir is not None:
             if not os.path.exists(f"{export_data_dir}"):
-                raise NotADirectoryError(f"The path {export_data_dir} was not "
-                                         f"found.")
+                raise NotADirectoryError(f"The path {export_data_dir} was not " f"found.")
         if import_data_dir is not None:
             if not os.path.exists(f"{import_data_dir}/{molecule_object}.pdb"):
-                raise FileNotFoundError(f"The pdb file {molecule_object} was "
-                                        f"not found under {import_data_dir}.")
+                raise FileNotFoundError(f"The pdb file {molecule_object} was " f"not found under {import_data_dir}.")
 
     def set_selection(self, selection: str) -> None:
         """This function sets a selection for the Protein object.
@@ -108,11 +105,11 @@ class Protein:
             if self.import_data_dir is None:
                 # this means a PDB ID was given
                 cmd.fetch(self.molecule_object)
-                self.sequence = cmd.get_fastastr('all')
+                self.sequence = cmd.get_fastastr("all")
             else:
                 # a .pdb file was given
                 cmd.load(f"{self.import_data_dir}/{self.molecule_object}.pdb")
-                self.sequence = cmd.get_fastastr('all')
+                self.sequence = cmd.get_fastastr("all")
         else:
             self.sequence = sequence
 
@@ -168,8 +165,7 @@ class ProteinPair:
 
     """
 
-    def __init__(self, reference_obj: Protein, model_obj: Protein,
-                 results_dir: str) -> None:
+    def __init__(self, reference_obj: Protein, model_obj: Protein, results_dir: str) -> None:
         """Constructor.
 
         Args:
@@ -208,11 +204,9 @@ class ProteinPair:
         """
         try:
             # loading the reference in the active PyMol session
-            cmd.load(f"{self.ref_obj.import_data_dir}/"
-                     f"{self.ref_obj.molecule_object}.pdb")
+            cmd.load(f"{self.ref_obj.import_data_dir}/" f"{self.ref_obj.molecule_object}.pdb")
             # loading the model in the active PyMol session
-            cmd.load(f"{self.model_obj.import_data_dir}/"
-                     f"{self.model_obj.molecule_object}.pdb")
+            cmd.load(f"{self.model_obj.import_data_dir}/" f"{self.model_obj.molecule_object}.pdb")
 
         except pymol.CmdException:
             print(f"PyMOL internal error.")
@@ -241,22 +235,22 @@ class ProteinPair:
         # argument test
         # checks if either the reference or the model is an actual object
         # in the memory
-        if cmd.get_model(self.ref_obj.molecule_object) is None \
-                or cmd.get_model(self.model_obj.molecule_object) is None:
-            raise pymol.CmdException(f"Either the reference or the model is "
-                                     f"not in the pymol session as object.")
+        if cmd.get_model(self.ref_obj.molecule_object) is None or cmd.get_model(self.model_obj.molecule_object) is None:
+            raise pymol.CmdException(f"Either the reference or the model is " f"not in the pymol session as object.")
         # checks if both the reference and the model are actual objects
         # in the memory
-        if cmd.get_model(self.ref_obj.molecule_object) is None \
-                and cmd.get_model(self.model_obj.molecule_object) is None:
-            raise pymol.CmdException(f"Both, the reference and the model are "
-                                     f"not in the pymol session as objects.")
+        if (
+            cmd.get_model(self.ref_obj.molecule_object) is None
+            and cmd.get_model(self.model_obj.molecule_object) is None
+        ):
+            raise pymol.CmdException(f"Both, the reference and the model are " f"not in the pymol session as objects.")
         # actual color cmd command
         cmd.color(color_ref, self.ref_obj.molecule_object)
         cmd.color(color_model, self.model_obj.molecule_object)
 
-    def align_protein_pair(self, cycle_number: int, cutoff_value: float,
-                           alignment_filename: str = None) -> tuple[float, int]:
+    def align_protein_pair(
+        self, cycle_number: int, cutoff_value: float, alignment_filename: str = None
+    ) -> tuple[float, int]:
         """This function aligns the model to the reference Protein, with the
         `align`_ command from PyMOL.
 
@@ -309,11 +303,9 @@ class ProteinPair:
         """
         # argument test
         if self.ref_obj.selection is None or self.model_obj.selection is None:
-            raise ValueError("Either the reference or the model "
-                             "has an empty selection.")
+            raise ValueError("Either the reference or the model " "has an empty selection.")
         if self.ref_obj.selection is None and self.model_obj.selection is None:
-            raise ValueError("Both, the reference and the model "
-                             "have an empty selection.")
+            raise ValueError("Both, the reference and the model " "have an empty selection.")
         if cycle_number < 0:
             raise ValueError("Number of cycles must be greater or equal than zero.")
         if cutoff_value <= 0:
@@ -321,36 +313,40 @@ class ProteinPair:
 
         # This block runs if an alignObject should be created.
         if alignment_filename is not None:
-            results = cmd.align(target=self.ref_obj.selection,
-                                mobile=self.model_obj.selection,
-                                object=alignment_filename,
-                                cycles=cycle_number,
-                                cutoff=cutoff_value,
-                                quiet=0)
+            results = cmd.align(
+                target=self.ref_obj.selection,
+                mobile=self.model_obj.selection,
+                object=alignment_filename,
+                cycles=cycle_number,
+                cutoff=cutoff_value,
+                quiet=0,
+            )
 
             if not os.path.exists(f"{self.results_dir}/alignment_files"):
                 os.mkdir(f"{self.results_dir}/alignment_files")
 
             # save the align object from pymol as alignment file
-            cmd.save(f"{self.results_dir}/alignment_files/"
-                     f"{alignment_filename}.aln")
+            cmd.save(f"{self.results_dir}/alignment_files/" f"{alignment_filename}.aln")
 
             return results[0], results[1]
 
         # This block runs if no alignObject should be created.
         else:
-            results = cmd.align(target=self.ref_obj.selection,
-                                mobile=self.model_obj.selection,
-                                cycles=cycle_number,
-                                cutoff=cutoff_value,
-                                quiet=1)
+            results = cmd.align(
+                target=self.ref_obj.selection,
+                mobile=self.model_obj.selection,
+                cycles=cycle_number,
+                cutoff=cutoff_value,
+                quiet=1,
+            )
 
             return results[0], results[1]
             # tup_results = (results[0], results[1])
             # return tup_results
 
-    def calculate_distance_between_ca_atoms(self, alignment_filename: str,
-                                            cutoff: float = 20.0) -> Dict[str, np.ndarray]:
+    def calculate_distance_between_ca_atoms(
+        self, alignment_filename: str, cutoff: float = 20.0
+    ) -> Dict[str, np.ndarray]:
         # def calculate_distance_between_ca_atoms(self, alignment_filename: str,
         #                                         cutoff: float = 20.0) -> Dict[str, np.ndarray]:
         """This function calculates the distances between the aligned alpha-C
@@ -392,23 +388,19 @@ class ProteinPair:
         """
         # argument test
         try:
-            file = open(f"{self.results_dir}/alignment_files/"
-                        f"{alignment_filename}.aln", "r")
+            file = open(f"{self.results_dir}/alignment_files/" f"{alignment_filename}.aln", "r")
             file.close()
         except FileNotFoundError:
             print(f"File not found, in {self.results_dir}.")
 
-        cmd.create(f"{self.ref_obj.molecule_object}_CA",
-                   f"/{self.ref_obj.molecule_object}////CA")
+        cmd.create(f"{self.ref_obj.molecule_object}_CA", f"/{self.ref_obj.molecule_object}////CA")
         ref_ca_obj = cmd.get_model(f"{self.ref_obj.molecule_object}_CA")
 
-        cmd.create(f"{self.model_obj.molecule_object}_CA",
-                   f"/{self.model_obj.molecule_object}////CA")
+        cmd.create(f"{self.model_obj.molecule_object}_CA", f"/{self.model_obj.molecule_object}////CA")
         model_ca_obj = cmd.get_model(f"{self.model_obj.molecule_object}_CA")
 
         # read in alignment file from alignProteinPair function
-        align = AlignIO.read(f"{self.results_dir}/alignment_files/"
-                             f"{alignment_filename}.aln", "clustal")
+        align = AlignIO.read(f"{self.results_dir}/alignment_files/" f"{alignment_filename}.aln", "clustal")
 
         index_list: [int] = []
         ref_chain_list: [str] = []
@@ -423,7 +415,7 @@ class ProteinPair:
         j = 0  # j for reference
         k = 0  # k for model
         index = 0
-        #try:
+        # try:
         while i < int(align.get_alignment_length()):
             # gets executed if the reference contains a "-" in the alignment
             if align[0, i] == "-":
@@ -501,21 +493,16 @@ class ProteinPair:
         model_resi_array: np.ndarray = np.array(model_resi_list)
         distance_array: np.ndarray = np.array(distance_list)
 
-        result_hashtable: Dict[str, np.ndarray] = {'index': index_array,
-                                                   'ref_chain':
-                                                       ref_chain_array,
-                                                   'ref_pos':
-                                                       ref_pos_array,
-                                                   'ref_resi':
-                                                       ref_resi_array,
-                                                   'model_chain':
-                                                       model_chain_array,
-                                                   'model_pos':
-                                                       model_pos_array,
-                                                   'model_resi':
-                                                       model_resi_array,
-                                                   'distance':
-                                                       distance_array}
+        result_hashtable: Dict[str, np.ndarray] = {
+            "index": index_array,
+            "ref_chain": ref_chain_array,
+            "ref_pos": ref_pos_array,
+            "ref_resi": ref_resi_array,
+            "model_chain": model_chain_array,
+            "model_pos": model_pos_array,
+            "model_resi": model_resi_array,
+            "distance": distance_array,
+        }
 
         # return the hast table with all results
         return result_hashtable
@@ -528,8 +515,7 @@ class ProteinPair:
         #     print(f"{align[0, i]},{align[1, i]}")
         #     print(result_hashtable)
 
-    def export_distance_between_ca_atoms(
-            self, distance_results: Dict[str, np.ndarray]) -> None:
+    def export_distance_between_ca_atoms(self, distance_results: Dict[str, np.ndarray]) -> None:
         """This function exports the results from the function
         calculate_distance_between_ca_atoms as CSV file
 
@@ -546,7 +532,7 @@ class ProteinPair:
             "model_chain": distance_results.get("model_chain"),
             "model_pos": distance_results.get("model_pos"),
             "model_resi": distance_results.get("model_resi"),
-            "distance": distance_results.get("distance")
+            "distance": distance_results.get("distance"),
         }
         tmp_frame = pd.DataFrame(distance_data)
 
@@ -598,16 +584,12 @@ class ProteinPair:
                 results generated from the cealign function from PyMol
         """
         # aligning the two proteins with the PyMol command cealign
-        results = cmd.cealign(
-            target=self.ref_obj.molecule_object,
-            mobile=self.model_obj.molecule_object,
-            quiet=1)
-        value_rmsd: float = results.get('RMSD')
+        results = cmd.cealign(target=self.ref_obj.molecule_object, mobile=self.model_obj.molecule_object, quiet=1)
+        value_rmsd: float = results.get("RMSD")
         return value_rmsd
 
     @staticmethod
-    def print_results_of_align_protein_pair(result: Tuple[float, int],
-                                            model_name: str) -> None:
+    def print_results_of_align_protein_pair(result: Tuple[float, int], model_name: str) -> None:
         """This function prints the results of the function alignProteinPair in
         a specific format.
 
@@ -714,17 +696,19 @@ class ProteinPair:
     #     # export data to csv file
     #     df_results.to_csv(f"{self.results_dir}/distances/{filename}.csv")
 
-    def take_image_of_protein_pair(self,
-                                   color_ref: str,
-                                   color_model: str,
-                                   representation: str,
-                                   view_point,
-                                   filename: str,
-                                   cycles: int,
-                                   cutoff: float,
-                                   selection: str = "",
-                                   ray_shadows: bool = False,
-                                   opaque_background: int = 0) -> None:
+    def take_image_of_protein_pair(
+        self,
+        color_ref: str,
+        color_model: str,
+        representation: str,
+        view_point,
+        filename: str,
+        cycles: int,
+        cutoff: float,
+        selection: str = "",
+        ray_shadows: bool = False,
+        opaque_background: int = 0,
+    ) -> None:
         """This function takes an image of the whole Protein/Protein pair.
 
         Note:
@@ -779,8 +763,7 @@ class ProteinPair:
         if selection != "":
             cmd.hide(representation, selection)
 
-        self.align_protein_pair(cycle_number=cycles,
-                                cutoff_value=cutoff)
+        self.align_protein_pair(cycle_number=cycles, cutoff_value=cutoff)
 
         cmd.orient()
         cmd.center()
@@ -789,7 +772,7 @@ class ProteinPair:
         cmd.bg_color("white")
         cmd.set("antialias", 2)
         cmd.set("ray_shadows", opt_ray_shadows)
-        cmd.set('ray_opaque_background', opaque_background)
+        cmd.set("ray_opaque_background", opaque_background)
         cmd.ray(2400, 2400, renderer=0)
 
         # check if path exists where the data will be exported,
@@ -798,4 +781,4 @@ class ProteinPair:
             os.mkdir(f"{self.results_dir}/images")
 
         # save image as 300 dpi png image
-        cmd.png(f'{self.results_dir}/images/{filename}.png', dpi=300)
+        cmd.png(f"{self.results_dir}/images/{filename}.png", dpi=300)

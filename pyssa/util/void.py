@@ -23,7 +23,7 @@
 from pyssa.util import constants, exception
 
 
-def void(a_python_object) -> None:  # noqa: ANN001
+def rvoid(a_python_object) -> None:  # noqa: ANN001
     """Only logs that a return value of a function or method is not used."""
     if a_python_object is None:
         constants.PYSSA_LOGGER.error("The given python object is None.")

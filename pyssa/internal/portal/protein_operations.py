@@ -39,9 +39,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 
 def remove_solvent_molecules_in_protein():
-    """This function removes solvent molecules in a protein.
-
-    """
+    """This function removes solvent molecules in a protein."""
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
@@ -51,9 +49,7 @@ def remove_solvent_molecules_in_protein():
 
 
 def remove_organic_molecules_in_protein():
-    """This function removes organic molecules in a protein.
-
-    """
+    """This function removes organic molecules in a protein."""
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
@@ -102,20 +98,26 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
         if sequence_of_chain.atom[0].resn in constants.AMINO_ACID_CODE:
             # TODO: can this be better?
             fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
-            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n"):]
-            complete_sequence_of_chain = sequence.Sequence(molecule_object, fasta_sequence_of_chain_without_header.replace("\n", ""))
+            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
+            complete_sequence_of_chain = sequence.Sequence(
+                molecule_object, fasta_sequence_of_chain_without_header.replace("\n", "")
+            )
             chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
         else:
             # TODO: this should produce a sequence with the non-protein atoms
             fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
-            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n"):]
-            complete_sequence_of_chain = sequence.Sequence(molecule_object, fasta_sequence_of_chain_without_header.replace("\n", ""))
-            chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN))
+            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
+            complete_sequence_of_chain = sequence.Sequence(
+                molecule_object, fasta_sequence_of_chain_without_header.replace("\n", "")
+            )
+            chains_of_protein.append(
+                chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN)
+            )
         i += 1
     return chains_of_protein
 
 
-def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> list['sequence.Sequence']:
+def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> list["sequence.Sequence"]:
     """This function gets all sequences from protein chains only.
 
     Args:
@@ -131,7 +133,9 @@ def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain
     if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(chains) or not safeguard.Safeguard.check_if_list_is_empty(chains):
+    if not safeguard.Safeguard.check_if_value_is_not_none(chains) or not safeguard.Safeguard.check_if_list_is_empty(
+        chains
+    ):
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
 
@@ -149,4 +153,4 @@ def get_protein_sequence_length_from_protein(a_protein: "protein.Protein") -> in
         a_protein: a protein object of which the sequence length is calculated.
     """
     fasta_prot_1 = cmd.get_fastastr(a_protein.pymol_selection.selection_string)
-    return len(fasta_prot_1[fasta_prot_1.find("\n"):])
+    return len(fasta_prot_1[fasta_prot_1.find("\n") :])

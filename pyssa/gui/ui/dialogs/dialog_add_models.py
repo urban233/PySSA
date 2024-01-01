@@ -27,7 +27,6 @@ global_var_pdb_files = []
 
 
 class DialogAddModels(QtWidgets.QDialog):
-
     def __init__(self, parent=None):
         """Constructor.
 
@@ -41,7 +40,7 @@ class DialogAddModels(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.ui.btn_create_projects.setEnabled(False)
         self.ui.btn_remove.setEnabled(False)
-        #self.ui.list_models.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        # self.ui.list_models.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
 
         self.ui.btn_cancel.clicked.connect(self.close_dialog)
         self.ui.btn_add.clicked.connect(self.add_model_to_list)
@@ -58,9 +57,9 @@ class DialogAddModels(QtWidgets.QDialog):
     def add_model_to_list(self):
         try:
             # open file dialog
-            file_names = QtWidgets.QFileDialog.getOpenFileNames(self, "Open Model",
-                                                                  QtCore.QDir.homePath(),
-                                                                  "PDB Files (*.pdb)")
+            file_names = QtWidgets.QFileDialog.getOpenFileNames(
+                self, "Open Model", QtCore.QDir.homePath(), "PDB Files (*.pdb)"
+            )
             if file_names == ([], ""):
                 print("No file has been selected.")
                 return

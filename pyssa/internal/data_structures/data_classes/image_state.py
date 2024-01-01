@@ -25,6 +25,7 @@ from dataclasses import dataclass
 @dataclass
 class ImageState:
     """Contains the current state of the image page."""
+
     representation: str
     background_color: str
     renderer: int

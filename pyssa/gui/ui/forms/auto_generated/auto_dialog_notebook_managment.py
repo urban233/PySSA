@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -31,7 +32,9 @@ class Ui_Dialog(object):
         self.lbl_current_status.setObjectName("lbl_current_status")
         self.verticalLayout.addWidget(self.lbl_current_status)
         self.verticalLayout_2.addLayout(self.verticalLayout)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            20, 5, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_2.addItem(spacerItem1)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -55,7 +58,9 @@ class Ui_Dialog(object):
         self.btn_disable_gpu.setMaximumSize(QtCore.QSize(110, 16777215))
         self.btn_disable_gpu.setObjectName("btn_disable_gpu")
         self.horizontalLayout.addWidget(self.btn_disable_gpu)
-        spacerItem2 = QtWidgets.QSpacerItem(5, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
+        spacerItem2 = QtWidgets.QSpacerItem(
+            5, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum
+        )
         self.horizontalLayout.addItem(spacerItem2)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
@@ -72,4 +77,3 @@ class Ui_Dialog(object):
         self.btn_check_status.setText(_translate("Dialog", "Check status"))
         self.btn_reconnect.setText(_translate("Dialog", "Reconnect"))
         self.btn_disable_gpu.setText(_translate("Dialog", "Disable GPU"))
-

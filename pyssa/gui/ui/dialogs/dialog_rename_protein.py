@@ -19,22 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-import os
-import pymol
 from pymol import Qt
-from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_rename_protein import Ui_Dialog
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, tools, gui_utils, workspace_util, input_validator
+from pyssa.util import constants, workspace_util, input_validator
 
 global_var_rename_protein = ("", False)
 
 
 class DialogRenameProtein(Qt.QtWidgets.QDialog):
-
     def __init__(self, the_workspace_path, parent=None) -> None:
         """Constructor.
 
@@ -85,7 +82,13 @@ class DialogRenameProtein(Qt.QtWidgets.QDialog):
         # tools.validate_protein_name(
         #     self.ui.txt_rename_protein, self.ui.lbl_status, self.ui.btn_rename_protein,
         # )
-        input_validator.InputValidator.validate_search_input(self.ui.list_workspace_proteins,
-                                                             self.ui.txt_rename_protein,
-                                                             self.ui.lbl_status)
-        input_validator.InputValidator.validate_protein_name(self.ui.txt_rename_protein, self.ui.lbl_status, self.ui.btn_rename_protein)
+        input_validator.InputValidator.validate_search_input(
+            self.ui.list_workspace_proteins,
+            self.ui.txt_rename_protein,
+            self.ui.lbl_status,
+        )
+        input_validator.InputValidator.validate_protein_name(
+            self.ui.txt_rename_protein,
+            self.ui.lbl_status,
+            self.ui.btn_rename_protein,
+        )

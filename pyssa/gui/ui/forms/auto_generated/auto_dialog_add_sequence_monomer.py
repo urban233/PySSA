@@ -52,7 +52,9 @@ class Ui_Dialog(object):
         self.lbl_seq_name_status.setObjectName("lbl_seq_name_status")
         self.verticalLayout_2.addWidget(self.lbl_seq_name_status)
         self.verticalLayout_3.addLayout(self.verticalLayout_2)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_3.addItem(spacerItem1)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")

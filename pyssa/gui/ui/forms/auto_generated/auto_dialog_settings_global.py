@@ -102,7 +102,9 @@ class Ui_Dialog(object):
         self.cb_color_vision_mode.setObjectName("cb_color_vision_mode")
         self.horizontalLayout.addWidget(self.cb_color_vision_mode)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_2.addItem(spacerItem1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")

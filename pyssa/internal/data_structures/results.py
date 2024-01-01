@@ -45,7 +45,7 @@ class DistanceAnalysisResults:
     """
     distance_data: dict[str, np.ndarray]
 
-    """ 
+    """
     The base64 string of the pymol session used for the distance analysis
     """
     pymol_session: str
@@ -88,13 +88,23 @@ class DistanceAnalysisResults:
             filepaths (list[path_util.FilePath]): List of file paths.
         """
         for tmp_filepath in filepaths:
-            self.interesting_regions_images.append((tmp_filepath.get_basename(), binary_data.create_base64_string_from_file(tmp_filepath)))
+            self.interesting_regions_images.append(
+                (tmp_filepath.get_basename(), binary_data.create_base64_string_from_file(tmp_filepath))
+            )
 
     def create_image_png_files_from_base64(self) -> None:
         """Creates png files from the base64 data."""
-        binary_data.write_binary_file_from_base64_string(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{self.structure_aln_image[0]}"), self.structure_aln_image[1])
+        binary_data.write_binary_file_from_base64_string(
+            pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_DIR}/{self.structure_aln_image[0]}"),
+            self.structure_aln_image[1],
+        )
         for tmp_interesting_reg in self.interesting_regions_images:
-            binary_data.write_binary_file_from_base64_string(pathlib.Path(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_interesting_reg[0]}"), tmp_interesting_reg[1])
+            binary_data.write_binary_file_from_base64_string(
+                pathlib.Path(
+                    f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_interesting_reg[0]}"
+                ),
+                tmp_interesting_reg[1],
+            )
 
     def serialize_distance_analysis_results(self, tmp_distance_analysis) -> None:
         """Serializes the distance analysis results object."""
@@ -105,30 +115,34 @@ class DistanceAnalysisResults:
         logger.debug(f"These are the keys of the self.distance_data hashtable: {self.distance_data.keys()}")
         logger.debug(f"These are the values of the self.distance_data hashtable: {self.distance_data.values()}")
         # <editor-fold desc="Distance data">
-        tmp_distance_data = ElementTree.SubElement(tmp_results_data,
-                                                   element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS)
+        tmp_distance_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS)
         tmp_index_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_INDEX_LIST)
         tmp_index_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX].tolist())
-        tmp_prot_1_chain_data = ElementTree.SubElement(tmp_distance_data,
-                                                       element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST)
+        tmp_prot_1_chain_data = ElementTree.SubElement(
+            tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST
+        )
         tmp_prot_1_chain_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN].tolist())
-        tmp_prot_1_position_data = ElementTree.SubElement(tmp_distance_data,
-                                                          element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST)
+        tmp_prot_1_position_data = ElementTree.SubElement(
+            tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST
+        )
         tmp_prot_1_position_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION].tolist())
-        tmp_prot_1_residue_data = ElementTree.SubElement(tmp_distance_data,
-                                                         element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST)
+        tmp_prot_1_residue_data = ElementTree.SubElement(
+            tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST
+        )
         tmp_prot_1_residue_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI].tolist())
-        tmp_prot_2_chain_data = ElementTree.SubElement(tmp_distance_data,
-                                                       element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST)
+        tmp_prot_2_chain_data = ElementTree.SubElement(
+            tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST
+        )
         tmp_prot_2_chain_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN].tolist())
-        tmp_prot_2_position_data = ElementTree.SubElement(tmp_distance_data,
-                                                          element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST)
+        tmp_prot_2_position_data = ElementTree.SubElement(
+            tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST
+        )
         tmp_prot_2_position_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION].tolist())
-        tmp_prot_2_residue_data = ElementTree.SubElement(tmp_distance_data,
-                                                         element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST)
+        tmp_prot_2_residue_data = ElementTree.SubElement(
+            tmp_distance_data, element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST
+        )
         tmp_prot_2_residue_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI].tolist())
-        tmp_distances_data = ElementTree.SubElement(tmp_distance_data,
-                                                    element_names.DISTANCE_ANALYSIS_DISTANCES_LIST)
+        tmp_distances_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_DISTANCES_LIST)
         tmp_distances_data.text = str(self.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist())
 
         # </editor-fold>
@@ -136,15 +150,22 @@ class DistanceAnalysisResults:
         # <editor-fold desc="Images">
         if len(self.structure_aln_image) != 0:
             tmp_image_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_IMAGES)
-            tmp_image_structure_aln = ElementTree.SubElement(tmp_image_data, element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE)
-            tmp_image_structure_aln.set(attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME, self.structure_aln_image[0])
+            tmp_image_structure_aln = ElementTree.SubElement(
+                tmp_image_data, element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE
+            )
+            tmp_image_structure_aln.set(
+                attribute_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE_BASENAME, self.structure_aln_image[0]
+            )
             tmp_image_structure_aln.text = self.structure_aln_image[1]
 
             if len(self.interesting_regions_images) != 0:
                 for tmp_base64_image in self.interesting_regions_images:
-                    tmp_image_interesting_reg = ElementTree.SubElement(tmp_image_data,
-                                                                       element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS)
-                    tmp_image_interesting_reg.set(attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME, tmp_base64_image[0])
+                    tmp_image_interesting_reg = ElementTree.SubElement(
+                        tmp_image_data, element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS
+                    )
+                    tmp_image_interesting_reg.set(
+                        attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME, tmp_base64_image[0]
+                    )
                     tmp_image_interesting_reg.text = tmp_base64_image[1]
 
         # </editor-fold>

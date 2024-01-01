@@ -53,7 +53,7 @@ class StructurePrediction:
 
     # <editor-fold desc="Class attributes">
     """
-    a list of tuples of protein name and sequence 
+    a list of tuples of protein name and sequence
     """
     predictions: list[prediction_protein_info.PredictionProteinInfo]
     """
@@ -61,22 +61,30 @@ class StructurePrediction:
     """
     prediction_config: prediction_configuration.PredictionConfiguration
     """
-    the current project in use 
+    the current project in use
     """
     current_project: project.Project
 
     # </editor-fold>
 
-    def __init__(self,
-                 predictions: list[prediction_protein_info.PredictionProteinInfo],
-                 prediction_config: prediction_configuration.PredictionConfiguration,
-                 current_project: 'project.Project') -> None:
+    def __init__(
+        self,
+        predictions: list[prediction_protein_info.PredictionProteinInfo],
+        prediction_config: prediction_configuration.PredictionConfiguration,
+        current_project: "project.Project",
+    ) -> None:
         self.predictions: list[prediction_protein_info.PredictionProteinInfo] = predictions
         self.prediction_configuration = prediction_config
         self.project = current_project
-        loggers.log_multiple_variable_values(logger, "Constructor", [("predictions", self.predictions),
-                                                                     ("prediction_configuration", self.prediction_configuration),
-                                                                     ("project", self.project)])
+        loggers.log_multiple_variable_values(
+            logger,
+            "Constructor",
+            [
+                ("predictions", self.predictions),
+                ("prediction_configuration", self.prediction_configuration),
+                ("project", self.project),
+            ],
+        )
 
     @staticmethod
     def create_tmp_directories() -> None:
@@ -97,7 +105,9 @@ class StructurePrediction:
             FastaFilesNotFoundError: If a fasta file could not be found.
         """
         try:
-            protein_objects: list[protein.Protein] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(self.predictions)
+            protein_objects: list[protein.Protein] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(
+                self.predictions
+            )
         except exception.IllegalArgumentError:
             logger.error("Invalid argument")
             raise exception.FastaFilesNotCreatedError("")
@@ -105,7 +115,9 @@ class StructurePrediction:
             logger.error("Unexpected error:", e)
             raise exception.FastaFilesNotCreatedError("")
 
-        logger.debug(f"Variable: protein_sequences; Value: {protein_objects} in function create_fasta_files_for_prediction")
+        logger.debug(
+            f"Variable: protein_sequences; Value: {protein_objects} in function create_fasta_files_for_prediction"
+        )
 
         for tmp_protein_to_predict in protein_objects:
             try:
@@ -133,8 +145,10 @@ class StructurePrediction:
         try:
             colabbatch.Colabbatch(self.prediction_configuration).run_prediction()
         except exception.IllegalArgumentError:
-            logger.error(f"The Prediction configuration: ({self.prediction_configuration.amber_force_field}, "
-                         f"{self.prediction_configuration.amber_force_field}) is invalid!")
+            logger.error(
+                f"The Prediction configuration: ({self.prediction_configuration.amber_force_field}, "
+                f"{self.prediction_configuration.amber_force_field}) is invalid!"
+            )
             raise exception.PredictionEndedWithError("")
         except exception.PredictionEndedWithError:
             logger.error("Prediction ended with errors!")
@@ -148,7 +162,9 @@ class StructurePrediction:
             FileNotFoundError: If the filepath of the rank 1 model could not be found.
         """
         logger.debug(self.predictions)
-        best_prediction_models: list[tuple[prediction_protein_info.PredictionProteinInfo, str]] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
+        best_prediction_models: list[
+            tuple[prediction_protein_info.PredictionProteinInfo, str]
+        ] = prediction_util.get_relaxed_rank_1_pdb_file(self.predictions)
         logger.debug(f"These are the models created by ColabFold: {best_prediction_models}")
         if len(best_prediction_models) == 0:
             logger.error("The prediction process finished but no rank 1 model could be found.")
@@ -159,12 +175,19 @@ class StructurePrediction:
             try:
                 src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
             except FileNotFoundError:
-                logger.error("This path does not exists: %s", path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}").get_filepath())
+                logger.error(
+                    "This path does not exists: %s",
+                    path_util.FilePath(
+                        f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"
+                    ).get_filepath(),
+                )
                 raise FileNotFoundError()
             dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
             os.rename(src.get_filepath(), dest)
             logger.debug(tmp_prediction[0].name)
-            self.project.add_existing_protein(protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)))
+            self.project.add_existing_protein(
+                protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest))
+            )
             logger.debug(self.project.proteins)
         try:
             shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))

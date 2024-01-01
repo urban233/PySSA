@@ -66,13 +66,13 @@ class Protein:
     """
     _pymol_molecule_object: str
     """
-    a pymol conform selection 
+    a pymol conform selection
     """
     pymol_selection: selection.Selection
     """
     a list of chains which occur in the protein
     """
-    chains: list['chain.Chain'] = []
+    chains: list["chain.Chain"] = []
     """
     the full filepath where the pdb file is stored
     """
@@ -96,7 +96,9 @@ class Protein:
 
     # </editor-fold>
 
-    def __init__(self, molecule_object: str, pdb_filepath: path_util.FilePath = "", pdb_xml_string: ElementTree = "") -> None:
+    def __init__(
+        self, molecule_object: str, pdb_filepath: path_util.FilePath = "", pdb_xml_string: ElementTree = ""
+    ) -> None:
         """Constructor.
 
         Args:
@@ -137,7 +139,9 @@ class Protein:
             if not os.path.exists(constants.CACHE_PROTEIN_DIR):
                 os.mkdir(constants.CACHE_PROTEIN_DIR)
             bio_data.convert_xml_string_to_pdb_file(pdb_xml_string, self.pdb_cache_path)
-            self.chains = protein_operations.get_protein_chains(molecule_object, constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb")
+            self.chains = protein_operations.get_protein_chains(
+                molecule_object, constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb"
+            )
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(pdb_xml_string)
             os.remove(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
             self.pymol_selection = selection.Selection(self._pymol_molecule_object)
@@ -148,7 +152,9 @@ class Protein:
 
         elif pdb_filepath != "" and pdb_xml_string == "":
             self._pymol_molecule_object = pdb_filepath.get_filename()
-            self.chains = protein_operations.get_protein_chains(molecule_object, pdb_filepath.get_dirname(), pdb_filepath.get_basename())
+            self.chains = protein_operations.get_protein_chains(
+                molecule_object, pdb_filepath.get_dirname(), pdb_filepath.get_basename()
+            )
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
                 bio_data.convert_pdb_file_into_xml_element(pdb_filepath),
             )
@@ -187,13 +193,13 @@ class Protein:
                 tmp_chain.chain_sequence.name = value
         self.pymol_selection.molecule_object = value
 
-    def get_all_sequences(self) -> list['sequence.Sequence']:
+    def get_all_sequences(self) -> list["sequence.Sequence"]:
         tmp_sequences = []
         for tmp_chain in self.chains:
             tmp_sequences.append(tmp_chain.chain_sequence)
         return tmp_sequences
 
-    def get_protein_sequences(self) -> list['sequence.Sequence']:
+    def get_protein_sequences(self) -> list["sequence.Sequence"]:
         return protein_operations.get_protein_sequences_from_protein(self._pymol_molecule_object, self.chains)
 
     def get_sequences_based_on_chain_letter(self, chain_letter):
@@ -352,7 +358,9 @@ class Protein:
         if self.export_dirname == "":
             raise AttributeError("A export directory must be defined!")
 
-        pymol_io.fetch_protein_from_pdb(self.pdb_filepath.get_dirname(), self.pdb_filepath.get_filename(), self._pymol_molecule_object)
+        pymol_io.fetch_protein_from_pdb(
+            self.pdb_filepath.get_dirname(), self.pdb_filepath.get_filename(), self._pymol_molecule_object
+        )
         protein_operations.remove_solvent_molecules_in_protein()
         protein_operations.remove_organic_molecules_in_protein()
         # check if path exists where the data will be exported,
@@ -375,10 +383,12 @@ class Protein:
             tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
             pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(self._id))
             self._pdb_data.clear()
-            self._pdb_data = bio_data.convert_pdb_xml_string_to_list(bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)))
+            self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
+                bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path))
+            )
         else:
             clean_prot = self.duplicate_protein()
-            #clean_prot.load_protein_in_pymol()
+            # clean_prot.load_protein_in_pymol()
             clean_prot.load_protein_pymol_session()
             protein_operations.remove_solvent_molecules_in_protein()
             protein_operations.remove_organic_molecules_in_protein()
@@ -386,7 +396,10 @@ class Protein:
             clean_prot.set_molecule_object(clean_prot_molecule_object)
             tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{clean_prot.get_id()}.pdb")
             pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(clean_prot.get_id()))
-            cleaned_prot = Protein(molecule_object=clean_prot_molecule_object, pdb_xml_string=bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)))
+            cleaned_prot = Protein(
+                molecule_object=clean_prot_molecule_object,
+                pdb_xml_string=bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)),
+            )
             return cleaned_prot
 
     def show_resi_as_balls_and_sticks(self) -> None:
@@ -415,11 +428,15 @@ class Protein:
         Returns:
             a complete protein object deserialized from a json file
         """
-        return filesystem_io.ObjectDeserializer(protein_obj_json_file.get_dirname(),
-                                                protein_obj_json_file.get_filename()).deserialize_protein()
+        return filesystem_io.ObjectDeserializer(
+            protein_obj_json_file.get_dirname(), protein_obj_json_file.get_filename()
+        ).deserialize_protein()
 
     def duplicate_protein(self):
-        tmp_protein = Protein(molecule_object=self._pymol_molecule_object, pdb_xml_string=bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data))
+        tmp_protein = Protein(
+            molecule_object=self._pymol_molecule_object,
+            pdb_xml_string=bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data),
+        )
         logger.debug(tmp_protein.chains[0])
         # tmp_protein.pymol_selection.selection_string = self.pymol_selection.selection_string
         # tmp_protein.chains = self.chains

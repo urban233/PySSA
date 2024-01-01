@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
         self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.scrollArea.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
         self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 163, 870))
@@ -310,7 +310,7 @@ class Ui_MainWindow(object):
         font.setBold(False)
         font.setWeight(50)
         self.lbl_homepage.setFont(font)
-        self.lbl_homepage.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lbl_homepage.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.lbl_homepage.setWordWrap(True)
         self.lbl_homepage.setIndent(22)
         self.lbl_homepage.setObjectName("lbl_homepage")
@@ -409,7 +409,9 @@ class Ui_MainWindow(object):
         self.btn_esm_next_2.setObjectName("btn_esm_next_2")
         self.next_layout_2.addWidget(self.btn_esm_next_2)
         self.verticalLayout_45.addLayout(self.next_layout_2)
-        spacerItem6 = QtWidgets.QSpacerItem(20, 15, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem6 = QtWidgets.QSpacerItem(
+            20, 15, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_45.addItem(spacerItem6)
         self.predict_layout = QtWidgets.QHBoxLayout()
         self.predict_layout.setObjectName("predict_layout")
@@ -496,7 +498,9 @@ class Ui_MainWindow(object):
         self.txt_prediction_chain_model.setObjectName("txt_prediction_chain_model")
         self.verticalLayout_14.addWidget(self.txt_prediction_chain_model)
         self.verticalLayout_21.addLayout(self.verticalLayout_14)
-        spacerItem10 = QtWidgets.QSpacerItem(20, 15, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem10 = QtWidgets.QSpacerItem(
+            20, 15, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_21.addItem(spacerItem10)
         self.horizontalLayout_18 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_18.setObjectName("horizontalLayout_18")
@@ -592,7 +596,9 @@ class Ui_MainWindow(object):
         self.cb_analysis_images.setObjectName("cb_analysis_images")
         self.horizontalLayout_5.addWidget(self.cb_analysis_images)
         self.verticalLayout_86.addLayout(self.horizontalLayout_5)
-        spacerItem14 = QtWidgets.QSpacerItem(20, 15, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem14 = QtWidgets.QSpacerItem(
+            20, 15, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_86.addItem(spacerItem14)
         self.horizontalLayout_63 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_63.setObjectName("horizontalLayout_63")
@@ -729,7 +735,9 @@ class Ui_MainWindow(object):
         self.cb_analysis_batch_images.setObjectName("cb_analysis_batch_images")
         self.horizontalLayout_16.addWidget(self.cb_analysis_batch_images)
         self.verticalLayout_87.addLayout(self.horizontalLayout_16)
-        spacerItem20 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem20 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_87.addItem(spacerItem20)
         self.horizontalLayout_65 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_65.setObjectName("horizontalLayout_65")
@@ -768,7 +776,7 @@ class Ui_MainWindow(object):
         self.txt_results_rmsd.setSizePolicy(sizePolicy)
         self.txt_results_rmsd.setMinimumSize(QtCore.QSize(50, 0))
         self.txt_results_rmsd.setMaximumSize(QtCore.QSize(50, 16777215))
-        self.txt_results_rmsd.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.txt_results_rmsd.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
         self.txt_results_rmsd.setReadOnly(True)
         self.txt_results_rmsd.setObjectName("txt_results_rmsd")
         self.horizontalLayout_73.addWidget(self.txt_results_rmsd)
@@ -800,7 +808,7 @@ class Ui_MainWindow(object):
         self.txt_results_aligned_residues.setSizePolicy(sizePolicy)
         self.txt_results_aligned_residues.setMinimumSize(QtCore.QSize(50, 0))
         self.txt_results_aligned_residues.setMaximumSize(QtCore.QSize(50, 16777215))
-        self.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignJustify|QtCore.Qt.AlignVCenter)
+        self.txt_results_aligned_residues.setAlignment(QtCore.Qt.AlignJustify | QtCore.Qt.AlignVCenter)
         self.txt_results_aligned_residues.setReadOnly(True)
         self.txt_results_aligned_residues.setObjectName("txt_results_aligned_residues")
         self.horizontalLayout_74.addWidget(self.txt_results_aligned_residues)
@@ -902,7 +910,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_13.addWidget(self.btn_view_interesting_region)
         self.verticalLayout_10.addLayout(self.horizontalLayout_13)
         self.verticalLayout_12.addLayout(self.verticalLayout_10)
-        spacerItem30 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem30 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_12.addItem(spacerItem30)
         self.stackedWidget.addWidget(self.results_page)
         self.image_page = QtWidgets.QWidget()
@@ -1071,7 +1081,7 @@ class Ui_MainWindow(object):
         self.txt_new_project_name.setObjectName("txt_new_project_name")
         self.verticalLayout_26.addWidget(self.txt_new_project_name)
         self.lbl_new_status_project_name = QtWidgets.QLabel(self.main_open_frame)
-        self.lbl_new_status_project_name.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        self.lbl_new_status_project_name.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.lbl_new_status_project_name.setIndent(-1)
         self.lbl_new_status_project_name.setObjectName("lbl_new_status_project_name")
         self.verticalLayout_26.addWidget(self.lbl_new_status_project_name)
@@ -1550,7 +1560,9 @@ class Ui_MainWindow(object):
         self.btn_use_next.setObjectName("btn_use_next")
         self.horizontalLayout_41.addWidget(self.btn_use_next)
         self.verticalLayout_71.addLayout(self.horizontalLayout_41)
-        spacerItem53 = QtWidgets.QSpacerItem(20, 18, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem53 = QtWidgets.QSpacerItem(
+            20, 18, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_71.addItem(spacerItem53)
         self.verticalLayout_68 = QtWidgets.QVBoxLayout()
         self.verticalLayout_68.setObjectName("verticalLayout_68")
@@ -1678,7 +1690,9 @@ class Ui_MainWindow(object):
         self.btn_local_pred_mono_advanced_config.setObjectName("btn_local_pred_mono_advanced_config")
         self.horizontalLayout_43.addWidget(self.btn_local_pred_mono_advanced_config)
         self.verticalLayout_74.addLayout(self.horizontalLayout_43)
-        spacerItem59 = QtWidgets.QSpacerItem(20, 431, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem59 = QtWidgets.QSpacerItem(
+            20, 431, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_74.addItem(spacerItem59)
         self.horizontalLayout_46 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_46.setObjectName("horizontalLayout_46")
@@ -1949,7 +1963,9 @@ class Ui_MainWindow(object):
         self.btn_cloud_pred_multi_advanced_config.setObjectName("btn_cloud_pred_multi_advanced_config")
         self.horizontalLayout_57.addWidget(self.btn_cloud_pred_multi_advanced_config)
         self.verticalLayout_83.addLayout(self.horizontalLayout_57)
-        spacerItem69 = QtWidgets.QSpacerItem(20, 114, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem69 = QtWidgets.QSpacerItem(
+            20, 114, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_83.addItem(spacerItem69)
         self.horizontalLayout_54 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_54.setObjectName("horizontalLayout_54")
@@ -2115,7 +2131,9 @@ class Ui_MainWindow(object):
         self.btn_pred_mono_advanced_config.setObjectName("btn_pred_mono_advanced_config")
         self.horizontalLayout_76.addWidget(self.btn_pred_mono_advanced_config)
         self.verticalLayout_93.addLayout(self.horizontalLayout_76)
-        spacerItem76 = QtWidgets.QSpacerItem(20, 88, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem76 = QtWidgets.QSpacerItem(
+            20, 88, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_93.addItem(spacerItem76)
         self.horizontalLayout_77 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_77.setObjectName("horizontalLayout_77")
@@ -2257,7 +2275,9 @@ class Ui_MainWindow(object):
         self.btn_pred_multi_advanced_config.setObjectName("btn_pred_multi_advanced_config")
         self.horizontalLayout_85.addWidget(self.btn_pred_multi_advanced_config)
         self.verticalLayout_102.addLayout(self.horizontalLayout_85)
-        spacerItem84 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem84 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_102.addItem(spacerItem84)
         self.horizontalLayout_86 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_86.setObjectName("horizontalLayout_86")
@@ -2370,7 +2390,9 @@ class Ui_MainWindow(object):
         self.btn_pred_mono_advanced_config_2.setObjectName("btn_pred_mono_advanced_config_2")
         self.horizontalLayout_88.addWidget(self.btn_pred_mono_advanced_config_2)
         self.verticalLayout_108.addLayout(self.horizontalLayout_88)
-        spacerItem90 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem90 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_108.addItem(spacerItem90)
         self.horizontalLayout_91 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_91.setObjectName("horizontalLayout_91")
@@ -2508,7 +2530,9 @@ class Ui_MainWindow(object):
         self.cb_pred_analysis_mono_images.setObjectName("cb_pred_analysis_mono_images")
         self.horizontalLayout_95.addWidget(self.cb_pred_analysis_mono_images)
         self.verticalLayout_114.addLayout(self.horizontalLayout_95)
-        spacerItem96 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem96 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_114.addItem(spacerItem96)
         self.horizontalLayout_93 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_93.setObjectName("horizontalLayout_93")
@@ -2556,7 +2580,9 @@ class Ui_MainWindow(object):
         spacerItem98 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_108.addItem(spacerItem98)
         self.btn_pred_analysis_multi_prot_to_predict_remove = QtWidgets.QPushButton(self.tab_3)
-        self.btn_pred_analysis_multi_prot_to_predict_remove.setObjectName("btn_pred_analysis_multi_prot_to_predict_remove")
+        self.btn_pred_analysis_multi_prot_to_predict_remove.setObjectName(
+            "btn_pred_analysis_multi_prot_to_predict_remove"
+        )
         self.horizontalLayout_108.addWidget(self.btn_pred_analysis_multi_prot_to_predict_remove)
         self.btn_pred_analysis_multi_prot_to_predict_add = QtWidgets.QPushButton(self.tab_3)
         self.btn_pred_analysis_multi_prot_to_predict_add.setObjectName("btn_pred_analysis_multi_prot_to_predict_add")
@@ -2631,7 +2657,9 @@ class Ui_MainWindow(object):
         spacerItem101 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_106.addItem(spacerItem101)
         self.btn_pred_analysis_multi_prot_seq_overview_remove = QtWidgets.QPushButton(self.tab_3)
-        self.btn_pred_analysis_multi_prot_seq_overview_remove.setObjectName("btn_pred_analysis_multi_prot_seq_overview_remove")
+        self.btn_pred_analysis_multi_prot_seq_overview_remove.setObjectName(
+            "btn_pred_analysis_multi_prot_seq_overview_remove"
+        )
         self.horizontalLayout_106.addWidget(self.btn_pred_analysis_multi_prot_seq_overview_remove)
         self.verticalLayout_121.addLayout(self.horizontalLayout_106)
         self.verticalLayout_129.addLayout(self.verticalLayout_121)
@@ -2646,7 +2674,9 @@ class Ui_MainWindow(object):
         self.btn_pred_analysis_multi_back_2.setObjectName("btn_pred_analysis_multi_back_2")
         self.horizontalLayout_107.addWidget(self.btn_pred_analysis_multi_back_2)
         self.btn_pred_analysis_multi_prot_to_predict_add_2 = QtWidgets.QPushButton(self.tab_3)
-        self.btn_pred_analysis_multi_prot_to_predict_add_2.setObjectName("btn_pred_analysis_multi_prot_to_predict_add_2")
+        self.btn_pred_analysis_multi_prot_to_predict_add_2.setObjectName(
+            "btn_pred_analysis_multi_prot_to_predict_add_2"
+        )
         self.horizontalLayout_107.addWidget(self.btn_pred_analysis_multi_prot_to_predict_add_2)
         self.verticalLayout_129.addLayout(self.horizontalLayout_107)
         self.horizontalLayout_112 = QtWidgets.QHBoxLayout()
@@ -2660,7 +2690,9 @@ class Ui_MainWindow(object):
         self.btn_pred_analysis_multi_advanced_config.setObjectName("btn_pred_analysis_multi_advanced_config")
         self.horizontalLayout_112.addWidget(self.btn_pred_analysis_multi_advanced_config)
         self.verticalLayout_129.addLayout(self.horizontalLayout_112)
-        spacerItem104 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem104 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_129.addItem(spacerItem104)
         self.horizontalLayout_109 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_109.setObjectName("horizontalLayout_109")
@@ -2797,7 +2829,9 @@ class Ui_MainWindow(object):
         self.cb_pred_analysis_multi_images.setObjectName("cb_pred_analysis_multi_images")
         self.horizontalLayout_119.addWidget(self.cb_pred_analysis_multi_images)
         self.verticalLayout_135.addLayout(self.horizontalLayout_119)
-        spacerItem110 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem110 = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_135.addItem(spacerItem110)
         self.horizontalLayout_117 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_117.setObjectName("horizontalLayout_117")
@@ -2845,7 +2879,9 @@ class Ui_MainWindow(object):
         self.lbl_analysis_images_creation_struct_analysis.setObjectName("lbl_analysis_images_creation_struct_analysis")
         self.verticalLayout_137.addWidget(self.lbl_analysis_images_creation_struct_analysis)
         self.list_analysis_images_creation_struct_analysis = QtWidgets.QListWidget(self.page_8)
-        self.list_analysis_images_creation_struct_analysis.setObjectName("list_analysis_images_creation_struct_analysis")
+        self.list_analysis_images_creation_struct_analysis.setObjectName(
+            "list_analysis_images_creation_struct_analysis"
+        )
         self.verticalLayout_137.addWidget(self.list_analysis_images_creation_struct_analysis)
         self.verticalLayout_136.addLayout(self.verticalLayout_137)
         self.horizontalLayout_103 = QtWidgets.QHBoxLayout()
@@ -2853,7 +2889,9 @@ class Ui_MainWindow(object):
         spacerItem113 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_103.addItem(spacerItem113)
         self.btn_remove_analysis_images_creation_struct_analysis = QtWidgets.QPushButton(self.page_8)
-        self.btn_remove_analysis_images_creation_struct_analysis.setObjectName("btn_remove_analysis_images_creation_struct_analysis")
+        self.btn_remove_analysis_images_creation_struct_analysis.setObjectName(
+            "btn_remove_analysis_images_creation_struct_analysis"
+        )
         self.horizontalLayout_103.addWidget(self.btn_remove_analysis_images_creation_struct_analysis)
         self.verticalLayout_136.addLayout(self.horizontalLayout_103)
         self.verticalLayout_140.addLayout(self.verticalLayout_136)
@@ -3049,7 +3087,9 @@ class Ui_MainWindow(object):
         self.btn_hotspots_page.setText(_translate("MainWindow", "Hotspots"))
         self.lbl_page_title.setText(_translate("MainWindow", "TextLabel"))
         self.btn_info.setText(_translate("MainWindow", "Info"))
-        self.lbl_homepage.setText(_translate("MainWindow", "PySSA - Python-Plugin for Protein Sequence-to-Structure Analysis"))
+        self.lbl_homepage.setText(
+            _translate("MainWindow", "PySSA - Python-Plugin for Protein Sequence-to-Structure Analysis")
+        )
         self.lbl_esm_prot_to_predict.setText(_translate("MainWindow", "Proteins to predict"))
         self.table_esm_prot_to_predict.setSortingEnabled(False)
         item = self.table_esm_prot_to_predict.horizontalHeaderItem(0)
@@ -3070,7 +3110,9 @@ class Ui_MainWindow(object):
         self.label_18.setText(_translate("MainWindow", "Enter a new project name:"))
         self.lbl_prediction_status_project_name.setText(_translate("MainWindow", "TextLabel"))
         self.btn_prediction_next_1.setText(_translate("MainWindow", "Next"))
-        self.lbl_prediction_load_reference.setText(_translate("MainWindow", "Choose a reference .pdb file or enter a PDB ID:"))
+        self.lbl_prediction_load_reference.setText(
+            _translate("MainWindow", "Choose a reference .pdb file or enter a PDB ID:")
+        )
         self.btn_prediction_load_reference.setText(_translate("MainWindow", "..."))
         self.lbl_prediction_status_load_reference.setText(_translate("MainWindow", "TextLabel"))
         self.btn_prediction_back_2.setText(_translate("MainWindow", "Back"))
@@ -3083,14 +3125,18 @@ class Ui_MainWindow(object):
         self.lbl_analysis_vs.setText(_translate("MainWindow", "vs."))
         self.lbl_analysis_prot_struct_2.setText(_translate("MainWindow", "Protein structure 2"))
         self.btn_analysis_next.setText(_translate("MainWindow", "Next"))
-        self.lbl_analysis_ref_chains.setText(_translate("MainWindow", "Select chains in protein structure 1 (if necessary)"))
+        self.lbl_analysis_ref_chains.setText(
+            _translate("MainWindow", "Select chains in protein structure 1 (if necessary)")
+        )
         self.btn_analysis_back.setText(_translate("MainWindow", "Back"))
         self.btn_analysis_next_2.setText(_translate("MainWindow", "Next"))
-        self.lbl_analysis_model_chains.setText(_translate("MainWindow", "Select chains in protein structure 2 (if necessary)"))
+        self.lbl_analysis_model_chains.setText(
+            _translate("MainWindow", "Select chains in protein structure 2 (if necessary)")
+        )
         self.lbl_analysis_images.setText(_translate("MainWindow", "Create ray-traced images (slow)"))
         self.btn_analysis_back_2.setText(_translate("MainWindow", "Back"))
         self.btn_analysis_start.setText(_translate("MainWindow", "Start"))
-        self.lbl_analysis_batch_overview.setText(_translate("MainWindow", "Protein structure analysis\'"))
+        self.lbl_analysis_batch_overview.setText(_translate("MainWindow", "Protein structure analysis'"))
         self.btn_analysis_batch_remove.setText(_translate("MainWindow", "Remove"))
         self.btn_analysis_batch_add.setText(_translate("MainWindow", "Add"))
         self.lbl_analysis_batch_prot_struct_1.setText(_translate("MainWindow", "Protein structure 1"))
@@ -3098,10 +3144,14 @@ class Ui_MainWindow(object):
         self.lbl_analysis_batch_prot_struct_2.setText(_translate("MainWindow", "Protein structure 2"))
         self.btn_analysis_batch_back.setText(_translate("MainWindow", "Back"))
         self.btn_analysis_batch_next.setText(_translate("MainWindow", "Next"))
-        self.lbl_analysis_batch_ref_chains.setText(_translate("MainWindow", "Select chains in protein structure 1 (if necessary)"))
+        self.lbl_analysis_batch_ref_chains.setText(
+            _translate("MainWindow", "Select chains in protein structure 1 (if necessary)")
+        )
         self.btn_analysis_batch_back_2.setText(_translate("MainWindow", "Back"))
         self.btn_analysis_batch_next_2.setText(_translate("MainWindow", "Next"))
-        self.lbl_analysis_batch_model_chains.setText(_translate("MainWindow", "Select chains in protein structure 2 (if necessary)"))
+        self.lbl_analysis_batch_model_chains.setText(
+            _translate("MainWindow", "Select chains in protein structure 2 (if necessary)")
+        )
         self.btn_analysis_batch_back_3.setText(_translate("MainWindow", "Back"))
         self.btn_analysis_batch_next_3.setText(_translate("MainWindow", "Next"))
         self.lbl_analysis_batch_images.setText(_translate("MainWindow", "Create ray-traced images (slow)"))
@@ -3140,7 +3190,9 @@ class Ui_MainWindow(object):
         self.lbl_new_status_project_name.setText(_translate("MainWindow", "TextLabel"))
         self.label_27.setText(_translate("MainWindow", "Existing projects"))
         self.cb_new_add_reference.setText(_translate("MainWindow", "Add existing protein"))
-        self.lbl_new_choose_reference.setText(_translate("MainWindow", "Choose an existing .pdb file or enter a PDB ID"))
+        self.lbl_new_choose_reference.setText(
+            _translate("MainWindow", "Choose an existing .pdb file or enter a PDB ID")
+        )
         self.btn_new_choose_reference.setText(_translate("MainWindow", "..."))
         self.lbl_new_status_choose_reference.setText(_translate("MainWindow", "TextLabel"))
         self.btn_new_create_project.setText(_translate("MainWindow", "Create"))
@@ -3258,7 +3310,9 @@ class Ui_MainWindow(object):
         self.btn_cloud_pred_multi_selected_protein_remove.setText(_translate("MainWindow", "Remove"))
         self.btn_cloud_pred_multi_back.setText(_translate("MainWindow", "Back"))
         self.btn_cloud_pred_multi_next_2.setText(_translate("MainWindow", "Next"))
-        self.lbl_cloud_pred_multi_choose_notebook.setText(_translate("MainWindow", "Choose a Google Colab Notebook from the list below"))
+        self.lbl_cloud_pred_multi_choose_notebook.setText(
+            _translate("MainWindow", "Choose a Google Colab Notebook from the list below")
+        )
         self.lbl_cloud_pred_multi_advanced_config.setText(_translate("MainWindow", "Advanced configurations"))
         self.btn_cloud_pred_multi_advanced_config.setText(_translate("MainWindow", "Edit"))
         self.btn_cloud_pred_multi_back_2.setText(_translate("MainWindow", "Back"))
@@ -3334,7 +3388,7 @@ class Ui_MainWindow(object):
         self.lbl_pred_analysis_mono_to_analysis_setup.setText(_translate("MainWindow", "To analysis setup"))
         self.btn_pred_analysis_mono_go_analysis_setup.setText(_translate("MainWindow", "Go"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "Prediction"))
-        self.lbl_pred_analysis_mono_overview.setText(_translate("MainWindow", "Protein structure analysis\'"))
+        self.lbl_pred_analysis_mono_overview.setText(_translate("MainWindow", "Protein structure analysis'"))
         self.btn_pred_analysis_mono_remove.setText(_translate("MainWindow", "Remove"))
         self.btn_pred_analysis_mono_add.setText(_translate("MainWindow", "Add"))
         self.lbl_pred_analysis_mono_prot_struct_1.setText(_translate("MainWindow", "Protein structure 1"))
@@ -3345,7 +3399,9 @@ class Ui_MainWindow(object):
         self.lbl_pred_analysis_mono_ref_chains.setText(_translate("MainWindow", "Select chains in protein structure 1"))
         self.btn_pred_analysis_mono_back_4.setText(_translate("MainWindow", "Back"))
         self.btn_pred_analysis_mono_next_3.setText(_translate("MainWindow", "Next"))
-        self.lbl_pred_analysis_mono_model_chains.setText(_translate("MainWindow", "Select chains in protein structure 2"))
+        self.lbl_pred_analysis_mono_model_chains.setText(
+            _translate("MainWindow", "Select chains in protein structure 2")
+        )
         self.btn_pred_analysis_mono_back_5.setText(_translate("MainWindow", "Back"))
         self.btn_pred_analysis_mono_next_4.setText(_translate("MainWindow", "Next"))
         self.lbl_pred_analysis_mono_images.setText(_translate("MainWindow", "Create ray-traced images (slow)"))
@@ -3377,7 +3433,7 @@ class Ui_MainWindow(object):
         self.lbl_pred_analysis_multi_to_analysis_setup.setText(_translate("MainWindow", "To analysis setup"))
         self.btn_pred_analysis_multi_go_analysis_setup.setText(_translate("MainWindow", "Go"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_3), _translate("MainWindow", "Prediction"))
-        self.lbl_pred_analysis_multi_overview.setText(_translate("MainWindow", "Protein structure analysis\'"))
+        self.lbl_pred_analysis_multi_overview.setText(_translate("MainWindow", "Protein structure analysis'"))
         self.btn_pred_analysis_multi_remove.setText(_translate("MainWindow", "Remove"))
         self.btn_pred_analysis_multi_add.setText(_translate("MainWindow", "Add"))
         self.lbl_pred_analysis_multi_prot_struct_1.setText(_translate("MainWindow", "Protein structure 1"))
@@ -3385,19 +3441,25 @@ class Ui_MainWindow(object):
         self.lbl_pred_analysis_multi_prot_struct_2.setText(_translate("MainWindow", "Protein structure 2"))
         self.btn_pred_analysis_multi_back_3.setText(_translate("MainWindow", "Back"))
         self.btn_pred_analysis_multi_next_2.setText(_translate("MainWindow", "Next"))
-        self.lbl_pred_analysis_multi_ref_chains.setText(_translate("MainWindow", "Select chains in protein structure 1"))
+        self.lbl_pred_analysis_multi_ref_chains.setText(
+            _translate("MainWindow", "Select chains in protein structure 1")
+        )
         self.btn_pred_analysis_multi_back_4.setText(_translate("MainWindow", "Back"))
         self.btn_pred_analysis_multi_next_3.setText(_translate("MainWindow", "Next"))
-        self.lbl_pred_analysis_multi_model_chains.setText(_translate("MainWindow", "Select chains in protein structure 2"))
+        self.lbl_pred_analysis_multi_model_chains.setText(
+            _translate("MainWindow", "Select chains in protein structure 2")
+        )
         self.btn_pred_analysis_multi_back_5.setText(_translate("MainWindow", "Back"))
         self.btn_pred_analysis_multi_next_4.setText(_translate("MainWindow", "Next"))
         self.lbl_pred_analysis_multi_images.setText(_translate("MainWindow", "Create ray-traced images (slow)"))
         self.btn_pred_analysis_multi_back_pred_setup.setText(_translate("MainWindow", "Back"))
         self.btn_pred_analysis_multi_start.setText(_translate("MainWindow", "Start"))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_4), _translate("MainWindow", "Analysis"))
-        self.lbl_analysis_images_struct_analysis.setText(_translate("MainWindow", "Protein structure analysis\'"))
+        self.lbl_analysis_images_struct_analysis.setText(_translate("MainWindow", "Protein structure analysis'"))
         self.btn_add_analysis_images_struct_analysis.setText(_translate("MainWindow", "Add"))
-        self.lbl_analysis_images_creation_struct_analysis.setText(_translate("MainWindow", "Protein structure analysis\' for image creation"))
+        self.lbl_analysis_images_creation_struct_analysis.setText(
+            _translate("MainWindow", "Protein structure analysis' for image creation")
+        )
         self.btn_remove_analysis_images_creation_struct_analysis.setText(_translate("MainWindow", "Remove"))
         self.lbl_automatic_image_creation.setText(_translate("MainWindow", "Automatic image creation"))
         self.btn_start_automatic_image_creation.setText(_translate("MainWindow", "Start"))
@@ -3416,7 +3478,9 @@ class Ui_MainWindow(object):
         self.action_file_save_as.setText(_translate("MainWindow", "Save PyMOL session as"))
         self.action_file_save.setText(_translate("MainWindow", "Save"))
         self.action_file_quit.setText(_translate("MainWindow", "Quit"))
-        self.action_settings_model_w_off_colab_notebook.setText(_translate("MainWindow", "Modeling with official colab notebook"))
+        self.action_settings_model_w_off_colab_notebook.setText(
+            _translate("MainWindow", "Modeling with official colab notebook")
+        )
         self.action_file_restore_settings.setText(_translate("MainWindow", "Restore Settings"))
         self.action_wizard_prepare_model_pdbs.setText(_translate("MainWindow", "Prepare Models"))
         self.action_display_current_workspace.setText(_translate("MainWindow", "Current Workspace"))

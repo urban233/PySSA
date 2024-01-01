@@ -43,28 +43,25 @@ if __name__ == "__main__":
     DISTANCE_LABEL: str = "$\\alpha$-C"
 
     # define variable filenames for the different results
-    ALIGNMENT_FILE_NAME:str = f"alignment_file_{MODEL_OBJ_NAME}"
-    DISTANCE_FILE_NAME:str = f"distance_file_{MODEL_OBJ_NAME}"
+    ALIGNMENT_FILE_NAME: str = f"alignment_file_{MODEL_OBJ_NAME}"
+    DISTANCE_FILE_NAME: str = f"distance_file_{MODEL_OBJ_NAME}"
     SESSION_FILE_NAME: str = f"session_file_{MODEL_OBJ_NAME}"
 
     # comment the below code in, if you wish to have a fixed y-axis for ALL plots
     # LIMIT_Y: tuple[float, float] = (0, 7)
 
     # create the Protein object for the reference
-    reference_protein: core.Protein = core.Protein(REFERENCE_OBJ_NAME,
-                                                   IMPORT_SUBDIR)
-    reference_protein.set_selection(f"/{reference_protein.molecule_object}//G//CA, "
-                                    f"/{reference_protein.molecule_object}//H//CA")
+    reference_protein: core.Protein = core.Protein(REFERENCE_OBJ_NAME, IMPORT_SUBDIR)
+    reference_protein.set_selection(
+        f"/{reference_protein.molecule_object}//G//CA, " f"/{reference_protein.molecule_object}//H//CA"
+    )
 
     # create model Protein object
     model_protein: core.Protein = core.Protein(MODEL_OBJ_NAME, IMPORT_SUBDIR)
     # set selection for the model, for the align command
-    model_protein.set_selection(f"/{model_protein.molecule_object}//A//CA, "
-                                f"/{model_protein.molecule_object}//B//CA")
+    model_protein.set_selection(f"/{model_protein.molecule_object}//A//CA, " f"/{model_protein.molecule_object}//B//CA")
     # create Protein pair object
-    bmp2_pair: core.ProteinPair = core.ProteinPair(reference_protein,
-                                                   model_protein,
-                                                   EXPORT_SUBDIR)
+    bmp2_pair: core.ProteinPair = core.ProteinPair(reference_protein, model_protein, EXPORT_SUBDIR)
     # reinitialize pymol session
     cmd.reinitialize()
     # load both proteins in the pymol session
@@ -74,17 +71,14 @@ if __name__ == "__main__":
     bmp2_pair.color_protein_pair()
     print(f"Finished coloring proteins.")
     # do the structure alignment
-    align_results = bmp2_pair.align_protein_pair(CYCLES, CUTOFF,
-                                                 ALIGNMENT_FILE_NAME)
+    align_results = bmp2_pair.align_protein_pair(CYCLES, CUTOFF, ALIGNMENT_FILE_NAME)
     print(f"Finished aligning proteins.")
     # do the distance calculation
     distance_results = bmp2_pair.calculate_distance_between_ca_atoms(ALIGNMENT_FILE_NAME)
     bmp2_pair.export_distance_between_ca_atoms(distance_results)
     print(f"Finished distance calculations.")
     # create an instance of the Graphics class
-    graphics_instance: graphics.Graphics = graphics.Graphics(bmp2_pair,
-                                                             distance_results,
-                                                             FIGURE_SIZE)
+    graphics_instance: graphics.Graphics = graphics.Graphics(bmp2_pair, distance_results, FIGURE_SIZE)
     # create distance plot
     fig = graphics_instance.create_distance_plot(DISTANCE_LABEL, CUTOFF)
     print(f"Finished creation of distance plot.")
@@ -93,8 +87,7 @@ if __name__ == "__main__":
         os.mkdir(f"{bmp2_pair.results_dir}/plots")
     if not os.path.exists(f"{bmp2_pair.results_dir}/plots/distance_plot"):
         os.mkdir(f"{bmp2_pair.results_dir}/plots/distance_plot")
-    plt.savefig(f"{bmp2_pair.results_dir}/plots/distance_plot/"
-                f"distance_plot_{MODEL_OBJ_NAME}.svg")
+    plt.savefig(f"{bmp2_pair.results_dir}/plots/distance_plot/" f"distance_plot_{MODEL_OBJ_NAME}.svg")
     plt.close(fig)
 
     # create distance histogram
@@ -105,14 +98,12 @@ if __name__ == "__main__":
         os.mkdir(f"{bmp2_pair.results_dir}/plots")
     if not os.path.exists(f"{bmp2_pair.results_dir}/plots/distance_histogram"):
         os.mkdir(f"{bmp2_pair.results_dir}/plots/distance_histogram")
-    plt.savefig(f"{bmp2_pair.results_dir}/plots/distance_histogram"
-                f"/distance_histogram_{MODEL_OBJ_NAME}.svg")
+    plt.savefig(f"{bmp2_pair.results_dir}/plots/distance_histogram" f"/distance_histogram_{MODEL_OBJ_NAME}.svg")
 
     # take image of whole structure alignment
     # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
     #                                              "test")
-    print(f"Finished creation of image which shows the whole structure "
-          f"alignment.")
+    print(f"Finished creation of image which shows the whole structure " f"alignment.")
     # take image of interesting regions
     # graphics_instance.take_image_of_interesting_regions(5.0,
     #                                                     "interesting_region",
@@ -126,8 +117,7 @@ if __name__ == "__main__":
     # graphics_instance.take_image_of_protein_pair(ALIGNMENT_FILE_NAME, "cartoon",
     #                                              "coloredByRMSD")
     graphics_instance.create_gif()
-    print(f"Finished creation of gif which shows the whole predicted "
-          f"structure colored by distance.")
+    print(f"Finished creation of gif which shows the whole predicted " f"structure colored by distance.")
     # save pymol session
     bmp2_pair.save_session_of_protein_pair(SESSION_FILE_NAME)
     print(f"Finished saving of pymol session file.")

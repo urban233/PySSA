@@ -2,15 +2,15 @@ CLUSTAL
 
 pymol_6omn   SSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKI
 bmp2_1       AQAKHKQRKRL----------------------------------------------------
-                                                                            
+
 
 pymol_6omn   PKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCRRLKSSCKRHPLYVDFSDVGWNDW
 bmp2_1       ---------------------------------------------------------------
-                                                                            
+
 
 pymol_6omn   IVAPPGYHAFYCHGECPFPLADHLNSTNHAIVQTLVNSVNSKIPKACCVPTELSAISMLYLDE
 bmp2_1       ---------------------------------------------------------------
-                                                                            
+
 
 pymol_6omn   NEKVVLKNYQDMVVEGCGCRRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPF
 bmp2_1       ------------------------KSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPF
@@ -24,7 +24,7 @@ pymol_6omn   CRK-----------SSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNH
 bmp2_1       CRAQAKHKQRKRLKSSCKRHPLYVDFSDVGWNDWIVAPPGYHAFYCHGECPFPLADHLNSTNH
              **            *************************************************
 
-pymol_6omn   AIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR         
-bmp2_1       AIVQTLVNSVNSKI-KACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR         
-             **********     ***************************************         
+pymol_6omn   AIVQTLVNSVNSKIPKACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR
+bmp2_1       AIVQTLVNSVNSKI-KACCVPTELSAISMLYLDENEKVVLKNYQDMVVEGCGCR
+             **********     ***************************************
 
