@@ -277,7 +277,7 @@ def mk_hhsearch_db(template_dir: str):
     with open(template_path.joinpath("pdb70_a3m.ffdata"), "w") as a3m, open(
         template_path.joinpath("pdb70_cs219.ffindex"),
         "w",
-    ) as cs219_index, open(template_path.joinpath("pdb70_a3m.ffindex"), "w",) as a3m_index, open(
+    ) as cs219_index, open(template_path.joinpath("pdb70_a3m.ffindex"), "w") as a3m_index, open(
         template_path.joinpath("pdb70_cs219.ffdata"),
         "w",
     ) as cs219:
@@ -293,7 +293,7 @@ def mk_hhsearch_db(template_dir: str):
             models = list(structure.get_models())
             if len(models) != 1:
                 logger.warning(
-                    f"WARNING: Found {len(models)} models in {cif_file}. The first model will be used as a template."
+                    f"WARNING: Found {len(models)} models in {cif_file}. The first model will be used as a template.",
                 )
                 # raise ValueError(
                 #     f"Only single model PDBs are supported. Found {len(models)} models in {cif_file}."
@@ -305,7 +305,7 @@ def mk_hhsearch_db(template_dir: str):
                     if res.id[2] != " ":
                         logger.warning(
                             f"WARNING: Found insertion code at chain {chain.id} and residue index {res.id[1]} of {cif_file}. "
-                            "This file cannot be used as a template."
+                            "This file cannot be used as a template.",
                         )
                         continue
                         # raise ValueError(
@@ -482,7 +482,7 @@ def predict_structure(
 
             # predict
             result, recycles = model_runner.predict(
-                input_features, random_seed=seed, return_representations=return_representations, callback=callback
+                input_features, random_seed=seed, return_representations=return_representations, callback=callback,
             )
 
             prediction_times.append(time.time() - start)
@@ -545,7 +545,7 @@ def predict_structure(
                 if "predicted_aligned_error" in result:
                     pae = result["predicted_aligned_error"][:seq_len, :seq_len]
                     scores.update(
-                        {"max_pae": pae.max().astype(float).item(), "pae": np.around(pae.astype(float), 2).tolist()}
+                        {"max_pae": pae.max().astype(float).item(), "pae": np.around(pae.astype(float), 2).tolist()},
                     )
                     for k in ["ptm", "iptm"]:
                         if k in conf[-1]:
@@ -794,7 +794,7 @@ def get_msa_and_templates(
     pairing_strategy: str = "greedy",
     host_url: str = DEFAULT_API_SERVER,
     user_agent: str = "",
-) -> Tuple[Optional[List[str]], Optional[List[str]], List[str], List[int], List[Dict[str, Any]],]:
+) -> Tuple[Optional[List[str]], Optional[List[str]], List[str], List[int], List[Dict[str, Any]]]:
     from colabfold.colabfold import run_mmseqs2
 
     use_env = msa_mode == "mmseqs2_uniref_env"
@@ -841,6 +841,7 @@ def get_msa_and_templates(
                 host_url=host_url,
                 user_agent=user_agent,
             )
+            logger.info(f"CUSTOM-PYSSA-MSG:: template_paths: {template_paths}")
         if template_paths is None:
             logger.info("No template detected")
             for index in range(0, len(query_seqs_unique)):
@@ -1118,7 +1119,7 @@ def generate_input_feature(
 def unserialize_msa(
     a3m_lines: List[str],
     query_sequence: Union[List[str], str],
-) -> Tuple[Optional[List[str]], Optional[List[str]], List[str], List[int], List[Dict[str, Any]],]:
+) -> Tuple[Optional[List[str]], Optional[List[str]], List[str], List[int], List[Dict[str, Any]]]:
     a3m_lines = a3m_lines[0].replace("\x00", "").splitlines()
     if not a3m_lines[0].startswith("#") or len(a3m_lines[0][1:].split("\t")) != 2:
         assert isinstance(query_sequence, str)
@@ -1589,7 +1590,7 @@ def run(
                 if num_models == 0:
                     with open(pickled_msa_and_templates, "wb") as f:
                         pickle.dump(
-                            (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features), f
+                            (unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality, template_features), f,
                         )
                     logger.info(f"Saved {pickled_msa_and_templates}")
 
@@ -1652,7 +1653,7 @@ def run(
             try:
                 # get list of lengths
                 query_sequence_len_array = sum(
-                    [[len(x)] * y for x, y in zip(query_seqs_unique, query_seqs_cardinality)], []
+                    [[len(x)] * y for x, y in zip(query_seqs_unique, query_seqs_cardinality)], [],
                 )
 
                 # decide how much to pad (to avoid recompiling)
@@ -1756,8 +1757,8 @@ def run(
                         {
                             "predicted_aligned_error": scores[0]["pae"],
                             "max_predicted_aligned_error": scores[0]["max_pae"],
-                        }
-                    )
+                        },
+                    ),
                 )
                 result_files.append(af_pae_file)
 

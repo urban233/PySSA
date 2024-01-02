@@ -27,6 +27,7 @@ import shutil
 from typing import TYPE_CHECKING
 from pyssa.util import constants
 from pyssa.util import exception
+from pyssa.util import globals
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.logging_pyssa import log_handlers
 
@@ -115,10 +116,10 @@ def delete_pyssa_colabfold_directory_in_wsl2() -> bool:
         if os.path.exists(tmp_pyssa_colabfold_path):
             shutil.rmtree(tmp_pyssa_colabfold_path)
             return True
+        return False
     except Exception as e:
         logger.error("Unexpected error!", e)
         raise exception.UnableToDeleteDirectoryError("Could not remove the pyssa_colabfold dir.")
-    return False
 
 
 def copy_pyssa_colabfold_directory_to_wsl2() -> None:
@@ -131,11 +132,25 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
     tmp_pyssa_colabfold_windows_path: str = str(pathlib.Path(f"{constants.PLUGIN_PATH}/pyssa_colabfold"))
     if not os.path.exists(tmp_pyssa_colabfold_windows_path):
         logger.error(f"The variable 'tmp_pyssa_colabfold_windows_path' is illegal: {tmp_pyssa_colabfold_windows_path}!")
-        raise exception.DirectoryNotFoundError("An variable is illegal.")
+        raise exception.DirectoryNotFoundError("A variable is illegal.")
     try:
         shutil.copytree(tmp_pyssa_colabfold_windows_path, tmp_pyssa_colabfold_wsl_path)
+        if os.path.exists(tmp_pyssa_colabfold_wsl_path):
+            logger.info("Successfully copied the pyssa_colabfold directory.")
+        else:
+            logger.warning("Copy command was successful, but pyssa_colabfold directory could not be found.")
     except Exception as e:
         logger.error("Unexpected error!", e)
         raise exception.UnableToCopyDirectoryError("Could not copy the pyssa_colabfold dir.")
-    else:
-        logger.info("Successfully copied the pyssa_colabfold directory.")
+
+
+def move_modified_batch_file_to_wsl2() -> None:
+    """Deletes the original batch.py file in the WSL2 and copies the new one."""
+    tmp_org_batch_filepath: str = r"\\wsl$\almaColabfold9\home\rhel_user\localcolabfold\colabfold-conda\lib\python3.10\site-packages\colabfold\batch.py"  # noqa: E501
+    tmp_batch_py_filepath_windows: str = f"{globals.g_plugin_path}\\pyssa_colabfold\\colabfold_sub\\batch.py"
+    try:
+        os.remove(tmp_org_batch_filepath)
+        if not os.path.exists(tmp_org_batch_filepath):
+            shutil.copy2(tmp_batch_py_filepath_windows, tmp_org_batch_filepath)
+    except Exception as e:
+        logger.error(f"Unexpected error! {e}")

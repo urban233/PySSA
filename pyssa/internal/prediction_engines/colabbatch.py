@@ -95,6 +95,7 @@ class Colabbatch:
             else:
                 logger.warning("The pyssa_colabfold directory was not found.")
             prediction_util.copy_pyssa_colabfold_directory_to_wsl2()
+            prediction_util.move_modified_batch_file_to_wsl2()
         except exception.SubprocessExecutionError:
             logger.error("An error occurred during subprocess execution!")
             raise exception.Wsl2PreparationFailedError("")

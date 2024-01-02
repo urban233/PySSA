@@ -30,40 +30,6 @@ def delete_scratch_directory_in_wsl2() -> bool:
     return False
 
 
-def delete_original_batch_py_file() -> None:
-    """Deletes the original batch.py file of colabfold.
-
-    Raises:
-        SubprocessExecutionError: If return code of subprocess is non-zero
-    """
-    # Remove original batch.py of Colabfold
-    tmp_batch_py_filepath: str = (
-        "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
-    )
-    try:
-        if os.path.exists(tmp_batch_py_filepath):
-            os.remove(tmp_batch_py_filepath)
-    except Exception as e:
-        raise OSError(f"Original batch.py file could not be deleted! {e}")
-
-
-def copy_modified_batch_py_file() -> None:
-    """Copies the modified batch.py file to the WSL2.
-
-    Raises:
-        SubprocessExecutionError: If return code of subprocess is non-zero
-    """
-    PLUGIN_PATH = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
-    tmp_batch_py_filepath_wsl: str = (
-        "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
-    )
-    tmp_batch_py_filepath_windows: str = f"{PLUGIN_PATH}/pyssa_colabfold/colabfold_sub/batch.py"
-    try:
-        shutil.copy2(tmp_batch_py_filepath_windows, tmp_batch_py_filepath_wsl)
-    except Exception as e:
-        raise OSError(f"Modified batch.py file could not be copied! {e}")
-
-
 def create_fasta_directory_in_wsl2() -> None:
     """Creates the fasta directory inside the WSL2.
 
@@ -103,7 +69,7 @@ def copy_fasta_files_from_windows_to_wsl2(the_fasta_path: str) -> None:
         raise OSError(f"Fasta files from Windows host could not be copied to WSL2! {e}")
 
 
-def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str):
+def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str) -> None:
     """Prepares the environment needed for the computation inside the WSL2."""
     str_conversion_1 = the_scratch_fasta_dir_of_windows_host.replace("\\", "/")
     str_conversion_2 = str_conversion_1.replace(":", "")
@@ -112,8 +78,6 @@ def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str):
     try:
         change_ownership_recursive("/home/rhel_user/")
         delete_scratch_directory_in_wsl2()
-        delete_original_batch_py_file()
-        copy_modified_batch_py_file()
         create_pdb_directory_in_wsl2()
         change_ownership_recursive("/home/rhel_user/scratch")
         copy_fasta_files_from_windows_to_wsl2(the_scratch_fasta_dir_of_windows_host)
@@ -165,6 +129,40 @@ if __name__ == "__main__":
 
         # Perform the computation and send back the result
         result = start_computation(
-            message["fasta_dir"], message["pdb_dir"], message["use_amber"], message["use_templates"]
+            message["fasta_dir"], message["pdb_dir"], message["use_amber"], message["use_templates"],
         )
         socket.send_json(result)
+
+
+# def delete_original_batch_py_file() -> None:
+#     """Deletes the original batch.py file of colabfold.
+#
+#     Raises:
+#         SubprocessExecutionError: If return code of subprocess is non-zero
+#     """
+#     # Remove original batch.py of Colabfold
+#     tmp_batch_py_filepath: str = (
+#         "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+#     )
+#     try:
+#         if os.path.exists(tmp_batch_py_filepath):
+#             os.remove(tmp_batch_py_filepath)
+#     except Exception as e:
+#         raise OSError(f"Original batch.py file could not be deleted! {e}")
+#
+#
+# def copy_modified_batch_py_file() -> None:
+#     """Copies the modified batch.py file to the WSL2.
+#
+#     Raises:
+#         SubprocessExecutionError: If return code of subprocess is non-zero
+#     """
+#     plugin_path = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
+#     tmp_batch_py_filepath_wsl: str = (
+#         "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
+#     )
+#     tmp_batch_py_filepath_windows: str = f"{plugin_path}/pyssa_colabfold/colabfold_sub/batch.py"
+#     try:
+#         subprocess.run(["cp", tmp_batch_py_filepath_windows, tmp_batch_py_filepath_wsl])
+#     except Exception as e:
+#         raise OSError(f"Modified batch.py file could not be copied! {e}")
