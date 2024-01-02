@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the About Dialog."""
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -28,12 +29,13 @@ from pyssa.util import constants
 
 
 class DialogAbout(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    """Class representing an About dialog."""
+
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            args
-            kwargs
+            parent: The parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
@@ -51,5 +53,6 @@ class DialogAbout(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
     # @SLOT
-    def close_dialog(self):
+    def close_dialog(self) -> None:
+        """Closes the dialog."""
         self.close()

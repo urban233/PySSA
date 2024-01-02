@@ -27,7 +27,7 @@ import os.path
 from pyssa.util import constants
 
 current_time = datetime.datetime.now()
-filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"
+filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"  # noqa: E501
 
 log_formatter = logging.Formatter("%(asctime)s: %(name)s %(levelname)s - %(message)s")
 if not os.path.exists(constants.SETTINGS_DIR):

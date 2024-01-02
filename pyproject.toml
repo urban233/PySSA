@@ -11,6 +11,7 @@ select = ["E", "F", "W", "N", "D", "ANN", "A", "COM", "C4", "RET", "SLF"]
 ignore = ["ANN101", "D203", "D213", "D407", "D408", "D409", "W291", "W293"]
 fixable = ["D", "COM"]
 line-length = 120
+exclude = ["__init__.py", "pyssa/experimental"]
 [tool.ruff.pydocstyle]
 convention = "google"
 

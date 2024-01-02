@@ -51,12 +51,11 @@ class Selection:
 
     # </editor-fold>
 
-    def __init__(self, molecule_object):
-        """
+    def __init__(self, molecule_object: str) -> None:
+        """Constructor.
 
         Args:
-            molecule_object:
-                the name of the protein which is also used within pymol
+            molecule_object: the name of the protein which is also used within pymol
         """
         # <editor-fold desc="Checks">
         if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
@@ -84,11 +83,15 @@ class Selection:
             self.selection_string = seperator.join(tmp_list)
 
     def set_selections_without_chains_ca(self) -> None:
-        """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's."""
+        """Sets a selection without any chains of the protein.
+
+        Notes:
+            The selection selects only the alpha-C's.
+        """
         self.selection_string = f"/{self.molecule_object}////CA"
 
-    def set_single_selection(self, segi: str, chain: str, resi: str, atom_name: str):
-        """This function creates a single pymol selection with only one chain and one resi.
+    def set_single_selection(self, segi: str, chain: str, resi: str, atom_name: str) -> None:
+        """Creates a single pymol selection with only one chain and one resi.
 
         Args:
             segi:
@@ -102,5 +105,10 @@ class Selection:
         """
         self.selection_string = f"/{self.molecule_object}/{segi}/{chain}/{resi}/{atom_name}"
 
-    def set_custom_selection(self, sele_string):
+    def set_custom_selection(self, sele_string: str) -> None:
+        """Sets a custom selection as selection string.
+
+        Args:
+            sele_string: a custom pymol selection string.
+        """
         self.selection_string = sele_string

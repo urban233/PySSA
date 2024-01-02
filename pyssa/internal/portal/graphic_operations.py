@@ -26,12 +26,11 @@ from pyssa.internal.portal import pymol_safeguard
 from pyssa.util import constants
 
 
-def show_protein_selection_as_balls_and_sticks(selection: str):
-    """This function shows the protein as balls and sticks in representation mode.
+def show_protein_selection_as_balls_and_sticks(selection: str) -> None:
+    """Shows the protein as balls and sticks in representation mode.
 
     Args:
-        selection:
-
+        selection: a pymol selection string.
     """
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
@@ -41,12 +40,11 @@ def show_protein_selection_as_balls_and_sticks(selection: str):
         print("No sticks and balls can be shown in protein.")
 
 
-def hide_protein_selection_as_balls_and_sticks(selection: str):
-    """This function hides the protein from balls and sticks.
+def hide_protein_selection_as_balls_and_sticks(selection: str) -> None:
+    """Hides the protein from balls and sticks.
 
     Args:
-        selection:
-            a pymol selection string
+        selection: a pymol selection string.
 
     """
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
@@ -57,12 +55,11 @@ def hide_protein_selection_as_balls_and_sticks(selection: str):
         print("No sticks and balls can be hidden in protein.")
 
 
-def zoom_to_residue_in_protein_position(selection: str):
-    """This function zooms to the residue in protein.
+def zoom_to_residue_in_protein_position(selection: str) -> None:
+    """Zooms to the residue in protein.
 
     Args:
-        selection:
-            a pymol selection string
+        selection: a pymol selection string
 
     """
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
@@ -73,14 +70,12 @@ def zoom_to_residue_in_protein_position(selection: str):
         print("No residue can be shown in protein.")
 
 
-def color_protein(pymol_color: str, a_selection_string: str):
-    """This function colors a specific protein selection with a given PyMOL color.
+def color_protein(pymol_color: str, a_selection_string: str) -> None:
+    """Colors a specific protein selection with a given PyMOL color.
 
     Args:
-        pymol_color:
-            a color which is available in PyMOL
-        a_selection_string:
-            a PyMOL conform selection string
+        pymol_color: a color which is available in PyMOL
+        a_selection_string: a PyMOL conform selection string
 
     """
     if pymol_color not in constants.PYMOL_COLORS:

@@ -19,25 +19,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the input validator class"""
+"""Module for the input validator class."""
 from pymol import Qt
 from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 from pyssa.gui.ui.styles import styles
 
 
 class InputValidator:
-    def __init__(self):
+    """Class for validating any input from the user."""
+
+    def __init__(self) -> None:
+        """Empty constructor."""
         pass
 
     @staticmethod
     def validate_project_name(
-        list_of_projects,
-        txt_for_project_name,
-        lbl_for_status_project_name,
-        btn_for_next_step,
-        cb_for_add_reference=None,
-    ):
-        """This function validates the input of the project name in real-time
+        list_of_projects: QtWidgets.QListWidget,
+        txt_for_project_name: QtWidgets.QTextEdit,
+        lbl_for_status_project_name: QtWidgets.QLabel,
+        btn_for_next_step: QtWidgets.QPushButton,
+        cb_for_add_reference: QtWidgets.QCheckBox = None,
+    ) -> None:
+        """This function validates the input of the project name in real-time.
 
         Args:
             list_of_projects:
@@ -50,7 +54,6 @@ class InputValidator:
                 push button which is used to execute either the next step or to create a project
             cb_for_add_reference (optional):
                 checkbox widget which is used to add a reference
-
         """
         if list_of_projects.currentItem() is not None:
             list_of_projects.currentItem().setSelected(False)
@@ -63,7 +66,6 @@ class InputValidator:
                 cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
             btn_for_next_step.setEnabled(False)
             styles.color_button_not_ready(btn_for_next_step)
-            return
         elif len(txt_for_project_name.text()) > 20:
             lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
             btn_for_next_step.setEnabled(False)
@@ -93,7 +95,8 @@ class InputValidator:
                     styles.color_button_not_ready(btn_for_next_step)
                     return
             item = list_of_projects.findItems(
-                txt_for_project_name.text(), Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly
+                txt_for_project_name.text(),
+                Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly,
             )
             if len(item) != 0:
                 list_of_projects.setCurrentItem(item[0])
@@ -107,9 +110,13 @@ class InputValidator:
 
     @staticmethod
     def validate_search_input(
-        list_for_projects, txt_for_search, lbl_for_status_search, txt_for_selected_project=None, status_message=None
-    ):
-        """This function validates the input of the project name in real-time
+        list_for_projects: QtWidgets.QListWidget,
+        txt_for_search: QtWidgets.QTextEdit,
+        lbl_for_status_search: QtWidgets.QLabel,
+        txt_for_selected_project: QtWidgets.QTextEdit = None,
+        status_message: str = None,
+    ) -> None:
+        """This function validates the input of the project name in real-time.
 
         Args:
             list_for_projects:
@@ -120,7 +127,8 @@ class InputValidator:
                 label which gives feedback
             txt_for_selected_project:
                 line edit widget which is used to display the selected project
-
+            status_message:
+                the message which should get displayed.
         """
         if list_for_projects.currentItem() is not None:
             list_for_projects.currentItem().setSelected(False)
@@ -130,10 +138,10 @@ class InputValidator:
             lbl_for_status_search.setText("")
             if txt_for_selected_project is not None:
                 txt_for_selected_project.setText("")
-            return
         else:
             item = list_for_projects.findItems(
-                txt_for_search.text(), Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly
+                txt_for_search.text(),
+                Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly,
             )
             if len(item) != 0:
                 list_for_projects.setCurrentItem(item[0])
@@ -150,7 +158,11 @@ class InputValidator:
                     txt_for_selected_project.setText("")
 
     @staticmethod
-    def validate_protein_name(txt_for_protein_name, lbl_for_status_protein_name, btn_next=None):
+    def validate_protein_name(
+        txt_for_protein_name: QtWidgets.QTextEdit,
+        lbl_for_status_protein_name: QtWidgets.QLabel,
+        btn_next: QtWidgets.QPushButton = None,
+    ) -> None:
         """This function validates the input of the protein name in real-time.
 
         Args:
@@ -160,7 +172,6 @@ class InputValidator:
                 label which gives feedback if the protein name is legal
             btn_next:
                 push button which is used for the next step
-
         """
         # set color for lineEdit
         txt_for_protein_name.setStyleSheet("color: #f44336")
@@ -169,13 +180,6 @@ class InputValidator:
             if btn_next is not None:
                 btn_next.setEnabled(False)
                 styles.color_button_not_ready(btn_next)
-            return
-        # elif len(txt_for_protein_name.text()) > 20:
-        #     lbl_for_status_protein_name.setText("Protein name is too long (max. 20 characters).")
-        #     if btn_next is not None:
-        #         btn_next.setEnabled(False)
-        #         styles.color_button_not_ready(btn_next)
-        #     return
         else:
             regex = Qt.QtCore.QRegularExpression()
             regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
@@ -197,8 +201,12 @@ class InputValidator:
                     return
 
     @staticmethod
-    def validate_protein_sequence(txt_protein_sequence, lbl_status_protein_sequence, btn_next):
-        """This function validates the input of the protein sequence in real-time
+    def validate_protein_sequence(
+        txt_protein_sequence: QtWidgets.QTextEdit,
+        lbl_status_protein_sequence: QtWidgets.QLabel,
+        btn_next: QtWidgets.QPushButton,
+    ) -> None:
+        """This function validates the input of the protein sequence in real-time.
 
         Args:
             txt_protein_sequence:
@@ -207,7 +215,6 @@ class InputValidator:
                 label which gives feedback if the protein sequence is legal or not
             btn_next:
                 button which is used to get to the next step
-
         """
         # set color for lineEdit
         txt_protein_sequence.setStyleSheet("color: #f44336")
@@ -215,7 +222,6 @@ class InputValidator:
             lbl_status_protein_sequence.setText("")
             btn_next.setEnabled(False)
             styles.color_button_not_ready(btn_next)
-            return
         else:
             regex = Qt.QtCore.QRegularExpression()
             regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")

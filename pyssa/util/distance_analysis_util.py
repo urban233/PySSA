@@ -89,7 +89,7 @@ def do_distance_analysis_in_pymol(tmp_protein_pair: "protein_pair.ProteinPair") 
         logger.error(tmp_msg)
         raise exception.UnableToDoAnalysisError(tmp_msg)
     logger.info(
-        f"Packed results into the DistanceAnalysisResults object for the protein pair: {tmp_protein_pair.name}."
+        f"Packed results into the DistanceAnalysisResults object for the protein pair: {tmp_protein_pair.name}.",
     )
     return analysis_results
 

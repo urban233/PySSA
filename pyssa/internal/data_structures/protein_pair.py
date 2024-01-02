@@ -23,27 +23,27 @@
 import os
 import pathlib
 import logging
-
 import pymol
 
+from xml.etree import ElementTree
+from typing import TYPE_CHECKING, Union
+
 from pyssa.logging_pyssa import log_handlers
-from pyssa.io_pyssa import path_util
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_pair_operations
-from pyssa.io_pyssa import filesystem_io
+from pyssa.io_pyssa import path_util
+from pyssa.io_pyssa.xml_pyssa import element_names
+from pyssa.io_pyssa.xml_pyssa import attribute_names
+from pyssa.io_pyssa import binary_data
 from pyssa.util import protein_util
 from pyssa.util import pyssa_keys
 from pyssa.util import exception
-from xml.etree import ElementTree
-from pyssa.io_pyssa.xml_pyssa import element_names
-from pyssa.io_pyssa.xml_pyssa import attribute_names
-from typing import TYPE_CHECKING
 from pyssa.util import constants
-from pyssa.io_pyssa import binary_data
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein
     from pyssa.internal.data_structures import structure_analysis
+    from pyssa.internal.data_structures import sequence
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -139,7 +139,8 @@ class ProteinPair:
         """
         try:
             protein_pair_operations.color_protein_pair(
-                self.protein_1.get_molecule_object(), self.protein_2.get_molecule_object()
+                self.protein_1.get_molecule_object(),
+                self.protein_2.get_molecule_object(),
             )
         except pymol.CmdException:
             pymol.CmdException("One Protein or both proteins does not exist as pymol objects.")
@@ -175,11 +176,13 @@ class ProteinPair:
         tmp_protein_pair = ElementTree.SubElement(xml_protein_pairs_element, element_names.PROTEIN_PAIR)
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_NAME, str(self.name))
         tmp_protein_pair.set(
-            attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT, str(self.protein_1.get_molecule_object())
+            attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT,
+            str(self.protein_1.get_molecule_object()),
         )
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_1_ID, str(self.protein_1.get_id()))
         tmp_protein_pair.set(
-            attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT, str(self.protein_2.get_molecule_object())
+            attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT,
+            str(self.protein_2.get_molecule_object()),
         )
         tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_2_ID, str(self.protein_2.get_id()))
         tmp_session_data = ElementTree.SubElement(tmp_protein_pair, element_names.PROTEIN_PAIR_SESSION)
@@ -187,8 +190,9 @@ class ProteinPair:
         if self.distance_analysis is not None:
             self.distance_analysis.serialize_distance_analysis(tmp_protein_pair)
 
-    def create_plain_text_memory_mirror(self):
-        mirror = [
+    def create_plain_text_memory_mirror(self) -> list[Union[str, list[tuple[str, "sequence.Sequence", str]]]]:
+        """Creates a plain text memory mirror of the current protein pair."""
+        return [
             self.protein_1.get_molecule_object(),
             str(self.protein_1.pdb_filepath.get_filepath()),
             str(self.protein_1.export_dirname),
@@ -206,4 +210,3 @@ class ProteinPair:
             self.name,
             str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
         ]
-        return mirror

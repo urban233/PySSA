@@ -19,10 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module contains the PredictionProteinInfo dataclass."""
 from dataclasses import dataclass
 
 
 @dataclass
 class PredictionProteinInfo:
+    """Class which contains the name and seqeunces of a protein to predict."""
+
     name: str
     sequences: list

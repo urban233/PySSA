@@ -179,7 +179,8 @@ class DistanceAnalysisDataTransformer:
         protein_1: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_1())
         if protein_1 is None:
             logger.error(
-                f"No protein with the given protein name: {self.analysis_run.get_protein_name_1()} found in the current project.",
+                "No protein with the given protein name: "
+                f"{self.analysis_run.get_protein_name_1()} found in the current project.",
             )
             raise exception.ProteinNotFoundInCurrentProjectError("")
 
@@ -192,7 +193,8 @@ class DistanceAnalysisDataTransformer:
             protein_2: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_2())
             if protein_2 is None:
                 logger.error(
-                    f"No protein with the given protein name: {self.analysis_run.get_protein_name_2()} found in the current project.",
+                    "No protein with the given protein name: "
+                    f"{self.analysis_run.get_protein_name_2()} found in the current project.",
                 )
                 raise exception.ProteinNotFoundInCurrentProjectError("")
         self.proteins = (protein_1, protein_2)
@@ -200,7 +202,7 @@ class DistanceAnalysisDataTransformer:
     def _create_analysis_name(self) -> str:
         """Creates the name of the analysis."""
         if len(self.proteins[0].chains) != 0:
-            analysis_name = f"{self.proteins[0].get_molecule_object()};{self.analysis_run.protein_chains_1}_vs_{self.proteins[1].get_molecule_object()};{self.analysis_run.protein_chains_2}"
+            analysis_name = f"{self.proteins[0].get_molecule_object()};{self.analysis_run.protein_chains_1}_vs_{self.proteins[1].get_molecule_object()};{self.analysis_run.protein_chains_2}"  # noqa
             analysis_name = analysis_name.replace(";", "_")
             analysis_name = analysis_name.replace(",", "_")
             analysis_name = analysis_name.replace("[", "")

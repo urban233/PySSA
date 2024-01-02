@@ -19,11 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for protein operations in pymol"""
+"""Module for protein operations in pymol."""
 import logging
 import pathlib
 import pymol
+from typing import TYPE_CHECKING
 from pymol import cmd
+
 from pyssa.internal.portal import pymol_safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_structures import chain
@@ -33,13 +35,15 @@ from pyssa.util import protein_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import sequence
 
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import protein
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def remove_solvent_molecules_in_protein():
-    """This function removes solvent molecules in a protein."""
+def remove_solvent_molecules_in_protein() -> None:
+    """Removes solvent molecules in a protein."""
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
@@ -48,8 +52,8 @@ def remove_solvent_molecules_in_protein():
         print("No solvent molecules needs to be removed.")
 
 
-def remove_organic_molecules_in_protein():
-    """This function removes organic molecules in a protein."""
+def remove_organic_molecules_in_protein() -> None:
+    """Removes organic molecules in a protein."""
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:
@@ -100,7 +104,8 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
             fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
             fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
             complete_sequence_of_chain = sequence.Sequence(
-                molecule_object, fasta_sequence_of_chain_without_header.replace("\n", "")
+                molecule_object,
+                fasta_sequence_of_chain_without_header.replace("\n", ""),
             )
             chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
         else:
@@ -108,16 +113,17 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
             fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
             fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
             complete_sequence_of_chain = sequence.Sequence(
-                molecule_object, fasta_sequence_of_chain_without_header.replace("\n", "")
+                molecule_object,
+                fasta_sequence_of_chain_without_header.replace("\n", ""),
             )
             chains_of_protein.append(
-                chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN)
+                chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN),
             )
         i += 1
     return chains_of_protein
 
 
-def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain]) -> list["sequence.Sequence"]:
+def get_protein_sequences_from_protein(molecule_object: str, chains: list[chain.Chain]) -> list["sequence.Sequence"]:
     """This function gets all sequences from protein chains only.
 
     Args:
@@ -134,7 +140,7 @@ def get_protein_sequences_from_protein(molecule_object, chains: list[chain.Chain
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
     if not safeguard.Safeguard.check_if_value_is_not_none(chains) or not safeguard.Safeguard.check_if_list_is_empty(
-        chains
+        chains,
     ):
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")

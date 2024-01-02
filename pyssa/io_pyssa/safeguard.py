@@ -19,11 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module that implements a safeguard in form of static methods."""
 import os
 import pathlib
 
 from pymol import cmd
-from pyssa.util import constants
 
 
 class Safeguard:
@@ -32,20 +32,6 @@ class Safeguard:
     def __init__(self) -> None:
         """Constructor."""
         pass
-
-    @staticmethod
-    def check_if_protein_sequence_is_valid_one_letter(protein_sequence) -> bool:
-        for tmp_amino_acid in protein_sequence:
-            if tmp_amino_acid not in constants.AMINO_ACID_CODE.values():
-                return False
-        return True
-
-    @staticmethod
-    def check_if_protein_sequence_is_valid_three_letter(protein_sequence) -> bool:
-        for tmp_amino_acid in protein_sequence:
-            if tmp_amino_acid not in constants.AMINO_ACID_CODE.keys():
-                return False
-        return True
 
     @staticmethod
     def check_filepath(a_filepath: pathlib.Path) -> bool:
@@ -63,7 +49,7 @@ class Safeguard:
         return True
 
     @staticmethod
-    def check_if_number_is_positive(value) -> bool:
+    def check_if_number_is_positive(value) -> bool:  # noqa: ANN001
         """This function checks if a number is positive.
 
         Returns:
@@ -72,59 +58,25 @@ class Safeguard:
         """
         if value >= 0:
             return True
-        else:
-            return False
+        return False
 
     @staticmethod
-    def check_if_number_is_greater_zero(value) -> bool:
-        if value > 0:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def check_if_file_is_readable(full_filepath) -> bool:
-        try:
-            file = open(full_filepath, "r", encoding="utf-8")
-        except FileNotFoundError:
-            return False
-        except PermissionError:
-            return False
-        except IOError:
-            return False
-        file.close()
-        return True
-
-    @staticmethod
-    def check_if_protein_is_in_pymol(molecule_object) -> bool:
+    def check_if_protein_is_in_pymol(molecule_object: str) -> bool:
+        """Checks if a protein is loaded into pymol."""
         if cmd.get_model(molecule_object) is not None:
             return True
-        else:
-            return False
-
-    @staticmethod
-    def check_if_pymol_selection_is_valid(selection) -> bool:
-        if selection is None or selection == "":
-            return False
-        else:
-            return True
-
-    @staticmethod
-    def check_if_dict_is_empty(value: dict) -> bool:
-        if len(value) != 0:
-            return True
-        else:
-            return False
+        return False
 
     @staticmethod
     def check_if_list_is_empty(value: list) -> bool:
+        """Checks if a list is empty."""
         if len(value) != 0:
             return True
-        else:
-            return False
+        return False
 
     @staticmethod
-    def check_if_value_is_in_table_v_header(value, table):
+    def check_if_value_is_in_table_v_header(value, table) -> bool:  # noqa: ANN001
+        """Checks if a value is in a vertical header of a QTableWidget."""
         for i in range(table.rowCount()):
             header = table.verticalHeaderItem(i).text()
             new_value = value
@@ -133,7 +85,7 @@ class Safeguard:
         return False
 
     @staticmethod
-    def check_if_value_is_not_none(value) -> bool:
+    def check_if_value_is_not_none(value) -> bool:  # noqa: ANN001
         """This function checks if a value is None or not.
 
         Args:
@@ -145,5 +97,4 @@ class Safeguard:
         """
         if value is None:
             return False
-        else:
-            return True
+        return True

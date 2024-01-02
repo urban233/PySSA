@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+"""XML element names which are used in PySSA."""
 PROJECT = "project"
 PROJECT_INFO = "project_info"
 PROTEINS = "proteins"

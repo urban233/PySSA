@@ -20,11 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains helper function for the analysis process."""
-import pathlib
 import logging
 from typing import Union
+
 from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.data_structures.data_classes import protein_analysis_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import selection
 from pyssa.util import protein_util, exception
@@ -70,7 +69,8 @@ def split_analysis_run_name_in_protein_name_and_chain(an_analysis_run_name: str)
 
 
 def create_selection_strings_for_structure_alignment(
-    a_protein: "protein.Protein", selected_chains: list
+    a_protein: "protein.Protein",
+    selected_chains: list,
 ) -> selection.Selection:
     """Creates the selection string for the structure alignment for a single protein.
 
@@ -93,10 +93,7 @@ def create_selection_strings_for_structure_alignment(
         for tmp_chain in selected_chains:
             protein_chains.append(tmp_chain)
         tmp_protein_selection.set_selections_from_chains_ca(
-            protein_util.get_chains_from_list_of_chain_names(a_protein, protein_chains)
-        )
-        logger.debug(
-            f"This is one selection created with <create_selection_strings_for_structure_alignment>: {tmp_protein_selection.selection_string}"
+            protein_util.get_chains_from_list_of_chain_names(a_protein, protein_chains),
         )
     else:
         all_protein_chains = []
@@ -107,104 +104,17 @@ def create_selection_strings_for_structure_alignment(
     return tmp_protein_selection
 
 
-def transform_data_for_analysis(
-    proteins_for_analysis, project
-) -> list[tuple["protein.Protein", "protein.Protein", pathlib.Path, str]]:
-    """This function transforms the data from a protein list to a usable format for the analysis algorithm
+def get_highest_start_index(ref_index: int, model_index: int) -> int:
+    """Gets the highest index of two indices.
 
-    Returns:
-        a list which consists of the two proteins, the export path for the results and the name of the analysis run
+    Args:
+        ref_index: the index of the reference protein.
+        model_index: the index of the model protein.
     """
-    tmp_data = []
-    for protein_pair_tuple in proteins_for_analysis:
-        prot_1_name = protein_pair_tuple[0].protein_name.replace(".pdb", "")
-        prot_2_name = protein_pair_tuple[1].protein_name.replace(".pdb", "")
-        # create new protein objects
-        prot_1: protein.Protein = project.search_protein(prot_1_name)
-        if prot_1_name == prot_2_name:
-            prot_2: protein.Protein = prot_1.duplicate_protein()
-            prot_1: protein.Protein = prot_2.duplicate_protein()
-            prot_1.molecule_object = f"{prot_1.molecule_object}_1"
-            prot_2.molecule_object = f"{prot_2.molecule_object}_2"
-        else:
-            prot_2: protein.Protein = project.search_protein(prot_2_name)
-
-        create_selection_strings_for_structure_alignment(prot_1, protein_pair_tuple)
-        create_selection_strings_for_structure_alignment(prot_2, protein_pair_tuple)
-        # set selection
-        prot_1_selection = selection.Selection(prot_1.molecule_object)
-        prot_1_chains_selected = protein_pair_tuple[0].protein_chains
-        if prot_1_chains_selected is not None:
-            prot_1_chains = []
-            for tmp_chain in prot_1_chains_selected:
-                prot_1_chains.append(tmp_chain)
-            prot_1_selection.set_selections_from_chains_ca(
-                protein_util.get_chains_from_list_of_chain_names(prot_1, prot_1_chains)
-            )
-        else:
-            prot_1_selection.set_selections_without_chains_ca()
-        prot_1.pymol_selection.selection_string = prot_1_selection.selection_string
-
-        prot_2_chains_selected = protein_pair_tuple[1].protein_chains
-        if prot_2_chains_selected is not None:
-            prot_2_chains = []
-            for tmp_chain in prot_2_chains_selected:
-                prot_2_chains.append(tmp_chain)
-            prot_2.set_chains(prot_2_chains)
-        else:
-            prot_2_chains = []
-
-        if len(prot_1.chains) != 0:
-            analysis_name = f"{prot_1.molecule_object};{prot_1_chains}_vs_{prot_2.molecule_object};{prot_2_chains}"
-            analysis_name = analysis_name.replace(";", "_")
-            analysis_name = analysis_name.replace(",", "_")
-            analysis_name = analysis_name.replace("[", "")
-            analysis_name = analysis_name.replace("]", "")
-            analysis_name = analysis_name.replace("'", "")
-        else:
-            analysis_name = f"{prot_1.molecule_object}_vs_{prot_2.molecule_object}"
-        export_dir = pathlib.Path(f"{project.get_protein_pairs_path()}/{analysis_name}")
-        transformed_data: tuple = prot_1, prot_2, export_dir, analysis_name
-        tmp_data.append(transformed_data)
-    return tmp_data
-
-
-def count_atoms_in_selection(pymol_obj):
-    """This function counts the atoms within a pymol molecule object."""
-    count = 0
-    first_seq_index = 0
-    for atom in pymol_obj.atom:
-        if count == 0:
-            first_seq_index = atom.resi
-        count += 1
-    return count, int(first_seq_index)
-
-
-def get_highest_start_index(ref_index, model_index):
     if ref_index > model_index:
         return ref_index
     if ref_index < model_index:
         return model_index
     if ref_index == model_index:
         return ref_index
-    else:
-        raise ValueError
-
-
-def get_ref_gap(a_ref_index, a_model_index):
-    return get_highest_start_index(a_ref_index, a_model_index) - a_ref_index
-
-
-def get_model_gap(a_ref_index, a_model_index):
-    return get_highest_start_index(a_ref_index, a_model_index) - a_model_index
-
-
-def get_lowest_count(a_ref_count, a_model_count):
-    if a_ref_count > a_model_count:
-        return a_model_count
-    if a_ref_count < a_model_count:
-        return a_ref_count
-    if a_ref_count == a_model_count:
-        return a_ref_count
-    else:
-        raise ValueError
+    raise ValueError()

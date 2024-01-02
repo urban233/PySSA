@@ -46,13 +46,11 @@ class Sequence:
     # </editor-fold>
 
     def __init__(self, protein_name: str, single_sequence: str) -> None:
-        """Constructor
+        """Constructor.
 
         Args:
-            protein_name:
-                the name of the protein
-            single_sequence:
-                a sequence as string of the protein
+            protein_name: the name of the protein
+            single_sequence: a sequence as string of the protein
         Raises:
             ValueError: raised if an argument is illegal
         """
@@ -73,35 +71,6 @@ class Sequence:
 
         self.name = protein_name
         self.sequence: str = single_sequence
-
-    # def write_fasta_file(self, filepath: pathlib.Path) -> None:
-    #     """This function writes a colabbatch compatible fasta file.
-    #
-    #     Args:
-    #         filepath:
-    #             path where the fasta file should be saved
-    #     Raises:
-    #
-    #     """
-    #     # <editor-fold desc="Checks">
-    #     if not safeguard.Safeguard.check_filepath(filepath):
-    #         logger.error("The directory does not exists!")
-    #         raise NotADirectoryError("The directory does not exists!")
-    #
-    #     # </editor-fold>
-    #
-    #     fasta_file = open(f"{filepath}/{self.name}.fasta", "w")
-    #     fasta_file.write(f">{self.name}\n")
-    #     i = 0
-    #     for tmp_sequence in self.sequence:
-    #         if i == len(self.sequence) - 1:
-    #             # should be the last entry
-    #             fasta_file.write(tmp_sequence)
-    #         else:
-    #             fasta_file.write(f"{tmp_sequence}:")
-    #         i += 1
-    #     logger.info(f"Fasta file for sequence {self.name} written.")
-    #     fasta_file.close()
 
     def serialize(self, filepath: pathlib.Path, filename: str) -> None:
         """This function serializes the sequence object.
@@ -126,16 +95,13 @@ class Sequence:
         logger.info(f"Sequence {self.name} was serialized.")
 
     @staticmethod
-    def deserialize(filepath, filename):
-        """
+    def deserialize(filepath: pathlib.Path, filename: str) -> "Sequence":
+        """Deserializes the sequence object.
 
         Args:
-            filepath:
-                filepath where the object serialization are stored
-            filename:
-                filename of the object serialization WITH .json extension
+            filepath: a filepath where the object serialization are stored
+            filename: a filename of the object serialization WITH .json extension
 
-        Returns:
-            a ProteinSequence object
+        Returns: a ProteinSequence object
         """
         return filesystem_io.ObjectDeserializer(filepath, filename).deserialize_sequence()

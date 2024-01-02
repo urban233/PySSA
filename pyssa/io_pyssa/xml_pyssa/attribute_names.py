@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+"""XML attribute names which are used in PySSA."""
 ID = "id"
 
 PROJECT_NAME = "name"

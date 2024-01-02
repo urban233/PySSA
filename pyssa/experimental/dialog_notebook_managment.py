@@ -79,7 +79,7 @@ class DialogNotebookManagment(Qt.QtWidgets.QDialog):
             self.ui.lbl_current_status.setText(
                 f"The GPU cannot be used, due to an account timeout. "
                 f"You can still run the prediction without a GPU."
-                f"Last checked: {current_time}"
+                f"Last checked: {current_time}",
             )
             self.ui.btn_disable_gpu.show()
             self.ui.btn_check_status.setEnabled(False)

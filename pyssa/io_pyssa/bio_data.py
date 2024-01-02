@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for handling biological data."""
 import logging
 import os.path
 import typing
@@ -59,7 +60,7 @@ def convert_pdb_file_into_xml_element(filepath: "path_util.FilePath") -> Element
 
 
 def convert_xml_string_to_pdb_file(xml_contents: "ElementTree.ElementTree", path_pdb: "pathlib.Path") -> None:
-    """This function writes a pdb file based on a xml string which contains the pdb information
+    """This function writes a pdb file based on a xml string which contains the pdb information.
 
     Args:
         xml_contents:
@@ -75,7 +76,12 @@ def convert_xml_string_to_pdb_file(xml_contents: "ElementTree.ElementTree", path
     pdb_file.close()
 
 
-def convert_pdb_xml_string_to_list(root):
+def convert_pdb_xml_string_to_list(root) -> list:  # noqa: ANN001
+    """Converts the xml string of pdb information to a list.
+
+    Args:
+        root: the xml root element.
+    """
     # TODO: write checks for function arguments
     pdb_lines = []
     for tmp_atom in root.iter("atom"):
@@ -123,7 +129,12 @@ def convert_pdb_data_list_to_pdb_file(a_pdb_filepath: pathlib.Path, a_pdb_data: 
     pdb_file.close()
 
 
-def convert_pdb_data_list_to_xml_string(pdb_data):
+def convert_pdb_data_list_to_xml_string(pdb_data: list) -> ElementTree.Element:
+    """Converts the list of pdb information into a xml string.
+
+    Args:
+        pdb_data: a list of pdb information.
+    """
     # Convert the PDB to XML format
     root = ElementTree.Element("pdb_data")
     for line in pdb_data:

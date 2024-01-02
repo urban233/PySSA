@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module that contains the dialog for the advanced configuration of the ColabFold prediction."""
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_advanced_prediction_configurations import Ui_Dialog
@@ -27,12 +28,14 @@ from pyssa.internal.data_structures.data_classes import prediction_configuration
 
 
 class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
-    def __init__(self, prediction_config, parent=None):
+    """Class that contains the dialog for the advanced configuration of the ColabFold."""
+
+    def __init__(self, prediction_config, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            args
-            kwargs
+            prediction_config: the configuration of the ColabFold prediction.
+            parent: The parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
@@ -49,7 +52,7 @@ class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
         ]
         gui_utils.fill_combo_box(self.ui.combo_box_template, item_list_templates)
         self.ui.combo_box_template.setCurrentIndex(
-            self.ui.combo_box_template.findText(self.prediction_config.templates)
+            self.ui.combo_box_template.findText(self.prediction_config.templates),
         )
 
         self.ui.btn_cancel.clicked.connect(self.close_dialog)
@@ -60,18 +63,22 @@ class DialogAdvancedPredictionConfigurations(QtWidgets.QDialog):
         self.setWindowTitle("Advanced prediction configuration")
 
     # @SLOT
-    def close_dialog(self):
+    def close_dialog(self) -> None:
+        """Closes the dialog."""
         self.close()
 
-    def save_config(self):
+    def save_config(self) -> "prediction_configuration.PredictionConfiguration":
+        """Closes the dialog and return the prediction configuration."""
         self.close()
         return self.prediction_config
 
-    def change_amber_force_field(self):
+    def change_amber_force_field(self) -> None:
+        """Changes the amber force field of the prediction configuration."""
         if self.ui.cb_amber.checkState() == 0:
             self.prediction_config.amber_force_field = False
         else:
             self.prediction_config.amber_force_field = True
 
-    def change_template_mode(self):
+    def change_template_mode(self) -> None:
+        """Changes the template mode of the prediction."""
         self.prediction_config.templates = self.ui.combo_box_template.currentText()

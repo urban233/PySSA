@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the dataclass CurrentSession."""
+"""Module contains the CurrentSession dataclass."""
 from dataclasses import dataclass
 
 
@@ -33,6 +33,6 @@ class CurrentSession:
         session (str)
     """
 
-    type: str
+    type: str  # noqa: A003
     name: str
     session: str

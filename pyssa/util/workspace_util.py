@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for functions related to the workspace."""
 import os
 import pathlib
 import concurrent.futures
@@ -34,7 +35,14 @@ from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 
 
-def get_proteins_of_project_xml(xml_filepath: pathlib.Path, result_queue, lock):
+def get_proteins_of_project_xml(xml_filepath: pathlib.Path, result_queue, lock) -> None:  # noqa: ANN001
+    """Gets the protein information from the project xml file.
+
+    Args:
+        xml_filepath: a path to the project xml file.
+        result_queue: a queue to put the protein information into.
+        lock: a lock to prevent the unauthorized access to the memory.
+    """
     tmp_protein_names: collections.deque = collections.deque()
     tmp_protein_infos: collections.deque = collections.deque()
     xml_deserializer = filesystem_io.XmlDeserializer(xml_filepath)
@@ -45,19 +53,27 @@ def get_proteins_of_project_xml(xml_filepath: pathlib.Path, result_queue, lock):
             tmp_protein_names.append(molecule_object)
             tmp_protein_infos.append(
                 basic_protein_info.BasicProteinInfo(
-                    molecule_object, tmp_protein.attrib[attribute_names.ID], project_name
-                )
+                    molecule_object,
+                    tmp_protein.attrib[attribute_names.ID],
+                    project_name,
+                ),
             )
     with lock:
         result_queue.put((list(tmp_protein_names), list(tmp_protein_infos)))
 
 
-def scan_workspace_for_non_duplicate_proteins(the_workspace_path) -> np.ndarray:
+def scan_workspace_for_non_duplicate_proteins(the_workspace_path: pathlib.Path) -> np.ndarray:
+    """Scans the workspace for non-duplicate proteins.
+
+    Args:
+        the_workspace_path: Path to the current workspace.
+    """
+    tmp_workspace_path: str = str(the_workspace_path)
     # List of XML file paths
     xml_files = [
-        f"{the_workspace_path}/{tmp_project_file}"
-        for tmp_project_file in os.listdir(the_workspace_path)
-        if not os.path.isdir(pathlib.Path(f"{the_workspace_path}/{tmp_project_file}"))
+        f"{tmp_workspace_path}/{tmp_project_file}"
+        for tmp_project_file in os.listdir(tmp_workspace_path)
+        if not os.path.isdir(pathlib.Path(f"{tmp_workspace_path}/{tmp_project_file}"))
     ]
     # Using ThreadPoolExecutor to read XML files in parallel
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -92,8 +108,11 @@ def scan_workspace_for_non_duplicate_proteins(the_workspace_path) -> np.ndarray:
         return np.array(list(unique_proteins_set))
 
 
-def scan_workspace_for_valid_projects(the_workspace_path):
-    directory_content = os.listdir(the_workspace_path)
-    # directory_content.sort()
-    xml_files = [file for file in directory_content if file.endswith(".xml")]
-    return xml_files
+def scan_workspace_for_valid_projects(the_workspace_path: pathlib.Path) -> list[str]:
+    """Scans the workspace for valid projects.
+
+    Args:
+        the_workspace_path: Path to the current workspace.
+    """
+    directory_content = os.listdir(str(the_workspace_path))
+    return [file for file in directory_content if file.endswith(".xml")]

@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the startup dialog."""
 import os
 import pathlib
 import sys
@@ -37,12 +38,13 @@ global_var_terminate_app = 0
 
 
 class DialogStartup(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    """Class for the startup dialog."""
+
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            args
-            kwargs
+            parent: the parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
@@ -74,13 +76,14 @@ class DialogStartup(QtWidgets.QDialog):
         self.setWindowTitle("PySSA Launch")
 
     # @SLOT
-    def close_dialog(self):
+    def close_dialog(self) -> None:
+        """Closes the dialog."""
         global global_var_terminate_app
         global_var_terminate_app = 1
         self.close()
 
-    def choose_workspace(self):
-        """This function opens a file dialog to choose a workspace directory."""
+    def choose_workspace(self) -> None:
+        """Opens a file dialog to choose a workspace directory."""
         self.workspace_dir = PyQt5.QtWidgets.QFileDialog.getExistingDirectory(
             self,
             "Open Workspace Directory",
@@ -90,8 +93,8 @@ class DialogStartup(QtWidgets.QDialog):
         if self.workspace_dir != "":
             self.ui.txt_workspace.setText(self.workspace_dir)
 
-    def launch_app(self):
-        """This function launches the plugin."""
+    def launch_app(self) -> None:
+        """Launches the pyssa plugin."""
         QApplication.setOverrideCursor(Qt.WaitCursor)
         global global_var_startup_workspace
         global_var_startup_workspace = self.ui.txt_workspace.text()
@@ -109,7 +112,7 @@ class DialogStartup(QtWidgets.QDialog):
 
         zip_file_path = str(destination)  # Replace with the actual path to your downloaded zip file
         destination_folder = str(
-            pathlib.Path(f"{constants.SETTINGS_DIR}/scripts")
+            pathlib.Path(f"{constants.SETTINGS_DIR}/scripts"),
         )  # Replace with the desired folder to extract the contents
         with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
             zip_ref.extractall(destination_folder)
@@ -119,7 +122,8 @@ class DialogStartup(QtWidgets.QDialog):
         if not os.path.exists(pathlib.Path(f"{constants.CACHE_DIR}")):
             os.mkdir(pathlib.Path(f"{constants.CACHE_DIR}"))
         request.urlretrieve(
-            constants.DEMO_PROJECT_SCIEBO_URL, str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"))
+            constants.DEMO_PROJECT_SCIEBO_URL,
+            str(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")),
         )
 
         self.close()

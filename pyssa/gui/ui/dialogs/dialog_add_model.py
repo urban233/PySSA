@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the add proteins dialog."""
 import os
 import pymol
 from pymol import Qt
@@ -33,11 +34,13 @@ global_var_add_model = ("", False)
 
 
 class DialogAddModel(Qt.QtWidgets.QDialog):
-    def __init__(self, parent=None) -> None:
+    """Class for a dialog to add proteins to a project."""
+
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            parent
+            parent: The parent.
         """
         Qt.QtWidgets.QDialog.__init__(self, parent)
         # build ui object
@@ -62,7 +65,7 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
                 "You do not have a working internet connection which is "
                 "necessary for connecting to the PDB!\n"
                 "However you can add a protein structure from "
-                "your local filesystem."
+                "your local filesystem.",
             )
             self.ui.txt_add_protein.setEnabled(False)
             self.ui.lbl_status.setText("You cannot enter a PDB ID (no internet).")
@@ -113,14 +116,19 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
                 self.ui.btn_add_protein.setEnabled(False)
                 styles.color_button_not_ready(self.ui.btn_add_protein)
 
-    def close_dialog(self):
+    def close_dialog(self) -> None:
+        """Closes the dialog."""
         self.close()
 
-    def load_model(self):
+    def load_model(self) -> None:
+        """Loads a protein from the filesystem into the textbox."""
         try:
             # open file dialog
             file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(
-                self, "Open existing protein", Qt.QtCore.QDir.homePath(), "PDB Files (*.pdb)"
+                self,
+                "Open existing protein",
+                Qt.QtCore.QDir.homePath(),
+                "PDB Files (*.pdb)",
             )
             if file_name == ("", ""):
                 self.ui.lbl_status.setText("No file has been selected.")
@@ -132,7 +140,8 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
             self.status_bar.showMessage("Loading the protein structure failed!")
             self.ui.lbl_status.setText("Loading the protein structure failed!")
 
-    def add_model(self):
+    def add_model(self) -> None:
+        """Adds a protein to the global variable and closes the dialog."""
         global global_var_add_model
         global_var_add_model = (self.ui.txt_add_protein.text(), True)
         self.close()

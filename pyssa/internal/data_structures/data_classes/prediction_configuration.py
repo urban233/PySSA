@@ -19,14 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module contains the PredictionConfiguration dataclass."""
 from dataclasses import dataclass
 
 
 @dataclass
 class PredictionConfiguration:
+    """Class which holds information about the prediction configuration."""
+
     amber_force_field: bool
     templates: str
 
-    def get_tuple_notation(self):
+    def get_tuple_notation(self) -> tuple[bool, str]:
+        """Gets the configuration as a tuple."""
         tuple_notation: tuple[bool, str] = (self.amber_force_field, self.templates)
         return tuple_notation

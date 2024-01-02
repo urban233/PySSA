@@ -24,23 +24,27 @@ import os
 import pathlib
 import logging
 import shutil
+from typing import TYPE_CHECKING
 from pyssa.util import constants
 from pyssa.util import exception
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.logging_pyssa import log_handlers
 
+if TYPE_CHECKING:
+    from PyQt5 import QtWidgets
+
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def get_prediction_name_and_seq_from_table(table) -> list[prediction_protein_info.PredictionProteinInfo]:
+def get_prediction_name_and_seq_from_table(
+    table: "QtWidgets.QTableWidget",
+) -> list[prediction_protein_info.PredictionProteinInfo]:
     """This function gets the names and sequences of the table which stores the predictions to run.
 
     Args:
-        table:
-            pyqt table which contains the proteins to predict
-    Returns:
-        list of tuples with name and sequence
+        table: a pyqt table which contains the proteins to predict
+    Returns: a list of tuples with name and sequence
     """
     # list which consists of tuples of the protein name and protein sequence
     predictions: list[tuple[str, str]] = []
@@ -116,57 +120,6 @@ def delete_pyssa_colabfold_directory_in_wsl2() -> bool:
         raise exception.UnableToDeleteDirectoryError("Could not remove the pyssa_colabfold dir.")
     return False
 
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "root",
-    #          "rm", "-r", "/home/rhel_user/pyssa_colabfold", "||", "true",  # fixme: don't know if this works
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to delete the pyssa_colabfold directory in WSL2!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully deleted the pyssa_colabfold directory.")
-
-
-def delete_scratch_directory_in_wsl2() -> bool:
-    """Deletes the scratch directory in WSL2.
-
-    Raises:
-        SubprocessExecutionError: If return code of subprocess is non-zero
-    """
-    tmp_scratch_path: str = r"\\wsl$\almaColabfold9\home\rhel_user\scratch"
-    try:
-        if os.path.exists(tmp_scratch_path):
-            shutil.rmtree(tmp_scratch_path)
-            return True
-    except Exception as e:
-        logger.error("Unexpected error!", e)
-        raise exception.UnableToDeleteDirectoryError("Could not remove the scratch dir.")
-    return False
-
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "root",
-    #          "rm", "-r", "/home/rhel_user/scratch", "||", "true",
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to delete the scratch directory in WSL2!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully deleted the scratch directory.")
-
 
 def copy_pyssa_colabfold_directory_to_wsl2() -> None:
     """Copies the pyssa_colabfold directory to WSL2.
@@ -186,214 +139,3 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
         raise exception.UnableToCopyDirectoryError("Could not copy the pyssa_colabfold dir.")
     else:
         logger.info("Successfully copied the pyssa_colabfold directory.")
-
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "rhel_user",
-    #          "cp", "-r",
-    #          f"{constants.PLUGIN_PATH_WSL_NOTATION}/pyssa_colabfold",
-    #          "/home/rhel_user/",
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to copy the pyssa_colabfold directory in WSL2!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully copied the pyssa_colabfold directory.")
-
-
-def delete_original_batch_py_file() -> bool:
-    """Deletes the original batch.py file of colabfold.
-
-    Raises:
-        SubprocessExecutionError: If return code of subprocess is non-zero
-    """
-    # Remove original batch.py of Colabfold
-    tmp_batch_py_filepath: str = r"\\wsl$\almaColabfold9/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
-    try:
-        if os.path.exists(tmp_batch_py_filepath):
-            os.remove(tmp_batch_py_filepath)
-            return True
-    except Exception as e:
-        logger.error("Unexpected error!", e)
-        raise exception.UnableToDeleteDirectoryError("Could not remove the original batch.py file.")
-    return False
-
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "root",
-    #          "rm",
-    #          "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py", "||", "true",
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to delete the batch.py file!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully deleted the batch.py file.")
-
-
-def copy_modified_batch_py_file() -> None:
-    """Copies the modified batch.py file to the WSL2.
-
-    Raises:
-        SubprocessExecutionError: If return code of subprocess is non-zero
-    """
-    tmp_batch_py_filepath_wsl: str = r"\\wsl$\almaColabfold9/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
-    tmp_batch_py_filepath_windows: str = f"{constants.PLUGIN_PATH}/pyssa_colabfold/colabfold_sub/batch.py"
-    try:
-        shutil.copy2(tmp_batch_py_filepath_windows, tmp_batch_py_filepath_wsl)
-    except Exception as e:
-        logger.error("Unexpected error!", e)
-        raise exception.UnableToCopyFileError("")
-    else:
-        logger.info("Successfully copied the modified batch.py file.")
-
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "root",
-    #          "cp",
-    #          f"{constants.PLUGIN_PATH_WSL_NOTATION}/pyssa_colabfold/colabfold_sub/batch.py",
-    #          "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py",
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to copy the modified batch.py file!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully copied the modified batch.py file.")
-
-
-def create_fasta_directory_in_wsl2(the_fasta_path: str) -> None:
-    """Creates the fasta directory inside the WSL2.
-
-    Raises:
-        IllegalArgumentError: If the argument is None.
-        SubprocessExecutionError: If return code of subprocess is non-zero.
-    """
-    # <editor-fold desc="Checks">
-    if the_fasta_path is None:
-        logger.error("The argument filename is illegal.")
-        raise exception.IllegalArgumentError("")
-
-    # </editor-fold>
-    try:
-        os.makedirs(the_fasta_path)
-    except Exception as e:
-        logger.error("Unexpected error!", e)
-        raise exception.UnableToCreateDirectoryError("")
-    else:
-        logger.info("Successfully created the fasta directory.")
-
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "rhel_user",
-    #          "mkdir", "-p", the_fasta_path,
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to create the fasta directory in WSL2!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully created the fasta directory.")
-
-
-def create_pdb_directory_in_wsl2(the_pdb_path: str) -> None:
-    """Creates the pdb directory inside the WSL2.
-
-    Raises:
-        IllegalArgumentError: If the argument is None.
-        SubprocessExecutionError: If return code of subprocess is non-zero
-    """
-    # <editor-fold desc="Checks">
-    if the_pdb_path is None:
-        logger.error("The argument filename is illegal.")
-        raise exception.IllegalArgumentError("")
-
-    # </editor-fold>
-
-    try:
-        os.makedirs(the_pdb_path)
-    except Exception as e:
-        logger.error("Unexpected error!", e)
-        raise exception.UnableToCreateDirectoryError("")
-    else:
-        logger.info("Successfully created the fasta directory.")
-
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "rhel_user",
-    #          "mkdir", "-p", the_pdb_path,
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to create the pdb directory in WSL2!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully created the pdb directory.")
-
-
-def copy_fasta_files_from_windows_to_wsl2(the_fasta_path: str) -> None:
-    """Copies fasta files from Windows host to WSL2.
-
-    Raises:
-        IllegalArgumentError: If an argument is None.
-        SubprocessExecutionError: If return code of subprocess is non-zero
-    """
-    # <editor-fold desc="Checks">
-    if the_fasta_path is None:
-        logger.error("The argument filename is illegal.")
-        raise exception.IllegalArgumentError("")
-
-    # </editor-fold>
-
-    tmp_fasta_files_path: str = f"{constants.PREDICTION_FASTA_DIR}/*.fasta"
-    try:
-        shutil.copytree(tmp_fasta_files_path, the_fasta_path)
-    except Exception as e:
-        logger.error("Unexpected error!", e)
-        raise exception.UnableToCopyFileError("")
-    else:
-        logger.info("Successfully copied the fasta files.")
-
-    # try:
-    #     subprocess.run(
-    #         ["wsl", "-d", "almaColabfold9",
-    #          "-u", "rhel_user",
-    #          "cp", "-r", f"{settings_dir_unix_notation}/scratch/local_predictions/fasta/*.fasta", the_fasta_path,
-    #          ], check=True,
-    #     )
-    # except subprocess.CalledProcessError:
-    #     message: str = "An error occurred while trying to copy the fasta files from Windows host to WSL2 filesystem!"
-    #     logger.error(message)
-    #     raise exception.SubprocessExecutionError(message)
-    # except Exception as e:
-    #     logger.error("Unexpected error!", e)
-    #     raise exception.SubprocessExecutionError(f"Unexpected error!: {e}")
-    # else:
-    #     logger.info("Successfully copied the fasta files.")

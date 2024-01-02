@@ -19,12 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module contains the stage dataclass."""
 from dataclasses import dataclass
 
 
 @dataclass
 class Stage:
-    """This class stores all gui elements of one stage in a specific form
+    """This class stores all gui elements of one stage in a specific form.
 
     Notes:
         List of valid keys for primary_elements dict:

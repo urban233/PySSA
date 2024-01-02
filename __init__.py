@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Init file for PySSA plugin."""
 import pathlib
 import sys
 import os
@@ -27,9 +28,10 @@ import os
 # this is necessary to be able to use import (submodules) statements
 
 # linux, macOS, Windows path
+pymol_root_path_win = "C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol"
 path_list = [
     f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/PySSA",
-    "C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA",
+    f"{pymol_root_path_win}\\pymol_path\\data\\startup\\PySSA",
 ]
 styles_path_list = [
     pathlib.Path(f"{path_list[0]}/pyssa/gui/ui/styles/styles.css"),
@@ -44,8 +46,8 @@ elif sys.platform.startswith("win32"):
     sys.path.append(path_list[1])
 
 
-def __init_plugin__(app=None):
-    """This function creates an entry in the PyMOL "Plugin" menu
+def __init_plugin__(app=None):  # noqa: ANN202, ANN001, N807
+    """This function creates an entry in the PyMOL "Plugin" menu.
 
     Args:
         app (optional):
@@ -61,7 +63,7 @@ def __init_plugin__(app=None):
 mainWindow = None
 
 
-def run_plugin_gui():
+def run_plugin_gui() -> None:
     """This function is the entry point for the plugin to start.
 
     Note:

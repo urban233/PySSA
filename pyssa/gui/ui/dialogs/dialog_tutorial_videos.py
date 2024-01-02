@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-""""""
+"""Module for the tutorial video dialog."""
 
 import os
 import pathlib
@@ -31,7 +31,14 @@ from pyssa.util import constants
 
 
 class TutorialVideosDialog(QtWidgets.QDialog):
-    def __init__(self, parent=None):
+    """Class for the tutorial video dialog."""
+
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
+        """Constructor.
+
+        Args:
+            parent: the parent.
+        """
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
@@ -51,7 +58,8 @@ class TutorialVideosDialog(QtWidgets.QDialog):
         # Hide help button
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
-    def populate_list_with_mp4_files(self):
+    def populate_list_with_mp4_files(self) -> None:
+        """Populates the list with all mp4 files of the tutorial directory."""
         # check if path exists
         if os.path.exists(constants.TUTORIAL_PATH):
             # fill list
@@ -60,8 +68,9 @@ class TutorialVideosDialog(QtWidgets.QDialog):
                     item = QtWidgets.QListWidgetItem(filename)
                     self.ui.list_tutorial_videos.addItem(item)
 
-    def load_file(self):
+    def load_file(self) -> None:
+        """Opens the selected file in the default video application."""
         tmp_video_filepath = pathlib.Path(
-            f"{constants.TUTORIAL_PATH}/{self.ui.list_tutorial_videos.currentItem().text()}"
+            f"{constants.TUTORIAL_PATH}/{self.ui.list_tutorial_videos.currentItem().text()}",
         )
         os.startfile(tmp_video_filepath)

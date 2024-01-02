@@ -19,17 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the gui page management class"""
-import PyQt5
-from PyQt5.QtWidgets import QListWidgetItem
-
-from pyssa.util import tools, gui_utils, constants
+"""Module for the gui page management class."""
+from PyQt5 import QtWidgets
+from pyssa.util import tools, gui_utils
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures.data_classes import stage
 
 
 class GuiPageManagement:
-    """This class is used to control gui elements on one page"""
+    """This class is used to control gui elements on one page."""
 
     """Var: elements_to_show is used to show gui elements after they where used -> shown after pressing a next button"""
     # this dict can to be expanded according to further needs
@@ -51,7 +49,7 @@ class GuiPageManagement:
     }
 
     def __init__(self, stages: list[stage.Stage]) -> None:
-        """Constructor
+        """Constructor.
 
         Args:
             stages:
@@ -59,7 +57,12 @@ class GuiPageManagement:
         """
         self.stages: list[stage.Stage] = stages
 
-    def show_stage_x(self, x: int):
+    def show_stage_x(self, x: int) -> None:
+        """Shows a specific gui stage.
+
+        Args:
+            x: the index of the gui stage to show.
+        """
         primary_elements_to_show = []
         control_elements_to_show = []
         primary_elements_to_hide = []
@@ -72,7 +75,8 @@ class GuiPageManagement:
                     if tmp_stage.primary_elements.__contains__(key):
                         if key.find("text") != -1:
                             gui_utils.disable_text_box(
-                                tmp_stage.primary_elements[key], tmp_stage.primary_elements[self.elements_to_show[key]]
+                                tmp_stage.primary_elements[key],
+                                tmp_stage.primary_elements[self.elements_to_show[key]],
                             )
                         primary_elements_to_show.append(tmp_stage.primary_elements[key])
                         primary_elements_to_show.append(tmp_stage.primary_elements[self.elements_to_show[key]])
@@ -88,7 +92,8 @@ class GuiPageManagement:
                 for key in self.elements_to_show:
                     if tmp_stage.primary_elements.__contains__(key):
                         gui_utils.enable_text_box(
-                            tmp_stage.primary_elements[key], tmp_stage.primary_elements[self.elements_to_show[key]]
+                            tmp_stage.primary_elements[key],
+                            tmp_stage.primary_elements[self.elements_to_show[key]],
                         )
                 for key in tmp_stage.primary_elements:
                     primary_elements_to_show.append(tmp_stage.primary_elements[key])
@@ -108,9 +113,13 @@ class GuiPageManagement:
         gui_utils.hide_gui_elements(control_elements_to_hide)
 
     def show_gui_elements_stage_x(
-        self, stages_to_show: list, stages_to_hide: list, hide_specific_elements=[], show_specific_elements=[]
-    ):
-        """Shows and hides precisely specific stages
+        self,
+        stages_to_show: list,
+        stages_to_hide: list,
+        hide_specific_elements: list = None,
+        show_specific_elements: list = None,
+    ) -> None:
+        """Shows and hides precisely specific stages.
 
         Args:
             stages_to_show:
@@ -122,6 +131,10 @@ class GuiPageManagement:
             show_specific_elements (optional):
                 list of pyqt widgets which should get shown
         """
+        if show_specific_elements is None:
+            show_specific_elements = []
+        if hide_specific_elements is None:
+            hide_specific_elements = []
         tmp_stages_to_show = []
         tmp_stages_to_hide = []
         for stage_number in stages_to_show:
@@ -157,7 +170,12 @@ class GuiPageManagement:
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
 
-    def enable_text_boxes_stage_x(self, stages_to_enable: list):
+    def enable_text_boxes_stage_x(self, stages_to_enable: list) -> None:
+        """Enables all text boxes of a certain stage.
+
+        Args:
+            stages_to_enable: List of stages to enable.
+        """
         tmp_stages_to_enable = []
         for stage_number in stages_to_enable:
             tmp_stages_to_enable.append(self.stages[stage_number])
@@ -165,10 +183,16 @@ class GuiPageManagement:
             for key in self.elements_to_show:
                 if tmp_stage.primary_elements.__contains__(key):
                     gui_utils.enable_text_box(
-                        tmp_stage.primary_elements[key], tmp_stage.primary_elements[self.elements_to_show[key]]
+                        tmp_stage.primary_elements[key],
+                        tmp_stage.primary_elements[self.elements_to_show[key]],
                     )
 
-    def disable_text_boxes_stage_x(self, stages_to_disable: list):
+    def disable_text_boxes_stage_x(self, stages_to_disable: list) -> None:
+        """Disables all text boxes of a certain stage.
+
+        Args:
+            stages_to_disable: List of stages to disable.
+        """
         tmp_stages_to_disable = []
         for stage_number in stages_to_disable:
             tmp_stages_to_disable.append(self.stages[stage_number])
@@ -176,10 +200,12 @@ class GuiPageManagement:
             for key in self.elements_to_show:
                 if tmp_stage.primary_elements.__contains__(key):
                     gui_utils.disable_text_box(
-                        tmp_stage.primary_elements[key], tmp_stage.primary_elements[self.elements_to_show[key]]
+                        tmp_stage.primary_elements[key],
+                        tmp_stage.primary_elements[self.elements_to_show[key]],
                     )
 
-    def disable_all_next_buttons(self):
+    def disable_all_next_buttons(self) -> None:
+        """Disables all next buttons."""
         for tmp_stage in self.stages:
             if tmp_stage.control_elements.keys().__contains__("next_button") is True:
                 tmp_stage.control_elements["next_button"].setEnabled(False)
@@ -189,7 +215,8 @@ class GuiPageManagement:
                 else:
                     print("No relevant button!")
 
-    def create_validation(self):
+    def create_validation(self) -> None:
+        """Creates validation."""
         for tmp_stage in self.stages:
             if (
                 tmp_stage.primary_elements.keys().__contains__("text_field_protein_name")
@@ -210,234 +237,37 @@ class GuiPageManagement:
                     tmp_stage.control_elements["next_button"],
                 )
 
-    def clear_all_text_boxes(self):
+    def clear_all_text_boxes(self) -> None:
+        """Clears all text boxes."""
         for tmp_stage in self.stages:
             for key in self.elements_to_show:
                 if tmp_stage.primary_elements.__contains__(key):
                     if key.find("text") != -1:
                         tmp_stage.primary_elements[key].clear()
 
-    def set_empty_string_in_label(self):
+    def set_empty_string_in_label(self) -> None:
+        """Sets empty strings in labels."""
         for tmp_stage in self.stages:
             for key in self.status_labels:
                 if tmp_stage.primary_elements.__contains__(key):
                     tmp_stage.primary_elements[key].clear()
 
     @staticmethod
-    def activate_specific_button(button):
+    def activate_specific_button(button: QtWidgets.QPushButton) -> None:
+        """Activates a specific button.
+
+        Args:
+            button: the button to activate.
+        """
         styles.color_button_ready(button)
         button.setEnabled(True)
 
     @staticmethod
-    def deactivate_specific_button(button):
+    def deactivate_specific_button(button: QtWidgets.QPushButton) -> None:
+        """Deactivates a specific button.
+
+        Args:
+            button: the button to deactivate.
+        """
         styles.color_button_not_ready(button)
         button.setEnabled(False)
-
-    # def __show_stage_x(self, x):
-    #     if len(self.stages) < x+1:
-    #         raise ValueError(f"The number of stages ({x}) is to low for this kind of operation!")
-    #     gui_elements_to_show = []
-    #
-    #     gui_utils.show_gui_elements(self.stages[x])
-    #     for stage in self.stages:
-    #         if stage is not self.stages[x]:
-    #             gui_utils.hide_gui_elements(stage)
-
-
-def show_analysis_page_stage_0(
-    monomer_prediction_analysis_management,
-    list_prot_1_chains,
-    lbl_prot_struct_1,
-    lbl_prot_struct_2,
-    list_prot_2_chains,
-    list_analysis_overview,
-    btn_remove_from_overview,
-    btn_add_to_overview,
-    no_of_first_stage,
-):
-    if lbl_prot_struct_1.text() != "Protein structure 1":
-        prot_1_name = lbl_prot_struct_1.text().replace(".pdb", "")
-        prot_1_chains = []
-        for chain in list_prot_1_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = lbl_prot_struct_2.text().replace(".pdb", "")
-        prot_2_chains = []
-        for chain in list_prot_2_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QListWidgetItem(analysis_name)
-        list_analysis_overview.addItem(item)
-    if list_analysis_overview.count() == 0:
-        monomer_prediction_analysis_management.show_stage_x(0 + no_of_first_stage)
-        btn_remove_from_overview.hide()
-    else:
-        gui_elements_to_show = [
-            btn_add_to_overview,
-            btn_remove_from_overview,
-        ]
-        monomer_prediction_analysis_management.show_gui_elements_stage_x(
-            [0 + no_of_first_stage, 4 + no_of_first_stage],
-            [1 + no_of_first_stage, 2 + no_of_first_stage, 3 + no_of_first_stage],
-            show_specific_elements=gui_elements_to_show,
-        )
-
-
-def show_analysis_page_stage_1(
-    monomer_prediction_analysis_management,
-    lbl_prot_struct_1,
-    lbl_prot_struct_2,
-    btn_remove_from_overview,
-    btn_add_to_overview,
-    no_of_first_stage,
-    fill_protein_boxes_batch,
-):
-    gui_elements_to_hide = [
-        btn_add_to_overview,
-        btn_remove_from_overview,
-    ]
-    monomer_prediction_analysis_management.show_gui_elements_stage_x(
-        [0 + no_of_first_stage, 1 + no_of_first_stage],
-        [2 + no_of_first_stage, 3 + no_of_first_stage, 4 + no_of_first_stage],
-        hide_specific_elements=gui_elements_to_hide,
-    )
-    fill_protein_boxes_batch()
-    lbl_prot_struct_1.setText("Protein structure 1")
-    lbl_prot_struct_2.setText("Protein structure 2")
-
-
-def show_analysis_page_stage_2(
-    app_project,
-    monomer_prediction_analysis_management,
-    lbl_prot_struct_1,
-    lbl_prot_struct_2,
-    box_prot_struct_1,
-    box_prot_struct_2,
-    lbl_prot_1_chains,
-    list_prot_1_chains,
-    btn_next,
-    btn_next_2,
-    btn_back,
-    no_of_first_stage,
-    table_prot_to_predict=None,
-    state=constants.ONLY_ANALYSIS,
-):
-    monomer_prediction_analysis_management.show_gui_elements_stage_x(
-        [0 + no_of_first_stage, 1 + no_of_first_stage, 2 + no_of_first_stage],
-        [3 + no_of_first_stage, 4 + no_of_first_stage],
-        hide_specific_elements=[box_prot_struct_1, box_prot_struct_2, btn_next, btn_back],
-    )
-    lbl_prot_struct_1.setText(box_prot_struct_1.currentText())
-    lbl_prot_struct_2.setText(box_prot_struct_2.currentText())
-    list_prot_1_chains.clear()
-    btn_next_2.setEnabled(False)
-
-    if state == constants.ONLY_ANALYSIS:
-        tmp_protein = app_project.search_protein(box_prot_struct_1.currentText())
-        for tmp_chain in tmp_protein.chains:
-            if tmp_chain.chain_type == "protein_chain":
-                list_prot_1_chains.addItem(tmp_chain.chain_letter)
-    elif state == constants.PREDICTION_ANALYSIS:
-        for i in range(table_prot_to_predict.rowCount()):
-            if table_prot_to_predict.verticalHeaderItem(i).text() == box_prot_struct_1.currentText():
-                list_prot_1_chains.addItem(table_prot_to_predict.item(i, 0).text())
-        if list_prot_1_chains.count() == 0:
-            tmp_protein = app_project.search_protein(box_prot_struct_1.currentText())
-            for tmp_chain in tmp_protein.chains:
-                if tmp_chain.chain_type == "protein_chain":
-                    list_prot_1_chains.addItem(tmp_chain.chain_letter)
-    else:
-        raise ValueError("Wrong optional argument.")
-
-    if list_prot_1_chains.count() == 1:
-        lbl_prot_1_chains.setText(f"Select chain in protein structure {lbl_prot_struct_1.text()}.")
-    else:
-        lbl_prot_1_chains.setText(f"Select chains in protein structure {lbl_prot_struct_1.text()}.")
-
-
-def show_analysis_page_stage_3(
-    app_project,
-    monomer_prediction_analysis_management,
-    list_analysis_overview,
-    btn_add,
-    btn_remove,
-    btn_next,
-    btn_back,
-    lbl_prot_struct_1,
-    lbl_prot_struct_2,
-    box_prot_struct_1,
-    box_prot_struct_2,
-    btn_next_2,
-    btn_back_2,
-    lbl_prot_2_chains,
-    list_prot_2_chains,
-    btn_next_3,
-    no_of_selected_chains,
-    no_of_first_stage,
-    table_prot_to_predict=None,
-    state=constants.ONLY_ANALYSIS,
-):
-    btn_next_3.setEnabled(False)
-    list_prot_2_chains.clear()
-    if state == constants.ONLY_ANALYSIS:
-        tmp_protein = app_project.search_protein(box_prot_struct_2.currentText())
-        for tmp_chain in tmp_protein.chains:
-            if tmp_chain.chain_type == "protein_chain":
-                list_prot_2_chains.addItem(tmp_chain.chain_letter)
-    elif state == constants.PREDICTION_ANALYSIS:
-        for i in range(table_prot_to_predict.rowCount()):
-            if table_prot_to_predict.verticalHeaderItem(i).text() == box_prot_struct_2.currentText():
-                list_prot_2_chains.addItem(table_prot_to_predict.item(i, 0).text())
-        if list_prot_2_chains.count() == 0:
-            tmp_protein = app_project.search_protein(box_prot_struct_2.currentText())
-            for tmp_chain in tmp_protein.chains:
-                if tmp_chain.chain_type == "protein_chain":
-                    list_prot_2_chains.addItem(tmp_chain.chain_letter)
-    else:
-        raise ValueError("Wrong optional argument.")
-
-    gui_elements_to_hide = [
-        box_prot_struct_1,
-        box_prot_struct_2,
-        btn_next,
-        btn_back,
-        btn_next_2,
-        btn_back_2,
-    ]
-    if no_of_selected_chains == 1:
-        # only one chain was selected
-        lbl_prot_2_chains.setText(
-            f"Please select {no_of_selected_chains} chain in protein structure {lbl_prot_struct_2.text()}."
-        )
-        list_prot_2_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.SingleSelection)
-        monomer_prediction_analysis_management.show_gui_elements_stage_x(
-            [0 + no_of_first_stage, 1 + no_of_first_stage, 2 + no_of_first_stage, 3 + no_of_first_stage],
-            [4 + no_of_first_stage],
-            hide_specific_elements=gui_elements_to_hide,
-        )
-    elif no_of_selected_chains > 1:
-        # multiple chains were selected
-        lbl_prot_2_chains.setText(
-            f"Please select {no_of_selected_chains} chains in protein structure {lbl_prot_struct_2.text()}."
-        )
-        list_prot_2_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        monomer_prediction_analysis_management.show_gui_elements_stage_x(
-            [0 + no_of_first_stage, 1 + no_of_first_stage, 2 + no_of_first_stage, 3 + no_of_first_stage],
-            [4 + no_of_first_stage],
-            hide_specific_elements=gui_elements_to_hide,
-        )
-    # else:
-    #     # no chains were selected
-    #     gui_elements_to_show = [
-    #         btn_add,
-    #         btn_remove,
-    #     ]
-    #     monomer_prediction_analysis_management.show_gui_elements_stage_x(
-    #         [0 + no_of_first_stage, 4 + no_of_first_stage], [1 + no_of_first_stage, 2 + no_of_first_stage, 3 + no_of_first_stage], show_specific_elements=gui_elements_to_show
-    #     )
-    #     prot_1_name = lbl_prot_struct_1.text().replace(".pdb", "")
-    #     prot_2_name = lbl_prot_struct_2.text().replace(".pdb", "")
-    #     analysis_name = f"{prot_1_name}_vs_{prot_2_name}"
-    #     item = QListWidgetItem(analysis_name)
-    #     list_analysis_overview.addItem(item)

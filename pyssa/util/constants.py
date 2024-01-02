@@ -31,7 +31,7 @@ PLUGIN_NAME = "PySSA"
 PLUGIN_PATH = globals.g_plugin_path
 PLUGIN_ROOT_PATH = globals.g_plugin_root_path
 PLUGIN_LOGO_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))
-VERSION_NUMBER = "v0.9.70"
+VERSION_NUMBER = "v0.9.71"
 PLUGIN_PATH_WSL_NOTATION = (
     "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
 )
@@ -91,7 +91,7 @@ UNINSTALL_LOCAL_COLABFOLD_DISTRO = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/bat
 COLABFOLD_PREDICT_SCRIPT_OLD = (
     f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
 )
-COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
+COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"  # noqa: E501
 INSTALLATION_COLABFOLD_SCRIPT_OLD = (
     f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
 )
@@ -106,30 +106,22 @@ COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT = (
     f"/mnt/c/Users/{os.getlogin()}/.pyssa/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
 )
 COLABFOLD_LOG_FILE_PATH = pathlib.Path(f"{PREDICTION_PDB_DIR}/log.txt")
-# COLABFOLD_PREDICT_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict.sh"
-# COLABFOLD_PREDICT_NO_TEMPLATES_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_templates.sh"
-# COLABFOLD_PREDICT_NO_AMBER_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber.sh"
-# COLABFOLD_PREDICT_NO_AMBER_AND_TEMPLATES_SCRIPT_OLD = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/colabfold_predict_no_amber_and_templates.sh"
-# INSTALLATION_COLABFOLD_SCRIPT = f"/mnt/c/Users/{os.getlogin()}/github_repos/{PLUGIN_NAME}/scripts/unix/installation_colabfold.sh"
 NOTEBOOK_RESULTS_ZIP_NAME = "prediction"
 
 current_time = datetime.datetime.now()
-LOG_FILENAME = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"
+LOG_FILENAME = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"  # noqa: E501
 LOG_FILEPATH = pathlib.Path(f"{SETTINGS_DIR}/logs/{LOG_FILENAME}")
 LOG_PATH = pathlib.Path(f"{SETTINGS_DIR}/logs")
 
 TUTORIAL_PATH = "C:\\ProgramData\\pyssa\\tutorials"
 DOCS_PATH = "C:\\ProgramData\\pyssa\\user_guide.pdf"
 
-# OFFICIAL_NOTEBOOK_NAME = "AlphaFold Colab"
-# OFFICIAL_NOTEBOOK_URL = "https://colab.research.google.com/github/deepmind/alphafold/blob/main/notebooks/AlphaFold.ipynb#scrollTo=rowN0bVYLe9n"
-# NOTEBOOK_URL = "https://colab.research.google.com/drive/1bJXKZ9Fva7Rk0E4z5nS2wPdwwdnEevxb#scrollTo=CcOzpV-SHPrS"
 REMOVE_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/remove_wsl_env.ps1")
 ADD_WSL_POWERSHELL = pathlib.Path(f"{PLUGIN_ROOT_PATH}/scripts/powershell/add_wsl_env.ps1")
 # Constants for config file
 # TODO: uncomment constant below before deployment
 # WSL_CONF_PATH = f"/mnt/c/Users/{os.getlogin()}/AppData/Roaming/pymol/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
-WSL_CONF_PATH = f"/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"
+WSL_CONF_PATH = f"/mnt/c/ProgramData/pyssa/plugin/Miniconda3/envs/pyssa_colab/Lib/site-packages/pymol/pymol_path/data/startup/{PLUGIN_NAME}/config/wsl/wsl.conf"  # noqa: E501
 WSL_DISTRO_NAME = "UbuntuColabfold"
 WSL_STORAGE_PATH = pathlib.Path("C:\\ProgramData\\pyssa\\wsl\\UbuntuColabfold")
 # WSL_DISTRO_IMPORT_PATH = pathlib.Path(f"C:/Users/{os.getlogin()}/.pyssa/{WSL_DISTRO_NAME}.tar")

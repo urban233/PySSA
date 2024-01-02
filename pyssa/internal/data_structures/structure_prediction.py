@@ -25,8 +25,6 @@ import pathlib
 import shutil
 import logging
 
-from PyQt5 import QtWidgets
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
@@ -37,12 +35,7 @@ from pyssa.util import constants
 from pyssa.util import prediction_util
 from pyssa.util import exception
 from pyssa.io_pyssa import path_util
-from typing import TYPE_CHECKING
 from pyssa.logging_pyssa import log_handlers
-from pyssa.logging_pyssa import loggers
-
-if TYPE_CHECKING:
-    from pyssa.internal.data_structures import project
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -73,18 +66,16 @@ class StructurePrediction:
         prediction_config: prediction_configuration.PredictionConfiguration,
         current_project: "project.Project",
     ) -> None:
+        """Constructor.
+
+        Args:
+            predictions: a list of prediction protein infos.
+            prediction_config: the configuration settings for the prediction.
+            current_project: the current project in use.
+        """
         self.predictions: list[prediction_protein_info.PredictionProteinInfo] = predictions
         self.prediction_configuration = prediction_config
         self.project = current_project
-        loggers.log_multiple_variable_values(
-            logger,
-            "Constructor",
-            [
-                ("predictions", self.predictions),
-                ("prediction_configuration", self.prediction_configuration),
-                ("project", self.project),
-            ],
-        )
 
     @staticmethod
     def create_tmp_directories() -> None:
@@ -106,7 +97,7 @@ class StructurePrediction:
         """
         try:
             protein_objects: list[protein.Protein] = data_transformer.transform_protein_name_seq_tuple_to_sequence_obj(
-                self.predictions
+                self.predictions,
             )
         except exception.IllegalArgumentError:
             logger.error("Invalid argument")
@@ -116,7 +107,7 @@ class StructurePrediction:
             raise exception.FastaFilesNotCreatedError("")
 
         logger.debug(
-            f"Variable: protein_sequences; Value: {protein_objects} in function create_fasta_files_for_prediction"
+            f"Variable: protein_sequences; Value: {protein_objects} in function create_fasta_files_for_prediction",
         )
 
         for tmp_protein_to_predict in protein_objects:
@@ -147,7 +138,7 @@ class StructurePrediction:
         except exception.IllegalArgumentError:
             logger.error(
                 f"The Prediction configuration: ({self.prediction_configuration.amber_force_field}, "
-                f"{self.prediction_configuration.amber_force_field}) is invalid!"
+                f"{self.prediction_configuration.amber_force_field}) is invalid!",
             )
             raise exception.PredictionEndedWithError("")
         except exception.PredictionEndedWithError:
@@ -178,7 +169,7 @@ class StructurePrediction:
                 logger.error(
                     "This path does not exists: %s",
                     path_util.FilePath(
-                        f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"
+                        f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}",
                     ).get_filepath(),
                 )
                 raise FileNotFoundError()
@@ -186,7 +177,7 @@ class StructurePrediction:
             os.rename(src.get_filepath(), dest)
             logger.debug(tmp_prediction[0].name)
             self.project.add_existing_protein(
-                protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest))
+                protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)),
             )
             logger.debug(self.project.proteins)
         try:

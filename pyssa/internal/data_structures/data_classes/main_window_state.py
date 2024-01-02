@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module contains the MainWindowState dataclass."""
 from dataclasses import dataclass
 from pyssa.internal.data_structures.data_classes import results_state, image_state
 

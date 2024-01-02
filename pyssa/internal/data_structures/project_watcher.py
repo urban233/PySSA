@@ -19,14 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the project watcher class which is hard coded based on pyssa"""
+"""Module for the project watcher class which is hard coded based on pyssa."""
+import pathlib
+
 from pyssa.internal.data_structures import project
 from pyssa.util import gui_utils
 from pyssa.util import tools
 
 
 class ProjectWatcher:
-    """A watcher class that observes the project status
+    """A watcher class that observes the project status.
 
     Attributes:
         current_project:
@@ -38,19 +40,32 @@ class ProjectWatcher:
 
     """
 
-    def __init__(self, current_project: project.Project, no_of_pdb_files=0, no_of_results=0, make_images=False):
+    def __init__(
+        self,
+        current_project: "project.Project",
+        no_of_pdb_files: int = 0,
+        no_of_results: int = 0,
+        make_images: bool = False,
+    ) -> None:
+        """Constructor.
+
+        Args:
+            current_project: the current project.
+            no_of_pdb_files: the number of pdb files in the current project.
+            no_of_results: the number of results in the current project.
+            make_images: a flag whether images should be generated or not.
+        """
         self.current_project: project.Project = current_project
         self.no_of_pdb_files: int = no_of_pdb_files
         self.no_of_results: int = no_of_results
         self.make_images: bool = make_images
         self.on_home_page: bool = True
 
-    def show_valid_options(self, ui):
-        """This function shows all valid options based on the number of pdb files and results in the project
+    def show_valid_options(self, ui) -> None:  # noqa: ANN001 #TODO: needs to be checked
+        """This function shows all valid options based on the number of pdb files and results in the project.
 
         Args:
-            ui:
-                ui variable of the Qt main window
+            ui: an ui variable of the Qt main window
 
         Notes:
             This function counts the pdb files and results automatically!
@@ -226,7 +241,13 @@ class ProjectWatcher:
                 gui_elements_to_show.append(ui.btn_image_analysis_page)
             gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
 
-    def check_workspace_for_projects(self, workspace, ui):
+    def check_workspace_for_projects(self, workspace: pathlib.Path, ui) -> None:  # noqa: ANN001
+        """Checks the workspace for any projects.
+
+        Args:
+            workspace: the path to the workspace.
+            ui: an instance of the PySSA ui class.
+        """
         if len(tools.scan_workspace_for_valid_projects(workspace, ui.list_delete_projects)) > 0:
             ui.btn_delete_page.show()
             ui.btn_open_page.show()
@@ -234,8 +255,8 @@ class ProjectWatcher:
             ui.btn_delete_page.hide()
             ui.btn_open_page.hide()
 
-    def count_proteins_in_project(self):
-        """This function counts the number of pdb files in the project pdb directory
+    def count_proteins_in_project(self) -> None:
+        """Counts the number of pdb files in the project pdb directory.
 
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!
@@ -245,8 +266,8 @@ class ProjectWatcher:
         else:
             self.no_of_pdb_files = None
 
-    def count_results(self):
-        """This function counts the number of results in the project
+    def count_results(self) -> None:
+        """Counts the number of results in the project.
 
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!
@@ -256,15 +277,16 @@ class ProjectWatcher:
         else:
             self.no_of_results = None
 
-    def check_images(self):
+    def check_images(self) -> None:
+        """Checks if images are within the project."""
         for tmp_protein_pair in self.current_project.protein_pairs:
             if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
                 self.make_images = True
                 return
         self.make_images = False
 
-    def count_images(self):
-        """This function counts the number of images in the project
+    def count_images(self) -> None:
+        """This function counts the number of images in the project.
 
         Notes:
             You do NOT need to use this function before using "show_valid_options"!!

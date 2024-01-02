@@ -40,14 +40,18 @@ def check_operating_system() -> None:
     """Checks operating system and sets plugin path based upon operating system."""
     if sys.platform.startswith("win32"):
         # Windows path
+        tmp_pymol_root_path: str = (
+            "C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol"  # noqa: E501
+        )
         globals.g_os = "win32"
         globals.g_plugin_path = pathlib.Path(
-            f"C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}",
+            f"{tmp_pymol_root_path}\\pymol_path\\data\\startup\\{constants.PLUGIN_NAME}",
         )
     elif sys.platform.startswith("linux"):
         # Linux path
+        tmp_linux_pymol_plugin_root_path: str = f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup"  # noqa: E501
         globals.g_os = "linux"
-        globals.g_plugin_path = f"/home/{os.getlogin()}/.local/pyssa/pyssa-mamba-env/lib/python3.10/site-packages/pmg_tk/startup/{constants.PLUGIN_NAME}"
+        globals.g_plugin_path = f"{tmp_linux_pymol_plugin_root_path}/{constants.PLUGIN_NAME}"
 
     constants.PYSSA_LOGGER.info(f"Started on platform: {globals.g_os}")
 

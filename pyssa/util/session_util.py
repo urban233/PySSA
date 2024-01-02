@@ -26,7 +26,8 @@ from pymol import cmd
 from pyssa.gui.ui.messageboxes import basic_boxes
 
 
-def check_if_sele_is_empty():
+def check_if_sele_is_empty() -> None:
+    """Checks if a selection is empty."""
     try:
         tmp_selection = cmd.get_model("sele")
     except pymol.CmdException:

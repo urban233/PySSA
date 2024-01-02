@@ -35,7 +35,18 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def get_all_filepaths_from_project(app_project: "project.Project", subfolder, extension):
+def get_all_filepaths_from_project(
+    app_project: "project.Project",
+    subfolder: str,
+    extension: str,
+) -> list["path_util.FilePath"]:
+    """Gets all filepaths from a given project.
+
+    Args:
+        app_project: the app project to get the filepaths from.
+        subfolder: the subfolder to search in.
+        extension: the extension to search for.
+    """
     tmp_dirnames = []
     folder = os.path.join(app_project.folder_paths["project"], subfolder)
     if len(os.listdir(folder)) > 0:
@@ -51,17 +62,21 @@ def get_all_filepaths_from_project(app_project: "project.Project", subfolder, ex
     return filepaths
 
 
-def get_all_protein_json_filepaths_from_project(app_project: "project.Project"):
+def get_all_protein_json_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
+    """Gets all protein json filepaths from a given project."""
     return get_all_filepaths_from_project(app_project, "proteins", ".objects")
 
 
-def get_all_pdb_filepaths_from_project(app_project: "project.Project"):
+def get_all_pdb_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
+    """Gets all protein pdb filepaths from a given project."""
     return get_all_filepaths_from_project(app_project, "proteins", "pdb")
 
 
-def get_all_protein_pair_json_filepaths_from_project(app_project: "project.Project"):
+def get_all_protein_pair_json_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
+    """Gets all protein pair json filepaths from a given project."""
     return get_all_filepaths_from_project(app_project, "protein_pairs", ".objects")
 
 
-def get_all_distance_analysis_json_filepaths_from_project(app_project: "project.Project"):
-    return get_all_filepaths_from_project(app_project, pathlib.Path("analysis/distance_analysis"), ".objects")
+def get_all_distance_analysis_json_filepaths_from_project(app_project: "project.Project") -> list["path_util.FilePath"]:
+    """Gets all distance analysis json filepaths from a given project."""
+    return get_all_filepaths_from_project(app_project, str(pathlib.Path("analysis/distance_analysis")), ".objects")

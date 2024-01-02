@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main window of the pyssa plugin."""
-import collections
 import logging
 import os
 import shutil
@@ -28,7 +27,6 @@ import subprocess
 import sys
 import pathlib
 import csv
-import requests
 import numpy as np
 import pymol
 import re
@@ -63,15 +61,16 @@ from pyssa.internal.data_structures.data_classes import stage
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.data_structures.data_classes import main_window_state
 from pyssa.internal.data_structures.data_classes import results_state
-from pyssa.internal.portal import graphic_operations, pymol_io
-from pyssa.internal.thread import workers
+from pyssa.internal.portal import graphic_operations
+from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import task_workers
 
 from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 
-from pyssa.util import pyssa_keys, workspace_util, main_window_util
+from pyssa.util import pyssa_keys
+from pyssa.util import main_window_util
 from pyssa.util import exit_codes
 from pyssa.util import globals
 from pyssa.util import protein_pair_util
@@ -82,7 +81,6 @@ from pyssa.util import input_validator
 from pyssa.util import gui_page_management
 from pyssa.util import tools
 from pyssa.util import gui_utils
-from pyssa.util.void import rvoid
 
 
 if TYPE_CHECKING:
@@ -175,6 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
             QtWidgets.QApplication.restoreOverrideCursor()
 
         globals.g_settings = main_window_util.setup_app_settings(self.app_settings)
+        self.app_settings = globals.g_settings
         # </editor-fold>
 
         main_window_util.check_version_number()
@@ -214,6 +213,9 @@ class MainWindow(QtWidgets.QMainWindow):
         tools.create_directory(constants.SETTINGS_DIR, "scratch")
         self._setup_default_configuration()
 
+        if len(os.listdir(constants.LOG_PATH)) > 0:
+            self.open_change_log()
+
         constants.PYSSA_LOGGER.info("Setup rest of GUI related elements ...")
 
         # <editor-fold desc="GUI page management">
@@ -234,36 +236,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._create_results_management()
         self._create_monomer_prediction_analysis_management()
         self._create_multimer_prediction_analysis_management()
-
-        # </editor-fold>
-
-        # <editor-fold desc="Worker definitions">
-        self.worker_prediction = workers.PredictionWorkerPool(
-            self.ui.table_pred_analysis_mono_prot_to_predict,
-            self.prediction_configuration,
-            self.app_project,
-        )
-        self.worker_prediction.signals.finished.connect(self.post_prediction_process)
-
-        self.worker_analysis = workers.AnalysisWorkerPool(
-            self.ui.list_analysis_batch_overview,
-            self.ui.cb_analysis_images,
-            self.status_bar,
-            self.app_project,
-            self.app_settings,
-            self._init_batch_analysis_page,
-        )
-        self.worker_analysis.signals.finished.connect(self.post_analysis_process)
-        self.worker_analysis.setAutoDelete(True)
-
-        self.worker_image_creation = workers.BatchImageWorkerPool(
-            self.ui.list_analysis_images_struct_analysis,
-            self.ui.list_analysis_images_creation_struct_analysis,
-            self.status_bar,
-            self.app_project,
-        )
-        self.worker_image_creation.signals.finished.connect(self.post_image_creation_process)
-        self.worker_image_creation.setAutoDelete(True)
 
         # </editor-fold>
 
@@ -299,13 +271,12 @@ class MainWindow(QtWidgets.QMainWindow):
             pyssa_keys.SESSION_SPEC_BG_COLOR: [0, ""],
         }
 
-        # setup defaults for pages
+        # <editor-fold desc="Setup defaults for pages">
         self._init_fill_combo_boxes()
         self._init_new_page()
         self._init_use_page()
         self._init_local_pred_mono_page()
         self._init_local_pred_multi_page()
-        # self._init_sequence_vs_pdb_page()
         self._init_single_analysis_page()
         self._init_batch_analysis_page()
         self.ui.action_toggle_notebook_visibility.setVisible(False)
@@ -322,29 +293,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.table_pred_analysis_multi_prot_to_predict.NoEditTriggers,
         )
 
-        # connections
-        self._connect_all_gui_elements()
-        # create tooltips
-        self._create_all_tooltips()
-        self._project_watcher.show_valid_options(self.ui)
-        self._project_watcher.check_workspace_for_projects(self.workspace_path, self.ui)
-        self.project_scanner = filesystem_io.ProjectScanner(self.app_project)
-        # sets threadpool
-        self.threadpool = QtCore.QThreadPool()
-        # create scratch and cache dir
-        try:
-            shutil.rmtree(constants.SCRATCH_DIR)
-        except Exception as e:
-            constants.PYSSA_LOGGER.warning(f"Scratch path could not be deleted. {e}")
-        filesystem_helpers.create_directory(constants.SCRATCH_DIR)
-        filesystem_helpers.create_directory(constants.CACHE_DIR)
-
-        if self.app_settings.wsl_install == 1 and self.app_settings.local_colabfold == 0:
-            self.ui.action_install_from_file.setVisible(True)
-        else:
-            self.ui.action_install_from_file.setVisible(False)
-
-        # temp gui changes (need to be changed in the designer)
+        # TODO: temp gui changes (need to be changed in the designer)
         self.ui.lbl_hotspots_resi_show.setText("Residue(s) as sticks")
         self.ui.lbl_hotspots_resi_hide.setText("Residue(s) as sticks")
 
@@ -353,6 +302,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.action_help_docs_pdf.setVisible(True)
         self.ui.action_help_docs.setText("Tutorials")
         self.ui.action_help_docs.setVisible(True)
+
+        if self.app_settings.wsl_install == 1 and self.app_settings.local_colabfold == 0:
+            self.ui.action_install_from_file.setVisible(True)
+        else:
+            self.ui.action_install_from_file.setVisible(False)
+        # </editor-fold>
+
+        self._connect_all_gui_elements()
+        self._create_all_tooltips()
+
+        self._project_watcher.show_valid_options(self.ui)
+        self._project_watcher.check_workspace_for_projects(self.workspace_path, self.ui)
+        self.project_scanner = filesystem_io.ProjectScanner(self.app_project)
+
+        self.threadpool = QtCore.QThreadPool()
+        # create scratch and cache dir
+        try:
+            filesystem_helpers.delete_directory(constants.SCRATCH_DIR)
+        except Exception as e:
+            constants.PYSSA_LOGGER.warning(f"Scratch path could not be deleted. {e}")
+        filesystem_helpers.create_directory(constants.SCRATCH_DIR)
+        filesystem_helpers.create_directory(constants.CACHE_DIR)
+
         # sets additional parameters
         self.ui.lbl_logo.setPixmap(
             QtGui.QPixmap(str(pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))),
@@ -360,10 +332,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("PySSA")
         constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
-        if len(os.listdir(constants.LOG_PATH)) > 0:
-            self.open_change_log()
 
-    def start_worker_thread(self, worker_obj, post_process_func):
+    def start_worker_thread(self, worker_obj: object, post_process_func) -> None:  # noqa: ANN001
+        """Sets up the worker, moves the worker to a thread and starts the thread.
+
+        Args:
+            worker_obj: an object of type <work>Worker (QObject).
+            post_process_func: a function which sould be executed if the worker is finished.
+        """
         self.tmp_thread = QtCore.QThread()
         self.tmp_worker = worker_obj
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, post_process_func)
@@ -911,7 +887,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.action_help_about.triggered.connect(self.open_about)
         self.ui.action_settings_open_logs.triggered.connect(self.open_logs)
         self.ui.action_settings_clear_logs.triggered.connect(self.clear_all_log_files)
-        self.ui.action_help_changelog.triggered.connect(self.open_constant_change_log)
+        self.ui.action_help_changelog.triggered.connect(self.open_release_notes_in_standard_application)
         # </editor-fold>
 
         self.ui.btn_info.clicked.connect(self.open_page_information)
@@ -1052,29 +1028,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.table_pred_multi_prot_to_predict.itemSelectionChanged.connect(
             self.local_pred_multi_prot_to_predict_item_changed,
         )
-        # self.ui.btn_local_pred_multi_single.clicked.connect(self.show_local_pred_multi_stage_protein_name)
-        # self.ui.btn_local_pred_multi_back_prediction_mode.clicked.connect(self.show_local_pred_multi_stage_prediction_mode)
-        # # single connections
-        # self.ui.btn_local_pred_multi_next.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
-        # self.ui.btn_local_pred_multi_back.clicked.connect(self.show_local_pred_multi_stage_protein_name)
-        # self.ui.btn_local_pred_multi_next_2.clicked.connect(self.show_local_pred_multi_stage_prediction_single)
-        # self.ui.btn_local_pred_multi_back_2.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_single)
-        # # batch connections
-        # self.ui.btn_local_pred_multi_batch.clicked.connect(self.show_local_pred_multi_stage_protein_sequence_batch)
-        # #self.ui.btn_local_pred_multi_back_3.clicked.connect(self.hide_protein_sequence_stage_batch)
-        # # text fields
-        # self.ui.txt_local_pred_multi_protein_name.textChanged.connect(self.validate_local_pred_multi)
-        # self.ui.txt_local_pred_multi_prot_seq.textChanged.connect(self.validate_local_pred_multi)
-        # single analysis page
-        # self.ui.btn_analysis_next.clicked.connect(self.show_single_analysis_stage_1)
-        # self.ui.btn_analysis_next_2.clicked.connect(self.show_single_analysis_stage_2)
-        # self.ui.btn_analysis_back.clicked.connect(self.show_single_analysis_stage_0)
-        # self.ui.btn_analysis_back_2.clicked.connect(self.show_single_analysis_stage_1)
-        # self.ui.btn_analysis_start.clicked.connect(self.start_process)
-        # self.ui.box_analysis_prot_struct_1.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
-        # self.ui.box_analysis_prot_struct_2.currentIndexChanged.connect(self.check_if_prot_structs_are_filled)
-        # self.ui.list_analysis_ref_chains.itemSelectionChanged.connect(self.count_selected_chains_for_prot_struct_1)
-        # self.ui.list_analysis_model_chains.itemSelectionChanged.connect(self.check_if_same_no_of_chains_selected)
         # </editor-fold>
 
         # <editor-fold desc="Monomer Prediction + Analysis page">
@@ -1709,7 +1662,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self._init_use_page()
 
-    def post_display_use_page(self, return_value) -> None:
+    def post_display_use_page(self, return_value) -> None:  # noqa: ANN001
         """Displays the use project page, after cpu intense task (post thread method).
 
         Args:
@@ -1875,16 +1828,28 @@ class MainWindow(QtWidgets.QMainWindow):
         tmp_dialog = dialog_help.DialogHelp(html_content)
         tmp_dialog.exec_()
 
-    def open_constant_change_log(self):
+    @staticmethod
+    def open_release_notes_in_standard_application() -> None:
+        """Opens the release notes in the default app."""
         os.startfile(constants.CHANGELOG_HTML_PATH)
 
     def open_change_log(self) -> None:
-        last_version = f"v{self.get_version_from_latest_log_file(self.get_latest_log_file())}"
-        if last_version != constants.VERSION_NUMBER:
-            os.startfile(constants.CHANGELOG_HTML_PATH)
+        """Opens change log based on the last run pyssa version.
 
-    def get_version_from_latest_log_file(self, a_filepath) -> str:
-        with open(a_filepath, "r", encoding="utf-8") as file:
+        Notes:
+            Change log opens only if the last pyssa version is older than the current one.
+        """
+        last_version = f"v{self.get_version_from_latest_log_file(self.get_filepath_of_latest_log_file())}"
+        if last_version != constants.VERSION_NUMBER:
+            self.open_release_notes_in_standard_application()
+
+    def get_version_from_latest_log_file(self, a_filepath: pathlib.Path) -> str:
+        """Gets the pyssa version of the latest log file.
+
+        Args:
+            a_filepath: the filepath to the latest log file.
+        """
+        with open(str(a_filepath), "r", encoding="utf-8") as file:
             file_content = file.read()
             file.close()
         # Define the regex pattern to extract the version number
@@ -1900,7 +1865,7 @@ class MainWindow(QtWidgets.QMainWindow):
             version_number = None
         return version_number
 
-    def get_latest_log_file(self) -> str:
+    def get_filepath_of_latest_log_file(self) -> pathlib.Path:
         """Gets the filepath of the latest log file.
 
         Raises:
@@ -1916,8 +1881,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Get the full path of each log file
         log_files_paths = [os.path.join(constants.LOG_PATH, f) for f in log_files]
         # Get the latest log file based on modification time
-        latest_log_file = max(log_files_paths, key=os.path.getmtime)
-        return latest_log_file
+        latest_log_file_index = log_files_paths.index(max(log_files_paths, key=os.path.getmtime)) - 1
+        return pathlib.Path(log_files_paths[latest_log_file_index])
 
     # <editor-fold desc="New project page functions">
     def show_add_reference(self) -> None:
@@ -2412,7 +2377,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar.showMessage(self.workspace.text())
         # list all proteins from pdb directory
         gui_utils.fill_list_view_with_protein_names(self.app_project, self.ui.list_view_project_proteins)
-        # self.project_scanner.scan_project_for_valid_proteins(list_view_project_proteins=self.ui.list_view_project_proteins)
 
         tools.switch_page(self.ui.stackedWidget, self.ui.lbl_page_title, 11, "View proteins of current project")
         self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self.ui.btn_view_page)
@@ -2602,7 +2566,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # new_project.create_project_tree()
         self.app_project = new_project
 
-    def create_use_project(self, proteins_for_new_project) -> None:
+    def create_use_project(self, proteins_for_new_project) -> None:  # noqa: ANN001
         """Post thread method.
 
         Args:
@@ -2647,7 +2611,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         QtWidgets.QMessageBox.Warning,
                     )
                     return
-                elif self.app_settings.local_colabfold == 0:
+                elif self.app_settings.local_colabfold == 0:  # noqa: RET505
                     basic_boxes.ok(
                         "Create new project",
                         "Please install local colabfold to import this project!",
@@ -3018,7 +2982,7 @@ class MainWindow(QtWidgets.QMainWindow):
             styles.color_button_ready(self.ui.btn_esm_predict)
             self.ui.btn_esm_predict.setEnabled(True)
 
-    def post_predict_esm_monomer(self, output) -> None:
+    def post_predict_esm_monomer(self, output) -> None:  # noqa: ANN001
         """Post thread method, for the prediction process.
 
         Args:
@@ -4147,7 +4111,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
-            return
         else:
             print("Unexpected Error.")
             self.block_box_prediction.close()
@@ -4736,19 +4699,9 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         else:
             self.ui.lbl_pred_analysis_mono_model_chains.setText(
-                f"Select {len(self.ui.list_pred_analysis_mono_model_chains.selectedItems())} chains in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
+                f"Select {len(self.ui.list_pred_analysis_mono_model_chains.selectedItems())} chains "
+                f"in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
             )
-
-        # tmp_protein = self.app_project.search_protein(self.ui.box_pred_analysis_mono_prot_struct_2.currentText())
-        # for tmp_chain in tmp_protein.chains:
-        #     if tmp_chain.chain_type == "protein_chain":
-        #         self.ui.list_pred_analysis_mono_model_chains.addItem(tmp_chain.chain_letter)
-        # if len(self.ui.list_pred_analysis_mono_ref_chains.selectedItems()) == 1:
-        #     self.ui.lbl_pred_analysis_mono_model_chains.setText(
-        #         f"Select 1 chain in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.")
-        # else:
-        #     self.ui.lbl_pred_analysis_mono_model_chains.setText(
-        #         f"Select {len(self.ui.list_pred_analysis_mono_ref_chains.selectedItems())} chains in protein structure {self.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.")
 
     def mono_pred_analysis_structure_analysis_back_4(self) -> None:
         """Hides the gui elements to select the chains in protein 1."""
@@ -5084,10 +5037,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Sets up the worker for the prediction of the proteins."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        # self.worker_prediction_analysis = workers.PredictionWorkerPool(self.ui.table_pred_analysis_mono_prot_to_predict,
-        #                                                               self.prediction_configuration, self.app_project)
         constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        # self.threadpool.start(self.worker_prediction_analysis)
 
         # <editor-fold desc="Worker setup">
         # TODO: test code below
@@ -5127,7 +5077,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
-            return
         else:
             print("Unexpected Error.")
             self.block_box_prediction.close()
@@ -6180,7 +6129,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
-            return
         else:
             print("Unexpected Error.")
             self.block_box_prediction.close()
@@ -6786,8 +6734,13 @@ class MainWindow(QtWidgets.QMainWindow):
         """Shows the combo box of protein pairs."""
         self.results_management.show_stage_x(0)
 
-    def show_results_interactions(self, gui_elements_to_show=None, gui_elements_to_hide=None) -> None:
-        """Shows the gui elements of the results page."""
+    def show_results_interactions(self, gui_elements_to_show: list = None, gui_elements_to_hide: list = None) -> None:
+        """Shows the gui elements of the results page.
+
+        Args:
+            gui_elements_to_show: a list of gui elements which should get displayed.
+            gui_elements_to_hide: a list of gui elements which should get hidden.
+        """
         if gui_elements_to_hide is not None:
             self.results_management.show_gui_elements_stage_x(
                 [0, 1],
@@ -6828,7 +6781,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status_bar.showMessage(f"Loading results of {self.results_name} ...")
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
 
-    def load_results(self, images_type) -> None:
+    def load_results(self, images_type) -> None:  # noqa: ANN001
         """Loads the results of the selected protein pair.
 
         Args:
@@ -7126,20 +7079,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.distance_plot_dialog.setWindowModality(Qt.WindowModal)
         self.is_distance_plot_open = True
         self.distance_plot_dialog.exec_()
-        # try:
-        #     protein_pair_of_analysis = self.app_project.search_protein_pair(self.ui.cb_results_analysis_options.currentText())
-        #     dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
-        #     dialog.exec_()
-        # except:
-        #     constants.PYSSA_LOGGER.error("The distance plot could not be created, due to an known bug.")
-        #     basic_boxes.ok("Display distance plot", "There was a problem with the display of the distance plot.\n"
-        #                                             "Try closing the project, or restarting the application.", QtWidgets.QMessageBox.Error)
 
     def display_distance_histogram(self) -> None:
         """Opens a window which displays the distance histogram."""
-        # item = self.ui.project_list.selectedItems()
-        # if item is None:
-        #     raise ValueError
         if self.is_distance_plot_open:
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
@@ -7158,7 +7100,7 @@ class MainWindow(QtWidgets.QMainWindow):
         label = QtWidgets.QLabel(self)
         file_name = self.ui.list_results_interest_regions.currentItem().text()
         pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{file_name}")
-        # TO-DO: Create setting for min. image size
+        # TODO: Create setting for min. image size
         pixmap = pixmap.scaled(450, 450, transformMode=QtCore.Qt.SmoothTransformation)
         label.setPixmap(pixmap)
         label.setScaledContents(True)
@@ -7286,10 +7228,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.ui.box_manage_choose_bg_color,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
+            tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
             if (
                 cmd.select(
                     name="disulfides",
-                    selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)",
+                    selection=f"{self.ui.box_manage_choose_protein.currentText()} & {tmp_pymol_selection_option}",
                 )
                 > 0
             ):
@@ -7355,9 +7298,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def show_disulfid_bonds_as_sticks(self) -> None:
         """Shows all disulfid bonds within the pymol session."""
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         cmd.select(
             name="disulfides",
-            selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)",
+            selection=f"{self.ui.box_manage_choose_protein.currentText()} & {tmp_pymol_selection_option}",
         )
         cmd.color(color="atomic", selection="disulfides and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
@@ -7366,9 +7310,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def hide_disulfid_bonds_as_sticks(self) -> None:
         """Hides all disulfid bonds within the pymol session."""
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         cmd.select(
             name="disulfides",
-            selection=f"{self.ui.box_manage_choose_protein.currentText()} & byres (resn CYS and name SG) within 2 of (resn CYS and name SG)",
+            selection=f"{self.ui.box_manage_choose_protein.currentText()} & {tmp_pymol_selection_option}",
         )
         cmd.hide("sticks", "disulfides")
 

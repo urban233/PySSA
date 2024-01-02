@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module containing a specific FilePath class."""
 import logging
 import os.path
 import pathlib
@@ -29,7 +30,6 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-# TODO: create docstrings and checks
 class FilePath:
     """This class is a hybrid class of pathlib.Path and QtCore.QFileInfo."""
 
@@ -57,7 +57,7 @@ class FilePath:
 
     # </editor-fold>
 
-    def __init__(self, filepath) -> None:
+    def __init__(self, filepath: pathlib.Path) -> None:
         """Constructor.
 
         Args:
@@ -66,7 +66,7 @@ class FilePath:
         Raises:
             FileNotFoundError if given filepath does not exists
         """
-        if os.path.exists(filepath):
+        if os.path.exists(str(filepath)):
             # complete file path was given
             self._filepath = filepath
             self._dirname, self._basename = self.split_filepath()
@@ -75,34 +75,32 @@ class FilePath:
             raise FileNotFoundError("You need to pass an existing filepath!")
 
     def split_filepath(self) -> tuple[pathlib.Path, str]:
+        """Split the filepath in path to the parent directory and the actual filepath."""
         string_version = str(self._filepath)
         file_info = QtCore.QFileInfo(string_version)
         return pathlib.Path(file_info.canonicalPath()), f"{file_info.baseName()}.{file_info.suffix()}"
 
-    def merge_filepath_to_filename(self) -> pathlib.Path:
-        return pathlib.Path(str(self._filepath) + str(self._filename))
-
     def split_file_extension_from_name(self) -> tuple[str, str]:
+        """Splits the extension of the filepath from its name."""
         file_info = QtCore.QFileInfo(str(self._filepath))
         return file_info.baseName(), f".{file_info.suffix()}"
 
-    def get_filepath(self):
+    def get_filepath(self) -> pathlib.Path:
+        """Gets the filepath."""
         return self._filepath
 
-    def get_dirname(self):
+    def get_dirname(self) -> pathlib.Path:
+        """Gets the directory path of the filepath."""
         return self._dirname
 
-    def get_basename(self):
+    def get_basename(self) -> str:
+        """Gets the basename of the filepath."""
         return self._basename
 
-    def get_filename(self):
+    def get_filename(self) -> str:
+        """Gets the filename of the filepath."""
         return self._filename
 
-    def get_file_extension(self):
+    def get_file_extension(self) -> str:
+        """Gets the file extension of the filepath as a string."""
         return self._extension
-
-    def check_if_path_exists(self) -> bool:
-        if os.path.exists(self._filepath):
-            return True
-        else:
-            return False

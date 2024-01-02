@@ -36,7 +36,7 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def check_if_protein_is_from_file_or_id(molecule_object) -> tuple:
+def check_if_protein_is_from_file_or_id(molecule_object: str) -> tuple:
     """This function checks if a protein is from a .pdb file or from a PDB ID.
 
     Args:
@@ -65,17 +65,15 @@ def check_if_protein_is_from_file_or_id(molecule_object) -> tuple:
 
 
 def filter_chains_for_protein_chains(chains: list["chain.Chain"]) -> list["chain.Chain"]:
-    """This function filters the chains for protein chains only
+    """Filters the chains for protein chains only.
 
     Args:
-        chains:
-            a list of chains which occur in the protein
-    Returns:
-        a list of protein chains only
+        chains: a list of chains which occur in the protein
+    Returns: a list of protein chains only
     """
     # <editor-fold desc="Checks">
     if not safeguard.Safeguard.check_if_value_is_not_none(chains) or not safeguard.Safeguard.check_if_list_is_empty(
-        chains
+        chains,
     ):
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
@@ -89,6 +87,7 @@ def filter_chains_for_protein_chains(chains: list["chain.Chain"]) -> list["chain
 
 
 def get_chains_as_list_of_tuples(chains: list["chain.Chain"]) -> list[tuple[str, "sequence.Sequence", str]]:
+    """Gets the chains as a list of tuples containing the chain letter, sequence and type."""
     chains_information = []
     for tmp_chain in chains:
         chains_information.append((tmp_chain.chain_letter, tmp_chain.chain_sequence, tmp_chain.chain_type))
@@ -96,17 +95,24 @@ def get_chains_as_list_of_tuples(chains: list["chain.Chain"]) -> list[tuple[str,
 
 
 def create_chains_from_list_of_tuples(
-    chains_as_list_of_tuples: list[tuple[str, "sequence.Sequence", str]]
+    chains_as_list_of_tuples: list[tuple[str, "sequence.Sequence", str]],
 ) -> list["chain.Chain"]:
+    """Creates chain objects from a list of tuples containing the chain letter, sequence and type."""
     chains: list["chain.Chain"] = []
     for tmp_chain_information in chains_as_list_of_tuples:
         chains.append(chain.Chain(tmp_chain_information[0], tmp_chain_information[1], tmp_chain_information[2]))
     return chains
 
 
-def get_chains_from_list_of_chain_names(protein: "protein.Protein", chain_names: list):
+def get_chains_from_list_of_chain_names(a_protein: "protein.Protein", chain_names: list) -> list["chain.Chain"]:
+    """Gets the chains from a list of chain names.
+
+    Args:
+        a_protein: the protein from which the chains are used.
+        chain_names: a list of chain names.
+    """
     chains: list["chain.Chain"] = []
-    for tmp_chain in protein.chains:
+    for tmp_chain in a_protein.chains:
         for tmp_chain_name in chain_names:
             if tmp_chain.chain_letter == tmp_chain_name:
                 chains.append(tmp_chain)

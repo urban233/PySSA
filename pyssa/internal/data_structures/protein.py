@@ -30,17 +30,16 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.data_structures import selection
-from pyssa.util import protein_util, exception
-from pyssa.io_pyssa import filesystem_io
+from pyssa.util import protein_util
+from pyssa.util import exception
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
-from pyssa.util import exception
 from pyssa.io_pyssa import path_util
-from typing import TYPE_CHECKING, TextIO
+from typing import TYPE_CHECKING, TextIO, Union, Any
 from xml.etree import ElementTree
 from pyssa.internal.data_structures import chain
 
@@ -97,7 +96,10 @@ class Protein:
     # </editor-fold>
 
     def __init__(
-        self, molecule_object: str, pdb_filepath: path_util.FilePath = "", pdb_xml_string: ElementTree = ""
+        self,
+        molecule_object: str,
+        pdb_filepath: path_util.FilePath = "",
+        pdb_xml_string: ElementTree = "",
     ) -> None:
         """Constructor.
 
@@ -140,7 +142,9 @@ class Protein:
                 os.mkdir(constants.CACHE_PROTEIN_DIR)
             bio_data.convert_xml_string_to_pdb_file(pdb_xml_string, self.pdb_cache_path)
             self.chains = protein_operations.get_protein_chains(
-                molecule_object, constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb"
+                molecule_object,
+                constants.CACHE_PROTEIN_DIR,
+                f"{self._id}.pdb",
             )
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(pdb_xml_string)
             os.remove(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
@@ -153,7 +157,9 @@ class Protein:
         elif pdb_filepath != "" and pdb_xml_string == "":
             self._pymol_molecule_object = pdb_filepath.get_filename()
             self.chains = protein_operations.get_protein_chains(
-                molecule_object, pdb_filepath.get_dirname(), pdb_filepath.get_basename()
+                molecule_object,
+                pdb_filepath.get_dirname(),
+                pdb_filepath.get_basename(),
             )
             self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
                 bio_data.convert_pdb_file_into_xml_element(pdb_filepath),
@@ -180,7 +186,7 @@ class Protein:
         """
         return self._pymol_molecule_object
 
-    def set_molecule_object(self, value) -> None:
+    def set_molecule_object(self, value: str) -> None:
         """This function sets the molecule object.
 
         Args:
@@ -194,24 +200,33 @@ class Protein:
         self.pymol_selection.molecule_object = value
 
     def get_all_sequences(self) -> list["sequence.Sequence"]:
+        """Gets all sequences of the protein as list of sequences."""
         tmp_sequences = []
         for tmp_chain in self.chains:
             tmp_sequences.append(tmp_chain.chain_sequence)
         return tmp_sequences
 
     def get_protein_sequences(self) -> list["sequence.Sequence"]:
+        """Gets all protein sequences of the protein as list of sequences."""
         return protein_operations.get_protein_sequences_from_protein(self._pymol_molecule_object, self.chains)
 
-    def get_sequences_based_on_chain_letter(self, chain_letter):
+    def get_sequences_based_on_chain_letter(self, chain_letter: str) -> "sequence.Sequence":
+        """Gets the sequence based on the provided chain letter.
+
+        Args:
+            chain_letter: the letter of which the sequence is to be needed.
+        """
         for tmp_chain in self.chains:
             if chain_letter == tmp_chain.chain_letter:
                 return tmp_chain.chain_sequence
         return None
 
-    def get_pdb_data(self):
+    def get_pdb_data(self) -> list:
+        """Gets the pdb information of the protein."""
         return self._pdb_data
 
-    def get_id(self):
+    def get_id(self) -> uuid.UUID:
+        """Gets the id of the protein."""
         return self._id
 
     def write_fasta_file(self, a_filepath: pathlib.Path) -> None:
@@ -251,11 +266,19 @@ class Protein:
         logger.info(f"Fasta file for sequence {self._pymol_molecule_object} written.")
         fasta_file.close()
 
-    def append_chain(self, chain_name, chain_sequence, chain_type):
+    def append_chain(self, chain_name: str, chain_sequence: "sequence.Sequence", chain_type: str) -> None:
+        """Appends a chain to the protein.
+
+        Args:
+            chain_name: name of the chain to append to the protein.
+            chain_sequence: sequence of the chain to append to the protein.
+            chain_type: type of chain to append to the protein.
+        """
         # TODO: add check if chain or any type of chain information already exists
         self.chains.append(chain.Chain(chain=chain_name, chain_sequence=chain_sequence, chain_type=chain_type))
 
-    def add_chain_names_to_chains(self):
+    def add_chain_names_to_chains(self) -> None:
+        """Adds the chain names to the individual chains."""
         i = 0
         for tmp_chain in self.chains:
             if tmp_chain.chain_letter == "":
@@ -302,8 +325,11 @@ class Protein:
             logger.error("Protein can not be loaded in PyMOL!")
             raise exception.UnableToLoadProteinError
 
-    def load_protein_pymol_session(self):
-        tmp_session_path = f"{constants.CACHE_PYMOL_SESSION_DIR}/{self._pymol_molecule_object}_session.pse"
+    def load_protein_pymol_session(self) -> None:
+        """Loads the protein in the pymol session based on the base64 data."""
+        tmp_session_path = pathlib.Path(
+            f"{constants.CACHE_PYMOL_SESSION_DIR}/{self._pymol_molecule_object}_session.pse",
+        )
         binary_data.write_binary_file_from_base64_string(tmp_session_path, self.pymol_session)
         pymol_io.load_pymol_session(tmp_session_path)
 
@@ -323,30 +349,20 @@ class Protein:
         graphic_operations.color_protein(color, self.pymol_selection.selection_string)
 
     def set_selections_from_chains_ca(self) -> None:
-        """This function sets a selection based on the chains of the protein. The selection selects only the alpha-C's."""
+        """Sets a selection based on the chains of the protein.
+
+        Notes:
+            The selection selects only the alpha-C's.
+        """
         self.pymol_selection.set_selections_from_chains_ca(protein_util.filter_chains_for_protein_chains(self.chains))
 
     def set_selection_without_chains_ca(self) -> None:
-        """This function sets a selection without any chains of the protein. The selection selects only the alpha-C's."""
-        self.pymol_selection.set_selections_without_chains_ca()
+        """Sets a selection without any chains of the protein.
 
-    # def write_fasta_file(self) -> None:
-    #     """This function writes a colabbatch compatible fasta file.
-    #
-    #     """
-    #     self.fasta_filepath = path_util.FilePath(pathlib.Path(f"{self.protein_subdirs.get(pyssa_keys.PROTEIN_SEQUENCE_SUBDIR)}/{self._pymol_molecule_object}.fasta"))
-    #     fasta_file = open(self.fasta_filepath.get_filepath(), "w")
-    #     fasta_file.write(f">{self._pymol_molecule_object}\n")
-    #     i = 0
-    #     for tmp_sequence in self.get_protein_sequences():
-    #         if i == len(self.get_protein_sequences()) - 1:
-    #             # should be the last entry
-    #             fasta_file.write(tmp_sequence.sequence)
-    #         else:
-    #             fasta_file.write(f"{tmp_sequence}:")
-    #         i += 1
-    #     logger.info(f"Fasta file for sequence {self._pymol_molecule_object} written.")
-    #     fasta_file.close()
+        Notes:
+            The selection selects only the alpha-C's.
+        """
+        self.pymol_selection.set_selections_without_chains_ca()
 
     def clean_pdb_file(self) -> None:
         """This function cleans a pdb file from the PDB.
@@ -359,7 +375,9 @@ class Protein:
             raise AttributeError("A export directory must be defined!")
 
         pymol_io.fetch_protein_from_pdb(
-            self.pdb_filepath.get_dirname(), self.pdb_filepath.get_filename(), self._pymol_molecule_object
+            self.pdb_filepath.get_dirname(),
+            self.pdb_filepath.get_filename(),
+            self._pymol_molecule_object,
         )
         protein_operations.remove_solvent_molecules_in_protein()
         protein_operations.remove_organic_molecules_in_protein()
@@ -370,21 +388,24 @@ class Protein:
         # save the pdb file under the path (export_data_dir)
         pymol_io.save_protein_to_pdb_file(self.export_dirname, self._pymol_molecule_object)
 
-    def clean_protein(self, new_protein=False):
-        # cmd.reinitialize()
-        # self.load_protein_in_pymol()
+    def clean_protein(self, new_protein: bool = False):  # noqa: ANN201 #TODO: needs to be redone
+        """Cleans the protein from all sugar and solvent molecules.
+
+        Args:
+            new_protein: a flag to determine whether to create a new protein object.
+        """
         if new_protein is False:
             try:
                 self.load_protein_pymol_session()
                 protein_operations.remove_solvent_molecules_in_protein()
                 protein_operations.remove_organic_molecules_in_protein()
             except pymol.CmdException:
-                return
+                return  # noqa: RET502 #TODO: needs more thoughts
             tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
             pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(self._id))
             self._pdb_data.clear()
-            self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
-                bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path))
+            self._pdb_data = bio_data.convert_pdb_xml_string_to_list(  # noqa: RET503 #TODO: needs more thoughts
+                bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)),
             )
         else:
             clean_prot = self.duplicate_protein()
@@ -400,18 +421,22 @@ class Protein:
                 molecule_object=clean_prot_molecule_object,
                 pdb_xml_string=bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)),
             )
-            return cleaned_prot
+            return cleaned_prot  # noqa: RET504 #TODO: needs more thoughts
 
     def show_resi_as_balls_and_sticks(self) -> None:
+        """Shows the residues of the selection as sticks representation."""
         graphic_operations.show_protein_selection_as_balls_and_sticks(self.pymol_selection.selection_string)
 
     def hide_resi_as_balls_and_sticks(self) -> None:
+        """Hides the residues of the selection as sticks representation."""
         graphic_operations.hide_protein_selection_as_balls_and_sticks(self.pymol_selection.selection_string)
 
     def zoom_resi_protein_position(self) -> None:
+        """Zoomes to the residues of the selection."""
         graphic_operations.zoom_to_residue_in_protein_position(self.pymol_selection.selection_string)
 
     def serialize_protein(self, xml_proteins_element: ElementTree.Element) -> None:
+        """Serializes the protein object."""
         tmp_protein = ElementTree.SubElement(xml_proteins_element, element_names.PROTEIN)
         tmp_protein.set(attribute_names.ID, str(self._id))
         tmp_protein.set(attribute_names.PROTEIN_MOLECULE_OBJECT, self._pymol_molecule_object)
@@ -420,19 +445,8 @@ class Protein:
         tmp_session_data = ElementTree.SubElement(tmp_protein, element_names.PROTEIN_SESSION)
         tmp_session_data.set(attribute_names.PROTEIN_SESSION, self.pymol_session)
 
-    @staticmethod
-    def deserialize_protein(protein_obj_json_file: path_util.FilePath):
-        """This function constructs the protein object from
-        the json file.
-
-        Returns:
-            a complete protein object deserialized from a json file
-        """
-        return filesystem_io.ObjectDeserializer(
-            protein_obj_json_file.get_dirname(), protein_obj_json_file.get_filename()
-        ).deserialize_protein()
-
-    def duplicate_protein(self):
+    def duplicate_protein(self):  # noqa: ANN201
+        """Duplicates the protein object."""
         tmp_protein = Protein(
             molecule_object=self._pymol_molecule_object,
             pdb_xml_string=bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data),
@@ -443,7 +457,8 @@ class Protein:
         # # TODO: create new session file for duplicate
         return tmp_protein
 
-    def set_all_attributes(self, attrib_dict, pdb_data, pymol_session):
+    def set_all_attributes(self, attrib_dict: dict, pdb_data: list, pymol_session: str) -> None:
+        """Sets all attributes of the protein."""
         """The unique identifier of the protein."""
         self._id = attrib_dict[attribute_names.ID]
         self._pymol_molecule_object = attrib_dict[attribute_names.PROTEIN_MOLECULE_OBJECT]
@@ -451,7 +466,8 @@ class Protein:
         self._pdb_data = pdb_data
         self.pymol_session = pymol_session
 
-    def create_plain_text_memory_mirror(self):
+    def create_plain_text_memory_mirror(self) -> list[Union[tuple[str, str], tuple[str, Any]]]:
+        """Creates a plain text memory mirror of the protein object."""
         mirror = [
             ("_id", str(self._id)),
             ("_pymol_molecule_object", str(self._pymol_molecule_object)),

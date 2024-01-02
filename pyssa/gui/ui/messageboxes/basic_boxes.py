@@ -22,35 +22,17 @@
 """Module for all message boxes which occur in the settings dialog."""
 import PyQt5
 from PyQt5.QtWidgets import QMessageBox
-
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
-def abort(window_title, text_message, icon):
+def yes_or_no(window_title: str, text_message: str, icon) -> bool:  # noqa: ANN001 #TODO: needs to be checked
     """This is a function which creates a basic QMessageBox with the buttons yes or no.
 
-    Returns:
-        True if "yes" is clicked
-        False if "no" is clicked
-    """
-    msg = QMessageBox()
-    msg.setIcon(icon)
-    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setWindowTitle(window_title)
-    msg.setText(text_message)
-    btn_abort = msg.addButton("Abort", QMessageBox.ActionRole)
-    if msg.clickedButton() == btn_abort:
-        return True
-    else:
-        print("Unexpected Error.")
-        msg.close()
-    return msg
-
-
-def yes_or_no(window_title, text_message, icon) -> bool:
-    """This is a function which creates a basic QMessageBox with the buttons yes or no.
+    Args:
+        window_title: the title of the message box
+        text_message: the message of the message box
+        icon: the icon of the message box
 
     Returns:
         True if "yes" is clicked
@@ -68,15 +50,16 @@ def yes_or_no(window_title, text_message, icon) -> bool:
 
     if msg.clickedButton() == btn_yes:
         return True
-    elif msg.clickedButton() == btn_no:
+    elif msg.clickedButton() == btn_no:  # noqa: RET505
         msg.close()
         return False
     else:
-        print("Unexpected Error.")
         msg.close()
+        return False
 
 
-def no_buttons(window_title, text_message, icon):
+def no_buttons(window_title: str, text_message: str, icon) -> QMessageBox:  # noqa: ANN001
+    """Creates a message box without any buttons."""
     msg = QMessageBox()
     msg.setIcon(icon)
     msg.setWindowTitle(window_title)
@@ -87,7 +70,8 @@ def no_buttons(window_title, text_message, icon):
     return msg
 
 
-def ok(window_title, text_message, icon):
+def ok(window_title: str, text_message: str, icon) -> bool:  # noqa: ANN001
+    """Creates a message box with an OK button."""
     msg = QMessageBox()
     msg.setIcon(icon)
     msg.setWindowTitle(window_title)
@@ -99,6 +83,5 @@ def ok(window_title, text_message, icon):
 
     if msg.clickedButton() == msg.setStandardButtons(QMessageBox.Ok):
         return True
-    else:
-        msg.close()
-        return False
+    msg.close()
+    return False

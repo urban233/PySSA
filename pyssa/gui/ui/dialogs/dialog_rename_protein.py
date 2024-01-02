@@ -19,6 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the renaming protein dialog."""
+import pathlib
+
 from pymol import Qt
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -32,11 +35,14 @@ global_var_rename_protein = ("", False)
 
 
 class DialogRenameProtein(Qt.QtWidgets.QDialog):
-    def __init__(self, the_workspace_path, parent=None) -> None:
+    """Class for renaming protein dialog."""
+
+    def __init__(self, the_workspace_path: pathlib.Path, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            parent
+            the_workspace_path: the path to the workspace.
+            parent: the parent.
         """
         Qt.QtWidgets.QDialog.__init__(self, parent)
         # build ui object
@@ -78,10 +84,8 @@ class DialogRenameProtein(Qt.QtWidgets.QDialog):
         global_var_rename_protein = (self.ui.txt_rename_protein.text(), False)
         self.close()
 
-    def validate_protein_name(self):
-        # tools.validate_protein_name(
-        #     self.ui.txt_rename_protein, self.ui.lbl_status, self.ui.btn_rename_protein,
-        # )
+    def validate_protein_name(self) -> None:
+        """Validates the protein name."""
         input_validator.InputValidator.validate_search_input(
             self.ui.list_workspace_proteins,
             self.ui.txt_rename_protein,

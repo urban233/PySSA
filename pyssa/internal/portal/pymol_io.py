@@ -23,7 +23,6 @@
 import pathlib
 import pymol
 import os
-from typing import TYPE_CHECKING
 from pymol import cmd
 from pyssa.util import exception
 from pyssa.internal.data_structures import protein
@@ -36,14 +35,14 @@ from pyssa.util import globals
 
 
 def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
-    """This function loads a protein in pymol through a protein object.
+    """Loads a protein in pymol through a protein object.
 
     Args:
-        protein_obj:
-            object which is in instance of the protein class
-
+        filepath: the filepath to the protein
+        basename: the name of the protein file
+        molecule_object: the name of the protein in PyMOL
     """
-    if not safeguard.Safeguard.check_filepath(f"{filepath}/{basename}"):
+    if not safeguard.Safeguard.check_filepath(pathlib.Path(f"{filepath}/{basename}")):
         raise FileNotFoundError
     cmd.load(f"{filepath}/{basename}", object=molecule_object)
     if globals.g_settings.color_vision_mode == constants.CVM_NORMAL:
@@ -64,14 +63,15 @@ def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_objec
     """This function fetches a protein in pymol from the PDB.
 
     Args:
-        protein_obj:
-            object which is in instance of the protein class
+        filepath: the filepath to the protein
+        filename: the name of the protein file with extension
+        molecule_object: the name of the protein in PyMOL
     Raises:
         FileNotFoundError: If file not found.
         ValueError: If PDB ID couldn't be found in PDB.
 
     """
-    if not safeguard.Safeguard.check_filepath(f"{filepath}/{filename}"):
+    if not safeguard.Safeguard.check_filepath(pathlib.Path(f"{filepath}/{filename}")):
         raise FileNotFoundError
     try:
         cmd.fetch(code=molecule_object, type="pdb", path=filepath, file=filename)
@@ -91,7 +91,7 @@ def get_protein_from_pdb(pdb_id: str) -> "protein.Protein":
             molecule_object=pdb_id,
             pdb_filepath=path_util.FilePath(pathlib.Path(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")),
         )
-        return tmp_protein
+        return tmp_protein  # noqa: RET504
     except pymol.CmdException:
         tools.clean_scratch_folder()
         # TODO: add message that fetching the reference failed
@@ -100,34 +100,33 @@ def get_protein_from_pdb(pdb_id: str) -> "protein.Protein":
 
 
 def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str) -> None:
-    """This function saves a protein from the current pymol session as a .pdb file.
+    """Saves a protein from the current pymol session as a .pdb file.
 
     Args:
-        protein_obj:
-            object which is in instance of the protein class
+        export_filepath: the filepath to save the protein as pdb file.
+        molecule_object: the name of the protein in PyMOL.
+
     Raises:
         NotADirectoryError: If directory is not found.
-
     """
-    if not safeguard.Safeguard.check_filepath(f"{export_filepath}"):
+    if not safeguard.Safeguard.check_filepath(export_filepath):
         raise NotADirectoryError(f"The filepath {export_filepath} does not exists.")
     # save the pdb file under the path (export_data_dir)
     cmd.save(f"{export_filepath}/{molecule_object}.pdb")
 
 
-def load_pymol_session(pymol_session_file):
+def load_pymol_session(pymol_session_filepath: pathlib.Path) -> None:
     """This function loads a pymol session file into the current pymol session.
 
     Args:
-        pymol_session_file:
-            filepath of the session file
+        pymol_session_filepath: the filepath of the session file
     Raises:
         FileNotFoundError: If file not found.
 
     """
-    if not safeguard.Safeguard.check_filepath(f"{pymol_session_file}"):
+    if not safeguard.Safeguard.check_filepath(pymol_session_filepath):
         raise FileNotFoundError
-    cmd.load(pymol_session_file)
+    cmd.load(str(pymol_session_filepath))
     graphic_operations.setup_default_session_graphic_settings()
 
 

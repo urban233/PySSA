@@ -48,12 +48,12 @@ class Chain:
     # </editor-fold>
 
     def __init__(self, chain: str, chain_sequence: sequence.Sequence, chain_type: str) -> None:
-        """Constructor
+        """Constructor.
 
         Args:
             chain:
                 letter of the chain
-            sequence:
+            chain_sequence:
                 sequence of the chain
             chain_type:
                 type of the chain, whether it is a protein, or nuclein acid chain or something different

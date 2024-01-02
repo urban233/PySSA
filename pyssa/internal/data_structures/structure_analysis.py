@@ -23,7 +23,6 @@
 import logging
 import os.path
 import pathlib
-import shutil
 from xml.etree import ElementTree
 
 import pymol
@@ -40,6 +39,8 @@ from pyssa.util import exception
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
     from pyssa.internal.data_structures import protein_pair
+    from pyssa.internal.data_structures import settings
+    from pyssa.internal.data_structures import results
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -76,7 +77,7 @@ class Analysis:
             IllegalArgumentError: If an invalid argument was used.
         """
         logger.debug(
-            f"The function argument of the value for the image_creation_option is: {the_image_creation_option}"
+            f"The function argument of the value for the image_creation_option is: {the_image_creation_option}",
         )
         # create scratch dirs
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)
@@ -113,16 +114,13 @@ class Analysis:
                     take_images=the_image_creation_option,
                     filename=f"interesting_reg_{tmp_protein_pair.name}",
                 )
-                logger.debug(
-                    f"For the protein pair {tmp_protein_pair.name} the value for the image_creation_option is: {the_image_creation_option}"
-                )
                 if the_image_creation_option is True:
                     logger.info("Setting the structure alignment image into the results object ...")
                     tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                         path_util.FilePath(
                             pathlib.Path(
                                 f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
-                                f"structure_aln_{tmp_protein_pair.name}.png"
+                                f"structure_aln_{tmp_protein_pair.name}.png",
                             ),
                         ),
                     )
@@ -133,13 +131,13 @@ class Analysis:
                             path_util.FilePath(
                                 pathlib.Path(
                                     f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/"
-                                    f"{tmp_filename}"
+                                    f"{tmp_filename}",
                                 ),
                             ),
                         )
                     (
                         tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
-                            interesting_region_filepaths
+                            interesting_region_filepaths,
                         )
                     )
             except FileNotFoundError:
@@ -158,7 +156,8 @@ class Analysis:
                 raise exception.UnableToSetImageError("")
             filesystem_helpers.delete_directory(constants.SCRATCH_DIR_IMAGES)
             cmd.scene(
-                f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}",
+                f"{tmp_protein_pair.protein_1.get_molecule_object()}-"
+                f"{tmp_protein_pair.protein_2.get_molecule_object()}",
                 action="recall",
             )
             # save pymol session of distance analysis
@@ -227,7 +226,7 @@ class DistanceAnalysis:
         self.cycles: int = the_app_settings.cycles
         self.figure_size: tuple[float, float] = (11.0, 6.0)
 
-    def serialize_distance_analysis(self, xml_distance_analysis_element) -> None:
+    def serialize_distance_analysis(self, xml_distance_analysis_element) -> None:  # noqa: ANN001
         """This function serialize the protein pair object."""
         tmp_distance_analysis = ElementTree.SubElement(
             xml_distance_analysis_element,

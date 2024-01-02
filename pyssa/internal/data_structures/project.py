@@ -399,7 +399,9 @@ class Project:
         for tmp_protein in self.proteins:
             tmp_protein_infos.append(
                 basic_protein_info.BasicProteinInfo(
-                    tmp_protein.get_molecule_object(), tmp_protein.get_id(), self._project_name
+                    tmp_protein.get_molecule_object(),
+                    tmp_protein.get_id(),
+                    self._project_name,
                 ),
             )
         return np.array(list(tmp_protein_infos))

@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for all task workers which run in separate threads."""
 import collections
 import copy
 import logging
@@ -29,6 +30,7 @@ import subprocess
 
 import numpy as np
 from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pymol import cmd
 from pyssa.internal.data_processing import data_transformer
@@ -49,7 +51,8 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def setup_worker_for_work(tmp_thread, tmp_worker, return_value_func):
+def setup_worker_for_work(tmp_thread: QtCore.QThread, tmp_worker, return_value_func) -> QtCore.QThread:  # noqa: ANN001
+    """Sets up the worker for the given thread."""
     tmp_worker.moveToThread(tmp_thread)
     tmp_thread.started.connect(tmp_worker.run)
     tmp_worker.finished.connect(tmp_thread.quit)
@@ -60,28 +63,38 @@ def setup_worker_for_work(tmp_thread, tmp_worker, return_value_func):
 
 
 class Worker(QObject):
+    """Class of a basic worker."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(tuple)
     workspace_path: str
 
-    def __init__(self, workspace):
-        super().__init__()
-        self.workspace_path = workspace
+    def __init__(self, workspace: pathlib.Path) -> None:
+        """Constructor.
 
-    def run(self):
+        Args:
+            workspace: the path of the workspace.
+        """
+        super().__init__()
+        self.workspace_path = str(workspace)
+
+    def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         protein_dict, protein_names = tools.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path))
         self.return_value.emit((protein_dict, protein_names))
         self.finished.emit()
 
 
 class LoadUsePageWorker(QObject):
+    """Class for the worker which loads the use page."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(tuple)
     workspace_path: str
 
-    def __init__(self, the_workspace_path, the_protein_infos_of_current_project) -> None:
+    def __init__(self, the_workspace_path: pathlib.Path, the_protein_infos_of_current_project) -> None:  # noqa: ANN001
         """Constructor.
 
         Raises:
@@ -93,16 +106,21 @@ class LoadUsePageWorker(QObject):
             raise exception.IllegalArgumentError("")
         if the_protein_infos_of_current_project is None:
             logger.error(
-                f"An argument the_proteins_of_current_project: {the_protein_infos_of_current_project} is illegal!"
+                f"An argument the_proteins_of_current_project: {the_protein_infos_of_current_project} is illegal!",
             )
 
         # </editor-fold>
 
         super().__init__()
-        self.workspace_path = the_workspace_path
+        self.workspace_path = str(the_workspace_path)
         self.protein_infos_of_current_project = the_protein_infos_of_current_project
 
     def create_q_list_widget_items_from_protein_infos(self, the_protein_infos: np.ndarray) -> np.ndarray:
+        """Creates a numpy array of QListWidgetItem objects.
+
+        Args:
+            the_protein_infos: a numpy array of protein infos.
+        """
         tmp_items: collections.deque = collections.deque()
         print(the_protein_infos)
         for tmp_protein_info in the_protein_infos:
@@ -112,8 +130,9 @@ class LoadUsePageWorker(QObject):
         return np.array(tmp_items)
 
     def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         # scan workspace for non duplicated proteins
-        tmp_protein_infos = workspace_util.scan_workspace_for_non_duplicate_proteins(self.workspace_path)
+        tmp_protein_infos = workspace_util.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path))
         if len(tmp_protein_infos) > 0:
             protein_items = self.create_q_list_widget_items_from_protein_infos(
                 tmp_protein_infos,
@@ -127,7 +146,7 @@ class LoadUsePageWorker(QObject):
         else:
             project_protein_items = []
         # scan workspace for valid projects
-        projects = workspace_util.scan_workspace_for_valid_projects(self.workspace_path)
+        projects = workspace_util.scan_workspace_for_valid_projects(pathlib.Path(self.workspace_path))
         # return
         self.return_value.emit((project_protein_items, protein_items, projects))
         # finished
@@ -135,18 +154,27 @@ class LoadUsePageWorker(QObject):
 
 
 class CreateUseProjectWorker(QObject):
+    """Class for a worker which creates the project on the use page."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(list)
     workspace_path: str
     proteins_to_copy: list
 
-    def __init__(self, workspace, proteins_to_copy):
+    def __init__(self, workspace, proteins_to_copy) -> None:  # noqa: ANN001 #TODO: needs to be checked
+        """Constructor.
+
+        Args:
+            workspace: the path to the workspace.
+            proteins_to_copy: the proteins for the new project.
+        """
         super().__init__()
         self.workspace_path = workspace
         self.proteins_to_copy = proteins_to_copy
 
-    def run(self):
+    def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         proteins_for_new_project = []
         protein_infos = (tools.scan_workspace_for_non_duplicate_proteins(pathlib.Path(self.workspace_path)))[0]
         for tmp_protein in self.proteins_to_copy:
@@ -154,7 +182,7 @@ class CreateUseProjectWorker(QObject):
                 if tmp_protein_info.name == tmp_protein:
                     """Var: project_proteins is a list which contains all proteins from a single project"""
                     xml_deserializer = filesystem_io.XmlDeserializer(
-                        pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml")
+                        pathlib.Path(f"{self.workspace_path}/{tmp_protein_info.project_name}.xml"),
                     )
                     for xml_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
                         if xml_protein.attrib[attribute_names.ID] == tmp_protein_info.id:
@@ -181,6 +209,8 @@ class CreateUseProjectWorker(QObject):
 
 
 class LoadResultsWorker(QObject):
+    """Class for a worker which loads the results."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(str)
@@ -188,19 +218,31 @@ class LoadResultsWorker(QObject):
     app_project_xml_filepath: str
     image_type: str
 
-    def __init__(self, protein_pair_of_results, app_project_xml_filepath):
+    def __init__(
+        self,
+        protein_pair_of_results,  # noqa: ANN001 #TODO: needs to be checked
+        app_project_xml_filepath,  # noqa: ANN001 #TODO: needs to be checked
+    ) -> None:
+        """Constructor.
+
+        Args:
+            protein_pair_of_results: the protein pair which results should be loaded.
+            app_project_xml_filepath: the filepath of the project xml file.
+        """
         super().__init__()
         self.protein_pair_of_results = protein_pair_of_results
         self.image_type = constants.IMAGES_NONE
         self.app_project_xml_filepath = app_project_xml_filepath
 
-    def run(self):
+    def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         shutil.rmtree(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_DIR)
         os.mkdir(constants.CACHE_IMAGES)
 
-        filesystem_io.XmlDeserializer(self.app_project_xml_filepath).deserialize_analysis_images(
-            self.protein_pair_of_results.name, self.protein_pair_of_results.distance_analysis.analysis_results
+        filesystem_io.XmlDeserializer(pathlib.Path(self.app_project_xml_filepath)).deserialize_analysis_images(
+            self.protein_pair_of_results.name,
+            self.protein_pair_of_results.distance_analysis.analysis_results,
         )
         if (
             len(self.protein_pair_of_results.distance_analysis.analysis_results.structure_aln_image) != 0
@@ -273,6 +315,8 @@ class BatchImageWorker(QObject):
         Args:
             list_analysis_images:
                 list where all analysis runs are stored
+            list_analysis_for_image_creation_overview:
+                list of all analysis runs where images should be made.
             status_bar:
                 status bar object of the main window
             app_project:
@@ -299,10 +343,11 @@ class BatchImageWorker(QObject):
         self.status_bar = status_bar
         self.app_project = app_project
 
-    def run(self):
+    def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         for i in range(self.list_analysis_for_image_creation_overview.count()):
             tmp_protein_pair = self.app_project.search_protein_pair(
-                self.list_analysis_for_image_creation_overview.item(i).text()
+                self.list_analysis_for_image_creation_overview.item(i).text(),
             )
             cmd.reinitialize()
             tmp_protein_pair.load_pymol_session()
@@ -313,30 +358,32 @@ class BatchImageWorker(QObject):
             if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 os.mkdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
             tmp_protein_pair.distance_analysis.take_image_of_protein_pair(
-                filename=f"structure_aln_{tmp_protein_pair.name}", representation="cartoon"
+                filename=f"structure_aln_{tmp_protein_pair.name}",
+                representation="cartoon",
             )
             tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
                 path_util.FilePath(
                     pathlib.Path(
-                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png"
+                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png",
                     ),
                 ),
             )
             logger.debug(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image[0])
             tmp_protein_pair.distance_analysis.take_image_of_interesting_regions(
-                tmp_protein_pair.distance_analysis.cutoff, f"interesting_reg_{tmp_protein_pair.name}"
+                tmp_protein_pair.distance_analysis.cutoff,
+                f"interesting_reg_{tmp_protein_pair.name}",
             )
             interesting_region_filepaths = []
             for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 interesting_region_filepaths.append(
                     path_util.FilePath(
                         pathlib.Path(
-                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}"
+                            f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{tmp_filename}",
                         ),
                     ),
                 )
             tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
-                interesting_region_filepaths
+                interesting_region_filepaths,
             )
             shutil.rmtree(constants.SCRATCH_DIR_IMAGES)
             # emit finish signal
@@ -344,16 +391,24 @@ class BatchImageWorker(QObject):
 
 
 class EsmFoldWorker(QObject):
+    """Class for a worker which runs the ESM fold prediction."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(list)
     table: QtWidgets.QTableWidget
 
-    def __init__(self, table_prot_to_predict: QtWidgets.QTableWidget):
+    def __init__(self, table_prot_to_predict: QtWidgets.QTableWidget) -> None:
+        """Constructor.
+
+        Args:
+            table_prot_to_predict: a QTableWidget containing the proteins to predict.
+        """
         super().__init__()
         self.table = table_prot_to_predict
 
-    def run(self):
+    def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         predictions: list[
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
@@ -435,7 +490,9 @@ class ColabfoldWorker(QObject):
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(self.table)
         structure_prediction_obj = structure_prediction.StructurePrediction(
-            predictions, self.prediction_configuration, self.app_project
+            predictions,
+            self.prediction_configuration,
+            self.app_project,
         )
         structure_prediction_obj.create_tmp_directories()
         logger.info("Tmp directories were created.")
@@ -474,13 +531,15 @@ class ColabfoldWorker(QObject):
         except exception.UnableToFindColabfoldModelError:
             logger.error("Could not move rank 1 model, because it does not exists.")
             self.finished.emit(
-                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1]
+                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
+                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
             )
             return
         except FileNotFoundError:
             logger.error("Could not move rank 1 model, because it does not exists.")
             self.finished.emit(
-                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0], exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1]
+                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
+                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
             )
             return
         except Exception as e:
@@ -496,7 +555,7 @@ class ColabfoldWorker(QObject):
 class DistanceAnalysisWorker(QObject):
     """This class is a worker class for the analysis process.
 
-    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+    Inherits from QObject to handler worker thread setup, signals and wrap-up.
 
     """
 
@@ -537,7 +596,7 @@ class DistanceAnalysisWorker(QObject):
         status_bar: QtWidgets.QStatusBar,
         app_project: "project.Project",
         app_settings: "settings.Settings",
-        _init_batch_analysis_page,
+        _init_batch_analysis_page,  # noqa: ANN001
     ) -> None:
         """Constructor.
 
@@ -605,7 +664,7 @@ class DistanceAnalysisWorker(QObject):
                 new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
                 distance_analysis_runs.append(new_protein_pair)
             logger.debug(
-                f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}."
+                f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}.",
             )
         except exception.IllegalArgumentError:
             logger.error("Transformation of data failed because an argument was illegal.")
@@ -630,7 +689,7 @@ class DistanceAnalysisWorker(QObject):
             logger.debug(
                 analysis_runs.analysis_list[0]
                 .distance_analysis.get_protein_pair()
-                .protein_1.pymol_selection.selection_string
+                .protein_1.pymol_selection.selection_string,
             )
         except exception.UnableToTransformDataForAnalysisError:
             logger.error("Setting up the analysis runs failed.")
@@ -642,14 +701,15 @@ class DistanceAnalysisWorker(QObject):
             return analysis_runs
 
     def run(self) -> None:
-        """This function is a reimplementation of the QRunnable run method."""
+        """This function is a reimplementation of the QObject run method."""
         logger.debug(f"Memory address of worker {self}")
         try:
             self.set_up_analysis_runs().run_analysis("distance", self.cb_analysis_images.isChecked())
         except exception.UnableToSetupAnalysisError:
             logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
             self.finished.emit(
-                exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0], exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1]
+                exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0],
+                exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1],
             )
         except Exception as e:
             logger.error(f"Unknown error: {e}")
@@ -659,39 +719,58 @@ class DistanceAnalysisWorker(QObject):
 
 
 class PreviewRayImageWorker(QObject):
+    """Class for a worker which previews a ray-traced image."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(tuple)
     renderer: str
 
-    def __init__(self, renderer):
+    def __init__(self, renderer) -> None:  # noqa: ANN001 #TODO: needs to be checked
+        """Constructor.
+
+        Args:
+            renderer: the renderer used for raytracing.
+        """
         super().__init__()
         self.renderer = renderer
 
-    def run(self):
+    def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         cmd.ray(2400, 2400, renderer=int(self.renderer))
         self.finished.emit()
 
 
 class SaveRayImageWorker(QObject):
+    """Class for a worker which saves a ray-traced image."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(tuple)
     renderer: str
     full_file_name: str
 
-    def __init__(self, renderer, full_file_name):
+    def __init__(self, renderer, full_file_name) -> None:  # noqa: ANN001 #TODO: needs to be checked
+        """Constructor.
+
+        Args:
+            renderer: the renderer used for image creation.
+            full_file_name: the full path of the file to be saved.
+        """
         super().__init__()
         self.renderer = renderer
         self.full_file_name = full_file_name
 
-    def run(self):
+    def run(self) -> None:
+        """This function is a reimplementation of the QObject run method."""
         cmd.ray(2400, 2400, renderer=int(self.renderer))
         cmd.png(self.full_file_name, dpi=300)
         self.finished.emit()
 
 
 class OpenProjectWorker(QObject):
+    """Class for a worker which opens an existing project."""
+
     finished = pyqtSignal()
     progress = pyqtSignal(int)
     return_value = pyqtSignal(project.Project)
@@ -699,15 +778,21 @@ class OpenProjectWorker(QObject):
     project_name: str
     app_settings: "settings.Settings"
 
-    def __init__(self, workspace_path, project_name, app_settings) -> None:
-        """Constructor."""
+    def __init__(self, workspace_path: pathlib.Path, project_name: str, app_settings: "settings.Settings") -> None:
+        """Constructor.
+
+        Args:
+            workspace_path: the path to the workspace
+            project_name: the name of the project
+            app_settings: the settings of the app
+        """
         super().__init__()
         self.workspace_path = workspace_path
         self.project_name = project_name
         self.app_settings = app_settings
 
     def run(self) -> None:
-        """Logic of the open project process."""
+        """This function is a reimplementation of the QObject run method."""
         # show project management options in side menu
         tmp_project_path = pathlib.Path(f"{self.workspace_path}/{self.project_name}")
         tmp_app_project = project.Project.deserialize_project(tmp_project_path, self.app_settings)

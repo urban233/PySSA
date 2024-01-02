@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the help dialog."""
 import logging
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
@@ -37,12 +38,12 @@ class DialogHelp(QtWidgets.QDialog):
     """This variable is for controlling whether the dialog opens or not"""
     ERROR = False
 
-    def __init__(self, html_content: str, parent=None) -> None:
+    def __init__(self, html_content: str, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            args
-            kwargs
+            html_content: a string with the content of the HTML file.
+            parent: the parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
         self.text_browser = QtWidgets.QTextBrowser(self)

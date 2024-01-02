@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for handling filesystem operations."""
 import fnmatch
 import os
 import json
@@ -28,6 +29,8 @@ import logging
 import ast
 import numpy as np
 from xml.etree import ElementTree
+from typing import TYPE_CHECKING
+
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import protein
@@ -43,26 +46,35 @@ from pyssa.util import protein_util
 from pyssa.util import project_util
 from pyssa.io_pyssa import path_util
 
+if TYPE_CHECKING:
+    from PyQt5 import QtWidgets
+
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
 class XmlDeserializer:
-    """"""
+    """Class used to deserialize XML documents into the respective objects."""
 
     """
-
+    the root element of the xml file
     """
     xml_root: ElementTree.Element
 
-    def __init__(self, filepath):
+    def __init__(self, filepath: pathlib.Path) -> None:
+        """Constructor.
+
+        Args:
+            filepath: the filepath to the xml file.
+        """
         # Read the XML file
-        xml_file = open(filepath, "r")
+        xml_file = open(str(filepath), "r")
         xml_contents = xml_file.read()
         self.xml_root = ElementTree.fromstring(xml_contents)
 
-    def create_all_proteins_from_xml(self):
-        proteins = []
+    def create_all_proteins_from_xml(self) -> list["protein.Protein"]:
+        """Creates a list of proteins from the XML."""
+        proteins: list["protein.Protein"] = []
         for tmp_protein in self.xml_root.iter(element_names.PROTEIN):
             basic_information = tmp_protein.attrib
             pdb_lines = []
@@ -76,32 +88,43 @@ class XmlDeserializer:
                 else:
                     raise ValueError
             tmp_protein_obj = protein.Protein(
-                molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT], pdb_xml_string=tmp_protein
+                molecule_object=basic_information[attribute_names.PROTEIN_MOLECULE_OBJECT],
+                pdb_xml_string=tmp_protein,
             )
             tmp_protein_obj.set_all_attributes(basic_information, pdb_lines, session_data_base64)
 
             proteins.append(tmp_protein_obj)
         return proteins
 
-    def create_all_protein_pairs(self, tmp_project: "project.Project", app_settings: "settings.Settings"):
+    def create_all_protein_pairs(
+        self,
+        a_project: "project.Project",
+        app_settings: "settings.Settings",
+    ) -> list["protein_pair.ProteinPair"]:
+        """Creates a list of protein pairs from the XML.
+
+        Args:
+            a_project: a project of which the protein pairs should be used.
+            app_settings: the settings of the app.
+        """
         protein_pairs = []
         if len(self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}")) == 0:
-            return
+            return  # noqa: RET502 #TODO: fix this
         for tmp_protein_pair in self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}"):
             basic_information = tmp_protein_pair.attrib
             prot_1_molecule_object = basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT]
             if prot_1_molecule_object.find("_1") != -1:
                 org_prot_1_molecule_object = prot_1_molecule_object[: prot_1_molecule_object.find("_1")]
-                protein_2: protein.Protein = tmp_project.search_protein(org_prot_1_molecule_object).duplicate_protein()
+                protein_2: protein.Protein = a_project.search_protein(org_prot_1_molecule_object).duplicate_protein()
                 protein_1: protein.Protein = protein_2.duplicate_protein()
                 protein_1.set_molecule_object(f"{protein_1.get_molecule_object()}_1")
                 protein_2.set_molecule_object(f"{protein_2.get_molecule_object()}_2")
             else:
-                protein_1 = tmp_project.search_protein(
-                    basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT]
+                protein_1 = a_project.search_protein(
+                    basic_information[attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT],
                 )
-                protein_2 = tmp_project.search_protein(
-                    basic_information[attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT]
+                protein_2 = a_project.search_protein(
+                    basic_information[attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT],
                 )
 
             tmp_protein_pair_obj = protein_pair.ProteinPair(protein_1=protein_1, protein_2=protein_2)
@@ -113,23 +136,23 @@ class XmlDeserializer:
             tag_results = tag_distance_analysis.find(element_names.DISTANCE_ANALYSIS_RESULTS)
             rmsd_aligned_aa = tag_results.attrib
             for tmp_tag_results_distance in tag_results.findall(
-                f".//{element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS}"
+                f".//{element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS}",
             ):
                 indexes = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_INDEX_LIST).text
                 prot_1_chains = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_1_CHAIN_LIST).text
                 prot_1_positions = tmp_tag_results_distance.find(
-                    element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST
+                    element_names.DISTANCE_ANALYSIS_PROT_1_POSITION_LIST,
                 ).text
                 prot_1_residues = tmp_tag_results_distance.find(
-                    element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST
+                    element_names.DISTANCE_ANALYSIS_PROT_1_RESIDUE_LIST,
                 ).text
 
                 prot_2_chains = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_PROT_2_CHAIN_LIST).text
                 prot_2_positions = tmp_tag_results_distance.find(
-                    element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST
+                    element_names.DISTANCE_ANALYSIS_PROT_2_POSITION_LIST,
                 ).text
                 prot_2_residues = tmp_tag_results_distance.find(
-                    element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST
+                    element_names.DISTANCE_ANALYSIS_PROT_2_RESIDUE_LIST,
                 ).text
 
                 distances = tmp_tag_results_distance.find(element_names.DISTANCE_ANALYSIS_DISTANCES_LIST).text
@@ -154,7 +177,8 @@ class XmlDeserializer:
                 }
 
             tmp_protein_pair_obj.distance_analysis = distance_analysis.DistanceAnalysis(
-                tmp_protein_pair_obj, app_settings
+                tmp_protein_pair_obj,
+                app_settings,
             )
             tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(
                 distance_data=result_hashtable,
@@ -163,7 +187,7 @@ class XmlDeserializer:
                 aligned_aa=str(rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]),
             )
             tmp_protein_pair_obj.distance_analysis.cutoff = float(
-                distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF]
+                distance_analysis_settings[attribute_names.DISTANCE_ANALYSIS_CUTOFF],
             )
             tmp_protein_pair_obj.distance_analysis.cycles = distance_analysis_settings[
                 attribute_names.DISTANCE_ANALYSIS_CYCLES
@@ -172,19 +196,21 @@ class XmlDeserializer:
                 attribute_names.DISTANCE_ANALYSIS_NAME
             ]
             tmp_protein_pair_obj.distance_analysis.rmsd_dict["rmsd"] = float(
-                rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD]
+                rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD],
             )
             tmp_protein_pair_obj.distance_analysis.rmsd_dict["aligned_residues"] = str(
-                rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA]
+                rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA],
             )
             self.deserialize_analysis_images(
-                tmp_protein_pair_obj.name, tmp_protein_pair_obj.distance_analysis.analysis_results
+                tmp_protein_pair_obj.name,
+                tmp_protein_pair_obj.distance_analysis.analysis_results,
             )
             protein_pairs.append(tmp_protein_pair_obj)
 
         return protein_pairs
 
-    def deserialize_project(self, app_settings):
+    def deserialize_project(self, app_settings: "settings.Settings") -> "project.Project":
+        """Deserialize the project from the XML."""
         project_dict = {}
         for info in self.xml_root.iter(element_names.PROJECT_INFO):
             project_dict = info.attrib
@@ -198,16 +224,25 @@ class XmlDeserializer:
         protein_pair_objs = self.create_all_protein_pairs(tmp_project, app_settings)
         if protein_pair_objs is None:
             return tmp_project
-        else:
-            for tmp_protein_pair_obj in protein_pair_objs:
-                tmp_project.add_protein_pair(tmp_protein_pair_obj)
-            return tmp_project
+        for tmp_protein_pair_obj in protein_pair_objs:
+            tmp_project.add_protein_pair(tmp_protein_pair_obj)
+        return tmp_project
 
-    def deserialize_analysis_images(self, protein_pair_name: str, analysis_results: "results.DistanceAnalysisResults"):
+    def deserialize_analysis_images(
+        self,
+        protein_pair_name: str,
+        analysis_results: "results.DistanceAnalysisResults",
+    ) -> None:
+        """Deserialize the analysis images.
+
+        Args:
+            protein_pair_name: the name of the protein pair to use.
+            analysis_results: the results of the distance analysis.
+        """
         for tmp_protein_pair in self.xml_root.findall(f".//{element_names.PROTEIN_PAIR}"):
             if tmp_protein_pair.attrib["name"] == protein_pair_name:
                 structure_aln_images = tmp_protein_pair.findall(
-                    f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE}"
+                    f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_STRUCTURE_ALN_IMAGE}",
                 )
                 try:
                     analysis_results.structure_aln_image = (
@@ -217,21 +252,23 @@ class XmlDeserializer:
                 except IndexError:
                     analysis_results.structure_aln_image = ()
                 interesting_reg_images = tmp_protein_pair.findall(
-                    f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS}"
+                    f".//{element_names.DISTANCE_ANALYSIS_IMAGES}/{element_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS}",
                 )
                 for tmp_image in interesting_reg_images:
                     analysis_results.interesting_regions_images.append(
                         (
                             tmp_image.attrib[attribute_names.DISTANCE_ANALYSIS_ALN_IMAGES_INTERESTING_REGIONS_BASENAME],
                             tmp_image.text,
-                        )
+                        ),
                     )
 
 
 class ObjectSerializer:
+    """Class which handles serialization of objects."""
+
     object_dict: dict
 
-    def __init__(self, object_to_serialize, filepath, filename):
+    def __init__(self, object_to_serialize, filepath: pathlib.Path, filename: str) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
@@ -247,27 +284,40 @@ class ObjectSerializer:
         self.filepath = filepath
         self.filename = filename
 
-    def create_standard_object_dict(self):
+    def create_standard_object_dict(self) -> None:
+        """Creates standard object dictionary for serialization."""
         self.object_dict = self.object.__dict__
 
-    def set_custom_object_dict(self, custom_dict: dict):
+    def set_custom_object_dict(self, custom_dict: dict) -> None:
+        """Sets a custom dictionary for serialization."""
         self.object_dict = custom_dict
 
-    def update_object_dict(self, dict_with_updates: dict):
+    def update_object_dict(self, dict_with_updates: dict) -> None:
+        """Updates a dictionary for serialization."""
         self.object_dict.update(dict_with_updates)
 
-    def serialize_object(self):
+    def serialize_object(self) -> None:
+        """Serializes the object to a JSON file."""
         tmp_object_file = open(pathlib.Path(f"{self.filepath}/{self.filename}.json"), "w", encoding="utf-8")
         json.dump(self.object_dict, tmp_object_file, indent=4)
         tmp_object_file.close()
 
 
 class ObjectDeserializer:
-    def __init__(self, filepath, filename):
+    """Class which deserializes objects."""
+
+    def __init__(self, filepath: pathlib.Path, filename: str) -> None:
+        """Constructor.
+
+        Args:
+            filepath: filepath of the json file, without the file name
+            filename: name of the json file WITHOUT .json extension!
+        """
         tmp_object_file = open(pathlib.Path(f"{filepath}/{filename}.json"), "r", encoding="utf-8")
         self.object_dict = json.load(tmp_object_file)
 
     def deserialize_protein(self) -> "protein.Protein":
+        """Deserializes the protein object from a JSON file."""
         if self.object_dict.get("export_data_dir") == "None":
             update = {"export_data_dir": None}
             self.object_dict.update(update)
@@ -283,6 +333,7 @@ class ObjectDeserializer:
         return tmp_protein
 
     def deserialize_protein_pair(self) -> "protein_pair.ProteinPair":
+        """Deserialize a protein pair object from a JSON file."""
         tmp_protein_pair = protein_pair.ProteinPair(
             self.object_dict.get("prot_1_molecule_object"),
             self.object_dict.get("prot_2_molecule_object"),
@@ -309,7 +360,7 @@ class ObjectDeserializer:
         if self.object_dict.get("prot_2_export_data_dir") == "None":
             export_data_dir = None
         else:
-            export_data_dir = self.object_dict.get("prot_2_export_data_dir")
+            export_data_dir = self.object_dict.get("prot_2_export_data_dir")  # noqa: F841
         tmp_protein_2 = protein.Protein(
             molecule_object=self.object_dict.get("prot_2_filename"),
             # important for duplicated proteins
@@ -324,8 +375,10 @@ class ObjectDeserializer:
         return tmp_protein_pair
 
     def deserialize_project(self, app_settings: "settings.Settings") -> "project.Project":
+        """Deserializes the project object from the JSON file."""
         tmp_project: project.Project = project.Project(
-            self.object_dict.get("_project_name"), self.object_dict.get("_workspace")
+            self.object_dict.get("_project_name"),
+            self.object_dict.get("_workspace"),
         )
         tmp_project.set_folder_paths(self.object_dict.get("_folder_paths"))
         tmp_project.project_path = self.object_dict.get("project_path")
@@ -337,7 +390,7 @@ class ObjectDeserializer:
                 ).deserialize_protein(),
             )
         for tmp_protein_pair_json_filepath in project_util.get_all_protein_pair_json_filepaths_from_project(
-            tmp_project
+            tmp_project,
         ):
             tmp_project.add_protein_pair(
                 ObjectDeserializer(
@@ -346,7 +399,7 @@ class ObjectDeserializer:
                 ).deserialize_protein_pair(),
             )
         for tmp_distance_analysis_json_filepath in project_util.get_all_distance_analysis_json_filepaths_from_project(
-            tmp_project
+            tmp_project,
         ):
             tmp_project.add_distance_analysis(
                 ObjectDeserializer(
@@ -357,8 +410,11 @@ class ObjectDeserializer:
         return tmp_project
 
     def deserialize_distance_analysis(
-        self, app_settings: "settings.Settings", app_project: "project.Project"
+        self,
+        app_settings: "settings.Settings",
+        app_project: "project.Project",
     ) -> "distance_analysis.DistanceAnalysis":
+        """Deserializes distance analysis object from a JSON file."""
         tmp_protein_pair = app_project.search_protein_pair(self.object_dict.get("protein_pair_for_analysis_name"))
         tmp_distance_analysis = distance_analysis.DistanceAnalysis(tmp_protein_pair, app_settings)
         tmp_distance_analysis.cutoff = self.object_dict.get("cutoff")
@@ -368,8 +424,10 @@ class ObjectDeserializer:
         return tmp_distance_analysis
 
     def deserialize_settings(self) -> "settings.Settings":
+        """Deserializes settings object from a JSON file."""
         tmp_settings: settings.Settings = settings.Settings(
-            self.object_dict.get("dir_settings"), self.object_dict.get("filename")
+            self.object_dict.get("dir_settings"),
+            self.object_dict.get("filename"),
         )
         if safeguard.Safeguard.check_filepath(self.object_dict.get("workspace_path")):
             tmp_settings.workspace_path = self.object_dict.get("workspace_path")
@@ -407,26 +465,26 @@ class ObjectDeserializer:
         return tmp_settings
 
     def deserialize_sequence(self) -> "sequence.Sequence":
-        """This function deserializes the sequence object from a .json file.
-
-        Returns:
-            a ProteinSequence object
-        """
+        """Deserializes sequence object from a JSON file."""
         return sequence.Sequence(self.object_dict.get("name"), self.object_dict.get("sequence"))
 
 
 class ProjectScanner:
-    def __init__(self, project_obj: "project.Project"):
-        self.project = project_obj
+    """Class which is used to scan the project."""
 
-    def scan_project_for_valid_proteins(self, list_view_project_proteins=None) -> list[str]:
-        """This function scans the project pdb path and optionally fills a list view.
+    def __init__(self, project_obj: "project.Project") -> None:
+        """Constructor.
 
         Args:
-            list_view_project_proteins:
+            project_obj: a project.
+        """
+        self.project = project_obj
 
-        Returns:
+    def scan_project_for_valid_proteins(self, list_view_project_proteins: QtWidgets.QListWidget = None) -> list[str]:
+        """Scans the project pdb path and optionally fills a list view.
 
+        Args:
+            list_view_project_proteins: a list widget for protein names.
         """
         pattern = "*.pdb"
         protein_basenames = []
@@ -451,10 +509,22 @@ class ProjectScanner:
 
 
 class WorkspaceScanner:
-    def __init__(self, workspace_path):
+    """Class to scan the workspace."""
+
+    def __init__(self, workspace_path: pathlib.Path) -> None:
+        """Constructor.
+
+        Args:
+            workspace_path: the path to the workspace.
+        """
         self.workspace_path = workspace_path
 
-    def scan_workspace_for_valid_projects(self, list_new_projects) -> list:
+    def scan_workspace_for_valid_projects(self, list_new_projects: QtWidgets.QListWidget) -> list:
+        """Scans the workspace for valid projects.
+
+        Args:
+            list_new_projects: a list for project names.
+        """
         workspace_projects: list[str] = os.listdir(self.workspace_path)
         valid_directories = []
         # iterates over possible project directories
@@ -469,8 +539,8 @@ class WorkspaceScanner:
                 print(f"This: {directory} is not a directory.")
 
         valid_directories.sort()
-        for project in valid_directories:
-            list_new_projects.addItem(project)
+        for tmp_project in valid_directories:
+            list_new_projects.addItem(tmp_project)
         return valid_directories
 
     def scan_workspace_for_non_duplicate_proteins(self) -> dict:
@@ -484,47 +554,30 @@ class WorkspaceScanner:
         for tmp_project_name in os.listdir(self.workspace_path):
             for tmp_protein_name in os.listdir(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins")):
                 pdb_basename = os.listdir(
-                    pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb")
+                    pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb"),
                 )
                 if len(pdb_basename) > 1:
                     logger.error("Too many pdb files in one directory.")
                     raise ValueError("Too many pdb files in one directory.")
                 pdb_filepath = path_util.FilePath(
                     pathlib.Path(
-                        f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb/{pdb_basename[0]}"
-                    )
+                        f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb/{pdb_basename[0]}",
+                    ),
                 )
                 pdb_basenames_filepaths.append((pdb_basename[0], pdb_filepath))
         return dict(list(set(pdb_basenames_filepaths)))
-        # """Var: workspace_proteins is a list which contains all proteins from all projects in the workspace"""
-        # workspace_proteins = []
-        # protein_names = []
-        # protein_tuples_notation = []
-        # for valid_project in valid_projects:
-        #     # if valid_project != current_project_name: # I don't know why this if-statement should be important
-        #     """Var: project_proteins is a list which contains all proteins from a single project"""
-        #     project_proteins = tools.scan_project_for_valid_proteins(pathlib.Path(f"{self.workspace_path}/{valid_project}"),
-        #                                                              list_widget)
-        #     list_widget.clear()
-        #     for protein in project_proteins:
-        #         tmp_protein = protein_info.ProteinInfo(protein,
-        #                                                pathlib.Path(f"{self.workspace_path}/{valid_project}/pdb/{protein}"))
-        #         workspace_proteins.append(tmp_protein)
-        #         if tmp_protein.name not in protein_names:
-        #             protein_names.append(tmp_protein.name)
-        # # this for-loop is necessary for the creation of the protein dictionary
-        # for protein in workspace_proteins:
-        #     protein_tuples_notation.append(protein.get_tuple_notation())
-        # protein_dict = dict(protein_tuples_notation)
-        # return protein_dict, protein_names
 
 
 class FilesystemCleaner:
-    def __int__(self):
+    """Class for cleaning up the filesystem."""
+
+    def __int__(self) -> None:
+        """Empty constructor."""
         pass
 
     @staticmethod
-    def clean_prediction_scratch_folder():
+    def clean_prediction_scratch_folder() -> None:
+        """Deletes the scratch folder for fasta and pdb files and creates new ones."""
         shutil.rmtree(constants.PREDICTION_FASTA_DIR)
         os.mkdir(constants.PREDICTION_FASTA_DIR)
         shutil.rmtree(constants.PREDICTION_PDB_DIR)

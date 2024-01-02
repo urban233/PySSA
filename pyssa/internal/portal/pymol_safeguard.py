@@ -19,15 +19,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for safeguards in pymol"""
+"""Module for safeguards in pymol."""
 from pymol import cmd
 
 
 class PymolSafeguard:
     """This class is used to collect all safeguard functions in one place for pymol."""
 
-    def __init__(self):
-        """Constructor"""
+    def __init__(self) -> None:
+        """Empty Constructor."""
         pass
 
     @staticmethod
@@ -40,5 +40,4 @@ class PymolSafeguard:
         """
         if len(cmd.get_chains()) == 0:
             return False
-        else:
-            return True
+        return True

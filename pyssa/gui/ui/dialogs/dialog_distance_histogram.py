@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the distance histogram dialog."""
 import copy
 import numpy as np
 from PyQt5 import QtGui
@@ -38,7 +39,15 @@ from matplotlib.figure import Figure
 
 
 class PlotWidget(QWidget):
-    def __init__(self, figure_size: tuple, parent=None):
+    """Class for a custom QWidget for plotting."""
+
+    def __init__(self, figure_size: tuple[float, float], parent=None) -> None:  # noqa: ANN001
+        """Constructor.
+
+        Args:
+            figure_size: the size of the figure.
+            parent: the parent
+        """
         super(PlotWidget, self).__init__(parent)
         self.figure = Figure(figsize=(figure_size[0], figure_size[1]))
         self.canvas = FigureCanvas(self.figure)
@@ -48,12 +57,14 @@ class PlotWidget(QWidget):
 
 
 class DialogDistanceHistogram(QtWidgets.QDialog):
-    def __init__(self, protein_pair_from_project, parent=None):
+    """Class for a distance histogram dialog."""
+
+    def __init__(self, protein_pair_from_project: "protein_pair.ProteinPair", parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            args
-            kwargs
+            protein_pair_from_project: the protein pair which should be used for the distance histogram.
+            parent: the parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
@@ -108,7 +119,8 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Distance Histogram")
 
-    def update_bar_width(self):
+    def update_bar_width(self) -> None:
+        """Updates the width of the bars."""
         if self.ui.cb_bar_size.currentText() == "Very large":
             self.setup_histogram_view((19, 50))
         elif self.ui.cb_bar_size.currentText() == "Large":
@@ -120,7 +132,8 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
 
         self.plot_histogram()
 
-    def setup_histogram_view(self, figure_size: tuple[int, int]):
+    def setup_histogram_view(self, figure_size: tuple[int, int]) -> None:
+        """Sets up the histogram view."""
         self.ui.main_Layout.removeWidget(self.toolbar)
         self.ui.main_Layout.removeWidget(self.scroll_area)
         self.scroll_area = QScrollArea()
@@ -138,7 +151,8 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         self.scroll_area.setWidget(self.plot_widget)
         self.plot_histogram()
 
-    def plot_histogram(self):
+    def plot_histogram(self) -> None:
+        """Plots the histogram."""
         # Clear any existing plot
         self.plot_widget.figure.clear()
 
@@ -209,14 +223,16 @@ class DialogDistanceHistogram(QtWidgets.QDialog):
         # Refresh the canvas
         self.plot_widget.canvas.draw()
 
-    def scroll_down(self):
+    def scroll_down(self) -> None:
+        """Scroll down the histogram."""
         if self.scroll_pos == "up":
             self.histogram_pos = (self.histogram_pos[0] + 0.3, self.histogram_pos[1] + 0.3)
         self.view_box.setRange(yRange=[self.histogram_pos[0], self.histogram_pos[1]])
         self.histogram_pos = (self.histogram_pos[0] + 0.3, self.histogram_pos[1] + 0.3)
         self.scroll_pos = "down"
 
-    def scroll_up(self):
+    def scroll_up(self) -> None:
+        """Scroll up the histogram."""
         if self.scroll_pos == "down":
             self.histogram_pos = (self.histogram_pos[0] - 0.6, self.histogram_pos[1] - 0.6)
         else:

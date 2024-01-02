@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for protein_pair operations in pymol"""
+"""Module for protein_pair operations in pymol."""
 import pymol
 import logging
 from pymol import cmd
@@ -34,7 +34,7 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def align_protein_pair(target_selection, mobile_selection, alignment_filename) -> tuple:
+def align_protein_pair(target_selection: str, mobile_selection: str, alignment_filename: str) -> tuple:
     """This function aligns two pymol selections and creates an alignment file.
 
     Args:
@@ -62,7 +62,8 @@ def align_protein_pair(target_selection, mobile_selection, alignment_filename) -
     # </editor-fold>
 
     tmp_settings = filesystem_io.ObjectDeserializer(
-        constants.SETTINGS_DIR, constants.SETTINGS_FILE_NAME
+        constants.SETTINGS_DIR,
+        constants.SETTINGS_FILE_NAME,
     ).deserialize_settings()
     results = cmd.align(
         target=target_selection,
@@ -72,11 +73,14 @@ def align_protein_pair(target_selection, mobile_selection, alignment_filename) -
         object=alignment_filename,
         quiet=0,
     )
-    return results
+    return results  # noqa: RET504
 
 
 def color_protein_pair(
-    pymol_molecule_object_ref, pymol_molecule_object_model, color_ref="green", color_model="blue"
+    pymol_molecule_object_ref: str,
+    pymol_molecule_object_model: str,
+    color_ref: str = "green",
+    color_model: str = "blue",
 ) -> None:
     """This function colors both the reference and the model Protein.
 
@@ -85,6 +89,8 @@ def color_protein_pair(
         be looked up under the `color values`_ page.
 
     Args:
+        pymol_molecule_object_ref: the molecule object string of the reference protein
+        pymol_molecule_object_model: the molecule object string of the model protein
         color_ref (str, optional):
             defines color for the reference Protein
         color_model (str, optional):
@@ -101,9 +107,9 @@ def color_protein_pair(
     # argument test
     # checks if either the reference or the model is an actual object in the memory
     if not safeguard.Safeguard.check_if_protein_is_in_pymol(pymol_molecule_object_ref):
-        raise pymol.CmdException(f"The reference is not in the pymol session as an object.")
+        raise pymol.CmdException("The reference is not in the pymol session as an object.")
     if not safeguard.Safeguard.check_if_protein_is_in_pymol(pymol_molecule_object_model):
-        raise pymol.CmdException(f"The model is not in the pymol session as an object.")
+        raise pymol.CmdException("The model is not in the pymol session as an object.")
     # actual color cmd command
     if globals.g_settings.color_vision_mode == constants.CVM_NORMAL:
         color_ref = constants.CVM_NORMAL_PROT_1_COLOR
@@ -122,20 +128,9 @@ def color_protein_pair(
 
 
 def save_session_of_protein_pair(name_of_protein_pair: str) -> str:
-    """This function saves the pymol session of the protein pair.
-
-    Note:
-        The pse file will be saved under the relative path
-        (if export_data_dir = "data/results"):
-        ``data/results/sessions``
-
-        The file name (filename) MUST NOT have the file extension .pse!
+    """Saves the pymol session of the protein pair.
 
     Args:
         name_of_protein_pair (str): Name of the protein pair.
     """
     return pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
-
-    # if not os.path.exists(session_filepath.get_dirname()):
-    #     os.mkdir(session_filepath.get_dirname())
-    # cmd.save(session_filepath.get_filepath())

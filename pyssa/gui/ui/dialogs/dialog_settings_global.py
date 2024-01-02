@@ -19,6 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Module for the global settings dialog."""
 import logging
 import subprocess
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
@@ -34,22 +35,22 @@ from PyQt5 import QtGui
 logging.basicConfig(level=logging.DEBUG)
 
 
-def is_wsl2_installed():
+def is_wsl2_installed() -> bool:
+    """Checks if the WSL2 is installed."""
     output = subprocess.run("wsl --list --verbose")
     if output.returncode == 0:
         return True
-    else:
-        return False
+    return False
 
 
-def is_local_colabfold_installed():
+def is_local_colabfold_installed() -> bool:
+    """Checks if the local colabfold is installed."""
     powershell_results = subprocess.run(["wsl", "-d", "almaColabfold9", "ls"])
     if powershell_results.returncode == 0:
         subprocess.run(["wsl", "--shutdown"])
         return True
-    else:
-        subprocess.run(["wsl", "--shutdown"])
-        return False
+    subprocess.run(["wsl", "--shutdown"])
+    return False
 
 
 class DialogSettingsGlobal(QtWidgets.QDialog):
@@ -58,12 +59,11 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
     """This variable is for controlling whether the dialog opens or not"""
     ERROR = False
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            args
-            kwargs
+            parent: the parent
         """
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
@@ -149,23 +149,28 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
     # @SLOT()
-    def choose_workspace_dir(self):
+    def choose_workspace_dir(self) -> None:
+        """Opens a QFileDialog to choose a workspace directory."""
         gui_utils.choose_directory(self, self.ui.txt_workspace_dir)
 
-    def set_color_vision_mode(self):
-        pass
+    def set_color_vision_mode(self) -> None:
+        """Sets the color vision mode."""
+        raise NotImplementedError("This function is not yet implemented!")
 
-    def _connect_all_gui_elements(self):
+    def _connect_all_gui_elements(self) -> None:
+        """Connects all dialog gui elements."""
         self.ui.cb_color_vision_mode.currentIndexChanged.connect(self.set_color_vision_mode)
         self.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
         self.ui.btn_cancel.clicked.connect(self.cancel_dialog)
         self.ui.btn_ok.clicked.connect(self.ok_dialog)
         self.ui.btn_info.clicked.connect(self.open_page_information)
 
-    def cancel_dialog(self):
+    def cancel_dialog(self) -> None:
+        """Closes the dialog."""
         self.close()
 
-    def ok_dialog(self):
+    def ok_dialog(self) -> None:
+        """Sets all settings from the gui elements into the settings object and closes the dialog window."""
         self.settings.set_workspace_path(self.ui.txt_workspace_dir.text())
         self.settings.set_cycles(str(self.ui.spb_cycles.value()))
         self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))

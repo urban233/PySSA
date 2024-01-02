@@ -43,7 +43,7 @@ class EsmFold:
     """
     protein_prediction_infos: list[prediction_protein_info.PredictionProteinInfo]
 
-    def __init__(self, protein_prediction_infos):
+    def __init__(self, protein_prediction_infos) -> None:  # noqa: ANN001 #TODO: needs to be checked
         """Constructor.
 
         Args:
@@ -55,8 +55,8 @@ class EsmFold:
         """
         self.protein_prediction_infos = protein_prediction_infos
 
-    def predict_single_protein(self, sequence, pdb_filepath):
-        """This function predicts a protein structure with the ESMFold API
+    def predict_single_protein(self, sequence, pdb_filepath) -> None:  # noqa: ANN001 #TODO: needs to be checked
+        """This function predicts a protein structure with the ESMFold API.
 
         Args:
             sequence: valid protein sequence which gets predicted
@@ -67,7 +67,6 @@ class EsmFold:
             NotADirectoryError: if the directory where the file should be created is not found
             ConnectionError: if the ESMFold server throws the error INTERNAL SERVER ERROR
         """
-
         # <editor-fold desc="Checks">
         if os.path.dirname(pdb_filepath) == "":
             logger.error("Invalid filepath, add dirname to complete the filepath!")
@@ -99,7 +98,6 @@ class EsmFold:
         Returns:
             a list with prediction protein infos which could not be predicted.
         """
-
         # <editor-fold desc="Checks">
         if self.protein_prediction_infos is None:
             logger.error("Protein sequences must not be None")
@@ -133,12 +131,12 @@ class EsmFold:
                 failed_predictions.append(tmp_protein_prediction_info.sequences[0])
                 logger.error(
                     f"Prediction with protein name: {tmp_protein_prediction_info.name} failed. "
-                    f"Prediction will be retried one more time after all others finished."
+                    f"Prediction will be retried one more time after all others finished.",
                 )
             finally:
                 logger.info(
                     f"Prediction with protein name: {tmp_protein_prediction_info.name} finished. "
-                    f"Run {i} of {len(self.protein_prediction_infos)} finished."
+                    f"Run {i} of {len(self.protein_prediction_infos)} finished.",
                 )
                 i += 1
         failed_multiple_attempts = []
@@ -154,7 +152,7 @@ class EsmFold:
                     failed_multiple_attempts.append(tmp_protein_prediction_info)
                     logger.error(
                         f"Prediction with protein name: {tmp_protein_prediction_info.name} failed. "
-                        f"Prediction cannot be completed at the moment."
+                        f"Prediction cannot be completed at the moment.",
                     )
             logger.debug(f"In the first run these predictions failed: {failed_predictions}")
             logger.debug(f"In the second run these predictions failed: {failed_multiple_attempts}")

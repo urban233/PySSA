@@ -23,13 +23,12 @@
 import typing
 import os
 import pathlib
-import shutil
-from pathlib import Path
 
-from PyQt5.QtGui import QIcon
 from pymol import Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
@@ -38,9 +37,10 @@ from pyssa.util.void import rvoid
 
 if typing.TYPE_CHECKING:
     from pyssa.internal.data_structures import project
+    from pyssa.internal.data_structures import settings
 
 
-def fill_combo_box(combo_box, item_list):
+def fill_combo_box(combo_box: QtWidgets.QComboBox, item_list: list) -> None:
     """This function fills a pyqt combobox.
 
     Args:
@@ -53,7 +53,7 @@ def fill_combo_box(combo_box, item_list):
         combo_box.addItem(item)
 
 
-def create_directory(parent_path, dir_name):
+def create_directory(parent_path: pathlib.Path, dir_name: str) -> None:
     """This function creates a directory with a given path and directory name.
 
     Args:
@@ -62,14 +62,13 @@ def create_directory(parent_path, dir_name):
         dir_name:
             name of the new directory
     """
-    new_dir = f"{parent_path}/{dir_name}"
+    new_dir = f"{str(parent_path)}/{dir_name}"
     if not os.path.exists(new_dir):
         os.mkdir(new_dir)
 
 
-def choose_directory(self, txt_box_dir):
-    """This function is for choosing a filepath with the
-    qt-file dialog.
+def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: ANN001
+    """This function is for choosing a filepath with the QFileDialog.
 
     Example:
         txt_box_dir: self.ui.txt_workspace_dir
@@ -103,7 +102,8 @@ def choose_directory(self, txt_box_dir):
         txt_box_dir.setText(str(current_file_path))
 
 
-def no_internet_dialog():
+def no_internet_dialog() -> None:
+    """Displays a message box which informs the user that there is no internet connection."""
     msg = QMessageBox()
     msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
@@ -114,7 +114,12 @@ def no_internet_dialog():
     msg.exec_()
 
 
-def no_internet_dialog_with_custom_msg(message):
+def no_internet_dialog_with_custom_msg(message: str) -> None:
+    """Displays a custom message box which informs the user that there is no internet connection.
+
+    Args:
+        message: a custom message for the dialog.
+    """
     msg = QMessageBox()
     msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
@@ -125,49 +130,7 @@ def no_internet_dialog_with_custom_msg(message):
     msg.exec_()
 
 
-def critical_message(message, message_detail):
-    """This function creates a basic critical message box, which can be customized.
-
-    Args:
-        message:
-            text which should get displayed in the dialog
-        message_detail:
-            additional information
-    """
-    msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setIcon(QMessageBox.Critical)
-    msg.setText("Critical")
-    msg.setInformativeText(message)
-    msg.setDetailedText(message_detail)
-    msg.setWindowTitle("Critical")
-    msg.setStandardButtons(QMessageBox.Abort)
-    msg.exec_()
-
-
-def error_dialog(message, message_detail):
-    """This function creates an error dialog, which can be customized.
-
-    Args:
-        message:
-            text which should get displayed in the dialog
-        message_detail:
-            additional information
-    """
-    msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setIcon(QMessageBox.Critical)
-    msg.setText("Error")
-    msg.setInformativeText(message)
-    msg.setDetailedText(message_detail)
-    msg.setWindowTitle("Error")
-    msg.setStandardButtons(QMessageBox.Abort)
-    msg.exec_()
-
-
-def error_dialog_settings(message, message_detail, settings_obj):
+def error_dialog_settings(message: str, message_detail: str, settings_obj: "settings.Settings") -> None:
     """This function creates an error dialog, which can be customized.
 
     Args:
@@ -184,7 +147,6 @@ def error_dialog_settings(message, message_detail, settings_obj):
     msg.setIcon(QMessageBox.Critical)
     msg.setText(message)
     msg.setInformativeText(message_detail)
-    # msg.setDetailedText()
     msg.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
     msg.setWindowTitle("Error")
 
@@ -196,7 +158,7 @@ def error_dialog_settings(message, message_detail, settings_obj):
         tools.restore_default_settings(settings_obj)
 
 
-def warning_dialog_restore_settings(message):
+def warning_dialog_restore_settings(message: str) -> bool:
     """This function creates a warning dialog, which can be customized.
 
     Args:
@@ -219,81 +181,13 @@ def warning_dialog_restore_settings(message):
     # button logic
     if msg.clickedButton() == yes_button:
         return True
-    elif msg.clickedButton() == no_button:
+    elif msg.clickedButton() == no_button:  # noqa: RET505
         return False
-
-
-def warning_message_prediction_exists(message_detail, path):
-    """This function creates a warning message, which can be customized.
-
-    Args:
-        message_detail:
-            additional information
-        path:
-            path where the prediction is stored
-    """
-    msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setIcon(QMessageBox.Warning)
-    msg.setText("Warning")
-    msg.setInformativeText("A prediction already exists! Please delete it or " "move it to another location.")
-    msg.setDetailedText(message_detail)
-    msg.setWindowTitle("Warning")
-    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
-    delete_button = msg.addButton("Delete", QMessageBox.ActionRole)
-    msg.exec_()
-    # button logic
-    if msg.clickedButton() == cancel_button:
-        return False
-    if msg.clickedButton() == delete_button:
-        os.remove(Path(path))
-        return True
-
-
-def warning_message_project_exists(project_name, message_detail, path):
-    """This function creates a warning message, which can be customized.
-
-    Args:
-        project_name:
-            name of the active project
-        message_detail:
-            additional information
-        path:
-            path where the prediction is stored
-    """
-    msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setIcon(QMessageBox.Warning)
-    msg.setText("Warning")
-    msg.setInformativeText(
-        f"A project with the name {project_name} already exists! " f"Please delete it or move it to another location.",
-    )
-    msg.setDetailedText(message_detail)
-    msg.setWindowTitle("Warning")
-    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
-    delete_button = msg.addButton("Delete", QMessageBox.ActionRole)
-    msg.exec_()
-    # button logic
-    if msg.clickedButton() == cancel_button:
-        return False
-    if msg.clickedButton() == delete_button:
-        shutil.rmtree(Path(path))
-        return True
+    return False
 
 
 def warning_message_project_gets_deleted() -> bool:
-    """This function creates a warning message, which can be customized.
-
-    Args:
-        project_name:
-            name of the active project
-        message_detail:
-            additional information
-        path:
-            path where the prediction is stored
-    """
+    """This function creates a warning message, which can be customized."""
     msg = QMessageBox()
     msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
@@ -312,16 +206,7 @@ def warning_message_project_gets_deleted() -> bool:
 
 
 def warning_message_protein_gets_deleted() -> bool:
-    """This function creates a warning message, which can be customized.
-
-    Args:
-        project_name:
-            name of the active project
-        message_detail:
-            additional information
-        path:
-            path where the prediction is stored
-    """
+    """This function creates a warning message, which can be customized."""
     msg = QMessageBox()
     msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
@@ -339,88 +224,11 @@ def warning_message_protein_gets_deleted() -> bool:
     return False
 
 
-def error_project_data_is_invalid(path) -> bool:
-    """This function creates an error message, if the project data is invalid.
+def warning_prediction_is_finished(dialog_obj) -> None:  # noqa: ANN001
+    """This function creates a warning message box, to inform the user to save the current active pymol session.
 
     Args:
-        path:
-            path where the data is missing
-    """
-    msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setIcon(QMessageBox.Critical)
-    msg.setText("Error")
-    msg.setInformativeText("Your project data is corrupted.")
-    msg.setDetailedText(f"Data is missing in the following path: {path}")
-    msg.setWindowTitle("Error")
-    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
-    msg.exec_()
-    # button logic
-    if msg.clickedButton() == ok_button:
-        return True
-    return False
-
-
-def warning_switch_pymol_session(message_detail) -> bool:
-    """This function creates a warning message box, to inform the
-    user to save the current active pymol session.
-
-    Args:
-        message_detail:
-            detailed message string
-    """
-    msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setIcon(QMessageBox.Warning)
-    msg.setText("Warning")
-    msg.setInformativeText("Do you want to save the current PyMOL session?")
-    msg.setDetailedText(message_detail)
-    msg.setWindowTitle("Warning")
-    no_button = msg.addButton("No", QMessageBox.ActionRole)
-    yes_button = msg.addButton("Yes", QMessageBox.ActionRole)
-    msg.exec_()
-    # button logic
-    if msg.clickedButton() == no_button:
-        return False
-    if msg.clickedButton() == yes_button:
-        return True
-    return False
-
-
-def warning_prediction_is_running(dialog_obj):
-    """This function creates a warning message box, to inform the
-    user to save the current active pymol session.
-
-    Args:
-        message_detail:
-            detailed message string
-    """
-    msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-    styles.set_stylesheet(msg)
-    msg.setIcon(QMessageBox.Warning)
-    msg.setText("Warning")
-    msg.setInformativeText("The AlphaFold prediction is running ...")
-    msg.setWindowTitle("Prediction is running.")
-    abort_button = msg.addButton("Abort", QMessageBox.ActionRole)
-    msg.exec_()
-    # button logic
-    if msg.clickedButton() == abort_button:
-        dialog_obj.close()
-        msg.close()
-        return False, msg
-    return True, msg
-
-
-def warning_prediction_is_finished(dialog_obj):
-    """This function creates a warning message box, to inform the
-    user to save the current active pymol session.
-
-    Args:
-        message_detail:
-            detailed message string
+        dialog_obj: the web interface object.
     """
     # closes the previous message box
     msg = QMessageBox()
@@ -439,12 +247,7 @@ def warning_prediction_is_finished(dialog_obj):
 
 
 def error_prediction_progress_lost() -> bool:
-    """This function creates an error message, if the project data is invalid.
-
-    Args:
-        path:
-            path where the data is missing
-    """
+    """Creates an error message if the project data is invalid."""
     msg = QMessageBox()
     msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
@@ -461,7 +264,7 @@ def error_prediction_progress_lost() -> bool:
     return False
 
 
-def hide_gui_elements(gui_elements: list):
+def hide_gui_elements(gui_elements: list) -> None:
     """This function hides gui elements.
 
     Args:
@@ -473,7 +276,7 @@ def hide_gui_elements(gui_elements: list):
             gui_element.hide()
 
 
-def show_gui_elements(gui_elements: list):
+def show_gui_elements(gui_elements: list) -> None:
     """This function shows gui elements.
 
     Args:
@@ -485,9 +288,8 @@ def show_gui_elements(gui_elements: list):
             gui_element.show()
 
 
-def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list):
-    """This function is a combination of "show_gui_elements" and "hide_gui_elements" to quickly
-    manage the visibility of gui elements.
+def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list) -> None:
+    """Manages a combination of "show_gui_elements" and "hide_gui_elements" manage the visibility of gui elements.
 
     Args:
         gui_elements_to_show:
@@ -499,7 +301,7 @@ def manage_gui_visibility(gui_elements_to_show: list, gui_elements_to_hide: list
     hide_gui_elements(gui_elements_to_hide)
 
 
-def disable_text_box(text_box, text_box_label):
+def disable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QLabel) -> None:
     """This function disables a text box and grays out the corresponding label.
 
     Args:
@@ -513,7 +315,7 @@ def disable_text_box(text_box, text_box_label):
     text_box.setEnabled(False)
 
 
-def enable_text_box(text_box, text_box_label):
+def enable_text_box(text_box: QtWidgets.QLineEdit, text_box_label: QtWidgets.QLabel) -> None:
     """This function enables a text box and colors the corresponding label black.
 
     Args:
@@ -527,39 +329,42 @@ def enable_text_box(text_box, text_box_label):
     text_box.setEnabled(True)
 
 
-def get_prediction_name_and_seq_from_table(table) -> list[tuple[str, str]]:
-    """This function gets the names and sequences of the table which stores the predictions to run.
+def fill_list_view_with_protein_names(
+    app_project: "project.Project",
+    list_view_project_proteins: QtWidgets.QListWidget,
+) -> None:
+    """Fills a list with protein names.
 
     Args:
-        table:
-
-    Returns:
-        list of tuples with name and sequence
+        app_project: the app project.
+        list_view_project_proteins: a QListWidget for the protein names.
     """
-    # list which consists of tuples of the protein name and protein sequence
-    predictions: list[tuple[str, str]] = []
-    for i in range(table.rowCount()):
-        tmp_name = table.verticalHeaderItem(i).text()
-        tmp_seq = table.item(i, 1).text()
-        predictions.append((tmp_name, tmp_seq))
-    return predictions
-
-
-def write_fasta_file_from_table():
-    pass
-
-
-def fill_list_view_with_protein_names(app_project: "project.Project", list_view_project_proteins):
     for tmp_protein in app_project.proteins:
         list_view_project_proteins.addItem(tmp_protein.get_molecule_object())
 
 
-def fill_list_view_with_protein_pair_names(app_project: "project.Project", list_view_project_proteins):
+def fill_list_view_with_protein_pair_names(
+    app_project: "project.Project",
+    list_view_project_proteins: QtWidgets.QListWidget,
+) -> None:
+    """Fills a list with protein pair names.
+
+    Args:
+        app_project: the app project.
+        list_view_project_proteins: a QListWidget for the protein pair names.
+    """
     for tmp_protein_pair in app_project.protein_pairs:
         list_view_project_proteins.addItem(tmp_protein_pair.name)
 
 
-def setup_standard_block_box(block_box, window_title, msg_text):
+def setup_standard_block_box(block_box: QMessageBox, window_title: str, msg_text: str) -> QMessageBox:
+    """Sets up the default values for a given block box.
+
+    Args:
+        block_box: the block box to configure.
+        window_title: the window title for the block box.
+        msg_text: the message for the block box.
+    """
     block_box.setStandardButtons(QMessageBox.NoButton)
     block_box.setIcon(QMessageBox.Information)
     block_box.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
