@@ -213,8 +213,8 @@ class MainWindow(QtWidgets.QMainWindow):
         tools.create_directory(constants.SETTINGS_DIR, "scratch")
         self._setup_default_configuration()
 
-        if len(os.listdir(constants.LOG_PATH)) > 0:
-            self.open_change_log()
+        # if len(os.listdir(constants.LOG_PATH)) > 0:
+        #     self.open_change_log()
 
         constants.PYSSA_LOGGER.info("Setup rest of GUI related elements ...")
 

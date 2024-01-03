@@ -47,6 +47,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class Project:

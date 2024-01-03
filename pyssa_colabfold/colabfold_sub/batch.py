@@ -1320,38 +1320,32 @@ def run(
     feature_dict_callback: Callable[[Any], Any] = None,
     **kwargs,
 ):
-    # # check what device is available
-    # try:
-    #     # check if TPU is available
-    #     import jax.tools.colab_tpu
-    #     jax.tools.colab_tpu.setup_tpu()
-    #     logger.info('Running on TPU')
-    #     DEVICE = "tpu"
-    #     use_gpu_relax = False
-    # except:
-    #     if jax.local_devices()[0].platform == 'cpu':
-    #         logger.info("WARNING: no GPU detected, will be using CPU")
-    #         DEVICE = "cpu"
-    #         use_gpu_relax = False
-    #     else:
-    #         import tensorflow as tf
-    #         tf.get_logger().setLevel(logging.ERROR)
-    #         logger.info('Running on GPU')
-    #         DEVICE = "gpu"
-    #         # disable GPU on tensorflow
-    #         tf.config.set_visible_devices([], 'GPU')
-
-    logger.info(f"Jax local devices platform: {jax.local_devices()[0].platform}")  # fixme: this needs to be tested!!
+    import jax
+    logger.info(f"CUSTOM-PYSSA-MSG::Jax local devices platform: {jax.local_devices()[0].platform}")
     if jax.local_devices()[0].platform != "cpu":
-        jax.default_device(jax.devices("cpu")[0])
-        DEVICE = "cpu"
-        use_gpu_relax = False
+        logger.warning("Jax uses a GPU by default, trying to switch to CPU ...")
+        # PYSSA-BEGIN:
+        import jax
+        jax.config.update('jax_platform_name', 'cpu')
+        import os
+        os.environ['CUDA_VISIBLE_DEVICES'] = ''
+        # PYSSA-END.
         import tensorflow as tf
-
         tf.config.set_visible_devices([], "GPU")
-        logger.info("Prediction process should now run on CPU only.")
+
+        if jax.local_devices()[0].platform != "cpu":
+            logger.warning("CUSTOM-PYSSA-MSG::Jax configuration could NOT be switch to CPU! This could lead to a failure of the prediction!")
+            logger.warning(
+                f"CUSTOM-PYSSA-MSG::Jax uses {jax.local_devices()[0].platform} as device for the prediction.")
+        else:
+            logger.info("CUSTOM-PYSSA-MSG::Prediction process should now run on CPU only.")
+            logger.info(
+                f"CUSTOM-PYSSA-MSG::Jax uses {jax.local_devices()[0].platform} as device for the prediction.")
+        # jax.default_device(jax.devices("cpu")[0])  # fixme: that code did not work on Achim's computer see Mail "Neue PySSA-Version klappt nicht @home"
+        # DEVICE = "cpu"
+        # use_gpu_relax = False
     else:
-        logger.info("Prediction process runs on CPU by default.")
+        logger.info("CUSTOM-PYSSA-MSG::Prediction process runs on CPU by default.")
 
     from alphafold.notebooks.notebook_utils import get_pae_json
     from colabfold.alphafold.models import load_models_and_params

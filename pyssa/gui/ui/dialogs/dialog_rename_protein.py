@@ -27,7 +27,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
-from pyssa.gui.ui.forms.auto_generated.auto_dialog_rename_protein import Ui_Dialog
+from pyssa.gui.ui.forms.auto_generated import auto_dialog_rename_protein
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, workspace_util, input_validator
 
@@ -46,7 +46,7 @@ class DialogRenameProtein(Qt.QtWidgets.QDialog):
         """
         Qt.QtWidgets.QDialog.__init__(self, parent)
         # build ui object
-        self.ui = Ui_Dialog()
+        self.ui = auto_dialog_rename_protein.Ui_Dialog()
         self.ui.setupUi(self)
         self.ui.btn_rename_protein.setEnabled(False)
         self.ui.btn_cancel.clicked.connect(self.close_dialog)

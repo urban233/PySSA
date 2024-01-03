@@ -69,6 +69,11 @@ def copy_fasta_files_from_windows_to_wsl2(the_fasta_path: str) -> None:
         raise OSError(f"Fasta files from Windows host could not be copied to WSL2! {e}")
 
 
+def disable_cuda_device_usage():
+    import os
+    os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+
 def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str) -> None:
     """Prepares the environment needed for the computation inside the WSL2."""
     str_conversion_1 = the_scratch_fasta_dir_of_windows_host.replace("\\", "/")
@@ -76,6 +81,7 @@ def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str) 
     str_conversion_3 = str_conversion_2.replace("C", "c")
     the_scratch_fasta_dir_of_windows_host = f"/mnt/{str_conversion_3}"
     try:
+        disable_cuda_device_usage()
         change_ownership_recursive("/home/rhel_user/")
         delete_scratch_directory_in_wsl2()
         create_pdb_directory_in_wsl2()

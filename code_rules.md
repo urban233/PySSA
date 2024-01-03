@@ -3,6 +3,7 @@ Authors: Hannah Kullik & Martin Urban
 
 ## Contents of this document
 * [Description](#Description)
+* [Dev-Environment](#dev-environment)
 * [Pre-commit hook](#pre-commit-hook)
 * [Linting](#Linting)
 * [Type annotation](#Type-annotation)
@@ -10,11 +11,17 @@ Authors: Hannah Kullik & Martin Urban
 * [Exception handling](#Exception-handling)
 * [Terminology](#Terminology)
 * [Code formatting](#Code-formatting)
+* [Code documentation](#code-documentation)
 
 ## Description
 Python is the main programming language of the PySSA project.
 This document describes the rules which must be followed if the
 source code gets extended.
+
+## Dev-Environment
+The conda environment used for the development **must** be created through
+an environment.yaml file from one of the authors.
+This ensures that the development environment is reproducible.
 
 ## Pre-commit hook
 Before committing any changes, run the pre-commit hook configuration.
@@ -191,4 +198,12 @@ if the_fasta_path is None:
 
 # </editor-fold>
 
+```
+
+## Code Documentation
+The documentation for the pyssa codebase is done with sphinx.
+To generate the new documentation run if you are in the codebase dir:
+```powershell
+sphinx-apidoc -f -o .\source\ ..\..\pyssa\
+sphinx-build -M html source/ build/
 ```

@@ -50,10 +50,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class Protein:
-    """This class stores one protein in a PyMOL compatible form."""
+    """Stores one protein in a PyMOL compatible form."""
 
     # <editor-fold desc="Class attributes">
     """
@@ -119,18 +120,6 @@ class Protein:
         if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
             logger.error("An argument is illegal.")
             raise ValueError("An argument is illegal.")
-        # if not safeguard.Safeguard.check_if_value_is_not_none(proteins_dirname):
-        #     logger.error("An argument is illegal.")
-        #     raise ValueError("An argument is illegal.")
-        # # if not safeguard.Safeguard.check_filepath(proteins_dirname):
-        # #     logger.error("The directory does not exist.")
-        # #     raise NotADirectoryError("The directory does not exist.")
-        # if not safeguard.Safeguard.check_if_value_is_not_none(pdb_filepath.get_filepath()):
-        #     logger.error("An argument is illegal.")
-        #     raise ValueError("An argument is illegal.")
-        # if not safeguard.Safeguard.check_filepath(pdb_filepath.get_filepath()):
-        #     logger.error("PDB file was not found.")
-        #     raise NotADirectoryError("PDB file was not found.")
 
         # </editor-fold>
 
