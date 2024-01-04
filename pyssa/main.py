@@ -82,7 +82,6 @@ from pyssa.util import gui_page_management
 from pyssa.util import tools
 from pyssa.util import gui_utils
 
-
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
 
@@ -2303,26 +2302,19 @@ class MainWindow(QtWidgets.QMainWindow):
             constants.PYSSA_LOGGER.info("No protein was deleted.")
 
     def add_existing_protein(self) -> None:
-        """Adds an existing protein structure to the project either by id or from the filesystem."""
-        tmp_dialog = dialog_add_model.DialogAddModel()
-        tmp_dialog.exec_()
-        if len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is True:
-            tmp_ref_protein = pymol_io.get_protein_from_pdb(dialog_add_model.global_var_add_model[0].upper())
-            self.app_project.add_existing_protein(tmp_ref_protein)
-        elif len(dialog_add_model.global_var_add_model[0]) == 0 and dialog_add_model.global_var_add_model[1] is False:
-            print("Dialog closed.")
-        elif len(dialog_add_model.global_var_add_model[0]) == 4 and dialog_add_model.global_var_add_model[1] is False:
-            print("Unexpected Error.")
-        else:
-            # local pdb file as input
-            pdb_filepath = path_util.FilePath(pathlib.Path(dialog_add_model.global_var_add_model[0]))
-            graphic_operations.setup_default_session_graphic_settings()
-            tmp_ref_protein = protein.Protein(
-                molecule_object=pdb_filepath.get_filename(),
-                pdb_filepath=pdb_filepath,
-            )
-            self.app_project.add_existing_protein(tmp_ref_protein)
-        self._project_watcher.show_valid_options(self.ui)
+        """Opens a dialog to adds an existing protein structure to the project."""
+        self.tmp_dialog = dialog_add_model.DialogAddModel()
+        self.tmp_dialog.return_value.connect(self.post_add_existing_protein)
+        self.tmp_dialog.show()
+
+    def post_add_existing_protein(self, return_value: tuple) -> None:
+        """Adds an existing protein structure to the current project either by id or from the filesystem.
+
+        Args:
+            return_value: a tuple consisting of the filepath or PDB id and the length of the first one.
+        """
+        if return_value[1] > 0:
+            self.app_project = main_window_util.add_protein_to_project(return_value, self.app_project)
         self.display_edit_page()
 
     def save_selected_protein_structure_as_pdb_file(self) -> None:

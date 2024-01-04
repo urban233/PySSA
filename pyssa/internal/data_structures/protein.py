@@ -144,7 +144,7 @@ class Protein:
             self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
 
         elif pdb_filepath != "" and pdb_xml_string == "":
-            self._pymol_molecule_object = pdb_filepath.get_filename()
+            self._pymol_molecule_object = pdb_filepath.get_filename().replace(" ", "_")
             self.chains = protein_operations.get_protein_chains(
                 molecule_object,
                 pdb_filepath.get_dirname(),

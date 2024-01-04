@@ -9,6 +9,7 @@ Authors: Hannah Kullik & Martin Urban
 * [Type annotation](#Type-annotation)
 * [Imports](#Imports)
 * [Exception handling](#Exception-handling)
+* [Communication](#communication)
 * [Terminology](#Terminology)
 * [Code formatting](#Code-formatting)
 * [Code documentation](#code-documentation)
@@ -24,9 +25,16 @@ an environment.yaml file from one of the authors.
 This ensures that the development environment is reproducible.
 
 ## Pre-commit hook
-Before committing any changes, run the pre-commit hook configuration.
+Before committing any changes, a custom commit-hook will be run **automatically**.
+You **must solve** any issues before committing any changes!
+
+You can choose to run the pre-commit hook configuration by yourself beforehand by
+running the command:
+```powershell
+pre-commit run --all-files
+```
 All available pre-commit hooks are listed here: https://pre-commit.com/hooks.html.
-The addition of a pre-commit hook needs an author approval.
+The addition of a pre-commit hook **needs an approval** of an author.
 
 To be able to run the pre-commit hooks on Windows, it could be
 possible to update the SSL lib. To do this download this [OpenSSL
@@ -64,8 +72,8 @@ distances_of_amino_acid_pairs: np.ndarray = np.ndarray([])
 
 ### Annotations of return values
 If a function/ method has a return value that will not be used, that
-function call needs to be wrapped inside the `void` function.
-The `void` function is the only function which gets imported as function
+function call needs to be wrapped inside the `rvoid` function.
+The `rvoid` function is the only function which gets imported as function
 and not as module:
 
 ```python
@@ -156,7 +164,7 @@ def copy_fasta_file(a_source_filepath: pathlib.Path, a_destination_filepath: pat
 ```
 
 ### try-except blocks
-Always wrap `cmd` commands of the PyMOL api into a try-except block.
+Always wrap `cmd` commands of the PyMOL API into a try-except block.
 
 ```python
 import pymol
@@ -170,6 +178,55 @@ except pymol.CmdException:
     raise ...
 ```
 
+## Communication
+### QMainWindow & QDialogs
+The communication between any QMainWindow and QDialog is done with
+signals and slots. This ensures that no unauthorized memory access violations occur.
+#### How-to
+1. Define a custom pyqtsignal in the QDialog class:
+```python
+...
+
+class DialogAddModel(Qt.QtWidgets.QDialog):
+    """Class for a dialog to add proteins to a project."""
+
+    """
+    A pyqtsignal that is used to hand-over the protein structure information.
+    """
+    return_value = pyqtSignal(tuple)  # this is a custom PyQt signal
+
+    ...
+```
+2. Emit the signal where communication should occur.
+```python
+...
+
+def add_model(self) -> None:
+    """Emits a custom pyqtsignal and closes the dialog."""
+    self.return_value.emit((self.ui.txt_add_protein.text(), True))
+    self.close()
+
+...
+```
+3. Connect the signal in the QMainWindow with the QDialog object and the slot function
+```python
+...
+
+def add_existing_protein(self) -> None:
+    """Opens a dialog to add an existing protein structure to the project."""
+    self.tmp_dialog = dialog_add_model.DialogAddModel()
+    self.tmp_dialog.return_value.connect(self.post_add_existing_protein)  # here is the connection
+    self.tmp_dialog.show()
+
+...
+```
+4. Be sure that the slot function has the value of the signal as an function argument
+```python
+...
+
+def post_add_existing_protein(self, return_value: tuple):  # in this case the value is a tuple
+    ...
+```
 
 ## Terminology
 ### Path, dir, file & filepath
@@ -202,7 +259,7 @@ if the_fasta_path is None:
 
 ## Code Documentation
 The documentation for the pyssa codebase is done with sphinx.
-To generate the new documentation run if you are in the codebase dir:
+To generate the new documentation run if you are in the codebase dir _(PySSA/docs/codebase)_:
 ```powershell
 sphinx-apidoc -f -o .\source\ ..\..\pyssa\
 sphinx-build -M html source/ build/

@@ -22,6 +22,7 @@
 """Module for the add proteins dialog."""
 import os
 import pymol
+from PyQt5.QtCore import pyqtSignal
 from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtCore
@@ -35,6 +36,11 @@ global_var_add_model = ("", False)
 
 class DialogAddModel(Qt.QtWidgets.QDialog):
     """Class for a dialog to add proteins to a project."""
+
+    """
+    A pyqtsignal that is used to hand-over the protein structure information.
+    """
+    return_value = pyqtSignal(tuple)
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
@@ -115,6 +121,11 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
                 self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
                 self.ui.btn_add_protein.setEnabled(False)
                 styles.color_button_not_ready(self.ui.btn_add_protein)
+            else:
+                # TODO: displays a correct filepath in red, needs to be fixed!
+                self.ui.txt_add_protein.setStyleSheet("color: #000000")
+                self.ui.btn_add_protein.setEnabled(True)
+                styles.color_button_ready(self.ui.btn_add_protein)
 
     def close_dialog(self) -> None:
         """Closes the dialog."""
@@ -142,6 +153,5 @@ class DialogAddModel(Qt.QtWidgets.QDialog):
 
     def add_model(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""
-        global global_var_add_model
-        global_var_add_model = (self.ui.txt_add_protein.text(), True)
+        self.return_value.emit((self.ui.txt_add_protein.text(), len(self.ui.txt_add_protein.text())))
         self.close()
