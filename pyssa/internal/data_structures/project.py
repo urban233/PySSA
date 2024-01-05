@@ -36,7 +36,6 @@ from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
-from pyssa.util import exception
 from pyssa.internal.data_structures.data_classes import basic_protein_info
 
 if TYPE_CHECKING:
@@ -86,7 +85,7 @@ class Project:
 
     # </editor-fold>
 
-    def __init__(self, a_project_name: str, a_workspace_path: pathlib.Path) -> None:
+    def __init__(self, a_project_name: str = "", a_workspace_path: pathlib.Path = pathlib.Path("")) -> None:
         """Constructor.
 
         Args:
@@ -98,20 +97,8 @@ class Project:
             exception.DirectoryDoesNotExistError: if the workspace folder does not exist
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_project_name):
-            msg = "The project name is None!"
-            logger.error(msg)
-            raise exception.IllegalArgumentError(msg)
-
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_workspace_path):
-            msg = "The workspace path is None!"
-            logger.error(msg)
-            raise exception.DirectoryNotFoundError(msg)
-
-        # if not safeguard.Safeguard.check_filepath(a_workspace_path):
-        #     msg = "The given workspace path does not exists!"
-        #     logger.error(msg)
-        #     raise exception.IllegalArgumentError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_project_name, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(a_workspace_path, logger)
 
         # </editor-fold>
 
@@ -130,10 +117,7 @@ class Project:
             ValueError: if one of the arguments are None or path does not exist
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_workspace_path):
-            msg = "The given path object is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_workspace_path, logger)
 
         if not safeguard.Safeguard.check_filepath(a_workspace_path):
             msg = "The given workspace path does not exists!"
@@ -154,10 +138,7 @@ class Project:
             ValueError: if one of the arguments are None
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_protein):
-            msg = "The given protein is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_protein, logger)
 
         # </editor-fold>
 
@@ -173,10 +154,8 @@ class Project:
             ValueError: If one of the arguments are None
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_protein_pair):
-            msg = "The given protein pair is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_protein_pair, logger)
+
         # </editor-fold>
 
         self.protein_pairs.append(a_protein_pair)
@@ -215,10 +194,7 @@ class Project:
             ValueError: if one of the arguments are None or path not exist
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_filepath):
-            msg = "The given filepath object is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_filepath, logger)
 
         # </editor-fold>
 
@@ -256,20 +232,9 @@ class Project:
             a complete project object deserialized from a xml file
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_filepath):
-            msg = "The given filepath object is None."
-            logger.error(msg)
-            raise ValueError(msg)
-
-        if not safeguard.Safeguard.check_filepath(a_filepath):
-            msg = "The given filepath does not exists!"
-            logger.error(msg)
-            raise ValueError(msg)
-
-        if not safeguard.Safeguard.check_if_value_is_not_none(app_settings):
-            msg = "The given settings object is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_filepath, logger)
+        safeguard.Safeguard.check_filepath(a_filepath)
+        safeguard.Safeguard.check_if_value_is_not_none(app_settings, logger)
 
         # </editor-fold>
 
@@ -285,10 +250,7 @@ class Project:
             IllegalArgumentError: If the argument is None.
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_protein_name):
-            msg = "The given protein name is None."
-            logger.error(msg)
-            raise exception.IllegalArgumentError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_protein_name, logger)
 
         # </editor-fold>
 
@@ -310,10 +272,7 @@ class Project:
             if the protein pair is found, the protein pair
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_protein_pair_name):
-            msg = "The given protein pair name object is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_protein_pair_name, logger)
 
         # </editor-fold>
 
@@ -332,10 +291,7 @@ class Project:
             ValueError: if one of the arguments are None
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_current_session):
-            msg = "The given current session object is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_current_session, logger)
 
         # </editor-fold>
 
@@ -356,10 +312,7 @@ class Project:
             ValueError: if one of the arguments are None
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_protein_name):
-            msg = "The given protein name object is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_protein_name, logger)
 
         # </editor-fold>
 
@@ -381,10 +334,8 @@ class Project:
             ValueError: if one of the arguments are None
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(a_protein_name):
-            msg = "The given protein name object is None."
-            logger.error(msg)
-            raise ValueError(msg)
+        safeguard.Safeguard.check_if_value_is_not_none(a_protein_name, logger)
+
         # </editor-fold>
 
         protein_obj = self.search_protein(a_protein_name)

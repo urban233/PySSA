@@ -50,6 +50,7 @@ from pyssa.gui.ui.dialogs import dialog_rename_protein
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.forms.auto_generated.auto_main_window import Ui_MainWindow
 from pyssa.gui.ui.styles import styles
+from pyssa.gui.ui.views import main_view
 
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
@@ -64,6 +65,8 @@ from pyssa.internal.data_structures.data_classes import results_state
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import task_workers
+
+from pyssa.presenter import main_presenter
 
 from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
 from pyssa.io_pyssa import filesystem_io
@@ -313,8 +316,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._project_watcher.show_valid_options(self.ui)
         self._project_watcher.check_workspace_for_projects(self.workspace_path, self.ui)
-        self.project_scanner = filesystem_io.ProjectScanner(self.app_project)
-
         self.threadpool = QtCore.QThreadPool()
         # create scratch and cache dir
         try:
@@ -2038,7 +2039,6 @@ class MainWindow(QtWidgets.QMainWindow):
             protein_names.append(tmp_protein.get_molecule_object())
         constants.PYSSA_LOGGER.debug(f"These are the proteins {protein_names}.")
         self._project_watcher.current_project = self.app_project
-        self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(
             f"{self._project_watcher.current_project.get_project_name()} is the current project.",
         )
@@ -2091,7 +2091,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.app_project = project.Project.deserialize_project(tmp_project_path, self.app_settings)
         constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
         self._project_watcher.current_project = self.app_project
-        self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(
             f"{self._project_watcher.current_project.get_project_name()} is the current project.",
         )
@@ -2123,7 +2122,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """Opens a project."""
         self.app_project = project_obj
         self._project_watcher.current_project = self.app_project
-        self.project_scanner.project = self.app_project
         constants.PYSSA_LOGGER.info(
             f"{self._project_watcher.current_project.get_project_name()} is the current project.",
         )
@@ -2573,7 +2571,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._project_watcher.current_project = self.app_project
         self._project_watcher.on_home_page = False
         self._project_watcher.show_valid_options(self.ui)
-        self.project_scanner.project = self.app_project
         self._init_use_page()
         constants.PYSSA_LOGGER.info(
             f"The project {self.app_project.get_project_name()} was successfully created through a use.",
@@ -2615,7 +2612,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.app_project = self.app_project.deserialize_project(new_filepath, self.app_settings)
             constants.PYSSA_LOGGER.info(f"Opening the project {self.app_project.get_project_name()}.")
             self._project_watcher.current_project = self.app_project
-            self.project_scanner.project = self.app_project
             constants.PYSSA_LOGGER.info(
                 f"{self._project_watcher.current_project.get_project_name()} is the current project.",
             )
@@ -7690,6 +7686,8 @@ class MainWindow(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     styles.set_stylesheet(app)
-    ex = MainWindow()
-    ex.show()
+    main_window = main_view.MainView()
+    main_presenter = main_presenter.MainPresenter(main_window)
+    styles.set_stylesheet(main_window)
+    main_window.show()
     sys.exit(app.exec_())

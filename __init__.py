@@ -71,13 +71,15 @@ def run_plugin_gui() -> None:
         app = Qt.QtWidgets.QApplication(sys.argv)
         app.exec_()
     """
-    from .pyssa.main import MainWindow
+    from .pyssa.gui.ui.views import main_view
+    from .pyssa.presenter import main_presenter
 
     # getting the value of the global var mainWindow
     global mainWindow
 
     if mainWindow is None:
-        mainWindow = MainWindow()
+        mainWindow = main_view.MainView()
+        main_presenter = main_presenter.MainPresenter(mainWindow)
         # Open the qss styles file and read in the css-alike styling code
         if sys.platform.startswith("linux"):
             with open(styles_path_list[0], "r", encoding="utf-8") as file:

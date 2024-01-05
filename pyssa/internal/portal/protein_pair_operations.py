@@ -49,15 +49,9 @@ def align_protein_pair(target_selection: str, mobile_selection: str, alignment_f
         a tuple with rmsd and aligned amino acids
     """
     # <editor-fold desc="Checks">
-    if not safeguard.Safeguard.check_if_value_is_not_none(target_selection):
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(mobile_selection):
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(alignment_filename):
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
+    safeguard.Safeguard.check_if_value_is_not_none(target_selection, logger)
+    safeguard.Safeguard.check_if_value_is_not_none(mobile_selection, logger)
+    safeguard.Safeguard.check_if_value_is_not_none(alignment_filename, logger)
 
     # </editor-fold>
 

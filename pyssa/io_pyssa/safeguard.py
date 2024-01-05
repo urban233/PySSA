@@ -24,6 +24,7 @@ import os
 import pathlib
 
 from pymol import cmd
+from pyssa.util import exception
 
 
 class Safeguard:
@@ -85,16 +86,18 @@ class Safeguard:
         return False
 
     @staticmethod
-    def check_if_value_is_not_none(value) -> bool:  # noqa: ANN001
-        """This function checks if a value is None or not.
+    def check_if_value_is_not_none(a_value, a_logger) -> None:  # noqa: ANN001
+        """Checks if a value is None or not.
 
         Args:
-            value:
-                any kind of variable
+            a_value: any kind of variable
+            a_logger: a logger from the module
         Returns:
             True: if NOT None
             False: if None
         """
-        if value is None:
-            return False
-        return True
+        if a_logger is None:
+            raise ValueError("The logger is None.")
+        if a_value is None:
+            a_logger.error(f"An argument is illegal: {a_value}!")
+            raise exception.IllegalArgumentError("An argument is illegal.")

@@ -77,16 +77,16 @@ def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: st
         a list of all chains from the protein, divided into protein and non-protein chains
     """
     # <editor-fold desc="Checks">
-    if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
+    safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
+    if molecule_object == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(dirname):
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
+    safeguard.Safeguard.check_if_value_is_not_none(dirname, logger)
     if not safeguard.Safeguard.check_filepath(dirname):
         logger.error("The directory does not exist.")
         raise NotADirectoryError("The directory does not exist.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(basename) or basename == "":
+    safeguard.Safeguard.check_if_value_is_not_none(basename, logger)
+    if basename == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
 
@@ -136,10 +136,12 @@ def get_protein_sequences_from_protein(molecule_object: str, chains: list[chain.
         a protein sequence object with amino acid sequences
     """
     # <editor-fold desc="Checks">
-    if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
+    safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
+    if molecule_object == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
-    if not safeguard.Safeguard.check_if_value_is_not_none(chains) or not safeguard.Safeguard.check_if_list_is_empty(
+    safeguard.Safeguard.check_if_value_is_not_none(chains, logger)
+    if not safeguard.Safeguard.check_if_list_is_empty(
         chains,
     ):
         logger.error("An argument is illegal.")

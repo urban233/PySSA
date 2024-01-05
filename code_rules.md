@@ -10,6 +10,7 @@ Authors: Hannah Kullik & Martin Urban
 * [Imports](#Imports)
 * [Exception handling](#Exception-handling)
 * [Communication](#communication)
+* [Threading](#threading)
 * [Terminology](#Terminology)
 * [Code formatting](#Code-formatting)
 * [Code documentation](#code-documentation)
@@ -133,10 +134,10 @@ Always check for None:
 def copy_fasta_file(a_source_filepath, a_destination_filepath):
     if a_source_filepath is None:
         logger.error(f"The argument 'a_source_filepath' is illegal: {a_source_filepath}!")
-        raise exceptions.IllegalArgumentError("An argument is illegal.")
+        raise exception.IllegalArgumentError("An argument is illegal.")
     if a_destination_filepath is None:
         logger.error(f"The argument 'a_destination_filepath' is illegal: {a_destination_filepath}!")
-        raise exceptions.IllegalArgumentError("An argument is illegal.")
+        raise exception.IllegalArgumentError("An argument is illegal.")
 ```
 
 Raise **IllegalArgumentError** if *unmodified* argument
@@ -227,6 +228,38 @@ def add_existing_protein(self) -> None:
 def post_add_existing_protein(self, return_value: tuple):  # in this case the value is a tuple
     ...
 ```
+
+## Threading
+Within PySSA the custom `Task` class will be used if multithreading is necessary
+for the presenter. The `Task` class is in the `pyssa.internal.thread.tasks`
+module. Do **NOT** use the `_Action` class directly only use the `Task` class!
+
+### Usage
+```python
+...
+
+def opens_project(self):
+    """Initiates the task to open an existing project."""
+    self._active_task = tasks.Task(self.__async_logic_open_project, post_func=self.__await_post_project)
+    self._active_task.start()
+    print("Thread should have started.")
+
+def __async_open_project(self) -> tuple:
+    """Runs in the separate QThread and does CPU-bound work."""
+    tmp_project_path = pathlib.Path(f"{self._workspace_path}/{self._view.ui.txt_open_selected_project.text()}")
+    return ("result", project.Project.deserialize_project(tmp_project_path, self._application_settings))
+
+def __await_post_project(self, a_result: tuple):
+    """Runs after the QThread finished."""
+    ...
+```
+The `Task` class gets an "async" function and optionally an "await" function.
+The function that runs in the QThread must have the signature `__async`
+(double underscore). The function that runs after the QThread finished must
+have the signature `__await`.
+This design decision is based on intuition because the `__async` function
+runs **asynchronous** in the QThread and the `__await` function **waits**
+for the QThread (`__async` function) to finish,
 
 ## Terminology
 ### Path, dir, file & filepath

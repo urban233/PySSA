@@ -39,7 +39,7 @@ from pyssa.internal.data_structures.data_classes import prediction_protein_info,
 from pyssa.io_pyssa import filesystem_io, safeguard, path_util
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import tools, constants, prediction_util, exception, exit_codes, workspace_util, constant_messages
+from pyssa.util import tools, constants, prediction_util, exception, exit_codes, workspace_util
 from pyssa.internal.prediction_engines import esmfold
 from pyssa.internal.data_structures import project
 from typing import TYPE_CHECKING
@@ -329,12 +329,8 @@ class BatchImageWorker(QObject):
         """
         super().__init__()
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(status_bar):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
+        safeguard.Safeguard.check_if_value_is_not_none(status_bar, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(app_project, logger)
 
         # </editor-fold>
 
@@ -468,15 +464,9 @@ class ColabfoldWorker(QObject):
         """
         super().__init__()
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(table_prot_to_predict):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        if not safeguard.Safeguard.check_if_value_is_not_none(prediction_config):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
+        safeguard.Safeguard.check_if_value_is_not_none(table_prot_to_predict, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(prediction_config, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(app_project, logger)
 
         # </editor-fold>
 
@@ -619,21 +609,11 @@ class DistanceAnalysisWorker(QObject):
         """
         super().__init__()
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(list_analysis_overview):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        if not safeguard.Safeguard.check_if_value_is_not_none(cb_analysis_images):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        if not safeguard.Safeguard.check_if_value_is_not_none(status_bar):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        if not safeguard.Safeguard.check_if_value_is_not_none(app_project):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
-        if not safeguard.Safeguard.check_if_value_is_not_none(app_settings):
-            logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-            raise ValueError(constant_messages.ARGUMENT_IS_ILLEGAL)
+        safeguard.Safeguard.check_if_value_is_not_none(list_analysis_overview, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(cb_analysis_images, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(status_bar, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(app_project, logger)
+        safeguard.Safeguard.check_if_value_is_not_none(app_settings, logger)
 
         # </editor-fold>
 

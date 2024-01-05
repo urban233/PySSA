@@ -117,7 +117,8 @@ class Protein:
             FileNotFoundError: If file not found.
         """
         # <editor-fold desc="Checks">
-        if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
+        safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
+        if molecule_object == "":
             logger.error("An argument is illegal.")
             raise ValueError("An argument is illegal.")
 

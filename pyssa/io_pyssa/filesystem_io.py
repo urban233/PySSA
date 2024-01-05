@@ -20,7 +20,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for handling filesystem operations."""
-import fnmatch
+import concurrent
+import concurrent.futures
+import collections
+import itertools
+from queue import Queue
+from threading import Lock
 import os
 import json
 import pathlib
@@ -29,8 +34,8 @@ import logging
 import ast
 import numpy as np
 from xml.etree import ElementTree
-from PyQt5 import QtWidgets
 
+from pyssa.internal.data_structures.data_classes import basic_protein_info
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import protein
@@ -466,45 +471,6 @@ class ObjectDeserializer:
         return sequence.Sequence(self.object_dict.get("name"), self.object_dict.get("sequence"))
 
 
-class ProjectScanner:
-    """Class which is used to scan the project."""
-
-    def __init__(self, project_obj: "project.Project") -> None:
-        """Constructor.
-
-        Args:
-            project_obj: a project.
-        """
-        self.project = project_obj
-
-    def scan_project_for_valid_proteins(self, list_view_project_proteins: QtWidgets.QListWidget = None) -> list[str]:
-        """Scans the project pdb path and optionally fills a list view.
-
-        Args:
-            list_view_project_proteins: a list widget for protein names.
-        """
-        pattern = "*.pdb"
-        protein_basenames = []
-        # iterates over possible project directories
-        if list_view_project_proteins is not None:
-            for tmp_protein_dir in os.listdir(self.project.folder_paths["project"]):
-                path = pathlib.Path(f"{self.project.folder_paths['project']}/{tmp_protein_dir}")
-                if len(os.listdir(pathlib.Path(f"{path}/pdb"))) > 1:
-                    logger.error("Too many pdb files in one directory.")
-                    raise ValueError("Too many pdb files in one directory.")
-                if (
-                    fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern)
-                    and list_view_project_proteins is not None
-                ):
-                    list_view_project_proteins.addItem(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]))
-                elif (
-                    fnmatch.fnmatch(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]), pattern)
-                    and list_view_project_proteins is None
-                ):
-                    protein_basenames.append(str(os.listdir(pathlib.Path(f"{path}/pdb"))[0]))
-        return protein_basenames
-
-
 class WorkspaceScanner:
     """Class to scan the workspace."""
 
@@ -516,53 +482,77 @@ class WorkspaceScanner:
         """
         self.workspace_path = workspace_path
 
-    def scan_workspace_for_valid_projects(self, list_new_projects: QtWidgets.QListWidget) -> list:
-        """Scans the workspace for valid projects.
+    def scan_workspace_for_valid_projects(self) -> list[str]:
+        """Scans the workspace for valid projects."""
+        directory_content = os.listdir(str(self.workspace_path))
+        return [file for file in directory_content if file.endswith(".xml")]
+
+    def scan_workspace_for_non_duplicate_proteins(self) -> np.ndarray:
+        """Scans the workspace for non-duplicate proteins."""
+        tmp_workspace_path: str = str(self.workspace_path)
+        # List of XML file paths
+        xml_files = [
+            f"{tmp_workspace_path}/{tmp_project_file}"
+            for tmp_project_file in os.listdir(tmp_workspace_path)
+            if not os.path.isdir(pathlib.Path(f"{tmp_workspace_path}/{tmp_project_file}"))
+        ]
+        # Using ThreadPoolExecutor to read XML files in parallel
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Create a queue and a lock for thread safety
+            result_queue = Queue()
+            lock = Lock()
+
+            # Map each XML file to the read_xml_file function in parallel
+            futures = [
+                executor.submit(self._get_proteins_of_project_xml, pathlib.Path(file_path), result_queue, lock)
+                for file_path in xml_files
+            ]
+
+            # Wait for all tasks to complete
+            concurrent.futures.wait(futures)
+
+            # Retrieve results from the queue in the main thread
+            all_proteins_of_workspace: collections.deque = collections.deque()
+            while not result_queue.empty():
+                result = result_queue.get()
+                protein_name, protein_info = result
+                all_proteins_of_workspace.append(result[1])
+                # print(f"Name: {protein_name}, Info: {protein_info}")
+            flatten_proteins = list(itertools.chain(*all_proteins_of_workspace))
+            print(flatten_proteins)
+            # Use a set to store unique elements
+            unique_proteins_set = set()
+            # Iterate through the list and add unique elements to the set
+            for tmp_protein in flatten_proteins:
+                unique_proteins_set.add(tmp_protein)
+
+            return np.array(list(unique_proteins_set))
+
+    def _get_proteins_of_project_xml(self, xml_filepath: pathlib.Path, result_queue, lock) -> None:  # noqa: ANN001
+        """Gets the protein information from the project xml file.
 
         Args:
-            list_new_projects: a list for project names.
+            xml_filepath: a path to the project xml file.
+            result_queue: a queue to put the protein information into.
+            lock: a lock to prevent the unauthorized access to the memory.
         """
-        workspace_projects: list[str] = os.listdir(self.workspace_path)
-        valid_directories = []
-        # iterates over possible project directories
-        for directory in workspace_projects:
-            try:
-                directory_content = os.listdir(f"{self.workspace_path}/{directory}")
-                # iterates over the content in a single project directory
-                for content in directory_content:
-                    if content == "project.json":
-                        valid_directories.append(directory)
-            except NotADirectoryError:
-                print(f"This: {directory} is not a directory.")
-
-        valid_directories.sort()
-        for tmp_project in valid_directories:
-            list_new_projects.addItem(tmp_project)
-        return valid_directories
-
-    def scan_workspace_for_non_duplicate_proteins(self) -> dict:
-        """This function scans the workspace directory for protein structures and eliminates all duplicates.
-
-        Args:
-            workspace_path:
-                the path of the workspace
-        """
-        pdb_basenames_filepaths = []
-        for tmp_project_name in os.listdir(self.workspace_path):
-            for tmp_protein_name in os.listdir(pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins")):
-                pdb_basename = os.listdir(
-                    pathlib.Path(f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb"),
-                )
-                if len(pdb_basename) > 1:
-                    logger.error("Too many pdb files in one directory.")
-                    raise ValueError("Too many pdb files in one directory.")
-                pdb_filepath = path_util.FilePath(
-                    pathlib.Path(
-                        f"{self.workspace_path}/{tmp_project_name}/proteins/{tmp_protein_name}/pdb/{pdb_basename[0]}",
+        tmp_protein_names: collections.deque = collections.deque()
+        tmp_protein_infos: collections.deque = collections.deque()
+        xml_deserializer = XmlDeserializer(xml_filepath)
+        project_name = str(xml_filepath.name).replace(".xml", "")
+        for tmp_protein in xml_deserializer.xml_root.iter(element_names.PROTEIN):
+            molecule_object = tmp_protein.attrib[attribute_names.PROTEIN_MOLECULE_OBJECT]
+            if molecule_object not in tmp_protein_names:
+                tmp_protein_names.append(molecule_object)
+                tmp_protein_infos.append(
+                    basic_protein_info.BasicProteinInfo(
+                        molecule_object,
+                        tmp_protein.attrib[attribute_names.ID],
+                        project_name,
                     ),
                 )
-                pdb_basenames_filepaths.append((pdb_basename[0], pdb_filepath))
-        return dict(list(set(pdb_basenames_filepaths)))
+        with lock:
+            result_queue.put((list(tmp_protein_names), list(tmp_protein_infos)))
 
 
 class FilesystemCleaner:

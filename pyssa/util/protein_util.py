@@ -46,7 +46,8 @@ def check_if_protein_is_from_file_or_id(molecule_object: str) -> tuple:
         a tuple with the molecule object and the basename
     """
     # <editor-fold desc="Checks">
-    if not safeguard.Safeguard.check_if_value_is_not_none(molecule_object) or molecule_object == "":
+    safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
+    if molecule_object == "":
         logger.error("An argument is illegal.")
         raise ValueError("An argument is illegal.")
 
@@ -72,7 +73,8 @@ def filter_chains_for_protein_chains(chains: list["chain.Chain"]) -> list["chain
     Returns: a list of protein chains only
     """
     # <editor-fold desc="Checks">
-    if not safeguard.Safeguard.check_if_value_is_not_none(chains) or not safeguard.Safeguard.check_if_list_is_empty(
+    safeguard.Safeguard.check_if_value_is_not_none(chains, logger)
+    if not safeguard.Safeguard.check_if_list_is_empty(
         chains,
     ):
         logger.error("An argument is illegal.")
