@@ -110,10 +110,11 @@ def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str
     Raises:
         NotADirectoryError: If directory is not found.
     """
-    if not safeguard.Safeguard.check_filepath(export_filepath):
-        raise NotADirectoryError(f"The filepath {export_filepath} does not exists.")
+    if not safeguard.Safeguard.check_filepath(export_filepath.parent):
+        raise NotADirectoryError(f"The filepath {export_filepath.parent} does not exists.")
     # save the pdb file under the path (export_data_dir)
-    cmd.save(f"{export_filepath}/{molecule_object}.pdb")
+    tmp_filepath: pathlib.Path = pathlib.Path(f"{export_filepath.parent}/{molecule_object}.pdb")
+    cmd.save(str(tmp_filepath))
 
 
 def load_pymol_session(pymol_session_filepath: pathlib.Path) -> None:

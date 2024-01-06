@@ -60,7 +60,7 @@ def calculate_distance_between_ca_atoms(ref_prot_name: str, model_prot_name: str
     for resi_no in range(len(prot_1_indices)):
         atom1 = f"/{ref_prot_name}//{prot_1_indices[resi_no][0]}/{prot_1_indices[resi_no][1]}/CA"
         atom2 = f"/{model_prot_name}//{prot_2_indices[resi_no][0]}/{prot_2_indices[resi_no][1]}/CA"
-        distance = round(cmd.get_distance(atom1, atom2), 2)
+        distance = round(cmd.get_distance(atom1, atom2, state=-1), 2)
 
         ref_chain_list.append(prot_1_indices[resi_no][0])
         ref_pos_list.append(prot_1_indices[resi_no][1])

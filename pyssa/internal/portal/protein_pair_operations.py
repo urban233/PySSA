@@ -26,7 +26,6 @@ from pymol import cmd
 from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import filesystem_io
 from pyssa.util import constants
-from pyssa.util import globals
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.portal import pymol_io
 
@@ -104,19 +103,19 @@ def color_protein_pair(
         raise pymol.CmdException("The reference is not in the pymol session as an object.")
     if not safeguard.Safeguard.check_if_protein_is_in_pymol(pymol_molecule_object_model):
         raise pymol.CmdException("The model is not in the pymol session as an object.")
-    # actual color cmd command
-    if globals.g_settings.color_vision_mode == constants.CVM_NORMAL:
-        color_ref = constants.CVM_NORMAL_PROT_1_COLOR
-        color_model = constants.CVM_NORMAL_PROT_2_COLOR
-    elif globals.g_settings.color_vision_mode == constants.CVM_DEUTERANOPIA:
-        color_ref = constants.CVM_DEUTERANOPIA_PROT_1_COLOR
-        color_model = constants.CVM_DEUTERANOPIA_PROT_2_COLOR
-    elif globals.g_settings.color_vision_mode == constants.CVM_PROTANOPIA:
-        color_ref = constants.CVM_PROTANOPIA_PROT_1_COLOR
-        color_model = constants.CVM_PROTANOPIA_PROT_2_COLOR
-    elif globals.g_settings.color_vision_mode == constants.CVM_TRITANOPIA:
-        color_ref = constants.CVM_TRITANOPIA_PROT_1_COLOR
-        color_model = constants.CVM_TRITANOPIA_PROT_2_COLOR
+    # actual color cmd command # fixme: new color vision feature
+    # if globals.g_settings.color_vision_mode == constants.CVM_NORMAL:
+    #     color_ref = constants.CVM_NORMAL_PROT_1_COLOR
+    #     color_model = constants.CVM_NORMAL_PROT_2_COLOR
+    # elif globals.g_settings.color_vision_mode == constants.CVM_DEUTERANOPIA:
+    #     color_ref = constants.CVM_DEUTERANOPIA_PROT_1_COLOR
+    #     color_model = constants.CVM_DEUTERANOPIA_PROT_2_COLOR
+    # elif globals.g_settings.color_vision_mode == constants.CVM_PROTANOPIA:
+    #     color_ref = constants.CVM_PROTANOPIA_PROT_1_COLOR
+    #     color_model = constants.CVM_PROTANOPIA_PROT_2_COLOR
+    # elif globals.g_settings.color_vision_mode == constants.CVM_TRITANOPIA:
+    #     color_ref = constants.CVM_TRITANOPIA_PROT_1_COLOR
+    #     color_model = constants.CVM_TRITANOPIA_PROT_2_COLOR
     cmd.color(color_ref, pymol_molecule_object_ref)
     cmd.color(color_model, pymol_molecule_object_model)
 

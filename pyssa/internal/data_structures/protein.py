@@ -121,6 +121,8 @@ class Protein:
         if molecule_object == "":
             logger.error("An argument is illegal.")
             raise ValueError("An argument is illegal.")
+        if molecule_object.find(" "):
+            molecule_object = molecule_object.replace(" ", "_")
 
         # </editor-fold>
 
@@ -141,9 +143,27 @@ class Protein:
             self.pymol_selection = selection.Selection(self._pymol_molecule_object)
             self.pymol_selection.selection_string = ""
             self.load_protein_in_pymol()
+            if protein_operations.count_states_of_molecule_object(self._pymol_molecule_object) > 1:
+                logger.info(f"Protein {molecule_object} has more than one state. Trying to consolidate to one state.")
+                try:
+                    protein_operations.consolidate_molecule_object_to_first_state(self._pymol_molecule_object)
+                    tmp_pdb_cache_filepath = pathlib.Path(
+                        f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}",
+                    )
+                    pymol_io.save_protein_to_pdb_file(
+                        tmp_pdb_cache_filepath,
+                        self._pymol_molecule_object,
+                    )
+                    self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
+                        bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_pdb_cache_filepath)),
+                    )
+                    self.load_protein_in_pymol()
+                except Exception as e:
+                    logger.error(f"Protein states could not be consolidated! Ran into error: {e}")
+                else:
+                    logger.info(f"Consolidation of protein {molecule_object} finished without any errors.")
             # saves pymol session into a base64 string
             self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
-
         elif pdb_filepath != "" and pdb_xml_string == "":
             self._pymol_molecule_object = pdb_filepath.get_filename().replace(" ", "_")
             self.chains = protein_operations.get_protein_chains(
@@ -157,14 +177,31 @@ class Protein:
             self.pymol_selection = selection.Selection(self._pymol_molecule_object)
             self.pymol_selection.selection_string = ""
             self.load_protein_in_pymol()
+            if protein_operations.count_states_of_molecule_object(self._pymol_molecule_object) > 1:
+                logger.info(f"Protein {molecule_object} has more than one state. Trying to consolidate to one state.")
+                try:
+                    protein_operations.consolidate_molecule_object_to_first_state(self._pymol_molecule_object)
+                    tmp_pdb_cache_filepath = pathlib.Path(
+                        f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb",
+                    )
+                    pymol_io.save_protein_to_pdb_file(
+                        tmp_pdb_cache_filepath,
+                        self._pymol_molecule_object,
+                    )
+                    self._pdb_data = bio_data.convert_pdb_xml_string_to_list(
+                        bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_pdb_cache_filepath)),
+                    )
+                except Exception as e:
+                    logger.error(f"Protein states could not be consolidated! Ran into error: {e}")
+                else:
+                    logger.info(f"Consolidation of protein {molecule_object} finished without any errors.")
+
             # saves pymol session into a base64 string
             self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
-
         elif pdb_filepath == "" and pdb_xml_string == "":
             self._pymol_molecule_object = molecule_object
             self.pymol_selection = selection.Selection(self._pymol_molecule_object)
             self.pymol_selection.selection_string = ""
-
         else:
             raise ValueError("Function has too many arguments.")
 
@@ -293,6 +330,8 @@ class Protein:
         pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
         if not os.path.exists(constants.CACHE_PROTEIN_DIR):
             os.mkdir(constants.CACHE_PROTEIN_DIR)
+
+        # </editor-fold>
         try:
             bio_data.convert_pdb_data_list_to_pdb_file(pdb_filepath, self._pdb_data)
         except exception.IllegalArgumentError:
@@ -307,7 +346,6 @@ class Protein:
         except exception.UnableToOpenFileError:
             logger.error("pdb file could not be opened for writing.")
             raise exception.UnableToOpenFileError("")
-        # </editor-fold>
 
         try:
             pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._id}.pdb", self._pymol_molecule_object)

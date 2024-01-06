@@ -29,7 +29,6 @@ import pathlib
 import csv
 import numpy as np
 import pymol
-import re
 from typing import TYPE_CHECKING
 from pymol import cmd
 from PyQt5 import QtGui
@@ -60,8 +59,6 @@ from pyssa.internal.data_structures.data_classes import stage
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.data_structures.data_classes import main_window_state
 from pyssa.internal.data_structures.data_classes import results_state
-from pyssa.internal.portal import graphic_operations
-from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import task_workers, tasks
 
 from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
@@ -81,6 +78,7 @@ from pyssa.util import gui_page_management
 from pyssa.util import tools
 from pyssa.util import gui_utils
 from pyssa.logging_pyssa import log_handlers
+from pyssa.presenter import main_presenter_async
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import protein_pair
@@ -253,22 +251,12 @@ class MainPresenter:
 
         # <editor-fold desc="GUI page management">
         # -- Gui page management vars
-        self.local_pred_monomer_management: gui_page_management.GuiPageManagement
-        self.local_pred_multimer_management: gui_page_management.GuiPageManagement
-        self.single_analysis_management: gui_page_management.GuiPageManagement
         self.batch_analysis_management: gui_page_management.GuiPageManagement
         self.results_management: gui_page_management.GuiPageManagement
-        self.monomer_prediction_analysis_management: gui_page_management.GuiPageManagement
-        self.multi_prediction_analysis_management: gui_page_management.GuiPageManagement
 
         # management functions
-        self._create_local_pred_monomer_management()
-        self._create_local_pred_multimer_management()
-        self._create_single_analysis_management()
         self._create_batch_analysis_management()
         self._create_results_management()
-        self._create_monomer_prediction_analysis_management()
-        self._create_multimer_prediction_analysis_management()
 
         # </editor-fold>
 
@@ -316,7 +304,6 @@ class MainPresenter:
         self._init_use_page()
         self._init_local_pred_mono_page()
         self._init_local_pred_multi_page()
-        self._init_single_analysis_page()
         self._init_batch_analysis_page()
         self._view.ui.action_toggle_notebook_visibility.setVisible(False)
         self._view.ui.action_settings_model_w_off_colab_notebook.setVisible(False)
@@ -376,495 +363,6 @@ class MainPresenter:
         self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, post_process_func)
         self.tmp_thread.start()
 
-    # <editor-fold desc="GUI page management functions">
-    def _create_local_pred_monomer_management(self) -> None:
-        """Creates a list of gui stages."""
-        # gui element management
-        tmp_stages = [
-            # add protein stage
-            stage.Stage(
-                {
-                    "label_proteins_to_predict": self._view.ui.lbl_pred_mono_prot_to_predict,
-                    "table_proteins_to_predict": self._view.ui.table_pred_mono_prot_to_predict,
-                },
-                {
-                    "remove_button": self._view.ui.btn_pred_mono_seq_to_predict_remove,
-                    "next_button": self._view.ui.btn_pred_mono_seq_to_predict,
-                },
-            ),
-            # protein name stage
-            stage.Stage(
-                {
-                    "label_protein_name": self._view.ui.lbl_pred_mono_prot_name,
-                    "text_field_protein_name": self._view.ui.txt_pred_mono_prot_name,
-                    "label_protein_name_status": self._view.ui.lbl_pred_mono_prot_name_status,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_mono_back,
-                    "next_button": self._view.ui.btn_pred_mono_next,
-                },
-            ),
-            # protein sequence stage
-            stage.Stage(
-                {
-                    "label_protein_sequence": self._view.ui.lbl_pred_mono_seq_name,
-                    "text_field_protein_sequence": self._view.ui.txt_pred_mono_seq_name,
-                    "label_protein_sequence_status": self._view.ui.lbl_pred_mono_seq_name_status,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_mono_back_2,
-                    "next_button": self._view.ui.btn_pred_mono_add_protein,
-                },
-            ),
-            # prediction stage (with advanced configurations)
-            stage.Stage(
-                {
-                    "label_advanced_config": self._view.ui.lbl_pred_mono_advanced_config,
-                    "button_advanced_config": self._view.ui.btn_pred_mono_advanced_config,
-                },
-                {
-                    "predict_button": self._view.ui.btn_pred_mono_predict,
-                },
-            ),
-        ]
-        self.local_pred_monomer_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    def _create_local_pred_multimer_management(self) -> None:
-        """Creates a list of gui stages."""
-        # gui element management
-        tmp_stages = [
-            # add protein stage
-            stage.Stage(
-                {
-                    "label_proteins_to_predict": self._view.ui.lbl_pred_multi_prot_to_predict,
-                    "table_proteins_to_predict": self._view.ui.table_pred_multi_prot_to_predict,
-                },
-                {
-                    "remove_button": self._view.ui.btn_pred_multi_prot_to_predict_remove,
-                    "next_button": self._view.ui.btn_pred_multi_prot_to_predict_add,
-                },
-            ),
-            # protein name stage
-            stage.Stage(
-                {
-                    "label_protein_name": self._view.ui.lbl_pred_multi_prot_name,
-                    "text_field_protein_name": self._view.ui.txt_pred_multi_prot_name,
-                    "label_protein_name_status": self._view.ui.lbl_pred_multi_prot_name_status,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_multi_back,
-                    "next_button": self._view.ui.btn_pred_multi_next,
-                },
-            ),
-            # protein sequence stage
-            stage.Stage(
-                {
-                    "label_protein_sequence": self._view.ui.lbl_pred_multi_prot_seq,
-                    "text_field_protein_sequence": self._view.ui.txt_pred_multi_prot_seq,
-                    "label_protein_sequence_status": self._view.ui.lbl_pred_multi_prot_seq_status,
-                    "label_protein_sequence_add": self._view.ui.lbl_pred_multi_prot_seq_add,
-                    "button_protein_sequence_add": self._view.ui.btn_pred_multi_prot_seq_add,
-                    "label_protein_sequence_overview": self._view.ui.lbl_pred_multi_prot_seq_overview,
-                    "list_protein_sequence_overview": self._view.ui.list_pred_multi_prot_seq_overview,
-                    "button_protein_sequence_overview_remove": self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-                    "label_protein_to_predict": self._view.ui.lbl_pred_multi_prot_to_predict_2,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_multi_back_2,
-                    "next_button": self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-                },
-            ),
-            # prediction stage (with advanced configurations)
-            stage.Stage(
-                {
-                    "label_advanced_config": self._view.ui.lbl_pred_multi_advanced_config,
-                    "button_advanced_config": self._view.ui.btn_pred_multi_advanced_config,
-                },
-                {
-                    "predict_button": self._view.ui.btn_pred_multi_predict,
-                },
-            ),
-        ]
-        self.local_pred_multimer_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    def _create_single_analysis_management(self) -> None:
-        """Creates a list of gui stages."""
-        # gui element management
-        tmp_stages = [
-            # choose protein structures: stage 0
-            stage.Stage(
-                {
-                    "label_protein_structure_1": self._view.ui.lbl_analysis_prot_struct_1,
-                    "box_protein_structure_1": self._view.ui.box_analysis_prot_struct_1,
-                    "label_vs": self._view.ui.lbl_analysis_vs,
-                    "label_protein_structure_2": self._view.ui.lbl_analysis_prot_struct_2,
-                    "box_protein_structure_2": self._view.ui.box_analysis_prot_struct_2,
-                },
-                {
-                    "next_button": self._view.ui.btn_analysis_next,
-                },
-            ),
-            # choose chains from prot structure 1: stage 1
-            stage.Stage(
-                {
-                    "label_protein_structure_1_chains": self._view.ui.lbl_analysis_ref_chains,
-                    "list_protein_structure_1_chains": self._view.ui.list_analysis_ref_chains,
-                },
-                {
-                    "back_button": self._view.ui.btn_analysis_back,
-                    "next_button": self._view.ui.btn_analysis_next_2,
-                },
-            ),
-            # choose chains from prot structure 2: stage 2
-            stage.Stage(
-                {
-                    "label_protein_structure_2_chains": self._view.ui.lbl_analysis_model_chains,
-                    "list_protein_structure_2_chains": self._view.ui.list_analysis_model_chains,
-                    "label_images": self._view.ui.lbl_analysis_images,
-                    "checkbox_images": self._view.ui.cb_analysis_images,
-                },
-                {
-                    "back_button": self._view.ui.btn_analysis_back_2,
-                    "start_button": self._view.ui.btn_analysis_start,
-                },
-            ),
-        ]
-        self.single_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    def _create_batch_analysis_management(self) -> None:
-        """Creates a list of gui stages."""
-        # gui element management
-        tmp_stages = [
-            # add a prot analysis: stage 0
-            stage.Stage(
-                {
-                    "label_batch_analysis_overview": self._view.ui.lbl_analysis_batch_overview,
-                    "box_protein_structure_1": self._view.ui.list_analysis_batch_overview,
-                },
-                {
-                    "add_button": self._view.ui.btn_analysis_batch_add,
-                    "remove_button": self._view.ui.btn_analysis_batch_remove,
-                },
-            ),
-            # choose protein structures: stage 1
-            stage.Stage(
-                {
-                    "label_protein_structure_1": self._view.ui.lbl_analysis_batch_prot_struct_1,
-                    "box_protein_structure_1": self._view.ui.box_analysis_batch_prot_struct_1,
-                    "label_vs": self._view.ui.lbl_analysis_batch_vs,
-                    "label_protein_structure_2": self._view.ui.lbl_analysis_batch_prot_struct_2,
-                    "box_protein_structure_2": self._view.ui.box_analysis_batch_prot_struct_2,
-                },
-                {
-                    "next_button": self._view.ui.btn_analysis_batch_next,
-                    "back_button": self._view.ui.btn_analysis_batch_back,
-                },
-            ),
-            # choose chains from prot structure 1: stage 2
-            stage.Stage(
-                {
-                    "label_protein_structure_1_chains": self._view.ui.lbl_analysis_batch_ref_chains,
-                    "list_protein_structure_1_chains": self._view.ui.list_analysis_batch_ref_chains,
-                },
-                {
-                    "back_button": self._view.ui.btn_analysis_batch_back_2,
-                    "next_button": self._view.ui.btn_analysis_batch_next_2,
-                },
-            ),
-            # choose chains from prot structure 2: stage 3
-            stage.Stage(
-                {
-                    "label_protein_structure_2_chains": self._view.ui.lbl_analysis_batch_model_chains,
-                    "list_protein_structure_2_chains": self._view.ui.list_analysis_batch_model_chains,
-                },
-                {
-                    "back_button": self._view.ui.btn_analysis_batch_back_3,
-                    "next_button": self._view.ui.btn_analysis_batch_next_3,
-                },
-            ),
-            # start batch run: stage 4
-            stage.Stage(
-                {
-                    "label_images": self._view.ui.lbl_analysis_batch_images,
-                    "checkbox_images": self._view.ui.cb_analysis_batch_images,
-                },
-                {
-                    "start_button": self._view.ui.btn_analysis_batch_start,
-                },
-            ),
-        ]
-        self.batch_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    def _create_results_management(self) -> None:
-        """Creates a list of gui stages."""
-        # gui element management
-        tmp_stages = [
-            # choose protein structures: stage 0
-            stage.Stage(
-                {
-                    "label_analysis_options": self._view.ui.lbl_results_analysis_options,
-                    "box_results_analysis_options": self._view.ui.cb_results_analysis_options,
-                },
-                {
-                    "": None,
-                },
-            ),
-            # choose chains from prot structure 1: stage 1
-            stage.Stage(
-                {
-                    "label_results_rmsd": self._view.ui.lbl_results_rmsd,
-                    "text_results_rmsd": self._view.ui.txt_results_rmsd,
-                    "label_color_rmsd": self._view.ui.lbl_color_rmsd,
-                    "button_color_rmsd": self._view.ui.btn_color_rmsd,
-                    "label_results_aligned_residues": self._view.ui.lbl_results_aligned_residues,
-                    "text_results_aligned_residues": self._view.ui.txt_results_aligned_residues,
-                    "label_results_distance_plot": self._view.ui.lbl_results_distance_plot,
-                    "button_view_distance_plot": self._view.ui.btn_view_distance_plot,
-                    "label_results_distance_histogram": self._view.ui.lbl_results_distance_histogram,
-                    "button_view_distance_histogram": self._view.ui.btn_view_distance_histogram,
-                    "label_results_distance_table": self._view.ui.lbl_results_distance_table,
-                    "button_view_distance_table": self._view.ui.btn_view_distance_table,
-                    "label_results_structure_alignment": self._view.ui.lbl_results_structure_alignment,
-                    "button_view_struct_alignment": self._view.ui.btn_view_struct_alignment,
-                    "label_results_interest_regions": self._view.ui.lbl_results_interest_regions,
-                    "list_results_interest_regions": self._view.ui.list_results_interest_regions,
-                    "button_results_interest_regions": self._view.ui.btn_view_interesting_region,
-                },
-                {
-                    "": None,
-                },
-            ),
-        ]
-        self.results_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    def _create_monomer_prediction_analysis_management(self) -> None:
-        """Creates a list of gui stages."""
-        tmp_stages = [
-            # add protein stage 0
-            stage.Stage(
-                {
-                    "label_proteins_to_predict": self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-                    "table_proteins_to_predict": self._view.ui.table_pred_analysis_mono_prot_to_predict,
-                },
-                {
-                    "remove_button": self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-                    "next_button": self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-                },
-            ),
-            # protein name stage 1
-            stage.Stage(
-                {
-                    "label_protein_name": self._view.ui.lbl_pred_analysis_mono_prot_name,
-                    "text_field_protein_name": self._view.ui.txt_pred_analysis_mono_prot_name,
-                    "label_protein_name_status": self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_mono_back,
-                    "next_button": self._view.ui.btn_pred_analysis_mono_next,
-                },
-            ),
-            # protein sequence stage 2
-            stage.Stage(
-                {
-                    "label_protein_sequence": self._view.ui.lbl_pred_analysis_mono_seq_name,
-                    "text_field_protein_sequence": self._view.ui.txt_pred_analysis_mono_seq_name,
-                    "label_protein_sequence_status": self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_mono_back_2,
-                    "next_button": self._view.ui.btn_pred_analysis_mono_add_protein,
-                },
-            ),
-            # prediction stage (with advanced configurations) 3
-            stage.Stage(
-                {
-                    "label_advanced_config": self._view.ui.lbl_pred_mono_advanced_config_2,
-                    "button_advanced_config": self._view.ui.btn_pred_mono_advanced_config_2,
-                },
-                {
-                    "label_go_to_analysis": self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-                    "button_go_to_analysis": self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-                },
-            ),
-            # add a prot analysis: stage 4
-            stage.Stage(
-                {
-                    "label_batch_analysis_overview": self._view.ui.lbl_pred_analysis_mono_overview,
-                    "box_protein_structure_1": self._view.ui.list_pred_analysis_mono_overview,
-                },
-                {
-                    "add_button": self._view.ui.btn_pred_analysis_mono_add,
-                    "remove_button": self._view.ui.btn_pred_analysis_mono_remove,
-                },
-            ),
-            # choose protein structures: stage 5
-            stage.Stage(
-                {
-                    "label_protein_structure_1": self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-                    "box_protein_structure_1": self._view.ui.box_pred_analysis_mono_prot_struct_1,
-                    "label_vs": self._view.ui.lbl_analysis_batch_vs_2,
-                    "label_protein_structure_2": self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-                    "box_protein_structure_2": self._view.ui.box_pred_analysis_mono_prot_struct_2,
-                },
-                {
-                    "next_button": self._view.ui.btn_pred_analysis_mono_next_2,
-                    "back_button": self._view.ui.btn_pred_analysis_mono_back_3,
-                },
-            ),
-            # choose chains from prot structure 1: stage 6
-            stage.Stage(
-                {
-                    "label_protein_structure_1_chains": self._view.ui.lbl_pred_analysis_mono_ref_chains,
-                    "list_protein_structure_1_chains": self._view.ui.list_pred_analysis_mono_ref_chains,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_mono_back_4,
-                    "next_button": self._view.ui.btn_pred_analysis_mono_next_3,
-                },
-            ),
-            # choose chains from prot structure 2: stage 7
-            stage.Stage(
-                {
-                    "label_protein_structure_2_chains": self._view.ui.lbl_pred_analysis_mono_model_chains,
-                    "list_protein_structure_2_chains": self._view.ui.list_pred_analysis_mono_model_chains,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_mono_back_5,
-                    "next_button": self._view.ui.btn_pred_analysis_mono_next_4,
-                },
-            ),
-            # start batch run: stage 8
-            stage.Stage(
-                {
-                    "label_images": self._view.ui.lbl_pred_analysis_mono_images,
-                    "checkbox_images": self._view.ui.cb_pred_analysis_mono_images,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-                    "start_button": self._view.ui.btn_pred_analysis_mono_start,
-                },
-            ),
-        ]
-        self.monomer_prediction_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    def _create_multimer_prediction_analysis_management(self) -> None:
-        """Creates a list of gui stages."""
-        tmp_stages = [
-            # add protein stage
-            stage.Stage(
-                {
-                    "label_proteins_to_predict": self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-                    "table_proteins_to_predict": self._view.ui.table_pred_analysis_multi_prot_to_predict,
-                },
-                {
-                    "remove_button": self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-                    "next_button": self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-                },
-            ),
-            # protein name stage
-            stage.Stage(
-                {
-                    "label_protein_name": self._view.ui.lbl_pred_analysis_multi_prot_name,
-                    "text_field_protein_name": self._view.ui.txt_pred_analysis_multi_prot_name,
-                    "label_protein_name_status": self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_multi_back,
-                    "next_button": self._view.ui.btn_pred_analysis_multi_next,
-                },
-            ),
-            # protein sequence stage
-            stage.Stage(
-                {
-                    "label_protein_sequence": self._view.ui.lbl_pred_analysis_multi_prot_seq,
-                    "text_field_protein_sequence": self._view.ui.txt_pred_analysis_multi_prot_seq,
-                    "label_protein_sequence_status": self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-                    "label_protein_sequence_add": self._view.ui.lbl_pred_multi_prot_seq_add_2,
-                    "button_protein_sequence_add": self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-                    "label_protein_sequence_overview": self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-                    "list_protein_sequence_overview": self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-                    "button_protein_sequence_overview_remove": self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-                    "label_protein_to_predict": self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_multi_back_2,
-                    "next_button": self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-                },
-            ),
-            # prediction stage (with advanced configurations)
-            stage.Stage(
-                {
-                    "label_advanced_config": self._view.ui.lbl_pred_analysis_multi_advanced_config,
-                    "button_advanced_config": self._view.ui.btn_pred_analysis_multi_advanced_config,
-                },
-                {
-                    "label_go_to_analysis": self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-                    "button_go_to_analysis": self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-                },
-            ),
-            # add a prot analysis: stage 0
-            stage.Stage(
-                {
-                    "label_batch_analysis_overview": self._view.ui.lbl_pred_analysis_multi_overview,
-                    "box_protein_structure_1": self._view.ui.list_pred_analysis_multi_overview,
-                },
-                {
-                    "add_button": self._view.ui.btn_pred_analysis_multi_add,
-                    "remove_button": self._view.ui.btn_pred_analysis_multi_remove,
-                },
-            ),
-            # choose protein structures: stage 1
-            stage.Stage(
-                {
-                    "label_protein_structure_1": self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-                    "box_protein_structure_1": self._view.ui.box_pred_analysis_multi_prot_struct_1,
-                    "label_vs": self._view.ui.lbl_analysis_batch_vs_3,
-                    "label_protein_structure_2": self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-                    "box_protein_structure_2": self._view.ui.box_pred_analysis_multi_prot_struct_2,
-                },
-                {
-                    "next_button": self._view.ui.btn_pred_analysis_multi_next_2,
-                    "back_button": self._view.ui.btn_pred_analysis_multi_back_3,
-                },
-            ),
-            # choose chains from prot structure 1: stage 2
-            stage.Stage(
-                {
-                    "label_protein_structure_1_chains": self._view.ui.lbl_pred_analysis_multi_ref_chains,
-                    "list_protein_structure_1_chains": self._view.ui.list_pred_analysis_multi_ref_chains,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_multi_back_4,
-                    "next_button": self._view.ui.btn_pred_analysis_multi_next_3,
-                },
-            ),
-            # choose chains from prot structure 2: stage 3
-            stage.Stage(
-                {
-                    "label_protein_structure_2_chains": self._view.ui.lbl_pred_analysis_multi_model_chains,
-                    "list_protein_structure_2_chains": self._view.ui.list_pred_analysis_multi_model_chains,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_multi_back_5,
-                    "next_button": self._view.ui.btn_pred_analysis_multi_next_4,
-                },
-            ),
-            # start batch run: stage 4
-            stage.Stage(
-                {
-                    "label_images": self._view.ui.lbl_pred_analysis_multi_images,
-                    "checkbox_images": self._view.ui.cb_pred_analysis_multi_images,
-                },
-                {
-                    "back_button": self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-                    "start_button": self._view.ui.btn_pred_analysis_multi_start,
-                },
-            ),
-        ]
-        self.multimer_prediction_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
-
-    # </editor-fold>
-
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._view.setStatusBar(self._view.status_bar)
@@ -909,6 +407,8 @@ class MainPresenter:
 
     def _connect_all_gui_elements(self) -> None:
         """Connects all gui elements with their corresponding slots."""
+        self._view.ui.btn_info.clicked.connect(self.open_page_information)
+
         # <editor-fold desc="Menu">
         self._view.ui.action_file_quit.triggered.connect(self.quit_app)
         self._view.ui.action_file_restore_settings.triggered.connect(self.restore_settings)
@@ -920,8 +420,6 @@ class MainPresenter:
         self._view.ui.action_settings_clear_logs.triggered.connect(self.clear_all_log_files)
         self._view.ui.action_help_changelog.triggered.connect(self.open_release_notes_in_standard_application)
         # </editor-fold>
-
-        self._view.ui.btn_info.clicked.connect(self.open_page_information)
 
         # <editor-fold desc="Side Menu">
         self._view.ui.btn_new_page.clicked.connect(self.display_new_page)
@@ -940,7 +438,6 @@ class MainPresenter:
         self._view.ui.btn_prediction_abort.clicked.connect(self.abort_prediction)
         self._view.ui.btn_pred_analysis_monomer_page.clicked.connect(self.display_monomer_pred_analysis)
         self._view.ui.btn_pred_analysis_multimer_page.clicked.connect(self.display_multimer_pred_analysis)
-        self._view.ui.btn_single_analysis_page.clicked.connect(self.display_single_analysis_page)
         self._view.ui.btn_batch_analysis_page.clicked.connect(self.display_job_analysis_page)
         self._view.ui.btn_image_analysis_page.clicked.connect(self.display_image_analysis_page)
         self._view.ui.btn_results_page.clicked.connect(self.display_results_page)
@@ -961,8 +458,8 @@ class MainPresenter:
         # </editor-fold>
 
         # <editor-fold desc="Open project page">
-        self._view.ui.btn_open_open_project.clicked.connect(self.opens_project)
-        self._view.ui.list_open_projects.doubleClicked.connect(self.pre_open_project)
+        self._view.ui.btn_open_open_project.clicked.connect(self.open_project)
+        self._view.ui.list_open_projects.doubleClicked.connect(self.open_project)
         self._view.ui.txt_open_search.textChanged.connect(self.validate_open_search)
         self._view.ui.txt_open_selected_project.textChanged.connect(self.activate_open_button)
         self._view.ui.list_open_projects.currentItemChanged.connect(self.select_project_from_open_list)
@@ -1282,557 +779,6 @@ class MainPresenter:
 
         # </editor-fold>
 
-    def _create_all_tooltips(self) -> None:
-        """Creates all tooltips for the gui elements."""
-        self._view.status_bar.setToolTip("Status information: Current process")
-        # new project page
-        self._view.ui.btn_new_choose_reference.setToolTip("Click to add a .pdb file")
-        # sidebar
-        self._view.ui.lbl_current_project_name.setToolTip("Name of the current project")
-        # edit page
-        self._view.ui.btn_edit_project_save.setToolTip("Save as a .pdb file")
-        # view page
-        # fixme: is this important? self._view.ui.list_view_project_proteins.setToolTip("Proteins of the current project")
-        self._view.ui.txtedit_view_sequence.setToolTip("Protein sequence of the selected protein")
-        # use page
-        self._view.ui.txt_use_search.setToolTip("Enter a protein name to search in your current workspace")
-        # prediction Monomer
-        self._view.ui.table_pred_mono_prot_to_predict.setToolTip("Protein monomers which get predicted")
-        self._view.ui.btn_pred_mono_seq_to_predict.setToolTip("Set up a protein which can be used for a prediction")
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setToolTip("Protein monomers which get predicted")
-        self._view.ui.list_pred_analysis_mono_overview.setToolTip("Protein pairs which get analyzed")
-        self._view.ui.btn_pred_analysis_mono_seq_to_predict.setToolTip(
-            "Set up a protein which can be used for a prediction",
-        )
-        # prediction Multimer
-        self._view.ui.table_pred_multi_prot_to_predict.setToolTip("Protein multimers which get predicted")
-        self._view.ui.btn_pred_multi_prot_to_predict_add.setToolTip(
-            "Set up a protein which can be used for a prediction",
-        )
-        self._view.ui.table_pred_analysis_multi_prot_to_predict.setToolTip("Protein multimers which get predicted")
-        self._view.ui.list_pred_analysis_multi_overview.setToolTip("Protein pairs which get analyzed")
-        self._view.ui.btn_pred_analysis_multi_prot_to_predict_add.setToolTip(
-            "Set up a protein which can be used for a prediction",
-        )
-        # image page
-        self._view.ui.btn_save_scene.setToolTip("Create new PyMOL scene")
-        self._view.ui.btn_update_scene.setToolTip("Overwrite current scene")
-        self._view.ui.btn_preview_image.setToolTip("Preview current viewpoint")
-        self._view.ui.btn_save_image.setToolTip("Save current viewpoint as png file")
-        self._view.ui.cb_ray_tracing.setToolTip("Enable ray-tracing")
-        self._view.ui.cb_transparent_bg.setToolTip("Enable transparent background")
-        self._view.ui.box_representation.setToolTip("Choose a representation")
-        self._view.ui.box_bg_color.setToolTip("Choose a background color")
-        self._view.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
-        self._view.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
-
-    # <editor-fold desc="Page init functions">
-    def _init_fill_combo_boxes(self) -> None:
-        """Fills all combo boxes of the plugin."""
-        item_list_representation = [
-            "",
-            "cartoon",
-            "ribbon",
-        ]
-        gui_utils.fill_combo_box(self._view.ui.box_representation, item_list_representation)
-        gui_utils.fill_combo_box(self._view.ui.box_manage_choose_representation, item_list_representation)
-        # combo box BgColor
-        item_list_bg_color = [
-            "",
-            "black",
-            "white",
-        ]
-        gui_utils.fill_combo_box(self._view.ui.box_bg_color, item_list_bg_color)
-        gui_utils.fill_combo_box(self._view.ui.box_manage_choose_bg_color, item_list_bg_color)
-        # combo box Renderer
-        item_list_renderer = [
-            "",
-            "default renderer",
-            "PyMOL internal renderer",
-        ]
-        gui_utils.fill_combo_box(self._view.ui.box_renderer, item_list_renderer)
-        # combo box RayTraceMode
-        item_list_ray_trace_mode = [
-            "",
-            "normal color",
-            "normal color + black outline",
-            "black outline only",
-            "quantized color + black outline",
-        ]
-        gui_utils.fill_combo_box(self._view.ui.box_ray_trace_mode, item_list_ray_trace_mode)
-        # combo box Ray Texture
-        item_list_ray_texture = [
-            "",
-            "None",
-            "Matte 1",
-            "Matte 2",
-            "Swirl 1",
-            "Fiber",
-        ]
-        gui_utils.fill_combo_box(self._view.ui.box_ray_texture, item_list_ray_texture)
-        # combo box protein Colors
-        gui_utils.fill_combo_box(self._view.ui.box_manage_choose_color, constants.PYMOL_COLORS)
-
-    def _init_new_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        self._view.ui.txt_new_project_name.clear()
-        self._view.ui.txt_new_choose_reference.clear()
-        self._view.ui.lbl_new_status_project_name.setText("")
-        self._view.ui.lbl_new_status_choose_reference.setText("")
-        self._view.ui.cb_new_add_reference.setCheckState(0)
-        self._view.ui.btn_new_create_project.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-
-    def _init_use_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        gui_elements = [
-            self._view.ui.lbl_use_search,
-            self._view.ui.lbl_use_status_search,
-            self._view.ui.txt_use_search,
-            self._view.ui.btn_use_add_available_protein_structures,
-            self._view.ui.lbl_use_available_protein_structures,
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.btn_use_remove_selected_protein_structures,
-            self._view.ui.lbl_use_selected_protein_structures,
-            self._view.ui.list_use_selected_protein_structures,
-            self._view.ui.btn_use_back,
-            self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_new_project,
-        ]
-        gui_utils.hide_gui_elements(gui_elements)
-        self._view.ui.txt_use_project_name.clear()
-        self._view.ui.lbl_use_status_project_name.setText("")
-        self._view.ui.txt_use_search.clear()
-        self._view.ui.lbl_use_status_search.setText("")
-        self._view.ui.list_use_available_protein_structures.clear()
-        self._view.ui.list_use_selected_protein_structures.clear()
-        self._view.ui.list_use_existing_projects.clear()
-        self._view.ui.btn_use_next.setEnabled(False)
-        self.hide_protein_selection_for_use()
-
-    def _init_edit_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        self._view.ui.list_edit_project_proteins.clear()
-        gui_elements_to_hide = [
-            self._view.ui.lbl_edit_clean_new_prot,
-            self._view.ui.btn_edit_clean_new_prot,
-            self._view.ui.lbl_edit_clean_update_prot,
-            self._view.ui.btn_edit_clean_update_prot,
-            self._view.ui.label_12,
-            self._view.ui.btn_edit_project_delete,
-            self._view.ui.label_15,
-            self._view.ui.btn_edit_protein_rename,
-            self._view.ui.btn_edit_project_save,
-            self._view.ui.label_13,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.fill_list_view_with_protein_names(self._current_project, self._view.ui.list_edit_project_proteins)
-        # self.project_scanner.scan_project_for_valid_proteins(self._view.ui.list_edit_project_proteins)
-
-    def _init_sequence_vs_pdb_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        self._view.ui.list_s_v_p_ref_chains.clear()
-        # # sets up defaults: Prediction + Analysis
-        #
-        # #self._view.ui.label_18.hide()
-        # #self._view.ui.txt_prediction_project_name.hide()
-        # #self._view.ui.lbl_prediction_status_project_name.hide()
-        # # stage 1
-        # self._view.ui.lbl_prediction_status_project_name.setText("")
-        #
-        # #self._view.ui.list_widget_projects.hide()
-        # #self._view.ui.btn_prediction_next_1.hide()
-        # # stage 2
-        # self._view.ui.lbl_prediction_load_reference.hide()
-        # self._view.ui.txt_prediction_load_reference.clear()
-        # self._view.ui.txt_prediction_load_reference.hide()
-        # self._view.ui.lbl_prediction_status_load_reference.setText("")
-        # self._view.ui.btn_prediction_back_2.setEnabled(False)
-        # self._view.ui.btn_prediction_back_2.hide()
-        # self._view.ui.btn_prediction_next_2.setEnabled(False)
-        # self._view.ui.btn_prediction_next_2.hide()
-        #
-        # # stage 3
-        # self._view.ui.lbl_prediction_ref_chains.hide()
-        # self._view.ui.list_widget_ref_chains.hide()
-        # # TO-DO: stylesheet needs to be integrated into the styles.css
-        # self._view.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
-        #                                              "border-width: 2px;"
-        #                                              "border-radius: 8px;"
-        #                                              "border-color: #DCDBE3;")
-        # self._view.ui.list_widget_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
-        # self._view.ui.btn_prediction_back_3.setEnabled(False)
-        # self._view.ui.btn_prediction_back_3.hide()
-        # self._view.ui.btn_prediction_start.setEnabled(False)
-        # self._view.ui.btn_prediction_start.hide()
-        # # TO-DO: needs to be removed if model chains are implemented at the right spot
-        # self._view.ui.lbl_prediction_model_chains.hide()
-        # self._view.ui.txt_prediction_chain_model.hide()
-
-    def _init_single_analysis_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        self.single_analysis_management.show_stage_x(0)
-        self.single_analysis_management.disable_all_next_buttons()
-        self.single_analysis_management.set_empty_string_in_label()
-        self._view.ui.lbl_analysis_prot_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_analysis_prot_struct_2.setText("Protein structure 2")
-        self._view.ui.box_analysis_prot_struct_1.setCurrentIndex(0)
-        self._view.ui.box_analysis_prot_struct_2.setCurrentIndex(0)
-
-    def _init_results_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        # stage 1
-        self._view.ui.list_results_interest_regions.clear()
-        self._view.ui.txt_results_rmsd.clear()
-        self._view.ui.txt_results_aligned_residues.clear()
-
-    def _init_analysis_image_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        self._view.ui.list_analysis_images_struct_analysis.setEnabled(True)
-        self._view.ui.list_analysis_images_creation_struct_analysis.setEnabled(True)
-        self.display_image_analysis_page()
-
-    def _init_image_page(self) -> None:
-        """Hides everything which is needed."""
-        self._view.ui.label_10.hide()
-        self._view.ui.box_ray_trace_mode.hide()
-        self._view.ui.label_14.hide()
-        self._view.ui.box_ray_texture.hide()
-
-    def _init_batch_analysis_page(self) -> None:
-        """Clears all text fields and hides everything which is needed."""
-        # sets up defaults: Batch
-        self.batch_analysis_management.show_stage_x(0)
-        self._view.ui.list_analysis_batch_overview.clear()
-        self._view.ui.btn_analysis_batch_remove.hide()
-
-    def _init_all_pages(self) -> None:
-        """Collection of all init methods to reset all page defaults."""
-        self._init_local_pred_mono_page()
-        self._init_local_pred_multi_page()
-        self._init_mono_pred_analysis_page()
-        self._init_multi_pred_analysis_page()
-        self._init_sequence_vs_pdb_page()
-        self._init_single_analysis_page()
-        self._init_batch_analysis_page()
-        self._init_analysis_image_page()
-        self._init_results_page()
-        self._init_image_page()
-
-    # </editor-fold>
-
-    # <editor-fold desc="Display page functions">
-    def display_home_page(self) -> None:
-        """Displays the homepage of the plugin."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 0, "Home")
-
-    def display_single_analysis_page(self) -> None:
-        """Displays the single analysis work area."""
-        self.fill_protein_structure_boxes()
-        self._view.ui.list_analysis_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self._view.ui.list_analysis_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        # regular work area opening
-        self._init_single_analysis_page()
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 3, "Single Analysis")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_single_analysis_page,
-        )
-
-    def display_job_analysis_page(self) -> None:
-        """Displays the job analysis work area."""
-        self._view.ui.list_analysis_batch_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self._view.ui.list_analysis_batch_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        # regular work area opening
-        self._init_batch_analysis_page()
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 4, "Structure Analysis")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_batch_analysis_page,
-        )
-
-    def display_results_page(self) -> None:
-        """Displays the results work area."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-        results = []
-        results.insert(0, "")
-
-        for tmp_protein_pair in self._current_project.protein_pairs:
-            results.append(tmp_protein_pair.name)
-            if tmp_protein_pair.name == self.results_name:
-                pass
-        self._view.ui.cb_results_analysis_options.clear()
-        gui_utils.fill_combo_box(self._view.ui.cb_results_analysis_options, results)
-
-        desired_string: str = self.main_window_state.results_page.results_name
-        # Find the index of the string in the combo box
-        index = self._view.ui.cb_results_analysis_options.findText(desired_string)
-        # Set the current index of the combo box
-        if index != -1:
-            self._view.ui.cb_results_analysis_options.setCurrentIndex(index)
-        else:
-            print(f"String '{desired_string}' not found in the combo box.")
-
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 5, "Results")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_results_page,
-        )
-
-    def display_image_page(self) -> None:
-        """Displays the image work area."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-        self._init_image_page()
-
-        if self.main_window_state.image_page.transparent_background:
-            self._view.ui.cb_transparent_bg.setChecked(True)
-        else:
-            self._view.ui.cb_transparent_bg.setChecked(False)
-        if self.main_window_state.image_page.ray_tracing:
-            self._view.ui.cb_ray_tracing.setChecked(True)
-        else:
-            self._view.ui.cb_ray_tracing.setChecked(False)
-        try:
-            self._view.ui.box_representation.setCurrentIndex(
-                self._view.ui.box_representation.findText(self.main_window_state.image_page.representation),
-            )
-            self._view.ui.box_bg_color.setCurrentIndex(
-                self._view.ui.box_bg_color.findText(self.main_window_state.image_page.background_color),
-            )
-            self._view.ui.box_renderer.setCurrentIndex(self.main_window_state.image_page.renderer)
-            self._view.ui.box_ray_trace_mode.setCurrentIndex(self.main_window_state.image_page.ray_trace_mode)
-            self._view.ui.box_ray_texture.setCurrentIndex(self.main_window_state.image_page.ray_texture)
-        except IndexError:
-            constants.PYSSA_LOGGER.error("An option is invalid.")
-
-        if self._view.ui.box_renderer.currentText() == "":
-            self._view.ui.cb_ray_tracing.hide()
-            self._view.ui.label_26.hide()
-        else:
-            self._view.ui.cb_ray_tracing.show()
-            self._view.ui.label_26.show()
-
-        if self._view.ui.cb_ray_tracing.isChecked():
-            self._view.ui.label_10.show()
-            self._view.ui.box_ray_trace_mode.show()
-            self._view.ui.label_14.show()
-            self._view.ui.box_ray_texture.show()
-        else:
-            self._view.ui.label_10.hide()
-            self._view.ui.box_ray_trace_mode.hide()
-            self._view.ui.label_14.hide()
-            self._view.ui.box_ray_texture.hide()
-
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_image_page)
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 6, "Image")
-
-    def display_new_page(self) -> None:
-        """Displays the new project work area."""
-        self._init_new_page()
-        self._view.ui.list_new_projects.clear()
-        # pre-process
-        gui_elements_to_hide = [
-            self._view.ui.lbl_new_choose_reference,
-            self._view.ui.txt_new_choose_reference,
-            self._view.ui.btn_new_choose_reference,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.status_bar.showMessage(self._workspace_label.text())
-        tools.scan_workspace_for_valid_projects(self._workspace_path, self._view.ui.list_new_projects)
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 7, "Create new project")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_new_page)
-
-    def display_open_page(self) -> None:
-        """Displays the open project work area."""
-        self._view.ui.txt_open_search.clear()
-        self._view.ui.txt_open_selected_project.clear()
-        if safeguard.Safeguard.check_filepath(self._workspace_path):
-            self._view.ui.list_open_projects.clear()
-            # pre-process
-            self._view.status_bar.showMessage(self._workspace_label.text())
-            try:
-                tools.scan_workspace_for_valid_projects(self._workspace_path, self._view.ui.list_open_projects)
-            except PermissionError:
-                gui_utils.error_dialog_settings(
-                    "The settings file is corrupted. Please restore the settings!",
-                    "",
-                    self._application_settings,
-                )
-                self.display_home_page()
-                return
-            tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 8, "Open existing project")
-            self.last_sidebar_button = styles.color_sidebar_buttons(
-                self.last_sidebar_button,
-                self._view.ui.btn_open_page,
-            )
-        else:
-            gui_utils.error_dialog_settings(
-                "The settings file is corrupted. Please restore the settings!",
-                "",
-                self._application_settings,
-            )
-            self.display_home_page()
-
-    def display_delete_page(self) -> None:
-        """Displays the "delete" project work area."""
-        self._view.ui.txt_delete_search.clear()
-        self._view.ui.txt_delete_selected_projects.clear()
-        self._view.ui.list_delete_projects.clear()
-        # pre-process
-        self._view.status_bar.showMessage(self._workspace_label.text())
-        tools.scan_workspace_for_valid_projects(self._workspace_path, self._view.ui.list_delete_projects)
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 9, "Delete existing project")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_delete_page)
-
-    def display_edit_page(self) -> None:
-        """Displays the edit project page."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-        # pre-process
-        self._view.status_bar.showMessage(self._workspace_label.text())
-        self._init_edit_page()
-        tools.switch_page(
-            self._view.ui.stackedWidget,
-            self._view.ui.lbl_page_title,
-            13,
-            "Edit proteins of current project",
-        )
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_edit_page)
-        if len(self._view.ui.list_edit_project_proteins) >= 2:
-            self._view.ui.btn_edit_existing_protein_struct.hide()
-            self._view.ui.lbl_edit_existing_protein_struct.hide()
-        else:
-            self._view.ui.btn_edit_existing_protein_struct.show()
-            self._view.ui.lbl_edit_existing_protein_struct.show()
-
-    def display_use_page(self) -> None:
-        """Displays the use project page."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        self.start_worker_thread(
-            task_workers.LoadUsePageWorker(
-                self._workspace_path,
-                self._current_project.convert_list_of_proteins_to_list_of_protein_infos(),
-            ),
-            self.post_display_use_page,
-        )
-        self._init_use_page()
-
-    def post_display_use_page(self, return_value) -> None:  # noqa: ANN001
-        """Displays the use project page, after cpu intense task (post thread method).
-
-        Args:
-            return_value: the value which gets returned from the thread process
-        """
-        # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
-        # are available
-        for tmp_item in return_value[0]:
-            self._view.ui.list_use_available_protein_structures.addItem(tmp_item)
-        for i in range(self._view.ui.list_use_selected_protein_structures.count()):
-            self._view.ui.list_use_selected_protein_structures.setCurrentRow(i)
-            tmp_prot_name = self._view.ui.list_use_selected_protein_structures.currentItem().text()
-            if tmp_prot_name in return_value[1]:
-                return_value[1].remove(tmp_prot_name)
-
-        for tmp_item in return_value[1]:
-            self._view.ui.list_use_available_protein_structures.addItem(tmp_item)
-        for tmp_project_name in return_value[2]:
-            self._view.ui.list_use_existing_projects.addItem(QtWidgets.QListWidgetItem(tmp_project_name))
-
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 14, "Use existing project")
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_use_page)
-        QtWidgets.QApplication.restoreOverrideCursor()
-
-    def display_hotspots_page(self) -> None:
-        """Displays the hotspots page."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-        try:
-            print(self._view.ui.list_hotspots_choose_protein.currentItem().text())
-        except AttributeError:
-            self._view.ui.list_hotspots_choose_protein.clear()
-            gui_elements_to_hide = [
-                self._view.ui.lbl_hotspots_resi_no,
-                self._view.ui.sp_hotspots_resi_no,
-                self._view.ui.lbl_hotspots_resi_show,
-                self._view.ui.btn_hotspots_resi_show,
-                self._view.ui.lbl_hotspots_resi_hide,
-                self._view.ui.btn_hotspots_resi_hide,
-                self._view.ui.lbl_hotspots_resi_zoom,
-                self._view.ui.btn_hotspots_resi_zoom,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            gui_utils.fill_list_view_with_protein_names(
-                self._current_project,
-                self._view.ui.list_hotspots_choose_protein,
-            )
-            gui_utils.fill_list_view_with_protein_pair_names(
-                self._current_project,
-                self._view.ui.list_hotspots_choose_protein,
-            )
-        # self.project_scanner.scan_project_for_valid_proteins(self._view.ui.list_hotspots_choose_protein)
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 18, "Hotspots")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_hotspots_page,
-        )
-
-    def display_manage_pymol_session(self) -> None:
-        """Displays the manage pymol session page."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-        self._view.ui.box_manage_choose_protein.clear()
-        pymol_objs = cmd.get_object_list()
-        pymol_objs.insert(0, "")
-        for tmp_object in pymol_objs:
-            self._view.ui.box_manage_choose_protein.addItem(tmp_object)
-        self._view.ui.box_manage_choose_protein.setCurrentIndex(
-            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_PROTEIN][0],
-        )
-        self._view.ui.box_manage_choose_color.setCurrentIndex(
-            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_COLOR][0],
-        )
-        self._view.ui.box_manage_choose_representation.setCurrentIndex(
-            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_REPRESENTATION][0],
-        )
-        self._view.ui.box_manage_choose_bg_color.setCurrentIndex(
-            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_BG_COLOR][0],
-        )
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 24, "Manage PyMOL session")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_manage_session,
-        )
-        gui_elements_to_hide = [
-            self._view.ui.lbl_manage_choose_color,
-            self._view.ui.box_manage_choose_color,
-            self._view.ui.lbl_manage_choose_representation,
-            self._view.ui.box_manage_choose_representation,
-            self._view.ui.lbl_manage_choose_bg_color,
-            self._view.ui.box_manage_choose_bg_color,
-            self._view.ui.lbl_disulfid_bond_1,
-            self._view.ui.lbl_disulfid_bond_2,
-            self._view.ui.btn_disulfid_bond_show,
-            self._view.ui.btn_disulfid_bond_hide,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-
-    # </editor-fold>
-
     def restore_settings(self) -> None:
         """Restores the settings.xml file to the default values."""
         out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?")
@@ -1846,28 +792,10 @@ class MainPresenter:
 
     def quit_app(self) -> None:
         """Closes the entire plugin."""
-        self.close()
+        self._view.quit_app()
 
-    def open_settings_global(self) -> None:
-        """Opens the dialog for the global settings."""
-        dialog = dialog_settings_global.DialogSettingsGlobal()
-        dialog.exec_()
-        self._application_settings = self._application_settings.deserialize_settings()
-        globals.g_settings = self._application_settings
-        self._workspace_path = globals.g_settings.workspace_path
-        self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
-        self._setup_statusbar()
-
-    def open_logs(self) -> None:
-        """Opens a file explorer with all log files and can open a log file in the default application."""
-        file_dialog = QtWidgets.QFileDialog()
-        log_path = str(constants.LOG_PATH)
-        file_dialog.setDirectory(log_path)
-        file_path, _ = file_dialog.getOpenFileName(self, "Select a log file to open", "", "LOG File (*.log)")
-        if file_path:
-            os.startfile(file_path)
-
-    def clear_all_log_files(self) -> None:
+    @staticmethod
+    def clear_all_log_files() -> None:
         """Clears all log files generated under .pyssa/logs."""
         response = basic_boxes.yes_or_no(
             "Clear log files",
@@ -1886,10 +814,29 @@ class MainPresenter:
                 basic_boxes.ok("Clear log files", "Not all log files could be deleted.", QtWidgets.QMessageBox.Warning)
                 constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
 
+    # <editor-fold desc="Open extra views">
+    def open_settings_global(self) -> None:
+        """Opens the dialog for the global settings."""
+        dialog = dialog_settings_global.DialogSettingsGlobal()
+        dialog.exec_()
+        self._application_settings = self._application_settings.deserialize_settings()
+        globals.g_settings = self._application_settings
+        self._workspace_path = globals.g_settings.workspace_path
+        self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
+        self._setup_statusbar()
+
+    def open_logs(self) -> None:
+        """Opens a file explorer with all log files and can open a log file in the default application."""
+        file_dialog = QtWidgets.QFileDialog()
+        log_path = str(constants.LOG_PATH)
+        file_dialog.setDirectory(log_path)
+        file_path, _ = file_dialog.getOpenFileName(self._view, "Select a log file to open", "", "LOG File (*.log)")
+        if file_path:
+            os.startfile(file_path)
+
     @staticmethod
     def open_tutorial() -> None:
         """Opens the official tutorial pdf file."""
-        # os.startfile(constants.TUTORIAL_PATH)
         tmp_dialog = dialog_tutorial_videos.TutorialVideosDialog()
         tmp_dialog.exec_()
 
@@ -1921,162 +868,62 @@ class MainPresenter:
         """Opens the release notes in the default app."""
         os.startfile(constants.CHANGELOG_HTML_PATH)
 
-    def open_change_log(self) -> None:
-        """Opens change log based on the last run pyssa version.
+    # </editor-fold>
 
-        Notes:
-            Change log opens only if the last pyssa version is older than the current one.
-        """
-        last_version = f"v{self.get_version_from_latest_log_file(self.get_filepath_of_latest_log_file())}"
-        if last_version != constants.VERSION_NUMBER:
-            self.open_release_notes_in_standard_application()
+    # def open_change_log(self) -> None:
+    #     """Opens change log based on the last run pyssa version.
+    #
+    #     Notes:
+    #         Change log opens only if the last pyssa version is older than the current one.
+    #     """
+    #     last_version = f"v{self.get_version_from_latest_log_file(self.get_filepath_of_latest_log_file())}"
+    #     if last_version != constants.VERSION_NUMBER:
+    #         self.open_release_notes_in_standard_application()
+    #
+    # def get_version_from_latest_log_file(self, a_filepath: pathlib.Path) -> str:
+    #     """Gets the pyssa version of the latest log file.
+    #
+    #     Args:
+    #         a_filepath: the filepath to the latest log file.
+    #     """
+    #     with open(str(a_filepath), "r", encoding="utf-8") as file:
+    #         file_content = file.read()
+    #         file.close()
+    #     # Define the regex pattern to extract the version number
+    #     pattern = r"PySSA started with version v(\d+\.\d+\.\d+)"
+    #     # Search for the pattern in the text
+    #     match = re.search(pattern, file_content)
+    #     # Check if a match is found
+    #     if match:
+    #         version_number = match.group(1)
+    #         print("Extracted version number:", version_number)
+    #     else:
+    #         print("Version number not found in the text.")
+    #         version_number = None
+    #     return version_number
+    #
+    # def get_filepath_of_latest_log_file(self) -> pathlib.Path:
+    #     """Gets the filepath of the latest log file.
+    #
+    #     Raises:
+    #         FileNotFoundError: If no log files can be found in the log directory.
+    #     """
+    #     # Get a list of files in the directory
+    #     files = [f for f in os.listdir(constants.LOG_PATH) if os.path.isfile(os.path.join(constants.LOG_PATH, f))]
+    #     # Filter files to include only log files (adjust the extension accordingly)
+    #     log_files = [f for f in files if f.endswith(".log")]
+    #     # Check if there are any log files
+    #     if not log_files:
+    #         raise FileNotFoundError("No log files found in the directory.")
+    #     # Get the full path of each log file
+    #     log_files_paths = [os.path.join(constants.LOG_PATH, f) for f in log_files]
+    #     # Get the latest log file based on modification time
+    #     latest_log_file_index = log_files_paths.index(max(log_files_paths, key=os.path.getmtime)) - 1
+    #     return pathlib.Path(log_files_paths[latest_log_file_index])
 
-    def get_version_from_latest_log_file(self, a_filepath: pathlib.Path) -> str:
-        """Gets the pyssa version of the latest log file.
-
-        Args:
-            a_filepath: the filepath to the latest log file.
-        """
-        with open(str(a_filepath), "r", encoding="utf-8") as file:
-            file_content = file.read()
-            file.close()
-        # Define the regex pattern to extract the version number
-        pattern = r"PySSA started with version v(\d+\.\d+\.\d+)"
-        # Search for the pattern in the text
-        match = re.search(pattern, file_content)
-        # Check if a match is found
-        if match:
-            version_number = match.group(1)
-            print("Extracted version number:", version_number)
-        else:
-            print("Version number not found in the text.")
-            version_number = None
-        return version_number
-
-    def get_filepath_of_latest_log_file(self) -> pathlib.Path:
-        """Gets the filepath of the latest log file.
-
-        Raises:
-            FileNotFoundError: If no log files can be found in the log directory.
-        """
-        # Get a list of files in the directory
-        files = [f for f in os.listdir(constants.LOG_PATH) if os.path.isfile(os.path.join(constants.LOG_PATH, f))]
-        # Filter files to include only log files (adjust the extension accordingly)
-        log_files = [f for f in files if f.endswith(".log")]
-        # Check if there are any log files
-        if not log_files:
-            raise FileNotFoundError("No log files found in the directory.")
-        # Get the full path of each log file
-        log_files_paths = [os.path.join(constants.LOG_PATH, f) for f in log_files]
-        # Get the latest log file based on modification time
-        latest_log_file_index = log_files_paths.index(max(log_files_paths, key=os.path.getmtime)) - 1
-        return pathlib.Path(log_files_paths[latest_log_file_index])
+    # <editor-fold desc="Logic related methods">
 
     # <editor-fold desc="New project page functions">
-    def show_add_reference(self) -> None:
-        """Shows the reference input section."""
-        # checkbox is checked
-        self._view.ui.cb_new_add_reference.checkState()
-        if self._view.ui.cb_new_add_reference.checkState() == 2:
-            self._view.ui.txt_new_choose_reference.clear()
-            self._view.ui.txt_new_choose_reference.setStyleSheet("background-color: white")
-            self._view.ui.lbl_new_choose_reference.show()
-            self._view.ui.txt_new_choose_reference.show()
-            self._view.ui.btn_new_choose_reference.show()
-            self._view.ui.btn_new_create_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-            # check internet connectivity
-            if not tools.check_internet_connectivity():
-                gui_utils.no_internet_dialog()
-                self._view.ui.txt_new_choose_reference.setEnabled(False)
-                self._view.ui.lbl_new_status_choose_reference.setText("You cannot enter a PDB ID (no internet).")
-                return
-            self._view.ui.txt_new_choose_reference.setEnabled(True)
-            self._view.ui.lbl_new_status_choose_reference.setText("")
-        else:
-            self._view.ui.lbl_new_choose_reference.hide()
-            self._view.ui.txt_new_choose_reference.hide()
-            self._view.ui.btn_new_choose_reference.hide()
-            self._view.ui.lbl_new_status_choose_reference.setText("")
-            self._view.ui.btn_new_create_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_new_create_project)
-
-    def load_reference_in_project(self) -> None:
-        """Loads a reference in a new project."""
-        try:
-            # open file dialog
-            file_name = QtWidgets.QFileDialog.getOpenFileName(
-                self,
-                "Open Reference",
-                QtCore.QDir.homePath(),
-                "PDB Files (*.pdb)",
-            )
-            if file_name == ("", ""):
-                raise ValueError
-            # display path in text box
-            self._view.ui.txt_new_choose_reference.setText(str(file_name[0]))
-            self._view.ui.txt_new_choose_reference.setEnabled(False)
-            self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
-            self._view.ui.btn_new_create_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_new_create_project)
-        except ValueError:
-            print("No file has been selected.")
-
-    def validate_reference_in_project(self) -> None:
-        """Checks if the entered reference protein is valid or not."""
-        if len(self._view.ui.txt_new_choose_reference.text()) == 0:
-            self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-            self._view.ui.lbl_new_status_choose_reference.setText("")
-            self._view.ui.btn_new_create_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-        elif len(self._view.ui.txt_new_choose_reference.text()) < 4:
-            self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-            self._view.ui.btn_new_create_project.setEnabled(False)
-            self._view.ui.lbl_new_status_choose_reference.setText("")
-        # checks if a pdb id was entered
-        elif len(self._view.ui.txt_new_choose_reference.text()) == 4:
-            pdb_id = self._view.ui.txt_new_choose_reference.text().upper()
-            try:
-                # the pdb file gets saved in a scratch directory where it gets deleted immediately
-                cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
-                os.remove(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
-                cmd.reinitialize()
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
-                self._view.ui.btn_new_create_project.setEnabled(True)
-                styles.color_button_ready(self._view.ui.btn_new_create_project)
-            # if the id does not exist an exception gets raised
-            except pymol.CmdException:
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-                return
-            except FileNotFoundError:
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                self._view.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
-                self._view.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-                return
-        else:
-            if self._view.ui.txt_new_choose_reference.text().find("/") == -1:
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                self._view.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-
-            elif self._view.ui.txt_new_choose_reference.text().find("\\") == -1:
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                self._view.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
-
-    def validate_project_name(self) -> None:
-        """Validates the input of the project name in real-time."""
-        input_validator.InputValidator.validate_project_name(
-            self._view.ui.list_new_projects,
-            self._view.ui.txt_new_project_name,
-            self._view.ui.lbl_new_status_project_name,
-            self._view.ui.btn_new_create_project,
-            self._view.ui.cb_new_add_reference,
-        )
-
     def create_new_project(self) -> None:
         """Creates a new project with the content of the new page."""
         # <editor-fold desc="Checks">
@@ -2097,110 +944,63 @@ class MainPresenter:
 
         # </editor-fold>
 
-        new_project_name = self._view.ui.txt_new_project_name.text()
-        self._current_project = project.Project(new_project_name, self._workspace_path)
+        an_add_protein_flag: bool = False
         if self._view.ui.cb_new_add_reference.checkState() == 2:
-            if len(self._view.ui.txt_new_choose_reference.text()) == 4:
-                tmp_ref_protein = pymol_io.get_protein_from_pdb(self._view.ui.txt_new_choose_reference.text().upper())
-            else:
-                # local pdb file as input
-                pdb_filepath = path_util.FilePath(pathlib.Path(self._view.ui.txt_new_choose_reference.text()))
-                graphic_operations.setup_default_session_graphic_settings()
-                tmp_ref_protein = protein.Protein(
-                    molecule_object=pdb_filepath.get_filename(),
-                    pdb_filepath=pdb_filepath,
-                )
-            # fixme: should the disulfid-bonds be displayed globally
-            # cmd.select(name="disulfides", selection="byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
-            # cmd.color(color="atomic", selection="disulfides and not elem C")
-            # cmd.set("valence", 0)  # this needs to be better implemented
-            # cmd.show("sticks", "disulfides")
-            self._current_project.add_existing_protein(tmp_ref_protein)
-        self._view.ui.cb_new_add_reference.setCheckState(0)
+            an_add_protein_flag = True
 
-        self._current_project.serialize_project(
-            pathlib.Path(f"{self._workspace_path}/{self._current_project.get_project_name()}.xml"),
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_new_project,
+            args=(
+                self._view.ui.txt_new_project_name.text(),
+                self._workspace_path,
+                an_add_protein_flag,
+                self._view.ui.txt_new_choose_reference.text(),
+            ),
+            post_func=self.__await_create_new_project,
         )
+        self._active_task.start()
+        self._wait_spinner.start()
+
+    def __await_create_new_project(self, a_result: tuple) -> None:
+        self._current_project: "project.Project" = a_result[1]
         constants.PYSSA_LOGGER.info(f"Created the project {self._current_project.get_project_name()}.")
-        protein_names = []
-        for tmp_protein in self._current_project.proteins:
-            protein_names.append(tmp_protein.get_molecule_object())
-        constants.PYSSA_LOGGER.debug(f"These are the proteins {protein_names}.")
+        self._view.ui.cb_new_add_reference.setCheckState(0)
         self._project_watcher.current_project = self._current_project
-        self.project_scanner.project = self._current_project
         constants.PYSSA_LOGGER.info(
             f"{self._project_watcher.current_project.get_project_name()} is the current project.",
         )
         self._project_watcher.on_home_page = False
         # update gui
         self._project_watcher.show_valid_options(self._view.ui)
-        self._view.ui.lbl_current_project_name.setText(new_project_name)
-        self._view.status_bar.showMessage(f"Current project path: {self._workspace_path}/{new_project_name}")
+        self._view.ui.lbl_current_project_name.setText(self._current_project.get_project_name())
+        self._view.status_bar.showMessage(
+            f"Current project path: {self._workspace_path}/{self._current_project.get_project_name()}",
+        )
         self.main_window_state = main_window_state.MainWindowState(
             results_state.ResultsState(),
             image_state.ImageState(),
         )
         self.display_view_page()
+        self._wait_spinner.stop()
 
     # </editor-fold>
 
     # <editor-fold desc="Open project page functions">
-    def validate_open_search(self) -> None:
-        """Validates the input of the project name in real-time."""
-        if self._view.ui.list_open_projects.currentItem() is not None:
-            self._view.ui.list_open_projects.currentItem().setSelected(False)
-        # set color for lineEdit
-        input_validator.InputValidator.validate_search_input(
-            self._view.ui.list_open_projects,
-            self._view.ui.txt_open_search,
-            self._view.ui.lbl_open_status_search,
-            self._view.ui.txt_open_selected_project,
-        )
-
-    def select_project_from_open_list(self) -> None:
-        """Sets the selected project name in the text box."""
-        try:
-            self._view.ui.txt_open_selected_project.setText(self._view.ui.list_open_projects.currentItem().text())
-        except AttributeError:
-            self._view.ui.txt_open_selected_project.setText("")
-
-    def activate_open_button(self) -> None:
-        """Activates the open button."""
-        if self._view.ui.txt_open_selected_project.text() == "":
-            self._view.ui.btn_open_open_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_open_open_project)
-        else:
-            self._view.ui.btn_open_open_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_open_open_project)
-
-    def thread_func_open_project(self) -> None:
-        """Logic of the open project process."""
-        # show project management options in side menu
-        tmp_project_path = pathlib.Path(
-            f"{self._workspace_path}/{self._view.ui.list_open_projects.currentItem().text()}",
-        )
-        self._current_project = project.Project.deserialize_project(tmp_project_path, self._application_settings)
-        constants.PYSSA_LOGGER.info(f"Opening the project {self._current_project.get_project_name()}.")
-        self._project_watcher.current_project = self._current_project
-        self.project_scanner.project = self._current_project
-        constants.PYSSA_LOGGER.info(
-            f"{self._project_watcher.current_project.get_project_name()} is the current project.",
-        )
-        self._view.ui.lbl_current_project_name.setText(self._current_project.get_project_name())
-        self._project_watcher.on_home_page = False
-        self._project_watcher.show_valid_options(self._view.ui)
-
-    def opens_project(self) -> None:
+    def open_project(self) -> None:
         """Initiates the task to open an existing project."""
-        self._active_task = tasks.Task(self.__async_logic_open_project, post_func=self.__await_post_project)
+        self._active_task = tasks.Task(
+            target=main_presenter_async.open_project,
+            args=(
+                self._workspace_path,
+                self._view.ui.txt_open_selected_project.text(),
+                self._application_settings,
+            ),
+            post_func=self.__await_open_project,
+        )
         self._active_task.start()
-        print("Thread should have started.")
+        self._view.wait_spinner.start()
 
-    def __async_logic_open_project(self) -> tuple:
-        tmp_project_path = pathlib.Path(f"{self._workspace_path}/{self._view.ui.txt_open_selected_project.text()}")
-        return ("result", project.Project.deserialize_project(tmp_project_path, self._application_settings))
-
-    def __await_post_project(self, a_result: tuple) -> None:
+    def __await_open_project(self, a_result: tuple) -> None:
         self._current_project = a_result[1]
         self._project_watcher.current_project = self._current_project
         constants.PYSSA_LOGGER.info(
@@ -2217,78 +1017,11 @@ class MainPresenter:
             results_state.ResultsState(),
             image_state.ImageState(),
         )
-
-    def pre_open_project(self) -> None:
-        """Opens an existing project."""
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        # <editor-fold desc="Worker setup">
-        # --Begin: worker setup
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.OpenProjectWorker(
-            self._workspace_path,
-            self._view.ui.list_open_projects.currentItem().text(),
-            self._application_settings,
-        )
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.open_project)
-        self.tmp_thread.start()
-        # --End: worker setup
-
-        # </editor-fold>
-
-        constants.PYSSA_LOGGER.info(f"Opening the project {self._current_project.get_project_name()}.")
-
-    def open_project(self, project_obj: project.Project) -> None:
-        """Opens a project."""
-        self._current_project = project_obj
-        self._project_watcher.current_project = self._current_project
-        self.project_scanner.project = self._current_project
-        constants.PYSSA_LOGGER.info(
-            f"{self._project_watcher.current_project.get_project_name()} is the current project.",
-        )
-        self._view.ui.lbl_current_project_name.setText(self._current_project.get_project_name())
-        self._project_watcher.on_home_page = False
-        self._project_watcher.show_valid_options(self._view.ui)
-        cmd.reinitialize()
-        self._view.ui.btn_manage_session.hide()
-        self.display_view_page()
-        QtWidgets.QApplication.restoreOverrideCursor()
-        self.main_window_state = main_window_state.MainWindowState(
-            results_state.ResultsState(),
-            image_state.ImageState(),
-        )
+        self._view.wait_spinner.stop()
 
     # </editor-fold>
 
     # <editor-fold desc="Delete project page functions">
-    def select_project_from_delete_list(self) -> None:
-        """Selects a project from the project list on the delete page."""
-        try:
-            self._view.ui.txt_delete_selected_projects.setText(self._view.ui.list_delete_projects.currentItem().text())
-        except AttributeError:
-            self._view.ui.txt_delete_selected_projects.setText("")
-
-    def activate_delete_button(self) -> None:
-        """Activates the delete button."""
-        if self._view.ui.txt_delete_selected_projects.text() == "":
-            self._view.ui.btn_delete_delete_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_delete_delete_project)
-        else:
-            self._view.ui.btn_delete_delete_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_delete_delete_project)
-
-    def validate_delete_search(self) -> None:
-        """Validates the input of the project name in real-time."""
-        if self._view.ui.list_delete_projects.currentItem() is not None:
-            self._view.ui.list_delete_projects.currentItem().setSelected(False)
-        # set color for lineEdit
-        input_validator.InputValidator.validate_search_input(
-            self._view.ui.list_delete_projects,
-            self._view.ui.txt_delete_search,
-            self._view.ui.lbl_delete_status_search,
-            self._view.ui.txt_delete_selected_projects,
-        )
-
     def delete_project(self) -> None:
         """Deletes an existing project."""
         # popup message which warns the user that the selected project gets deleted
@@ -2331,52 +1064,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Edit project page functions">
-    def check_for_cleaning(self) -> None:
-        """Checks if the selected protein can be cleaned."""
-        try:
-            protein_name = self._view.ui.list_edit_project_proteins.currentItem().text()
-        except AttributeError:
-            return
-        tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
-        cmd.reinitialize()
-        self._view.ui.btn_manage_session.show()
-        tmp_protein = self._current_project.search_protein(protein_name.replace(".pdb", ""))
-        tmp_protein.load_protein_in_pymol()
-        # check if selected protein contains any organic or solvent molecules which can be removed
-        if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
-            gui_elements_to_show = [
-                self._view.ui.lbl_edit_clean_new_prot,
-                self._view.ui.btn_edit_clean_new_prot,
-                self._view.ui.lbl_edit_clean_update_prot,
-                self._view.ui.btn_edit_clean_update_prot,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-        else:
-            gui_elements_to_hide = [
-                self._view.ui.lbl_edit_clean_new_prot,
-                self._view.ui.btn_edit_clean_new_prot,
-                self._view.ui.lbl_edit_clean_update_prot,
-                self._view.ui.btn_edit_clean_update_prot,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        # check if selected protein is in any existing protein pair
-        if self._current_project.check_if_protein_is_in_any_protein_pair(protein_name) is True:
-            gui_elements_to_hide = [
-                self._view.ui.label_12,
-                self._view.ui.btn_edit_project_delete,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        else:
-            gui_elements_to_show = [
-                self._view.ui.label_12,
-                self._view.ui.btn_edit_project_delete,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-        self._view.ui.btn_edit_project_save.show()
-        self._view.ui.label_13.show()
-        self._view.ui.label_15.show()
-        self._view.ui.btn_edit_protein_rename.show()
-
     def clean_protein_new(self) -> None:
         """Cleans the selected protein structure and creates a new cleaned structure."""
         tmp_protein = self._current_project.search_protein(
@@ -2444,7 +1131,12 @@ class MainPresenter:
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getSaveFileName(self, "Save protein structure", "", "Protein Data Bank File (*.pdb)")
+        file_path, _ = file_dialog.getSaveFileName(
+            self._view,
+            "Save protein structure",
+            "",
+            "Protein Data Bank File (*.pdb)",
+        )
         if file_path:
             tmp_protein = self._current_project.search_protein(
                 self._view.ui.list_edit_project_proteins.currentItem().text(),
@@ -2484,57 +1176,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="View project page functions">
-    def display_view_page(self) -> None:
-        """Displays the edit project page."""
-        if self.is_distance_plot_open:
-            self.distance_plot_dialog.close()
-            self.is_distance_plot_open = False
-        self._view.ui.list_view_project_proteins.clear()
-        self._view.ui.txtedit_view_sequence.clear()
-        # pre-process
-        self._view.status_bar.showMessage(self._workspace_label.text())
-        # list all proteins from pdb directory
-        gui_utils.fill_list_view_with_protein_names(self._current_project, self._view.ui.list_view_project_proteins)
-
-        tools.switch_page(
-            self._view.ui.stackedWidget,
-            self._view.ui.lbl_page_title,
-            11,
-            "View proteins of current project",
-        )
-        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_view_page)
-        gui_elements_to_hide = [
-            self._view.ui.btn_view_project_show,
-            self._view.ui.btn_view_project_show_structure,
-            self._view.ui.txtedit_view_sequence,
-            self._view.ui.label_9,
-            self._view.ui.label_11,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-
-    def view_show_options(self) -> None:
-        """Controls which gui elements get shown."""
-        gui_elements_to_show = [
-            # self._view.ui.btn_view_project_show,
-            self._view.ui.btn_view_project_show_structure,
-            self._view.ui.txtedit_view_sequence,
-            # self._view.ui.label_9,
-            self._view.ui.label_11,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        self.view_sequence()
-
-    def view_sequence(self) -> None:
-        """Displays the sequence of the selected protein in a text box."""
-        tmp_protein_basename = self._view.ui.list_view_project_proteins.currentItem().text()
-        tmp_protein_sequences = self._current_project.search_protein(tmp_protein_basename).get_protein_sequences()
-        self._view.ui.txtedit_view_sequence.clear()
-        for tmp_sequence in tmp_protein_sequences:
-            self._view.ui.txtedit_view_sequence.append("".join(tmp_sequence.sequence))
-        # fixme: experimental sequence viewer gui
-        # dialog = dialog_sequence_viewer.SequenceViewer(tmp_protein_sequences, tmp_protein_filename)
-        # dialog.exec_()
-
     def view_structure(self) -> None:
         """Displays the structure of the selected protein in pymol."""
         protein_name = self._view.ui.list_view_project_proteins.currentItem().text()
@@ -2557,113 +1198,46 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Use project page functions">
-    def validate_use_project_name(self) -> None:
-        """Validates the input of the project name in real-time."""
-        input_validator.InputValidator.validate_project_name(
-            self._view.ui.list_use_existing_projects,
-            self._view.ui.txt_use_project_name,
-            self._view.ui.lbl_use_status_project_name,
-            self._view.ui.btn_use_next,
+    def display_use_page(self) -> None:
+        """Displays the use project page."""
+        self._view.wait_spinner.start()
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+
+        self.start_worker_thread(
+            task_workers.LoadUsePageWorker(
+                self._workspace_path,
+                self._current_project.convert_list_of_proteins_to_list_of_protein_infos(),
+            ),
+            self.post_display_use_page,
         )
+        self._init_use_page()
 
-    def validate_use_search(self) -> None:
-        """Validates the input of the protein name in real-time."""
-        message = "Protein structure does not exists."
-        input_validator.InputValidator.validate_search_input(
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.txt_use_search,
-            self._view.ui.lbl_use_status_search,
-            status_message=message,
-        )
+    def post_display_use_page(self, return_value) -> None:  # noqa: ANN001
+        """Displays the use project page, after cpu intense task (post thread method).
 
-    def add_protein_structure_to_new_project(self) -> None:
-        """Adds the selected protein to the list which is used to create the new project."""
-        prot_to_add = self._view.ui.list_use_available_protein_structures.currentItem().text()
-        self._view.ui.list_use_selected_protein_structures.addItem(prot_to_add)
-        self._view.ui.list_use_available_protein_structures.takeItem(
-            self._view.ui.list_use_available_protein_structures.currentRow(),
-        )
-        self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
-        if self._view.ui.list_use_available_protein_structures.count() > 0:
-            try:
-                self._view.ui.list_use_available_protein_structures.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in use available proteins list on Use page.")
+        Args:
+            return_value: the value which gets returned from the thread process
+        """
+        # this for-loop is necessary for eliminating all proteins which are in the current project from the ones which
+        # are available
+        for tmp_item in return_value[0]:
+            self._view.ui.list_use_available_protein_structures.addItem(tmp_item)
+        for i in range(self._view.ui.list_use_selected_protein_structures.count()):
+            self._view.ui.list_use_selected_protein_structures.setCurrentRow(i)
+            tmp_prot_name = self._view.ui.list_use_selected_protein_structures.currentItem().text()
+            if tmp_prot_name in return_value[1]:
+                return_value[1].remove(tmp_prot_name)
 
-    def remove_protein_structure_to_new_project(self) -> None:
-        """Removes the selected protein from the list which is used to create the new project."""
-        prot_to_remove = self._view.ui.list_use_selected_protein_structures.currentItem()
-        self._view.ui.list_use_selected_protein_structures.takeItem(
-            self._view.ui.list_use_selected_protein_structures.currentRow(),
-        )
-        self._view.ui.list_use_available_protein_structures.addItem(prot_to_remove)
-        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
-        if self._view.ui.list_use_selected_protein_structures.count() > 0:
-            try:
-                self._view.ui.list_use_selected_protein_structures.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in use selected proteins list on Use page.")
+        for tmp_item in return_value[1]:
+            self._view.ui.list_use_available_protein_structures.addItem(tmp_item)
+        for tmp_project_name in return_value[2]:
+            self._view.ui.list_use_existing_projects.addItem(QtWidgets.QListWidgetItem(tmp_project_name))
 
-    def show_protein_selection_for_use(self) -> None:
-        """Shows the two lists for the protein selection."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_use_search,
-            self._view.ui.lbl_use_status_search,
-            self._view.ui.txt_use_search,
-            self._view.ui.btn_use_add_available_protein_structures,
-            self._view.ui.lbl_use_available_protein_structures,
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.btn_use_remove_selected_protein_structures,
-            self._view.ui.lbl_use_selected_protein_structures,
-            self._view.ui.list_use_selected_protein_structures,
-            self._view.ui.btn_use_back,
-            self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_new_project,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        self._view.ui.txt_use_project_name.setEnabled(False)
-        gui_elements_to_hide = [
-            self._view.ui.btn_use_next,
-            self._view.ui.list_use_existing_projects,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.disable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
-        self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
-        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
-
-    def hide_protein_selection_for_use(self) -> None:
-        """Hides the two lists for the protein selection."""
-        gui_elements_to_show = [
-            self._view.ui.btn_use_next,
-            self._view.ui.list_use_existing_projects,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        self._view.ui.txt_use_project_name.setEnabled(True)
-
-        gui_elements_to_hide = [
-            self._view.ui.lbl_use_search,
-            self._view.ui.lbl_use_status_search,
-            self._view.ui.txt_use_search,
-            self._view.ui.btn_use_add_available_protein_structures,
-            self._view.ui.lbl_use_available_protein_structures,
-            self._view.ui.list_use_available_protein_structures,
-            self._view.ui.btn_use_remove_selected_protein_structures,
-            self._view.ui.lbl_use_selected_protein_structures,
-            self._view.ui.list_use_selected_protein_structures,
-            self._view.ui.btn_use_back,
-            self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_new_project,
-        ]
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
-
-    def use_enable_add(self) -> None:
-        """Enables the add button."""
-        self._view.ui.btn_use_add_available_protein_structures.setEnabled(True)
-
-    def use_enable_remove(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 14, "Use existing project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_use_page)
+        self._view.wait_spinner.stop()
 
     def pre_create_use_project(self) -> None:
         """Sets up the worker for the create_use_project task."""
@@ -2726,7 +1300,12 @@ class MainPresenter:
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getOpenFileName(self, "Select a project file to import", "", "XML Files (*.xml)")
+        file_path, _ = file_dialog.getOpenFileName(
+            self._view,
+            "Select a project file to import",
+            "",
+            "XML Files (*.xml)",
+        )
         if file_path:
             tmp_project = project.Project("", self._workspace_path)
             tmp_project = tmp_project.deserialize_project(pathlib.Path(file_path), self._application_settings)
@@ -2810,309 +1389,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="ESMFold Monomer functions">
-    def _init_esm_pred_mono_page(self) -> None:
-        """Clears all text boxes and sets up the default values for the page."""
-        # clears everything
-        self._view.ui.txt_esm_prot_name.clear()
-        self._view.ui.txt_esm_prot_seq.clear()
-        for i in range(self._view.ui.table_esm_prot_to_predict.rowCount()):
-            self._view.ui.table_esm_prot_to_predict.removeRow(i)
-        # sets up defaults: Prediction
-        self._view.ui.btn_esm_next.setEnabled(False)
-        self._view.ui.btn_esm_next_2.setEnabled(False)
-        self._view.ui.lbl_esm_prot_name_status.setText("")
-        self._view.ui.lbl_esm_prot_seq_status.setText("")
-
-    def display_esm_pred_mono(self) -> None:
-        """Displays the esm_fold monomer page."""
-        self._init_esm_pred_mono_page()
-        gui_elements_to_show = [
-            self._view.ui.lbl_esm_prot_to_predict,
-            self._view.ui.table_esm_prot_to_predict,
-            self._view.ui.btn_esm_seq_to_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_esm_seq_to_predict_remove,
-            self._view.ui.lbl_esm_prot_name,
-            self._view.ui.txt_esm_prot_name,
-            self._view.ui.lbl_esm_prot_name_status,
-            self._view.ui.btn_esm_back,
-            self._view.ui.btn_esm_next,
-            self._view.ui.lbl_esm_prot_seq,
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_back_2,
-            self._view.ui.btn_esm_next_2,
-            self._view.ui.btn_esm_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        styles.color_button_not_ready(self._view.ui.btn_esm_next)
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 1, "ESMFold Monomer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_pred_cloud_monomer_page,
-        )
-
-    def cloud_esm_validate_protein_name(self) -> None:
-        """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
-            self._view.ui.txt_esm_prot_name.text(),
-            self._view.ui.table_esm_prot_to_predict,
-        ):
-            self._view.ui.lbl_esm_prot_name_status.setText("Protein name already used.")
-            self._view.ui.btn_esm_next.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_esm_next)
-        else:
-            self._view.ui.btn_esm_next.setEnabled(True)
-            tools.validate_protein_name(
-                self._view.ui.txt_esm_prot_name,
-                self._view.ui.lbl_esm_prot_name_status,
-                self._view.ui.btn_esm_next,
-            )
-
-    def cloud_esm_validate_protein_sequence(self) -> None:
-        """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_next_2,
-        )
-
-    def setup_defaults_esm_monomer_prediction(self) -> None:
-        """Sets up the default values for the page."""
-        # clears everything
-        self._view.ui.txt_esm_prot_name.clear()
-        self._view.ui.txt_esm_prot_seq.clear()
-        # sets up defaults: Prediction
-        self._view.ui.btn_esm_next.setEnabled(False)
-        self._view.ui.btn_esm_next_2.setEnabled(False)
-        self._view.ui.lbl_esm_prot_name_status.setText("")
-        self._view.ui.lbl_esm_prot_seq_status.setText("")
-
-    def cloud_esm_add_seq_to_predict(self) -> None:
-        """Shows the gui elements to add a sequence to the protein to predict."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_esm_prot_to_predict,
-            self._view.ui.table_esm_prot_to_predict,
-            self._view.ui.lbl_esm_prot_name,
-            self._view.ui.txt_esm_prot_name,
-            self._view.ui.lbl_esm_prot_name_status,
-            self._view.ui.btn_esm_back,
-            self._view.ui.btn_esm_next,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
-        gui_elements_to_hide = [
-            self._view.ui.btn_esm_seq_to_predict_remove,
-            self._view.ui.btn_esm_seq_to_predict,
-            self._view.ui.lbl_esm_prot_seq,
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_back_2,
-            self._view.ui.btn_esm_next_2,
-            self._view.ui.btn_esm_predict,
-        ]
-        gui_utils.disable_text_box(self._view.ui.txt_esm_prot_seq, self._view.ui.lbl_esm_prot_seq)
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_esm_next.setEnabled(False)
-        self._view.ui.txt_esm_prot_name.clear()
-        styles.color_button_not_ready(self._view.ui.btn_esm_next)
-        if self._view.ui.table_esm_prot_to_predict.rowCount() > 0:
-            try:
-                self._view.ui.table_esm_prot_to_predict.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
-
-    def cloud_esm_back(self) -> None:
-        """Hides the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_esm_prot_to_predict,
-            self._view.ui.table_esm_prot_to_predict,
-            self._view.ui.btn_esm_seq_to_predict_remove,
-            self._view.ui.btn_esm_seq_to_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.lbl_esm_prot_name,
-            self._view.ui.txt_esm_prot_name,
-            self._view.ui.lbl_esm_prot_name_status,
-            self._view.ui.btn_esm_back,
-            self._view.ui.btn_esm_next,
-            self._view.ui.lbl_esm_prot_seq,
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_back_2,
-            self._view.ui.btn_esm_next_2,
-            self._view.ui.btn_esm_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.cloud_esm_check_if_table_is_empty()
-        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
-
-    def cloud_esm_next(self) -> None:
-        """Shows the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_esm_prot_to_predict,
-            self._view.ui.table_esm_prot_to_predict,
-            self._view.ui.lbl_esm_prot_name,
-            self._view.ui.txt_esm_prot_name,
-            self._view.ui.lbl_esm_prot_seq,
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_back_2,
-            self._view.ui.btn_esm_next_2,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_seq, self._view.ui.lbl_esm_prot_seq)
-        gui_elements_to_hide = [
-            self._view.ui.btn_esm_seq_to_predict_remove,
-            self._view.ui.btn_esm_seq_to_predict,
-            self._view.ui.lbl_esm_prot_name_status,
-            self._view.ui.btn_esm_back,
-            self._view.ui.btn_esm_next,
-            self._view.ui.btn_esm_predict,
-        ]
-        gui_utils.disable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.txt_esm_prot_seq.clear()
-
-    def cloud_esm_back_2(self) -> None:
-        """Hides the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_esm_prot_to_predict,
-            self._view.ui.table_esm_prot_to_predict,
-            self._view.ui.lbl_esm_prot_name,
-            self._view.ui.txt_esm_prot_name,
-            self._view.ui.lbl_esm_prot_name_status,
-            self._view.ui.btn_esm_back,
-            self._view.ui.btn_esm_next,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_esm_seq_to_predict_remove,
-            self._view.ui.btn_esm_seq_to_predict,
-            self._view.ui.lbl_esm_prot_seq,
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_back_2,
-            self._view.ui.btn_esm_next_2,
-            self._view.ui.btn_esm_predict,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
-        gui_utils.disable_text_box(self._view.ui.txt_esm_prot_seq, self._view.ui.lbl_esm_prot_seq)
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-
-    def cloud_esm_add_protein(self) -> None:
-        """Adds protein to the list of proteins to predict."""
-        self._view.ui.table_esm_prot_to_predict.setRowCount(self._view.ui.table_esm_prot_to_predict.rowCount() + 1)
-        self._view.ui.table_esm_prot_to_predict.insertRow(self._view.ui.table_esm_prot_to_predict.rowCount() + 1)
-        self._view.ui.table_esm_prot_to_predict.setItem(
-            self._view.ui.table_esm_prot_to_predict.rowCount() - 1,
-            0,
-            QtWidgets.QTableWidgetItem("A"),
-        )
-        self._view.ui.table_esm_prot_to_predict.setItem(
-            self._view.ui.table_esm_prot_to_predict.rowCount() - 1,
-            1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_esm_prot_seq.toPlainText()),
-        )
-        self._view.ui.table_esm_prot_to_predict.setVerticalHeaderItem(
-            self._view.ui.table_esm_prot_to_predict.rowCount() - 1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_esm_prot_name.text()),
-        )
-        self._view.ui.table_esm_prot_to_predict.resizeColumnsToContents()
-        self.cloud_esm_check_if_table_is_empty()
-        gui_elements_to_show = [
-            self._view.ui.lbl_esm_prot_to_predict,
-            self._view.ui.table_esm_prot_to_predict,
-            self._view.ui.btn_esm_seq_to_predict_remove,
-            self._view.ui.btn_esm_seq_to_predict,
-            self._view.ui.btn_esm_predict,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
-        gui_elements_to_hide = [
-            self._view.ui.lbl_esm_prot_name,
-            self._view.ui.txt_esm_prot_name,
-            self._view.ui.lbl_esm_prot_name_status,
-            self._view.ui.btn_esm_back,
-            self._view.ui.btn_esm_next,
-            self._view.ui.lbl_esm_prot_seq,
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_back_2,
-            self._view.ui.btn_esm_next_2,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_esm_predict.setEnabled(True)
-        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_esm_predict)
-        self.setup_defaults_esm_monomer_prediction()
-
-    def cloud_esm_remove(self) -> None:
-        """Removes a protein from the list of proteins to predict."""
-        self._view.ui.table_esm_prot_to_predict.removeRow(self._view.ui.table_esm_prot_to_predict.currentRow())
-        gui_elements_to_show = [
-            self._view.ui.lbl_esm_prot_to_predict,
-            self._view.ui.table_esm_prot_to_predict,
-            self._view.ui.btn_esm_seq_to_predict_remove,
-            self._view.ui.btn_esm_seq_to_predict,
-            self._view.ui.btn_esm_predict,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
-        gui_elements_to_hide = [
-            self._view.ui.lbl_esm_prot_name,
-            self._view.ui.txt_esm_prot_name,
-            self._view.ui.lbl_esm_prot_name_status,
-            self._view.ui.btn_esm_back,
-            self._view.ui.btn_esm_next,
-            self._view.ui.lbl_esm_prot_seq,
-            self._view.ui.txt_esm_prot_seq,
-            self._view.ui.lbl_esm_prot_seq_status,
-            self._view.ui.btn_esm_back_2,
-            self._view.ui.btn_esm_next_2,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
-        self.cloud_esm_check_if_table_is_empty()
-
-    def cloud_esm_item_changed(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(True)
-
-    def cloud_esm_check_if_table_is_empty(self) -> None:
-        """Checks if the table proteins to predict is empty."""
-        if self._view.ui.table_esm_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_esm_predict)
-            self._view.ui.btn_esm_predict.setEnabled(False)
-            gui_elements_to_show = [
-                self._view.ui.lbl_esm_prot_to_predict,
-                self._view.ui.table_esm_prot_to_predict,
-                self._view.ui.btn_esm_seq_to_predict,
-            ]
-            gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
-            gui_elements_to_hide = [
-                self._view.ui.btn_esm_seq_to_predict_remove,
-                self._view.ui.lbl_esm_prot_name,
-                self._view.ui.txt_esm_prot_name,
-                self._view.ui.lbl_esm_prot_name_status,
-                self._view.ui.btn_esm_back,
-                self._view.ui.btn_esm_next,
-                self._view.ui.lbl_esm_prot_seq,
-                self._view.ui.txt_esm_prot_seq,
-                self._view.ui.lbl_esm_prot_seq_status,
-                self._view.ui.btn_esm_back_2,
-                self._view.ui.btn_esm_next_2,
-                self._view.ui.btn_esm_predict,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        else:
-            styles.color_button_ready(self._view.ui.btn_esm_predict)
-            self._view.ui.btn_esm_predict.setEnabled(True)
-
     def post_predict_esm_monomer(self, output) -> None:  # noqa: ANN001
         """Post thread method, for the prediction process.
 
@@ -3177,344 +1453,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Monomer Local Prediction functions">
-    def _init_local_pred_mono_page(self) -> None:
-        """Clears all text boxes and sets default values for the gui elements."""
-        # clears everything
-        self._view.ui.txt_pred_mono_prot_name.clear()
-        self._view.ui.txt_pred_mono_seq_name.clear()
-        for i in range(self._view.ui.table_pred_mono_prot_to_predict.rowCount()):
-            self._view.ui.table_pred_mono_prot_to_predict.removeRow(i)
-        # sets up defaults: Prediction
-        self._view.ui.btn_pred_mono_next.setEnabled(False)
-        self._view.ui.btn_pred_mono_add_protein.setEnabled(False)
-        self._view.ui.lbl_pred_mono_prot_name_status.setText("")
-        self._view.ui.lbl_pred_mono_seq_name_status.setText("")
-
-    def display_local_pred_mono(self) -> None:
-        """Displays the local prediction monomer page."""
-        # checks internet connection
-        if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog()
-            return
-        self._init_local_pred_mono_page()
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_mono_prot_to_predict,
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self._view.ui.btn_pred_mono_seq_to_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_mono_seq_to_predict_remove,
-            self._view.ui.lbl_pred_mono_prot_name,
-            self._view.ui.txt_pred_mono_prot_name,
-            self._view.ui.lbl_pred_mono_prot_name_status,
-            self._view.ui.btn_pred_mono_back,
-            self._view.ui.btn_pred_mono_next,
-            self._view.ui.lbl_pred_mono_seq_name,
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_back_2,
-            self._view.ui.btn_pred_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        styles.color_button_not_ready(self._view.ui.btn_pred_mono_next)
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 19, "Local Monomer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_pred_local_monomer_page,
-        )
-
-    def local_pred_mono_validate_protein_name(self) -> None:
-        """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
-            self._view.ui.txt_pred_mono_prot_name.text(),
-            self._view.ui.table_pred_mono_prot_to_predict,
-        ):
-            self._view.ui.lbl_pred_mono_prot_name_status.setText("Protein name already used.")
-            self._view.ui.btn_pred_mono_next.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_pred_mono_next)
-        else:
-            self._view.ui.btn_pred_mono_next.setEnabled(True)
-            tools.validate_protein_name(
-                self._view.ui.txt_pred_mono_prot_name,
-                self._view.ui.lbl_pred_mono_prot_name_status,
-                self._view.ui.btn_pred_mono_next,
-            )
-
-    def local_pred_mono_validate_protein_sequence(self) -> None:
-        """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_add_protein,
-        )
-
-    def show_prediction_configuration(self) -> None:
-        """Opens the prediction configuration dialog window."""
-        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(
-            self.prediction_configuration,
-        )
-        config.exec_()
-        self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
-        self.prediction_configuration.templates = config.prediction_config.templates
-
-    def setup_defaults_monomer_prediction(self) -> None:
-        """Sets up the defaults for the page."""
-        # clears everything
-        self._view.ui.txt_pred_mono_prot_name.clear()
-        self._view.ui.txt_pred_mono_seq_name.clear()
-        # sets up defaults: Prediction
-        self._view.ui.btn_pred_mono_next.setEnabled(False)
-        self._view.ui.btn_pred_mono_add_protein.setEnabled(False)
-        self._view.ui.lbl_pred_mono_prot_name_status.setText("")
-        self._view.ui.lbl_pred_mono_seq_name_status.setText("")
-
-    def local_pred_mono_add_seq_to_predict(self) -> None:
-        """Shows the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_mono_prot_to_predict,
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self._view.ui.lbl_pred_mono_prot_name,
-            self._view.ui.txt_pred_mono_prot_name,
-            self._view.ui.lbl_pred_mono_prot_name_status,
-            self._view.ui.btn_pred_mono_back,
-            self._view.ui.btn_pred_mono_next,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_mono_seq_to_predict,
-            self._view.ui.lbl_pred_mono_seq_name,
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_back_2,
-            self._view.ui.btn_pred_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_predict,
-        ]
-        gui_utils.disable_text_box(self._view.ui.txt_pred_mono_seq_name, self._view.ui.lbl_pred_mono_seq_name)
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_pred_mono_next.setEnabled(False)
-        self._view.ui.txt_pred_mono_prot_name.clear()
-        styles.color_button_not_ready(self._view.ui.btn_pred_mono_next)
-        if self._view.ui.table_pred_mono_prot_to_predict.rowCount() > 0:
-            try:
-                self._view.ui.table_pred_mono_prot_to_predict.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
-
-    def local_pred_mono_back(self) -> None:
-        """Hides the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_mono_prot_to_predict,
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self._view.ui.btn_pred_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_mono_seq_to_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.lbl_pred_mono_prot_name,
-            self._view.ui.txt_pred_mono_prot_name,
-            self._view.ui.lbl_pred_mono_prot_name_status,
-            self._view.ui.btn_pred_mono_back,
-            self._view.ui.btn_pred_mono_next,
-            self._view.ui.lbl_pred_mono_seq_name,
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_back_2,
-            self._view.ui.btn_pred_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.local_pred_mono_check_if_table_is_empty()
-        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
-
-    def local_pred_mono_next(self) -> None:
-        """Shows the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_mono_prot_to_predict,
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self._view.ui.lbl_pred_mono_prot_name,
-            self._view.ui.txt_pred_mono_prot_name,
-            self._view.ui.lbl_pred_mono_seq_name,
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_back_2,
-            self._view.ui.btn_pred_mono_add_protein,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_seq_name, self._view.ui.lbl_pred_mono_seq_name)
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_mono_seq_to_predict,
-            self._view.ui.lbl_pred_mono_prot_name_status,
-            self._view.ui.btn_pred_mono_back,
-            self._view.ui.btn_pred_mono_next,
-            self._view.ui.lbl_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_predict,
-        ]
-        gui_utils.disable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.txt_pred_mono_seq_name.clear()
-
-    def local_pred_mono_back_2(self) -> None:
-        """Hides the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_mono_prot_to_predict,
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self._view.ui.lbl_pred_mono_prot_name,
-            self._view.ui.txt_pred_mono_prot_name,
-            self._view.ui.lbl_pred_mono_prot_name_status,
-            self._view.ui.btn_pred_mono_back,
-            self._view.ui.btn_pred_mono_next,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_mono_seq_to_predict,
-            self._view.ui.lbl_pred_mono_seq_name,
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_back_2,
-            self._view.ui.btn_pred_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_predict,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
-        gui_utils.disable_text_box(self._view.ui.txt_pred_mono_seq_name, self._view.ui.lbl_pred_mono_seq_name)
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-
-    def local_pred_mono_add_protein(self) -> None:
-        """Adds protein to the list of proteins to predict."""
-        self._view.ui.table_pred_mono_prot_to_predict.setRowCount(
-            self._view.ui.table_pred_mono_prot_to_predict.rowCount() + 1,
-        )
-        self._view.ui.table_pred_mono_prot_to_predict.insertRow(
-            self._view.ui.table_pred_mono_prot_to_predict.rowCount() + 1,
-        )
-        self._view.ui.table_pred_mono_prot_to_predict.setItem(
-            self._view.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
-            0,
-            QtWidgets.QTableWidgetItem("A"),
-        )
-        self._view.ui.table_pred_mono_prot_to_predict.setItem(
-            self._view.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
-            1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_mono_seq_name.toPlainText()),
-        )
-        self._view.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(
-            self._view.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_mono_prot_name.text()),
-        )
-        self._view.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
-        self.local_pred_mono_check_if_table_is_empty()
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_mono_prot_to_predict,
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self._view.ui.btn_pred_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_mono_seq_to_predict,
-            self._view.ui.lbl_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_predict,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
-        gui_elements_to_hide = [
-            self._view.ui.lbl_pred_mono_prot_name,
-            self._view.ui.txt_pred_mono_prot_name,
-            self._view.ui.lbl_pred_mono_prot_name_status,
-            self._view.ui.btn_pred_mono_back,
-            self._view.ui.btn_pred_mono_next,
-            self._view.ui.lbl_pred_mono_seq_name,
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_back_2,
-            self._view.ui.btn_pred_mono_add_protein,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_pred_mono_predict.setEnabled(True)
-        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_mono_predict)
-        self.setup_defaults_monomer_prediction()
-
-    def local_pred_mono_remove(self) -> None:
-        """Removes the selected protein from the list of proteins to predict."""
-        self._view.ui.table_pred_mono_prot_to_predict.removeRow(
-            self._view.ui.table_pred_mono_prot_to_predict.currentRow(),
-        )
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_mono_prot_to_predict,
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self._view.ui.btn_pred_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_mono_seq_to_predict,
-            self._view.ui.lbl_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_advanced_config,
-            self._view.ui.btn_pred_mono_predict,
-        ]
-        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
-        gui_elements_to_hide = [
-            self._view.ui.lbl_pred_mono_prot_name,
-            self._view.ui.txt_pred_mono_prot_name,
-            self._view.ui.lbl_pred_mono_prot_name_status,
-            self._view.ui.btn_pred_mono_back,
-            self._view.ui.btn_pred_mono_next,
-            self._view.ui.lbl_pred_mono_seq_name,
-            self._view.ui.txt_pred_mono_seq_name,
-            self._view.ui.lbl_pred_mono_seq_name_status,
-            self._view.ui.btn_pred_mono_back_2,
-            self._view.ui.btn_pred_mono_add_protein,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
-        self.local_pred_mono_check_if_table_is_empty()
-
-    def local_pred_mono_item_changed(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(True)
-
-    def local_pred_mono_check_if_table_is_empty(self) -> None:
-        """Checks if the table proteins to predict is empty."""
-        if self._view.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_mono_predict)
-            self._view.ui.btn_pred_mono_predict.setEnabled(False)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_mono_prot_to_predict,
-                self._view.ui.table_pred_mono_prot_to_predict,
-                self._view.ui.btn_pred_mono_seq_to_predict,
-            ]
-            gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
-            gui_elements_to_hide = [
-                self._view.ui.btn_pred_mono_seq_to_predict_remove,
-                self._view.ui.lbl_pred_mono_prot_name,
-                self._view.ui.txt_pred_mono_prot_name,
-                self._view.ui.lbl_pred_mono_prot_name_status,
-                self._view.ui.btn_pred_mono_back,
-                self._view.ui.btn_pred_mono_next,
-                self._view.ui.lbl_pred_mono_seq_name,
-                self._view.ui.txt_pred_mono_seq_name,
-                self._view.ui.lbl_pred_mono_seq_name_status,
-                self._view.ui.btn_pred_mono_back_2,
-                self._view.ui.btn_pred_mono_add_protein,
-                self._view.ui.lbl_pred_mono_advanced_config,
-                self._view.ui.btn_pred_mono_advanced_config,
-                self._view.ui.btn_pred_mono_predict,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        else:
-            styles.color_button_ready(self._view.ui.btn_pred_mono_predict)
-            self._view.ui.btn_pred_mono_predict.setEnabled(True)
-
     def post_prediction_process(self, an_exit_code: int, an_exit_code_description: str) -> None:
         """Process which runs after each prediction job."""
         if an_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
@@ -3737,481 +1675,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Multimer Local Prediction functions">
-    def _init_local_pred_multi_page(self) -> None:
-        """Clears all text boxes and sets default values for the gui elements."""
-        # clears everything
-        self._view.ui.txt_pred_multi_prot_name.clear()
-        self._view.ui.txt_pred_multi_prot_seq.clear()
-        self._view.ui.list_pred_multi_prot_seq_overview.clear()
-        # sets up defaults: Prediction
-        self._view.ui.btn_pred_multi_next.setEnabled(False)
-        self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
-        self._view.ui.lbl_pred_multi_prot_name_status.setText("")
-        self._view.ui.lbl_pred_multi_prot_seq_status.setText("")
-
-    def display_local_pred_multi(self) -> None:
-        """Displays the local prediction multimer page."""
-        # checks internet connection
-        if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog()
-            return
-
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_multi_prot_to_predict,
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self._view.ui.btn_pred_multi_prot_to_predict_add,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_multi_prot_to_predict_remove,
-            self._view.ui.lbl_pred_multi_prot_name_status,
-            self._view.ui.btn_pred_multi_back,
-            self._view.ui.btn_pred_multi_next,
-            self._view.ui.lbl_pred_multi_prot_name,
-            self._view.ui.txt_pred_multi_prot_name,
-            self._view.ui.lbl_pred_multi_prot_seq,
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-            self._view.ui.lbl_pred_multi_prot_seq_overview,
-            self._view.ui.list_pred_multi_prot_seq_overview,
-            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_multi_back_2,
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_predict,
-        ]
-        for i in range(self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1, -1, -1):
-            self._view.ui.table_pred_multi_prot_to_predict.removeRow(i)
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 20, "Local Multimer Prediction")
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_pred_local_multimer_page,
-        )
-
-    def local_pred_multi_validate_protein_name(self) -> None:
-        """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
-            self._view.ui.txt_pred_multi_prot_name.text(),
-            self._view.ui.table_pred_multi_prot_to_predict,
-        ):
-            self._view.ui.lbl_pred_multi_prot_name_status.setText("Protein name already used.")
-            self._view.ui.btn_pred_multi_next.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_pred_multi_next)
-        else:
-            self._view.ui.btn_pred_multi_next.setEnabled(True)
-            tools.validate_protein_name(
-                self._view.ui.txt_pred_multi_prot_name,
-                self._view.ui.lbl_pred_multi_prot_name_status,
-                self._view.ui.btn_pred_multi_next,
-            )
-
-    def local_pred_multi_validate_protein_sequence(self) -> None:
-        """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-        )
-
-    def local_pred_multi_check_if_table_is_empty(self) -> None:
-        """Checks if the table proteins to predict is empty."""
-        if self._view.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_multi_predict)
-            self._view.ui.btn_pred_multi_predict.setEnabled(False)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_multi_prot_to_predict,
-                self._view.ui.table_pred_multi_prot_to_predict,
-                self._view.ui.btn_pred_multi_prot_to_predict_add,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.btn_pred_multi_prot_to_predict_remove,
-                self._view.ui.lbl_pred_multi_prot_name_status,
-                self._view.ui.btn_pred_multi_back,
-                self._view.ui.btn_pred_multi_next,
-                self._view.ui.lbl_pred_multi_prot_name,
-                self._view.ui.txt_pred_multi_prot_name,
-                self._view.ui.lbl_pred_multi_prot_seq,
-                self._view.ui.txt_pred_multi_prot_seq,
-                self._view.ui.lbl_pred_multi_prot_seq_status,
-                self._view.ui.lbl_pred_multi_prot_seq_add,
-                self._view.ui.btn_pred_multi_prot_seq_add,
-                self._view.ui.lbl_pred_multi_prot_seq_overview,
-                self._view.ui.list_pred_multi_prot_seq_overview,
-                self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-                self._view.ui.lbl_pred_multi_prot_to_predict_2,
-                self._view.ui.btn_pred_multi_back_2,
-                self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-                self._view.ui.lbl_pred_multi_advanced_config,
-                self._view.ui.btn_pred_multi_advanced_config,
-                self._view.ui.btn_pred_multi_predict,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-        else:
-            styles.color_button_ready(self._view.ui.btn_pred_multi_predict)
-            self._view.ui.btn_pred_multi_predict.setEnabled(True)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_multi_prot_to_predict,
-                self._view.ui.table_pred_multi_prot_to_predict,
-                self._view.ui.btn_pred_multi_prot_to_predict_add,
-                self._view.ui.btn_pred_multi_prot_to_predict_remove,
-                self._view.ui.lbl_pred_multi_advanced_config,
-                self._view.ui.btn_pred_multi_advanced_config,
-                self._view.ui.btn_pred_multi_predict,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.lbl_pred_multi_prot_name_status,
-                self._view.ui.btn_pred_multi_back,
-                self._view.ui.btn_pred_multi_next,
-                self._view.ui.lbl_pred_multi_prot_name,
-                self._view.ui.txt_pred_multi_prot_name,
-                self._view.ui.lbl_pred_multi_prot_seq,
-                self._view.ui.txt_pred_multi_prot_seq,
-                self._view.ui.lbl_pred_multi_prot_seq_status,
-                self._view.ui.lbl_pred_multi_prot_seq_add,
-                self._view.ui.btn_pred_multi_prot_seq_add,
-                self._view.ui.lbl_pred_multi_prot_seq_overview,
-                self._view.ui.list_pred_multi_prot_seq_overview,
-                self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-                self._view.ui.lbl_pred_multi_prot_to_predict_2,
-                self._view.ui.btn_pred_multi_back_2,
-                self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-
-    def local_pred_multi_add_sequence_to_list(self) -> None:
-        """Adds the entered sequence to the list of sequences of the protein."""
-        self._view.ui.list_pred_multi_prot_seq_overview.addItem(
-            QtWidgets.QListWidgetItem(self._view.ui.txt_pred_multi_prot_seq.toPlainText()),
-        )
-        self.local_pred_multi_check_if_list_is_empty()
-
-    def local_pred_multi_remove_sequence_to_list(self) -> None:
-        """Removes the entered sequence to the list of sequences of the protein."""
-        self._view.ui.list_pred_multi_prot_seq_overview.takeItem(
-            self._view.ui.list_pred_multi_prot_seq_overview.currentRow(),
-        )
-        self.local_pred_multi_check_if_list_is_empty()
-        self._view.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(False)
-
-    def local_pred_multi_check_if_list_is_empty(self) -> None:
-        """Checks if the list of sequences of the protein is empty."""
-        if self._view.ui.list_pred_multi_prot_seq_overview.count() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
-        else:
-            styles.color_button_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(True)
-
-    def local_pred_multi_add(self) -> None:
-        """Shows the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_multi_prot_to_predict,
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self._view.ui.lbl_pred_multi_prot_name,
-            self._view.ui.txt_pred_multi_prot_name,
-            self._view.ui.lbl_pred_multi_prot_name_status,
-            self._view.ui.btn_pred_multi_back,
-            self._view.ui.btn_pred_multi_next,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_multi_prot_seq,
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-            self._view.ui.lbl_pred_multi_prot_seq_overview,
-            self._view.ui.list_pred_multi_prot_seq_overview,
-            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_multi_back_2,
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(self._view.ui.txt_pred_multi_prot_name, self._view.ui.lbl_pred_multi_prot_name)
-        gui_utils.disable_text_box(self._view.ui.txt_pred_multi_prot_seq, self._view.ui.lbl_pred_multi_prot_seq)
-        self._view.ui.btn_pred_multi_next.setEnabled(False)
-        self._view.ui.txt_pred_multi_prot_name.clear()
-        styles.color_button_not_ready(self._view.ui.btn_pred_multi_next)
-        if self._view.ui.table_pred_multi_prot_to_predict.rowCount() > 0:
-            try:
-                self._view.ui.table_pred_multi_prot_to_predict.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection on Local Multimer Prediction in overview table.")
-
-    def local_pred_multi_back(self) -> None:
-        """Hides the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_multi_prot_to_predict,
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self._view.ui.btn_pred_multi_prot_to_predict_add,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_multi_prot_to_predict_remove,
-            self._view.ui.lbl_pred_multi_prot_name,
-            self._view.ui.txt_pred_multi_prot_name,
-            self._view.ui.lbl_pred_multi_prot_name_status,
-            self._view.ui.btn_pred_multi_back,
-            self._view.ui.btn_pred_multi_next,
-            self._view.ui.lbl_pred_multi_prot_seq,
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-            self._view.ui.lbl_pred_multi_prot_seq_overview,
-            self._view.ui.list_pred_multi_prot_seq_overview,
-            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_multi_back_2,
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.local_pred_multi_check_if_table_is_empty()
-
-    def local_pred_multi_next(self) -> None:
-        """Shows the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_multi_prot_to_predict,
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self._view.ui.lbl_pred_multi_prot_name,
-            self._view.ui.txt_pred_multi_prot_name,
-            self._view.ui.lbl_pred_multi_prot_seq,
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-            self._view.ui.lbl_pred_multi_prot_seq_overview,
-            self._view.ui.list_pred_multi_prot_seq_overview,
-            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_multi_back_2,
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_multi_prot_name_status,
-            self._view.ui.btn_pred_multi_back,
-            self._view.ui.btn_pred_multi_next,
-            self._view.ui.lbl_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(self._view.ui.txt_pred_multi_prot_seq, self._view.ui.lbl_pred_multi_prot_seq)
-        gui_utils.disable_text_box(self._view.ui.txt_pred_multi_prot_name, self._view.ui.lbl_pred_multi_prot_name)
-        self._view.ui.txt_pred_multi_prot_seq.clear()
-        self._view.ui.list_pred_multi_prot_seq_overview.clear()
-        self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
-        self._view.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
-
-    def local_pred_multi_back_2(self) -> None:
-        """Hides the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_multi_prot_to_predict,
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self._view.ui.lbl_pred_multi_prot_name_status,
-            self._view.ui.btn_pred_multi_back,
-            self._view.ui.btn_pred_multi_next,
-            self._view.ui.lbl_pred_multi_prot_name,
-            self._view.ui.txt_pred_multi_prot_name,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_multi_prot_seq,
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-            self._view.ui.lbl_pred_multi_prot_seq_overview,
-            self._view.ui.list_pred_multi_prot_seq_overview,
-            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_multi_back_2,
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_predict,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(self._view.ui.txt_pred_multi_prot_name, self._view.ui.lbl_pred_multi_prot_name)
-        gui_utils.disable_text_box(self._view.ui.txt_pred_multi_prot_seq, self._view.ui.lbl_pred_multi_prot_seq)
-
-    def local_pred_multi_prot_seq_overview_item_changed(self) -> None:
-        """Enables the remove button of the list sequences of the protein."""
-        self._view.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(True)
-
-    def local_pred_multi_prot_to_predict_item_changed(self) -> None:
-        """Enables the remove button of the table proteins to predict."""
-        self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
-
-    def local_pred_multi_prot_to_predict_add_2(self) -> None:
-        """Adds the protein to the list of proteins to predict."""
-        for i in range(self._view.ui.list_pred_multi_prot_seq_overview.count()):
-            self._view.ui.table_pred_multi_prot_to_predict.setRowCount(
-                self._view.ui.table_pred_multi_prot_to_predict.rowCount() + 1,
-            )
-            self._view.ui.table_pred_multi_prot_to_predict.insertRow(
-                self._view.ui.table_pred_multi_prot_to_predict.rowCount() + 1,
-            )
-            tmp_chain_seq = (
-                constants.chain_dict.get(i),
-                self._view.ui.list_pred_multi_prot_seq_overview.item(i).text(),
-            )
-            self._view.ui.table_pred_multi_prot_to_predict.setItem(
-                self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1,
-                0,
-                QtWidgets.QTableWidgetItem(tmp_chain_seq[0]),
-            )
-            self._view.ui.table_pred_multi_prot_to_predict.setItem(
-                self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1,
-                1,
-                QtWidgets.QTableWidgetItem(tmp_chain_seq[1]),
-            )
-            name_item = QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_multi_prot_name.text())
-            self._view.ui.table_pred_multi_prot_to_predict.setVerticalHeaderItem(
-                self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1,
-                name_item,
-            )
-        self._view.ui.table_pred_multi_prot_to_predict.resizeColumnsToContents()
-        self.local_pred_multi_check_if_table_is_empty()
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_multi_prot_to_predict,
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self._view.ui.btn_pred_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.lbl_pred_multi_prot_name_status,
-            self._view.ui.btn_pred_multi_back,
-            self._view.ui.btn_pred_multi_next,
-            self._view.ui.lbl_pred_multi_prot_name,
-            self._view.ui.txt_pred_multi_prot_name,
-            self._view.ui.lbl_pred_multi_prot_seq,
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-            self._view.ui.lbl_pred_multi_prot_seq_overview,
-            self._view.ui.list_pred_multi_prot_seq_overview,
-            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_multi_back_2,
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._init_local_pred_multi_page()
-        self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-
-    def local_pred_multi_remove(self) -> None:
-        """Removes the selected protein from the list of proteins to predict."""
-        self._view.ui.table_pred_multi_prot_to_predict.removeRow(
-            self._view.ui.table_pred_multi_prot_to_predict.currentRow(),
-        )
-        if self._view.ui.table_pred_multi_prot_to_predict.rowCount() > 0:
-            prot_name = self._view.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(
-                self._view.ui.table_pred_multi_prot_to_predict.currentRow(),
-            ).text()
-            for i in range(self._view.ui.table_pred_multi_prot_to_predict.rowCount()):
-                if self._view.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                    self._view.ui.table_pred_multi_prot_to_predict.setItem(
-                        i,
-                        0,
-                        QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)),
-                    )
-        self.local_pred_multi_check_if_table_is_empty()
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_multi_prot_to_predict,
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self._view.ui.btn_pred_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_advanced_config,
-            self._view.ui.btn_pred_multi_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.lbl_pred_multi_prot_name_status,
-            self._view.ui.btn_pred_multi_back,
-            self._view.ui.btn_pred_multi_next,
-            self._view.ui.lbl_pred_multi_prot_name,
-            self._view.ui.txt_pred_multi_prot_name,
-            self._view.ui.lbl_pred_multi_prot_seq,
-            self._view.ui.txt_pred_multi_prot_seq,
-            self._view.ui.lbl_pred_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add,
-            self._view.ui.btn_pred_multi_prot_seq_add,
-            self._view.ui.lbl_pred_multi_prot_seq_overview,
-            self._view.ui.list_pred_multi_prot_seq_overview,
-            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_multi_back_2,
-            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-        self.local_pred_multi_check_if_table_is_empty()
-
-    # def local_pred_multi_show_protein_overview(self):
-    #     if self._view.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
-    #         self.local_pred_multimer_management.show_stage_x(0)
-    #     else:
-    #         gui_elements_to_show = [
-    #             self._view.ui.btn_pred_multi_prot_to_predict_add,
-    #             self._view.ui.btn_pred_multi_prot_to_predict_remove,
-    #         ]
-    #         self.local_pred_multimer_management.show_gui_elements_stage_x(
-    #             [0, 3], [1, 2], show_specific_elements=gui_elements_to_show
-    #         )
-    #
-    # def local_pred_multi_show_protein_name(self):
-    #     gui_elements_to_hide = [
-    #         self._view.ui.btn_pred_multi_prot_to_predict_add,
-    #         self._view.ui.btn_pred_multi_prot_to_predict_remove,
-    #     ]
-    #     self.local_pred_multimer_management.show_gui_elements_stage_x(
-    #         [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
-    #     gui_utils.enable_text_box(self._view.ui.txt_pred_multi_prot_name,
-    #                               self._view.ui.lbl_pred_multi_prot_name)
-    #
-    # def local_pred_multi_show_protein_sequence(self):
-    #     gui_elements_to_hide = [
-    #         self._view.ui.btn_pred_multi_prot_to_predict_add,
-    #         self._view.ui.btn_pred_multi_prot_to_predict_remove,
-    #         self._view.ui.btn_pred_multi_back,
-    #         self._view.ui.btn_pred_multi_next,
-    #     ]
-    #     self.local_pred_multimer_management.show_gui_elements_stage_x(
-    #         [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
-    #     gui_utils.disable_text_box(self._view.ui.txt_pred_multi_prot_name,
-    #                                self._view.ui.lbl_pred_multi_prot_name)
-
     def predict_local_multimer(self) -> None:
         """Sets up the worker for the prediction with the colabfold."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED
@@ -4267,960 +1730,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Monomer Prediction + Analysis functions">
-    def _init_mono_pred_analysis_page(self) -> None:
-        """Clears all text boxes and sets default values for the gui elements."""
-        # <editor-fold desc="Prediction section">
-        self._view.ui.txt_pred_analysis_mono_prot_name.clear()
-        self._view.ui.txt_pred_analysis_mono_seq_name.clear()
-        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.removeRow(i)
-        # sets up defaults: Prediction
-        self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
-        self._view.ui.btn_pred_analysis_mono_add_protein.setEnabled(False)
-        self._view.ui.lbl_pred_analysis_mono_prot_name_status.setText("")
-        self._view.ui.lbl_pred_analysis_mono_seq_name_status.setText("")
-
-        # </editor-fold>
-
-        # <editor-fold desc="Analysis section">
-        self._view.ui.list_pred_analysis_mono_overview.clear()
-        self._view.ui.btn_pred_analysis_mono_remove.hide()
-
-        # </editor-fold>
-
-    def display_monomer_pred_analysis(self) -> None:
-        """Displays the monomer prediction + analysis page."""
-        # checks internet connection
-        if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog()
-            return
-
-        self._init_mono_pred_analysis_page()
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.clear()
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(
-            0,
-            QtWidgets.QTableWidgetItem("Chain"),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(
-            1,
-            QtWidgets.QTableWidgetItem("Sequence"),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-            self._view.ui.table_pred_analysis_mono_prot_to_predict,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-            self._view.ui.btn_pred_analysis_mono_back,
-            self._view.ui.btn_pred_analysis_mono_next,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-            self._view.ui.btn_pred_analysis_mono_back_2,
-            self._view.ui.btn_pred_analysis_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.tabWidget.currentIndex() == 1:
-            self._view.ui.tabWidget.setCurrentIndex(0)
-        self._view.ui.tabWidget.setTabEnabled(1, False)
-        self._view.ui.tabWidget.setTabEnabled(0, True)
-        tools.switch_page(
-            self._view.ui.stackedWidget,
-            self._view.ui.lbl_page_title,
-            21,
-            "Monomer Prediction + Analysis",
-        )
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_pred_analysis_monomer_page,
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setEnabled(True)
-
-    # <editor-fold desc="Sections">
-
-    # <editor-fold desc="Prediction section">
-    def mono_pred_analysis_validate_protein_name(self) -> None:
-        """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
-            self._view.ui.txt_pred_analysis_mono_prot_name.text(),
-            self._view.ui.table_pred_analysis_mono_prot_to_predict,
-        ):
-            self._view.ui.lbl_pred_analysis_mono_prot_name_status.setText("Protein name already used.")
-            self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next)
-        else:
-            self._view.ui.btn_pred_analysis_mono_next.setEnabled(True)
-            tools.validate_protein_name(
-                self._view.ui.txt_pred_analysis_mono_prot_name,
-                self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                self._view.ui.btn_pred_analysis_mono_next,
-            )
-
-    def mono_pred_analysis_validate_protein_sequence(self) -> None:
-        """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-            self._view.ui.btn_pred_analysis_mono_add_protein,
-        )
-
-    def mono_pred_analysis_check_if_table_is_empty(self) -> None:
-        """Checks if the table proteins to predict is empty."""
-        if self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(False)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-                self._view.ui.table_pred_analysis_mono_prot_to_predict,
-                self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-                self._view.ui.lbl_pred_analysis_mono_prot_name,
-                self._view.ui.txt_pred_analysis_mono_prot_name,
-                self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                self._view.ui.btn_pred_analysis_mono_back,
-                self._view.ui.btn_pred_analysis_mono_next,
-                self._view.ui.lbl_pred_analysis_mono_seq_name,
-                self._view.ui.txt_pred_analysis_mono_seq_name,
-                self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-                self._view.ui.btn_pred_analysis_mono_back_2,
-                self._view.ui.btn_pred_analysis_mono_add_protein,
-                self._view.ui.lbl_pred_mono_advanced_config_2,
-                self._view.ui.btn_pred_mono_advanced_config_2,
-                self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-                self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        else:
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-                self._view.ui.table_pred_analysis_mono_prot_to_predict,
-                self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-                self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-                self._view.ui.lbl_pred_mono_advanced_config_2,
-                self._view.ui.btn_pred_mono_advanced_config_2,
-                self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-                self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.lbl_pred_analysis_mono_prot_name,
-                self._view.ui.txt_pred_analysis_mono_prot_name,
-                self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                self._view.ui.btn_pred_analysis_mono_back,
-                self._view.ui.btn_pred_analysis_mono_next,
-                self._view.ui.lbl_pred_analysis_mono_seq_name,
-                self._view.ui.txt_pred_analysis_mono_seq_name,
-                self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-                self._view.ui.btn_pred_analysis_mono_back_2,
-                self._view.ui.btn_pred_analysis_mono_add_protein,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
-
-    def setup_defaults_monomer_prediction_analysis(self) -> None:
-        """Sets up default values for the prediction tab."""
-        # clears everything
-        self._view.ui.txt_pred_analysis_mono_prot_name.clear()
-        self._view.ui.txt_pred_analysis_mono_seq_name.clear()
-        # sets up defaults: Prediction
-        self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
-        self._view.ui.btn_pred_analysis_mono_add_protein.setEnabled(False)
-        self._view.ui.lbl_pred_analysis_mono_prot_name_status.setText("")
-        self._view.ui.lbl_pred_analysis_mono_seq_name_status.setText("")
-
-    def mono_pred_analysis_add_seq_to_predict(self) -> None:
-        """Shows the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-            self._view.ui.table_pred_analysis_mono_prot_to_predict,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-            self._view.ui.btn_pred_analysis_mono_back,
-            self._view.ui.btn_pred_analysis_mono_next,
-        ]
-        gui_utils.enable_text_box(
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-        )
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-            self._view.ui.btn_pred_analysis_mono_back_2,
-            self._view.ui.btn_pred_analysis_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-        ]
-        gui_utils.disable_text_box(
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-        )
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
-        self._view.ui.txt_pred_analysis_mono_prot_name.clear()
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next)
-        if self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() > 0:
-            try:
-                self._view.ui.table_pred_analysis_mono_prot_to_predict.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
-
-    def mono_pred_analysis_back(self) -> None:
-        """Hides the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-            self._view.ui.table_pred_analysis_mono_prot_to_predict,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-            self._view.ui.btn_pred_analysis_mono_back,
-            self._view.ui.btn_pred_analysis_mono_next,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-            self._view.ui.btn_pred_analysis_mono_back_2,
-            self._view.ui.btn_pred_analysis_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.mono_pred_analysis_check_if_table_is_empty()
-        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
-
-    def mono_pred_analysis_next(self) -> None:
-        """Shows the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-            self._view.ui.table_pred_analysis_mono_prot_to_predict,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-            self._view.ui.btn_pred_analysis_mono_back_2,
-            self._view.ui.btn_pred_analysis_mono_add_protein,
-        ]
-        gui_utils.enable_text_box(
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-        )
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-            self._view.ui.btn_pred_analysis_mono_back,
-            self._view.ui.btn_pred_analysis_mono_next,
-            self._view.ui.lbl_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-        ]
-        gui_utils.disable_text_box(
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-        )
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.txt_pred_analysis_mono_seq_name.clear()
-
-    def mono_pred_analysis_back_2(self) -> None:
-        """Hides the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-            self._view.ui.table_pred_analysis_mono_prot_to_predict,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-            self._view.ui.btn_pred_analysis_mono_back,
-            self._view.ui.btn_pred_analysis_mono_next,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-            self._view.ui.btn_pred_analysis_mono_back_2,
-            self._view.ui.btn_pred_analysis_mono_add_protein,
-            self._view.ui.lbl_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-        ]
-        gui_utils.enable_text_box(
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-        )
-        gui_utils.disable_text_box(
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-        )
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-
-    def mono_pred_analysis_add_protein(self) -> None:
-        """Adds the protein to the list of proteins to predict."""
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.insertRow(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            0,
-            QtWidgets.QTableWidgetItem("A"),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_seq_name.toPlainText()),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_prot_name.text()),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
-        self.mono_pred_analysis_check_if_table_is_empty()
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-            self._view.ui.table_pred_analysis_mono_prot_to_predict,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-            self._view.ui.lbl_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_mono_advanced_config_2,
-            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-        ]
-        gui_utils.enable_text_box(
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-        )
-        gui_elements_to_hide = [
-            self._view.ui.lbl_pred_analysis_mono_prot_name,
-            self._view.ui.txt_pred_analysis_mono_prot_name,
-            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-            self._view.ui.btn_pred_analysis_mono_back,
-            self._view.ui.btn_pred_analysis_mono_next,
-            self._view.ui.lbl_pred_analysis_mono_seq_name,
-            self._view.ui.txt_pred_analysis_mono_seq_name,
-            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-            self._view.ui.btn_pred_analysis_mono_back_2,
-            self._view.ui.btn_pred_analysis_mono_add_protein,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
-        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
-        self.setup_defaults_monomer_prediction()
-
-    def mono_pred_analysis_prediction_overview_item_clicked(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(True)
-
-    def mono_pred_analysis_add_protein_to_predict(self) -> None:
-        """Needs to be removed."""
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.insertRow(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            0,
-            QtWidgets.QTableWidgetItem("A"),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_seq_name.toPlainText()),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
-            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_prot_name.text()),
-        )
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
-        self.mono_pred_analysis_check_if_table_is_empty()
-        self.setup_defaults_monomer_prediction_analysis()
-
-    def mono_pred_analysis_remove_protein_to_predict(self) -> None:
-        """Removes the selected protein from the list of proteins to predict."""
-        self._view.ui.table_pred_analysis_mono_prot_to_predict.removeRow(
-            self._view.ui.table_pred_analysis_mono_prot_to_predict.currentRow(),
-        )
-        self.mono_pred_analysis_check_if_table_is_empty()
-        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
-
-    # </editor-fold>
-
-    # <editor-fold desc="Analysis section">
-    def mono_pred_analysis_structure_analysis_add(self) -> None:
-        """Shows the gui elements for the selection of the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.clear()
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.clear()
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.setText("Protein structure 2")
-        self.fill_mono_pred_analysis_protein_boxes()
-        if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
-            try:
-                self._view.ui.list_pred_analysis_mono_overview.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
-
-    def mono_pred_analysis_structure_analysis_next_2(self) -> None:
-        """Shows the gui elements for the chain selection of protein 1."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.setText(
-            self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText(),
-        )
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.setText(
-            self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText(),
-        )
-        self._view.ui.list_pred_analysis_mono_ref_chains.clear()
-        self._view.ui.btn_pred_analysis_mono_next_3.setEnabled(False)
-        self._view.ui.list_pred_analysis_mono_ref_chains.setEnabled(True)
-
-        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
-            if (
-                self._view.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text()
-                == self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText()
-            ):
-                self._view.ui.list_pred_analysis_mono_ref_chains.addItem(
-                    self._view.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
-                )
-        if self._view.ui.list_pred_analysis_mono_ref_chains.count() == 0:
-            tmp_protein = self._current_project.search_protein(
-                self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText(),
-            )
-            for tmp_chain in tmp_protein.chains:
-                if tmp_chain.chain_type == "protein_chain":
-                    self._view.ui.list_pred_analysis_mono_ref_chains.addItem(tmp_chain.chain_letter)
-        if self._view.ui.list_pred_analysis_mono_ref_chains.count() == 1:
-            self._view.ui.lbl_pred_analysis_mono_ref_chains.setText(
-                f"Select chain in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.",
-            )
-        else:
-            self._view.ui.lbl_pred_analysis_mono_ref_chains.setText(
-                f"Select chains in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.",
-            )
-
-    def mono_pred_analysis_structure_analysis_back_3(self) -> None:
-        """Hides the gui elements to select the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
-            self._view.ui.btn_pred_analysis_mono_remove.show()
-            self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-            self._view.ui.btn_pred_analysis_mono_start.show()
-            self._view.ui.lbl_pred_analysis_mono_images.show()
-            self._view.ui.cb_pred_analysis_mono_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
-
-    def mono_pred_analysis_structure_analysis_next_3(self) -> None:
-        """Shows the gui elements to select the chains of protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_pred_analysis_mono_model_chains.clear()
-        self._view.ui.list_pred_analysis_mono_ref_chains.setEnabled(False)
-        self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
-
-        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
-            if (
-                self._view.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text()
-                == self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText()
-            ):
-                self._view.ui.list_pred_analysis_mono_model_chains.addItem(
-                    self._view.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
-                )
-        if self._view.ui.list_pred_analysis_mono_model_chains.count() == 0:
-            tmp_protein = self._current_project.search_protein(
-                self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText(),
-            )
-            for tmp_chain in tmp_protein.chains:
-                if tmp_chain.chain_type == "protein_chain":
-                    self._view.ui.list_pred_analysis_mono_model_chains.addItem(tmp_chain.chain_letter)
-        if self._view.ui.list_pred_analysis_mono_model_chains.count() == 1:
-            self._view.ui.lbl_pred_analysis_mono_model_chains.setText(
-                f"Select chain in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
-            )
-        else:
-            self._view.ui.lbl_pred_analysis_mono_model_chains.setText(
-                f"Select {len(self._view.ui.list_pred_analysis_mono_model_chains.selectedItems())} chains "
-                f"in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
-            )
-
-    def mono_pred_analysis_structure_analysis_back_4(self) -> None:
-        """Hides the gui elements to select the chains in protein 1."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.setText("Protein structure 2")
-
-    def mono_pred_analysis_structure_analysis_next_4(self) -> None:
-        """Adds the protein pair to the list of protein pairs to analyze."""
-        gui_elements_to_show = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        prot_1_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_pred_analysis_mono_ref_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_pred_analysis_mono_model_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QtWidgets.QListWidgetItem(analysis_name)
-        self._view.ui.list_pred_analysis_mono_overview.addItem(item)
-        self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
-
-    def mono_pred_analysis_structure_analysis_back_5(self) -> None:
-        """Hides the gui elements to select the chains in protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_pred_analysis_mono_ref_chains.setEnabled(True)
-
-        # tmp_protein = self._current_project.search_protein(self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText())
-        # for tmp_chain in tmp_protein.chains:
-        #     if tmp_chain.chain_type == "protein_chain":
-        #         self._view.ui.list_pred_analysis_mono_ref_chains.addItem(tmp_chain.chain_letter)
-
-    def mono_pred_analysis_structure_analysis_overview_clicked(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_pred_analysis_mono_remove.setEnabled(True)
-
-    def fill_mono_pred_analysis_protein_boxes(self) -> None:
-        """Fills the combo box of the protein structures."""
-        protein_names = []
-        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
-            protein_names.append(self._view.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text())
-        for tmp_protein in self._current_project.proteins:
-            protein_names.append(tmp_protein.get_molecule_object())
-        protein_names.insert(0, "")
-        self._view.ui.box_pred_analysis_mono_prot_struct_1.clear()
-        self._view.ui.box_pred_analysis_mono_prot_struct_2.clear()
-        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_mono_prot_struct_1, protein_names)
-        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_mono_prot_struct_2, protein_names)
-
-    def remove_mono_pred_analysis_analysis_run(self) -> None:
-        """Removes a selected protein pair form the list of protein pairs to analyze."""
-        self._view.ui.list_pred_analysis_mono_overview.takeItem(
-            self._view.ui.list_pred_analysis_mono_overview.currentRow(),
-        )
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_mono_overview,
-            self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.btn_pred_analysis_mono_add,
-            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_mono_remove,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_2,
-            self._view.ui.lbl_pred_analysis_mono_ref_chains,
-            self._view.ui.list_pred_analysis_mono_ref_chains,
-            self._view.ui.btn_pred_analysis_mono_back_4,
-            self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.box_pred_analysis_mono_prot_struct_1,
-            self._view.ui.box_pred_analysis_mono_prot_struct_2,
-            self._view.ui.btn_pred_analysis_mono_back_3,
-            self._view.ui.btn_pred_analysis_mono_next_2,
-            self._view.ui.lbl_pred_analysis_mono_model_chains,
-            self._view.ui.list_pred_analysis_mono_model_chains,
-            self._view.ui.btn_pred_analysis_mono_back_5,
-            self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
-            self._view.ui.cb_pred_analysis_mono_images,
-            self._view.ui.btn_pred_analysis_mono_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
-            self._view.ui.btn_pred_analysis_mono_remove.show()
-            self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-            self._view.ui.btn_pred_analysis_mono_start.show()
-            self._view.ui.lbl_pred_analysis_mono_images.show()
-            self._view.ui.cb_pred_analysis_mono_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
-        # if self._view.ui.list_pred_analysis_mono_overview.count() == 0:
-        #
-        #     self._view.ui.btn_pred_analysis_mono_back_pred_setup.show()
-        #     self._view.ui.btn_pred_analysis_mono_remove.hide()
-
-    def check_mono_pred_analysis_if_same_no_of_chains_selected(self) -> None:
-        """Checks if the same number of chains were selected."""
-        self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next_4)
-        if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_mono_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_next_4)
-            self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(True)
-
-        prot_1_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_pred_analysis_mono_ref_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_pred_analysis_mono_model_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        for tmp_row in range(self._view.ui.list_pred_analysis_mono_overview.count()):
-            if analysis_name == self._view.ui.list_pred_analysis_mono_overview.item(tmp_row).text():
-                self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next_4)
-                return
-
-    def check_mono_pred_analysis_if_prot_structs_are_filled(self) -> None:
-        """Checks if two proteins were selected."""
-        prot_1 = self._view.ui.box_pred_analysis_mono_prot_struct_1.itemText(
-            self._view.ui.box_pred_analysis_mono_prot_struct_1.currentIndex(),
-        )
-        prot_2 = self._view.ui.box_pred_analysis_mono_prot_struct_2.itemText(
-            self._view.ui.box_pred_analysis_mono_prot_struct_2.currentIndex(),
-        )
-        if prot_1 != "" and prot_2 != "":
-            self._view.ui.btn_pred_analysis_mono_next_2.setEnabled(True)
-        else:
-            self._view.ui.btn_pred_analysis_mono_next_2.setEnabled(False)
-
-    def count_mono_pred_analysis_selected_chains_for_prot_struct_1(self) -> None:
-        """Counts the number of chains selected in protein 1."""
-        self.no_of_selected_chains = len(self._view.ui.list_pred_analysis_mono_ref_chains.selectedItems())
-        if self.no_of_selected_chains > 0:
-            self._view.ui.btn_pred_analysis_mono_next_3.setEnabled(True)
-        else:
-            self._view.ui.btn_pred_analysis_mono_next_3.setEnabled(False)
-
-    # </editor-fold>
-
-    # </editor-fold>
-
-    def switch_monomer_pred_analysis_tab(self) -> None:
-        """Switches the tabs from prediction to analysis and vice versa."""
-        if self._view.ui.tabWidget.currentIndex() == 0:
-            # goes from prediction to analysis
-            self._view.ui.tabWidget.setTabEnabled(1, True)
-            self._view.ui.tabWidget.setTabEnabled(0, False)
-            self._view.ui.tabWidget.setCurrentIndex(1)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_analysis_mono_overview,
-                self._view.ui.list_pred_analysis_mono_overview,
-                self._view.ui.btn_pred_analysis_mono_add,
-                self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.btn_pred_analysis_mono_remove,
-                self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-                self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-                self._view.ui.lbl_analysis_batch_vs_2,
-                self._view.ui.lbl_pred_analysis_mono_ref_chains,
-                self._view.ui.list_pred_analysis_mono_ref_chains,
-                self._view.ui.btn_pred_analysis_mono_back_4,
-                self._view.ui.btn_pred_analysis_mono_next_3,
-                self._view.ui.box_pred_analysis_mono_prot_struct_1,
-                self._view.ui.box_pred_analysis_mono_prot_struct_2,
-                self._view.ui.btn_pred_analysis_mono_back_3,
-                self._view.ui.btn_pred_analysis_mono_next_2,
-                self._view.ui.lbl_pred_analysis_mono_model_chains,
-                self._view.ui.list_pred_analysis_mono_model_chains,
-                self._view.ui.btn_pred_analysis_mono_back_5,
-                self._view.ui.btn_pred_analysis_mono_next_4,
-                self._view.ui.lbl_pred_analysis_mono_images,
-                self._view.ui.cb_pred_analysis_mono_images,
-                self._view.ui.btn_pred_analysis_mono_start,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
-                self._view.ui.btn_pred_analysis_mono_remove.show()
-                self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-                self._view.ui.btn_pred_analysis_mono_start.show()
-                self._view.ui.lbl_pred_analysis_mono_images.show()
-                self._view.ui.cb_pred_analysis_mono_images.show()
-                styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
-        else:
-            # goes from analysis to prediction
-            if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
-                gui_elements_to_show = [
-                    self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.table_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-                    self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-                ]
-                gui_elements_to_hide = [
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-                    self._view.ui.lbl_pred_analysis_mono_prot_name,
-                    self._view.ui.txt_pred_analysis_mono_prot_name,
-                    self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back,
-                    self._view.ui.btn_pred_analysis_mono_next,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name,
-                    self._view.ui.txt_pred_analysis_mono_seq_name,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back_2,
-                    self._view.ui.btn_pred_analysis_mono_add_protein,
-                    self._view.ui.lbl_pred_mono_advanced_config_2,
-                    self._view.ui.btn_pred_mono_advanced_config_2,
-                ]
-                gui_utils.show_gui_elements(gui_elements_to_show)
-                gui_utils.hide_gui_elements(gui_elements_to_hide)
-            else:
-                gui_elements_to_show = [
-                    self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.table_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-                    self._view.ui.lbl_pred_mono_advanced_config_2,
-                    self._view.ui.btn_pred_mono_advanced_config_2,
-                    self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-                    self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-                ]
-                gui_elements_to_hide = [
-                    self._view.ui.lbl_pred_analysis_mono_prot_name,
-                    self._view.ui.txt_pred_analysis_mono_prot_name,
-                    self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back,
-                    self._view.ui.btn_pred_analysis_mono_next,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name,
-                    self._view.ui.txt_pred_analysis_mono_seq_name,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back_2,
-                    self._view.ui.btn_pred_analysis_mono_add_protein,
-                ]
-                gui_utils.show_gui_elements(gui_elements_to_show)
-                gui_utils.hide_gui_elements(gui_elements_to_hide)
-                self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
-            self._view.ui.tabWidget.setTabEnabled(0, True)
-            self._view.ui.tabWidget.setTabEnabled(1, False)
-            self._view.ui.tabWidget.setCurrentIndex(0)
-
     def start_monomer_prediction_analysis(self) -> None:
         """Sets up the worker for the prediction of the proteins."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
@@ -5272,1033 +1781,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Multimer Prediction + Analysis functions">
-    def _init_multi_pred_analysis_page(self) -> None:
-        """Clears the text boxes and sets the default values for the gui elements."""
-        # <editor-fold desc="Prediction section">
-        # clears everything
-        self._view.ui.txt_pred_analysis_multi_prot_name.clear()
-        self._view.ui.txt_pred_analysis_multi_prot_seq.clear()
-        self._view.ui.list_pred_analysis_multi_prot_seq_overview.clear()
-        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, -1, -1):
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.removeRow(i)
-
-        # sets up defaults: Prediction
-        self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
-        self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
-        self._view.ui.lbl_pred_analysis_multi_prot_name_status.setText("")
-        self._view.ui.lbl_pred_analysis_multi_prot_seq_status.setText("")
-
-        # </editor-fold>
-
-        # <editor-fold desc="Analysis section">
-        self._view.ui.list_pred_analysis_multi_overview.clear()
-        self._view.ui.btn_pred_analysis_multi_remove.hide()
-
-        # </editor-fold>
-
-        # self.multi_pred_analysis_show_protein_overview()
-
-    def display_multimer_pred_analysis(self) -> None:
-        """Displays the multimer prediction + analysis page."""
-        # checks internet connection
-        if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog()
-            return
-
-        self._init_multi_pred_analysis_page()
-        self._view.ui.table_pred_analysis_multi_prot_to_predict.clear()
-        self._view.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
-            0,
-            QtWidgets.QTableWidgetItem("Chain"),
-        )
-        self._view.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
-            1,
-            QtWidgets.QTableWidgetItem("Sequence"),
-        )
-        self._view.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-            self._view.ui.table_pred_analysis_multi_prot_to_predict,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-            self._view.ui.btn_pred_analysis_multi_back,
-            self._view.ui.btn_pred_analysis_multi_next,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add_2,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_analysis_multi_back_2,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.tabWidget_2.currentIndex() == 1:
-            self._view.ui.tabWidget_2.setCurrentIndex(0)
-        self._view.ui.tabWidget_2.setTabEnabled(1, False)
-        self._view.ui.tabWidget_2.setTabEnabled(0, True)
-        tools.switch_page(
-            self._view.ui.stackedWidget,
-            self._view.ui.lbl_page_title,
-            22,
-            "Multimer Prediction + Analysis",
-        )
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_pred_analysis_multimer_page,
-        )
-        self._view.ui.table_pred_analysis_multi_prot_to_predict.setEnabled(True)
-
-    # <editor-fold desc="Prediction section">
-    def multi_pred_analysis_validate_protein_name(self) -> None:
-        """Validates the input of the protein name in real-time."""
-        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
-            self._view.ui.txt_pred_analysis_multi_prot_name.text(),
-            self._view.ui.table_pred_analysis_multi_prot_to_predict,
-        ):
-            self._view.ui.lbl_pred_analysis_multi_prot_name_status.setText("Protein name already used.")
-            self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next)
-        else:
-            self._view.ui.btn_pred_analysis_multi_next.setEnabled(True)
-            tools.validate_protein_name(
-                self._view.ui.txt_pred_analysis_multi_prot_name,
-                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                self._view.ui.btn_pred_analysis_multi_next,
-            )
-
-    def multi_pred_analysis_validate_protein_sequence(self) -> None:
-        """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-        )
-
-    def multi_pred_analysis_check_if_list_is_empty(self) -> None:
-        """Checks if the list of sequences of the protein is empty."""
-        if self._view.ui.list_pred_analysis_multi_prot_seq_overview.count() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
-        else:
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(True)
-
-    def multi_pred_analysis_add_sequence_to_list(self) -> None:
-        """Adds the entered sequence to the sequences of the protein."""
-        self._view.ui.list_pred_analysis_multi_prot_seq_overview.addItem(
-            QtWidgets.QListWidgetItem(self._view.ui.txt_pred_analysis_multi_prot_seq.toPlainText()),
-        )
-        self.multi_pred_analysis_check_if_list_is_empty()
-
-    def multi_pred_analysis_remove_sequence_to_list(self) -> None:
-        """Removes the entered sequence from the sequences of the protein."""
-        self._view.ui.list_pred_analysis_multi_prot_seq_overview.takeItem(
-            self._view.ui.list_pred_analysis_multi_prot_seq_overview.currentRow(),
-        )
-        self.multi_pred_analysis_check_if_list_is_empty()
-        self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
-
-    def multi_pred_analysis_check_if_table_is_empty(self) -> None:
-        """Checks if the list of proteins to predict is empty."""
-        if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_multi_predict)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-                self._view.ui.table_pred_analysis_multi_prot_to_predict,
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-                self._view.ui.lbl_pred_analysis_multi_prot_name,
-                self._view.ui.txt_pred_analysis_multi_prot_name,
-                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                self._view.ui.btn_pred_analysis_multi_back,
-                self._view.ui.btn_pred_analysis_multi_next,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq,
-                self._view.ui.txt_pred_analysis_multi_prot_seq,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-                self._view.ui.lbl_pred_multi_prot_seq_add_2,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-                self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-                self._view.ui.btn_pred_analysis_multi_back_2,
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-                self._view.ui.lbl_pred_analysis_multi_advanced_config,
-                self._view.ui.btn_pred_analysis_multi_advanced_config,
-                self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-                self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.btn_pred_multi_predict.setEnabled(False)
-            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-        else:
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_go_analysis_setup)
-            self._view.ui.btn_pred_multi_predict.setEnabled(True)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-                self._view.ui.table_pred_analysis_multi_prot_to_predict,
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-                self._view.ui.lbl_pred_analysis_multi_advanced_config,
-                self._view.ui.btn_pred_analysis_multi_advanced_config,
-                self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-                self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.lbl_pred_analysis_multi_prot_name,
-                self._view.ui.txt_pred_analysis_multi_prot_name,
-                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                self._view.ui.btn_pred_analysis_multi_back,
-                self._view.ui.btn_pred_analysis_multi_next,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq,
-                self._view.ui.txt_pred_analysis_multi_prot_seq,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-                self._view.ui.lbl_pred_multi_prot_seq_add_2,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-                self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-                self._view.ui.btn_pred_analysis_multi_back_2,
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
-
-    def multi_pred_analysis_add_protein_to_predict(self) -> None:
-        """Adds the proteins to the list of proteins to predict."""
-        for i in range(self._view.ui.list_pred_analysis_multi_prot_seq_overview.count()):
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.setRowCount(
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1,
-            )
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.insertRow(
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1,
-            )
-            tmp_chain_seq = (
-                constants.chain_dict.get(i),
-                self._view.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text(),
-            )
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.setItem(
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
-                0,
-                QtWidgets.QTableWidgetItem(tmp_chain_seq[0]),
-            )
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.setItem(
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
-                1,
-                QtWidgets.QTableWidgetItem(tmp_chain_seq[1]),
-            )
-            name_item = QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_multi_prot_name.text())
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.setVerticalHeaderItem(
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
-                name_item,
-            )
-        self._view.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
-        self.multi_pred_analysis_check_if_table_is_empty()
-        self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
-
-    def multi_pred_analysis_remove_protein_to_predict(self) -> None:
-        """Removes the selected protein from the list of proteins to predict."""
-        if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 1:
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.removeRow(0)
-        else:
-            self._view.ui.table_pred_analysis_multi_prot_to_predict.removeRow(
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.currentRow(),
-            )
-            prot_name = self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.currentRow(),
-            ).text()
-            for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
-                if self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
-                    self._view.ui.table_pred_analysis_multi_prot_to_predict.setItem(
-                        i,
-                        0,
-                        QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)),
-                    )
-        self.multi_pred_analysis_check_if_table_is_empty()
-        self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
-
-    def multi_pred_analysis_add(self) -> None:
-        """Shows the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-            self._view.ui.table_pred_analysis_multi_prot_to_predict,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-            self._view.ui.btn_pred_analysis_multi_back,
-            self._view.ui.btn_pred_analysis_multi_next,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add_2,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_analysis_multi_back_2,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-        )
-        gui_utils.disable_text_box(
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-        )
-        self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
-        self._view.ui.txt_pred_analysis_multi_prot_name.clear()
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next)
-        if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() > 0:
-            try:
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection on Local Multimer Prediction in overview table.")
-
-    def multi_pred_analysis_back(self) -> None:
-        """Hides the gui elements for the protein name."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-            self._view.ui.table_pred_analysis_multi_prot_to_predict,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-            self._view.ui.btn_pred_analysis_multi_back,
-            self._view.ui.btn_pred_analysis_multi_next,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add_2,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_analysis_multi_back_2,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self.multi_pred_analysis_check_if_table_is_empty()
-
-    def multi_pred_analysis_next(self) -> None:
-        """Shows the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-            self._view.ui.table_pred_analysis_multi_prot_to_predict,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add_2,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_analysis_multi_back_2,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-            self._view.ui.btn_pred_analysis_multi_back,
-            self._view.ui.btn_pred_analysis_multi_next,
-            self._view.ui.lbl_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-        )
-        gui_utils.disable_text_box(
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-        )
-        self._view.ui.txt_pred_analysis_multi_prot_seq.clear()
-        self._view.ui.list_pred_analysis_multi_prot_seq_overview.clear()
-        self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
-        self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
-
-    def multi_pred_analysis_back_2(self) -> None:
-        """Hides the gui elements for the protein sequence."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-            self._view.ui.table_pred_analysis_multi_prot_to_predict,
-            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-            self._view.ui.btn_pred_analysis_multi_back,
-            self._view.ui.btn_pred_analysis_multi_next,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-            self._view.ui.lbl_pred_multi_prot_seq_add_2,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-            self._view.ui.btn_pred_analysis_multi_back_2,
-            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-            self._view.ui.lbl_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_advanced_config,
-            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        gui_utils.enable_text_box(
-            self._view.ui.txt_pred_analysis_multi_prot_name,
-            self._view.ui.lbl_pred_analysis_multi_prot_name,
-        )
-        gui_utils.disable_text_box(
-            self._view.ui.txt_pred_analysis_multi_prot_seq,
-            self._view.ui.lbl_pred_analysis_multi_prot_seq,
-        )
-
-    def multi_pred_analysis_prot_seq_overview_item_changed(self) -> None:
-        """Enables the remove button of the list of sequences of the protein."""
-        self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(True)
-
-    def multi_pred_analysis_prot_to_predict_item_changed(self) -> None:
-        """Enables the remove button of the list of proteins to predict."""
-        self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(True)
-
-    # <editor-fold desc="old">
-    # def multi_pred_analysis_show_protein_overview(self):
-    #     if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
-    #         self.multimer_prediction_analysis_management.show_stage_x(0)
-    #     else:
-    #         gui_elements_to_show = [
-    #             self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-    #             self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-    #         ]
-    #         self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
-    #             [0, 3], [1, 2], show_specific_elements=gui_elements_to_show,
-    #         )
-    #
-    # def multi_pred_analysis_show_protein_name(self):
-    #     gui_elements_to_hide = [
-    #         self._view.ui.btn_pred_multi_prot_to_predict_add,
-    #         self._view.ui.btn_pred_multi_prot_to_predict_remove,
-    #     ]
-    #     self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
-    #         [0, 1], [2, 3], hide_specific_elements=gui_elements_to_hide)
-    #     gui_utils.enable_text_box(self._view.ui.txt_pred_analysis_multi_prot_name,
-    #                               self._view.ui.lbl_pred_analysis_multi_prot_name)
-    #
-    # def multi_pred_analysis_show_protein_sequence(self):
-    #     gui_elements_to_hide = [
-    #         self._view.ui.btn_pred_multi_prot_to_predict_add,
-    #         self._view.ui.btn_pred_multi_prot_to_predict_remove,
-    #         self._view.ui.btn_pred_analysis_multi_back,
-    #         self._view.ui.btn_pred_analysis_multi_next,
-    #     ]
-    #     self.multimer_prediction_analysis_management.show_gui_elements_stage_x(
-    #         [0, 1, 2], [3], hide_specific_elements=gui_elements_to_hide)
-    #     gui_utils.disable_text_box(self._view.ui.txt_pred_analysis_multi_prot_name,
-    #                                self._view.ui.lbl_pred_analysis_multi_prot_name)
-    # </editor-fold>
-
-    # </editor-fold>
-
-    def switch_multimer_pred_analysis_tab(self) -> None:
-        """Switches the tabs from prediction to analysis and vice versa."""
-        if self._view.ui.tabWidget_2.currentIndex() == 0:
-            # goes from prediction to analysis
-            self._view.ui.tabWidget_2.setCurrentIndex(1)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_analysis_multi_overview,
-                self._view.ui.list_pred_analysis_multi_overview,
-                self._view.ui.btn_pred_analysis_multi_add,
-                self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.btn_pred_analysis_multi_remove,
-                self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-                self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-                self._view.ui.lbl_analysis_batch_vs_3,
-                self._view.ui.lbl_pred_analysis_multi_ref_chains,
-                self._view.ui.list_pred_analysis_multi_ref_chains,
-                self._view.ui.btn_pred_analysis_multi_back_4,
-                self._view.ui.btn_pred_analysis_multi_next_3,
-                self._view.ui.box_pred_analysis_multi_prot_struct_1,
-                self._view.ui.box_pred_analysis_multi_prot_struct_2,
-                self._view.ui.btn_pred_analysis_multi_back_3,
-                self._view.ui.btn_pred_analysis_multi_next_2,
-                self._view.ui.lbl_pred_analysis_multi_model_chains,
-                self._view.ui.list_pred_analysis_multi_model_chains,
-                self._view.ui.btn_pred_analysis_multi_back_5,
-                self._view.ui.btn_pred_analysis_multi_next_4,
-                self._view.ui.lbl_pred_analysis_multi_images,
-                self._view.ui.cb_pred_analysis_multi_images,
-                self._view.ui.btn_pred_analysis_multi_start,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.tabWidget_2.setTabEnabled(1, True)
-            self._view.ui.tabWidget_2.setTabEnabled(0, False)
-            if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
-                self._view.ui.btn_pred_analysis_multi_remove.show()
-                self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-                self._view.ui.btn_pred_analysis_multi_start.show()
-                self._view.ui.lbl_pred_analysis_multi_images.show()
-                self._view.ui.cb_pred_analysis_multi_images.show()
-                styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
-        else:
-            # goes from analysis to prediction
-            self._view.ui.tabWidget_2.setCurrentIndex(0)
-            if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
-                gui_elements_to_show = [
-                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-                    self._view.ui.table_pred_analysis_multi_prot_to_predict,
-                    self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-                    self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-                ]
-                gui_elements_to_hide = [
-                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-                    self._view.ui.lbl_pred_analysis_multi_advanced_config,
-                    self._view.ui.btn_pred_analysis_multi_advanced_config,
-                    self._view.ui.lbl_pred_analysis_multi_prot_name,
-                    self._view.ui.txt_pred_analysis_multi_prot_name,
-                    self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                    self._view.ui.btn_pred_analysis_multi_back,
-                    self._view.ui.btn_pred_analysis_multi_next,
-                    self._view.ui.lbl_pred_analysis_multi_prot_seq,
-                    self._view.ui.txt_pred_analysis_multi_prot_seq,
-                    self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-                    self._view.ui.lbl_pred_multi_prot_seq_add_2,
-                    self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-                    self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-                    self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-                    self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-                    self._view.ui.btn_pred_analysis_multi_back_2,
-                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-                ]
-                gui_utils.show_gui_elements(gui_elements_to_show)
-                gui_utils.hide_gui_elements(gui_elements_to_hide)
-            else:
-                gui_elements_to_show = [
-                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
-                    self._view.ui.table_pred_analysis_multi_prot_to_predict,
-                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
-                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
-                    self._view.ui.lbl_pred_analysis_multi_advanced_config,
-                    self._view.ui.btn_pred_analysis_multi_advanced_config,
-                    self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
-                    self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
-                ]
-                gui_elements_to_hide = [
-                    self._view.ui.lbl_pred_analysis_multi_prot_name,
-                    self._view.ui.txt_pred_analysis_multi_prot_name,
-                    self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                    self._view.ui.btn_pred_analysis_multi_back,
-                    self._view.ui.btn_pred_analysis_multi_next,
-                    self._view.ui.lbl_pred_analysis_multi_prot_seq,
-                    self._view.ui.txt_pred_analysis_multi_prot_seq,
-                    self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-                    self._view.ui.lbl_pred_multi_prot_seq_add_2,
-                    self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-                    self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-                    self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-                    self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-                    self._view.ui.btn_pred_analysis_multi_back_2,
-                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-                ]
-                gui_utils.show_gui_elements(gui_elements_to_show)
-                gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.tabWidget_2.setTabEnabled(0, True)
-            self._view.ui.tabWidget_2.setTabEnabled(1, False)
-
-    # <editor-fold desc="Analysis section">
-    def multi_pred_analysis_structure_analysis_add(self) -> None:
-        """Shows the gui elements to choose the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.clear()
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.clear()
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.setText("Protein structure 2")
-        self.fill_multi_pred_analysis_protein_boxes()
-        if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
-            try:
-                self._view.ui.list_pred_analysis_multi_overview.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
-
-    def multi_pred_analysis_structure_analysis_next_2(self) -> None:
-        """Shows the gui elements to select the chains in protein 1."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.setText(
-            self._view.ui.box_pred_analysis_multi_prot_struct_1.currentText(),
-        )
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.setText(
-            self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText(),
-        )
-        self._view.ui.list_pred_analysis_multi_ref_chains.clear()
-        self._view.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
-        self._view.ui.list_pred_analysis_multi_ref_chains.setEnabled(True)
-
-        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
-            if (
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text()
-                == self._view.ui.box_pred_analysis_multi_prot_struct_1.currentText()
-            ):
-                self._view.ui.list_pred_analysis_multi_ref_chains.addItem(
-                    self._view.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text(),
-                )
-        if self._view.ui.list_pred_analysis_multi_ref_chains.count() == 0:
-            tmp_protein = self._current_project.search_protein(
-                self._view.ui.box_pred_analysis_multi_prot_struct_1.currentText(),
-            )
-            for tmp_chain in tmp_protein.chains:
-                if tmp_chain.chain_type == "protein_chain":
-                    self._view.ui.list_pred_analysis_multi_ref_chains.addItem(tmp_chain.chain_letter)
-        if self._view.ui.list_pred_analysis_multi_ref_chains.count() == 1:
-            self._view.ui.lbl_pred_analysis_multi_ref_chains.setText(
-                f"Select chain in protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.",
-            )
-        else:
-            self._view.ui.lbl_pred_analysis_multi_ref_chains.setText(
-                f"Select chains in protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.",
-            )
-
-    def multi_pred_analysis_structure_analysis_back_3(self) -> None:
-        """Hides the gui elements to choose the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
-            self._view.ui.btn_pred_analysis_multi_remove.show()
-            self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-            self._view.ui.btn_pred_analysis_multi_start.show()
-            self._view.ui.lbl_pred_analysis_multi_images.show()
-            self._view.ui.cb_pred_analysis_multi_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
-
-    def multi_pred_analysis_structure_analysis_next_3(self) -> None:
-        """Shows the gui elements to select the chains in protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_pred_analysis_multi_model_chains.clear()
-        self._view.ui.list_pred_analysis_multi_ref_chains.setEnabled(False)
-        self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-
-        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
-            if (
-                self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text()
-                == self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText()
-            ):
-                self._view.ui.list_pred_analysis_multi_model_chains.addItem(
-                    self._view.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text(),
-                )
-        if self._view.ui.list_pred_analysis_multi_model_chains.count() == 0:
-            tmp_protein = self._current_project.search_protein(
-                self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText(),
-            )
-            for tmp_chain in tmp_protein.chains:
-                if tmp_chain.chain_type == "protein_chain":
-                    self._view.ui.list_pred_analysis_multi_model_chains.addItem(tmp_chain.chain_letter)
-        if len(self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems()) == 1:
-            self._view.ui.lbl_pred_analysis_multi_model_chains.setText(
-                f"Select 1 chain in protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.",
-            )
-        else:
-            self._view.ui.lbl_pred_analysis_multi_model_chains.setText(
-                f"Select {len(self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems())} chains in "
-                f"protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.",
-            )
-
-    def multi_pred_analysis_structure_analysis_back_4(self) -> None:
-        """Hides the gui elements to select the chains in protein 1."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.setText("Protein structure 2")
-
-    def multi_pred_analysis_structure_analysis_next_4(self) -> None:
-        """Adds the protein pair to the list of protein pairs to analyze."""
-        gui_elements_to_show = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        prot_1_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_pred_analysis_multi_model_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QtWidgets.QListWidgetItem(analysis_name)
-        self._view.ui.list_pred_analysis_multi_overview.addItem(item)
-        self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
-
-    def multi_pred_analysis_structure_analysis_back_5(self) -> None:
-        """Hides the gui elements to select the chains in protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_pred_analysis_multi_ref_chains.setEnabled(True)
-
-        # tmp_protein = self._current_project.search_protein(self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText())
-        # for tmp_chain in tmp_protein.chains:
-        #     if tmp_chain.chain_type == "protein_chain":
-        #         self._view.ui.list_pred_analysis_multi_ref_chains.addItem(tmp_chain.chain_letter)
-
-    def multi_pred_analysis_structure_analysis_overview_clicked(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_pred_analysis_multi_remove.setEnabled(True)
-
-    def fill_multi_pred_analysis_protein_boxes(self) -> None:
-        """Fills the combo boxes with the protein names."""
-        protein_names = []
-        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
-            protein_names.append(self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text())
-        for tmp_protein in self._current_project.proteins:
-            protein_names.append(tmp_protein.get_molecule_object())
-        protein_names.insert(0, "")
-        protein_names = list(set(protein_names))
-        self._view.ui.box_pred_analysis_multi_prot_struct_1.clear()
-        self._view.ui.box_pred_analysis_multi_prot_struct_2.clear()
-        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_multi_prot_struct_1, protein_names)
-        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_multi_prot_struct_2, protein_names)
-
-    def remove_multi_pred_analysis_analysis_run(self) -> None:
-        """Removes the selected protein pair from the list of protein pairs to analyze."""
-        self._view.ui.list_pred_analysis_multi_overview.takeItem(
-            self._view.ui.list_pred_analysis_multi_overview.currentRow(),
-        )
-        gui_elements_to_show = [
-            self._view.ui.lbl_pred_analysis_multi_overview,
-            self._view.ui.list_pred_analysis_multi_overview,
-            self._view.ui.btn_pred_analysis_multi_add,
-            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_pred_analysis_multi_remove,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
-            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs_3,
-            self._view.ui.lbl_pred_analysis_multi_ref_chains,
-            self._view.ui.list_pred_analysis_multi_ref_chains,
-            self._view.ui.btn_pred_analysis_multi_back_4,
-            self._view.ui.btn_pred_analysis_multi_next_3,
-            self._view.ui.box_pred_analysis_multi_prot_struct_1,
-            self._view.ui.box_pred_analysis_multi_prot_struct_2,
-            self._view.ui.btn_pred_analysis_multi_back_3,
-            self._view.ui.btn_pred_analysis_multi_next_2,
-            self._view.ui.lbl_pred_analysis_multi_model_chains,
-            self._view.ui.list_pred_analysis_multi_model_chains,
-            self._view.ui.btn_pred_analysis_multi_back_5,
-            self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.lbl_pred_analysis_multi_images,
-            self._view.ui.cb_pred_analysis_multi_images,
-            self._view.ui.btn_pred_analysis_multi_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
-            self._view.ui.btn_pred_analysis_multi_remove.show()
-            self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-            self._view.ui.btn_pred_analysis_multi_start.show()
-            self._view.ui.lbl_pred_analysis_multi_images.show()
-            self._view.ui.cb_pred_analysis_multi_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
-        # if self._view.ui.list_pred_analysis_multi_overview.count() == 0:
-        #
-        #     self._view.ui.btn_pred_analysis_multi_back_pred_setup.show()
-        #     self._view.ui.btn_pred_analysis_multi_remove.hide()
-
-    def check_multi_pred_analysis_if_same_no_of_chains_selected(self) -> None:
-        """Checks if the same number of chains were selected."""
-        self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next_4)
-        if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_multi_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_next_4)
-            self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
-
-        prot_1_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_pred_analysis_multi_model_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        for tmp_row in range(self._view.ui.list_pred_analysis_multi_overview.count()):
-            if analysis_name == self._view.ui.list_pred_analysis_multi_overview.item(tmp_row).text():
-                self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next_4)
-                return
-
-    def check_multi_pred_analysis_if_prot_structs_are_filled(self) -> None:
-        """Checks if two proteins were selected."""
-        prot_1 = self._view.ui.box_pred_analysis_multi_prot_struct_1.itemText(
-            self._view.ui.box_pred_analysis_multi_prot_struct_1.currentIndex(),
-        )
-        prot_2 = self._view.ui.box_pred_analysis_multi_prot_struct_2.itemText(
-            self._view.ui.box_pred_analysis_multi_prot_struct_2.currentIndex(),
-        )
-        if prot_1 != "" and prot_2 != "":
-            self._view.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
-        else:
-            self._view.ui.btn_pred_analysis_multi_next_2.setEnabled(False)
-
-    def count_multi_pred_analysis_selected_chains_for_prot_struct_1(self) -> None:
-        """Counts the number of chains in protein 1."""
-        self.no_of_selected_chains = len(self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems())
-        if self.no_of_selected_chains > 0:
-            self._view.ui.btn_pred_analysis_multi_next_3.setEnabled(True)
-        else:
-            self._view.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
-
     def start_multimer_prediction_analysis(self) -> None:
         """Sets up the prediction process."""
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
@@ -6351,415 +1833,12 @@ class MainPresenter:
             self.block_box_prediction.close()
 
     # </editor-fold>
-    # </editor-fold>
 
     # <editor-fold desc="Structure Analysis functions">
-    def structure_analysis_add(self) -> None:
-        """Shows the gui elements to choose the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_batch_overview,
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.lbl_analysis_batch_prot_struct_1,
-            self._view.ui.box_analysis_batch_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_vs,
-            self._view.ui.lbl_analysis_batch_prot_struct_2,
-            self._view.ui.box_analysis_batch_prot_struct_2,
-            self._view.ui.btn_analysis_batch_back,
-            self._view.ui.btn_analysis_batch_next,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_batch_remove,
-            self._view.ui.btn_analysis_batch_add,
-            self._view.ui.lbl_analysis_batch_ref_chains,
-            self._view.ui.list_analysis_batch_ref_chains,
-            self._view.ui.btn_analysis_batch_back_2,
-            self._view.ui.btn_analysis_batch_next_2,
-            self._view.ui.lbl_analysis_batch_model_chains,
-            self._view.ui.list_analysis_batch_model_chains,
-            self._view.ui.btn_analysis_batch_back_3,
-            self._view.ui.btn_analysis_batch_next_3,
-            self._view.ui.lbl_analysis_batch_images,
-            self._view.ui.cb_analysis_batch_images,
-            self._view.ui.btn_analysis_batch_start,
-        ]
-
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_analysis_batch_prot_struct_1.clear()
-        self._view.ui.lbl_analysis_batch_prot_struct_2.clear()
-        self._view.ui.lbl_analysis_batch_prot_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_analysis_batch_prot_struct_2.setText("Protein structure 2")
-        self.fill_protein_boxes_batch()
-        if self._view.ui.list_analysis_batch_overview.count() > 0:
-            try:
-                self._view.ui.list_analysis_batch_overview.currentItem().setSelected(False)
-            except AttributeError:
-                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
-
-    def structure_analysis_next(self) -> None:
-        """Shows the gui elements to select the chains in protein 1."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_batch_overview,
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.lbl_analysis_batch_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs,
-            self._view.ui.lbl_analysis_batch_ref_chains,
-            self._view.ui.list_analysis_batch_ref_chains,
-            self._view.ui.btn_analysis_batch_back_2,
-            self._view.ui.btn_analysis_batch_next_2,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_batch_remove,
-            self._view.ui.btn_analysis_batch_add,
-            self._view.ui.box_analysis_batch_prot_struct_1,
-            self._view.ui.box_analysis_batch_prot_struct_2,
-            self._view.ui.btn_analysis_batch_back,
-            self._view.ui.btn_analysis_batch_next,
-            self._view.ui.lbl_analysis_batch_model_chains,
-            self._view.ui.list_analysis_batch_model_chains,
-            self._view.ui.btn_analysis_batch_back_3,
-            self._view.ui.btn_analysis_batch_next_3,
-            self._view.ui.lbl_analysis_batch_images,
-            self._view.ui.cb_analysis_batch_images,
-            self._view.ui.btn_analysis_batch_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_analysis_batch_prot_struct_1.setText(
-            self._view.ui.box_analysis_batch_prot_struct_1.currentText(),
-        )
-        self._view.ui.lbl_analysis_batch_prot_struct_2.setText(
-            self._view.ui.box_analysis_batch_prot_struct_2.currentText(),
-        )
-        self._view.ui.list_analysis_batch_ref_chains.clear()
-        self._view.ui.btn_analysis_batch_next_2.setEnabled(False)
-        self._view.ui.list_analysis_batch_ref_chains.setEnabled(True)
-
-        tmp_protein = self._current_project.search_protein(self._view.ui.box_analysis_batch_prot_struct_1.currentText())
-        for tmp_chain in tmp_protein.chains:
-            if tmp_chain.chain_type == "protein_chain":
-                self._view.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
-        if self._view.ui.list_analysis_batch_ref_chains.count() == 1:
-            self._view.ui.lbl_analysis_batch_ref_chains.setText(
-                f"Select chain in protein structure {self._view.ui.lbl_analysis_batch_prot_struct_1.text()}.",
-            )
-        else:
-            self._view.ui.lbl_analysis_batch_ref_chains.setText(
-                f"Select chains in protein structure {self._view.ui.lbl_analysis_batch_prot_struct_1.text()}.",
-            )
-
-    def structure_analysis_back(self) -> None:
-        """Hides the gui elements to choose the two proteins."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_batch_overview,
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.btn_analysis_batch_add,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_batch_remove,
-            self._view.ui.lbl_analysis_batch_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs,
-            self._view.ui.lbl_analysis_batch_ref_chains,
-            self._view.ui.list_analysis_batch_ref_chains,
-            self._view.ui.btn_analysis_batch_back_2,
-            self._view.ui.btn_analysis_batch_next_2,
-            self._view.ui.box_analysis_batch_prot_struct_1,
-            self._view.ui.box_analysis_batch_prot_struct_2,
-            self._view.ui.btn_analysis_batch_back,
-            self._view.ui.btn_analysis_batch_next,
-            self._view.ui.lbl_analysis_batch_model_chains,
-            self._view.ui.list_analysis_batch_model_chains,
-            self._view.ui.btn_analysis_batch_back_3,
-            self._view.ui.btn_analysis_batch_next_3,
-            self._view.ui.lbl_analysis_batch_images,
-            self._view.ui.cb_analysis_batch_images,
-            self._view.ui.btn_analysis_batch_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        if self._view.ui.list_analysis_batch_overview.count() > 0:
-            self._view.ui.btn_analysis_batch_remove.show()
-            self._view.ui.btn_analysis_batch_remove.setEnabled(False)
-            self._view.ui.btn_analysis_batch_start.show()
-            self._view.ui.lbl_analysis_batch_images.show()
-            self._view.ui.cb_analysis_batch_images.show()
-            styles.color_button_ready(self._view.ui.btn_analysis_batch_start)
-
-    def structure_analysis_next_2(self) -> None:
-        """Shows the gui elements to select the chains in protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_batch_overview,
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.lbl_analysis_batch_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs,
-            self._view.ui.lbl_analysis_batch_ref_chains,
-            self._view.ui.list_analysis_batch_ref_chains,
-            self._view.ui.lbl_analysis_batch_model_chains,
-            self._view.ui.list_analysis_batch_model_chains,
-            self._view.ui.btn_analysis_batch_back_3,
-            self._view.ui.btn_analysis_batch_next_3,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_batch_remove,
-            self._view.ui.btn_analysis_batch_add,
-            self._view.ui.box_analysis_batch_prot_struct_1,
-            self._view.ui.box_analysis_batch_prot_struct_2,
-            self._view.ui.btn_analysis_batch_back,
-            self._view.ui.btn_analysis_batch_next,
-            self._view.ui.btn_analysis_batch_back_2,
-            self._view.ui.btn_analysis_batch_next_2,
-            self._view.ui.lbl_analysis_batch_images,
-            self._view.ui.cb_analysis_batch_images,
-            self._view.ui.btn_analysis_batch_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_analysis_batch_model_chains.clear()
-        self._view.ui.list_analysis_batch_ref_chains.setEnabled(False)
-        self._view.ui.btn_analysis_batch_next_3.setEnabled(False)
-
-        tmp_protein = self._current_project.search_protein(self._view.ui.box_analysis_batch_prot_struct_2.currentText())
-        for tmp_chain in tmp_protein.chains:
-            if tmp_chain.chain_type == "protein_chain":
-                self._view.ui.list_analysis_batch_model_chains.addItem(tmp_chain.chain_letter)
-        if len(self._view.ui.list_analysis_batch_ref_chains.selectedItems()) == 1:
-            self._view.ui.lbl_analysis_batch_model_chains.setText(
-                f"Select 1 chain in protein structure {self._view.ui.lbl_analysis_batch_prot_struct_2.text()}.",
-            )
-        else:
-            self._view.ui.lbl_analysis_batch_model_chains.setText(
-                f"Select {len(self._view.ui.list_analysis_batch_ref_chains.selectedItems())} chains in "
-                f"protein structure {self._view.ui.lbl_analysis_batch_prot_struct_2.text()}.",
-            )
-
-    def structure_analysis_back_2(self) -> None:
-        """Hides the gui elements to select the chains in protein 1."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_batch_overview,
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.lbl_analysis_batch_prot_struct_1,
-            self._view.ui.box_analysis_batch_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_vs,
-            self._view.ui.lbl_analysis_batch_prot_struct_2,
-            self._view.ui.box_analysis_batch_prot_struct_2,
-            self._view.ui.btn_analysis_batch_back,
-            self._view.ui.btn_analysis_batch_next,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_batch_remove,
-            self._view.ui.btn_analysis_batch_add,
-            self._view.ui.lbl_analysis_batch_ref_chains,
-            self._view.ui.list_analysis_batch_ref_chains,
-            self._view.ui.btn_analysis_batch_back_2,
-            self._view.ui.btn_analysis_batch_next_2,
-            self._view.ui.lbl_analysis_batch_model_chains,
-            self._view.ui.list_analysis_batch_model_chains,
-            self._view.ui.btn_analysis_batch_back_3,
-            self._view.ui.btn_analysis_batch_next_3,
-            self._view.ui.lbl_analysis_batch_images,
-            self._view.ui.cb_analysis_batch_images,
-            self._view.ui.btn_analysis_batch_start,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.lbl_analysis_batch_prot_struct_1.setText("Protein structure 1")
-        self._view.ui.lbl_analysis_batch_prot_struct_2.setText("Protein structure 2")
-
-    def structure_analysis_next_3(self) -> None:
-        """Adds the protein pair to the list of protein pairs to analyze."""
-        gui_elements_to_show = [
-            self._view.ui.btn_analysis_batch_remove,
-            self._view.ui.btn_analysis_batch_add,
-            self._view.ui.lbl_analysis_batch_overview,
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.lbl_analysis_batch_images,
-            self._view.ui.cb_analysis_batch_images,
-            self._view.ui.btn_analysis_batch_start,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.box_analysis_batch_prot_struct_1,
-            self._view.ui.box_analysis_batch_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs,
-            self._view.ui.lbl_analysis_batch_ref_chains,
-            self._view.ui.list_analysis_batch_ref_chains,
-            self._view.ui.lbl_analysis_batch_model_chains,
-            self._view.ui.list_analysis_batch_model_chains,
-            self._view.ui.btn_analysis_batch_back,
-            self._view.ui.btn_analysis_batch_next,
-            self._view.ui.btn_analysis_batch_back_2,
-            self._view.ui.btn_analysis_batch_next_2,
-            self._view.ui.btn_analysis_batch_back_3,
-            self._view.ui.btn_analysis_batch_next_3,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        prot_1_name = self._view.ui.lbl_analysis_batch_prot_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_analysis_batch_ref_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_analysis_batch_prot_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_analysis_batch_model_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        item = QtWidgets.QListWidgetItem(analysis_name)
-        self._view.ui.list_analysis_batch_overview.addItem(item)
-        self._view.ui.btn_analysis_batch_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_analysis_batch_start)
-
-    def structure_analysis_back_3(self) -> None:
-        """Hides the gui elements to select the chains in protein 2."""
-        gui_elements_to_show = [
-            self._view.ui.lbl_analysis_batch_overview,
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.lbl_analysis_batch_prot_struct_1,
-            self._view.ui.lbl_analysis_batch_prot_struct_2,
-            self._view.ui.lbl_analysis_batch_vs,
-            self._view.ui.lbl_analysis_batch_ref_chains,
-            self._view.ui.list_analysis_batch_ref_chains,
-            self._view.ui.btn_analysis_batch_back_2,
-            self._view.ui.btn_analysis_batch_next_2,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_analysis_batch_remove,
-            self._view.ui.btn_analysis_batch_add,
-            self._view.ui.box_analysis_batch_prot_struct_1,
-            self._view.ui.box_analysis_batch_prot_struct_2,
-            self._view.ui.btn_analysis_batch_back,
-            self._view.ui.btn_analysis_batch_next,
-            self._view.ui.btn_analysis_batch_back_3,
-            self._view.ui.btn_analysis_batch_next_3,
-            self._view.ui.lbl_analysis_batch_images,
-            self._view.ui.cb_analysis_batch_images,
-            self._view.ui.btn_analysis_batch_start,
-            self._view.ui.lbl_analysis_batch_model_chains,
-            self._view.ui.list_analysis_batch_model_chains,
-        ]
-        gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
-        self._view.ui.list_analysis_batch_ref_chains.setEnabled(True)
-
-        # tmp_protein = self._current_project.search_protein(self._view.ui.box_analysis_batch_prot_struct_2.currentText())
-        # for tmp_chain in tmp_protein.chains:
-        #     if tmp_chain.chain_type == "protein_chain":
-        #         self._view.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
-
-    def structure_analysis_overview_clicked(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_analysis_batch_remove.setEnabled(True)
-
-    def fill_protein_boxes_batch(self) -> None:
-        """Fills the combo boxes with the protein names."""
-        proteins = []
-        for tmp_protein in self._current_project.proteins:
-            proteins.append(tmp_protein.get_molecule_object())
-        proteins.insert(0, "")
-        self._view.ui.box_analysis_batch_prot_struct_1.clear()
-        self._view.ui.box_analysis_batch_prot_struct_2.clear()
-        gui_utils.fill_combo_box(self._view.ui.box_analysis_batch_prot_struct_1, proteins)
-        gui_utils.fill_combo_box(self._view.ui.box_analysis_batch_prot_struct_2, proteins)
-
-    def remove_analysis_run(self) -> None:
-        """Removes the selected protein pair from the list of protein pairs to analyze."""
-        self._view.ui.list_analysis_batch_overview.takeItem(self._view.ui.list_analysis_batch_overview.currentRow())
-        if self._view.ui.list_analysis_batch_overview.count() == 0:
-            gui_elements_to_show = [
-                self._view.ui.lbl_analysis_batch_overview,
-                self._view.ui.list_analysis_batch_overview,
-                self._view.ui.btn_analysis_batch_add,
-            ]
-
-            gui_elements_to_hide = [
-                self._view.ui.btn_analysis_batch_remove,
-                self._view.ui.lbl_analysis_batch_prot_struct_1,
-                self._view.ui.lbl_analysis_batch_prot_struct_2,
-                self._view.ui.lbl_analysis_batch_vs,
-                self._view.ui.lbl_analysis_batch_ref_chains,
-                self._view.ui.list_analysis_batch_ref_chains,
-                self._view.ui.btn_analysis_batch_back_2,
-                self._view.ui.btn_analysis_batch_next_2,
-                self._view.ui.box_analysis_batch_prot_struct_1,
-                self._view.ui.box_analysis_batch_prot_struct_2,
-                self._view.ui.btn_analysis_batch_back,
-                self._view.ui.btn_analysis_batch_next,
-                self._view.ui.lbl_analysis_batch_model_chains,
-                self._view.ui.list_analysis_batch_model_chains,
-                self._view.ui.btn_analysis_batch_back_3,
-                self._view.ui.btn_analysis_batch_next_3,
-                self._view.ui.lbl_analysis_batch_images,
-                self._view.ui.cb_analysis_batch_images,
-                self._view.ui.btn_analysis_batch_start,
-            ]
-
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            self._view.ui.btn_analysis_batch_remove.hide()
-        else:
-            if self._view.ui.list_analysis_batch_overview.count() > 0:
-                try:
-                    self._view.ui.list_analysis_batch_overview.currentItem().setSelected(False)
-                except AttributeError:
-                    constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
-        self._view.ui.btn_analysis_batch_remove.setEnabled(False)
-
-    def check_if_same_no_of_chains_selected_batch(self) -> None:
-        """Checks if the same number of proteins were selected."""
-        self._view.ui.btn_analysis_batch_next_3.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_analysis_batch_next_3)
-
-        if self.no_of_selected_chains == len(self._view.ui.list_analysis_batch_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_analysis_batch_next_3)
-            self._view.ui.btn_analysis_batch_next_3.setEnabled(True)
-
-        prot_1_name = self._view.ui.lbl_analysis_batch_prot_struct_1.text()
-        prot_1_chains = []
-        for chain in self._view.ui.list_analysis_batch_ref_chains.selectedItems():
-            prot_1_chains.append(chain.text())
-        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
-        prot_2_name = self._view.ui.lbl_analysis_batch_prot_struct_2.text()
-        prot_2_chains = []
-        for chain in self._view.ui.list_analysis_batch_model_chains.selectedItems():
-            prot_2_chains.append(chain.text())
-        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
-        for tmp_row in range(self._view.ui.list_analysis_batch_overview.count()):
-            if analysis_name == self._view.ui.list_analysis_batch_overview.item(tmp_row).text():
-                self._view.ui.btn_analysis_batch_next_3.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_analysis_batch_next_3)
-                return
-
-    def check_if_prot_structs_are_filled_batch(self) -> None:
-        """Checks if two proteins were selected."""
-        prot_1 = self._view.ui.box_analysis_batch_prot_struct_1.itemText(
-            self._view.ui.box_analysis_batch_prot_struct_1.currentIndex(),
-        )
-        prot_2 = self._view.ui.box_analysis_batch_prot_struct_2.itemText(
-            self._view.ui.box_analysis_batch_prot_struct_2.currentIndex(),
-        )
-        if prot_1 != "" and prot_2 != "":
-            self._view.ui.btn_analysis_batch_next.setEnabled(True)
-        else:
-            self._view.ui.btn_analysis_batch_next.setEnabled(False)
-
-    def count_batch_selected_chains_for_prot_struct_1(self) -> None:
-        """Counts the number of chains of protein 1."""
-        self.no_of_selected_chains = len(self._view.ui.list_analysis_batch_ref_chains.selectedItems())
-        if self.no_of_selected_chains > 0:
-            self._view.ui.btn_analysis_batch_next_2.setEnabled(True)
-        else:
-            self._view.ui.btn_analysis_batch_next_2.setEnabled(False)
-
-    def post_analysis_process(self, an_exit_code: int, an_exit_code_description: str) -> None:
+    def post_analysis_process(self, an_exit_code: tuple[int, str]) -> None:
         """Post process after the analysis thread finished."""
         constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
-        if an_exit_code == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
+        if an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
             self.block_box_analysis.destroy(True)
             basic_boxes.ok(
                 "Distance analysis",
@@ -6767,9 +1846,9 @@ class MainPresenter:
                 QtWidgets.QMessageBox.Critical,
             )
             constants.PYSSA_LOGGER.error(
-                f"Distance analysis ended with exit code {an_exit_code}: {an_exit_code_description}",
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
-        elif an_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+        elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             self.block_box_analysis.destroy(True)
             basic_boxes.ok(
                 "Distance analysis",
@@ -6777,9 +1856,9 @@ class MainPresenter:
                 QtWidgets.QMessageBox.Critical,
             )
             constants.PYSSA_LOGGER.error(
-                f"Distance analysis ended with exit code {an_exit_code}: {an_exit_code_description}",
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
-        elif an_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+        elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
             self._current_project.serialize_project(self._current_project.get_project_xml_path())
             constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
             self.block_box_analysis.destroy(True)
@@ -6797,27 +1876,21 @@ class MainPresenter:
     def start_process_batch(self) -> None:
         """Sets up the worker for the analysis task."""
         constants.PYSSA_LOGGER.info("Begin analysis process.")
-        constants.PYSSA_LOGGER.info("Thread started for analysis process.")
 
-        # <editor-fold desc="Worker setup">
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.DistanceAnalysisWorker(
-            self._view.ui.list_analysis_batch_overview,
-            self._view.ui.cb_analysis_images,
-            self._view.status_bar,
-            self._current_project,
-            self._application_settings,
-            self._init_batch_analysis_page,
+        tmp_raw_analysis_run_names: list = []
+        for row_no in range(self._view.ui.list_analysis_batch_overview.count()):
+            tmp_raw_analysis_run_names.append(self._view.ui.list_analysis_batch_overview.item(row_no).text())
+        self._active_task = tasks.Task(
+            target=main_presenter_async.run_distance_analysis,
+            args=(
+                tmp_raw_analysis_run_names,
+                self._current_project,
+                self._application_settings,
+                self._view.ui.cb_analysis_images.isChecked(),
+            ),
+            post_func=self.post_analysis_process,
         )
-        self.tmp_thread = task_workers.setup_worker_for_work(
-            self.tmp_thread,
-            self.tmp_worker,
-            self.post_display_use_page,
-        )
-        self.tmp_worker.finished.connect(self.post_analysis_process)
-        self.tmp_thread.start()
-
-        # </editor-fold>
+        self._active_task.start()
 
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
@@ -6828,60 +1901,6 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Analysis Images">
-    def display_image_analysis_page(self) -> None:
-        """Displays the analysis image work area."""
-        # get all protein pairs without images
-        self._view.ui.list_analysis_images_struct_analysis.clear()
-        self._view.ui.list_analysis_images_creation_struct_analysis.clear()
-        for tmp_protein_pair in self._current_project.protein_pairs:
-            if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
-                self._view.ui.list_analysis_images_struct_analysis.addItem(tmp_protein_pair.name)
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_image_analysis_page,
-        )
-        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 23, "Analysis Images")
-        self._view.ui.btn_add_analysis_images_struct_analysis.setEnabled(False)
-        self._view.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
-        self._view.ui.btn_start_automatic_image_creation.setEnabled(False)
-
-    def analysis_images_enable_add(self) -> None:
-        """Enables the add button."""
-        self._view.ui.btn_add_analysis_images_struct_analysis.setEnabled(True)
-
-    def analysis_images_enable_remove(self) -> None:
-        """Enables the remove button."""
-        self._view.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(True)
-
-    def add_protein_pair_to_image_creation_queue(self) -> None:
-        """Adds a protein pair from the list of protein pairs to make images of."""
-        protein_pair_to_add = self._view.ui.list_analysis_images_struct_analysis.currentItem().text()
-        self._view.ui.list_analysis_images_creation_struct_analysis.addItem(protein_pair_to_add)
-        self._view.ui.list_analysis_images_struct_analysis.takeItem(
-            self._view.ui.list_analysis_images_struct_analysis.currentRow(),
-        )
-        self._view.ui.btn_add_analysis_images_struct_analysis.setEnabled(False)
-        self.analysis_images_check_if_creation_can_start()
-
-    def remove_protein_pair_from_image_creation_queue(self) -> None:
-        """Removes a protein pair from the list of protein pairs to make images of."""
-        protein_pair_to_remove = self._view.ui.list_analysis_images_creation_struct_analysis.currentItem()
-        self._view.ui.list_analysis_images_creation_struct_analysis.takeItem(
-            self._view.ui.list_analysis_images_creation_struct_analysis.currentRow(),
-        )
-        self._view.ui.list_analysis_images_struct_analysis.addItem(protein_pair_to_remove)
-        self._view.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
-        self.analysis_images_check_if_creation_can_start()
-
-    def analysis_images_check_if_creation_can_start(self) -> None:
-        """Checks if the list of protein pairs which get images are empty."""
-        if self._view.ui.list_analysis_images_creation_struct_analysis.count() > 0:
-            self._view.ui.btn_start_automatic_image_creation.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_start_automatic_image_creation)
-        else:
-            self._view.ui.btn_start_automatic_image_creation.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_start_automatic_image_creation)
-
     def post_image_creation_process(self) -> None:
         """Post method after the image creation task is finished."""
         self._current_project.serialize_project(self._current_project.get_project_xml_path())
@@ -7934,5 +2953,4449 @@ class MainPresenter:
         """Zooms to the pymol selection."""
         session_util.check_if_sele_is_empty()
         cmd.zoom(selection="sele", buffer=8.0, state=0, complete=0)
+
+    # </editor-fold>
+
+    # </editor-fold>
+
+    # <editor-fold desc="GUI related methods">
+
+    # <editor-fold desc="GUI page management functions">
+    def _create_batch_analysis_management(self) -> None:
+        """Creates a list of gui stages."""
+        # gui element management
+        tmp_stages = [
+            # add a prot analysis: stage 0
+            stage.Stage(
+                {
+                    "label_batch_analysis_overview": self._view.ui.lbl_analysis_batch_overview,
+                    "box_protein_structure_1": self._view.ui.list_analysis_batch_overview,
+                },
+                {
+                    "add_button": self._view.ui.btn_analysis_batch_add,
+                    "remove_button": self._view.ui.btn_analysis_batch_remove,
+                },
+            ),
+            # choose protein structures: stage 1
+            stage.Stage(
+                {
+                    "label_protein_structure_1": self._view.ui.lbl_analysis_batch_prot_struct_1,
+                    "box_protein_structure_1": self._view.ui.box_analysis_batch_prot_struct_1,
+                    "label_vs": self._view.ui.lbl_analysis_batch_vs,
+                    "label_protein_structure_2": self._view.ui.lbl_analysis_batch_prot_struct_2,
+                    "box_protein_structure_2": self._view.ui.box_analysis_batch_prot_struct_2,
+                },
+                {
+                    "next_button": self._view.ui.btn_analysis_batch_next,
+                    "back_button": self._view.ui.btn_analysis_batch_back,
+                },
+            ),
+            # choose chains from prot structure 1: stage 2
+            stage.Stage(
+                {
+                    "label_protein_structure_1_chains": self._view.ui.lbl_analysis_batch_ref_chains,
+                    "list_protein_structure_1_chains": self._view.ui.list_analysis_batch_ref_chains,
+                },
+                {
+                    "back_button": self._view.ui.btn_analysis_batch_back_2,
+                    "next_button": self._view.ui.btn_analysis_batch_next_2,
+                },
+            ),
+            # choose chains from prot structure 2: stage 3
+            stage.Stage(
+                {
+                    "label_protein_structure_2_chains": self._view.ui.lbl_analysis_batch_model_chains,
+                    "list_protein_structure_2_chains": self._view.ui.list_analysis_batch_model_chains,
+                },
+                {
+                    "back_button": self._view.ui.btn_analysis_batch_back_3,
+                    "next_button": self._view.ui.btn_analysis_batch_next_3,
+                },
+            ),
+            # start batch run: stage 4
+            stage.Stage(
+                {
+                    "label_images": self._view.ui.lbl_analysis_batch_images,
+                    "checkbox_images": self._view.ui.cb_analysis_batch_images,
+                },
+                {
+                    "start_button": self._view.ui.btn_analysis_batch_start,
+                },
+            ),
+        ]
+        self.batch_analysis_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    def _create_results_management(self) -> None:
+        """Creates a list of gui stages."""
+        # gui element management
+        tmp_stages = [
+            # choose protein structures: stage 0
+            stage.Stage(
+                {
+                    "label_analysis_options": self._view.ui.lbl_results_analysis_options,
+                    "box_results_analysis_options": self._view.ui.cb_results_analysis_options,
+                },
+                {
+                    "": None,
+                },
+            ),
+            # choose chains from prot structure 1: stage 1
+            stage.Stage(
+                {
+                    "label_results_rmsd": self._view.ui.lbl_results_rmsd,
+                    "text_results_rmsd": self._view.ui.txt_results_rmsd,
+                    "label_color_rmsd": self._view.ui.lbl_color_rmsd,
+                    "button_color_rmsd": self._view.ui.btn_color_rmsd,
+                    "label_results_aligned_residues": self._view.ui.lbl_results_aligned_residues,
+                    "text_results_aligned_residues": self._view.ui.txt_results_aligned_residues,
+                    "label_results_distance_plot": self._view.ui.lbl_results_distance_plot,
+                    "button_view_distance_plot": self._view.ui.btn_view_distance_plot,
+                    "label_results_distance_histogram": self._view.ui.lbl_results_distance_histogram,
+                    "button_view_distance_histogram": self._view.ui.btn_view_distance_histogram,
+                    "label_results_distance_table": self._view.ui.lbl_results_distance_table,
+                    "button_view_distance_table": self._view.ui.btn_view_distance_table,
+                    "label_results_structure_alignment": self._view.ui.lbl_results_structure_alignment,
+                    "button_view_struct_alignment": self._view.ui.btn_view_struct_alignment,
+                    "label_results_interest_regions": self._view.ui.lbl_results_interest_regions,
+                    "list_results_interest_regions": self._view.ui.list_results_interest_regions,
+                    "button_results_interest_regions": self._view.ui.btn_view_interesting_region,
+                },
+                {
+                    "": None,
+                },
+            ),
+        ]
+        self.results_management = gui_page_management.GuiPageManagement(tmp_stages)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Page init functions">
+    def _init_fill_combo_boxes(self) -> None:
+        """Fills all combo boxes of the plugin."""
+        item_list_representation = [
+            "",
+            "cartoon",
+            "ribbon",
+        ]
+        gui_utils.fill_combo_box(self._view.ui.box_representation, item_list_representation)
+        gui_utils.fill_combo_box(self._view.ui.box_manage_choose_representation, item_list_representation)
+        # combo box BgColor
+        item_list_bg_color = [
+            "",
+            "black",
+            "white",
+        ]
+        gui_utils.fill_combo_box(self._view.ui.box_bg_color, item_list_bg_color)
+        gui_utils.fill_combo_box(self._view.ui.box_manage_choose_bg_color, item_list_bg_color)
+        # combo box Renderer
+        item_list_renderer = [
+            "",
+            "default renderer",
+            "PyMOL internal renderer",
+        ]
+        gui_utils.fill_combo_box(self._view.ui.box_renderer, item_list_renderer)
+        # combo box RayTraceMode
+        item_list_ray_trace_mode = [
+            "",
+            "normal color",
+            "normal color + black outline",
+            "black outline only",
+            "quantized color + black outline",
+        ]
+        gui_utils.fill_combo_box(self._view.ui.box_ray_trace_mode, item_list_ray_trace_mode)
+        # combo box Ray Texture
+        item_list_ray_texture = [
+            "",
+            "None",
+            "Matte 1",
+            "Matte 2",
+            "Swirl 1",
+            "Fiber",
+        ]
+        gui_utils.fill_combo_box(self._view.ui.box_ray_texture, item_list_ray_texture)
+        # combo box protein Colors
+        gui_utils.fill_combo_box(self._view.ui.box_manage_choose_color, constants.PYMOL_COLORS)
+
+    def _init_new_page(self) -> None:
+        """Clears all text fields and hides everything which is needed."""
+        self._view.ui.txt_new_project_name.clear()
+        self._view.ui.txt_new_choose_reference.clear()
+        self._view.ui.lbl_new_status_project_name.setText("")
+        self._view.ui.lbl_new_status_choose_reference.setText("")
+        self._view.ui.cb_new_add_reference.setCheckState(0)
+        self._view.ui.btn_new_create_project.setEnabled(False)
+        styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+
+    def _init_use_page(self) -> None:
+        """Clears all text fields and hides everything which is needed."""
+        gui_elements = [
+            self._view.ui.lbl_use_search,
+            self._view.ui.lbl_use_status_search,
+            self._view.ui.txt_use_search,
+            self._view.ui.btn_use_add_available_protein_structures,
+            self._view.ui.lbl_use_available_protein_structures,
+            self._view.ui.list_use_available_protein_structures,
+            self._view.ui.btn_use_remove_selected_protein_structures,
+            self._view.ui.lbl_use_selected_protein_structures,
+            self._view.ui.list_use_selected_protein_structures,
+            self._view.ui.btn_use_back,
+            self._view.ui.btn_use_create_new_project,
+            self._view.ui.lbl_use_new_project,
+        ]
+        gui_utils.hide_gui_elements(gui_elements)
+        self._view.ui.txt_use_project_name.clear()
+        self._view.ui.lbl_use_status_project_name.setText("")
+        self._view.ui.txt_use_search.clear()
+        self._view.ui.lbl_use_status_search.setText("")
+        self._view.ui.list_use_available_protein_structures.clear()
+        self._view.ui.list_use_selected_protein_structures.clear()
+        self._view.ui.list_use_existing_projects.clear()
+        self._view.ui.btn_use_next.setEnabled(False)
+        self.hide_protein_selection_for_use()
+
+    def _init_edit_page(self) -> None:
+        """Clears all text fields and hides everything which is needed."""
+        self._view.ui.list_edit_project_proteins.clear()
+        gui_elements_to_hide = [
+            self._view.ui.lbl_edit_clean_new_prot,
+            self._view.ui.btn_edit_clean_new_prot,
+            self._view.ui.lbl_edit_clean_update_prot,
+            self._view.ui.btn_edit_clean_update_prot,
+            self._view.ui.label_12,
+            self._view.ui.btn_edit_project_delete,
+            self._view.ui.label_15,
+            self._view.ui.btn_edit_protein_rename,
+            self._view.ui.btn_edit_project_save,
+            self._view.ui.label_13,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.fill_list_view_with_protein_names(self._current_project, self._view.ui.list_edit_project_proteins)
+        # self.project_scanner.scan_project_for_valid_proteins(self._view.ui.list_edit_project_proteins)
+
+    def _init_sequence_vs_pdb_page(self) -> None:
+        """Clears all text fields and hides everything which is needed."""
+        self._view.ui.list_s_v_p_ref_chains.clear()
+        # # sets up defaults: Prediction + Analysis
+        #
+        # #self._view.ui.label_18.hide()
+        # #self._view.ui.txt_prediction_project_name.hide()
+        # #self._view.ui.lbl_prediction_status_project_name.hide()
+        # # stage 1
+        # self._view.ui.lbl_prediction_status_project_name.setText("")
+        #
+        # #self._view.ui.list_widget_projects.hide()
+        # #self._view.ui.btn_prediction_next_1.hide()
+        # # stage 2
+        # self._view.ui.lbl_prediction_load_reference.hide()
+        # self._view.ui.txt_prediction_load_reference.clear()
+        # self._view.ui.txt_prediction_load_reference.hide()
+        # self._view.ui.lbl_prediction_status_load_reference.setText("")
+        # self._view.ui.btn_prediction_back_2.setEnabled(False)
+        # self._view.ui.btn_prediction_back_2.hide()
+        # self._view.ui.btn_prediction_next_2.setEnabled(False)
+        # self._view.ui.btn_prediction_next_2.hide()
+        #
+        # # stage 3
+        # self._view.ui.lbl_prediction_ref_chains.hide()
+        # self._view.ui.list_widget_ref_chains.hide()
+        # # TO-DO: stylesheet needs to be integrated into the styles.css
+        # self._view.ui.list_widget_ref_chains.setStyleSheet("border-style: solid;"
+        #                                              "border-width: 2px;"
+        #                                              "border-radius: 8px;"
+        #                                              "border-color: #DCDBE3;")
+        # self._view.ui.list_widget_ref_chains.setSelectionMode(PyQt5.QtWidgets.QAbstractItemView.ExtendedSelection)
+        # self._view.ui.btn_prediction_back_3.setEnabled(False)
+        # self._view.ui.btn_prediction_back_3.hide()
+        # self._view.ui.btn_prediction_start.setEnabled(False)
+        # self._view.ui.btn_prediction_start.hide()
+        # # TO-DO: needs to be removed if model chains are implemented at the right spot
+        # self._view.ui.lbl_prediction_model_chains.hide()
+        # self._view.ui.txt_prediction_chain_model.hide()
+
+    def _init_results_page(self) -> None:
+        """Clears all text fields and hides everything which is needed."""
+        # stage 1
+        self._view.ui.list_results_interest_regions.clear()
+        self._view.ui.txt_results_rmsd.clear()
+        self._view.ui.txt_results_aligned_residues.clear()
+
+    def _init_analysis_image_page(self) -> None:
+        """Clears all text fields and hides everything which is needed."""
+        self._view.ui.list_analysis_images_struct_analysis.setEnabled(True)
+        self._view.ui.list_analysis_images_creation_struct_analysis.setEnabled(True)
+        self.display_image_analysis_page()
+
+    def _init_image_page(self) -> None:
+        """Hides everything which is needed."""
+        self._view.ui.label_10.hide()
+        self._view.ui.box_ray_trace_mode.hide()
+        self._view.ui.label_14.hide()
+        self._view.ui.box_ray_texture.hide()
+
+    def _init_batch_analysis_page(self) -> None:
+        """Clears all text fields and hides everything which is needed."""
+        # sets up defaults: Batch
+        self.batch_analysis_management.show_stage_x(0)
+        self._view.ui.list_analysis_batch_overview.clear()
+        self._view.ui.btn_analysis_batch_remove.hide()
+
+    def _init_all_pages(self) -> None:
+        """Collection of all init methods to reset all page defaults."""
+        self._init_local_pred_mono_page()
+        self._init_local_pred_multi_page()
+        self._init_mono_pred_analysis_page()
+        self._init_multi_pred_analysis_page()
+        self._init_sequence_vs_pdb_page()
+        self._init_batch_analysis_page()
+        self._init_analysis_image_page()
+        self._init_results_page()
+        self._init_image_page()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Display page functions">
+    def display_home_page(self) -> None:
+        """Displays the homepage of the plugin."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 0, "Home")
+
+    def display_job_analysis_page(self) -> None:
+        """Displays the job analysis work area."""
+        self._view.ui.list_analysis_batch_ref_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self._view.ui.list_analysis_batch_model_chains.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        # regular work area opening
+        self._init_batch_analysis_page()
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 4, "Structure Analysis")
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_batch_analysis_page,
+        )
+
+    def display_results_page(self) -> None:
+        """Displays the results work area."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+        results = []
+        results.insert(0, "")
+
+        for tmp_protein_pair in self._current_project.protein_pairs:
+            results.append(tmp_protein_pair.name)
+            if tmp_protein_pair.name == self.results_name:
+                pass
+        self._view.ui.cb_results_analysis_options.clear()
+        gui_utils.fill_combo_box(self._view.ui.cb_results_analysis_options, results)
+
+        desired_string: str = self.main_window_state.results_page.results_name
+        # Find the index of the string in the combo box
+        index = self._view.ui.cb_results_analysis_options.findText(desired_string)
+        # Set the current index of the combo box
+        if index != -1:
+            self._view.ui.cb_results_analysis_options.setCurrentIndex(index)
+        else:
+            print(f"String '{desired_string}' not found in the combo box.")
+
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 5, "Results")
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_results_page,
+        )
+
+    def display_image_page(self) -> None:
+        """Displays the image work area."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+        self._init_image_page()
+
+        if self.main_window_state.image_page.transparent_background:
+            self._view.ui.cb_transparent_bg.setChecked(True)
+        else:
+            self._view.ui.cb_transparent_bg.setChecked(False)
+        if self.main_window_state.image_page.ray_tracing:
+            self._view.ui.cb_ray_tracing.setChecked(True)
+        else:
+            self._view.ui.cb_ray_tracing.setChecked(False)
+        try:
+            self._view.ui.box_representation.setCurrentIndex(
+                self._view.ui.box_representation.findText(self.main_window_state.image_page.representation),
+            )
+            self._view.ui.box_bg_color.setCurrentIndex(
+                self._view.ui.box_bg_color.findText(self.main_window_state.image_page.background_color),
+            )
+            self._view.ui.box_renderer.setCurrentIndex(self.main_window_state.image_page.renderer)
+            self._view.ui.box_ray_trace_mode.setCurrentIndex(self.main_window_state.image_page.ray_trace_mode)
+            self._view.ui.box_ray_texture.setCurrentIndex(self.main_window_state.image_page.ray_texture)
+        except IndexError:
+            constants.PYSSA_LOGGER.error("An option is invalid.")
+
+        if self._view.ui.box_renderer.currentText() == "":
+            self._view.ui.cb_ray_tracing.hide()
+            self._view.ui.label_26.hide()
+        else:
+            self._view.ui.cb_ray_tracing.show()
+            self._view.ui.label_26.show()
+
+        if self._view.ui.cb_ray_tracing.isChecked():
+            self._view.ui.label_10.show()
+            self._view.ui.box_ray_trace_mode.show()
+            self._view.ui.label_14.show()
+            self._view.ui.box_ray_texture.show()
+        else:
+            self._view.ui.label_10.hide()
+            self._view.ui.box_ray_trace_mode.hide()
+            self._view.ui.label_14.hide()
+            self._view.ui.box_ray_texture.hide()
+
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_image_page)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 6, "Image")
+
+    def display_new_page(self) -> None:
+        """Displays the new project work area."""
+        self._init_new_page()
+        self._view.ui.list_new_projects.clear()
+        # pre-process
+        gui_elements_to_hide = [
+            self._view.ui.lbl_new_choose_reference,
+            self._view.ui.txt_new_choose_reference,
+            self._view.ui.btn_new_choose_reference,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.status_bar.showMessage(self._workspace_label.text())
+        tools.scan_workspace_for_valid_projects(self._workspace_path, self._view.ui.list_new_projects)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 7, "Create new project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_new_page)
+
+    def display_open_page(self) -> None:
+        """Displays the open project work area."""
+        self._view.ui.txt_open_search.clear()
+        self._view.ui.txt_open_selected_project.clear()
+        if safeguard.Safeguard.check_filepath(self._workspace_path):
+            self._view.ui.list_open_projects.clear()
+            # pre-process
+            self._view.status_bar.showMessage(self._workspace_label.text())
+            try:
+                tools.scan_workspace_for_valid_projects(self._workspace_path, self._view.ui.list_open_projects)
+            except PermissionError:
+                gui_utils.error_dialog_settings(
+                    "The settings file is corrupted. Please restore the settings!",
+                    "",
+                    self._application_settings,
+                )
+                self.display_home_page()
+                return
+            tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 8, "Open existing project")
+            self.last_sidebar_button = styles.color_sidebar_buttons(
+                self.last_sidebar_button,
+                self._view.ui.btn_open_page,
+            )
+        else:
+            gui_utils.error_dialog_settings(
+                "The settings file is corrupted. Please restore the settings!",
+                "",
+                self._application_settings,
+            )
+            self.display_home_page()
+
+    def display_delete_page(self) -> None:
+        """Displays the "delete" project work area."""
+        self._view.ui.txt_delete_search.clear()
+        self._view.ui.txt_delete_selected_projects.clear()
+        self._view.ui.list_delete_projects.clear()
+        # pre-process
+        self._view.status_bar.showMessage(self._workspace_label.text())
+        tools.scan_workspace_for_valid_projects(self._workspace_path, self._view.ui.list_delete_projects)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 9, "Delete existing project")
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_delete_page)
+
+    def display_edit_page(self) -> None:
+        """Displays the edit project page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+        # pre-process
+        self._view.status_bar.showMessage(self._workspace_label.text())
+        self._init_edit_page()
+        tools.switch_page(
+            self._view.ui.stackedWidget,
+            self._view.ui.lbl_page_title,
+            13,
+            "Edit proteins of current project",
+        )
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_edit_page)
+        if len(self._view.ui.list_edit_project_proteins) >= 2:
+            self._view.ui.btn_edit_existing_protein_struct.hide()
+            self._view.ui.lbl_edit_existing_protein_struct.hide()
+        else:
+            self._view.ui.btn_edit_existing_protein_struct.show()
+            self._view.ui.lbl_edit_existing_protein_struct.show()
+
+    def display_hotspots_page(self) -> None:
+        """Displays the hotspots page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+        try:
+            print(self._view.ui.list_hotspots_choose_protein.currentItem().text())
+        except AttributeError:
+            self._view.ui.list_hotspots_choose_protein.clear()
+            gui_elements_to_hide = [
+                self._view.ui.lbl_hotspots_resi_no,
+                self._view.ui.sp_hotspots_resi_no,
+                self._view.ui.lbl_hotspots_resi_show,
+                self._view.ui.btn_hotspots_resi_show,
+                self._view.ui.lbl_hotspots_resi_hide,
+                self._view.ui.btn_hotspots_resi_hide,
+                self._view.ui.lbl_hotspots_resi_zoom,
+                self._view.ui.btn_hotspots_resi_zoom,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            gui_utils.fill_list_view_with_protein_names(
+                self._current_project,
+                self._view.ui.list_hotspots_choose_protein,
+            )
+            gui_utils.fill_list_view_with_protein_pair_names(
+                self._current_project,
+                self._view.ui.list_hotspots_choose_protein,
+            )
+        # self.project_scanner.scan_project_for_valid_proteins(self._view.ui.list_hotspots_choose_protein)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 18, "Hotspots")
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_hotspots_page,
+        )
+
+    def display_manage_pymol_session(self) -> None:
+        """Displays the manage pymol session page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+        self._view.ui.box_manage_choose_protein.clear()
+        pymol_objs = cmd.get_object_list()
+        pymol_objs.insert(0, "")
+        for tmp_object in pymol_objs:
+            self._view.ui.box_manage_choose_protein.addItem(tmp_object)
+        self._view.ui.box_manage_choose_protein.setCurrentIndex(
+            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_PROTEIN][0],
+        )
+        self._view.ui.box_manage_choose_color.setCurrentIndex(
+            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_COLOR][0],
+        )
+        self._view.ui.box_manage_choose_representation.setCurrentIndex(
+            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_REPRESENTATION][0],
+        )
+        self._view.ui.box_manage_choose_bg_color.setCurrentIndex(
+            self.pymol_session_specs[pyssa_keys.SESSION_SPEC_BG_COLOR][0],
+        )
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 24, "Manage PyMOL session")
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_manage_session,
+        )
+        gui_elements_to_hide = [
+            self._view.ui.lbl_manage_choose_color,
+            self._view.ui.box_manage_choose_color,
+            self._view.ui.lbl_manage_choose_representation,
+            self._view.ui.box_manage_choose_representation,
+            self._view.ui.lbl_manage_choose_bg_color,
+            self._view.ui.box_manage_choose_bg_color,
+            self._view.ui.lbl_disulfid_bond_1,
+            self._view.ui.lbl_disulfid_bond_2,
+            self._view.ui.btn_disulfid_bond_show,
+            self._view.ui.btn_disulfid_bond_hide,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    # </editor-fold>
+
+    # <editor-fold desc="New project">
+    def show_add_reference(self) -> None:
+        """Shows the reference input section."""
+        # checkbox is checked
+        self._view.ui.cb_new_add_reference.checkState()
+        if self._view.ui.cb_new_add_reference.checkState() == 2:
+            self._view.ui.txt_new_choose_reference.clear()
+            self._view.ui.txt_new_choose_reference.setStyleSheet("background-color: white")
+            self._view.ui.lbl_new_choose_reference.show()
+            self._view.ui.txt_new_choose_reference.show()
+            self._view.ui.btn_new_choose_reference.show()
+            self._view.ui.btn_new_create_project.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+            # check internet connectivity
+            if not tools.check_internet_connectivity():
+                gui_utils.no_internet_dialog()
+                self._view.ui.txt_new_choose_reference.setEnabled(False)
+                self._view.ui.lbl_new_status_choose_reference.setText("You cannot enter a PDB ID (no internet).")
+                return
+            self._view.ui.txt_new_choose_reference.setEnabled(True)
+            self._view.ui.lbl_new_status_choose_reference.setText("")
+        else:
+            self._view.ui.lbl_new_choose_reference.hide()
+            self._view.ui.txt_new_choose_reference.hide()
+            self._view.ui.btn_new_choose_reference.hide()
+            self._view.ui.lbl_new_status_choose_reference.setText("")
+            self._view.ui.btn_new_create_project.setEnabled(True)
+            styles.color_button_ready(self._view.ui.btn_new_create_project)
+
+    def load_reference_in_project(self) -> None:
+        """Loads a reference in a new project."""
+        try:
+            # open file dialog
+            file_name = QtWidgets.QFileDialog.getOpenFileName(
+                self,
+                "Open Reference",
+                QtCore.QDir.homePath(),
+                "PDB Files (*.pdb)",
+            )
+            if file_name == ("", ""):
+                raise ValueError
+            # display path in text box
+            self._view.ui.txt_new_choose_reference.setText(str(file_name[0]))
+            self._view.ui.txt_new_choose_reference.setEnabled(False)
+            self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
+            self._view.ui.btn_new_create_project.setEnabled(True)
+            styles.color_button_ready(self._view.ui.btn_new_create_project)
+        except ValueError:
+            print("No file has been selected.")
+
+    def validate_reference_in_project(self) -> None:
+        """Checks if the entered reference protein is valid or not."""
+        if len(self._view.ui.txt_new_choose_reference.text()) == 0:
+            self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+            self._view.ui.lbl_new_status_choose_reference.setText("")
+            self._view.ui.btn_new_create_project.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+        elif len(self._view.ui.txt_new_choose_reference.text()) < 4:
+            self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+            self._view.ui.btn_new_create_project.setEnabled(False)
+            self._view.ui.lbl_new_status_choose_reference.setText("")
+        # checks if a pdb id was entered
+        elif len(self._view.ui.txt_new_choose_reference.text()) == 4:
+            pdb_id = self._view.ui.txt_new_choose_reference.text().upper()
+            try:
+                # the pdb file gets saved in a scratch directory where it gets deleted immediately
+                cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
+                os.remove(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
+                cmd.reinitialize()
+                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
+                self._view.ui.btn_new_create_project.setEnabled(True)
+                styles.color_button_ready(self._view.ui.btn_new_create_project)
+            # if the id does not exist an exception gets raised
+            except pymol.CmdException:
+                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+                return
+            except FileNotFoundError:
+                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+                self._view.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
+                self._view.ui.btn_new_create_project.setEnabled(False)
+                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+                return
+        else:
+            if self._view.ui.txt_new_choose_reference.text().find("/") == -1:
+                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+                self._view.ui.btn_new_create_project.setEnabled(False)
+                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+
+            elif self._view.ui.txt_new_choose_reference.text().find("\\") == -1:
+                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+                self._view.ui.btn_new_create_project.setEnabled(False)
+                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
+
+    def validate_project_name(self) -> None:
+        """Validates the input of the project name in real-time."""
+        input_validator.InputValidator.validate_project_name(
+            self._view.ui.list_new_projects,
+            self._view.ui.txt_new_project_name,
+            self._view.ui.lbl_new_status_project_name,
+            self._view.ui.btn_new_create_project,
+            self._view.ui.cb_new_add_reference,
+        )
+
+    # </editor-fold>
+
+    # <editor-fold desc="Open project">
+    def validate_open_search(self) -> None:
+        """Validates the input of the project name in real-time."""
+        if self._view.ui.list_open_projects.currentItem() is not None:
+            self._view.ui.list_open_projects.currentItem().setSelected(False)
+        # set color for lineEdit
+        input_validator.InputValidator.validate_search_input(
+            self._view.ui.list_open_projects,
+            self._view.ui.txt_open_search,
+            self._view.ui.lbl_open_status_search,
+            self._view.ui.txt_open_selected_project,
+        )
+
+    def select_project_from_open_list(self) -> None:
+        """Sets the selected project name in the text box."""
+        try:
+            self._view.ui.txt_open_selected_project.setText(self._view.ui.list_open_projects.currentItem().text())
+        except AttributeError:
+            self._view.ui.txt_open_selected_project.setText("")
+
+    def activate_open_button(self) -> None:
+        """Activates the open button."""
+        if self._view.ui.txt_open_selected_project.text() == "":
+            self._view.ui.btn_open_open_project.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_open_open_project)
+        else:
+            self._view.ui.btn_open_open_project.setEnabled(True)
+            styles.color_button_ready(self._view.ui.btn_open_open_project)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Delete project">
+    def select_project_from_delete_list(self) -> None:
+        """Selects a project from the project list on the delete page."""
+        try:
+            self._view.ui.txt_delete_selected_projects.setText(self._view.ui.list_delete_projects.currentItem().text())
+        except AttributeError:
+            self._view.ui.txt_delete_selected_projects.setText("")
+
+    def activate_delete_button(self) -> None:
+        """Activates the delete button."""
+        if self._view.ui.txt_delete_selected_projects.text() == "":
+            self._view.ui.btn_delete_delete_project.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_delete_delete_project)
+        else:
+            self._view.ui.btn_delete_delete_project.setEnabled(True)
+            styles.color_button_ready(self._view.ui.btn_delete_delete_project)
+
+    def validate_delete_search(self) -> None:
+        """Validates the input of the project name in real-time."""
+        if self._view.ui.list_delete_projects.currentItem() is not None:
+            self._view.ui.list_delete_projects.currentItem().setSelected(False)
+        # set color for lineEdit
+        input_validator.InputValidator.validate_search_input(
+            self._view.ui.list_delete_projects,
+            self._view.ui.txt_delete_search,
+            self._view.ui.lbl_delete_status_search,
+            self._view.ui.txt_delete_selected_projects,
+        )
+
+    # </editor-fold>
+
+    # <editor-fold desc="Edit page">
+    def check_for_cleaning(self) -> None:
+        """Checks if the selected protein can be cleaned."""
+        try:
+            protein_name = self._view.ui.list_edit_project_proteins.currentItem().text()
+        except AttributeError:
+            return
+        tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
+        cmd.reinitialize()
+        self._view.ui.btn_manage_session.show()
+        tmp_protein = self._current_project.search_protein(protein_name.replace(".pdb", ""))
+        tmp_protein.load_protein_in_pymol()
+        # check if selected protein contains any organic or solvent molecules which can be removed
+        if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
+            gui_elements_to_show = [
+                self._view.ui.lbl_edit_clean_new_prot,
+                self._view.ui.btn_edit_clean_new_prot,
+                self._view.ui.lbl_edit_clean_update_prot,
+                self._view.ui.btn_edit_clean_update_prot,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+        else:
+            gui_elements_to_hide = [
+                self._view.ui.lbl_edit_clean_new_prot,
+                self._view.ui.btn_edit_clean_new_prot,
+                self._view.ui.lbl_edit_clean_update_prot,
+                self._view.ui.btn_edit_clean_update_prot,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        # check if selected protein is in any existing protein pair
+        if self._current_project.check_if_protein_is_in_any_protein_pair(protein_name) is True:
+            gui_elements_to_hide = [
+                self._view.ui.label_12,
+                self._view.ui.btn_edit_project_delete,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            gui_elements_to_show = [
+                self._view.ui.label_12,
+                self._view.ui.btn_edit_project_delete,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+        self._view.ui.btn_edit_project_save.show()
+        self._view.ui.label_13.show()
+        self._view.ui.label_15.show()
+        self._view.ui.btn_edit_protein_rename.show()
+
+    # </editor-fold>
+
+    # <editor-fold desc="View page">
+    def display_view_page(self) -> None:
+        """Displays the edit project page."""
+        if self.is_distance_plot_open:
+            self.distance_plot_dialog.close()
+            self.is_distance_plot_open = False
+        self._view.ui.list_view_project_proteins.clear()
+        self._view.ui.txtedit_view_sequence.clear()
+        # pre-process
+        self._view.status_bar.showMessage(self._workspace_label.text())
+        # list all proteins from pdb directory
+        gui_utils.fill_list_view_with_protein_names(self._current_project, self._view.ui.list_view_project_proteins)
+
+        tools.switch_page(
+            self._view.ui.stackedWidget,
+            self._view.ui.lbl_page_title,
+            11,
+            "View proteins of current project",
+        )
+        self.last_sidebar_button = styles.color_sidebar_buttons(self.last_sidebar_button, self._view.ui.btn_view_page)
+        gui_elements_to_hide = [
+            self._view.ui.btn_view_project_show,
+            self._view.ui.btn_view_project_show_structure,
+            self._view.ui.txtedit_view_sequence,
+            self._view.ui.label_9,
+            self._view.ui.label_11,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def view_show_options(self) -> None:
+        """Controls which gui elements get shown."""
+        gui_elements_to_show = [
+            # self._view.ui.btn_view_project_show,
+            self._view.ui.btn_view_project_show_structure,
+            self._view.ui.txtedit_view_sequence,
+            # self._view.ui.label_9,
+            self._view.ui.label_11,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        self.view_sequence()
+
+    def view_sequence(self) -> None:
+        """Displays the sequence of the selected protein in a text box."""
+        tmp_protein_basename = self._view.ui.list_view_project_proteins.currentItem().text()
+        tmp_protein_sequences = self._current_project.search_protein(tmp_protein_basename).get_protein_sequences()
+        self._view.ui.txtedit_view_sequence.clear()
+        for tmp_sequence in tmp_protein_sequences:
+            self._view.ui.txtedit_view_sequence.append("".join(tmp_sequence.sequence))
+        # fixme: experimental sequence viewer gui
+        # dialog = dialog_sequence_viewer.SequenceViewer(tmp_protein_sequences, tmp_protein_filename)
+        # dialog.exec_()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Use page">
+    def validate_use_project_name(self) -> None:
+        """Validates the input of the project name in real-time."""
+        input_validator.InputValidator.validate_project_name(
+            self._view.ui.list_use_existing_projects,
+            self._view.ui.txt_use_project_name,
+            self._view.ui.lbl_use_status_project_name,
+            self._view.ui.btn_use_next,
+        )
+
+    def validate_use_search(self) -> None:
+        """Validates the input of the protein name in real-time."""
+        message = "Protein structure does not exists."
+        input_validator.InputValidator.validate_search_input(
+            self._view.ui.list_use_available_protein_structures,
+            self._view.ui.txt_use_search,
+            self._view.ui.lbl_use_status_search,
+            status_message=message,
+        )
+
+    def add_protein_structure_to_new_project(self) -> None:
+        """Adds the selected protein to the list which is used to create the new project."""
+        prot_to_add = self._view.ui.list_use_available_protein_structures.currentItem().text()
+        self._view.ui.list_use_selected_protein_structures.addItem(prot_to_add)
+        self._view.ui.list_use_available_protein_structures.takeItem(
+            self._view.ui.list_use_available_protein_structures.currentRow(),
+        )
+        self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
+        if self._view.ui.list_use_available_protein_structures.count() > 0:
+            try:
+                self._view.ui.list_use_available_protein_structures.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in use available proteins list on Use page.")
+
+    def remove_protein_structure_to_new_project(self) -> None:
+        """Removes the selected protein from the list which is used to create the new project."""
+        prot_to_remove = self._view.ui.list_use_selected_protein_structures.currentItem()
+        self._view.ui.list_use_selected_protein_structures.takeItem(
+            self._view.ui.list_use_selected_protein_structures.currentRow(),
+        )
+        self._view.ui.list_use_available_protein_structures.addItem(prot_to_remove)
+        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
+        if self._view.ui.list_use_selected_protein_structures.count() > 0:
+            try:
+                self._view.ui.list_use_selected_protein_structures.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in use selected proteins list on Use page.")
+
+    def show_protein_selection_for_use(self) -> None:
+        """Shows the two lists for the protein selection."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_use_search,
+            self._view.ui.lbl_use_status_search,
+            self._view.ui.txt_use_search,
+            self._view.ui.btn_use_add_available_protein_structures,
+            self._view.ui.lbl_use_available_protein_structures,
+            self._view.ui.list_use_available_protein_structures,
+            self._view.ui.btn_use_remove_selected_protein_structures,
+            self._view.ui.lbl_use_selected_protein_structures,
+            self._view.ui.list_use_selected_protein_structures,
+            self._view.ui.btn_use_back,
+            self._view.ui.btn_use_create_new_project,
+            self._view.ui.lbl_use_new_project,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        self._view.ui.txt_use_project_name.setEnabled(False)
+        gui_elements_to_hide = [
+            self._view.ui.btn_use_next,
+            self._view.ui.list_use_existing_projects,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.disable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
+        self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
+        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(False)
+
+    def hide_protein_selection_for_use(self) -> None:
+        """Hides the two lists for the protein selection."""
+        gui_elements_to_show = [
+            self._view.ui.btn_use_next,
+            self._view.ui.list_use_existing_projects,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        self._view.ui.txt_use_project_name.setEnabled(True)
+
+        gui_elements_to_hide = [
+            self._view.ui.lbl_use_search,
+            self._view.ui.lbl_use_status_search,
+            self._view.ui.txt_use_search,
+            self._view.ui.btn_use_add_available_protein_structures,
+            self._view.ui.lbl_use_available_protein_structures,
+            self._view.ui.list_use_available_protein_structures,
+            self._view.ui.btn_use_remove_selected_protein_structures,
+            self._view.ui.lbl_use_selected_protein_structures,
+            self._view.ui.list_use_selected_protein_structures,
+            self._view.ui.btn_use_back,
+            self._view.ui.btn_use_create_new_project,
+            self._view.ui.lbl_use_new_project,
+        ]
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
+
+    def use_enable_add(self) -> None:
+        """Enables the add button."""
+        self._view.ui.btn_use_add_available_protein_structures.setEnabled(True)
+
+    def use_enable_remove(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
+
+    # </editor-fold>
+
+    # <editor-fold desc="ESM fold">
+    def _init_esm_pred_mono_page(self) -> None:
+        """Clears all text boxes and sets up the default values for the page."""
+        # clears everything
+        self._view.ui.txt_esm_prot_name.clear()
+        self._view.ui.txt_esm_prot_seq.clear()
+        for i in range(self._view.ui.table_esm_prot_to_predict.rowCount()):
+            self._view.ui.table_esm_prot_to_predict.removeRow(i)
+        # sets up defaults: Prediction
+        self._view.ui.btn_esm_next.setEnabled(False)
+        self._view.ui.btn_esm_next_2.setEnabled(False)
+        self._view.ui.lbl_esm_prot_name_status.setText("")
+        self._view.ui.lbl_esm_prot_seq_status.setText("")
+
+    def display_esm_pred_mono(self) -> None:
+        """Displays the esm_fold monomer page."""
+        self._init_esm_pred_mono_page()
+        gui_elements_to_show = [
+            self._view.ui.lbl_esm_prot_to_predict,
+            self._view.ui.table_esm_prot_to_predict,
+            self._view.ui.btn_esm_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_esm_seq_to_predict_remove,
+            self._view.ui.lbl_esm_prot_name,
+            self._view.ui.txt_esm_prot_name,
+            self._view.ui.lbl_esm_prot_name_status,
+            self._view.ui.btn_esm_back,
+            self._view.ui.btn_esm_next,
+            self._view.ui.lbl_esm_prot_seq,
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_back_2,
+            self._view.ui.btn_esm_next_2,
+            self._view.ui.btn_esm_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        styles.color_button_not_ready(self._view.ui.btn_esm_next)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 1, "ESMFold Monomer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_pred_cloud_monomer_page,
+        )
+
+    def cloud_esm_validate_protein_name(self) -> None:
+        """Validates the input of the protein name in real-time."""
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self._view.ui.txt_esm_prot_name.text(),
+            self._view.ui.table_esm_prot_to_predict,
+        ):
+            self._view.ui.lbl_esm_prot_name_status.setText("Protein name already used.")
+            self._view.ui.btn_esm_next.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_esm_next)
+        else:
+            self._view.ui.btn_esm_next.setEnabled(True)
+            tools.validate_protein_name(
+                self._view.ui.txt_esm_prot_name,
+                self._view.ui.lbl_esm_prot_name_status,
+                self._view.ui.btn_esm_next,
+            )
+
+    def cloud_esm_validate_protein_sequence(self) -> None:
+        """Validates the input of the protein sequence in real-time."""
+        tools.validate_protein_sequence(
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_next_2,
+        )
+
+    def setup_defaults_esm_monomer_prediction(self) -> None:
+        """Sets up the default values for the page."""
+        # clears everything
+        self._view.ui.txt_esm_prot_name.clear()
+        self._view.ui.txt_esm_prot_seq.clear()
+        # sets up defaults: Prediction
+        self._view.ui.btn_esm_next.setEnabled(False)
+        self._view.ui.btn_esm_next_2.setEnabled(False)
+        self._view.ui.lbl_esm_prot_name_status.setText("")
+        self._view.ui.lbl_esm_prot_seq_status.setText("")
+
+    def cloud_esm_add_seq_to_predict(self) -> None:
+        """Shows the gui elements to add a sequence to the protein to predict."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_esm_prot_to_predict,
+            self._view.ui.table_esm_prot_to_predict,
+            self._view.ui.lbl_esm_prot_name,
+            self._view.ui.txt_esm_prot_name,
+            self._view.ui.lbl_esm_prot_name_status,
+            self._view.ui.btn_esm_back,
+            self._view.ui.btn_esm_next,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
+        gui_elements_to_hide = [
+            self._view.ui.btn_esm_seq_to_predict_remove,
+            self._view.ui.btn_esm_seq_to_predict,
+            self._view.ui.lbl_esm_prot_seq,
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_back_2,
+            self._view.ui.btn_esm_next_2,
+            self._view.ui.btn_esm_predict,
+        ]
+        gui_utils.disable_text_box(self._view.ui.txt_esm_prot_seq, self._view.ui.lbl_esm_prot_seq)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_esm_next.setEnabled(False)
+        self._view.ui.txt_esm_prot_name.clear()
+        styles.color_button_not_ready(self._view.ui.btn_esm_next)
+        if self._view.ui.table_esm_prot_to_predict.rowCount() > 0:
+            try:
+                self._view.ui.table_esm_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
+
+    def cloud_esm_back(self) -> None:
+        """Hides the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_esm_prot_to_predict,
+            self._view.ui.table_esm_prot_to_predict,
+            self._view.ui.btn_esm_seq_to_predict_remove,
+            self._view.ui.btn_esm_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.lbl_esm_prot_name,
+            self._view.ui.txt_esm_prot_name,
+            self._view.ui.lbl_esm_prot_name_status,
+            self._view.ui.btn_esm_back,
+            self._view.ui.btn_esm_next,
+            self._view.ui.lbl_esm_prot_seq,
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_back_2,
+            self._view.ui.btn_esm_next_2,
+            self._view.ui.btn_esm_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.cloud_esm_check_if_table_is_empty()
+        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
+
+    def cloud_esm_next(self) -> None:
+        """Shows the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_esm_prot_to_predict,
+            self._view.ui.table_esm_prot_to_predict,
+            self._view.ui.lbl_esm_prot_name,
+            self._view.ui.txt_esm_prot_name,
+            self._view.ui.lbl_esm_prot_seq,
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_back_2,
+            self._view.ui.btn_esm_next_2,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_seq, self._view.ui.lbl_esm_prot_seq)
+        gui_elements_to_hide = [
+            self._view.ui.btn_esm_seq_to_predict_remove,
+            self._view.ui.btn_esm_seq_to_predict,
+            self._view.ui.lbl_esm_prot_name_status,
+            self._view.ui.btn_esm_back,
+            self._view.ui.btn_esm_next,
+            self._view.ui.btn_esm_predict,
+        ]
+        gui_utils.disable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.txt_esm_prot_seq.clear()
+
+    def cloud_esm_back_2(self) -> None:
+        """Hides the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_esm_prot_to_predict,
+            self._view.ui.table_esm_prot_to_predict,
+            self._view.ui.lbl_esm_prot_name,
+            self._view.ui.txt_esm_prot_name,
+            self._view.ui.lbl_esm_prot_name_status,
+            self._view.ui.btn_esm_back,
+            self._view.ui.btn_esm_next,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_esm_seq_to_predict_remove,
+            self._view.ui.btn_esm_seq_to_predict,
+            self._view.ui.lbl_esm_prot_seq,
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_back_2,
+            self._view.ui.btn_esm_next_2,
+            self._view.ui.btn_esm_predict,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
+        gui_utils.disable_text_box(self._view.ui.txt_esm_prot_seq, self._view.ui.lbl_esm_prot_seq)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def cloud_esm_add_protein(self) -> None:
+        """Adds protein to the list of proteins to predict."""
+        self._view.ui.table_esm_prot_to_predict.setRowCount(self._view.ui.table_esm_prot_to_predict.rowCount() + 1)
+        self._view.ui.table_esm_prot_to_predict.insertRow(self._view.ui.table_esm_prot_to_predict.rowCount() + 1)
+        self._view.ui.table_esm_prot_to_predict.setItem(
+            self._view.ui.table_esm_prot_to_predict.rowCount() - 1,
+            0,
+            QtWidgets.QTableWidgetItem("A"),
+        )
+        self._view.ui.table_esm_prot_to_predict.setItem(
+            self._view.ui.table_esm_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_esm_prot_seq.toPlainText()),
+        )
+        self._view.ui.table_esm_prot_to_predict.setVerticalHeaderItem(
+            self._view.ui.table_esm_prot_to_predict.rowCount() - 1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_esm_prot_name.text()),
+        )
+        self._view.ui.table_esm_prot_to_predict.resizeColumnsToContents()
+        self.cloud_esm_check_if_table_is_empty()
+        gui_elements_to_show = [
+            self._view.ui.lbl_esm_prot_to_predict,
+            self._view.ui.table_esm_prot_to_predict,
+            self._view.ui.btn_esm_seq_to_predict_remove,
+            self._view.ui.btn_esm_seq_to_predict,
+            self._view.ui.btn_esm_predict,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
+        gui_elements_to_hide = [
+            self._view.ui.lbl_esm_prot_name,
+            self._view.ui.txt_esm_prot_name,
+            self._view.ui.lbl_esm_prot_name_status,
+            self._view.ui.btn_esm_back,
+            self._view.ui.btn_esm_next,
+            self._view.ui.lbl_esm_prot_seq,
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_back_2,
+            self._view.ui.btn_esm_next_2,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_esm_predict.setEnabled(True)
+        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
+        styles.color_button_ready(self._view.ui.btn_esm_predict)
+        self.setup_defaults_esm_monomer_prediction()
+
+    def cloud_esm_remove(self) -> None:
+        """Removes a protein from the list of proteins to predict."""
+        self._view.ui.table_esm_prot_to_predict.removeRow(self._view.ui.table_esm_prot_to_predict.currentRow())
+        gui_elements_to_show = [
+            self._view.ui.lbl_esm_prot_to_predict,
+            self._view.ui.table_esm_prot_to_predict,
+            self._view.ui.btn_esm_seq_to_predict_remove,
+            self._view.ui.btn_esm_seq_to_predict,
+            self._view.ui.btn_esm_predict,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
+        gui_elements_to_hide = [
+            self._view.ui.lbl_esm_prot_name,
+            self._view.ui.txt_esm_prot_name,
+            self._view.ui.lbl_esm_prot_name_status,
+            self._view.ui.btn_esm_back,
+            self._view.ui.btn_esm_next,
+            self._view.ui.lbl_esm_prot_seq,
+            self._view.ui.txt_esm_prot_seq,
+            self._view.ui.lbl_esm_prot_seq_status,
+            self._view.ui.btn_esm_back_2,
+            self._view.ui.btn_esm_next_2,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
+        self.cloud_esm_check_if_table_is_empty()
+
+    def cloud_esm_item_changed(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(True)
+
+    def cloud_esm_check_if_table_is_empty(self) -> None:
+        """Checks if the table proteins to predict is empty."""
+        if self._view.ui.table_esm_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self._view.ui.btn_esm_predict)
+            self._view.ui.btn_esm_predict.setEnabled(False)
+            gui_elements_to_show = [
+                self._view.ui.lbl_esm_prot_to_predict,
+                self._view.ui.table_esm_prot_to_predict,
+                self._view.ui.btn_esm_seq_to_predict,
+            ]
+            gui_utils.enable_text_box(self._view.ui.txt_esm_prot_name, self._view.ui.lbl_esm_prot_name)
+            gui_elements_to_hide = [
+                self._view.ui.btn_esm_seq_to_predict_remove,
+                self._view.ui.lbl_esm_prot_name,
+                self._view.ui.txt_esm_prot_name,
+                self._view.ui.lbl_esm_prot_name_status,
+                self._view.ui.btn_esm_back,
+                self._view.ui.btn_esm_next,
+                self._view.ui.lbl_esm_prot_seq,
+                self._view.ui.txt_esm_prot_seq,
+                self._view.ui.lbl_esm_prot_seq_status,
+                self._view.ui.btn_esm_back_2,
+                self._view.ui.btn_esm_next_2,
+                self._view.ui.btn_esm_predict,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            styles.color_button_ready(self._view.ui.btn_esm_predict)
+            self._view.ui.btn_esm_predict.setEnabled(True)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Monomer local prediction">
+    def _init_local_pred_mono_page(self) -> None:
+        """Clears all text boxes and sets default values for the gui elements."""
+        # clears everything
+        self._view.ui.txt_pred_mono_prot_name.clear()
+        self._view.ui.txt_pred_mono_seq_name.clear()
+        for i in range(self._view.ui.table_pred_mono_prot_to_predict.rowCount()):
+            self._view.ui.table_pred_mono_prot_to_predict.removeRow(i)
+        # sets up defaults: Prediction
+        self._view.ui.btn_pred_mono_next.setEnabled(False)
+        self._view.ui.btn_pred_mono_add_protein.setEnabled(False)
+        self._view.ui.lbl_pred_mono_prot_name_status.setText("")
+        self._view.ui.lbl_pred_mono_seq_name_status.setText("")
+
+    def display_local_pred_mono(self) -> None:
+        """Displays the local prediction monomer page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
+        self._init_local_pred_mono_page()
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_mono_prot_to_predict,
+            self._view.ui.table_pred_mono_prot_to_predict,
+            self._view.ui.btn_pred_mono_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_mono_seq_to_predict_remove,
+            self._view.ui.lbl_pred_mono_prot_name,
+            self._view.ui.txt_pred_mono_prot_name,
+            self._view.ui.lbl_pred_mono_prot_name_status,
+            self._view.ui.btn_pred_mono_back,
+            self._view.ui.btn_pred_mono_next,
+            self._view.ui.lbl_pred_mono_seq_name,
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_back_2,
+            self._view.ui.btn_pred_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        styles.color_button_not_ready(self._view.ui.btn_pred_mono_next)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 19, "Local Monomer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_pred_local_monomer_page,
+        )
+
+    def local_pred_mono_validate_protein_name(self) -> None:
+        """Validates the input of the protein name in real-time."""
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self._view.ui.txt_pred_mono_prot_name.text(),
+            self._view.ui.table_pred_mono_prot_to_predict,
+        ):
+            self._view.ui.lbl_pred_mono_prot_name_status.setText("Protein name already used.")
+            self._view.ui.btn_pred_mono_next.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_pred_mono_next)
+        else:
+            self._view.ui.btn_pred_mono_next.setEnabled(True)
+            tools.validate_protein_name(
+                self._view.ui.txt_pred_mono_prot_name,
+                self._view.ui.lbl_pred_mono_prot_name_status,
+                self._view.ui.btn_pred_mono_next,
+            )
+
+    def local_pred_mono_validate_protein_sequence(self) -> None:
+        """Validates the input of the protein sequence in real-time."""
+        tools.validate_protein_sequence(
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_add_protein,
+        )
+
+    def show_prediction_configuration(self) -> None:
+        """Opens the prediction configuration dialog window."""
+        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(
+            self.prediction_configuration,
+        )
+        config.exec_()
+        self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
+        self.prediction_configuration.templates = config.prediction_config.templates
+
+    def setup_defaults_monomer_prediction(self) -> None:
+        """Sets up the defaults for the page."""
+        # clears everything
+        self._view.ui.txt_pred_mono_prot_name.clear()
+        self._view.ui.txt_pred_mono_seq_name.clear()
+        # sets up defaults: Prediction
+        self._view.ui.btn_pred_mono_next.setEnabled(False)
+        self._view.ui.btn_pred_mono_add_protein.setEnabled(False)
+        self._view.ui.lbl_pred_mono_prot_name_status.setText("")
+        self._view.ui.lbl_pred_mono_seq_name_status.setText("")
+
+    def local_pred_mono_add_seq_to_predict(self) -> None:
+        """Shows the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_mono_prot_to_predict,
+            self._view.ui.table_pred_mono_prot_to_predict,
+            self._view.ui.lbl_pred_mono_prot_name,
+            self._view.ui.txt_pred_mono_prot_name,
+            self._view.ui.lbl_pred_mono_prot_name_status,
+            self._view.ui.btn_pred_mono_back,
+            self._view.ui.btn_pred_mono_next,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_mono_seq_to_predict,
+            self._view.ui.lbl_pred_mono_seq_name,
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_back_2,
+            self._view.ui.btn_pred_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_predict,
+        ]
+        gui_utils.disable_text_box(self._view.ui.txt_pred_mono_seq_name, self._view.ui.lbl_pred_mono_seq_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_pred_mono_next.setEnabled(False)
+        self._view.ui.txt_pred_mono_prot_name.clear()
+        styles.color_button_not_ready(self._view.ui.btn_pred_mono_next)
+        if self._view.ui.table_pred_mono_prot_to_predict.rowCount() > 0:
+            try:
+                self._view.ui.table_pred_mono_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
+
+    def local_pred_mono_back(self) -> None:
+        """Hides the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_mono_prot_to_predict,
+            self._view.ui.table_pred_mono_prot_to_predict,
+            self._view.ui.btn_pred_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_mono_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.lbl_pred_mono_prot_name,
+            self._view.ui.txt_pred_mono_prot_name,
+            self._view.ui.lbl_pred_mono_prot_name_status,
+            self._view.ui.btn_pred_mono_back,
+            self._view.ui.btn_pred_mono_next,
+            self._view.ui.lbl_pred_mono_seq_name,
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_back_2,
+            self._view.ui.btn_pred_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.local_pred_mono_check_if_table_is_empty()
+        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
+
+    def local_pred_mono_next(self) -> None:
+        """Shows the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_mono_prot_to_predict,
+            self._view.ui.table_pred_mono_prot_to_predict,
+            self._view.ui.lbl_pred_mono_prot_name,
+            self._view.ui.txt_pred_mono_prot_name,
+            self._view.ui.lbl_pred_mono_seq_name,
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_back_2,
+            self._view.ui.btn_pred_mono_add_protein,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_seq_name, self._view.ui.lbl_pred_mono_seq_name)
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_mono_seq_to_predict,
+            self._view.ui.lbl_pred_mono_prot_name_status,
+            self._view.ui.btn_pred_mono_back,
+            self._view.ui.btn_pred_mono_next,
+            self._view.ui.lbl_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_predict,
+        ]
+        gui_utils.disable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.txt_pred_mono_seq_name.clear()
+
+    def local_pred_mono_back_2(self) -> None:
+        """Hides the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_mono_prot_to_predict,
+            self._view.ui.table_pred_mono_prot_to_predict,
+            self._view.ui.lbl_pred_mono_prot_name,
+            self._view.ui.txt_pred_mono_prot_name,
+            self._view.ui.lbl_pred_mono_prot_name_status,
+            self._view.ui.btn_pred_mono_back,
+            self._view.ui.btn_pred_mono_next,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_mono_seq_to_predict,
+            self._view.ui.lbl_pred_mono_seq_name,
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_back_2,
+            self._view.ui.btn_pred_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_predict,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
+        gui_utils.disable_text_box(self._view.ui.txt_pred_mono_seq_name, self._view.ui.lbl_pred_mono_seq_name)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def local_pred_mono_add_protein(self) -> None:
+        """Adds protein to the list of proteins to predict."""
+        self._view.ui.table_pred_mono_prot_to_predict.setRowCount(
+            self._view.ui.table_pred_mono_prot_to_predict.rowCount() + 1,
+        )
+        self._view.ui.table_pred_mono_prot_to_predict.insertRow(
+            self._view.ui.table_pred_mono_prot_to_predict.rowCount() + 1,
+        )
+        self._view.ui.table_pred_mono_prot_to_predict.setItem(
+            self._view.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
+            0,
+            QtWidgets.QTableWidgetItem("A"),
+        )
+        self._view.ui.table_pred_mono_prot_to_predict.setItem(
+            self._view.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_mono_seq_name.toPlainText()),
+        )
+        self._view.ui.table_pred_mono_prot_to_predict.setVerticalHeaderItem(
+            self._view.ui.table_pred_mono_prot_to_predict.rowCount() - 1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_mono_prot_name.text()),
+        )
+        self._view.ui.table_pred_mono_prot_to_predict.resizeColumnsToContents()
+        self.local_pred_mono_check_if_table_is_empty()
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_mono_prot_to_predict,
+            self._view.ui.table_pred_mono_prot_to_predict,
+            self._view.ui.btn_pred_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_mono_seq_to_predict,
+            self._view.ui.lbl_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_predict,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
+        gui_elements_to_hide = [
+            self._view.ui.lbl_pred_mono_prot_name,
+            self._view.ui.txt_pred_mono_prot_name,
+            self._view.ui.lbl_pred_mono_prot_name_status,
+            self._view.ui.btn_pred_mono_back,
+            self._view.ui.btn_pred_mono_next,
+            self._view.ui.lbl_pred_mono_seq_name,
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_back_2,
+            self._view.ui.btn_pred_mono_add_protein,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_pred_mono_predict.setEnabled(True)
+        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
+        styles.color_button_ready(self._view.ui.btn_pred_mono_predict)
+        self.setup_defaults_monomer_prediction()
+
+    def local_pred_mono_remove(self) -> None:
+        """Removes the selected protein from the list of proteins to predict."""
+        self._view.ui.table_pred_mono_prot_to_predict.removeRow(
+            self._view.ui.table_pred_mono_prot_to_predict.currentRow(),
+        )
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_mono_prot_to_predict,
+            self._view.ui.table_pred_mono_prot_to_predict,
+            self._view.ui.btn_pred_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_mono_seq_to_predict,
+            self._view.ui.lbl_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_advanced_config,
+            self._view.ui.btn_pred_mono_predict,
+        ]
+        gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
+        gui_elements_to_hide = [
+            self._view.ui.lbl_pred_mono_prot_name,
+            self._view.ui.txt_pred_mono_prot_name,
+            self._view.ui.lbl_pred_mono_prot_name_status,
+            self._view.ui.btn_pred_mono_back,
+            self._view.ui.btn_pred_mono_next,
+            self._view.ui.lbl_pred_mono_seq_name,
+            self._view.ui.txt_pred_mono_seq_name,
+            self._view.ui.lbl_pred_mono_seq_name_status,
+            self._view.ui.btn_pred_mono_back_2,
+            self._view.ui.btn_pred_mono_add_protein,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
+        self.local_pred_mono_check_if_table_is_empty()
+
+    def local_pred_mono_item_changed(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(True)
+
+    def local_pred_mono_check_if_table_is_empty(self) -> None:
+        """Checks if the table proteins to predict is empty."""
+        if self._view.ui.table_pred_mono_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self._view.ui.btn_pred_mono_predict)
+            self._view.ui.btn_pred_mono_predict.setEnabled(False)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_mono_prot_to_predict,
+                self._view.ui.table_pred_mono_prot_to_predict,
+                self._view.ui.btn_pred_mono_seq_to_predict,
+            ]
+            gui_utils.enable_text_box(self._view.ui.txt_pred_mono_prot_name, self._view.ui.lbl_pred_mono_prot_name)
+            gui_elements_to_hide = [
+                self._view.ui.btn_pred_mono_seq_to_predict_remove,
+                self._view.ui.lbl_pred_mono_prot_name,
+                self._view.ui.txt_pred_mono_prot_name,
+                self._view.ui.lbl_pred_mono_prot_name_status,
+                self._view.ui.btn_pred_mono_back,
+                self._view.ui.btn_pred_mono_next,
+                self._view.ui.lbl_pred_mono_seq_name,
+                self._view.ui.txt_pred_mono_seq_name,
+                self._view.ui.lbl_pred_mono_seq_name_status,
+                self._view.ui.btn_pred_mono_back_2,
+                self._view.ui.btn_pred_mono_add_protein,
+                self._view.ui.lbl_pred_mono_advanced_config,
+                self._view.ui.btn_pred_mono_advanced_config,
+                self._view.ui.btn_pred_mono_predict,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            styles.color_button_ready(self._view.ui.btn_pred_mono_predict)
+            self._view.ui.btn_pred_mono_predict.setEnabled(True)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Multimer local prediction">
+    def _init_local_pred_multi_page(self) -> None:
+        """Clears all text boxes and sets default values for the gui elements."""
+        # clears everything
+        self._view.ui.txt_pred_multi_prot_name.clear()
+        self._view.ui.txt_pred_multi_prot_seq.clear()
+        self._view.ui.list_pred_multi_prot_seq_overview.clear()
+        # sets up defaults: Prediction
+        self._view.ui.btn_pred_multi_next.setEnabled(False)
+        self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
+        self._view.ui.lbl_pred_multi_prot_name_status.setText("")
+        self._view.ui.lbl_pred_multi_prot_seq_status.setText("")
+
+    def display_local_pred_multi(self) -> None:
+        """Displays the local prediction multimer page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
+
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_multi_prot_to_predict,
+            self._view.ui.table_pred_multi_prot_to_predict,
+            self._view.ui.btn_pred_multi_prot_to_predict_add,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_multi_prot_to_predict_remove,
+            self._view.ui.lbl_pred_multi_prot_name_status,
+            self._view.ui.btn_pred_multi_back,
+            self._view.ui.btn_pred_multi_next,
+            self._view.ui.lbl_pred_multi_prot_name,
+            self._view.ui.txt_pred_multi_prot_name,
+            self._view.ui.lbl_pred_multi_prot_seq,
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+            self._view.ui.lbl_pred_multi_prot_seq_overview,
+            self._view.ui.list_pred_multi_prot_seq_overview,
+            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_multi_back_2,
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_predict,
+        ]
+        for i in range(self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1, -1, -1):
+            self._view.ui.table_pred_multi_prot_to_predict.removeRow(i)
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 20, "Local Multimer Prediction")
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_pred_local_multimer_page,
+        )
+
+    def local_pred_multi_validate_protein_name(self) -> None:
+        """Validates the input of the protein name in real-time."""
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self._view.ui.txt_pred_multi_prot_name.text(),
+            self._view.ui.table_pred_multi_prot_to_predict,
+        ):
+            self._view.ui.lbl_pred_multi_prot_name_status.setText("Protein name already used.")
+            self._view.ui.btn_pred_multi_next.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_pred_multi_next)
+        else:
+            self._view.ui.btn_pred_multi_next.setEnabled(True)
+            tools.validate_protein_name(
+                self._view.ui.txt_pred_multi_prot_name,
+                self._view.ui.lbl_pred_multi_prot_name_status,
+                self._view.ui.btn_pred_multi_next,
+            )
+
+    def local_pred_multi_validate_protein_sequence(self) -> None:
+        """Validates the input of the protein sequence in real-time."""
+        tools.validate_protein_sequence(
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+        )
+
+    def local_pred_multi_check_if_table_is_empty(self) -> None:
+        """Checks if the table proteins to predict is empty."""
+        if self._view.ui.table_pred_multi_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self._view.ui.btn_pred_multi_predict)
+            self._view.ui.btn_pred_multi_predict.setEnabled(False)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_multi_prot_to_predict,
+                self._view.ui.table_pred_multi_prot_to_predict,
+                self._view.ui.btn_pred_multi_prot_to_predict_add,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.btn_pred_multi_prot_to_predict_remove,
+                self._view.ui.lbl_pred_multi_prot_name_status,
+                self._view.ui.btn_pred_multi_back,
+                self._view.ui.btn_pred_multi_next,
+                self._view.ui.lbl_pred_multi_prot_name,
+                self._view.ui.txt_pred_multi_prot_name,
+                self._view.ui.lbl_pred_multi_prot_seq,
+                self._view.ui.txt_pred_multi_prot_seq,
+                self._view.ui.lbl_pred_multi_prot_seq_status,
+                self._view.ui.lbl_pred_multi_prot_seq_add,
+                self._view.ui.btn_pred_multi_prot_seq_add,
+                self._view.ui.lbl_pred_multi_prot_seq_overview,
+                self._view.ui.list_pred_multi_prot_seq_overview,
+                self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+                self._view.ui.lbl_pred_multi_prot_to_predict_2,
+                self._view.ui.btn_pred_multi_back_2,
+                self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+                self._view.ui.lbl_pred_multi_advanced_config,
+                self._view.ui.btn_pred_multi_advanced_config,
+                self._view.ui.btn_pred_multi_predict,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        else:
+            styles.color_button_ready(self._view.ui.btn_pred_multi_predict)
+            self._view.ui.btn_pred_multi_predict.setEnabled(True)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_multi_prot_to_predict,
+                self._view.ui.table_pred_multi_prot_to_predict,
+                self._view.ui.btn_pred_multi_prot_to_predict_add,
+                self._view.ui.btn_pred_multi_prot_to_predict_remove,
+                self._view.ui.lbl_pred_multi_advanced_config,
+                self._view.ui.btn_pred_multi_advanced_config,
+                self._view.ui.btn_pred_multi_predict,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.lbl_pred_multi_prot_name_status,
+                self._view.ui.btn_pred_multi_back,
+                self._view.ui.btn_pred_multi_next,
+                self._view.ui.lbl_pred_multi_prot_name,
+                self._view.ui.txt_pred_multi_prot_name,
+                self._view.ui.lbl_pred_multi_prot_seq,
+                self._view.ui.txt_pred_multi_prot_seq,
+                self._view.ui.lbl_pred_multi_prot_seq_status,
+                self._view.ui.lbl_pred_multi_prot_seq_add,
+                self._view.ui.btn_pred_multi_prot_seq_add,
+                self._view.ui.lbl_pred_multi_prot_seq_overview,
+                self._view.ui.list_pred_multi_prot_seq_overview,
+                self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+                self._view.ui.lbl_pred_multi_prot_to_predict_2,
+                self._view.ui.btn_pred_multi_back_2,
+                self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+
+    def local_pred_multi_add_sequence_to_list(self) -> None:
+        """Adds the entered sequence to the list of sequences of the protein."""
+        self._view.ui.list_pred_multi_prot_seq_overview.addItem(
+            QtWidgets.QListWidgetItem(self._view.ui.txt_pred_multi_prot_seq.toPlainText()),
+        )
+        self.local_pred_multi_check_if_list_is_empty()
+
+    def local_pred_multi_remove_sequence_to_list(self) -> None:
+        """Removes the entered sequence to the list of sequences of the protein."""
+        self._view.ui.list_pred_multi_prot_seq_overview.takeItem(
+            self._view.ui.list_pred_multi_prot_seq_overview.currentRow(),
+        )
+        self.local_pred_multi_check_if_list_is_empty()
+        self._view.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(False)
+
+    def local_pred_multi_check_if_list_is_empty(self) -> None:
+        """Checks if the list of sequences of the protein is empty."""
+        if self._view.ui.list_pred_multi_prot_seq_overview.count() == 0:
+            styles.color_button_not_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
+        else:
+            styles.color_button_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(True)
+
+    def local_pred_multi_add(self) -> None:
+        """Shows the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_multi_prot_to_predict,
+            self._view.ui.table_pred_multi_prot_to_predict,
+            self._view.ui.lbl_pred_multi_prot_name,
+            self._view.ui.txt_pred_multi_prot_name,
+            self._view.ui.lbl_pred_multi_prot_name_status,
+            self._view.ui.btn_pred_multi_back,
+            self._view.ui.btn_pred_multi_next,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_multi_prot_seq,
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+            self._view.ui.lbl_pred_multi_prot_seq_overview,
+            self._view.ui.list_pred_multi_prot_seq_overview,
+            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_multi_back_2,
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self._view.ui.txt_pred_multi_prot_name, self._view.ui.lbl_pred_multi_prot_name)
+        gui_utils.disable_text_box(self._view.ui.txt_pred_multi_prot_seq, self._view.ui.lbl_pred_multi_prot_seq)
+        self._view.ui.btn_pred_multi_next.setEnabled(False)
+        self._view.ui.txt_pred_multi_prot_name.clear()
+        styles.color_button_not_ready(self._view.ui.btn_pred_multi_next)
+        if self._view.ui.table_pred_multi_prot_to_predict.rowCount() > 0:
+            try:
+                self._view.ui.table_pred_multi_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Multimer Prediction in overview table.")
+
+    def local_pred_multi_back(self) -> None:
+        """Hides the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_multi_prot_to_predict,
+            self._view.ui.table_pred_multi_prot_to_predict,
+            self._view.ui.btn_pred_multi_prot_to_predict_add,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_multi_prot_to_predict_remove,
+            self._view.ui.lbl_pred_multi_prot_name,
+            self._view.ui.txt_pred_multi_prot_name,
+            self._view.ui.lbl_pred_multi_prot_name_status,
+            self._view.ui.btn_pred_multi_back,
+            self._view.ui.btn_pred_multi_next,
+            self._view.ui.lbl_pred_multi_prot_seq,
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+            self._view.ui.lbl_pred_multi_prot_seq_overview,
+            self._view.ui.list_pred_multi_prot_seq_overview,
+            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_multi_back_2,
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.local_pred_multi_check_if_table_is_empty()
+
+    def local_pred_multi_next(self) -> None:
+        """Shows the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_multi_prot_to_predict,
+            self._view.ui.table_pred_multi_prot_to_predict,
+            self._view.ui.lbl_pred_multi_prot_name,
+            self._view.ui.txt_pred_multi_prot_name,
+            self._view.ui.lbl_pred_multi_prot_seq,
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+            self._view.ui.lbl_pred_multi_prot_seq_overview,
+            self._view.ui.list_pred_multi_prot_seq_overview,
+            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_multi_back_2,
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_multi_prot_name_status,
+            self._view.ui.btn_pred_multi_back,
+            self._view.ui.btn_pred_multi_next,
+            self._view.ui.lbl_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self._view.ui.txt_pred_multi_prot_seq, self._view.ui.lbl_pred_multi_prot_seq)
+        gui_utils.disable_text_box(self._view.ui.txt_pred_multi_prot_name, self._view.ui.lbl_pred_multi_prot_name)
+        self._view.ui.txt_pred_multi_prot_seq.clear()
+        self._view.ui.list_pred_multi_prot_seq_overview.clear()
+        self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
+        self._view.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(False)
+        styles.color_button_not_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
+
+    def local_pred_multi_back_2(self) -> None:
+        """Hides the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_multi_prot_to_predict,
+            self._view.ui.table_pred_multi_prot_to_predict,
+            self._view.ui.lbl_pred_multi_prot_name_status,
+            self._view.ui.btn_pred_multi_back,
+            self._view.ui.btn_pred_multi_next,
+            self._view.ui.lbl_pred_multi_prot_name,
+            self._view.ui.txt_pred_multi_prot_name,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_multi_prot_seq,
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+            self._view.ui.lbl_pred_multi_prot_seq_overview,
+            self._view.ui.list_pred_multi_prot_seq_overview,
+            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_multi_back_2,
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_predict,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self._view.ui.txt_pred_multi_prot_name, self._view.ui.lbl_pred_multi_prot_name)
+        gui_utils.disable_text_box(self._view.ui.txt_pred_multi_prot_seq, self._view.ui.lbl_pred_multi_prot_seq)
+
+    def local_pred_multi_prot_seq_overview_item_changed(self) -> None:
+        """Enables the remove button of the list sequences of the protein."""
+        self._view.ui.btn_pred_multi_prot_seq_overview_remove.setEnabled(True)
+
+    def local_pred_multi_prot_to_predict_item_changed(self) -> None:
+        """Enables the remove button of the table proteins to predict."""
+        self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(True)
+
+    def local_pred_multi_prot_to_predict_add_2(self) -> None:
+        """Adds the protein to the list of proteins to predict."""
+        for i in range(self._view.ui.list_pred_multi_prot_seq_overview.count()):
+            self._view.ui.table_pred_multi_prot_to_predict.setRowCount(
+                self._view.ui.table_pred_multi_prot_to_predict.rowCount() + 1,
+            )
+            self._view.ui.table_pred_multi_prot_to_predict.insertRow(
+                self._view.ui.table_pred_multi_prot_to_predict.rowCount() + 1,
+            )
+            tmp_chain_seq = (
+                constants.chain_dict.get(i),
+                self._view.ui.list_pred_multi_prot_seq_overview.item(i).text(),
+            )
+            self._view.ui.table_pred_multi_prot_to_predict.setItem(
+                self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1,
+                0,
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[0]),
+            )
+            self._view.ui.table_pred_multi_prot_to_predict.setItem(
+                self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1,
+                1,
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[1]),
+            )
+            name_item = QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_multi_prot_name.text())
+            self._view.ui.table_pred_multi_prot_to_predict.setVerticalHeaderItem(
+                self._view.ui.table_pred_multi_prot_to_predict.rowCount() - 1,
+                name_item,
+            )
+        self._view.ui.table_pred_multi_prot_to_predict.resizeColumnsToContents()
+        self.local_pred_multi_check_if_table_is_empty()
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_multi_prot_to_predict,
+            self._view.ui.table_pred_multi_prot_to_predict,
+            self._view.ui.btn_pred_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.lbl_pred_multi_prot_name_status,
+            self._view.ui.btn_pred_multi_back,
+            self._view.ui.btn_pred_multi_next,
+            self._view.ui.lbl_pred_multi_prot_name,
+            self._view.ui.txt_pred_multi_prot_name,
+            self._view.ui.lbl_pred_multi_prot_seq,
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+            self._view.ui.lbl_pred_multi_prot_seq_overview,
+            self._view.ui.list_pred_multi_prot_seq_overview,
+            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_multi_back_2,
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._init_local_pred_multi_page()
+        self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+
+    def local_pred_multi_remove(self) -> None:
+        """Removes the selected protein from the list of proteins to predict."""
+        self._view.ui.table_pred_multi_prot_to_predict.removeRow(
+            self._view.ui.table_pred_multi_prot_to_predict.currentRow(),
+        )
+        if self._view.ui.table_pred_multi_prot_to_predict.rowCount() > 0:
+            prot_name = self._view.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(
+                self._view.ui.table_pred_multi_prot_to_predict.currentRow(),
+            ).text()
+            for i in range(self._view.ui.table_pred_multi_prot_to_predict.rowCount()):
+                if self._view.ui.table_pred_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
+                    self._view.ui.table_pred_multi_prot_to_predict.setItem(
+                        i,
+                        0,
+                        QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)),
+                    )
+        self.local_pred_multi_check_if_table_is_empty()
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_multi_prot_to_predict,
+            self._view.ui.table_pred_multi_prot_to_predict,
+            self._view.ui.btn_pred_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_advanced_config,
+            self._view.ui.btn_pred_multi_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.lbl_pred_multi_prot_name_status,
+            self._view.ui.btn_pred_multi_back,
+            self._view.ui.btn_pred_multi_next,
+            self._view.ui.lbl_pred_multi_prot_name,
+            self._view.ui.txt_pred_multi_prot_name,
+            self._view.ui.lbl_pred_multi_prot_seq,
+            self._view.ui.txt_pred_multi_prot_seq,
+            self._view.ui.lbl_pred_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add,
+            self._view.ui.btn_pred_multi_prot_seq_add,
+            self._view.ui.lbl_pred_multi_prot_seq_overview,
+            self._view.ui.list_pred_multi_prot_seq_overview,
+            self._view.ui.btn_pred_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_multi_back_2,
+            self._view.ui.btn_pred_multi_prot_to_predict_add_2,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        self.local_pred_multi_check_if_table_is_empty()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Monomer prediction + analysis">
+    def _init_mono_pred_analysis_page(self) -> None:
+        """Clears all text boxes and sets default values for the gui elements."""
+        # <editor-fold desc="Prediction section">
+        self._view.ui.txt_pred_analysis_mono_prot_name.clear()
+        self._view.ui.txt_pred_analysis_mono_seq_name.clear()
+        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.removeRow(i)
+        # sets up defaults: Prediction
+        self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
+        self._view.ui.btn_pred_analysis_mono_add_protein.setEnabled(False)
+        self._view.ui.lbl_pred_analysis_mono_prot_name_status.setText("")
+        self._view.ui.lbl_pred_analysis_mono_seq_name_status.setText("")
+
+        # </editor-fold>
+
+        # <editor-fold desc="Analysis section">
+        self._view.ui.list_pred_analysis_mono_overview.clear()
+        self._view.ui.btn_pred_analysis_mono_remove.hide()
+
+        # </editor-fold>
+
+    def display_monomer_pred_analysis(self) -> None:
+        """Displays the monomer prediction + analysis page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
+
+        self._init_mono_pred_analysis_page()
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.clear()
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(
+            0,
+            QtWidgets.QTableWidgetItem("Chain"),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setHorizontalHeaderItem(
+            1,
+            QtWidgets.QTableWidgetItem("Sequence"),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+            self._view.ui.table_pred_analysis_mono_prot_to_predict,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+            self._view.ui.btn_pred_analysis_mono_back,
+            self._view.ui.btn_pred_analysis_mono_next,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+            self._view.ui.btn_pred_analysis_mono_back_2,
+            self._view.ui.btn_pred_analysis_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self._view.ui.tabWidget.currentIndex() == 1:
+            self._view.ui.tabWidget.setCurrentIndex(0)
+        self._view.ui.tabWidget.setTabEnabled(1, False)
+        self._view.ui.tabWidget.setTabEnabled(0, True)
+        tools.switch_page(
+            self._view.ui.stackedWidget,
+            self._view.ui.lbl_page_title,
+            21,
+            "Monomer Prediction + Analysis",
+        )
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_pred_analysis_monomer_page,
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setEnabled(True)
+
+    # <editor-fold desc="Sections">
+
+    # <editor-fold desc="Prediction section">
+    def mono_pred_analysis_validate_protein_name(self) -> None:
+        """Validates the input of the protein name in real-time."""
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self._view.ui.txt_pred_analysis_mono_prot_name.text(),
+            self._view.ui.table_pred_analysis_mono_prot_to_predict,
+        ):
+            self._view.ui.lbl_pred_analysis_mono_prot_name_status.setText("Protein name already used.")
+            self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next)
+        else:
+            self._view.ui.btn_pred_analysis_mono_next.setEnabled(True)
+            tools.validate_protein_name(
+                self._view.ui.txt_pred_analysis_mono_prot_name,
+                self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+                self._view.ui.btn_pred_analysis_mono_next,
+            )
+
+    def mono_pred_analysis_validate_protein_sequence(self) -> None:
+        """Validates the input of the protein sequence in real-time."""
+        tools.validate_protein_sequence(
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+            self._view.ui.btn_pred_analysis_mono_add_protein,
+        )
+
+    def mono_pred_analysis_check_if_table_is_empty(self) -> None:
+        """Checks if the table proteins to predict is empty."""
+        if self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(False)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+                self._view.ui.table_pred_analysis_mono_prot_to_predict,
+                self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+                self._view.ui.lbl_pred_analysis_mono_prot_name,
+                self._view.ui.txt_pred_analysis_mono_prot_name,
+                self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+                self._view.ui.btn_pred_analysis_mono_back,
+                self._view.ui.btn_pred_analysis_mono_next,
+                self._view.ui.lbl_pred_analysis_mono_seq_name,
+                self._view.ui.txt_pred_analysis_mono_seq_name,
+                self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+                self._view.ui.btn_pred_analysis_mono_back_2,
+                self._view.ui.btn_pred_analysis_mono_add_protein,
+                self._view.ui.lbl_pred_mono_advanced_config_2,
+                self._view.ui.btn_pred_mono_advanced_config_2,
+                self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+                self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+                self._view.ui.table_pred_analysis_mono_prot_to_predict,
+                self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+                self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+                self._view.ui.lbl_pred_mono_advanced_config_2,
+                self._view.ui.btn_pred_mono_advanced_config_2,
+                self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+                self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.lbl_pred_analysis_mono_prot_name,
+                self._view.ui.txt_pred_analysis_mono_prot_name,
+                self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+                self._view.ui.btn_pred_analysis_mono_back,
+                self._view.ui.btn_pred_analysis_mono_next,
+                self._view.ui.lbl_pred_analysis_mono_seq_name,
+                self._view.ui.txt_pred_analysis_mono_seq_name,
+                self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+                self._view.ui.btn_pred_analysis_mono_back_2,
+                self._view.ui.btn_pred_analysis_mono_add_protein,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
+
+    def setup_defaults_monomer_prediction_analysis(self) -> None:
+        """Sets up default values for the prediction tab."""
+        # clears everything
+        self._view.ui.txt_pred_analysis_mono_prot_name.clear()
+        self._view.ui.txt_pred_analysis_mono_seq_name.clear()
+        # sets up defaults: Prediction
+        self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
+        self._view.ui.btn_pred_analysis_mono_add_protein.setEnabled(False)
+        self._view.ui.lbl_pred_analysis_mono_prot_name_status.setText("")
+        self._view.ui.lbl_pred_analysis_mono_seq_name_status.setText("")
+
+    def mono_pred_analysis_add_seq_to_predict(self) -> None:
+        """Shows the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+            self._view.ui.table_pred_analysis_mono_prot_to_predict,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+            self._view.ui.btn_pred_analysis_mono_back,
+            self._view.ui.btn_pred_analysis_mono_next,
+        ]
+        gui_utils.enable_text_box(
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+        )
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+            self._view.ui.btn_pred_analysis_mono_back_2,
+            self._view.ui.btn_pred_analysis_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+        ]
+        gui_utils.disable_text_box(
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+        )
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
+        self._view.ui.txt_pred_analysis_mono_prot_name.clear()
+        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next)
+        if self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() > 0:
+            try:
+                self._view.ui.table_pred_analysis_mono_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Monomer Prediction in overview table.")
+
+    def mono_pred_analysis_back(self) -> None:
+        """Hides the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+            self._view.ui.table_pred_analysis_mono_prot_to_predict,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+            self._view.ui.btn_pred_analysis_mono_back,
+            self._view.ui.btn_pred_analysis_mono_next,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+            self._view.ui.btn_pred_analysis_mono_back_2,
+            self._view.ui.btn_pred_analysis_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.mono_pred_analysis_check_if_table_is_empty()
+        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
+
+    def mono_pred_analysis_next(self) -> None:
+        """Shows the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+            self._view.ui.table_pred_analysis_mono_prot_to_predict,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+            self._view.ui.btn_pred_analysis_mono_back_2,
+            self._view.ui.btn_pred_analysis_mono_add_protein,
+        ]
+        gui_utils.enable_text_box(
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+        )
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+            self._view.ui.btn_pred_analysis_mono_back,
+            self._view.ui.btn_pred_analysis_mono_next,
+            self._view.ui.lbl_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+        ]
+        gui_utils.disable_text_box(
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+        )
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.txt_pred_analysis_mono_seq_name.clear()
+
+    def mono_pred_analysis_back_2(self) -> None:
+        """Hides the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+            self._view.ui.table_pred_analysis_mono_prot_to_predict,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+            self._view.ui.btn_pred_analysis_mono_back,
+            self._view.ui.btn_pred_analysis_mono_next,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+            self._view.ui.btn_pred_analysis_mono_back_2,
+            self._view.ui.btn_pred_analysis_mono_add_protein,
+            self._view.ui.lbl_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+        ]
+        gui_utils.enable_text_box(
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+        )
+        gui_utils.disable_text_box(
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+        )
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
+    def mono_pred_analysis_add_protein(self) -> None:
+        """Adds the protein to the list of proteins to predict."""
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.insertRow(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            0,
+            QtWidgets.QTableWidgetItem("A"),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_seq_name.toPlainText()),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_prot_name.text()),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
+        self.mono_pred_analysis_check_if_table_is_empty()
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+            self._view.ui.table_pred_analysis_mono_prot_to_predict,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+            self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+            self._view.ui.lbl_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_mono_advanced_config_2,
+            self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+        ]
+        gui_utils.enable_text_box(
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+        )
+        gui_elements_to_hide = [
+            self._view.ui.lbl_pred_analysis_mono_prot_name,
+            self._view.ui.txt_pred_analysis_mono_prot_name,
+            self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+            self._view.ui.btn_pred_analysis_mono_back,
+            self._view.ui.btn_pred_analysis_mono_next,
+            self._view.ui.lbl_pred_analysis_mono_seq_name,
+            self._view.ui.txt_pred_analysis_mono_seq_name,
+            self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+            self._view.ui.btn_pred_analysis_mono_back_2,
+            self._view.ui.btn_pred_analysis_mono_add_protein,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
+        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
+        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
+        self.setup_defaults_monomer_prediction()
+
+    def mono_pred_analysis_prediction_overview_item_clicked(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(True)
+
+    def mono_pred_analysis_add_protein_to_predict(self) -> None:
+        """Needs to be removed."""
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setRowCount(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.insertRow(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() + 1,
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            0,
+            QtWidgets.QTableWidgetItem("A"),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setItem(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_seq_name.toPlainText()),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.setVerticalHeaderItem(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() - 1,
+            QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_mono_prot_name.text()),
+        )
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.resizeColumnsToContents()
+        self.mono_pred_analysis_check_if_table_is_empty()
+        self.setup_defaults_monomer_prediction_analysis()
+
+    def mono_pred_analysis_remove_protein_to_predict(self) -> None:
+        """Removes the selected protein from the list of proteins to predict."""
+        self._view.ui.table_pred_analysis_mono_prot_to_predict.removeRow(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict.currentRow(),
+        )
+        self.mono_pred_analysis_check_if_table_is_empty()
+        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Analysis section">
+    def mono_pred_analysis_structure_analysis_add(self) -> None:
+        """Shows the gui elements for the selection of the two proteins."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.clear()
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.clear()
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.setText("Protein structure 1")
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.setText("Protein structure 2")
+        self.fill_mono_pred_analysis_protein_boxes()
+        if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+            try:
+                self._view.ui.list_pred_analysis_mono_overview.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
+
+    def mono_pred_analysis_structure_analysis_next_2(self) -> None:
+        """Shows the gui elements for the chain selection of protein 1."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.setText(
+            self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText(),
+        )
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.setText(
+            self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText(),
+        )
+        self._view.ui.list_pred_analysis_mono_ref_chains.clear()
+        self._view.ui.btn_pred_analysis_mono_next_3.setEnabled(False)
+        self._view.ui.list_pred_analysis_mono_ref_chains.setEnabled(True)
+
+        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
+            if (
+                self._view.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text()
+                == self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText()
+            ):
+                self._view.ui.list_pred_analysis_mono_ref_chains.addItem(
+                    self._view.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
+                )
+        if self._view.ui.list_pred_analysis_mono_ref_chains.count() == 0:
+            tmp_protein = self._current_project.search_protein(
+                self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText(),
+            )
+            for tmp_chain in tmp_protein.chains:
+                if tmp_chain.chain_type == "protein_chain":
+                    self._view.ui.list_pred_analysis_mono_ref_chains.addItem(tmp_chain.chain_letter)
+        if self._view.ui.list_pred_analysis_mono_ref_chains.count() == 1:
+            self._view.ui.lbl_pred_analysis_mono_ref_chains.setText(
+                f"Select chain in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.",
+            )
+        else:
+            self._view.ui.lbl_pred_analysis_mono_ref_chains.setText(
+                f"Select chains in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.",
+            )
+
+    def mono_pred_analysis_structure_analysis_back_3(self) -> None:
+        """Hides the gui elements to select the two proteins."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+            self._view.ui.btn_pred_analysis_mono_remove.show()
+            self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
+            self._view.ui.btn_pred_analysis_mono_start.show()
+            self._view.ui.lbl_pred_analysis_mono_images.show()
+            self._view.ui.cb_pred_analysis_mono_images.show()
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
+
+    def mono_pred_analysis_structure_analysis_next_3(self) -> None:
+        """Shows the gui elements to select the chains of protein 2."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.list_pred_analysis_mono_model_chains.clear()
+        self._view.ui.list_pred_analysis_mono_ref_chains.setEnabled(False)
+        self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
+
+        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
+            if (
+                self._view.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text()
+                == self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText()
+            ):
+                self._view.ui.list_pred_analysis_mono_model_chains.addItem(
+                    self._view.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
+                )
+        if self._view.ui.list_pred_analysis_mono_model_chains.count() == 0:
+            tmp_protein = self._current_project.search_protein(
+                self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText(),
+            )
+            for tmp_chain in tmp_protein.chains:
+                if tmp_chain.chain_type == "protein_chain":
+                    self._view.ui.list_pred_analysis_mono_model_chains.addItem(tmp_chain.chain_letter)
+        if self._view.ui.list_pred_analysis_mono_model_chains.count() == 1:
+            self._view.ui.lbl_pred_analysis_mono_model_chains.setText(
+                f"Select chain in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
+            )
+        else:
+            self._view.ui.lbl_pred_analysis_mono_model_chains.setText(
+                f"Select {len(self._view.ui.list_pred_analysis_mono_model_chains.selectedItems())} chains "
+                f"in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()}.",
+            )
+
+    def mono_pred_analysis_structure_analysis_back_4(self) -> None:
+        """Hides the gui elements to select the chains in protein 1."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_1.setText("Protein structure 1")
+        self._view.ui.lbl_pred_analysis_mono_prot_struct_2.setText("Protein structure 2")
+
+    def mono_pred_analysis_structure_analysis_next_4(self) -> None:
+        """Adds the protein pair to the list of protein pairs to analyze."""
+        gui_elements_to_show = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        prot_1_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self._view.ui.list_pred_analysis_mono_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self._view.ui.list_pred_analysis_mono_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        item = QtWidgets.QListWidgetItem(analysis_name)
+        self._view.ui.list_pred_analysis_mono_overview.addItem(item)
+        self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
+        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
+
+    def mono_pred_analysis_structure_analysis_back_5(self) -> None:
+        """Hides the gui elements to select the chains in protein 2."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.list_pred_analysis_mono_ref_chains.setEnabled(True)
+
+        # tmp_protein = self._current_project.search_protein(self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText())
+        # for tmp_chain in tmp_protein.chains:
+        #     if tmp_chain.chain_type == "protein_chain":
+        #         self._view.ui.list_pred_analysis_mono_ref_chains.addItem(tmp_chain.chain_letter)
+
+    def mono_pred_analysis_structure_analysis_overview_clicked(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_pred_analysis_mono_remove.setEnabled(True)
+
+    def fill_mono_pred_analysis_protein_boxes(self) -> None:
+        """Fills the combo box of the protein structures."""
+        protein_names = []
+        for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
+            protein_names.append(self._view.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text())
+        for tmp_protein in self._current_project.proteins:
+            protein_names.append(tmp_protein.get_molecule_object())
+        protein_names.insert(0, "")
+        self._view.ui.box_pred_analysis_mono_prot_struct_1.clear()
+        self._view.ui.box_pred_analysis_mono_prot_struct_2.clear()
+        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_mono_prot_struct_1, protein_names)
+        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_mono_prot_struct_2, protein_names)
+
+    def remove_mono_pred_analysis_analysis_run(self) -> None:
+        """Removes a selected protein pair form the list of protein pairs to analyze."""
+        self._view.ui.list_pred_analysis_mono_overview.takeItem(
+            self._view.ui.list_pred_analysis_mono_overview.currentRow(),
+        )
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_mono_overview,
+            self._view.ui.list_pred_analysis_mono_overview,
+            self._view.ui.btn_pred_analysis_mono_add,
+            self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_mono_remove,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_2,
+            self._view.ui.lbl_pred_analysis_mono_ref_chains,
+            self._view.ui.list_pred_analysis_mono_ref_chains,
+            self._view.ui.btn_pred_analysis_mono_back_4,
+            self._view.ui.btn_pred_analysis_mono_next_3,
+            self._view.ui.box_pred_analysis_mono_prot_struct_1,
+            self._view.ui.box_pred_analysis_mono_prot_struct_2,
+            self._view.ui.btn_pred_analysis_mono_back_3,
+            self._view.ui.btn_pred_analysis_mono_next_2,
+            self._view.ui.lbl_pred_analysis_mono_model_chains,
+            self._view.ui.list_pred_analysis_mono_model_chains,
+            self._view.ui.btn_pred_analysis_mono_back_5,
+            self._view.ui.btn_pred_analysis_mono_next_4,
+            self._view.ui.lbl_pred_analysis_mono_images,
+            self._view.ui.cb_pred_analysis_mono_images,
+            self._view.ui.btn_pred_analysis_mono_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+            self._view.ui.btn_pred_analysis_mono_remove.show()
+            self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
+            self._view.ui.btn_pred_analysis_mono_start.show()
+            self._view.ui.lbl_pred_analysis_mono_images.show()
+            self._view.ui.cb_pred_analysis_mono_images.show()
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
+        # if self._view.ui.list_pred_analysis_mono_overview.count() == 0:
+        #
+        #     self._view.ui.btn_pred_analysis_mono_back_pred_setup.show()
+        #     self._view.ui.btn_pred_analysis_mono_remove.hide()
+
+    def check_mono_pred_analysis_if_same_no_of_chains_selected(self) -> None:
+        """Checks if the same number of chains were selected."""
+        self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
+        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next_4)
+        if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_mono_model_chains.selectedItems()):
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_next_4)
+            self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(True)
+
+        prot_1_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self._view.ui.list_pred_analysis_mono_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self._view.ui.list_pred_analysis_mono_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        for tmp_row in range(self._view.ui.list_pred_analysis_mono_overview.count()):
+            if analysis_name == self._view.ui.list_pred_analysis_mono_overview.item(tmp_row).text():
+                self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
+                styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next_4)
+                return
+
+    def check_mono_pred_analysis_if_prot_structs_are_filled(self) -> None:
+        """Checks if two proteins were selected."""
+        prot_1 = self._view.ui.box_pred_analysis_mono_prot_struct_1.itemText(
+            self._view.ui.box_pred_analysis_mono_prot_struct_1.currentIndex(),
+        )
+        prot_2 = self._view.ui.box_pred_analysis_mono_prot_struct_2.itemText(
+            self._view.ui.box_pred_analysis_mono_prot_struct_2.currentIndex(),
+        )
+        if prot_1 != "" and prot_2 != "":
+            self._view.ui.btn_pred_analysis_mono_next_2.setEnabled(True)
+        else:
+            self._view.ui.btn_pred_analysis_mono_next_2.setEnabled(False)
+
+    def count_mono_pred_analysis_selected_chains_for_prot_struct_1(self) -> None:
+        """Counts the number of chains selected in protein 1."""
+        self.no_of_selected_chains = len(self._view.ui.list_pred_analysis_mono_ref_chains.selectedItems())
+        if self.no_of_selected_chains > 0:
+            self._view.ui.btn_pred_analysis_mono_next_3.setEnabled(True)
+        else:
+            self._view.ui.btn_pred_analysis_mono_next_3.setEnabled(False)
+
+    # </editor-fold>
+
+    # </editor-fold>
+
+    def switch_monomer_pred_analysis_tab(self) -> None:
+        """Switches the tabs from prediction to analysis and vice versa."""
+        if self._view.ui.tabWidget.currentIndex() == 0:
+            # goes from prediction to analysis
+            self._view.ui.tabWidget.setTabEnabled(1, True)
+            self._view.ui.tabWidget.setTabEnabled(0, False)
+            self._view.ui.tabWidget.setCurrentIndex(1)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_analysis_mono_overview,
+                self._view.ui.list_pred_analysis_mono_overview,
+                self._view.ui.btn_pred_analysis_mono_add,
+                self._view.ui.btn_pred_analysis_mono_back_pred_setup,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.btn_pred_analysis_mono_remove,
+                self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+                self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+                self._view.ui.lbl_analysis_batch_vs_2,
+                self._view.ui.lbl_pred_analysis_mono_ref_chains,
+                self._view.ui.list_pred_analysis_mono_ref_chains,
+                self._view.ui.btn_pred_analysis_mono_back_4,
+                self._view.ui.btn_pred_analysis_mono_next_3,
+                self._view.ui.box_pred_analysis_mono_prot_struct_1,
+                self._view.ui.box_pred_analysis_mono_prot_struct_2,
+                self._view.ui.btn_pred_analysis_mono_back_3,
+                self._view.ui.btn_pred_analysis_mono_next_2,
+                self._view.ui.lbl_pred_analysis_mono_model_chains,
+                self._view.ui.list_pred_analysis_mono_model_chains,
+                self._view.ui.btn_pred_analysis_mono_back_5,
+                self._view.ui.btn_pred_analysis_mono_next_4,
+                self._view.ui.lbl_pred_analysis_mono_images,
+                self._view.ui.cb_pred_analysis_mono_images,
+                self._view.ui.btn_pred_analysis_mono_start,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+                self._view.ui.btn_pred_analysis_mono_remove.show()
+                self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
+                self._view.ui.btn_pred_analysis_mono_start.show()
+                self._view.ui.lbl_pred_analysis_mono_images.show()
+                self._view.ui.cb_pred_analysis_mono_images.show()
+                styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
+        else:
+            # goes from analysis to prediction
+            if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+                gui_elements_to_show = [
+                    self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+                    self._view.ui.table_pred_analysis_mono_prot_to_predict,
+                    self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+                    self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+                ]
+                gui_elements_to_hide = [
+                    self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+                    self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+                    self._view.ui.lbl_pred_analysis_mono_prot_name,
+                    self._view.ui.txt_pred_analysis_mono_prot_name,
+                    self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+                    self._view.ui.btn_pred_analysis_mono_back,
+                    self._view.ui.btn_pred_analysis_mono_next,
+                    self._view.ui.lbl_pred_analysis_mono_seq_name,
+                    self._view.ui.txt_pred_analysis_mono_seq_name,
+                    self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+                    self._view.ui.btn_pred_analysis_mono_back_2,
+                    self._view.ui.btn_pred_analysis_mono_add_protein,
+                    self._view.ui.lbl_pred_mono_advanced_config_2,
+                    self._view.ui.btn_pred_mono_advanced_config_2,
+                ]
+                gui_utils.show_gui_elements(gui_elements_to_show)
+                gui_utils.hide_gui_elements(gui_elements_to_hide)
+            else:
+                gui_elements_to_show = [
+                    self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+                    self._view.ui.table_pred_analysis_mono_prot_to_predict,
+                    self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+                    self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+                    self._view.ui.lbl_pred_mono_advanced_config_2,
+                    self._view.ui.btn_pred_mono_advanced_config_2,
+                    self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+                    self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+                ]
+                gui_elements_to_hide = [
+                    self._view.ui.lbl_pred_analysis_mono_prot_name,
+                    self._view.ui.txt_pred_analysis_mono_prot_name,
+                    self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+                    self._view.ui.btn_pred_analysis_mono_back,
+                    self._view.ui.btn_pred_analysis_mono_next,
+                    self._view.ui.lbl_pred_analysis_mono_seq_name,
+                    self._view.ui.txt_pred_analysis_mono_seq_name,
+                    self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+                    self._view.ui.btn_pred_analysis_mono_back_2,
+                    self._view.ui.btn_pred_analysis_mono_add_protein,
+                ]
+                gui_utils.show_gui_elements(gui_elements_to_show)
+                gui_utils.hide_gui_elements(gui_elements_to_hide)
+                self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
+            self._view.ui.tabWidget.setTabEnabled(0, True)
+            self._view.ui.tabWidget.setTabEnabled(1, False)
+            self._view.ui.tabWidget.setCurrentIndex(0)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Multimer prediction + analysis">
+    def _init_multi_pred_analysis_page(self) -> None:
+        """Clears the text boxes and sets the default values for the gui elements."""
+        # <editor-fold desc="Prediction section">
+        # clears everything
+        self._view.ui.txt_pred_analysis_multi_prot_name.clear()
+        self._view.ui.txt_pred_analysis_multi_prot_seq.clear()
+        self._view.ui.list_pred_analysis_multi_prot_seq_overview.clear()
+        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1, -1, -1):
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.removeRow(i)
+
+        # sets up defaults: Prediction
+        self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
+        self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        self._view.ui.lbl_pred_analysis_multi_prot_name_status.setText("")
+        self._view.ui.lbl_pred_analysis_multi_prot_seq_status.setText("")
+
+        # </editor-fold>
+
+        # <editor-fold desc="Analysis section">
+        self._view.ui.list_pred_analysis_multi_overview.clear()
+        self._view.ui.btn_pred_analysis_multi_remove.hide()
+
+        # </editor-fold>
+
+        # self.multi_pred_analysis_show_protein_overview()
+
+    def display_multimer_pred_analysis(self) -> None:
+        """Displays the multimer prediction + analysis page."""
+        # checks internet connection
+        if not tools.check_internet_connectivity():
+            gui_utils.no_internet_dialog()
+            return
+
+        self._init_multi_pred_analysis_page()
+        self._view.ui.table_pred_analysis_multi_prot_to_predict.clear()
+        self._view.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
+            0,
+            QtWidgets.QTableWidgetItem("Chain"),
+        )
+        self._view.ui.table_pred_analysis_multi_prot_to_predict.setHorizontalHeaderItem(
+            1,
+            QtWidgets.QTableWidgetItem("Sequence"),
+        )
+        self._view.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self._view.ui.table_pred_analysis_multi_prot_to_predict,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+            self._view.ui.btn_pred_analysis_multi_back,
+            self._view.ui.btn_pred_analysis_multi_next,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add_2,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_analysis_multi_back_2,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self._view.ui.tabWidget_2.currentIndex() == 1:
+            self._view.ui.tabWidget_2.setCurrentIndex(0)
+        self._view.ui.tabWidget_2.setTabEnabled(1, False)
+        self._view.ui.tabWidget_2.setTabEnabled(0, True)
+        tools.switch_page(
+            self._view.ui.stackedWidget,
+            self._view.ui.lbl_page_title,
+            22,
+            "Multimer Prediction + Analysis",
+        )
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_pred_analysis_multimer_page,
+        )
+        self._view.ui.table_pred_analysis_multi_prot_to_predict.setEnabled(True)
+
+    # <editor-fold desc="Prediction section">
+    def multi_pred_analysis_validate_protein_name(self) -> None:
+        """Validates the input of the protein name in real-time."""
+        if safeguard.Safeguard.check_if_value_is_in_table_v_header(
+            self._view.ui.txt_pred_analysis_multi_prot_name.text(),
+            self._view.ui.table_pred_analysis_multi_prot_to_predict,
+        ):
+            self._view.ui.lbl_pred_analysis_multi_prot_name_status.setText("Protein name already used.")
+            self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next)
+        else:
+            self._view.ui.btn_pred_analysis_multi_next.setEnabled(True)
+            tools.validate_protein_name(
+                self._view.ui.txt_pred_analysis_multi_prot_name,
+                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+                self._view.ui.btn_pred_analysis_multi_next,
+            )
+
+    def multi_pred_analysis_validate_protein_sequence(self) -> None:
+        """Validates the input of the protein sequence in real-time."""
+        tools.validate_protein_sequence(
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+        )
+
+    def multi_pred_analysis_check_if_list_is_empty(self) -> None:
+        """Checks if the list of sequences of the protein is empty."""
+        if self._view.ui.list_pred_analysis_multi_prot_seq_overview.count() == 0:
+            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        else:
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(True)
+
+    def multi_pred_analysis_add_sequence_to_list(self) -> None:
+        """Adds the entered sequence to the sequences of the protein."""
+        self._view.ui.list_pred_analysis_multi_prot_seq_overview.addItem(
+            QtWidgets.QListWidgetItem(self._view.ui.txt_pred_analysis_multi_prot_seq.toPlainText()),
+        )
+        self.multi_pred_analysis_check_if_list_is_empty()
+
+    def multi_pred_analysis_remove_sequence_to_list(self) -> None:
+        """Removes the entered sequence from the sequences of the protein."""
+        self._view.ui.list_pred_analysis_multi_prot_seq_overview.takeItem(
+            self._view.ui.list_pred_analysis_multi_prot_seq_overview.currentRow(),
+        )
+        self.multi_pred_analysis_check_if_list_is_empty()
+        self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
+
+    def multi_pred_analysis_check_if_table_is_empty(self) -> None:
+        """Checks if the list of proteins to predict is empty."""
+        if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
+            styles.color_button_not_ready(self._view.ui.btn_pred_multi_predict)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+                self._view.ui.table_pred_analysis_multi_prot_to_predict,
+                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                self._view.ui.lbl_pred_analysis_multi_prot_name,
+                self._view.ui.txt_pred_analysis_multi_prot_name,
+                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+                self._view.ui.btn_pred_analysis_multi_back,
+                self._view.ui.btn_pred_analysis_multi_next,
+                self._view.ui.lbl_pred_analysis_multi_prot_seq,
+                self._view.ui.txt_pred_analysis_multi_prot_seq,
+                self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+                self._view.ui.lbl_pred_multi_prot_seq_add_2,
+                self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+                self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+                self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                self._view.ui.btn_pred_analysis_multi_back_2,
+                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+                self._view.ui.lbl_pred_analysis_multi_advanced_config,
+                self._view.ui.btn_pred_analysis_multi_advanced_config,
+                self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+                self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.btn_pred_multi_predict.setEnabled(False)
+            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+        else:
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_go_analysis_setup)
+            self._view.ui.btn_pred_multi_predict.setEnabled(True)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+                self._view.ui.table_pred_analysis_multi_prot_to_predict,
+                self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+                self._view.ui.lbl_pred_analysis_multi_advanced_config,
+                self._view.ui.btn_pred_analysis_multi_advanced_config,
+                self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+                self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.lbl_pred_analysis_multi_prot_name,
+                self._view.ui.txt_pred_analysis_multi_prot_name,
+                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+                self._view.ui.btn_pred_analysis_multi_back,
+                self._view.ui.btn_pred_analysis_multi_next,
+                self._view.ui.lbl_pred_analysis_multi_prot_seq,
+                self._view.ui.txt_pred_analysis_multi_prot_seq,
+                self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+                self._view.ui.lbl_pred_multi_prot_seq_add_2,
+                self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+                self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+                self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                self._view.ui.btn_pred_analysis_multi_back_2,
+                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
+
+    def multi_pred_analysis_add_protein_to_predict(self) -> None:
+        """Adds the proteins to the list of proteins to predict."""
+        for i in range(self._view.ui.list_pred_analysis_multi_prot_seq_overview.count()):
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.setRowCount(
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1,
+            )
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.insertRow(
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() + 1,
+            )
+            tmp_chain_seq = (
+                constants.chain_dict.get(i),
+                self._view.ui.list_pred_analysis_multi_prot_seq_overview.item(i).text(),
+            )
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
+                0,
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[0]),
+            )
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
+                1,
+                QtWidgets.QTableWidgetItem(tmp_chain_seq[1]),
+            )
+            name_item = QtWidgets.QTableWidgetItem(self._view.ui.txt_pred_analysis_multi_prot_name.text())
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.setVerticalHeaderItem(
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() - 1,
+                name_item,
+            )
+        self._view.ui.table_pred_analysis_multi_prot_to_predict.resizeColumnsToContents()
+        self.multi_pred_analysis_check_if_table_is_empty()
+        self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
+
+    def multi_pred_analysis_remove_protein_to_predict(self) -> None:
+        """Removes the selected protein from the list of proteins to predict."""
+        if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 1:
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.removeRow(0)
+        else:
+            self._view.ui.table_pred_analysis_multi_prot_to_predict.removeRow(
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.currentRow(),
+            )
+            prot_name = self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.currentRow(),
+            ).text()
+            for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+                if self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text() == prot_name:
+                    self._view.ui.table_pred_analysis_multi_prot_to_predict.setItem(
+                        i,
+                        0,
+                        QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)),
+                    )
+        self.multi_pred_analysis_check_if_table_is_empty()
+        self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
+
+    def multi_pred_analysis_add(self) -> None:
+        """Shows the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self._view.ui.table_pred_analysis_multi_prot_to_predict,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+            self._view.ui.btn_pred_analysis_multi_back,
+            self._view.ui.btn_pred_analysis_multi_next,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add_2,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_analysis_multi_back_2,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+        )
+        gui_utils.disable_text_box(
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+        )
+        self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
+        self._view.ui.txt_pred_analysis_multi_prot_name.clear()
+        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next)
+        if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() > 0:
+            try:
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection on Local Multimer Prediction in overview table.")
+
+    def multi_pred_analysis_back(self) -> None:
+        """Hides the gui elements for the protein name."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self._view.ui.table_pred_analysis_multi_prot_to_predict,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+            self._view.ui.btn_pred_analysis_multi_back,
+            self._view.ui.btn_pred_analysis_multi_next,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add_2,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_analysis_multi_back_2,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self.multi_pred_analysis_check_if_table_is_empty()
+
+    def multi_pred_analysis_next(self) -> None:
+        """Shows the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self._view.ui.table_pred_analysis_multi_prot_to_predict,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add_2,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_analysis_multi_back_2,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+            self._view.ui.btn_pred_analysis_multi_back,
+            self._view.ui.btn_pred_analysis_multi_next,
+            self._view.ui.lbl_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+        )
+        gui_utils.disable_text_box(
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+        )
+        self._view.ui.txt_pred_analysis_multi_prot_seq.clear()
+        self._view.ui.list_pred_analysis_multi_prot_seq_overview.clear()
+        self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
+        self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
+        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
+
+    def multi_pred_analysis_back_2(self) -> None:
+        """Hides the gui elements for the protein sequence."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+            self._view.ui.table_pred_analysis_multi_prot_to_predict,
+            self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+            self._view.ui.btn_pred_analysis_multi_back,
+            self._view.ui.btn_pred_analysis_multi_next,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+            self._view.ui.lbl_pred_multi_prot_seq_add_2,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+            self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+            self._view.ui.btn_pred_analysis_multi_back_2,
+            self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+            self._view.ui.lbl_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_advanced_config,
+            self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+            self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(
+            self._view.ui.txt_pred_analysis_multi_prot_name,
+            self._view.ui.lbl_pred_analysis_multi_prot_name,
+        )
+        gui_utils.disable_text_box(
+            self._view.ui.txt_pred_analysis_multi_prot_seq,
+            self._view.ui.lbl_pred_analysis_multi_prot_seq,
+        )
+
+    def multi_pred_analysis_prot_seq_overview_item_changed(self) -> None:
+        """Enables the remove button of the list of sequences of the protein."""
+        self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(True)
+
+    def multi_pred_analysis_prot_to_predict_item_changed(self) -> None:
+        """Enables the remove button of the list of proteins to predict."""
+        self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(True)
+
+    # </editor-fold>
+
+    def switch_multimer_pred_analysis_tab(self) -> None:
+        """Switches the tabs from prediction to analysis and vice versa."""
+        if self._view.ui.tabWidget_2.currentIndex() == 0:
+            # goes from prediction to analysis
+            self._view.ui.tabWidget_2.setCurrentIndex(1)
+            gui_elements_to_show = [
+                self._view.ui.lbl_pred_analysis_multi_overview,
+                self._view.ui.list_pred_analysis_multi_overview,
+                self._view.ui.btn_pred_analysis_multi_add,
+                self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+            ]
+            gui_elements_to_hide = [
+                self._view.ui.btn_pred_analysis_multi_remove,
+                self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+                self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+                self._view.ui.lbl_analysis_batch_vs_3,
+                self._view.ui.lbl_pred_analysis_multi_ref_chains,
+                self._view.ui.list_pred_analysis_multi_ref_chains,
+                self._view.ui.btn_pred_analysis_multi_back_4,
+                self._view.ui.btn_pred_analysis_multi_next_3,
+                self._view.ui.box_pred_analysis_multi_prot_struct_1,
+                self._view.ui.box_pred_analysis_multi_prot_struct_2,
+                self._view.ui.btn_pred_analysis_multi_back_3,
+                self._view.ui.btn_pred_analysis_multi_next_2,
+                self._view.ui.lbl_pred_analysis_multi_model_chains,
+                self._view.ui.list_pred_analysis_multi_model_chains,
+                self._view.ui.btn_pred_analysis_multi_back_5,
+                self._view.ui.btn_pred_analysis_multi_next_4,
+                self._view.ui.lbl_pred_analysis_multi_images,
+                self._view.ui.cb_pred_analysis_multi_images,
+                self._view.ui.btn_pred_analysis_multi_start,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.tabWidget_2.setTabEnabled(1, True)
+            self._view.ui.tabWidget_2.setTabEnabled(0, False)
+            if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
+                self._view.ui.btn_pred_analysis_multi_remove.show()
+                self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+                self._view.ui.btn_pred_analysis_multi_start.show()
+                self._view.ui.lbl_pred_analysis_multi_images.show()
+                self._view.ui.cb_pred_analysis_multi_images.show()
+                styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
+        else:
+            # goes from analysis to prediction
+            self._view.ui.tabWidget_2.setCurrentIndex(0)
+            if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
+                gui_elements_to_show = [
+                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+                    self._view.ui.table_pred_analysis_multi_prot_to_predict,
+                    self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+                    self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+                ]
+                gui_elements_to_hide = [
+                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+                    self._view.ui.lbl_pred_analysis_multi_advanced_config,
+                    self._view.ui.btn_pred_analysis_multi_advanced_config,
+                    self._view.ui.lbl_pred_analysis_multi_prot_name,
+                    self._view.ui.txt_pred_analysis_multi_prot_name,
+                    self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+                    self._view.ui.btn_pred_analysis_multi_back,
+                    self._view.ui.btn_pred_analysis_multi_next,
+                    self._view.ui.lbl_pred_analysis_multi_prot_seq,
+                    self._view.ui.txt_pred_analysis_multi_prot_seq,
+                    self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+                    self._view.ui.lbl_pred_multi_prot_seq_add_2,
+                    self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+                    self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                    self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+                    self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                    self._view.ui.btn_pred_analysis_multi_back_2,
+                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+                ]
+                gui_utils.show_gui_elements(gui_elements_to_show)
+                gui_utils.hide_gui_elements(gui_elements_to_hide)
+            else:
+                gui_elements_to_show = [
+                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
+                    self._view.ui.table_pred_analysis_multi_prot_to_predict,
+                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove,
+                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add,
+                    self._view.ui.lbl_pred_analysis_multi_advanced_config,
+                    self._view.ui.btn_pred_analysis_multi_advanced_config,
+                    self._view.ui.btn_pred_analysis_multi_go_analysis_setup,
+                    self._view.ui.lbl_pred_analysis_multi_to_analysis_setup,
+                ]
+                gui_elements_to_hide = [
+                    self._view.ui.lbl_pred_analysis_multi_prot_name,
+                    self._view.ui.txt_pred_analysis_multi_prot_name,
+                    self._view.ui.lbl_pred_analysis_multi_prot_name_status,
+                    self._view.ui.btn_pred_analysis_multi_back,
+                    self._view.ui.btn_pred_analysis_multi_next,
+                    self._view.ui.lbl_pred_analysis_multi_prot_seq,
+                    self._view.ui.txt_pred_analysis_multi_prot_seq,
+                    self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
+                    self._view.ui.lbl_pred_multi_prot_seq_add_2,
+                    self._view.ui.btn_pred_analysis_multi_prot_seq_add,
+                    self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
+                    self._view.ui.list_pred_analysis_multi_prot_seq_overview,
+                    self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
+                    self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
+                    self._view.ui.btn_pred_analysis_multi_back_2,
+                    self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
+                ]
+                gui_utils.show_gui_elements(gui_elements_to_show)
+                gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.tabWidget_2.setTabEnabled(0, True)
+            self._view.ui.tabWidget_2.setTabEnabled(1, False)
+
+    # <editor-fold desc="Analysis section">
+    def multi_pred_analysis_structure_analysis_add(self) -> None:
+        """Shows the gui elements to choose the two proteins."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.clear()
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.clear()
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.setText("Protein structure 1")
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.setText("Protein structure 2")
+        self.fill_multi_pred_analysis_protein_boxes()
+        if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
+            try:
+                self._view.ui.list_pred_analysis_multi_overview.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
+
+    def multi_pred_analysis_structure_analysis_next_2(self) -> None:
+        """Shows the gui elements to select the chains in protein 1."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.setText(
+            self._view.ui.box_pred_analysis_multi_prot_struct_1.currentText(),
+        )
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.setText(
+            self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText(),
+        )
+        self._view.ui.list_pred_analysis_multi_ref_chains.clear()
+        self._view.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
+        self._view.ui.list_pred_analysis_multi_ref_chains.setEnabled(True)
+
+        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+            if (
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text()
+                == self._view.ui.box_pred_analysis_multi_prot_struct_1.currentText()
+            ):
+                self._view.ui.list_pred_analysis_multi_ref_chains.addItem(
+                    self._view.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text(),
+                )
+        if self._view.ui.list_pred_analysis_multi_ref_chains.count() == 0:
+            tmp_protein = self._current_project.search_protein(
+                self._view.ui.box_pred_analysis_multi_prot_struct_1.currentText(),
+            )
+            for tmp_chain in tmp_protein.chains:
+                if tmp_chain.chain_type == "protein_chain":
+                    self._view.ui.list_pred_analysis_multi_ref_chains.addItem(tmp_chain.chain_letter)
+        if self._view.ui.list_pred_analysis_multi_ref_chains.count() == 1:
+            self._view.ui.lbl_pred_analysis_multi_ref_chains.setText(
+                f"Select chain in protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.",
+            )
+        else:
+            self._view.ui.lbl_pred_analysis_multi_ref_chains.setText(
+                f"Select chains in protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.",
+            )
+
+    def multi_pred_analysis_structure_analysis_back_3(self) -> None:
+        """Hides the gui elements to choose the two proteins."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
+            self._view.ui.btn_pred_analysis_multi_remove.show()
+            self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+            self._view.ui.btn_pred_analysis_multi_start.show()
+            self._view.ui.lbl_pred_analysis_multi_images.show()
+            self._view.ui.cb_pred_analysis_multi_images.show()
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
+
+    def multi_pred_analysis_structure_analysis_next_3(self) -> None:
+        """Shows the gui elements to select the chains in protein 2."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.list_pred_analysis_multi_model_chains.clear()
+        self._view.ui.list_pred_analysis_multi_ref_chains.setEnabled(False)
+        self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+
+        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+            if (
+                self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text()
+                == self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText()
+            ):
+                self._view.ui.list_pred_analysis_multi_model_chains.addItem(
+                    self._view.ui.table_pred_analysis_multi_prot_to_predict.item(i, 0).text(),
+                )
+        if self._view.ui.list_pred_analysis_multi_model_chains.count() == 0:
+            tmp_protein = self._current_project.search_protein(
+                self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText(),
+            )
+            for tmp_chain in tmp_protein.chains:
+                if tmp_chain.chain_type == "protein_chain":
+                    self._view.ui.list_pred_analysis_multi_model_chains.addItem(tmp_chain.chain_letter)
+        if len(self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems()) == 1:
+            self._view.ui.lbl_pred_analysis_multi_model_chains.setText(
+                f"Select 1 chain in protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.",
+            )
+        else:
+            self._view.ui.lbl_pred_analysis_multi_model_chains.setText(
+                f"Select {len(self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems())} chains in "
+                f"protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()}.",
+            )
+
+    def multi_pred_analysis_structure_analysis_back_4(self) -> None:
+        """Hides the gui elements to select the chains in protein 1."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_1.setText("Protein structure 1")
+        self._view.ui.lbl_pred_analysis_multi_prot_struct_2.setText("Protein structure 2")
+
+    def multi_pred_analysis_structure_analysis_next_4(self) -> None:
+        """Adds the protein pair to the list of protein pairs to analyze."""
+        gui_elements_to_show = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        prot_1_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self._view.ui.list_pred_analysis_multi_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        item = QtWidgets.QListWidgetItem(analysis_name)
+        self._view.ui.list_pred_analysis_multi_overview.addItem(item)
+        self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+        styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
+
+    def multi_pred_analysis_structure_analysis_back_5(self) -> None:
+        """Hides the gui elements to select the chains in protein 2."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.list_pred_analysis_multi_ref_chains.setEnabled(True)
+
+        # tmp_protein = self._current_project.search_protein(self._view.ui.box_pred_analysis_multi_prot_struct_2.currentText())
+        # for tmp_chain in tmp_protein.chains:
+        #     if tmp_chain.chain_type == "protein_chain":
+        #         self._view.ui.list_pred_analysis_multi_ref_chains.addItem(tmp_chain.chain_letter)
+
+    def multi_pred_analysis_structure_analysis_overview_clicked(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_pred_analysis_multi_remove.setEnabled(True)
+
+    def fill_multi_pred_analysis_protein_boxes(self) -> None:
+        """Fills the combo boxes with the protein names."""
+        protein_names = []
+        for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
+            protein_names.append(self._view.ui.table_pred_analysis_multi_prot_to_predict.verticalHeaderItem(i).text())
+        for tmp_protein in self._current_project.proteins:
+            protein_names.append(tmp_protein.get_molecule_object())
+        protein_names.insert(0, "")
+        protein_names = list(set(protein_names))
+        self._view.ui.box_pred_analysis_multi_prot_struct_1.clear()
+        self._view.ui.box_pred_analysis_multi_prot_struct_2.clear()
+        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_multi_prot_struct_1, protein_names)
+        gui_utils.fill_combo_box(self._view.ui.box_pred_analysis_multi_prot_struct_2, protein_names)
+
+    def remove_multi_pred_analysis_analysis_run(self) -> None:
+        """Removes the selected protein pair from the list of protein pairs to analyze."""
+        self._view.ui.list_pred_analysis_multi_overview.takeItem(
+            self._view.ui.list_pred_analysis_multi_overview.currentRow(),
+        )
+        gui_elements_to_show = [
+            self._view.ui.lbl_pred_analysis_multi_overview,
+            self._view.ui.list_pred_analysis_multi_overview,
+            self._view.ui.btn_pred_analysis_multi_add,
+            self._view.ui.btn_pred_analysis_multi_back_pred_setup,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_pred_analysis_multi_remove,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_1,
+            self._view.ui.lbl_pred_analysis_multi_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs_3,
+            self._view.ui.lbl_pred_analysis_multi_ref_chains,
+            self._view.ui.list_pred_analysis_multi_ref_chains,
+            self._view.ui.btn_pred_analysis_multi_back_4,
+            self._view.ui.btn_pred_analysis_multi_next_3,
+            self._view.ui.box_pred_analysis_multi_prot_struct_1,
+            self._view.ui.box_pred_analysis_multi_prot_struct_2,
+            self._view.ui.btn_pred_analysis_multi_back_3,
+            self._view.ui.btn_pred_analysis_multi_next_2,
+            self._view.ui.lbl_pred_analysis_multi_model_chains,
+            self._view.ui.list_pred_analysis_multi_model_chains,
+            self._view.ui.btn_pred_analysis_multi_back_5,
+            self._view.ui.btn_pred_analysis_multi_next_4,
+            self._view.ui.lbl_pred_analysis_multi_images,
+            self._view.ui.cb_pred_analysis_multi_images,
+            self._view.ui.btn_pred_analysis_multi_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self._view.ui.list_pred_analysis_multi_overview.count() > 0:
+            self._view.ui.btn_pred_analysis_multi_remove.show()
+            self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
+            self._view.ui.btn_pred_analysis_multi_start.show()
+            self._view.ui.lbl_pred_analysis_multi_images.show()
+            self._view.ui.cb_pred_analysis_multi_images.show()
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
+        # if self._view.ui.list_pred_analysis_multi_overview.count() == 0:
+        #
+        #     self._view.ui.btn_pred_analysis_multi_back_pred_setup.show()
+        #     self._view.ui.btn_pred_analysis_multi_remove.hide()
+
+    def check_multi_pred_analysis_if_same_no_of_chains_selected(self) -> None:
+        """Checks if the same number of chains were selected."""
+        self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next_4)
+        if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_multi_model_chains.selectedItems()):
+            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_next_4)
+            self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
+
+        prot_1_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self._view.ui.list_pred_analysis_multi_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        for tmp_row in range(self._view.ui.list_pred_analysis_multi_overview.count()):
+            if analysis_name == self._view.ui.list_pred_analysis_multi_overview.item(tmp_row).text():
+                self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
+                styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next_4)
+                return
+
+    def check_multi_pred_analysis_if_prot_structs_are_filled(self) -> None:
+        """Checks if two proteins were selected."""
+        prot_1 = self._view.ui.box_pred_analysis_multi_prot_struct_1.itemText(
+            self._view.ui.box_pred_analysis_multi_prot_struct_1.currentIndex(),
+        )
+        prot_2 = self._view.ui.box_pred_analysis_multi_prot_struct_2.itemText(
+            self._view.ui.box_pred_analysis_multi_prot_struct_2.currentIndex(),
+        )
+        if prot_1 != "" and prot_2 != "":
+            self._view.ui.btn_pred_analysis_multi_next_2.setEnabled(True)
+        else:
+            self._view.ui.btn_pred_analysis_multi_next_2.setEnabled(False)
+
+    def count_multi_pred_analysis_selected_chains_for_prot_struct_1(self) -> None:
+        """Counts the number of chains in protein 1."""
+        self.no_of_selected_chains = len(self._view.ui.list_pred_analysis_multi_ref_chains.selectedItems())
+        if self.no_of_selected_chains > 0:
+            self._view.ui.btn_pred_analysis_multi_next_3.setEnabled(True)
+        else:
+            self._view.ui.btn_pred_analysis_multi_next_3.setEnabled(False)
+
+    # </editor-fold>
+    # </editor-fold>
+
+    # <editor-fold desc="Distance analysis">
+    def structure_analysis_add(self) -> None:
+        """Shows the gui elements to choose the two proteins."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_analysis_batch_overview,
+            self._view.ui.list_analysis_batch_overview,
+            self._view.ui.lbl_analysis_batch_prot_struct_1,
+            self._view.ui.box_analysis_batch_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_vs,
+            self._view.ui.lbl_analysis_batch_prot_struct_2,
+            self._view.ui.box_analysis_batch_prot_struct_2,
+            self._view.ui.btn_analysis_batch_back,
+            self._view.ui.btn_analysis_batch_next,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_analysis_batch_remove,
+            self._view.ui.btn_analysis_batch_add,
+            self._view.ui.lbl_analysis_batch_ref_chains,
+            self._view.ui.list_analysis_batch_ref_chains,
+            self._view.ui.btn_analysis_batch_back_2,
+            self._view.ui.btn_analysis_batch_next_2,
+            self._view.ui.lbl_analysis_batch_model_chains,
+            self._view.ui.list_analysis_batch_model_chains,
+            self._view.ui.btn_analysis_batch_back_3,
+            self._view.ui.btn_analysis_batch_next_3,
+            self._view.ui.lbl_analysis_batch_images,
+            self._view.ui.cb_analysis_batch_images,
+            self._view.ui.btn_analysis_batch_start,
+        ]
+
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_analysis_batch_prot_struct_1.clear()
+        self._view.ui.lbl_analysis_batch_prot_struct_2.clear()
+        self._view.ui.lbl_analysis_batch_prot_struct_1.setText("Protein structure 1")
+        self._view.ui.lbl_analysis_batch_prot_struct_2.setText("Protein structure 2")
+        self.fill_protein_boxes_batch()
+        if self._view.ui.list_analysis_batch_overview.count() > 0:
+            try:
+                self._view.ui.list_analysis_batch_overview.currentItem().setSelected(False)
+            except AttributeError:
+                constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
+
+    def structure_analysis_next(self) -> None:
+        """Shows the gui elements to select the chains in protein 1."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_analysis_batch_overview,
+            self._view.ui.list_analysis_batch_overview,
+            self._view.ui.lbl_analysis_batch_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs,
+            self._view.ui.lbl_analysis_batch_ref_chains,
+            self._view.ui.list_analysis_batch_ref_chains,
+            self._view.ui.btn_analysis_batch_back_2,
+            self._view.ui.btn_analysis_batch_next_2,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_analysis_batch_remove,
+            self._view.ui.btn_analysis_batch_add,
+            self._view.ui.box_analysis_batch_prot_struct_1,
+            self._view.ui.box_analysis_batch_prot_struct_2,
+            self._view.ui.btn_analysis_batch_back,
+            self._view.ui.btn_analysis_batch_next,
+            self._view.ui.lbl_analysis_batch_model_chains,
+            self._view.ui.list_analysis_batch_model_chains,
+            self._view.ui.btn_analysis_batch_back_3,
+            self._view.ui.btn_analysis_batch_next_3,
+            self._view.ui.lbl_analysis_batch_images,
+            self._view.ui.cb_analysis_batch_images,
+            self._view.ui.btn_analysis_batch_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_analysis_batch_prot_struct_1.setText(
+            self._view.ui.box_analysis_batch_prot_struct_1.currentText(),
+        )
+        self._view.ui.lbl_analysis_batch_prot_struct_2.setText(
+            self._view.ui.box_analysis_batch_prot_struct_2.currentText(),
+        )
+        self._view.ui.list_analysis_batch_ref_chains.clear()
+        self._view.ui.btn_analysis_batch_next_2.setEnabled(False)
+        self._view.ui.list_analysis_batch_ref_chains.setEnabled(True)
+
+        tmp_protein = self._current_project.search_protein(self._view.ui.box_analysis_batch_prot_struct_1.currentText())
+        for tmp_chain in tmp_protein.chains:
+            if tmp_chain.chain_type == "protein_chain":
+                self._view.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
+        if self._view.ui.list_analysis_batch_ref_chains.count() == 1:
+            self._view.ui.lbl_analysis_batch_ref_chains.setText(
+                f"Select chain in protein structure {self._view.ui.lbl_analysis_batch_prot_struct_1.text()}.",
+            )
+        else:
+            self._view.ui.lbl_analysis_batch_ref_chains.setText(
+                f"Select chains in protein structure {self._view.ui.lbl_analysis_batch_prot_struct_1.text()}.",
+            )
+
+    def structure_analysis_back(self) -> None:
+        """Hides the gui elements to choose the two proteins."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_analysis_batch_overview,
+            self._view.ui.list_analysis_batch_overview,
+            self._view.ui.btn_analysis_batch_add,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_analysis_batch_remove,
+            self._view.ui.lbl_analysis_batch_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs,
+            self._view.ui.lbl_analysis_batch_ref_chains,
+            self._view.ui.list_analysis_batch_ref_chains,
+            self._view.ui.btn_analysis_batch_back_2,
+            self._view.ui.btn_analysis_batch_next_2,
+            self._view.ui.box_analysis_batch_prot_struct_1,
+            self._view.ui.box_analysis_batch_prot_struct_2,
+            self._view.ui.btn_analysis_batch_back,
+            self._view.ui.btn_analysis_batch_next,
+            self._view.ui.lbl_analysis_batch_model_chains,
+            self._view.ui.list_analysis_batch_model_chains,
+            self._view.ui.btn_analysis_batch_back_3,
+            self._view.ui.btn_analysis_batch_next_3,
+            self._view.ui.lbl_analysis_batch_images,
+            self._view.ui.cb_analysis_batch_images,
+            self._view.ui.btn_analysis_batch_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        if self._view.ui.list_analysis_batch_overview.count() > 0:
+            self._view.ui.btn_analysis_batch_remove.show()
+            self._view.ui.btn_analysis_batch_remove.setEnabled(False)
+            self._view.ui.btn_analysis_batch_start.show()
+            self._view.ui.lbl_analysis_batch_images.show()
+            self._view.ui.cb_analysis_batch_images.show()
+            styles.color_button_ready(self._view.ui.btn_analysis_batch_start)
+
+    def structure_analysis_next_2(self) -> None:
+        """Shows the gui elements to select the chains in protein 2."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_analysis_batch_overview,
+            self._view.ui.list_analysis_batch_overview,
+            self._view.ui.lbl_analysis_batch_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs,
+            self._view.ui.lbl_analysis_batch_ref_chains,
+            self._view.ui.list_analysis_batch_ref_chains,
+            self._view.ui.lbl_analysis_batch_model_chains,
+            self._view.ui.list_analysis_batch_model_chains,
+            self._view.ui.btn_analysis_batch_back_3,
+            self._view.ui.btn_analysis_batch_next_3,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_analysis_batch_remove,
+            self._view.ui.btn_analysis_batch_add,
+            self._view.ui.box_analysis_batch_prot_struct_1,
+            self._view.ui.box_analysis_batch_prot_struct_2,
+            self._view.ui.btn_analysis_batch_back,
+            self._view.ui.btn_analysis_batch_next,
+            self._view.ui.btn_analysis_batch_back_2,
+            self._view.ui.btn_analysis_batch_next_2,
+            self._view.ui.lbl_analysis_batch_images,
+            self._view.ui.cb_analysis_batch_images,
+            self._view.ui.btn_analysis_batch_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.list_analysis_batch_model_chains.clear()
+        self._view.ui.list_analysis_batch_ref_chains.setEnabled(False)
+        self._view.ui.btn_analysis_batch_next_3.setEnabled(False)
+
+        tmp_protein = self._current_project.search_protein(self._view.ui.box_analysis_batch_prot_struct_2.currentText())
+        for tmp_chain in tmp_protein.chains:
+            if tmp_chain.chain_type == "protein_chain":
+                self._view.ui.list_analysis_batch_model_chains.addItem(tmp_chain.chain_letter)
+        if len(self._view.ui.list_analysis_batch_ref_chains.selectedItems()) == 1:
+            self._view.ui.lbl_analysis_batch_model_chains.setText(
+                f"Select 1 chain in protein structure {self._view.ui.lbl_analysis_batch_prot_struct_2.text()}.",
+            )
+        else:
+            self._view.ui.lbl_analysis_batch_model_chains.setText(
+                f"Select {len(self._view.ui.list_analysis_batch_ref_chains.selectedItems())} chains in "
+                f"protein structure {self._view.ui.lbl_analysis_batch_prot_struct_2.text()}.",
+            )
+
+    def structure_analysis_back_2(self) -> None:
+        """Hides the gui elements to select the chains in protein 1."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_analysis_batch_overview,
+            self._view.ui.list_analysis_batch_overview,
+            self._view.ui.lbl_analysis_batch_prot_struct_1,
+            self._view.ui.box_analysis_batch_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_vs,
+            self._view.ui.lbl_analysis_batch_prot_struct_2,
+            self._view.ui.box_analysis_batch_prot_struct_2,
+            self._view.ui.btn_analysis_batch_back,
+            self._view.ui.btn_analysis_batch_next,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_analysis_batch_remove,
+            self._view.ui.btn_analysis_batch_add,
+            self._view.ui.lbl_analysis_batch_ref_chains,
+            self._view.ui.list_analysis_batch_ref_chains,
+            self._view.ui.btn_analysis_batch_back_2,
+            self._view.ui.btn_analysis_batch_next_2,
+            self._view.ui.lbl_analysis_batch_model_chains,
+            self._view.ui.list_analysis_batch_model_chains,
+            self._view.ui.btn_analysis_batch_back_3,
+            self._view.ui.btn_analysis_batch_next_3,
+            self._view.ui.lbl_analysis_batch_images,
+            self._view.ui.cb_analysis_batch_images,
+            self._view.ui.btn_analysis_batch_start,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.lbl_analysis_batch_prot_struct_1.setText("Protein structure 1")
+        self._view.ui.lbl_analysis_batch_prot_struct_2.setText("Protein structure 2")
+
+    def structure_analysis_next_3(self) -> None:
+        """Adds the protein pair to the list of protein pairs to analyze."""
+        gui_elements_to_show = [
+            self._view.ui.btn_analysis_batch_remove,
+            self._view.ui.btn_analysis_batch_add,
+            self._view.ui.lbl_analysis_batch_overview,
+            self._view.ui.list_analysis_batch_overview,
+            self._view.ui.lbl_analysis_batch_images,
+            self._view.ui.cb_analysis_batch_images,
+            self._view.ui.btn_analysis_batch_start,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.box_analysis_batch_prot_struct_1,
+            self._view.ui.box_analysis_batch_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs,
+            self._view.ui.lbl_analysis_batch_ref_chains,
+            self._view.ui.list_analysis_batch_ref_chains,
+            self._view.ui.lbl_analysis_batch_model_chains,
+            self._view.ui.list_analysis_batch_model_chains,
+            self._view.ui.btn_analysis_batch_back,
+            self._view.ui.btn_analysis_batch_next,
+            self._view.ui.btn_analysis_batch_back_2,
+            self._view.ui.btn_analysis_batch_next_2,
+            self._view.ui.btn_analysis_batch_back_3,
+            self._view.ui.btn_analysis_batch_next_3,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        prot_1_name = self._view.ui.lbl_analysis_batch_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self._view.ui.list_analysis_batch_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self._view.ui.lbl_analysis_batch_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self._view.ui.list_analysis_batch_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        item = QtWidgets.QListWidgetItem(analysis_name)
+        self._view.ui.list_analysis_batch_overview.addItem(item)
+        self._view.ui.btn_analysis_batch_remove.setEnabled(False)
+        styles.color_button_ready(self._view.ui.btn_analysis_batch_start)
+
+    def structure_analysis_back_3(self) -> None:
+        """Hides the gui elements to select the chains in protein 2."""
+        gui_elements_to_show = [
+            self._view.ui.lbl_analysis_batch_overview,
+            self._view.ui.list_analysis_batch_overview,
+            self._view.ui.lbl_analysis_batch_prot_struct_1,
+            self._view.ui.lbl_analysis_batch_prot_struct_2,
+            self._view.ui.lbl_analysis_batch_vs,
+            self._view.ui.lbl_analysis_batch_ref_chains,
+            self._view.ui.list_analysis_batch_ref_chains,
+            self._view.ui.btn_analysis_batch_back_2,
+            self._view.ui.btn_analysis_batch_next_2,
+        ]
+        gui_elements_to_hide = [
+            self._view.ui.btn_analysis_batch_remove,
+            self._view.ui.btn_analysis_batch_add,
+            self._view.ui.box_analysis_batch_prot_struct_1,
+            self._view.ui.box_analysis_batch_prot_struct_2,
+            self._view.ui.btn_analysis_batch_back,
+            self._view.ui.btn_analysis_batch_next,
+            self._view.ui.btn_analysis_batch_back_3,
+            self._view.ui.btn_analysis_batch_next_3,
+            self._view.ui.lbl_analysis_batch_images,
+            self._view.ui.cb_analysis_batch_images,
+            self._view.ui.btn_analysis_batch_start,
+            self._view.ui.lbl_analysis_batch_model_chains,
+            self._view.ui.list_analysis_batch_model_chains,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        self._view.ui.list_analysis_batch_ref_chains.setEnabled(True)
+
+        # tmp_protein = self._current_project.search_protein(self._view.ui.box_analysis_batch_prot_struct_2.currentText())
+        # for tmp_chain in tmp_protein.chains:
+        #     if tmp_chain.chain_type == "protein_chain":
+        #         self._view.ui.list_analysis_batch_ref_chains.addItem(tmp_chain.chain_letter)
+
+    def structure_analysis_overview_clicked(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_analysis_batch_remove.setEnabled(True)
+
+    def fill_protein_boxes_batch(self) -> None:
+        """Fills the combo boxes with the protein names."""
+        proteins = []
+        for tmp_protein in self._current_project.proteins:
+            proteins.append(tmp_protein.get_molecule_object())
+        proteins.insert(0, "")
+        self._view.ui.box_analysis_batch_prot_struct_1.clear()
+        self._view.ui.box_analysis_batch_prot_struct_2.clear()
+        gui_utils.fill_combo_box(self._view.ui.box_analysis_batch_prot_struct_1, proteins)
+        gui_utils.fill_combo_box(self._view.ui.box_analysis_batch_prot_struct_2, proteins)
+
+    def remove_analysis_run(self) -> None:
+        """Removes the selected protein pair from the list of protein pairs to analyze."""
+        self._view.ui.list_analysis_batch_overview.takeItem(self._view.ui.list_analysis_batch_overview.currentRow())
+        if self._view.ui.list_analysis_batch_overview.count() == 0:
+            gui_elements_to_show = [
+                self._view.ui.lbl_analysis_batch_overview,
+                self._view.ui.list_analysis_batch_overview,
+                self._view.ui.btn_analysis_batch_add,
+            ]
+
+            gui_elements_to_hide = [
+                self._view.ui.btn_analysis_batch_remove,
+                self._view.ui.lbl_analysis_batch_prot_struct_1,
+                self._view.ui.lbl_analysis_batch_prot_struct_2,
+                self._view.ui.lbl_analysis_batch_vs,
+                self._view.ui.lbl_analysis_batch_ref_chains,
+                self._view.ui.list_analysis_batch_ref_chains,
+                self._view.ui.btn_analysis_batch_back_2,
+                self._view.ui.btn_analysis_batch_next_2,
+                self._view.ui.box_analysis_batch_prot_struct_1,
+                self._view.ui.box_analysis_batch_prot_struct_2,
+                self._view.ui.btn_analysis_batch_back,
+                self._view.ui.btn_analysis_batch_next,
+                self._view.ui.lbl_analysis_batch_model_chains,
+                self._view.ui.list_analysis_batch_model_chains,
+                self._view.ui.btn_analysis_batch_back_3,
+                self._view.ui.btn_analysis_batch_next_3,
+                self._view.ui.lbl_analysis_batch_images,
+                self._view.ui.cb_analysis_batch_images,
+                self._view.ui.btn_analysis_batch_start,
+            ]
+
+            gui_utils.show_gui_elements(gui_elements_to_show)
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.btn_analysis_batch_remove.hide()
+        else:
+            if self._view.ui.list_analysis_batch_overview.count() > 0:
+                try:
+                    self._view.ui.list_analysis_batch_overview.currentItem().setSelected(False)
+                except AttributeError:
+                    constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
+        self._view.ui.btn_analysis_batch_remove.setEnabled(False)
+
+    def check_if_same_no_of_chains_selected_batch(self) -> None:
+        """Checks if the same number of proteins were selected."""
+        self._view.ui.btn_analysis_batch_next_3.setEnabled(False)
+        styles.color_button_not_ready(self._view.ui.btn_analysis_batch_next_3)
+
+        if self.no_of_selected_chains == len(self._view.ui.list_analysis_batch_model_chains.selectedItems()):
+            styles.color_button_ready(self._view.ui.btn_analysis_batch_next_3)
+            self._view.ui.btn_analysis_batch_next_3.setEnabled(True)
+
+        prot_1_name = self._view.ui.lbl_analysis_batch_prot_struct_1.text()
+        prot_1_chains = []
+        for chain in self._view.ui.list_analysis_batch_ref_chains.selectedItems():
+            prot_1_chains.append(chain.text())
+        prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
+        prot_2_name = self._view.ui.lbl_analysis_batch_prot_struct_2.text()
+        prot_2_chains = []
+        for chain in self._view.ui.list_analysis_batch_model_chains.selectedItems():
+            prot_2_chains.append(chain.text())
+        prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
+        analysis_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        for tmp_row in range(self._view.ui.list_analysis_batch_overview.count()):
+            if analysis_name == self._view.ui.list_analysis_batch_overview.item(tmp_row).text():
+                self._view.ui.btn_analysis_batch_next_3.setEnabled(False)
+                styles.color_button_not_ready(self._view.ui.btn_analysis_batch_next_3)
+                return
+
+    def check_if_prot_structs_are_filled_batch(self) -> None:
+        """Checks if two proteins were selected."""
+        prot_1 = self._view.ui.box_analysis_batch_prot_struct_1.itemText(
+            self._view.ui.box_analysis_batch_prot_struct_1.currentIndex(),
+        )
+        prot_2 = self._view.ui.box_analysis_batch_prot_struct_2.itemText(
+            self._view.ui.box_analysis_batch_prot_struct_2.currentIndex(),
+        )
+        if prot_1 != "" and prot_2 != "":
+            self._view.ui.btn_analysis_batch_next.setEnabled(True)
+        else:
+            self._view.ui.btn_analysis_batch_next.setEnabled(False)
+
+    def count_batch_selected_chains_for_prot_struct_1(self) -> None:
+        """Counts the number of chains of protein 1."""
+        self.no_of_selected_chains = len(self._view.ui.list_analysis_batch_ref_chains.selectedItems())
+        if self.no_of_selected_chains > 0:
+            self._view.ui.btn_analysis_batch_next_2.setEnabled(True)
+        else:
+            self._view.ui.btn_analysis_batch_next_2.setEnabled(False)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Analysis images">
+    def display_image_analysis_page(self) -> None:
+        """Displays the analysis image work area."""
+        # get all protein pairs without images
+        self._view.ui.list_analysis_images_struct_analysis.clear()
+        self._view.ui.list_analysis_images_creation_struct_analysis.clear()
+        for tmp_protein_pair in self._current_project.protein_pairs:
+            if len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) == 0:
+                self._view.ui.list_analysis_images_struct_analysis.addItem(tmp_protein_pair.name)
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_image_analysis_page,
+        )
+        tools.switch_page(self._view.ui.stackedWidget, self._view.ui.lbl_page_title, 23, "Analysis Images")
+        self._view.ui.btn_add_analysis_images_struct_analysis.setEnabled(False)
+        self._view.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
+        self._view.ui.btn_start_automatic_image_creation.setEnabled(False)
+
+    def analysis_images_enable_add(self) -> None:
+        """Enables the add button."""
+        self._view.ui.btn_add_analysis_images_struct_analysis.setEnabled(True)
+
+    def analysis_images_enable_remove(self) -> None:
+        """Enables the remove button."""
+        self._view.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(True)
+
+    def add_protein_pair_to_image_creation_queue(self) -> None:
+        """Adds a protein pair from the list of protein pairs to make images of."""
+        protein_pair_to_add = self._view.ui.list_analysis_images_struct_analysis.currentItem().text()
+        self._view.ui.list_analysis_images_creation_struct_analysis.addItem(protein_pair_to_add)
+        self._view.ui.list_analysis_images_struct_analysis.takeItem(
+            self._view.ui.list_analysis_images_struct_analysis.currentRow(),
+        )
+        self._view.ui.btn_add_analysis_images_struct_analysis.setEnabled(False)
+        self.analysis_images_check_if_creation_can_start()
+
+    def remove_protein_pair_from_image_creation_queue(self) -> None:
+        """Removes a protein pair from the list of protein pairs to make images of."""
+        protein_pair_to_remove = self._view.ui.list_analysis_images_creation_struct_analysis.currentItem()
+        self._view.ui.list_analysis_images_creation_struct_analysis.takeItem(
+            self._view.ui.list_analysis_images_creation_struct_analysis.currentRow(),
+        )
+        self._view.ui.list_analysis_images_struct_analysis.addItem(protein_pair_to_remove)
+        self._view.ui.btn_remove_analysis_images_creation_struct_analysis.setEnabled(False)
+        self.analysis_images_check_if_creation_can_start()
+
+    def analysis_images_check_if_creation_can_start(self) -> None:
+        """Checks if the list of protein pairs which get images are empty."""
+        if self._view.ui.list_analysis_images_creation_struct_analysis.count() > 0:
+            self._view.ui.btn_start_automatic_image_creation.setEnabled(True)
+            styles.color_button_ready(self._view.ui.btn_start_automatic_image_creation)
+        else:
+            self._view.ui.btn_start_automatic_image_creation.setEnabled(False)
+            styles.color_button_not_ready(self._view.ui.btn_start_automatic_image_creation)
+
+    # </editor-fold>
 
     # </editor-fold>

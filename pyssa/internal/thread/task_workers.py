@@ -543,7 +543,7 @@ class ColabfoldWorker(QObject):
 
 
 class DistanceAnalysisWorker(QObject):
-    """This class is a worker class for the analysis process.
+    """This class is a worker class for the analysis process. DO NOT USE THIS ANYMORE!
 
     Inherits from QObject to handler worker thread setup, signals and wrap-up.
 
@@ -759,7 +759,7 @@ class OpenProjectWorker(QObject):
     app_settings: "settings.Settings"
 
     def __init__(self, workspace_path: pathlib.Path, project_name: str, app_settings: "settings.Settings") -> None:
-        """Constructor.
+        """Constructor. DO NOT USE THIS ANYMORE!
 
         Args:
             workspace_path: the path to the workspace

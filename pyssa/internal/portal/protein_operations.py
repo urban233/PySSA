@@ -162,3 +162,32 @@ def get_protein_sequence_length_from_protein(a_protein: "protein.Protein") -> in
     """
     fasta_prot_1 = cmd.get_fastastr(a_protein.pymol_selection.selection_string)
     return len(fasta_prot_1[fasta_prot_1.find("\n") :])
+
+
+def count_states_of_molecule_object(molecule_object: str) -> int:
+    """Counts the states of a given molecule object.
+
+    Args:
+        molecule_object: the name of the molecule object in pymol.
+    """
+    return cmd.count_states(molecule_object)
+
+
+def consolidate_molecule_object_to_first_state(molecule_object: str) -> None:
+    """Consolidates the given molecule object into a single state.
+
+    Args:
+        molecule_object: the name of the molecule object in pymol.
+    """
+    # Create a new object with only the first state
+    cmd.create("new_object", molecule_object, 1, 1)
+    # Delete the original molecule to keep only the new object
+    cmd.delete(molecule_object)
+    # Rename the new object to the original name if needed
+    cmd.set_name("new_object", molecule_object)
+    if count_states_of_molecule_object(molecule_object) > 1:
+        raise RuntimeError("Molecule object has still more than one state.")
+    if cmd.select(f"/{molecule_object}//A/1/CA") > 1:
+        raise RuntimeError(
+            f"Molecule object has still more than one state. {cmd.select(f'/{molecule_object}//A/1/CA')}",
+        )

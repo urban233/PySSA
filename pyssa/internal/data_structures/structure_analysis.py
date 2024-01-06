@@ -80,6 +80,7 @@ class Analysis:
             f"The function argument of the value for the image_creation_option is: {the_image_creation_option}",
         )
         # create scratch dirs
+        filesystem_helpers.create_directory(constants.SCRATCH_DIR_ANALYSIS)
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)

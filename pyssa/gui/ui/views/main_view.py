@@ -24,6 +24,8 @@ import pathlib
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
+from PyQt5.QtCore import Qt
+from pyqtspinner import spinner
 
 from pyssa.gui.ui.forms.auto_generated import auto_main_window
 from pyssa.util import constants
@@ -33,8 +35,9 @@ class MainView(QtWidgets.QMainWindow):
     """Class representing the main view of PySSA."""
 
     """
-    The status bar of the main view.
+    The spinner that shows up if something runs as Task
     """
+    wait_spinner: spinner.WaitingSpinner
 
     def __init__(self) -> None:
         """Constructor."""
@@ -43,6 +46,20 @@ class MainView(QtWidgets.QMainWindow):
         self.ui = auto_main_window.Ui_MainWindow()
         self.ui.setupUi(self)
         self.status_bar = QtWidgets.QStatusBar()
+        self.wait_spinner = spinner.WaitingSpinner(
+            parent=self,
+            center_on_parent=True,
+            disable_parent_when_spinning=True,
+            modality=Qt.ApplicationModal,
+            roundness=100.0,
+            fade=45.0,
+            radius=14,
+            lines=8,
+            line_length=17,
+            line_width=10,
+            speed=1.25,
+            color=QtGui.QColor(75, 145, 247),
+        )
         self.initialize_ui()
 
     def initialize_ui(self) -> None:
@@ -109,3 +126,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.box_bg_color.setToolTip("Choose a background color")
         self.ui.box_renderer.setToolTip("Choose a ray-tracing renderer")
         self.ui.box_ray_trace_mode.setToolTip("Choose a ray-trace mode")
+
+    def quit_app(self) -> None:
+        """Closes the entire plugin."""
+        self.close()

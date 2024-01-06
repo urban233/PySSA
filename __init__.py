@@ -61,6 +61,7 @@ def __init_plugin__(app=None):  # noqa: ANN202, ANN001, N807
 
 # global reference to avoid garbage collection of our dialog
 mainWindow = None
+mainPresenter = None
 
 
 def run_plugin_gui() -> None:
@@ -76,10 +77,11 @@ def run_plugin_gui() -> None:
 
     # getting the value of the global var mainWindow
     global mainWindow
+    global mainPresenter
 
     if mainWindow is None:
         mainWindow = main_view.MainView()
-        main_presenter = main_presenter.MainPresenter(mainWindow)
+        mainPresenter = main_presenter.MainPresenter(mainWindow)
         # Open the qss styles file and read in the css-alike styling code
         if sys.platform.startswith("linux"):
             with open(styles_path_list[0], "r", encoding="utf-8") as file:

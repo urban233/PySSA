@@ -235,19 +235,22 @@ for the presenter. The `Task` class is in the `pyssa.internal.thread.tasks`
 module. Do **NOT** use the `_Action` class directly only use the `Task` class!
 
 ### Usage
+
 ```python
 ...
 
+
 def opens_project(self):
     """Initiates the task to open an existing project."""
-    self._active_task = tasks.Task(self.__async_logic_open_project, post_func=self.__await_post_project)
+    self._active_task = tasks.Task(self.__async_open_project, post_func=self.__await_open_project)
     self._active_task.start()
-    print("Thread should have started.")
+
 
 def __async_open_project(self) -> tuple:
     """Runs in the separate QThread and does CPU-bound work."""
     tmp_project_path = pathlib.Path(f"{self._workspace_path}/{self._view.ui.txt_open_selected_project.text()}")
     return ("result", project.Project.deserialize_project(tmp_project_path, self._application_settings))
+
 
 def __await_post_project(self, a_result: tuple):
     """Runs after the QThread finished."""

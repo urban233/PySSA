@@ -20,9 +20,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains helper function for the analysis process."""
+import copy
 import logging
 from typing import Union
-
+from typing import TYPE_CHECKING
+from pyssa.internal.data_processing import data_transformer
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import selection
@@ -30,6 +32,46 @@ from pyssa.util import protein_util, exception
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+
+if TYPE_CHECKING:
+    from pyssa.internal.data_structures import project
+    from pyssa.internal.data_structures import settings
+
+
+def transform_gui_input_to_practical_data(
+    a_list_with_analysis_names: list,
+    a_project: "project.Project",
+    the_settings: "settings.Settings",
+) -> list:
+    """Transforms the input from the gui to a practical data basis that can be used to set up analysis runs.
+
+    Raises:
+        UnableToTransformDataForAnalysis: If the transformation process failed.
+    """
+    distance_analysis_runs = []
+    try:
+        for tmp_analysis_name in a_list_with_analysis_names:
+            input_transformer = data_transformer.DistanceAnalysisDataTransformer(
+                tmp_analysis_name,
+                a_project,
+                the_settings,
+            )
+            protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
+            new_protein_pair = copy.deepcopy(protein_pair_for_analysis)
+            distance_analysis_runs.append(new_protein_pair)
+        logger.debug(
+            f"These are the distance analysis runs, after the data transformation: {distance_analysis_runs}.",
+        )
+    except exception.IllegalArgumentError:
+        logger.error("Transformation of data failed because an argument was illegal.")
+        raise exception.UnableToTransformDataForAnalysisError("")
+    except exception.UnableToTransformDataForAnalysisError:
+        logger.error("Transformation of data failed because the transformation process failed.")
+        raise exception.UnableToTransformDataForAnalysisError("")
+    except Exception as e:
+        logger.error(f"Unknown error: {e}")
+        raise exception.UnableToTransformDataForAnalysisError("")
+    return distance_analysis_runs
 
 
 def split_analysis_run_name_in_protein_name_and_chain(an_analysis_run_name: str) -> list[Union[str, list[str]]]:
