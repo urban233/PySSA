@@ -468,3 +468,146 @@ def color_protein_pair_by_rmsd_value(a_project: "project.Project", a_results_nam
     tmp_protein_pair: "protein_pair.ProteinPair" = a_project.search_protein_pair(a_results_name)
     graphic_operations.color_protein_pair_by_rmsd(tmp_protein_pair)
     return ("result", tmp_protein_pair)
+
+
+def open_protein_for_hotspots(
+    a_name: str,
+    a_project: "project.Project",
+    the_current_session: "current_session.CurrentSession",
+) -> tuple:
+    """Opens either a protein or a protein pair pymol session, based on the given name.
+
+    Args:
+        a_name: either a protein or a protein pair name.
+        a_project: the current project.
+        the_current_session: the current session object.
+
+    Returns:
+        a tuple with ("result", is_protein, is_protein_pair, an_existing_current_session_object)
+    """
+    is_protein: bool = False
+    is_protein_pair: bool = False
+    if a_name.find("_vs_") == -1:
+        # one protein is selected
+        tmp_protein = a_project.search_protein(a_name.replace(".pdb", ""))
+        tmp_protein.load_protein_pymol_session()
+        the_current_session.name = tmp_protein.get_molecule_object()
+        the_current_session.type = "protein"
+        the_current_session.session = tmp_protein.pymol_session
+        cmd.set("seq_view", 1)
+    else:
+        # protein pair is selected
+        tmp_protein_pair = a_project.search_protein_pair(a_name)
+        tmp_protein_pair.load_pymol_session()
+        the_current_session.name = tmp_protein_pair.name
+        the_current_session.type = "protein_pair"
+        the_current_session.session = tmp_protein_pair.pymol_session
+        cmd.set("seq_view", 1)
+    return ("result", is_protein, is_protein_pair, the_current_session)
+
+
+def check_chains_for_analysis(the_protein_1_name: str, the_protein_2_name: str, a_project: "project.Project") -> tuple:
+    """Checks if the two proteins have only one chain.
+
+    Args:
+        the_protein_1_name: the name of the first protein from the analysis.
+        the_protein_2_name: the name of the second protein from the analysis.
+        a_project: the current project.
+
+    Returns:
+        a tuple with ("result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2)
+    """
+    # TODO: checks needed
+    # TODO: tests needed
+    # fixme: The function does not check if the only chain is really a protein chain, this should be done better!
+    tmp_is_only_one_chain: bool = False
+    tmp_analysis_run_name: str = ""
+    tmp_protein_1 = a_project.search_protein(the_protein_1_name)
+    tmp_protein_2 = a_project.search_protein(the_protein_2_name)
+    if len(tmp_protein_1.chains) == 1 and len(tmp_protein_2.chains):
+        tmp_is_only_one_chain = True
+        tmp_analysis_run_name = (
+            f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1.chains[0].chain_letter}"
+            f"_vs_{tmp_protein_2.get_molecule_object()};{tmp_protein_2.chains[0].chain_letter}"
+        )
+    return ("result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2)
+
+
+def check_chains_for_subsequent_analysis(
+    the_protein_1_name: str,
+    the_protein_2_name: str,
+    a_project: "project.Project",
+    a_list_with_proteins_to_predict: list[str],
+) -> tuple:
+    """Checks if the two proteins have only one chain.
+
+    Args:
+        the_protein_1_name: the name of the first protein from the analysis.
+        the_protein_2_name: the name of the second protein from the analysis.
+        a_project: the current project.
+        a_list_with_proteins_to_predict: a list of all proteins that should be predicted.
+    """
+    tmp_protein_1_only_one_chain: bool = False
+    tmp_protein_2_only_one_chain: bool = False
+    tmp_sub_analysis_name_1: str = ""
+    tmp_sub_analysis_name_2: str = ""
+    if the_protein_1_name not in a_list_with_proteins_to_predict:
+        tmp_protein_1 = a_project.search_protein(the_protein_1_name)
+        if len(tmp_protein_1.chains) == 1:
+            tmp_protein_1_only_one_chain = True
+            tmp_sub_analysis_name_1 = f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1.chains[0].chain_letter}"
+    else:
+        tmp_protein_1_only_one_chain = True
+        tmp_sub_analysis_name_1 = f"{the_protein_1_name};A"
+
+    if the_protein_2_name not in a_list_with_proteins_to_predict:
+        tmp_protein_2 = a_project.search_protein(the_protein_2_name)
+        if len(tmp_protein_2.chains) == 1:
+            tmp_protein_2_only_one_chain = True
+            tmp_sub_analysis_name_2 = f"{tmp_protein_2.get_molecule_object()};{tmp_protein_2.chains[0].chain_letter}"
+    else:
+        tmp_protein_2_only_one_chain = True
+        tmp_sub_analysis_name_2 = f"{the_protein_2_name};A"
+
+    if tmp_protein_1_only_one_chain and tmp_protein_2_only_one_chain:
+        tmp_analysis_run_name = f"{tmp_sub_analysis_name_1}_vs_{tmp_sub_analysis_name_2}"
+    else:
+        tmp_analysis_run_name = ""
+    return ("result", tmp_analysis_run_name)
+
+
+def check_chains_for_subsequent_analysis_for_multimers(
+    the_protein_1_name: str,
+    the_protein_2_name: str,
+    a_project: "project.Project",
+    a_list_with_proteins_to_predict: list[str],
+) -> tuple:
+    """Checks if the two proteins have only one chain.
+
+    Args:
+        the_protein_1_name: the name of the first protein from the analysis.
+        the_protein_2_name: the name of the second protein from the analysis.
+        a_project: the current project.
+        a_list_with_proteins_to_predict: a list of all proteins that should be predicted.
+    """
+    tmp_protein_1_only_one_chain: bool = False
+    tmp_protein_2_only_one_chain: bool = False
+    tmp_sub_analysis_name_1: str = ""
+    tmp_sub_analysis_name_2: str = ""
+    if the_protein_1_name not in a_list_with_proteins_to_predict:
+        tmp_protein_1 = a_project.search_protein(the_protein_1_name)
+        if len(tmp_protein_1.chains) == 1:
+            tmp_protein_1_only_one_chain = True
+            tmp_sub_analysis_name_1 = f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1.chains[0].chain_letter}"
+
+    if the_protein_2_name not in a_list_with_proteins_to_predict:
+        tmp_protein_2 = a_project.search_protein(the_protein_2_name)
+        if len(tmp_protein_2.chains) == 1:
+            tmp_protein_2_only_one_chain = True
+            tmp_sub_analysis_name_2 = f"{tmp_protein_2.get_molecule_object()};{tmp_protein_2.chains[0].chain_letter}"
+
+    if tmp_protein_1_only_one_chain and tmp_protein_2_only_one_chain:
+        tmp_analysis_run_name = f"{tmp_sub_analysis_name_1}_vs_{tmp_sub_analysis_name_2}"
+    else:
+        tmp_analysis_run_name = ""
+    return ("result", tmp_analysis_run_name)
