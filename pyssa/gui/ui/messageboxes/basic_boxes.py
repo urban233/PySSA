@@ -20,8 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all message boxes which occur in the settings dialog."""
-import PyQt5
 from PyQt5.QtWidgets import QMessageBox
+from PyQt5 import QtGui
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
@@ -40,9 +40,9 @@ def yes_or_no(window_title: str, text_message: str, icon) -> bool:  # noqa: ANN0
     """
     msg = QMessageBox()
     msg.setIcon(icon)
-    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
     styles.set_stylesheet(msg)
     msg.setWindowTitle(window_title)
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     msg.setText(text_message)
     btn_yes = msg.addButton("Yes", QMessageBox.ActionRole)
     btn_no = msg.addButton("No", QMessageBox.ActionRole)
@@ -63,7 +63,7 @@ def no_buttons(window_title: str, text_message: str, icon) -> QMessageBox:  # no
     msg = QMessageBox()
     msg.setIcon(icon)
     msg.setWindowTitle(window_title)
-    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setText(text_message)
     msg.setStandardButtons(QMessageBox.NoButton)
@@ -75,7 +75,7 @@ def ok(window_title: str, text_message: str, icon) -> bool:  # noqa: ANN001
     msg = QMessageBox()
     msg.setIcon(icon)
     msg.setWindowTitle(window_title)
-    msg.setWindowIcon(PyQt5.QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setText(text_message)
     msg.setStandardButtons(QMessageBox.Ok)

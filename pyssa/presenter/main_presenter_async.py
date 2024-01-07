@@ -30,9 +30,13 @@ from typing import TYPE_CHECKING
 from pymol import cmd
 
 from pyssa.internal.data_structures import project, protein, structure_analysis, structure_prediction
-from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
+from pyssa.internal.data_structures.data_classes import (
+    prediction_protein_info,
+    prediction_configuration,
+    current_session,
+)
 from pyssa.internal.portal import pymol_io, graphic_operations
-from pyssa.io_pyssa import path_util, filesystem_io
+from pyssa.io_pyssa import path_util, filesystem_io, bio_data
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import analysis_util, exception, exit_codes, constants
 
@@ -205,12 +209,83 @@ def check_for_cleaning(a_protein_name: str, a_project: "project.Project") -> tup
     is_cleanable: bool = False
     is_in_protein_pair: bool = False
     tmp_protein = a_project.search_protein(a_protein_name.replace(".pdb", ""))
+    cmd.reinitialize()
     tmp_protein.load_protein_in_pymol()
     if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
         is_cleanable = True
     if a_project.check_if_protein_is_in_any_protein_pair(a_protein_name) is True:
         is_in_protein_pair = True
     return ("result", is_cleanable, is_in_protein_pair)
+
+
+def add_existing_protein_to_project(the_protein_information: tuple, a_project: "project.Project") -> tuple:
+    """Adds a protein based on the filepath/ PDB id to a project.
+
+    Args:
+        the_protein_information (tuple[str, int]): a pair of either filepath or id and the length of the first one.
+        a_project: a project where the protein should be added.
+
+    Note:
+        If a PDB id is used than the first element of the tuple contains the id and the second the length = 4.
+        If a filepath is used than the first element of the tuple contains the id and the second the length of
+        the entire filepath.
+    """
+    # TODO: checks are needed
+    if the_protein_information[1] == 4:
+        # PDB ID is used
+        tmp_protein = pymol_io.get_protein_from_pdb(the_protein_information[0])
+    else:
+        # Filepath is used
+        pdb_filepath: "path_util.FilePath" = path_util.FilePath(pathlib.Path(the_protein_information[0]))
+        graphic_operations.setup_default_session_graphic_settings()
+        tmp_protein_name: str = pdb_filepath.get_filename().replace(" ", "_")
+        tmp_protein = protein.Protein(
+            molecule_object=tmp_protein_name,
+            pdb_filepath=pdb_filepath,
+        )
+    a_project.add_existing_protein(tmp_protein)
+    return ("result", a_project)
+
+
+def save_selected_protein_structure_as_pdb_file(
+    a_protein_name: str,
+    a_project: "project.Project",
+    a_filepath: str,
+) -> tuple:
+    """Saves a given protein structure to a pdb file."""
+    tmp_protein = a_project.search_protein(a_protein_name)
+    try:
+        bio_data.convert_xml_string_to_pdb_file(
+            bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()),
+            pathlib.Path(a_filepath),
+        )
+    except Exception as e:
+        logger.error(f"Saving protein to pdb file ended with error: {e}")
+        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+    else:
+        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
+
+
+def rename_selected_protein_structure(
+    a_protein_name: str,
+    the_new_protein_name: str,
+    a_project: "project.Project",
+) -> tuple:
+    """Deletes a certain protein from a project.
+
+    Args:
+        a_protein_name: the name of the protein to rename.
+        the_new_protein_name: the new name for the given protein.
+        a_project: the current project.
+
+    Returns:
+        a tuple with ("result", an_existing_protein_object)
+    """
+    tmp_protein = a_project.search_protein(
+        a_protein_name,
+    )
+    tmp_protein.set_molecule_object(the_new_protein_name)
+    return ("result", tmp_protein)
 
 
 def predict_protein_with_colabfold(
@@ -359,7 +434,25 @@ def load_results(a_project: "project.Project", a_results_name: str) -> tuple:
     else:
         # no images were made
         image_type = constants.IMAGES_NONE
-    return ("result", image_type)
+
+    cmd.reinitialize()
+    tmp_protein_pair.load_pymol_session()
+    tmp_current_session = current_session.CurrentSession(
+        "protein_pair",
+        tmp_protein_pair.name,
+        tmp_protein_pair.pymol_session,
+    )
+    cmd.scene(
+        f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}",
+        action="recall",
+    )
+    return (
+        "result",
+        image_type,
+        tmp_current_session,
+        tmp_protein_pair.distance_analysis.analysis_results.rmsd,
+        tmp_protein_pair.distance_analysis.analysis_results.aligned_aa,
+    )
 
 
 def color_protein_pair_by_rmsd_value(a_project: "project.Project", a_results_name: str) -> tuple:

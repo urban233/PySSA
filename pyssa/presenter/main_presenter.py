@@ -27,6 +27,7 @@ import subprocess
 import sys
 import pathlib
 import csv
+
 import numpy as np
 import pymol
 from typing import TYPE_CHECKING
@@ -61,7 +62,7 @@ from pyssa.internal.data_structures.data_classes import main_window_state
 from pyssa.internal.data_structures.data_classes import results_state
 from pyssa.internal.thread import task_workers, tasks
 
-from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
+from pyssa.io_pyssa import safeguard, filesystem_helpers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 
@@ -213,6 +214,7 @@ class MainPresenter:
 
         # <editor-fold desc="Class attributes">
         self._workspace_path = self._application_settings.workspace_path
+        self._workspace_status = f"Current workspace: {str(self._workspace_path)}"
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
         self.results_name = ""
@@ -734,7 +736,7 @@ class MainPresenter:
         # </editor-fold>
 
         # <editor-fold desc="Results page">
-        self._view.ui.cb_results_analysis_options.currentIndexChanged.connect(self.pre_load_results)
+        self._view.ui.cb_results_analysis_options.currentIndexChanged.connect(self.load_results)
         self._view.ui.btn_color_rmsd.clicked.connect(self.color_protein_pair_by_rmsd)
         self._view.ui.btn_view_struct_alignment.clicked.connect(self.display_structure_alignment)
         self._view.ui.btn_view_distance_plot.clicked.connect(self.display_distance_plot)
@@ -958,6 +960,7 @@ class MainPresenter:
             post_func=self.__await_create_new_project,
         )
         self._active_task.start()
+        self.update_status("Creating new project ...")
 
     def __await_create_new_project(self, a_result: tuple) -> None:
         self._current_project: "project.Project" = a_result[1]
@@ -971,15 +974,13 @@ class MainPresenter:
         # update gui
         self._project_watcher.show_valid_options(self._view.ui)
         self._view.ui.lbl_current_project_name.setText(self._current_project.get_project_name())
-        self._view.status_bar.showMessage(
-            f"Current project path: {self._workspace_path}/{self._current_project.get_project_name()}",
-        )
         self.main_window_state = main_window_state.MainWindowState(
             results_state.ResultsState(),
             image_state.ImageState(),
         )
         self.display_view_page()
         self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
 
     # </editor-fold>
 
@@ -997,6 +998,7 @@ class MainPresenter:
             post_func=self.__await_open_project,
         )
         self._active_task.start()
+        self.update_status("Opening existing project ...")
 
     def __await_open_project(self, a_result: tuple) -> None:
         self._current_project = a_result[1]
@@ -1010,12 +1012,12 @@ class MainPresenter:
         cmd.reinitialize()
         self._view.ui.btn_manage_session.hide()
         self.display_view_page()
-        QtWidgets.QApplication.restoreOverrideCursor()
         self.main_window_state = main_window_state.MainWindowState(
             results_state.ResultsState(),
             image_state.ImageState(),
         )
         self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
 
     # </editor-fold>
 
@@ -1061,9 +1063,11 @@ class MainPresenter:
             post_func=self.__await_save_project,
         )
         self._active_task.start()
+        self.update_status("Saving current project ...")
 
     def __await_save_project(self, result: tuple) -> None:
         self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
         basic_boxes.ok("Save Project", "The project was successfully saved.", QtWidgets.QMessageBox.Information)
 
     # </editor-fold>
@@ -1073,7 +1077,6 @@ class MainPresenter:
         """Checks if the selected protein can be cleaned."""
         self._view.wait_spinner.start()
         tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
-        cmd.reinitialize()
         try:
             tmp_protein_name: str = self._view.ui.list_edit_project_proteins.currentItem().text()
         except AttributeError:
@@ -1088,6 +1091,7 @@ class MainPresenter:
             post_func=self.__await_check_for_cleaning,
         )
         self._active_task.start()
+        self.update_status("Checking protein properties ...")
 
     def __await_check_for_cleaning(self, result: tuple) -> None:
         # check if selected protein contains any organic or solvent molecules which can be removed
@@ -1128,6 +1132,7 @@ class MainPresenter:
         self._view.ui.btn_edit_protein_rename.show()
         self._view.ui.btn_manage_session.show()
         self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
 
     def clean_protein_new(self) -> None:
         """Cleans the selected protein structure and creates a new cleaned structure."""
@@ -1141,10 +1146,12 @@ class MainPresenter:
             post_func=self.__await_clean_protein_new,
         )
         self._active_task.start()
+        self.update_status("Duplicating and cleaning protein ...")
 
     def __await_clean_protein_new(self, result: tuple) -> None:
         self._init_edit_page()
         self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
 
     def clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
@@ -1163,6 +1170,7 @@ class MainPresenter:
                 post_func=self.__await_clean_protein_update,
             )
             self._active_task.start()
+            self.update_status("Cleaning protein ...")
         else:
             constants.PYSSA_LOGGER.info("No protein has been cleaned.")
             self._view.wait_spinner.stop()
@@ -1170,6 +1178,7 @@ class MainPresenter:
     def __await_clean_protein_update(self) -> None:
         self._init_edit_page()
         self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
 
     def delete_protein(self) -> None:
         """Deletes the selected protein structure."""
@@ -1184,6 +1193,7 @@ class MainPresenter:
                 post_func=self.__await_delete_protein,
             )
             self._active_task.start()
+            self.update_status("Deleting protein ...")
         else:
             constants.PYSSA_LOGGER.info("No protein was deleted.")
             self._view.wait_spinner.stop()
@@ -1192,6 +1202,7 @@ class MainPresenter:
         self._init_edit_page()
         self._project_watcher.show_valid_options(self._view.ui)
         self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
 
     def add_existing_protein(self) -> None:
         """Opens a dialog to adds an existing protein structure to the project."""
@@ -1205,12 +1216,28 @@ class MainPresenter:
         Args:
             return_value: a tuple consisting of the filepath or PDB id and the length of the first one.
         """
+        self._view.wait_spinner.start()
         if return_value[1] > 0:
-            self._current_project = main_window_util.add_protein_to_project(return_value, self._current_project)
+            self._active_task = tasks.Task(
+                target=main_presenter_async.add_existing_protein_to_project,
+                args=(return_value, self._current_project),
+                post_func=self.__await_post_add_existing_protein,
+            )
+            self._active_task.start()
+            self.update_status("Adding protein to current project ...")
+        else:
+            self._view.wait_spinner.stop()
+            self.display_edit_page()
+
+    def __await_post_add_existing_protein(self, result: tuple) -> None:
+        self._current_project = result[1]
+        self._view.wait_spinner.stop()
+        self.update_status(self._workspace_status)
         self.display_edit_page()
 
     def save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
+        self._view.wait_spinner.start()
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -1221,40 +1248,63 @@ class MainPresenter:
             "Protein Data Bank File (*.pdb)",
         )
         if file_path:
-            tmp_protein = self._current_project.search_protein(
-                self._view.ui.list_edit_project_proteins.currentItem().text(),
+            self._active_task = tasks.Task(
+                target=main_presenter_async.save_selected_protein_structure_as_pdb_file,
+                args=(self._view.ui.list_edit_project_proteins.currentItem().text(), self._current_project, file_path),
+                post_func=self.__await_save_selected_protein_structure_as_pdb_file,
             )
-            try:
-                bio_data.convert_xml_string_to_pdb_file(
-                    bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()),
-                    pathlib.Path(file_path),
-                )
-            except Exception as e:
-                basic_boxes.ok(
-                    "Save protein structure",
-                    f"Saving the protein as .pdb file failed with the error: {e}!",
-                    QtWidgets.QMessageBox.Error,
-                )
-            else:
-                basic_boxes.ok(
-                    "Save protein structure",
-                    "The protein was successfully saved as .pdb file.",
-                    QtWidgets.QMessageBox.Information,
-                )
+            self._active_task.start()
+        else:
+            self._view.wait_spinner.stop()
+
+    def __await_save_selected_protein_structure_as_pdb_file(self, result: tuple) -> None:
+        self._view.wait_spinner.stop()
+        if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            basic_boxes.ok(
+                "Save protein structure",
+                "Saving the protein as .pdb file failed!",
+                QtWidgets.QMessageBox.Error,
+            )
+        elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
+            basic_boxes.ok(
+                "Save protein structure",
+                "The protein was successfully saved as .pdb file.",
+                QtWidgets.QMessageBox.Information,
+            )
+        else:
+            basic_boxes.ok(
+                "Save protein structure",
+                "Saving the protein as .pdb file failed with an unexpected error!",
+                QtWidgets.QMessageBox.Error,
+            )
+        self.update_status(self._workspace_status)
 
     def rename_selected_protein_structure(self) -> None:
+        """Opens a new view to rename the selected protein."""
+        self._view.wait_spinner.start()
+        self.tmp_dialog = dialog_rename_protein.DialogRenameProtein(self._workspace_path)
+        self.tmp_dialog.return_value.connect(self.post_rename_selected_protein_structure)
+        self.tmp_dialog.show()
+
+    def post_rename_selected_protein_structure(self, return_value: tuple) -> None:
         """Renames a selected protein structure."""
-        tmp_dialog = dialog_rename_protein.DialogRenameProtein(self._workspace_path)
-        tmp_dialog.exec_()
-        if (
-            dialog_rename_protein.global_var_rename_protein[1] is True
-            and dialog_rename_protein.global_var_rename_protein[0] != ""
-        ):
-            tmp_protein = self._current_project.search_protein(
-                self._view.ui.list_edit_project_proteins.currentItem().text(),
+        if return_value[1] is True:
+            self._active_task = tasks.Task(
+                target=main_presenter_async.rename_selected_protein_structure,
+                args=(
+                    self._view.ui.list_edit_project_proteins.currentItem().text(),
+                    return_value[0],
+                    self._current_project,
+                ),
+                post_func=self.__await_post_rename_selected_protein_structure,
             )
-            tmp_protein.set_molecule_object(dialog_rename_protein.global_var_rename_protein[0])
-            self._init_edit_page()
+            self._active_task.start()
+        else:
+            self._view.wait_spinner.stop()
+
+    def __await_post_rename_selected_protein_structure(self, result: tuple) -> None:
+        self._init_edit_page()
+        self._view.wait_spinner.stop()
 
     # </editor-fold>
 
@@ -1699,6 +1749,7 @@ class MainPresenter:
         self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin prediction process.")
+        self.update_status("Begin prediction process ...")
         predictions: list[
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(self._view.ui.table_pred_mono_prot_to_predict)
@@ -1823,6 +1874,7 @@ class MainPresenter:
         self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin multimer prediction process.")
+        self.update_status("Begin prediction process ...")
         predictions: list[
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(self._view.ui.table_pred_multi_prot_to_predict)
@@ -1862,6 +1914,7 @@ class MainPresenter:
         self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
+        self.update_status("Begin prediction process ...")
         predictions: list[
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(
@@ -1900,8 +1953,12 @@ class MainPresenter:
         tmp_exit_code_description = [1]
         if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
+            self.block_box_prediction.destroy(True)
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            self.update_status("All structure predictions are done.")
             constants.PYSSA_LOGGER.info("Begin analysis process.")
+            self.update_status("Begin analysis process ...")
+
             tmp_raw_analysis_run_names: list = []
             for row_no in range(self._view.ui.list_pred_analysis_mono_overview.count()):
                 tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_mono_overview.item(row_no).text())
@@ -1984,6 +2041,7 @@ class MainPresenter:
         self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
+        self.update_status("Begin prediction process ...")
         predictions: list[
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(
@@ -2022,8 +2080,11 @@ class MainPresenter:
         tmp_exit_code_description = [1]
         if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
+            self.block_box_prediction.destroy(True)
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            self.update_status("All structure predictions are done.")
             constants.PYSSA_LOGGER.info("Begin analysis process.")
+            self.update_status("Begin analysis process ...")
             tmp_raw_analysis_run_names: list = []
             for row_no in range(self._view.ui.list_pred_analysis_multi_overview.count()):
                 tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_multi_overview.item(row_no).text())
@@ -2269,7 +2330,7 @@ class MainPresenter:
                 ],
             )
 
-    def pre_load_results(self) -> None:
+    def load_results(self) -> None:
         """Sets up the worker for the result loading process."""
         self._view.wait_spinner.start()
         if self.is_distance_plot_open:
@@ -2296,7 +2357,8 @@ class MainPresenter:
         self._view.status_bar.showMessage(f"Loading results of {self.results_name} ...")
 
     def __await_load_results(self, result: tuple) -> None:
-        images_type: str = result[1]
+        _, images_type, self.current_session, tmp_rmsd, tmp_no_aligned_residues = result
+
         if images_type == constants.IMAGES_ALL:
             gui_elements_to_show = [
                 self._view.ui.lbl_results_analysis_options,
@@ -2322,6 +2384,7 @@ class MainPresenter:
             gui_utils.show_gui_elements(gui_elements_to_show)
             for tmp_filename in os.listdir(constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
                 self._view.ui.list_results_interest_regions.addItem(tmp_filename)
+            self._view.ui.list_results_interest_regions.sortItems()
         elif images_type == constants.IMAGES_STRUCT_ALN_ONLY:
             gui_elements_to_show = [
                 self._view.ui.lbl_results_analysis_options,
@@ -2348,6 +2411,7 @@ class MainPresenter:
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.list_results_interest_regions.sortItems()
         elif images_type == constants.IMAGES_NONE:
             gui_elements_to_show = [
                 self._view.ui.lbl_results_analysis_options,
@@ -2377,25 +2441,8 @@ class MainPresenter:
         else:
             raise ValueError("Illegal argument.")
 
-        tmp_protein_pair = self._current_project.search_protein_pair(self.results_name)
-        self._view.ui.list_results_interest_regions.sortItems()
-        self._view.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
-
-        cmd.reinitialize()
-        tmp_protein_pair.load_pymol_session()
-        self.current_session = current_session.CurrentSession(
-            "protein_pair",
-            tmp_protein_pair.name,
-            tmp_protein_pair.pymol_session,
-        )
-
-        self._view.ui.txt_results_aligned_residues.setText(
-            str(tmp_protein_pair.distance_analysis.analysis_results.aligned_aa),
-        )
-        cmd.scene(
-            f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}",
-            action="recall",
-        )
+        self._view.ui.txt_results_rmsd.setText(str(tmp_rmsd))
+        self._view.ui.txt_results_aligned_residues.setText(str(tmp_no_aligned_residues))
         self._view.status_bar.showMessage(f"Current workspace: {str(self._workspace_path)}")
         self.main_window_state.results_page.results_name = self._view.ui.cb_results_analysis_options.currentText()
         self._view.wait_spinner.stop()
@@ -2412,6 +2459,7 @@ class MainPresenter:
             post_func=self.__await_color_protein_pair_by_rmsd,
         )
         self._active_task.start()
+        self._view.status_bar.showMessage("Coloring protein pair by RMSD value ...")
         # hide unnecessary representations
         # fixme: it might be a problem to hide any representation at this point
         # cmd.hide("cartoon", tmp_protein_pair.protein_1.get_molecule_object())
@@ -2421,6 +2469,9 @@ class MainPresenter:
     def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
         self._view.wait_spinner.stop()
 
+    # </editor-fold>
+
+    # <editor-fold desc="Display page functions">
     def display_structure_alignment(self) -> None:
         """Opens a window which displays the image of the structure alignment."""
         png_dialog = QtWidgets.QDialog(self._view)
@@ -7472,3 +7523,7 @@ class MainPresenter:
     # </editor-fold>
 
     # </editor-fold>
+
+    def update_status(self, message: str) -> None:
+        """Updates the status bar of the main view with a custom message."""
+        self._view.status_bar.showMessage(message)

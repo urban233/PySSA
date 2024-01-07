@@ -26,6 +26,7 @@ from pymol import Qt
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtSignal
 
 from pyssa.gui.ui.forms.auto_generated import auto_dialog_rename_protein
 from pyssa.gui.ui.styles import styles
@@ -36,6 +37,11 @@ global_var_rename_protein = ("", False)
 
 class DialogRenameProtein(Qt.QtWidgets.QDialog):
     """Class for renaming protein dialog."""
+
+    """
+    A pyqtsignal that is used to hand-over the protein structure information.
+    """
+    return_value = pyqtSignal(tuple)
 
     def __init__(self, the_workspace_path: pathlib.Path, parent=None) -> None:  # noqa: ANN001
         """Constructor.
@@ -74,14 +80,12 @@ class DialogRenameProtein(Qt.QtWidgets.QDialog):
 
     def rename_protein(self) -> None:
         """Renames the current selected protein."""
-        global global_var_rename_protein
-        global_var_rename_protein = (self.ui.txt_rename_protein.text(), True)
+        self.return_value.emit((self.ui.txt_rename_protein.text(), True))
         self.close()
 
     def close_dialog(self) -> None:
         """Closes dialog."""
-        global global_var_rename_protein
-        global_var_rename_protein = (self.ui.txt_rename_protein.text(), False)
+        self.return_value.emit((self.ui.txt_rename_protein.text(), False))
         self.close()
 
     def validate_protein_name(self) -> None:
