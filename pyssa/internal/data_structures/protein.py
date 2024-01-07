@@ -148,7 +148,7 @@ class Protein:
                 try:
                     protein_operations.consolidate_molecule_object_to_first_state(self._pymol_molecule_object)
                     tmp_pdb_cache_filepath = pathlib.Path(
-                        f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}",
+                        f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb",
                     )
                     pymol_io.save_protein_to_pdb_file(
                         tmp_pdb_cache_filepath,

@@ -22,8 +22,10 @@
 """Module for graphic operations in pymol."""
 import pymol
 from pymol import cmd
+
+from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.portal import pymol_safeguard
-from pyssa.util import constants
+from pyssa.util import constants, protein_pair_util
 
 
 def show_protein_selection_as_balls_and_sticks(selection: str) -> None:
@@ -86,6 +88,134 @@ def color_protein(pymol_color: str, a_selection_string: str) -> None:
         cmd.color(pymol_color, a_selection_string)
     except pymol.CmdException:
         print("Color process was unsuccessful.")
+
+
+def color_protein_pair_by_rmsd(a_protein_pair: "protein_pair.ProteinPair") -> None:
+    """Colors a specific protein pair based on their rmsd value.
+
+    Args:
+        a_protein_pair: the protein pair to color.
+    """
+    cutoff_1 = 0.5
+    cutoff_2 = 1.0
+    cutoff_3 = 2
+    cutoff_4 = 4
+    cutoff_5 = 6
+
+    color_1 = "br0"
+    color_2 = "br2"
+    color_3 = "br4"
+    color_4 = "br6"
+    color_5 = "br8"
+    color_6 = "red"
+
+    cmd.color("hydrogen", a_protein_pair.protein_2.get_molecule_object())
+
+    i: int = 0
+    for distance_value in a_protein_pair.distance_analysis.analysis_results.distance_data.get("distance"):
+        if distance_value <= cutoff_1:
+            atom_info = protein_pair_util.get_chain_and_position(
+                a_protein_pair.distance_analysis.analysis_results.distance_data,
+                i,
+            )
+            # create two atoms for the get_distance command
+            atom1: str = (
+                f"/{a_protein_pair.protein_1.get_molecule_object()}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+            )
+            atom2: str = (
+                f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+            )
+            # coloring
+            cmd.color(color_1, atom1)
+            cmd.color(color_1, atom2)
+            i += 1
+
+        elif distance_value <= cutoff_2:
+            atom_info = protein_pair_util.get_chain_and_position(
+                a_protein_pair.distance_analysis.analysis_results.distance_data,
+                i,
+            )
+            # create two atoms for the get_distance command
+            atom1: str = (
+                f"/{a_protein_pair.protein_1.get_molecule_object()}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+            )
+            atom2: str = (
+                f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+            )
+            # coloring
+            cmd.color(color_2, atom1)
+            cmd.color(color_2, atom2)
+            i += 1
+
+        elif distance_value <= cutoff_3:
+            atom_info = protein_pair_util.get_chain_and_position(
+                a_protein_pair.distance_analysis.analysis_results.distance_data,
+                i,
+            )
+            # create two atoms for the get_distance command
+            atom1: str = (
+                f"/{a_protein_pair.protein_1.get_molecule_object()}//"
+                f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}/CA"
+            )
+            atom2: str = (
+                f"/{a_protein_pair.protein_2.get_molecule_object()}//"
+                f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
+            )
+            # coloring
+            cmd.color(color_3, atom1)
+            cmd.color(color_3, atom2)
+            i += 1
+
+        elif distance_value <= cutoff_4:
+            atom_info = protein_pair_util.get_chain_and_position(
+                a_protein_pair.distance_analysis.analysis_results.distance_data,
+                i,
+            )
+            # create two atoms for the get_distance command
+            atom1: str = (
+                f"/{a_protein_pair.protein_1.get_molecule_object()}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+            )
+            atom2: str = (
+                f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+            )
+            # coloring
+            cmd.color(color_4, atom1)
+            cmd.color(color_4, atom2)
+            i += 1
+
+        elif distance_value <= cutoff_5:
+            atom_info = protein_pair_util.get_chain_and_position(
+                a_protein_pair.distance_analysis.analysis_results.distance_data,
+                i,
+            )
+            # create two atoms for the get_distance command
+            atom1: str = (
+                f"/{a_protein_pair.protein_1.get_molecule_object()}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+            )
+            atom2: str = (
+                f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+            )
+            # coloring
+            cmd.color(color_5, atom1)
+            cmd.color(color_5, atom2)
+            i += 1
+
+        elif distance_value > cutoff_5:
+            atom_info = protein_pair_util.get_chain_and_position(
+                a_protein_pair.distance_analysis.analysis_results.distance_data,
+                i,
+            )
+            # create two atoms for the get_distance command
+            atom1: str = (
+                f"/{a_protein_pair.protein_1.get_molecule_object()}//" f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
+            )
+            atom2: str = (
+                f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
+            )
+            # coloring
+            cmd.color(color_6, f"({atom1})")
+            cmd.color(color_6, f"({atom2})")
+            i += 1
 
 
 def setup_default_session_graphic_settings() -> None:

@@ -112,8 +112,8 @@ class DistanceAnalysisResults:
         tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_RMSD, str(self.rmsd))
         tmp_results_data.set(attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA, str(self.aligned_aa))
 
-        logger.debug(f"These are the keys of the self.distance_data hashtable: {self.distance_data.keys()}")
-        logger.debug(f"These are the values of the self.distance_data hashtable: {self.distance_data.values()}")
+        # logger.debug(f"These are the keys of the self.distance_data hashtable: {self.distance_data.keys()}")
+        # logger.debug(f"These are the values of the self.distance_data hashtable: {self.distance_data.values()}")
         # <editor-fold desc="Distance data">
         tmp_distance_data = ElementTree.SubElement(tmp_results_data, element_names.DISTANCE_ANALYSIS_DISTANCE_RESULTS)
         tmp_index_data = ElementTree.SubElement(tmp_distance_data, element_names.DISTANCE_ANALYSIS_INDEX_LIST)

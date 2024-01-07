@@ -21,17 +21,24 @@
 #
 """Module for all asynchronous functions used in the main presenter."""
 import logging
+import os
 import pathlib
+import shutil
+import subprocess
 from typing import TYPE_CHECKING
 
-from pyssa.internal.data_structures import project, protein, structure_analysis
+from pymol import cmd
+
+from pyssa.internal.data_structures import project, protein, structure_analysis, structure_prediction
+from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.portal import pymol_io, graphic_operations
-from pyssa.io_pyssa import path_util
+from pyssa.io_pyssa import path_util, filesystem_io
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import analysis_util, exception, exit_codes
+from pyssa.util import analysis_util, exception, exit_codes, constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import settings
+    from pyssa.internal.data_structures import protein_pair
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -100,6 +107,186 @@ def create_new_project(
     return ("result", tmp_project)
 
 
+def save_project(a_project: "project.Project", placeholder: int) -> tuple:
+    """Saves the project through serialization.
+
+    Args:
+        a_project: a project that should be saved.
+        placeholder: a placeholder argument so that python accepts the two arguments as tuple.
+
+    Returns:
+        a tuple with ("result", the_existing_project_object)
+    """
+    # TODO: needs checks
+    # TODO: needs tests!
+    a_project.serialize_project(a_project.get_project_xml_path())
+    return ("result", a_project)
+
+
+def clean_protein_new(
+    a_protein_name: str,
+    a_project: "project.Project",
+) -> tuple:
+    """Cleans a protein by creating a duplicate and removing all solvent and sugar molecules.
+
+    Args:
+        a_protein_name: the name of the protein to clean.
+        a_project: the current project.
+
+    Returns:
+        a tuple with ("result", a_updates_project_object)
+    """
+    # TODO: needs checks
+    tmp_protein = a_project.search_protein(
+        a_protein_name,
+    )
+    clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
+    constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", clean_tmp_protein.get_molecule_object())
+    a_project.add_existing_protein(clean_tmp_protein)
+    a_project.serialize_project(a_project.get_project_xml_path())
+    return ("result", a_project)
+
+
+def clean_protein_update(a_protein_name: str, a_project: "project.Project") -> tuple:
+    """Cleans a protein by removing all solvent and sugar molecules in the current molecule object.
+
+    Args:
+        a_protein_name: the name of the protein to clean.
+        a_project: the current project.
+
+    Returns:
+        a tuple with ("result", a_updates_project_object)
+    """
+    # TODO: needs checks
+    # TODO: needs tests!
+    tmp_protein = a_project.search_protein(
+        a_protein_name,
+    )
+    tmp_protein.clean_protein()
+    constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", tmp_protein.get_molecule_object())
+    a_project.serialize_project(a_project.get_project_xml_path())
+    return ("result", a_project)
+
+
+def delete_protein(a_protein_name: str, a_project: "project.Project") -> tuple:
+    """Deletes a certain protein from a project.
+
+    Args:
+        a_protein_name: the name of the protein to remove from the project.
+        a_project: the current project.
+
+    Returns:
+        a tuple with ("result", an_existing_project_object)
+    """
+    # TODO: needs checks
+    # TODO: needs tests!
+    try:
+        a_project.delete_specific_protein(a_protein_name)
+    except ValueError:
+        constants.PYSSA_LOGGER.error(
+            "The protein %s could not be deleted, because it is not in the project.",
+            a_protein_name,
+        )
+    return ("result", a_project)
+
+
+def check_for_cleaning(a_protein_name: str, a_project: "project.Project") -> tuple:
+    """Deletes a certain protein from a project.
+
+    Args:
+        a_protein_name: the name of the protein to remove from the project.
+        a_project: the current project.
+
+    Returns:
+        a tuple with ("result", is_cleanable, is_in_protein_pair)
+    """
+    # TODO: needs checks
+    # TODO: needs tests!
+    is_cleanable: bool = False
+    is_in_protein_pair: bool = False
+    tmp_protein = a_project.search_protein(a_protein_name.replace(".pdb", ""))
+    tmp_protein.load_protein_in_pymol()
+    if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
+        is_cleanable = True
+    if a_project.check_if_protein_is_in_any_protein_pair(a_protein_name) is True:
+        is_in_protein_pair = True
+    return ("result", is_cleanable, is_in_protein_pair)
+
+
+def predict_protein_with_colabfold(
+    the_prediction_protein_infos: list["prediction_protein_info.PredictionProteinInfo"],
+    the_prediction_configuration: "prediction_configuration.PredictionConfiguration",
+    a_project: "project.Project",
+) -> tuple:
+    """Runs structure prediction for a monomeric protein.
+
+    Args:
+        the_prediction_protein_infos: a list with protein names and sequences to predict.
+        the_prediction_configuration: a prediction configuration for the monomeric protein prediction.
+        a_project: a project object that contains all the proteins.
+
+    Returns:
+        a tuple with the exit code and exit code description
+    """
+    # TODO: needs checks
+    # TODO: needs tests!
+    structure_prediction_obj = structure_prediction.StructurePrediction(
+        the_prediction_protein_infos,
+        the_prediction_configuration,
+        a_project,
+    )
+    structure_prediction_obj.create_tmp_directories()
+    logger.info("Tmp directories were created.")
+
+    # Create fasta files for prediction
+    try:
+        structure_prediction_obj.create_fasta_files_for_prediction()
+    except exception.FastaFilesNotCreatedError:
+        logger.error("Fasta files were not created.")
+        return (exit_codes.ERROR_WRITING_FASTA_FILES[0], exit_codes.ERROR_WRITING_FASTA_FILES[1])
+    except exception.FastaFilesNotFoundError:
+        logger.error("Fasta files were not found.")
+        return (exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+    else:
+        logger.info("Fasta files were successfully created.")
+
+    # Run structure prediction
+    try:
+        structure_prediction_obj.run_prediction()
+    except exception.PredictionEndedWithError:
+        logger.error("Prediction ended with error.")
+        return (exit_codes.ERROR_PREDICTION_FAILED[0], exit_codes.ERROR_PREDICTION_FAILED[1])
+    else:
+        logger.info("Prediction process finished.")
+
+    try:
+        structure_prediction_obj.move_best_prediction_models()
+        logger.info("Saved predicted pdb file into XML file.")
+    except exception.UnableToFindColabfoldModelError:
+        logger.error("Could not move rank 1 model, because it does not exists.")
+        return (
+            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
+            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
+        )
+    except FileNotFoundError:
+        logger.error("Could not move rank 1 model, because it does not exists.")
+        return (
+            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
+            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        logger.error("Could not move rank 1 model, because it does not exists.")
+        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+    else:
+        subprocess.run(["wsl", "--shutdown"])
+        logger.info("WSL gets shutdown.")
+        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
+
+
 def run_distance_analysis(
     a_list_with_analysis_names: list,
     a_project: "project.Project",
@@ -138,3 +325,53 @@ def run_distance_analysis(
         return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
     else:
         return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
+
+
+def load_results(a_project: "project.Project", a_results_name: str) -> tuple:
+    """Loads the results of a given protein pair name.
+
+    Args:
+        a_project: a project object containing the protein pair.
+        a_results_name: the name of the protein pair.
+    """
+    shutil.rmtree(constants.CACHE_DIR)
+    os.mkdir(constants.CACHE_DIR)
+    os.mkdir(constants.CACHE_IMAGES)
+    tmp_protein_pair = a_project.search_protein_pair(a_results_name)
+    filesystem_io.XmlDeserializer(pathlib.Path(a_project.get_project_xml_path())).deserialize_analysis_images(
+        tmp_protein_pair.name,
+        tmp_protein_pair.distance_analysis.analysis_results,
+    )
+    if (
+        len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0
+        and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) != 0
+    ):
+        # if both image types were made during analysis
+        tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
+        image_type = constants.IMAGES_ALL
+    elif (
+        len(tmp_protein_pair.distance_analysis.analysis_results.structure_aln_image) != 0
+        and len(tmp_protein_pair.distance_analysis.analysis_results.interesting_regions_images) == 0
+    ):
+        # only struct align image were made
+        tmp_protein_pair.distance_analysis.analysis_results.create_image_png_files_from_base64()
+        image_type = constants.IMAGES_STRUCT_ALN_ONLY
+    else:
+        # no images were made
+        image_type = constants.IMAGES_NONE
+    return ("result", image_type)
+
+
+def color_protein_pair_by_rmsd_value(a_project: "project.Project", a_results_name: str) -> tuple:
+    """Colors a given protein pair by their rmsd value.
+
+    Args:
+        a_project: a project object containing the protein pair.
+        a_results_name: the name of the protein pair.
+
+    Returns:
+        a tuple with ("result", an_existing_protein_pair_object)
+    """
+    tmp_protein_pair: "protein_pair.ProteinPair" = a_project.search_protein_pair(a_results_name)
+    graphic_operations.color_protein_pair_by_rmsd(tmp_protein_pair)
+    return ("result", tmp_protein_pair)

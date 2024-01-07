@@ -105,3 +105,18 @@ class TestMainPresenterAsync:
             assert True
         else:
             assert False
+
+    def test_clean_protein_new(self) -> None:
+        """Tests the cleaning process if a new protein should be created."""
+        tmp_project: "project.Project" = project.Project("pytest-1", constants.DEFAULT_WORKSPACE_PATH)
+        # add the two proteins to the project
+        tmp_prot_1: "protein.Protein" = basic_objects.create_protein_obj_from_pdb_id("6OMN")
+        tmp_project.add_existing_protein(tmp_prot_1)
+        result = main_presenter_async.clean_protein_new("6OMN", tmp_project)
+        if os.path.exists(tmp_project.get_project_xml_path()):
+            os.remove(tmp_project.get_project_xml_path())
+        if len(result[1].proteins) == 2:
+            assert True
+        else:
+            assert False
+

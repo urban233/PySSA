@@ -53,7 +53,7 @@ from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import project_watcher
 from pyssa.internal.data_structures import settings
-from pyssa.internal.data_structures.data_classes import prediction_configuration
+from pyssa.internal.data_structures.data_classes import prediction_configuration, prediction_protein_info
 from pyssa.internal.data_structures.data_classes import image_state
 from pyssa.internal.data_structures.data_classes import stage
 from pyssa.internal.data_structures.data_classes import current_session
@@ -65,11 +65,10 @@ from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa import path_util
 
-from pyssa.util import pyssa_keys
+from pyssa.util import pyssa_keys, prediction_util
 from pyssa.util import main_window_util
 from pyssa.util import exit_codes
 from pyssa.util import globals
-from pyssa.util import protein_pair_util
 from pyssa.util import session_util
 from pyssa.util import exception
 from pyssa.util import constants
@@ -81,7 +80,6 @@ from pyssa.logging_pyssa import log_handlers
 from pyssa.presenter import main_presenter_async
 
 if TYPE_CHECKING:
-    from pyssa.internal.data_structures import protein_pair
     from pyssa.gui.ui.views import main_view
 
 logger = logging.getLogger(__file__)
@@ -944,6 +942,7 @@ class MainPresenter:
 
         # </editor-fold>
 
+        self._view.wait_spinner.start()
         an_add_protein_flag: bool = False
         if self._view.ui.cb_new_add_reference.checkState() == 2:
             an_add_protein_flag = True
@@ -959,7 +958,6 @@ class MainPresenter:
             post_func=self.__await_create_new_project,
         )
         self._active_task.start()
-        self._wait_spinner.start()
 
     def __await_create_new_project(self, a_result: tuple) -> None:
         self._current_project: "project.Project" = a_result[1]
@@ -981,13 +979,14 @@ class MainPresenter:
             image_state.ImageState(),
         )
         self.display_view_page()
-        self._wait_spinner.stop()
+        self._view.wait_spinner.stop()
 
     # </editor-fold>
 
     # <editor-fold desc="Open project page functions">
     def open_project(self) -> None:
         """Initiates the task to open an existing project."""
+        self._view.wait_spinner.start()
         self._active_task = tasks.Task(
             target=main_presenter_async.open_project,
             args=(
@@ -998,7 +997,6 @@ class MainPresenter:
             post_func=self.__await_open_project,
         )
         self._active_task.start()
-        self._view.wait_spinner.start()
 
     def __await_open_project(self, a_result: tuple) -> None:
         self._current_project = a_result[1]
@@ -1051,64 +1049,149 @@ class MainPresenter:
     # <editor-fold desc="Save project functions">
     def save_project(self) -> None:
         """Saves the project.xml."""
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+        self._view.wait_spinner.start()
         self.last_sidebar_button = styles.color_sidebar_buttons(
             self.last_sidebar_button,
             self._view.ui.btn_save_project,
         )
         tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
-        self._current_project.serialize_project(self._current_project.get_project_xml_path())
-        QtWidgets.QApplication.restoreOverrideCursor()
+        self._active_task = tasks.Task(
+            target=main_presenter_async.save_project,
+            args=(self._current_project, 0),
+            post_func=self.__await_save_project,
+        )
+        self._active_task.start()
+
+    def __await_save_project(self, result: tuple) -> None:
+        self._view.wait_spinner.stop()
         basic_boxes.ok("Save Project", "The project was successfully saved.", QtWidgets.QMessageBox.Information)
 
     # </editor-fold>
 
     # <editor-fold desc="Edit project page functions">
+    def check_for_cleaning(self) -> None:
+        """Checks if the selected protein can be cleaned."""
+        self._view.wait_spinner.start()
+        tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
+        cmd.reinitialize()
+        try:
+            tmp_protein_name: str = self._view.ui.list_edit_project_proteins.currentItem().text()
+        except AttributeError:
+            self._view.wait_spinner.stop()
+            return
+        self._active_task = tasks.Task(
+            target=main_presenter_async.check_for_cleaning,
+            args=(
+                tmp_protein_name,
+                self._current_project,
+            ),
+            post_func=self.__await_check_for_cleaning,
+        )
+        self._active_task.start()
+
+    def __await_check_for_cleaning(self, result: tuple) -> None:
+        # check if selected protein contains any organic or solvent molecules which can be removed
+        tmp_is_cleanable: bool = result[1]
+        tmp_is_in_protein_pair: bool = result[2]
+        if tmp_is_cleanable:
+            gui_elements_to_show = [
+                self._view.ui.lbl_edit_clean_new_prot,
+                self._view.ui.btn_edit_clean_new_prot,
+                self._view.ui.lbl_edit_clean_update_prot,
+                self._view.ui.btn_edit_clean_update_prot,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+        else:
+            gui_elements_to_hide = [
+                self._view.ui.lbl_edit_clean_new_prot,
+                self._view.ui.btn_edit_clean_new_prot,
+                self._view.ui.lbl_edit_clean_update_prot,
+                self._view.ui.btn_edit_clean_update_prot,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        # check if selected protein is in any existing protein pair
+        if tmp_is_in_protein_pair:
+            gui_elements_to_hide = [
+                self._view.ui.label_12,
+                self._view.ui.btn_edit_project_delete,
+            ]
+            gui_utils.hide_gui_elements(gui_elements_to_hide)
+        else:
+            gui_elements_to_show = [
+                self._view.ui.label_12,
+                self._view.ui.btn_edit_project_delete,
+            ]
+            gui_utils.show_gui_elements(gui_elements_to_show)
+        self._view.ui.btn_edit_project_save.show()
+        self._view.ui.label_13.show()
+        self._view.ui.label_15.show()
+        self._view.ui.btn_edit_protein_rename.show()
+        self._view.ui.btn_manage_session.show()
+        self._view.wait_spinner.stop()
+
     def clean_protein_new(self) -> None:
         """Cleans the selected protein structure and creates a new cleaned structure."""
-        tmp_protein = self._current_project.search_protein(
-            self._view.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""),
+        self._view.wait_spinner.start()
+        self._active_task = tasks.Task(
+            target=main_presenter_async.clean_protein_new,
+            args=(
+                self._view.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""),
+                self._current_project,
+            ),
+            post_func=self.__await_clean_protein_new,
         )
-        clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
-        constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", clean_tmp_protein.get_molecule_object())
-        self._current_project.add_existing_protein(clean_tmp_protein)
-        self._current_project.serialize_project(self._current_project.get_project_xml_path())
+        self._active_task.start()
+
+    def __await_clean_protein_new(self, result: tuple) -> None:
         self._init_edit_page()
+        self._view.wait_spinner.stop()
 
     def clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
-        tmp_protein = self._current_project.search_protein(
-            self._view.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""),
-        )
+        self._view.wait_spinner.start()
         if basic_boxes.yes_or_no(
             "Clean protein",
             "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!",
             QtWidgets.QMessageBox.Information,
         ):
-            tmp_protein.clean_protein()
-            constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", tmp_protein.get_molecule_object())
-            self._current_project.serialize_project(self._current_project.get_project_xml_path())
-            self._init_edit_page()
+            self._active_task = tasks.Task(
+                target=main_presenter_async.clean_protein_update,
+                args=(
+                    self._view.ui.list_edit_project_proteins.currentItem().text().replace(".pdb", ""),
+                    self._current_project,
+                ),
+                post_func=self.__await_clean_protein_update,
+            )
+            self._active_task.start()
         else:
             constants.PYSSA_LOGGER.info("No protein has been cleaned.")
+            self._view.wait_spinner.stop()
+
+    def __await_clean_protein_update(self) -> None:
+        self._init_edit_page()
+        self._view.wait_spinner.stop()
 
     def delete_protein(self) -> None:
         """Deletes the selected protein structure."""
-        protein_name = self._view.ui.list_edit_project_proteins.currentItem().text()
-        response = gui_utils.warning_message_protein_gets_deleted()
-        if response:
-            try:
-                self._current_project.delete_specific_protein(protein_name)
-            except ValueError:
-                constants.PYSSA_LOGGER.error(
-                    "The protein %s could not be deleted, because it is not in the project.",
-                    protein_name,
-                )
-            self._view.ui.list_edit_project_proteins.clear()
-            gui_utils.fill_list_view_with_protein_names(self._current_project, self._view.ui.list_edit_project_proteins)
-            self._project_watcher.show_valid_options(self._view.ui)
+        self._view.wait_spinner.start()
+        if gui_utils.warning_message_protein_gets_deleted():
+            self._active_task = tasks.Task(
+                target=main_presenter_async.delete_protein,
+                args=(
+                    self._view.ui.list_edit_project_proteins.currentItem().text(),
+                    self._current_project,
+                ),
+                post_func=self.__await_delete_protein,
+            )
+            self._active_task.start()
         else:
             constants.PYSSA_LOGGER.info("No protein was deleted.")
+            self._view.wait_spinner.stop()
+
+    def __await_delete_protein(self) -> None:
+        self._init_edit_page()
+        self._project_watcher.show_valid_options(self._view.ui)
+        self._view.wait_spinner.stop()
 
     def add_existing_protein(self) -> None:
         """Opens a dialog to adds an existing protein structure to the project."""
@@ -1357,7 +1440,7 @@ class MainPresenter:
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getSaveFileName(self, "Save current project", "", "XML Files (*.xml)")
+        file_path, _ = file_dialog.getSaveFileName(self._view, "Save current project", "", "XML Files (*.xml)")
         if file_path:
             self._current_project.serialize_project(pathlib.Path(file_path))
             basic_boxes.ok(
@@ -1613,34 +1696,23 @@ class MainPresenter:
 
     def predict_local_monomer(self) -> None:
         """Sets tup the worker for the prediction with the colabfold."""
+        self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin prediction process.")
+        predictions: list[
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(self._view.ui.table_pred_mono_prot_to_predict)
 
-        # <editor-fold desc="Worker setup">
-        # --Begin: worker setup
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(
-            self._view.ui.table_pred_mono_prot_to_predict,
-            self.prediction_configuration,
-            self._current_project,
+        self._active_task = tasks.Task(
+            target=main_presenter_async.predict_protein_with_colabfold,
+            args=(
+                predictions,
+                self.prediction_configuration,
+                self._current_project,
+            ),
+            post_func=self.__await_predict_protein_with_colabfold,
         )
-        self.tmp_worker.finished.connect(self.post_prediction_process)
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
-        self.tmp_thread.start()
-        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        # --End: worker setup
-
-        # </editor-fold>
-
-        gui_elements_to_show = []
-        gui_elements_to_hide = [
-            self._view.ui.btn_prediction_abort,
-            self._view.ui.btn_use_page,
-            self._view.ui.btn_close_project,
-            self._view.ui.btn_pred_local_monomer_page,
-            self._view.ui.btn_pred_local_multimer_page,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        self._active_task.start()
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
@@ -1653,10 +1725,81 @@ class MainPresenter:
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
             return
         else:  # noqa: RET505
-            print("Unexpected Error.")
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+
+    def __await_predict_protein_with_colabfold(self, result: tuple) -> None:
+        """Process which runs after each prediction job."""
+        tmp_exit_code = result[0]
+        tmp_exit_code_description = [1]
+        if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because there was an error writing the fasta file(s)!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because the fasta file(s) could not be found!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because a subprocess failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            if self.prediction_type == constants.PREDICTION_TYPE_PRED:
+                self._current_project.serialize_project(self._current_project.get_project_xml_path())
+                constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+                self.block_box_prediction.destroy(True)
+                basic_boxes.ok(
+                    "Structure prediction",
+                    "All structure predictions are done. Go to View to check the new proteins.",
+                    QtWidgets.QMessageBox.Information,
+                )
+                constants.PYSSA_LOGGER.info("All structure predictions are done.")
+                self._project_watcher.show_valid_options(self._view.ui)
+                self._init_local_pred_mono_page()
+                self._init_local_pred_multi_page()
+                self.display_view_page()
+        self._view.wait_spinner.stop()
 
     def abort_prediction(self) -> None:
         """Aborts the running prediction."""
@@ -1677,40 +1820,23 @@ class MainPresenter:
     # <editor-fold desc="Multimer Local Prediction functions">
     def predict_local_multimer(self) -> None:
         """Sets up the worker for the prediction with the colabfold."""
+        self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED
         constants.PYSSA_LOGGER.info("Begin multimer prediction process.")
-        # worker = workers.PredictionWorkerPool(self._view.ui.table_pred_multi_prot_to_predict,
-        #                                      self.prediction_configuration, self._current_project)
-        # worker.signals.finished.connect(self.post_prediction_process)
-        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        # self.threadpool.start(worker)
+        predictions: list[
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(self._view.ui.table_pred_multi_prot_to_predict)
 
-        # <editor-fold desc="Worker setup">
-        # TODO: test code below
-        # --Begin: worker setup
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(
-            self._view.ui.table_pred_multi_prot_to_predict,
-            self.prediction_configuration,
-            self._current_project,
+        self._active_task = tasks.Task(
+            target=main_presenter_async.predict_protein_with_colabfold,
+            args=(
+                predictions,
+                self.prediction_configuration,
+                self._current_project,
+            ),
+            post_func=self.__await_predict_protein_with_colabfold,
         )
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
-        self.tmp_worker.finished.connect(self.post_prediction_process)
-        self.tmp_thread.start()
-        # --End: worker setup
-
-        # </editor-fold>
-
-        gui_elements_to_show = [
-            self._view.ui.btn_prediction_abort,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_use_page,
-            self._view.ui.btn_close_project,
-            self._view.ui.btn_pred_local_monomer_page,
-            self._view.ui.btn_pred_local_multimer_page,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        self._active_task.start()
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
@@ -1723,45 +1849,35 @@ class MainPresenter:
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
         else:
-            print("Unexpected Error.")
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
 
     # </editor-fold>
 
     # <editor-fold desc="Monomer Prediction + Analysis functions">
     def start_monomer_prediction_analysis(self) -> None:
         """Sets up the worker for the prediction of the proteins."""
+        self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-
-        # <editor-fold desc="Worker setup">
-        # TODO: test code below
-        # --Begin: worker setup
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(
+        predictions: list[
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(
             self._view.ui.table_pred_analysis_mono_prot_to_predict,
-            self.prediction_configuration,
-            self._current_project,
         )
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
-        self.tmp_worker.finished.connect(self.post_prediction_process)
-        self.tmp_thread.start()
-        # --End: worker setup
 
-        # </editor-fold>
-
-        gui_elements_to_show = [
-            self._view.ui.btn_prediction_abort,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_use_page,
-            self._view.ui.btn_close_project,
-            self._view.ui.btn_pred_local_monomer_page,
-            self._view.ui.btn_pred_local_multimer_page,
-        ]
-        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        self._active_task = tasks.Task(
+            target=main_presenter_async.predict_protein_with_colabfold,
+            args=(
+                predictions,
+                self.prediction_configuration,
+                self._current_project,
+            ),
+            post_func=self.__await_monomer_prediction_for_subsequent_analysis,
+        )
+        self._active_task.start()
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
@@ -1774,48 +1890,116 @@ class MainPresenter:
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
         else:
-            print("Unexpected Error.")
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+
+    def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
+        tmp_exit_code = result[0]
+        tmp_exit_code_description = [1]
+        if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            constants.PYSSA_LOGGER.info("Begin analysis process.")
+            tmp_raw_analysis_run_names: list = []
+            for row_no in range(self._view.ui.list_pred_analysis_mono_overview.count()):
+                tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_mono_overview.item(row_no).text())
+
+            self._active_task = tasks.Task(
+                target=main_presenter_async.run_distance_analysis,
+                args=(
+                    tmp_raw_analysis_run_names,
+                    self._current_project,
+                    self._application_settings,
+                    self._view.ui.cb_pred_analysis_mono_images.isChecked(),
+                ),
+                post_func=self.post_analysis_process,
+            )
+            self._active_task.start()
+
+            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+            self.block_box_analysis.exec_()
+            self.display_view_page()
+
+        elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because there was an error writing the fasta file(s)!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because the fasta file(s) could not be found!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because a subprocess failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
 
     # </editor-fold>
 
     # <editor-fold desc="Multimer Prediction + Analysis functions">
     def start_multimer_prediction_analysis(self) -> None:
         """Sets up the prediction process."""
+        self._view.wait_spinner.start()
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        # self.worker_prediction = workers.PredictionWorkerPool(self._view.ui.table_pred_analysis_multi_prot_to_predict,
-        #                                                      self.prediction_configuration, self._current_project)
-        constants.PYSSA_LOGGER.info("Thread started for prediction process.")
-        # self.threadpool.start(self.worker_prediction)
-        gui_elements_to_show = [
-            self._view.ui.btn_prediction_abort,
-        ]
-        gui_elements_to_hide = [
-            self._view.ui.btn_use_page,
-            self._view.ui.btn_close_project,
-            self._view.ui.btn_pred_local_monomer_page,
-            self._view.ui.btn_pred_local_multimer_page,
-        ]
-
-        # <editor-fold desc="Worker setup">
-        # TODO: test code below
-        # --Begin: worker setup
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.ColabfoldWorker(
+        predictions: list[
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(
             self._view.ui.table_pred_analysis_multi_prot_to_predict,
-            self.prediction_configuration,
-            self._current_project,
         )
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.display_view_page)
-        self.tmp_worker.finished.connect(self.post_prediction_process)
-        self.tmp_thread.start()
-        # --End: worker setup
 
-        # </editor-fold>
-
-        gui_utils.manage_gui_visibility(gui_elements_to_show, gui_elements_to_hide)
+        self._active_task = tasks.Task(
+            target=main_presenter_async.predict_protein_with_colabfold,
+            args=(
+                predictions,
+                self.prediction_configuration,
+                self._current_project,
+            ),
+            post_func=self.__await_multimer_prediction_for_subsequent_analysis,
+        )
+        self._active_task.start()
 
         self.block_box_prediction = QtWidgets.QMessageBox()
         self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
@@ -1828,9 +2012,91 @@ class MainPresenter:
         if self.block_box_prediction.clickedButton() == btn_abort:
             self.abort_prediction()
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
         else:
-            print("Unexpected Error.")
             self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+
+    def __await_multimer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
+        tmp_exit_code = result[0]
+        tmp_exit_code_description = [1]
+        if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            constants.PYSSA_LOGGER.info("Begin analysis process.")
+            tmp_raw_analysis_run_names: list = []
+            for row_no in range(self._view.ui.list_pred_analysis_multi_overview.count()):
+                tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_multi_overview.item(row_no).text())
+
+            self._active_task = tasks.Task(
+                target=main_presenter_async.run_distance_analysis,
+                args=(
+                    tmp_raw_analysis_run_names,
+                    self._current_project,
+                    self._application_settings,
+                    self._view.ui.cb_pred_analysis_multi_images.isChecked(),
+                ),
+                post_func=self.post_analysis_process,
+            )
+            self._active_task.start()
+
+            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+            self.block_box_analysis.exec_()
+            self.display_view_page()
+
+        elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because there was an error writing the fasta file(s)!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because the fasta file(s) could not be found!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because a subprocess failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
 
     # </editor-fold>
 
@@ -2005,36 +2271,32 @@ class MainPresenter:
 
     def pre_load_results(self) -> None:
         """Sets up the worker for the result loading process."""
+        self._view.wait_spinner.start()
         if self.is_distance_plot_open:
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
         self.results_name = self._view.ui.cb_results_analysis_options.currentText()
         if self.results_name == "":
             self.show_analysis_results_options()
+            self._view.wait_spinner.stop()
             return
         tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
-        tmp_protein_pair = self._current_project.search_protein_pair(self.results_name)
 
-        # <editor-fold desc="Worker setup">
-        # --Begin: worker setup
-        self.tmp_thread = QtCore.QThread()
-        self.tmp_worker = task_workers.LoadResultsWorker(tmp_protein_pair, self._current_project.get_project_xml_path())
-        self.tmp_thread = task_workers.setup_worker_for_work(self.tmp_thread, self.tmp_worker, self.load_results)
-        self.tmp_thread.start()
-        # --End: worker setup
-
-        # </editor-fold>
+        self._active_task = tasks.Task(
+            target=main_presenter_async.load_results,
+            args=(
+                self._current_project,
+                self.results_name,
+            ),
+            post_func=self.__await_load_results,
+        )
+        self._active_task.start()
 
         self._view.ui.list_results_interest_regions.clear()
         self._view.status_bar.showMessage(f"Loading results of {self.results_name} ...")
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
 
-    def load_results(self, images_type) -> None:  # noqa: ANN001
-        """Loads the results of the selected protein pair.
-
-        Args:
-            images_type: the type of images which were made during analysis
-        """
+    def __await_load_results(self, result: tuple) -> None:
+        images_type: str = result[1]
         if images_type == constants.IMAGES_ALL:
             gui_elements_to_show = [
                 self._view.ui.lbl_results_analysis_options,
@@ -2119,24 +2381,6 @@ class MainPresenter:
         self._view.ui.list_results_interest_regions.sortItems()
         self._view.ui.txt_results_rmsd.setText(str(tmp_protein_pair.distance_analysis.analysis_results.rmsd))
 
-        # # <editor-fold desc="Histogram check">
-        # # check if histogram can be created
-        # distance_list.sort()
-        # x, y = np.histogram(distance_list, bins=np.arange(0, distance_list[len(distance_list) - 1], 0.25))
-        # if x.size != y.size:
-        #     x = np.resize(x, (1, y.size))
-        # # this conversion is needed for the pyqtgraph library!
-        # x = x.tolist()
-        # try:
-        #     x = x[0]
-        # except IndexError:
-        #     # histogram could not be created
-        #     gui_elements_to_hide.append(self._view.ui.lbl_results_distance_histogram)
-        #     gui_elements_to_hide.append(self._view.ui.btn_view_distance_histogram)
-        #     gui_utils.hide_gui_elements(gui_elements_to_hide)
-        #
-        # # </editor-fold>
-
         cmd.reinitialize()
         tmp_protein_pair.load_pymol_session()
         self.current_session = current_session.CurrentSession(
@@ -2152,157 +2396,35 @@ class MainPresenter:
             f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}",
             action="recall",
         )
-        QtWidgets.QApplication.restoreOverrideCursor()
         self._view.status_bar.showMessage(f"Current workspace: {str(self._workspace_path)}")
         self.main_window_state.results_page.results_name = self._view.ui.cb_results_analysis_options.currentText()
+        self._view.wait_spinner.stop()
 
     def color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
-        tmp_protein_pair: "protein_pair.ProteinPair" = self._current_project.search_protein_pair(self.results_name)
-
-        cutoff_1 = 0.5
-        cutoff_2 = 1.0
-        cutoff_3 = 2
-        cutoff_4 = 4
-        cutoff_5 = 6
-
-        color_1 = "br0"
-        color_2 = "br2"
-        color_3 = "br4"
-        color_4 = "br6"
-        color_5 = "br8"
-        color_6 = "red"
-
-        cmd.color("hydrogen", tmp_protein_pair.protein_2.get_molecule_object())
-
-        i: int = 0
-        for distance_value in tmp_protein_pair.distance_analysis.analysis_results.distance_data.get("distance"):
-            if distance_value <= cutoff_1:
-                atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                    i,
-                )
-                # create two atoms for the get_distance command
-                atom1: str = (
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
-                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                )
-                atom2: str = (
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
-                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
-                )
-                # coloring
-                cmd.color(color_1, atom1)
-                cmd.color(color_1, atom2)
-                # cmd.do(f"color {color_1}, {atom1}")
-                # cmd.do(f"color {color_1}, {atom2}")
-                i += 1
-
-            elif distance_value <= cutoff_2:
-                atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                    i,
-                )
-                # create two atoms for the get_distance command
-                atom1: str = (
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
-                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                )
-                atom2: str = (
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
-                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
-                )
-                # coloring
-                cmd.color(color_2, atom1)
-                cmd.color(color_2, atom2)
-                i += 1
-
-            elif distance_value <= cutoff_3:
-                atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                    i,
-                )
-                # create two atoms for the get_distance command
-                atom1: str = (
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
-                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}/CA"
-                )
-                atom2: str = (
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
-                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
-                )
-                # coloring
-                cmd.color(color_3, atom1)
-                cmd.color(color_3, atom2)
-                i += 1
-
-            elif distance_value <= cutoff_4:
-                atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                    i,
-                )
-                # create two atoms for the get_distance command
-                atom1: str = (
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
-                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                )
-                atom2: str = (
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
-                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
-                )
-                # coloring
-                cmd.color(color_4, atom1)
-                cmd.color(color_4, atom2)
-                i += 1
-
-            elif distance_value <= cutoff_5:
-                atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                    i,
-                )
-                # create two atoms for the get_distance command
-                atom1: str = (
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
-                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                )
-                atom2: str = (
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
-                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
-                )
-                # coloring
-                cmd.color(color_5, atom1)
-                cmd.color(color_5, atom2)
-                i += 1
-
-            elif distance_value > cutoff_5:
-                atom_info = protein_pair_util.get_chain_and_position(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                    i,
-                )
-                # create two atoms for the get_distance command
-                atom1: str = (
-                    f"/{tmp_protein_pair.protein_1.get_molecule_object()}//"
-                    f"{atom_info[0]}/{atom_info[2]}`{atom_info[1]}"
-                )
-                atom2: str = (
-                    f"/{tmp_protein_pair.protein_2.get_molecule_object()}//"
-                    f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
-                )
-                # coloring
-                cmd.color(color_6, f"({atom1})")
-                cmd.color(color_6, f"({atom2})")
-                i += 1
-
+        self._view.wait_spinner.start()
+        self._active_task = tasks.Task(
+            target=main_presenter_async.color_protein_pair_by_rmsd_value,
+            args=(
+                self._current_project,
+                self.results_name,
+            ),
+            post_func=self.__await_color_protein_pair_by_rmsd,
+        )
+        self._active_task.start()
         # hide unnecessary representations
         # fixme: it might be a problem to hide any representation at this point
         # cmd.hide("cartoon", tmp_protein_pair.protein_1.get_molecule_object())
         # cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
         # cmd.hide("cartoon", f"{tmp_protein_pair.protein_2.get_molecule_object()}")
 
+    def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
+        self._view.wait_spinner.stop()
+
     def display_structure_alignment(self) -> None:
         """Opens a window which displays the image of the structure alignment."""
-        png_dialog = QtWidgets.QDialog(self)
-        label = QtWidgets.QLabel(self)
+        png_dialog = QtWidgets.QDialog(self._view)
+        label = QtWidgets.QLabel(self._view)
         pathlib.Path(
             f"{self._workspace_path}/{self._view.ui.lbl_current_project_name.text()}/results/{self.results_name}",
         )
@@ -2346,8 +2468,8 @@ class MainPresenter:
         if self.is_distance_plot_open:
             self.distance_plot_dialog.close()
             self.is_distance_plot_open = False
-        png_dialog = QtWidgets.QDialog(self)
-        label = QtWidgets.QLabel(self)
+        png_dialog = QtWidgets.QDialog(self._view)
+        label = QtWidgets.QLabel(self._view)
         file_name = self._view.ui.list_results_interest_regions.currentItem().text()
         pixmap = QtGui.QPixmap(f"{constants.CACHE_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/{file_name}")
         # TODO: Create setting for min. image size
@@ -2378,7 +2500,7 @@ class MainPresenter:
             "Distance in Å",
         ]
         csv_model.setHorizontalHeaderLabels(labels)
-        table_dialog = QtWidgets.QDialog(self)
+        table_dialog = QtWidgets.QDialog(self._view)
         table_view = QtWidgets.QTableView()
         table_view.setModel(csv_model)
 
@@ -2695,7 +2817,7 @@ class MainPresenter:
     def save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
         # returns tuple with (name, bool)
-        scene_name = QtWidgets.QInputDialog.getText(self, "Save Scene", "Enter scene name:")
+        scene_name = QtWidgets.QInputDialog.getText(self._view, "Save Scene", "Enter scene name:")
         if scene_name[1]:
             cmd.scene(key=scene_name[0], action="append")
 
@@ -3544,7 +3666,7 @@ class MainPresenter:
         try:
             # open file dialog
             file_name = QtWidgets.QFileDialog.getOpenFileName(
-                self,
+                self._view,
                 "Open Reference",
                 QtCore.QDir.homePath(),
                 "PDB Files (*.pdb)",
@@ -3676,55 +3798,6 @@ class MainPresenter:
             self._view.ui.lbl_delete_status_search,
             self._view.ui.txt_delete_selected_projects,
         )
-
-    # </editor-fold>
-
-    # <editor-fold desc="Edit page">
-    def check_for_cleaning(self) -> None:
-        """Checks if the selected protein can be cleaned."""
-        try:
-            protein_name = self._view.ui.list_edit_project_proteins.currentItem().text()
-        except AttributeError:
-            return
-        tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
-        cmd.reinitialize()
-        self._view.ui.btn_manage_session.show()
-        tmp_protein = self._current_project.search_protein(protein_name.replace(".pdb", ""))
-        tmp_protein.load_protein_in_pymol()
-        # check if selected protein contains any organic or solvent molecules which can be removed
-        if cmd.select("organic") > 0 or cmd.select("solvent") > 0:
-            gui_elements_to_show = [
-                self._view.ui.lbl_edit_clean_new_prot,
-                self._view.ui.btn_edit_clean_new_prot,
-                self._view.ui.lbl_edit_clean_update_prot,
-                self._view.ui.btn_edit_clean_update_prot,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-        else:
-            gui_elements_to_hide = [
-                self._view.ui.lbl_edit_clean_new_prot,
-                self._view.ui.btn_edit_clean_new_prot,
-                self._view.ui.lbl_edit_clean_update_prot,
-                self._view.ui.btn_edit_clean_update_prot,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        # check if selected protein is in any existing protein pair
-        if self._current_project.check_if_protein_is_in_any_protein_pair(protein_name) is True:
-            gui_elements_to_hide = [
-                self._view.ui.label_12,
-                self._view.ui.btn_edit_project_delete,
-            ]
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-        else:
-            gui_elements_to_show = [
-                self._view.ui.label_12,
-                self._view.ui.btn_edit_project_delete,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-        self._view.ui.btn_edit_project_save.show()
-        self._view.ui.label_13.show()
-        self._view.ui.label_15.show()
-        self._view.ui.btn_edit_protein_rename.show()
 
     # </editor-fold>
 
