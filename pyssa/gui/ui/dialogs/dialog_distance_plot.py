@@ -68,6 +68,12 @@ class DialogDistancePlot(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+
+        # self.resizeEvent = self.handle_resize
+        # Create a timer for delayed updates
+        self.resize_timer = QtCore.QTimer(self)
+        self.resize_timer.timeout.connect(self.handle_resize_timeout)
+
         # self.graph_widget = pg.PlotWidget()
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         custom_pyssa_styles.set_stylesheet(self)
@@ -90,7 +96,6 @@ class DialogDistancePlot(QtWidgets.QDialog):
         self.scroll_area.setWidget(self.plot_widget)
         self.plot_distance_data()
         self.toolbar.show()
-
         # styles
         stylesheet = """
         QDialog {background-color: #F6F4F8;}
@@ -112,6 +117,22 @@ class DialogDistancePlot(QtWidgets.QDialog):
         """Event handler for a key press event."""
         if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
             self.update_plot()
+
+    def resizeEvent(self, event) -> None:  # noqa: N802, ANN001
+        """The actual resize event overwritten from PyQt5."""
+        # Let the base class handle the event
+        super().resizeEvent(event)
+
+        # Start or restart the timer when resizing
+        self.resize_timer.start(200)  # Adjust the timeout as needed
+
+    def handle_resize_timeout(self) -> None:
+        """Handles the resize process."""
+        # Handle the resize event after the timeout
+        size = self.scroll_area.size()
+        self.plot_widget.setFixedSize(size.width() - 10, size.height() - 10)
+        self.plot_widget.figure.tight_layout()
+        self.plot_widget.canvas.draw()
 
     def plot_distance_data(self) -> None:
         """Plots the distance data."""

@@ -1131,6 +1131,7 @@ class MainPresenter:
         self._view.ui.label_15.show()
         self._view.ui.btn_edit_protein_rename.show()
         self._view.ui.btn_manage_session.show()
+        self._project_watcher.show_valid_options(self._view.ui)
         self._view.wait_spinner.stop()
         self.update_status(self._workspace_status)
 
@@ -1150,6 +1151,7 @@ class MainPresenter:
 
     def __await_clean_protein_new(self, result: tuple) -> None:
         self._init_edit_page()
+        self._project_watcher.show_valid_options(self._view.ui)
         self._view.wait_spinner.stop()
         self.update_status(self._workspace_status)
 
@@ -1177,6 +1179,7 @@ class MainPresenter:
 
     def __await_clean_protein_update(self) -> None:
         self._init_edit_page()
+        self._project_watcher.show_valid_options(self._view.ui)
         self._view.wait_spinner.stop()
         self.update_status(self._workspace_status)
 
@@ -1231,6 +1234,7 @@ class MainPresenter:
 
     def __await_post_add_existing_protein(self, result: tuple) -> None:
         self._current_project = result[1]
+        self._project_watcher.show_valid_options(self._view.ui)
         self._view.wait_spinner.stop()
         self.update_status(self._workspace_status)
         self.display_edit_page()
@@ -1277,6 +1281,7 @@ class MainPresenter:
                 "Saving the protein as .pdb file failed with an unexpected error!",
                 QtWidgets.QMessageBox.Error,
             )
+        self._project_watcher.show_valid_options(self._view.ui)
         self.update_status(self._workspace_status)
 
     def rename_selected_protein_structure(self) -> None:
@@ -1304,6 +1309,7 @@ class MainPresenter:
 
     def __await_post_rename_selected_protein_structure(self, result: tuple) -> None:
         self._init_edit_page()
+        self._project_watcher.show_valid_options(self._view.ui)
         self._view.wait_spinner.stop()
 
     # </editor-fold>
