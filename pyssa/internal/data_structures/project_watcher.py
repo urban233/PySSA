@@ -83,7 +83,6 @@ class ProjectWatcher:
             ]
             gui_elements_to_hide = [
                 ui.btn_close_project,
-                ui.btn_save_project,
                 ui.btn_view_page,
                 ui.btn_use_page,
                 ui.btn_export_project,
@@ -119,7 +118,6 @@ class ProjectWatcher:
                 ui.btn_close_project,
                 ui.btn_use_page,
                 ui.btn_edit_page,
-                ui.btn_save_project,
                 ui.btn_view_page,
                 ui.lbl_pred_local,
                 ui.btn_pred_local_monomer_page,
@@ -157,7 +155,6 @@ class ProjectWatcher:
         elif self.no_of_pdb_files == 1:
             gui_elements_to_show = [
                 ui.btn_close_project,
-                ui.btn_save_project,
                 ui.btn_use_page,
                 ui.btn_export_project,
                 ui.btn_edit_page,
@@ -197,7 +194,6 @@ class ProjectWatcher:
         elif self.no_of_pdb_files >= 2:
             gui_elements_to_show = [
                 ui.btn_close_project,
-                ui.btn_save_project,
                 ui.btn_use_page,
                 ui.btn_export_project,
                 ui.btn_edit_page,

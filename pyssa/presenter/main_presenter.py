@@ -424,7 +424,6 @@ class MainPresenter:
         self._view.ui.btn_new_page.clicked.connect(self.display_new_page)
         self._view.ui.btn_open_page.clicked.connect(self.display_open_page)
         self._view.ui.btn_delete_page.clicked.connect(self.display_delete_page)
-        self._view.ui.btn_save_project.clicked.connect(self.save_project)
         self._view.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self._view.ui.btn_view_page.clicked.connect(self.display_view_page)
         self._view.ui.btn_use_page.clicked.connect(self.display_use_page)
@@ -1043,21 +1042,21 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Save project functions">
-    def save_project(self) -> None:
-        """Saves the project.xml."""
-        self._view.wait_spinner.start()
-        self.last_sidebar_button = styles.color_sidebar_buttons(
-            self.last_sidebar_button,
-            self._view.ui.btn_save_project,
-        )
-        tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
-        self._active_task = tasks.Task(
-            target=main_presenter_async.save_project,
-            args=(self._current_project, 0),
-            post_func=self.__await_save_project,
-        )
-        self._active_task.start()
-        self.update_status("Saving current project ...")
+    # def save_project(self) -> None:
+    #     """Saves the project.xml."""
+    #     self._view.wait_spinner.start()
+    #     self.last_sidebar_button = styles.color_sidebar_buttons(
+    #         self.last_sidebar_button,
+    #         self._view.ui.btn_save_project,
+    #     )
+    #     tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
+    #     self._active_task = tasks.Task(
+    #         target=main_presenter_async.save_project,
+    #         args=(self._current_project, 0),
+    #         post_func=self.__await_save_project,
+    #     )
+    #     self._active_task.start()
+    #     self.update_status("Saving current project ...")
 
     def __await_save_project(self, result: tuple) -> None:
         self._view.wait_spinner.stop()
