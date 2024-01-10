@@ -7144,7 +7144,6 @@
     <addaction name="action_help_docs_pdf"/>
     <addaction name="action_settings_open_logs"/>
     <addaction name="action_settings_clear_logs"/>
-    <addaction name="action_help_changelog"/>
     <addaction name="action_help_about"/>
    </widget>
    <addaction name="menuSettings"/>

@@ -20,6 +20,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the About Dialog."""
+import os
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -42,6 +44,7 @@ class DialogAbout(QtWidgets.QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
+        self.ui.btn_changelog_open.clicked.connect(self.open_release_notes_in_standard_application)
         self.ui.btn_ok.clicked.connect(self.close_dialog)
         original_pixmap = QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png")
         scaled_pixmap = original_pixmap.scaled(150, 150)
@@ -53,6 +56,10 @@ class DialogAbout(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
     # @SLOT
+    def open_release_notes_in_standard_application(self) -> None:
+        """Opens the release notes in the default app."""
+        os.startfile(constants.CHANGELOG_HTML_PATH)
+
     def close_dialog(self) -> None:
         """Closes the dialog."""
         self.close()

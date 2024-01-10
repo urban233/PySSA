@@ -418,7 +418,6 @@ class MainPresenter:
         self._view.ui.action_help_about.triggered.connect(self.open_about)
         self._view.ui.action_settings_open_logs.triggered.connect(self.open_logs)
         self._view.ui.action_settings_clear_logs.triggered.connect(self.clear_all_log_files)
-        self._view.ui.action_help_changelog.triggered.connect(self.open_release_notes_in_standard_application)
         # </editor-fold>
 
         # <editor-fold desc="Side Menu">
@@ -862,11 +861,6 @@ class MainPresenter:
             file.close()
         tmp_dialog = dialog_help.DialogHelp(html_content)
         tmp_dialog.exec_()
-
-    @staticmethod
-    def open_release_notes_in_standard_application() -> None:
-        """Opens the release notes in the default app."""
-        os.startfile(constants.CHANGELOG_HTML_PATH)
 
     # </editor-fold>
 

@@ -2995,7 +2995,6 @@ class Ui_MainWindow(object):
         self.menuHelp.addAction(self.action_help_docs_pdf)
         self.menuHelp.addAction(self.action_settings_open_logs)
         self.menuHelp.addAction(self.action_settings_clear_logs)
-        self.menuHelp.addAction(self.action_help_changelog)
         self.menuHelp.addAction(self.action_help_about)
         self.menubar.addAction(self.menuSettings.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
