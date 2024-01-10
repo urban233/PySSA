@@ -182,8 +182,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>163</width>
-                  <height>870</height>
+                  <width>142</width>
+                  <height>962</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_115">
@@ -7125,7 +7125,7 @@
      <x>0</x>
      <y>0</y>
      <width>540</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -7134,11 +7134,7 @@
     </property>
     <addaction name="action_settings_edit_all"/>
     <addaction name="action_settings_model_w_off_colab_notebook"/>
-    <addaction name="separator"/>
     <addaction name="action_file_restore_settings"/>
-    <addaction name="separator"/>
-    <addaction name="action_settings_open_logs"/>
-    <addaction name="action_settings_clear_logs"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -7146,8 +7142,10 @@
     </property>
     <addaction name="action_help_docs"/>
     <addaction name="action_help_docs_pdf"/>
-    <addaction name="action_help_about"/>
+    <addaction name="action_settings_open_logs"/>
+    <addaction name="action_settings_clear_logs"/>
     <addaction name="action_help_changelog"/>
+    <addaction name="action_help_about"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -7160,7 +7158,7 @@
   </action>
   <action name="action_settings_edit_all">
    <property name="text">
-    <string>Edit all</string>
+    <string>Edit</string>
    </property>
   </action>
   <action name="action_file_save_as">
@@ -7188,7 +7186,7 @@
   </action>
   <action name="action_file_restore_settings">
    <property name="text">
-    <string>Restore Settings</string>
+    <string>Restore </string>
    </property>
   </action>
   <action name="action_wizard_prepare_model_pdbs">

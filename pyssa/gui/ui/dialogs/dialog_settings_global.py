@@ -159,7 +159,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
 
     def _connect_all_gui_elements(self) -> None:
         """Connects all dialog gui elements."""
-        self.ui.cb_color_vision_mode.currentIndexChanged.connect(self.set_color_vision_mode)
+        #self.ui.cb_color_vision_mode.currentIndexChanged.connect(self.set_color_vision_mode)
         self.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
         self.ui.btn_cancel.clicked.connect(self.cancel_dialog)
         self.ui.btn_ok.clicked.connect(self.ok_dialog)
