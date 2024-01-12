@@ -19,40 +19,38 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the About Dialog."""
+"""Module for the help dialog."""
+import logging
+from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-from PyQt5 import QtCore
-from pyssa.gui.ui.forms.auto_generated.auto_dialog_about import Ui_Dialog
-from pyssa.gui.ui.styles import styles
+
 from pyssa.util import constants
+from pyssa.gui.ui.styles import styles
+
+# setup logger
+logging.basicConfig(level=logging.DEBUG)
 
 
-class DialogAbout(QtWidgets.QDialog):
-    """Class representing an About dialog."""
+class DialogHelp(QtWidgets.QDialog):
+    """This class opens a help dialog."""
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
+    """This variable is for controlling whether the dialog opens or not"""
+    ERROR = False
+
+    def __init__(self, html_content: str, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            parent: The parent.
+            html_content: a string with the content of the HTML file.
+            parent: the parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
-        # build ui object
-        self.ui = Ui_Dialog()
-        self.ui.setupUi(self)
-
-        self.ui.btn_ok.clicked.connect(self.close_dialog)
-        original_pixmap = QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png")
-        scaled_pixmap = original_pixmap.scaled(150, 150)
-        self.ui.lbl_pyssa_logo.setPixmap(scaled_pixmap)
-        self.ui.label_2.setText(f"Version: {constants.VERSION_NUMBER}")
-        styles.set_stylesheet(self)
+        self.text_browser = QtWidgets.QTextBrowser(self)
+        self.text_browser.setGeometry(10, 10, 780, 580)
+        self.text_browser.setHtml(html_content)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("About")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
-    # @SLOT
-    def close_dialog(self) -> None:
-        """Closes the dialog."""
-        self.close()
+        styles.set_stylesheet(self)
+        self.text_browser.setStyleSheet("""background-color: white;""")
+        self.setWindowTitle("Help")

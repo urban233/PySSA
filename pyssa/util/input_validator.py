@@ -20,9 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the input validator class."""
-from pymol import Qt
+from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 from pyssa.gui.ui.styles import styles
 
 
@@ -110,7 +111,7 @@ class InputValidator:
 
     @staticmethod
     def validate_search_input(
-        list_for_projects: QtWidgets.QListWidget,
+        list_for_projects: QtCore.QStringListModel,
         txt_for_search: QtWidgets.QTextEdit,
         lbl_for_status_search: QtWidgets.QLabel,
         txt_for_selected_project: QtWidgets.QTextEdit = None,
@@ -130,28 +131,32 @@ class InputValidator:
             status_message:
                 the message which should get displayed.
         """
-        if list_for_projects.currentItem() is not None:
-            list_for_projects.currentItem().setSelected(False)
-        # set color for lineEdit
-        txt_for_search.setStyleSheet("background-color: white")
+        list_model = list_for_projects  # Replace with your actual QStringListModel
+        txt_for_search = txt_for_search  # Replace with your actual QLineEdit
+        lbl_for_status_search = lbl_for_status_search  # Replace with your actual QLabel
+        txt_for_selected_project = txt_for_selected_project  # Replace with your actual QLineEdit
+
+        # Reset styles for lineEdit
+        txt_for_search.setStyleSheet("background-color: white; color: black")
+
         if len(txt_for_search.text()) == 0:
             lbl_for_status_search.setText("")
             if txt_for_selected_project is not None:
                 txt_for_selected_project.setText("")
         else:
-            item = list_for_projects.findItems(
-                txt_for_search.text(),
-                Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly,
-            )
-            if len(item) != 0:
-                list_for_projects.setCurrentItem(item[0])
+            string_list = list_model.stringList()
+            matching_items = [item for item in string_list if txt_for_search.text() in item]
+
+            if matching_items:
+                index = string_list.index(matching_items[0])
+                list_model.setData(list_model.index(index), Qt.Checked, Qt.CheckStateRole)
                 lbl_for_status_search.setText("")
                 if txt_for_selected_project is not None:
-                    txt_for_selected_project.setText(list_for_projects.currentItem().text())
+                    txt_for_selected_project.setText(matching_items[0])
             else:
-                txt_for_search.setStyleSheet("color: #f44336")
+                txt_for_search.setStyleSheet("background-color: white; color: #f44336")
                 if status_message is None:
-                    lbl_for_status_search.setText("Project name does not exists.")
+                    lbl_for_status_search.setText("Project name does not exist.")
                 else:
                     lbl_for_status_search.setText(status_message)
                 if txt_for_selected_project is not None:

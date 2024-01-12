@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\pyssa\gui\ui\forms\dlgSettingsGlobal.ui'
+# Form implementation generated from reading ui file '.\dlgSettingsGlobal.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -102,18 +102,20 @@ class Ui_Dialog(object):
         self.cb_color_vision_mode.setObjectName("cb_color_vision_mode")
         self.horizontalLayout.addWidget(self.cb_color_vision_mode)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
+        spacerItem1 = QtWidgets.QSpacerItem(
+            20, 48, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding
+        )
         self.verticalLayout_2.addItem(spacerItem1)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         spacerItem2 = QtWidgets.QSpacerItem(148, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem2)
-        self.btn_ok = QtWidgets.QPushButton(Dialog)
-        self.btn_ok.setObjectName("btn_ok")
-        self.horizontalLayout_3.addWidget(self.btn_ok)
         self.btn_cancel = QtWidgets.QPushButton(Dialog)
         self.btn_cancel.setObjectName("btn_cancel")
         self.horizontalLayout_3.addWidget(self.btn_cancel)
+        self.btn_ok = QtWidgets.QPushButton(Dialog)
+        self.btn_ok.setObjectName("btn_ok")
+        self.horizontalLayout_3.addWidget(self.btn_ok)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
 
         self.retranslateUi(Dialog)
@@ -131,5 +133,5 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "Parameters for PyMOL session"))
         self.lbl_ask_to_save_pymol_session.setText(_translate("Dialog", "Ask to save pymol session"))
         self.lbl_color_vision_mode.setText(_translate("Dialog", "Color vision mode"))
-        self.btn_ok.setText(_translate("Dialog", "OK"))
         self.btn_cancel.setText(_translate("Dialog", "Cancel"))
+        self.btn_ok.setText(_translate("Dialog", "OK"))

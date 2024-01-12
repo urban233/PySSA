@@ -182,8 +182,8 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>142</width>
-                  <height>934</height>
+                  <width>163</width>
+                  <height>870</height>
                  </rect>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_115">
@@ -248,6 +248,16 @@
                      </property>
                      <property name="text">
                       <string>Import</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="btn_save_project">
+                     <property name="focusPolicy">
+                      <enum>Qt::ClickFocus</enum>
+                     </property>
+                     <property name="text">
+                      <string>Save</string>
                      </property>
                     </widget>
                    </item>
@@ -7115,7 +7125,7 @@
      <x>0</x>
      <y>0</y>
      <width>540</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -7124,7 +7134,11 @@
     </property>
     <addaction name="action_settings_edit_all"/>
     <addaction name="action_settings_model_w_off_colab_notebook"/>
+    <addaction name="separator"/>
     <addaction name="action_file_restore_settings"/>
+    <addaction name="separator"/>
+    <addaction name="action_settings_open_logs"/>
+    <addaction name="action_settings_clear_logs"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -7132,9 +7146,8 @@
     </property>
     <addaction name="action_help_docs"/>
     <addaction name="action_help_docs_pdf"/>
-    <addaction name="action_settings_open_logs"/>
-    <addaction name="action_settings_clear_logs"/>
     <addaction name="action_help_about"/>
+    <addaction name="action_help_changelog"/>
    </widget>
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
@@ -7147,7 +7160,7 @@
   </action>
   <action name="action_settings_edit_all">
    <property name="text">
-    <string>Edit</string>
+    <string>Edit all</string>
    </property>
   </action>
   <action name="action_file_save_as">
@@ -7175,7 +7188,7 @@
   </action>
   <action name="action_file_restore_settings">
    <property name="text">
-    <string>Restore </string>
+    <string>Restore Settings</string>
    </property>
   </action>
   <action name="action_wizard_prepare_model_pdbs">

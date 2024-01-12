@@ -65,7 +65,7 @@ def set_stylesheet(self) -> None:  # noqa: ANN001
         self: a QMainWindow or QDialog
     """
     with open(
-        pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/styles.css"),
+        pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/app_styles.css"),
         "r",
         encoding="utf-8",
     ) as file:

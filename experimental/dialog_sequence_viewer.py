@@ -22,10 +22,13 @@
 from pymol import Qt
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
+
+from pyssa.model import sequence_model
 from pyssa.util import constants
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_sequence_viewer import Ui_Dialog
 from PyQt5.QtWidgets import *
 import PyQt5
+from PyQt5 import QtGui
 
 
 class SequenceViewer(Qt.QtWidgets.QDialog):
@@ -43,19 +46,22 @@ class SequenceViewer(Qt.QtWidgets.QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-        self.sequence_as_list = list(sequence)
+        self.sequence_as_list = list(sequence[0].sequence)
+        tmp_model = sequence_model.SequenceModel()
+        tmp_model.add_sequence(sequence[0].sequence)
         self.protein_filenames = [filename.replace(".pdb", "")]
-
-        # fill table
-        self.ui.table_seq_viewer.setRowCount(len(self.protein_filenames))
-        self.ui.table_seq_viewer.setColumnCount(len(self.sequence_as_list))
-        i = 0
-        for amino_acid in self.sequence_as_list:
-            self.ui.table_seq_viewer.setItem(0, i, QTableWidgetItem(amino_acid))
-            i += 1
-        i = 0
-        for protein_filename in self.protein_filenames:
-            self.ui.table_seq_viewer.setVerticalHeaderItem(i, QTableWidgetItem(protein_filename))
+        self.ui.table_seq_viewer = QTableView(self)
+        self.ui.table_seq_viewer.setModel(tmp_model)
+        # # fill table
+        # self.ui.table_seq_viewer.setRowCount(len(self.protein_filenames))
+        # self.ui.table_seq_viewer.setColumnCount(len(self.sequence_as_list))
+        # i = 0
+        # for amino_acid in self.sequence_as_list:
+        #     self.ui.table_seq_viewer.setItem(0, i, QTableWidgetItem(amino_acid))
+        #     i += 1
+        # i = 0
+        # for protein_filename in self.protein_filenames:
+        #     self.ui.table_seq_viewer.setVerticalHeaderItem(i, QTableWidgetItem(protein_filename))
 
         self.ui.table_seq_viewer.setSizeAdjustPolicy(PyQt5.QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.ui.table_seq_viewer.resizeColumnsToContents()

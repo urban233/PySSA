@@ -49,6 +49,7 @@ from pyssa.gui.ui.dialogs import dialog_tutorial_videos
 from pyssa.gui.ui.dialogs import dialog_rename_protein
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
+from pyssa.gui.ui.views import plot_view
 
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
@@ -418,12 +419,14 @@ class MainPresenter:
         self._view.ui.action_help_about.triggered.connect(self.open_about)
         self._view.ui.action_settings_open_logs.triggered.connect(self.open_logs)
         self._view.ui.action_settings_clear_logs.triggered.connect(self.clear_all_log_files)
+        self._view.ui.action_help_changelog.triggered.connect(self.open_release_notes_in_standard_application)
         # </editor-fold>
 
         # <editor-fold desc="Side Menu">
         self._view.ui.btn_new_page.clicked.connect(self.display_new_page)
         self._view.ui.btn_open_page.clicked.connect(self.display_open_page)
         self._view.ui.btn_delete_page.clicked.connect(self.display_delete_page)
+        self._view.ui.btn_save_project.clicked.connect(self.save_project)
         self._view.ui.btn_edit_page.clicked.connect(self.display_edit_page)
         self._view.ui.btn_view_page.clicked.connect(self.display_view_page)
         self._view.ui.btn_use_page.clicked.connect(self.display_use_page)
@@ -861,6 +864,11 @@ class MainPresenter:
         tmp_dialog = dialog_help.DialogHelp(html_content)
         tmp_dialog.exec_()
 
+    @staticmethod
+    def open_release_notes_in_standard_application() -> None:
+        """Opens the release notes in the default app."""
+        os.startfile(constants.CHANGELOG_HTML_PATH)
+
     # </editor-fold>
 
     # def open_change_log(self) -> None:
@@ -1042,21 +1050,21 @@ class MainPresenter:
     # </editor-fold>
 
     # <editor-fold desc="Save project functions">
-    # def save_project(self) -> None:
-    #     """Saves the project.xml."""
-    #     self._view.wait_spinner.start()
-    #     self.last_sidebar_button = styles.color_sidebar_buttons(
-    #         self.last_sidebar_button,
-    #         self._view.ui.btn_save_project,
-    #     )
-    #     tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
-    #     self._active_task = tasks.Task(
-    #         target=main_presenter_async.save_project,
-    #         args=(self._current_project, 0),
-    #         post_func=self.__await_save_project,
-    #     )
-    #     self._active_task.start()
-    #     self.update_status("Saving current project ...")
+    def save_project(self) -> None:
+        """Saves the project.xml."""
+        self._view.wait_spinner.start()
+        self.last_sidebar_button = styles.color_sidebar_buttons(
+            self.last_sidebar_button,
+            self._view.ui.btn_save_project,
+        )
+        tools.ask_to_save_pymol_session(self._current_project, self.current_session, self._application_settings)
+        self._active_task = tasks.Task(
+            target=main_presenter_async.save_project,
+            args=(self._current_project, 0),
+            post_func=self.__await_save_project,
+        )
+        self._active_task.start()
+        self.update_status("Saving current project ...")
 
     def __await_save_project(self, result: tuple) -> None:
         self._view.wait_spinner.stop()
@@ -2843,10 +2851,15 @@ class MainPresenter:
         protein_pair_of_analysis = self._current_project.search_protein_pair(
             self._view.ui.cb_results_analysis_options.currentText(),
         )
-        self.distance_plot_dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis)
-        self.distance_plot_dialog.setWindowModality(Qt.WindowModal)
-        self.is_distance_plot_open = True
-        self.distance_plot_dialog.exec_()
+
+        tmp_dialog = plot_view.PlotView(protein_pair_of_analysis, self._current_project, self._view.ui.cb_results_analysis_options.currentText())
+        tmp_dialog.exec_()
+
+        # self.distance_plot_dialog = dialog_distance_plot.DialogDistancePlot(protein_pair_of_analysis, self._current_project,
+        #                                                                     self._view.ui.cb_results_analysis_options.currentText())
+        # self.distance_plot_dialog.setWindowModality(Qt.WindowModal)
+        # self.is_distance_plot_open = True
+        # self.distance_plot_dialog.exec_()
 
     def display_distance_histogram(self) -> None:
         """Opens a window which displays the distance histogram."""
