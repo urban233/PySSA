@@ -38,6 +38,13 @@ QTableView {
     border-color: #DCDBE3;
 }
 
+QTreeView {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 6px;
+    border-color: #DCDBE3;
+}
+
 QMainWindow {
     background-color: #fcfcfc;
 }
@@ -137,4 +144,9 @@ QTabBar::tab:selected {
 
 QTabBar::tab:!selected {
     margin-top: 2px; /* make non-selected tabs look smaller */
+}
+
+QMenuBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);
+    color: black;
 }

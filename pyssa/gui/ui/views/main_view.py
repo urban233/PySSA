@@ -84,6 +84,7 @@ class MainView(QtWidgets.QMainWindow):
 
         self.setMinimumWidth(700)
         self.setMinimumHeight(700)
+
         pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
         # Resize the pixmap
         scaled_pixmap = pixmap.scaled(700, 700, aspectRatioMode=Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
@@ -95,6 +96,21 @@ class MainView(QtWidgets.QMainWindow):
         self.setWindowTitle("PySSA")
         # constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
         # constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
+
+    def setup_proteins_table(self, row_count):
+        self.ui.proteins_table_widget.setRowCount(row_count)
+        self.ui.proteins_table_widget.setColumnCount(2)
+        self.ui.proteins_table_widget.verticalHeader().setVisible(False)
+        self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+        self.cb_chain_color = QtWidgets.QComboBox()
+        gui_utils.fill_combo_box(self.cb_chain_color, ["red", "green", "yellow"])
+        self.ui.proteins_table_widget.setCellWidget(0, 1, self.cb_chain_color)
+        self.cb_chain_color.adjustSize()
+
+        self.cb_chain_representation = QtWidgets.QComboBox()
+        gui_utils.fill_combo_box(self.cb_chain_representation, ["ribbon", "cartoon", "sticks"])
+        self.ui.proteins_table_widget.setCellWidget(1, 1, self.cb_chain_representation)
+        self.cb_chain_representation.adjustSize()
 
     def refresh_ui_based_on_app_model(self, an_app_model: "application_model.ApplicationModel"):
         """Modifies the UI of the main view based on an app model."""

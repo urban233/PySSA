@@ -149,7 +149,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
-           <widget class="QListView" name="proteins_list_view"/>
+           <widget class="QTreeView" name="proteins_tree_view"/>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_5">

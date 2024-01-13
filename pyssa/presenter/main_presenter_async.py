@@ -65,6 +65,7 @@ def open_project(
     """
     # TODO: needs checks
     # TODO: needs tests!
+    cmd.reinitialize()
     tmp_project_path = pathlib.Path(f"{str(the_workspace_path)}/{the_project_name}")
     return ("result", project.Project.deserialize_project(tmp_project_path, the_application_settings))
 

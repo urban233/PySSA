@@ -44,6 +44,10 @@ class Chain:
     type of the chain, whether it is a protein, or nuclein acid chain or something different
     """
     chain_type: str
+    """
+    a dict of parameters that can be changed in pymol
+    """
+    pymol_parameters: dict
 
     # </editor-fold>
 
@@ -61,3 +65,7 @@ class Chain:
         self.chain_letter = chain
         self.chain_sequence = chain_sequence
         self.chain_type = chain_type
+        self.pymol_parameters = {
+            "chain_color": "green",
+            "chain_representation": "cartoon",
+        }

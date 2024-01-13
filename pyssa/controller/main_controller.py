@@ -5,7 +5,7 @@ import sys
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
-from pymol import cmd
+from PyQt5 import QtGui
 
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.internal.data_structures import project, settings
@@ -17,6 +17,7 @@ from pyssa.util import constants, enums, exception, main_window_util
 from pyssa.gui.ui.views import main_view
 from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
+from pyssa.controller import interface_manager
 
 
 logger = logging.getLogger(__file__)
@@ -47,14 +48,13 @@ class MainController:
     _application_settings: "settings.Settings"
 
     """
-    The currently active project.
-    """
-    _current_project: "project.Project"
-
-    """
     A watcher for the project state.
     """
-    _project_watcher: "project_watcher.ProjectWatcher"
+    _interface_manager: "interface_manager.InterfaceManager"
+
+    _sequence_model: QtGui.QStandardItemModel
+    _protein_model: QtGui.QStandardItemModel
+    _protein_pair_model: QtGui.QStandardItemModel
 
     """
     The active task of the application.
@@ -78,7 +78,7 @@ class MainController:
         self._view: "main_view.MainView" = a_view
         self._app_model: "application_model.ApplicationModel" = application_model.ApplicationModel(project.Project())
         self._external_view = None
-
+        self._protein_model = QtGui.QStandardItemModel()
         self._workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self._workspace_status = f"Current workspace: {str(self._workspace_path)}"
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
@@ -138,23 +138,26 @@ class MainController:
         self._application_settings = main_window_util.setup_app_settings(self._application_settings)
         # </editor-fold>
 
+        self._interface_manager: "interface_manager.InterfaceManager"
         self._setup_statusbar()
         self._connect_all_ui_elements_with_slot_functions()
 
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._view.setStatusBar(self._view.status_bar)
-        self._view.status_bar.showMessage(str(self._workspace_label.text()))
+        self._interface_manager = interface_manager.InterfaceManager(project.Project(),
+                                                                     self._application_settings,
+                                                                     self._view)
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_open_project.triggered.connect(self._open_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
-        self._view.ui.proteins_list_view.clicked.connect(self._show_protein_information)
+        self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
 
     def _close_project(self):
         """Closes the current project"""
-        self._app_model.application_state[enums.ApplicationModelEnum.PROJECT] = project.Project()
-        self._view.refresh_ui_based_on_app_model(self._app_model)
+        self._interface_manager.set_new_project(project.Project())
+        self._interface_manager.refresh_main_view()
 
     def _open_project(self) -> None:
         self._external_view = open_project_view.OpenProjectView()
@@ -162,7 +165,7 @@ class MainController:
         self._external_view.show()
 
     def _post_open_project(self, return_value: str):
-        self._view.wait_spinner.start()
+        self._interface_manager.start_wait_spinner()
         tmp_filepath = pathlib.Path(f"{return_value}.xml")
         self._active_task = tasks.Task(
             target=main_presenter_async.open_project,
@@ -174,21 +177,27 @@ class MainController:
             post_func=self.__await_open_project,
         )
         self._active_task.start()
-        self.update_status("Opening existing project ...")
+        self._interface_manager.update_status_bar("Opening existing project ...")
 
     def __await_open_project(self, a_result: tuple) -> None:
-        self._current_project = a_result[1]
-        self._app_model.application_state[enums.ApplicationModelEnum.PROJECT] = a_result[1]
-        cmd.reinitialize()
-        self._view.wait_spinner.stop()
-        self.update_status(self._workspace_status)
-        self._view.refresh_ui_based_on_app_model(self._app_model)
+        self._interface_manager.set_new_project(a_result[1])
+        self._interface_manager.update_status_bar(self._workspace_status)
+        self._interface_manager.refresh_main_view(self._protein_model)
+        self._interface_manager.stop_wait_spinner()
+        print(self._protein_model.item(0,0))
 
     def _show_protein_information(self) -> None:
-        tmp_protein_name = self._view.ui.proteins_list_view.model().data(
-            self._view.ui.proteins_list_view.currentIndex(), Qt.DisplayRole
+        tmp_type = self._view.ui.proteins_tree_view.model().data(
+            self._view.ui.proteins_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
         )
-        self._view.ui.lbl_active_object.setText(f"Active protein structure: {tmp_protein_name}")
+        if tmp_type == "protein":
+            tmp_first_chain = self._view.ui.proteins_tree_view.currentIndex().child(0, 0)
+            self._interface_manager.show_chain_pymol_parameters(tmp_first_chain)
+        elif tmp_type == "chain":
+            self._interface_manager.show_chain_pymol_parameters(self._protein_model.itemFromIndex(self._view.ui.proteins_tree_view.currentIndex()))
+        else:
+            raise ValueError("Unknown type!")
+        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
 
     def update_status(self, message: str) -> None:
         """Updates the status bar of the main view with a custom message."""

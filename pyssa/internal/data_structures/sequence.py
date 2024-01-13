@@ -41,7 +41,7 @@ class Sequence:
     """
     sequence of the protein
     """
-    sequence: list[str]
+    sequence: str
 
     # </editor-fold>
 
@@ -69,7 +69,7 @@ class Sequence:
 
         # </editor-fold>
 
-        self.name = protein_name
+        self.name: str = protein_name
         self.sequence: str = single_sequence
 
     def serialize(self, filepath: pathlib.Path, filename: str) -> None:
