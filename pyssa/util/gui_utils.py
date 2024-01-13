@@ -194,8 +194,8 @@ def warning_message_project_gets_deleted() -> bool:
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Are you sure you want to delete this project?")
     msg.setWindowTitle("Warning")
-    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)
+    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     msg.exec_()
     # button logic
     if msg.clickedButton() == cancel_button:

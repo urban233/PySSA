@@ -14,10 +14,11 @@ from pyssa.io_pyssa import safeguard
 from pyssa.logging_pyssa import log_handlers
 from pyssa.presenter import main_presenter_async
 from pyssa.util import constants, enums, exception, main_window_util
-from pyssa.gui.ui.views import main_view
+from pyssa.gui.ui.views import main_view, delete_project_view
 from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager
+from pyssa.controller import delete_project_view_controller
 
 
 logger = logging.getLogger(__file__)
@@ -74,6 +75,7 @@ class MainViewController:
         self._view: "main_view.MainView" = a_view
         self._app_model: "application_model.ApplicationModel" = application_model.ApplicationModel(project.Project())
         self._external_view = None
+        self._external_controller = None
         self._protein_model = QtGui.QStandardItemModel()
         self._workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self._workspace_status = f"Current workspace: {str(self._workspace_path)}"
@@ -134,19 +136,21 @@ class MainViewController:
         self._application_settings = main_window_util.setup_app_settings(self._application_settings)
         # </editor-fold>
 
-        self._interface_manager: "interface_manager.InterfaceManager"
+        self._interface_manager = interface_manager.InterfaceManager(self._workspace_path,
+                                                                     project.Project(),
+                                                                     self._application_settings)
+        self._interface_manager.set_new_workspace(self._application_settings.workspace_path)
         self._setup_statusbar()
         self._connect_all_ui_elements_with_slot_functions()
 
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._view.setStatusBar(self._view.status_bar)
-        self._interface_manager = interface_manager.InterfaceManager(self._workspace_path,
-                                                                     project.Project(),
-                                                                     self._application_settings)
+
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_open_project.triggered.connect(self._open_project)
+        self._view.ui.action_delete_project.triggered.connect(self._delete_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
 
@@ -180,6 +184,12 @@ class MainViewController:
         self._interface_manager.update_status_bar(self._workspace_status, self._view)
         self._interface_manager.refresh_main_view(self._view)
         self._interface_manager.stop_wait_spinner(self._view)
+
+    def _delete_project(self) -> None:
+        self._external_view = delete_project_view.DeleteProjectView()
+        self._external_controller = delete_project_view_controller.DeleteProjectViewController(self._interface_manager,
+                                                                                               self._external_view)
+        self._external_view.show()
 
     def _show_protein_information(self) -> None:
         tmp_type = self._view.ui.proteins_tree_view.model().data(

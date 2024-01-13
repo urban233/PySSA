@@ -19,38 +19,43 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the help dialog."""
-import logging
-from PyQt5 import QtCore
+"""Module for the About Dialog."""
+import os
+import glob
+
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-
-from pyssa.util import constants
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
+from pyssa.gui.ui.forms.auto_generated import auto_delete_project_view
 from pyssa.gui.ui.styles import styles
-
-# setup logger
-logging.basicConfig(level=logging.DEBUG)
+from pyssa.util import constants, input_validator
 
 
-class DialogHelp(QtWidgets.QDialog):
-    """This class opens a help dialog."""
+class DeleteProjectView(QtWidgets.QDialog):
+    """Class representing an About dialog."""
 
-    """This variable is for controlling whether the dialog opens or not"""
-    ERROR = False
+    string_model = QtCore.QStringListModel()
+    return_value = QtCore.pyqtSignal(str)
 
-    def __init__(self, html_content: str, parent=None) -> None:  # noqa: ANN001
+    def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
-            html_content: a string with the content of the HTML file.
-            parent: the parent.
+            parent: The parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
-        self.text_browser = QtWidgets.QTextBrowser(self)
-        self.text_browser.setGeometry(10, 10, 780, 580)
-        self.text_browser.setHtml(html_content)
+        # build ui object
+        self.ui = auto_delete_project_view.Ui_Dialog()
+        self.ui.setupUi(self)
+        self._initialize_ui()
+
+    def _initialize_ui(self) -> None:
+        """Initialize the UI elements."""
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+        self.setWindowTitle("Delete project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        styles.set_stylesheet(self)
-        self.text_browser.setStyleSheet("""background-color: white;""")
-        self.setWindowTitle("Help")
+
+    def _close(self):
+        self.close()

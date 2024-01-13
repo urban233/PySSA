@@ -20,16 +20,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the About Dialog."""
+import os
+import glob
+
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from pyssa.gui.ui.forms.auto_generated.auto_dialog_about import Ui_Dialog
+from PyQt5.QtCore import Qt
+from pyssa.gui.ui.forms.auto_generated import auto_create_project_view
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants
+from pyssa.util import constants, input_validator
 
 
-class DialogAbout(QtWidgets.QDialog):
+class CreateProjectView(QtWidgets.QDialog):
     """Class representing an About dialog."""
+
+    string_model = QtCore.QStringListModel()
+    return_value = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor.
@@ -39,20 +47,15 @@ class DialogAbout(QtWidgets.QDialog):
         """
         QtWidgets.QDialog.__init__(self, parent)
         # build ui object
-        self.ui = Ui_Dialog()
+        self.ui = auto_create_project_view.Ui_Dialog()
         self.ui.setupUi(self)
+        self._initialize_ui()
 
-        self.ui.btn_ok.clicked.connect(self.close_dialog)
-        original_pixmap = QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png")
-        scaled_pixmap = original_pixmap.scaled(150, 150)
-        self.ui.lbl_pyssa_logo.setPixmap(scaled_pixmap)
-        self.ui.label_2.setText(f"Version: {constants.VERSION_NUMBER}")
-        styles.set_stylesheet(self)
+    def _initialize_ui(self) -> None:
+        """Initialize the UI elements."""
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("About")
+        self.setWindowTitle("Create project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
-    # @SLOT
-    def close_dialog(self) -> None:
-        """Closes the dialog."""
+    def _close(self):
         self.close()
