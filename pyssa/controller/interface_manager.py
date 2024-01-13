@@ -1,3 +1,7 @@
+import glob
+import os
+import pathlib
+
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
@@ -5,11 +9,12 @@ from PyQt5.QtCore import Qt
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import main_view
 from pyssa.internal.data_structures import project, settings, chain
-from pyssa.util import enums, gui_utils
+from pyssa.util import enums, gui_utils, constants
 
 
 class InterfaceManager:
     """A manager for all views."""
+    _current_workspace: pathlib.Path
     _current_project: "project.Project"
     _application_settings: "settings.Settings"
 
@@ -18,7 +23,8 @@ class InterfaceManager:
     _protein_model: QtGui.QStandardItemModel
     _protein_pair_model: QtGui.QStandardItemModel
 
-    def __init__(self, a_project, the_settings: "settings.Settings"):
+    def __init__(self, a_workspace, a_project, the_settings: "settings.Settings"):
+        self._current_workspace = a_workspace
         self._current_project = a_project
         self._application_settings = the_settings
         self._workspace_model = QtGui.QStandardItemModel()
@@ -34,6 +40,25 @@ class InterfaceManager:
     def get_current_project(self) -> "project.Project":
         """Returns the current project."""
         return self._current_project
+
+    def set_new_workspace(self, the_current_workspace) -> None:
+        """Sets the new current workspace into the interface manager."""
+        self._current_workspace = the_current_workspace
+        self._build_workspace_model()
+
+    def get_workspace_model(self) -> QtGui.QStandardItemModel:
+        """Returns the current workspace model"""
+        return self._workspace_model
+
+    def _build_workspace_model(self) -> None:
+        tmp_workspace = constants.DEFAULT_WORKSPACE_PATH
+        xml_pattern = os.path.join(tmp_workspace, '*.xml')
+        tmp_root_item = self._workspace_model.invisibleRootItem()
+        for tmp_filename in [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]:
+            tmp_project_item = QtGui.QStandardItem(tmp_filename)
+            tmp_filepath = pathlib.Path(f"{tmp_workspace}/{tmp_filename}.xml")
+            tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
+            tmp_root_item.appendRow(tmp_project_item)
 
     def _build_proteins_model(self) -> None:
         if len(self._current_project.proteins) > 0:

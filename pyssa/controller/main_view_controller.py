@@ -141,7 +141,8 @@ class MainViewController:
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._view.setStatusBar(self._view.status_bar)
-        self._interface_manager = interface_manager.InterfaceManager(project.Project(),
+        self._interface_manager = interface_manager.InterfaceManager(self._workspace_path,
+                                                                     project.Project(),
                                                                      self._application_settings)
 
     def _connect_all_ui_elements_with_slot_functions(self):
