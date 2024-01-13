@@ -24,7 +24,7 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-class MainController:
+class MainViewController:
     """Class for main presenter of the pyssa plugin."""
 
     """
@@ -51,10 +51,6 @@ class MainController:
     A watcher for the project state.
     """
     _interface_manager: "interface_manager.InterfaceManager"
-
-    _sequence_model: QtGui.QStandardItemModel
-    _protein_model: QtGui.QStandardItemModel
-    _protein_pair_model: QtGui.QStandardItemModel
 
     """
     The active task of the application.
@@ -146,8 +142,7 @@ class MainController:
         """Sets up the status bar and fills it with the current workspace."""
         self._view.setStatusBar(self._view.status_bar)
         self._interface_manager = interface_manager.InterfaceManager(project.Project(),
-                                                                     self._application_settings,
-                                                                     self._view)
+                                                                     self._application_settings)
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_open_project.triggered.connect(self._open_project)
@@ -157,7 +152,7 @@ class MainController:
     def _close_project(self):
         """Closes the current project"""
         self._interface_manager.set_new_project(project.Project())
-        self._interface_manager.refresh_main_view()
+        self._interface_manager.refresh_main_view(self._view)
 
     def _open_project(self) -> None:
         self._external_view = open_project_view.OpenProjectView()
@@ -165,7 +160,7 @@ class MainController:
         self._external_view.show()
 
     def _post_open_project(self, return_value: str):
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_spinner(self._view)
         tmp_filepath = pathlib.Path(f"{return_value}.xml")
         self._active_task = tasks.Task(
             target=main_presenter_async.open_project,
@@ -177,14 +172,13 @@ class MainController:
             post_func=self.__await_open_project,
         )
         self._active_task.start()
-        self._interface_manager.update_status_bar("Opening existing project ...")
+        self._interface_manager.update_status_bar("Opening existing project ...", self._view)
 
     def __await_open_project(self, a_result: tuple) -> None:
         self._interface_manager.set_new_project(a_result[1])
-        self._interface_manager.update_status_bar(self._workspace_status)
-        self._interface_manager.refresh_main_view(self._protein_model)
-        self._interface_manager.stop_wait_spinner()
-        print(self._protein_model.item(0,0))
+        self._interface_manager.update_status_bar(self._workspace_status, self._view)
+        self._interface_manager.refresh_main_view(self._view)
+        self._interface_manager.stop_wait_spinner(self._view)
 
     def _show_protein_information(self) -> None:
         tmp_type = self._view.ui.proteins_tree_view.model().data(
@@ -192,9 +186,9 @@ class MainController:
         )
         if tmp_type == "protein":
             tmp_first_chain = self._view.ui.proteins_tree_view.currentIndex().child(0, 0)
-            self._interface_manager.show_chain_pymol_parameters(tmp_first_chain)
+            self._interface_manager.show_chain_pymol_parameters(tmp_first_chain, self._view)
         elif tmp_type == "chain":
-            self._interface_manager.show_chain_pymol_parameters(self._protein_model.itemFromIndex(self._view.ui.proteins_tree_view.currentIndex()))
+            self._interface_manager.show_chain_pymol_parameters(self._protein_model.itemFromIndex(self._view.ui.proteins_tree_view.currentIndex()), self._view)
         else:
             raise ValueError("Unknown type!")
         self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")

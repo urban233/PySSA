@@ -66,7 +66,7 @@ from pyssa.internal.portal import graphic_operations
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import task_workers
 
-from pyssa.controller import main_controller
+from pyssa.controller import main_view_controller
 
 from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
 from pyssa.io_pyssa import filesystem_io
@@ -7688,7 +7688,7 @@ if __name__ == "__main__":
     styles.set_stylesheet(app)
     main_window = main_view.MainView()
     #main_presenter = main_presenter.MainPresenter(main_window)
-    main_controller = main_controller.MainController(main_window)
+    main_controller = main_view_controller.MainViewController(main_window)
     styles.set_stylesheet(main_window)
     main_window.show()
     sys.exit(app.exec_())
