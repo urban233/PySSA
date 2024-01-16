@@ -65,9 +65,9 @@ class Settings:
         self.app_launch = 1
         self.dir_settings: str = dir_settings
         self.filename: str = filename
-        self.local_colabfold: int = 0
+        self.local_colabfold: int = 1
         self.wsl_username: str = "no_user_name"
-        self.wsl_install: int = 0
+        self.wsl_install: int = 1
         self.color_vision_mode: str = "normal"
         self.ask_save_pymol_session: int = 0
 

@@ -30,6 +30,7 @@ from xml.dom import minidom
 from typing import TYPE_CHECKING
 
 import numpy as np
+from Bio import SeqRecord
 
 from pyssa.logging_pyssa import log_handlers
 from pyssa.io_pyssa import filesystem_io
@@ -82,7 +83,10 @@ class Project:
     a list of all protein_pair objects of the project
     """
     protein_pairs: list["protein_pair.ProteinPair"]
-
+    """
+    a list of all sequence objects of the project
+    """
+    sequences: list[SeqRecord.SeqRecord]
     # </editor-fold>
 
     def __init__(self, a_project_name: str = "", a_workspace_path: pathlib.Path = pathlib.Path("")) -> None:
@@ -106,6 +110,7 @@ class Project:
         self._workspace: pathlib.Path = a_workspace_path
         self.proteins: list["protein.Protein"] = []
         self.protein_pairs: list["protein_pair.ProteinPair"] = []
+        self.sequences: list[SeqRecord.SeqRecord] = []
 
     def set_workspace_path(self, a_workspace_path: pathlib.Path) -> None:
         """Setter for the workspace path.
@@ -212,6 +217,14 @@ class Project:
         xml_protein_pairs_element = ElementTree.SubElement(project_root, element_names.PROTEIN_PAIRS)
         for tmp_protein_pair in self.protein_pairs:
             tmp_protein_pair.serialize_protein_pair(xml_protein_pairs_element)
+        xml_sequences_element = ElementTree.SubElement(project_root, element_names.SEQUENCES)
+        for tmp_sequence in self.sequences:
+            tmp_sequence_xml = ElementTree.SubElement(xml_sequences_element, element_names.SEQUENCE)
+            tmp_sequence_xml.set(attribute_names.SEQUENCE_NAME, str(tmp_sequence.name))
+            tmp_sequence_xml.set(
+                attribute_names.SEQUENCE_SEQ,
+                str(tmp_sequence.seq),
+            )
 
         xml_string = minidom.parseString(ElementTree.tostring(project_root)).toprettyxml(indent="   ")
         with open(a_filepath, "w", encoding="utf-8") as tmp_file:

@@ -117,6 +117,19 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
+               <spacer name="horizontalSpacer_6">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
                <widget class="QPushButton" name="pushButton_3">
                 <property name="text">
                  <string>Edit</string>
@@ -145,7 +158,7 @@
        <attribute name="title">
         <string>Proteins</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
@@ -194,6 +207,19 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_4">
               <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
                <widget class="QPushButton" name="pushButton_5">
                 <property name="text">
                  <string>Clean</string>
@@ -221,7 +247,53 @@
          </layout>
         </item>
         <item>
-         <widget class="QTableWidget" name="proteins_table_widget"/>
+         <layout class="QVBoxLayout" name="verticalLayout_8">
+          <item>
+           <widget class="QTableWidget" name="proteins_table_widget"/>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_7">
+            <item>
+             <widget class="QLabel" name="lbl_pymol_protein_scene">
+              <property name="text">
+               <string>PyMOL scene</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>18</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_create_protein_scene">
+                <property name="text">
+                 <string>Create</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_update_protein_scene">
+                <property name="text">
+                 <string>Update</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -229,7 +301,7 @@
        <attribute name="title">
         <string>Protein pairs</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_12">
+       <layout class="QHBoxLayout" name="horizontalLayout_10">
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
@@ -269,7 +341,53 @@
          </layout>
         </item>
         <item>
-         <widget class="QTableWidget" name="protein_pairs_table_widget"/>
+         <layout class="QVBoxLayout" name="verticalLayout_10">
+          <item>
+           <widget class="QTableWidget" name="protein_pairs_table_widget"/>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <widget class="QLabel" name="lbl_pymol_protein_pair_scene">
+              <property name="text">
+               <string>PyMOL scene</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_8">
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>18</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_create_protein_pair_scene">
+                <property name="text">
+                 <string>Create</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="btn_update_protein_pair_scene">
+                <property name="text">
+                 <string>Update</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>

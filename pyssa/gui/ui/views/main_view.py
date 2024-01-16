@@ -71,7 +71,7 @@ class MainView(QtWidgets.QMainWindow):
         """Initialize the UI elements."""
         self.ui.lbl_project_name.hide()
         self.ui.project_tab_widget.hide()
-
+        self.ui.actionExport.setEnabled(False)
         self.ui.action_close_project.setEnabled(False)
         self.ui.action_predict_monomer.setEnabled(False)
         self.ui.action_predict_multimer.setEnabled(False)
@@ -111,80 +111,6 @@ class MainView(QtWidgets.QMainWindow):
         gui_utils.fill_combo_box(self.cb_chain_representation, ["ribbon", "cartoon", "sticks"])
         self.ui.proteins_table_widget.setCellWidget(1, 1, self.cb_chain_representation)
         self.cb_chain_representation.adjustSize()
-
-    def refresh_ui_based_on_app_model(self, an_app_model: "application_model.ApplicationModel"):
-        """Modifies the UI of the main view based on an app model."""
-        tmp_project: "project.Project" = an_app_model.application_state[enums.ApplicationModelEnum.PROJECT]
-        self.ui.lbl_logo.hide()
-        if tmp_project.get_project_name() != "":
-            self.ui.lbl_project_name.show()
-            self.ui.lbl_project_name.setText(f"Project name: {tmp_project.get_project_name()}")
-            self.ui.project_tab_widget.show()
-            self.ui.action_new_project.setEnabled(False)
-            self.ui.action_open_project.setEnabled(False)
-            self.ui.action_delete_project.setEnabled(False)
-            self.ui.actionImport.setEnabled(False)
-            self.ui.actionExport.setEnabled(False)
-            self.ui.action_close_project.setEnabled(True)
-            self.ui.actionPreview.setEnabled(True)
-            self.ui.actionCreate_ray_ta.setEnabled(True)
-            self.ui.actionCreate_drawn.setEnabled(True)
-            self.ui.actionPlaceholder.setEnabled(True)
-            self.ui.project_tab_widget.setCurrentIndex(0)
-        else:
-            self.ui.lbl_project_name.hide()
-            self.ui.project_tab_widget.hide()
-            self.ui.lbl_logo.show()
-            self.ui.action_new_project.setEnabled(True)
-            self.ui.action_open_project.setEnabled(True)
-            self.ui.action_delete_project.setEnabled(True)
-            self.ui.actionImport.setEnabled(True)
-            self.ui.actionExport.setEnabled(True)
-            self.ui.action_close_project.setEnabled(False)
-            self.ui.actionPreview.setEnabled(False)
-            self.ui.actionCreate_ray_ta.setEnabled(False)
-            self.ui.actionCreate_drawn.setEnabled(False)
-            self.ui.actionPlaceholder.setEnabled(False)
-
-        if len(tmp_project.proteins) > 0:
-            list_model = QtGui.QStandardItemModel()
-            for protein in tmp_project.proteins:
-                item = QtGui.QStandardItem(protein.get_molecule_object())
-                list_model.appendRow(item)
-            self.ui.proteins_list_view.setModel(list_model)
-
-            # Set row and column count
-            self.ui.proteins_table_widget.setRowCount(len(tmp_project.proteins))
-            self.ui.proteins_table_widget.setColumnCount(2)  # Assuming two columns: attribute name and attribute value
-
-            # Set header labels
-            self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Parameter Name", "Parameter Value"])
-
-            item_names = ["color", "name"]
-            for row, protein in enumerate(tmp_project.proteins):
-                # Set attribute name in the first column
-                item_name = QtWidgets.QTableWidgetItem(item_names[row])
-                self.ui.proteins_table_widget.setItem(row, 0, item_name)
-
-                # Set attribute value in the second column
-                item_value = QtWidgets.QTableWidgetItem(str(getattr(protein, list(protein.__annotations__.keys())[row])))
-                if row == 0:
-                    self.ui.proteins_table_widget.setItem(row, 1, QtWidgets.QTableWidgetItem("yellow"))
-                else:
-                    self.ui.proteins_table_widget.setItem(row, 1, item_value)
-
-            combo = QtWidgets.QComboBox()
-            gui_utils.fill_combo_box(combo, ["red", "green", "yellow"])
-            self.ui.proteins_table_widget.setCellWidget(0, 1, combo)
-            combo.adjustSize()
-
-            for row in range(self.ui.proteins_table_widget.rowCount()):
-                item = self.ui.proteins_table_widget.item(row, 0)
-                if item:
-                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-
-            self.ui.proteins_table_widget.verticalHeader().setVisible(False)
-            self.ui.proteins_table_widget.resizeColumnsToContents()
 
     #
     # def _create_all_tooltips(self) -> None:

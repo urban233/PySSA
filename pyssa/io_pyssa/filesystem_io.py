@@ -34,7 +34,7 @@ import logging
 import ast
 import numpy as np
 from xml.etree import ElementTree
-
+from Bio import SeqRecord
 from pyssa.internal.data_structures.data_classes import basic_protein_info
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
@@ -211,6 +211,14 @@ class XmlDeserializer:
 
         return protein_pairs
 
+    def create_all_sequences_from_xml(self):
+        seq_records: list = []
+        for tmp_seq in self.xml_root.iter(element_names.SEQUENCE):
+            basic_information = tmp_seq.attrib
+            tmp_seq_record_obj = SeqRecord.SeqRecord(basic_information[attribute_names.SEQUENCE_SEQ], name=basic_information[attribute_names.SEQUENCE_NAME])
+            seq_records.append(tmp_seq_record_obj)
+        return seq_records
+
     def deserialize_project(self, app_settings: "settings.Settings") -> "project.Project":
         """Deserialize the project from the XML."""
         project_dict = {}
@@ -220,14 +228,18 @@ class XmlDeserializer:
             project_dict[attribute_names.PROJECT_NAME],
             pathlib.Path(project_dict[attribute_names.PROJECT_WORKSPACE_PATH]),
         )
+        tmp_seq_record_objs = self.create_all_sequences_from_xml()
+        if tmp_seq_record_objs is not None:
+            for tmp_seq_record_obj in tmp_seq_record_objs:
+                tmp_project.sequences.append(tmp_seq_record_obj)
         protein_objs = self.create_all_proteins_from_xml()
         for tmp_protein_obj in protein_objs:
             tmp_project.add_existing_protein(tmp_protein_obj)
         protein_pair_objs = self.create_all_protein_pairs(tmp_project, app_settings)
-        if protein_pair_objs is None:
-            return tmp_project
-        for tmp_protein_pair_obj in protein_pair_objs:
-            tmp_project.add_protein_pair(tmp_protein_pair_obj)
+        if protein_pair_objs is not None:
+            for tmp_protein_pair_obj in protein_pair_objs:
+                tmp_project.add_protein_pair(tmp_protein_pair_obj)
+
         return tmp_project
 
     def deserialize_analysis_images(

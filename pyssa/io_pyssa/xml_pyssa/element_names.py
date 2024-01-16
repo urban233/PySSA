@@ -30,6 +30,9 @@ PROTEIN_SESSION = "session_data"
 PROTEIN_PAIR = "protein_pair"
 PROTEIN_PAIR_SESSION = "session_data"
 
+SEQUENCE = "sequence"
+SEQUENCES = "sequences"
+
 DISTANCE_ANALYSIS = "distance_analysis"
 DISTANCE_ANALYSIS_RESULTS = "results"
 DISTANCE_ANALYSIS_DISTANCE_RESULTS = "results_distance"

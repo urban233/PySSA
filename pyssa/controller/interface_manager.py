@@ -1,19 +1,25 @@
 import glob
 import os
 import pathlib
+import sys
 
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
+from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import main_view
+from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view
 from pyssa.internal.data_structures import project, settings, chain
-from pyssa.util import enums, gui_utils, constants
+from pyssa.util import enums, gui_utils, constants, exception, main_window_util
 
 
 class InterfaceManager:
     """A manager for all views."""
+    _main_view: "main_view.MainView"
+    _predict_monomer_view: "predict_monomer_view.PredictMonomerView"
+    _distance_analysis_view: "distance_analysis_view.DistanceAnalysisView"
+
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
     _application_settings: "settings.Settings"
@@ -23,18 +29,94 @@ class InterfaceManager:
     _protein_model: QtGui.QStandardItemModel
     _protein_pair_model: QtGui.QStandardItemModel
 
-    def __init__(self, a_workspace, a_project, the_settings: "settings.Settings"):
-        self._current_workspace = a_workspace
-        self._current_project = a_project
-        self._application_settings = the_settings
+    def __init__(self) -> None:
+        # View definitions
+        self._main_view = main_view.MainView()
+        self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
+        self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView()
+
+        # <editor-fold desc="Setup App Settings">
+        self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
+        if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):
+            constants.PYSSA_LOGGER.info("Settings file not found, open configuration dialog.")
+            # Configuration dialog to setup setting file
+            dialog = dialog_startup.DialogStartup()
+            dialog.exec_()
+
+            # checks if the cancel button was pressed
+            if dialog_startup.global_var_terminate_app == 1:
+                os.remove(constants.SETTINGS_FULL_FILEPATH)
+                constants.PYSSA_LOGGER.info("Configuration dialog closed, and removed new settings file.")
+                sys.exit()
+
+            self._application_settings.app_launch = 1
+            self._application_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
+
+            constants.PYSSA_LOGGER.info("Demo projects are getting downloaded and extracted ...")
+            import zipfile
+
+            with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), "r") as zip_ref:
+                zip_ref.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
+            constants.PYSSA_LOGGER.info(
+                "Demo projects are downloaded and extracted.\n Import of demo projects started ...",
+            )
+
+            path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
+            tmp_project = project.Project("", dialog_startup.global_var_startup_workspace)
+            for tmp_filename in os.listdir(path_of_demo_projects):
+                try:
+                    tmp_project = tmp_project.deserialize_project(
+                        pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"),
+                        self._application_settings,
+                    )
+                except exception.IllegalArgumentError:
+                    constants.PYSSA_LOGGER.warning(
+                        "The workspace path does not exist on this system, " "but this is due to the demo projects.",
+                    )
+                tmp_project.set_workspace_path(dialog_startup.global_var_startup_workspace)
+                new_filepath = pathlib.Path(f"{dialog_startup.global_var_startup_workspace}/{tmp_filename}")
+                tmp_project.serialize_project(new_filepath)
+            constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
+            try:
+                os.remove(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"))
+            except FileNotFoundError:
+                constants.PYSSA_LOGGER.warning("Zip archive of demo projects could not be found!")
+            constants.PYSSA_LOGGER.info("Serialize settings ...")
+            self._application_settings.serialize_settings()
+            constants.PYSSA_LOGGER.info("Serialize settings finished.")
+
+            QtWidgets.QApplication.restoreOverrideCursor()
+        self._application_settings = main_window_util.setup_app_settings(self._application_settings)
+
+        # </editor-fold>
+
+        # General attributes definitions
+        self._current_workspace = self._application_settings.workspace_path
+        self._current_project = project.Project()
+        # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
         self._sequence_model = QtGui.QStandardItemModel()
         self._protein_model = QtGui.QStandardItemModel()
         self._protein_pair_model = QtGui.QStandardItemModel()
-    
+
+    def get_main_view(self) -> "main_view.MainView":
+        return self._main_view
+
+    def get_predict_monomer_view(self) -> "predict_monomer_view":
+        return self._predict_monomer_view
+
+    def get_distance_analysis_view(self) -> "distance_analysis_view.DistanceAnalysisView":
+        return self._distance_analysis_view
+
+    def get_application_settings(self) -> "settings.Settings":
+        return self._application_settings
+
     def set_new_project(self, the_current_project: "project.Project") -> None:
         """Sets the new current project into the interface manager."""
         self._current_project = the_current_project
+        self._sequence_model.clear()
+        self._build_sequences_model()
+        self._protein_model.clear()
         self._build_proteins_model()
 
     def get_current_project(self) -> "project.Project":
@@ -44,11 +126,16 @@ class InterfaceManager:
     def set_new_workspace(self, the_current_workspace) -> None:
         """Sets the new current workspace into the interface manager."""
         self._current_workspace = the_current_workspace
+        self._workspace_model.clear()
         self._build_workspace_model()
 
     def get_workspace_model(self) -> QtGui.QStandardItemModel:
         """Returns the current workspace model"""
         return self._workspace_model
+
+    def update_settings(self):
+        """Deserializes the settings json file."""
+        self._application_settings = self._application_settings.deserialize_settings()
 
     def _build_workspace_model(self) -> None:
         tmp_workspace = constants.DEFAULT_WORKSPACE_PATH
@@ -74,70 +161,97 @@ class InterfaceManager:
                     tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
                     tmp_protein_item.appendRow(tmp_chain_item)
 
-    def refresh_main_view(self, the_main_view: "main_view.MainView"):
+    def _build_sequences_model(self):
+        if len(self._current_project.sequences) > 0:
+            tmp_root_item = self._sequence_model.invisibleRootItem()
+            for tmp_sequence in self._current_project.sequences:
+                tmp_sequence_item = QtGui.QStandardItem(tmp_sequence.name)
+                tmp_sequence_item.setData(tmp_sequence, enums.ModelEnum.OBJECT_ROLE)
+                tmp_root_item.appendRow(tmp_sequence_item)
+
+    def refresh_main_view(self):
         """Modifies the UI of the main view based on an app model."""
-        the_main_view.ui.lbl_logo.hide()
+        self._main_view.ui.lbl_logo.hide()
         if self._current_project.get_project_name() != "":
-            the_main_view.ui.lbl_project_name.show()
-            the_main_view.ui.lbl_project_name.setText(f"Name: {self._current_project.get_project_name()}")
-            the_main_view.ui.project_tab_widget.show()
-            the_main_view.ui.action_new_project.setEnabled(False)
-            the_main_view.ui.action_open_project.setEnabled(False)
-            the_main_view.ui.action_delete_project.setEnabled(False)
-            the_main_view.ui.actionImport.setEnabled(False)
-            the_main_view.ui.actionExport.setEnabled(False)
-            the_main_view.ui.action_close_project.setEnabled(True)
-            the_main_view.ui.actionPreview.setEnabled(True)
-            the_main_view.ui.actionCreate_ray_ta.setEnabled(True)
-            the_main_view.ui.actionCreate_drawn.setEnabled(True)
-            the_main_view.ui.actionPlaceholder.setEnabled(True)
-            the_main_view.ui.project_tab_widget.setCurrentIndex(0)
+            # A project is open
+            self._main_view.ui.lbl_project_name.show()
+            self._main_view.ui.lbl_project_name.setText(f"Name: {self._current_project.get_project_name()}")
+            self._main_view.ui.project_tab_widget.show()
+            self._main_view.ui.action_new_project.setEnabled(False)
+            self._main_view.ui.action_open_project.setEnabled(False)
+            self._main_view.ui.action_delete_project.setEnabled(False)
+            self._main_view.ui.actionImport.setEnabled(False)
+            self._main_view.ui.actionExport.setEnabled(True)
+            self._main_view.ui.action_close_project.setEnabled(True)
+            self._main_view.ui.action_predict_monomer.setEnabled(True)
+            self._main_view.ui.action_distance_analysis.setEnabled(True)
+            self._main_view.ui.actionPreview.setEnabled(True)
+            self._main_view.ui.actionCreate_ray_ta.setEnabled(True)
+            self._main_view.ui.actionCreate_drawn.setEnabled(True)
+            self._main_view.ui.actionPlaceholder.setEnabled(True)
+            self._main_view.ui.project_tab_widget.setCurrentIndex(0)
         else:
-            the_main_view.ui.lbl_project_name.hide()
-            the_main_view.ui.project_tab_widget.hide()
-            the_main_view.ui.lbl_logo.show()
-            the_main_view.ui.action_new_project.setEnabled(True)
-            the_main_view.ui.action_open_project.setEnabled(True)
-            the_main_view.ui.action_delete_project.setEnabled(True)
-            the_main_view.ui.actionImport.setEnabled(True)
-            the_main_view.ui.actionExport.setEnabled(True)
-            the_main_view.ui.action_close_project.setEnabled(False)
-            the_main_view.ui.actionPreview.setEnabled(False)
-            the_main_view.ui.actionCreate_ray_ta.setEnabled(False)
-            the_main_view.ui.actionCreate_drawn.setEnabled(False)
-            the_main_view.ui.actionPlaceholder.setEnabled(False)
+            # No project is open
+            self._main_view.ui.lbl_project_name.hide()
+            self._main_view.ui.project_tab_widget.hide()
+            self._main_view.ui.lbl_logo.show()
+            self._main_view.ui.action_new_project.setEnabled(True)
+            self._main_view.ui.action_open_project.setEnabled(True)
+            self._main_view.ui.action_delete_project.setEnabled(True)
+            self._main_view.ui.actionImport.setEnabled(True)
+            self._main_view.ui.actionExport.setEnabled(False)
+            self._main_view.ui.action_close_project.setEnabled(False)
+            self._main_view.ui.actionPreview.setEnabled(False)
+            self._main_view.ui.actionCreate_ray_ta.setEnabled(False)
+            self._main_view.ui.actionCreate_drawn.setEnabled(False)
+            self._main_view.ui.actionPlaceholder.setEnabled(False)
 
         if len(self._current_project.proteins) > 0:
-            the_main_view.ui.proteins_tree_view.setModel(self._protein_model)
-            the_main_view.ui.proteins_tree_view.setHeaderHidden(True)
+            self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
+            self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
 
-    def show_chain_pymol_parameters(self, a_chain_item: QtGui.QStandardItem, the_main_view):
+        if len(self._current_project.sequences) > 0:
+            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+
+    def show_chain_pymol_parameters(self, a_chain_item: QtGui.QStandardItem):
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
-        the_main_view.setup_proteins_table(len(tmp_chain.pymol_parameters))
+        self._main_view.setup_proteins_table(len(tmp_chain.pymol_parameters))
         i = 0
         for tmp_key in tmp_chain.pymol_parameters.keys():
             tmp_value_item = QtWidgets.QTableWidgetItem(tmp_chain.pymol_parameters[tmp_key])
             tmp_key_item = QtWidgets.QTableWidgetItem(str(tmp_key).replace("_", " "))
             tmp_key_item.setFlags(tmp_key_item.flags() & ~Qt.ItemIsEditable)
-            the_main_view.ui.proteins_table_widget.setItem(i, 0, tmp_key_item)
-            the_main_view.ui.proteins_table_widget.setItem(i, 1, tmp_value_item)
+            self._main_view.ui.proteins_table_widget.setItem(i, 0, tmp_key_item)
+            self._main_view.ui.proteins_table_widget.setItem(i, 1, tmp_value_item)
             i += 1
-        the_main_view.cb_chain_color.setCurrentIndex(
-            the_main_view.cb_chain_color.findText(tmp_chain.pymol_parameters["chain_color"])
+        self._main_view.cb_chain_color.setCurrentIndex(
+            self._main_view.cb_chain_color.findText(tmp_chain.pymol_parameters["chain_color"])
         )
-        the_main_view.cb_chain_representation.setCurrentIndex(
-            the_main_view.cb_chain_representation.findText(tmp_chain.pymol_parameters["chain_representation"])
+        self._main_view.cb_chain_representation.setCurrentIndex(
+            self._main_view.cb_chain_representation.findText(tmp_chain.pymol_parameters["chain_representation"])
         )
-        the_main_view.ui.proteins_table_widget.resizeColumnsToContents()
+        self._main_view.ui.proteins_table_widget.resizeColumnsToContents()
 
-    def update_status_bar(self, message: str, the_main_view) -> None:
+    def update_status_bar(self, message: str) -> None:
         """Sets a custom message into the status bar."""
-        the_main_view.status_bar.showMessage(message)
+        self._main_view.status_bar.showMessage(message)
 
-    def start_wait_spinner(self, the_main_view) -> None:
+    def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
+        self._main_view.ui.seqs_table_widget.setRowCount(2)
+        self._main_view.ui.seqs_table_widget.setColumnCount(2)
+        self._main_view.ui.seqs_table_widget.verticalHeader().setVisible(False)
+        self._main_view.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+        tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
+        self._main_view.ui.seqs_table_widget.setItem(0, 0, QtWidgets.QTableWidgetItem("Name"))
+        self._main_view.ui.seqs_table_widget.setItem(0, 1, QtWidgets.QTableWidgetItem(tmp_sequence.name))
+        self._main_view.ui.seqs_table_widget.setItem(1, 0, QtWidgets.QTableWidgetItem("Sequence"))
+        self._main_view.ui.seqs_table_widget.setItem(1, 1, QtWidgets.QTableWidgetItem(tmp_sequence.seq))
+        self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
+
+    def start_wait_spinner(self) -> None:
         """Starts the spinner."""
-        the_main_view.wait_spinner.start()
+        self._main_view.wait_spinner.start()
 
-    def stop_wait_spinner(self, the_main_view) -> None:
+    def stop_wait_spinner(self) -> None:
         """Stops the spinner."""
-        the_main_view.wait_spinner.stop()
+        self._main_view.wait_spinner.stop()

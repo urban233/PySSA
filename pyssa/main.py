@@ -67,6 +67,7 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import task_workers
 
 from pyssa.controller import main_view_controller
+from pyssa.controller import interface_manager
 
 from pyssa.io_pyssa import safeguard, bio_data, filesystem_helpers
 from pyssa.io_pyssa import filesystem_io
@@ -7686,9 +7687,9 @@ class MainWindow(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     styles.set_stylesheet(app)
-    main_window = main_view.MainView()
-    #main_presenter = main_presenter.MainPresenter(main_window)
-    main_controller = main_view_controller.MainViewController(main_window)
+    interfaceManager = interface_manager.InterfaceManager()
+    main_window = interfaceManager.get_main_view()
+    main_controller = main_view_controller.MainViewController(interfaceManager)
     styles.set_stylesheet(main_window)
     main_window.show()
     sys.exit(app.exec_())

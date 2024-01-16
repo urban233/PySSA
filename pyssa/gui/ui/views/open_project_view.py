@@ -64,7 +64,8 @@ class OpenProjectView(QtWidgets.QDialog):
         """Lists all projects."""
         xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
         self.string_model.setStringList(
-            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]  # Filters the workspace for all project files based on the xml extension
+            # Filters the workspace for all project files based on the xml extension
+            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
         )
         self.ui.projects_list_view.setModel(self.string_model)
 

@@ -28,8 +28,10 @@ QPushButton {
     border: 2px solid #4B91F7;
     border-width: 2px;
     border-radius: 6px;
-    min-width: 6em;
     padding: 2px;
+    min-width: 75px;
+    max-width: 75px;
+    min-height: 15px;
 }
 
 QPushButton:hover {

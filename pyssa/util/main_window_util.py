@@ -104,25 +104,6 @@ def setup_app_settings(the_app_settings: "settings.Settings") -> "settings.Setti
             the_app_settings,
         )
         tmp_settings: "settings.Settings" = the_app_settings
-
-    if globals.g_os == "win32":
-        constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
-        if dialog_settings_global.is_wsl2_installed():
-            tmp_settings.wsl_install = 1
-            constants.PYSSA_LOGGER.info("WSL2 is installed.")
-        else:
-            tmp_settings.wsl_install = 0
-            constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
-    else:
-        tmp_settings.wsl_install = 1
-
-    constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
-    if dialog_settings_global.is_local_colabfold_installed():
-        tmp_settings.local_colabfold = 1
-        constants.PYSSA_LOGGER.info("Local Colabfold is installed.")
-    else:
-        tmp_settings.local_colabfold = 0
-        constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
     return tmp_settings
 
 

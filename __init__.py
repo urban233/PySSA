@@ -73,15 +73,18 @@ def run_plugin_gui() -> None:
         app.exec_()
     """
     from .pyssa.gui.ui.views import main_view
-    from .pyssa.presenter import main_presenter
+    from .pyssa.controller import main_view_controller
+    from .pyssa.controller import interface_manager
 
     # getting the value of the global var mainWindow
     global mainWindow
-    global mainPresenter
+    global mainViewController
+    global interfaceManager
 
     if mainWindow is None:
-        mainWindow = main_view.MainView()
-        mainPresenter = main_presenter.MainPresenter(mainWindow)
+        interfaceManager = interface_manager.InterfaceManager()
+        mainWindow = interfaceManager.get_main_view()
+        mainViewController = main_view_controller.MainViewController(interfaceManager)
         # Open the qss styles file and read in the css-alike styling code
         if sys.platform.startswith("linux"):
             with open(styles_path_list[0], "r", encoding="utf-8") as file:
