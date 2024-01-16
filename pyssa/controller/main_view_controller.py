@@ -26,7 +26,7 @@ from pyssa.util import constants, enums, exception, main_window_util, exit_codes
 from pyssa.gui.ui.views import main_view
 from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
-from pyssa.controller import interface_manager, distance_analysis_view_controller
+from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller
 from pyssa.util import globals
 
 logger = logging.getLogger(__file__)
@@ -171,9 +171,7 @@ class MainViewController:
         self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
 
     def _add_sequence(self):
-        self._external_view = add_sequence_view.AddSequenceView()
-        self._external_view.return_value.connect(self._post_add_sequence)
-        self._external_view.show()
+        pass
 
     def _post_add_sequence(self, return_value: tuple):
         tmp_seq_name = return_value[0]
