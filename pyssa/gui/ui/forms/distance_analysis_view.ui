@@ -305,7 +305,14 @@
     </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_67">
+    <layout class="QHBoxLayout" name="bottom_layout">
+     <item>
+      <widget class="QPushButton" name="btn_help">
+       <property name="text">
+        <string>Help</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer_47">
        <property name="orientation">

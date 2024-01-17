@@ -62,7 +62,7 @@
     <item>
      <widget class="QTabWidget" name="project_tab_widget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="sequences">
        <attribute name="title">
@@ -72,48 +72,17 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Protein Sequence</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QListView" name="seqs_list_view"/>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>New protein sequence</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QPushButton" name="pushButton">
-              <property name="text">
-               <string>Add</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
            <layout class="QVBoxLayout" name="verticalLayout_2">
-            <item>
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>Existing protein sequence</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout">
               <item>
@@ -128,6 +97,13 @@
                  </size>
                 </property>
                </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton">
+                <property name="text">
+                 <string>Add</string>
+                </property>
+               </widget>
               </item>
               <item>
                <widget class="QPushButton" name="pushButton_3">
@@ -150,7 +126,18 @@
          </layout>
         </item>
         <item>
-         <widget class="QTableWidget" name="seqs_table_widget"/>
+         <layout class="QVBoxLayout" name="verticalLayout_11">
+          <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Placeholder</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTableWidget" name="seqs_table_widget"/>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -162,17 +149,17 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_6">
           <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Protein Structure</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QTreeView" name="proteins_tree_view"/>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_5">
-            <item>
-             <widget class="QLabel" name="label_6">
-              <property name="text">
-               <string>New protein structure</string>
-              </property>
-             </widget>
-            </item>
             <item>
              <spacer name="horizontalSpacer_4">
               <property name="orientation">
@@ -401,7 +388,7 @@
      <x>0</x>
      <y>0</y>
      <width>616</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">

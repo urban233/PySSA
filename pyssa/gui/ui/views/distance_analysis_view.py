@@ -53,6 +53,10 @@ class DistanceAnalysisView(QtWidgets.QDialog):
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
+        icon = self.style().standardIcon(pixmapi)
+        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setText("")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Distance Analysis")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
