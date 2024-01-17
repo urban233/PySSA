@@ -3,6 +3,14 @@ QWidget {
     font-size: 12px;
 }
 
+QFrame#frame_bottom {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+}
+
 QLabel#lbl_project_name {
     background: #4B91F7;
     color: #ffffff;
