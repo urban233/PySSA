@@ -27,10 +27,8 @@ import glob
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
 from pyssa.gui.ui.forms.auto_generated import auto_delete_project_view
-from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, input_validator
+from pyssa.util import constants
 
 
 class DeleteProjectView(QtWidgets.QDialog):

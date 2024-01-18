@@ -1,19 +1,23 @@
 import os
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import delete_project_view
 from pyssa.util import input_validator, gui_utils, constants, enums
 
 
-class DeleteProjectViewController():
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager", the_delete_project_view: "delete_project_view.DeleteProjectView") -> None:
+class DeleteProjectViewController(QtCore.QObject):
+
+    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+        super().__init__()
         self._interface_manager = the_interface_manager
-        self._view = the_delete_project_view
+        self._view = the_interface_manager.get_delete_view()
         self._fill_projects_list_view()
         self._connect_all_ui_elements_to_slot_functions()
 
     def _fill_projects_list_view(self) -> None:
+        """Lists all projects."""
         self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_model())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
@@ -36,7 +40,8 @@ class DeleteProjectViewController():
     def select_project_from_delete_list(self) -> None:
         """Selects a project from the project list on the delete page."""
         try:
-            self._view.ui.txt_delete_selected_projects.setText(self._view.ui.list_delete_projects_view.currentIndex().text())
+            self._view.ui.txt_delete_selected_projects.setText(self._view.ui.list_delete_projects_view.model().data
+                                                               (self._view.ui.list_delete_projects_view.currentIndex(), Qt.DisplayRole))
         except AttributeError:
             self._view.ui.txt_delete_selected_projects.setText("")
 
@@ -60,5 +65,3 @@ class DeleteProjectViewController():
             self._view.ui.lbl_delete_status_search,
             self._view.ui.txt_delete_selected_projects,
         )
-
-

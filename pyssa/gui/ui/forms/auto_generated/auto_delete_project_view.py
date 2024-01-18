@@ -61,9 +61,6 @@ class Ui_Dialog(object):
         self.btn_delete_delete_project.setMinimumSize(QtCore.QSize(131, 0))
         self.btn_delete_delete_project.setObjectName("btn_delete_delete_project")
         self.horizontalLayout.addWidget(self.btn_delete_delete_project)
-        self.btn_cancel = QtWidgets.QPushButton(self.layoutWidget)
-        self.btn_cancel.setObjectName("btn_cancel")
-        self.horizontalLayout.addWidget(self.btn_cancel)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
 
         self.retranslateUi(Dialog)
@@ -77,4 +74,3 @@ class Ui_Dialog(object):
         self.label_32.setText(_translate("Dialog", "Existing projects"))
         self.label_33.setText(_translate("Dialog", "Selected project"))
         self.btn_delete_delete_project.setText(_translate("Dialog", "Delete"))
-        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

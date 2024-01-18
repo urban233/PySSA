@@ -14,7 +14,7 @@ from Bio import SeqRecord
 
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import predict_monomer_view
+from pyssa.gui.ui.views import predict_monomer_view, delete_project_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
@@ -26,7 +26,8 @@ from pyssa.util import constants, enums, exception, main_window_util, exit_codes
 from pyssa.gui.ui.views import main_view
 from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
-from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller
+from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
+    delete_project_view_controller
 from pyssa.util import globals
 
 logger = logging.getLogger(__file__)
@@ -101,6 +102,7 @@ class MainViewController:
         self._view.ui.actionImport.triggered.connect(self.import_project)
         self._view.ui.actionExport.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
+        self._view.ui.action_delete_project.triggered.connect(self._delete_project)
 
         self._view.ui.actionPreview.triggered.connect(self.preview_image)
 
@@ -156,6 +158,10 @@ class MainViewController:
         self._interface_manager.update_status_bar(self._workspace_status)
         self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
+
+    def _delete_project(self) -> None:
+        self._external_controller = delete_project_view_controller.DeleteProjectViewController(self._interface_manager)
+        self._interface_manager.get_delete_view().show()
 
     def _show_protein_information(self) -> None:
         tmp_type = self._view.ui.proteins_tree_view.model().data(

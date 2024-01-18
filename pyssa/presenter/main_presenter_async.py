@@ -69,6 +69,22 @@ def open_project(
     tmp_project_path = pathlib.Path(f"{str(the_workspace_path)}/{the_project_name}")
     return ("result", project.Project.deserialize_project(tmp_project_path, the_application_settings))
 
+def delete_project() -> None:
+    """Deletes a project.
+
+        Args:
+            the_workspace_path: the current workspace path.
+            the_project_name: the name of the project to open.
+            the_application_settings: the settings of the application.
+
+        Returns:
+
+        """
+    # TODO: needs checks
+    # TODO: needs tests!
+    cmd.reinitialize()
+    tmp_project_path = pathlib.Path(f"{str(the_workspace_path)}/{the_project_name}")
+    return ("result", project.Project.deserialize_project(tmp_project_path, the_application_settings))
 
 def create_new_project(
     the_project_name: str,
