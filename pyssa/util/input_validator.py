@@ -112,9 +112,9 @@ class InputValidator:
     @staticmethod
     def validate_search_input(
         list_for_projects: QtCore.QStringListModel,
-        txt_for_search: QtWidgets.QTextEdit,
+        txt_for_search: QtWidgets.QLineEdit,
         lbl_for_status_search: QtWidgets.QLabel,
-        txt_for_selected_project: QtWidgets.QTextEdit = None,
+        txt_for_selected_project: QtWidgets.QLineEdit = None,
         status_message: str = None,
     ) -> None:
         """This function validates the input of the project name in real-time.
@@ -131,10 +131,10 @@ class InputValidator:
             status_message:
                 the message which should get displayed.
         """
-        list_model = list_for_projects  # Replace with your actual QStringListModel
-        txt_for_search = txt_for_search  # Replace with your actual QLineEdit
-        lbl_for_status_search = lbl_for_status_search  # Replace with your actual QLabel
-        txt_for_selected_project = txt_for_selected_project  # Replace with your actual QLineEdit
+        list_model = list_for_projects
+        txt_for_search = txt_for_search
+        lbl_for_status_search = lbl_for_status_search
+        txt_for_selected_project = txt_for_selected_project
 
         # Reset styles for lineEdit
         txt_for_search.setStyleSheet("background-color: white; color: black")
@@ -157,6 +157,7 @@ class InputValidator:
                 txt_for_search.setStyleSheet("background-color: white; color: #f44336")
                 if status_message is None:
                     lbl_for_status_search.setText("Project name does not exist.")
+                    lbl_for_status_search.setStyleSheet("color: #f44336")
                 else:
                     lbl_for_status_search.setText(status_message)
                 if txt_for_selected_project is not None:

@@ -27,7 +27,7 @@ from pyssa.gui.ui.views import main_view
 from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
-    delete_project_view_controller
+    delete_project_view_controller, create_project_view_controller, open_project_view_controller
 from pyssa.util import globals
 
 logger = logging.getLogger(__file__)
@@ -98,11 +98,12 @@ class MainViewController:
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
     def _connect_all_ui_elements_with_slot_functions(self):
+        self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
+        self._view.ui.action_delete_project.triggered.connect(self._delete_project)
         self._view.ui.actionImport.triggered.connect(self.import_project)
         self._view.ui.actionExport.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
-        self._view.ui.action_delete_project.triggered.connect(self._delete_project)
 
         self._view.ui.actionPreview.triggered.connect(self.preview_image)
 
@@ -131,12 +132,14 @@ class MainViewController:
         self._interface_manager.set_new_project(project.Project())
         self._interface_manager.refresh_main_view()
 
+    def _create_project(self) -> None:
+        self._external_controller = create_project_view_controller.CreateProjectViewController(self._interface_manager)
+        self._interface_manager.get_create_view().show()
+
     def _open_project(self) -> None:
-        self._external_view = open_project_view.OpenProjectView()
-        self._external_view.return_value.connect(self._post_open_project)
-        self._external_view.show()
-        # self._external_view = basic_form.BasicForm()
-        # self._external_view.show()
+        self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
+        self._external_controller.return_value.connect(self._post_open_project)
+        self._interface_manager.get_open_view().show()
 
     def _post_open_project(self, return_value: str):
         self._interface_manager.start_wait_spinner()

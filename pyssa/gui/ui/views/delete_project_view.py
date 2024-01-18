@@ -19,10 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the About Dialog."""
-import os
-import glob
-
+"""Module for the Delete Dialog."""
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
@@ -32,18 +29,12 @@ from pyssa.util import constants
 
 
 class DeleteProjectView(QtWidgets.QDialog):
-    """Class representing an About dialog."""
+    """Class representing a Delete dialog."""
 
-    string_model = QtCore.QStringListModel()
-    return_value = QtCore.pyqtSignal(str)
-
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
+    def __init__(self) -> None:
         """Constructor.
-
-        Args:
-            parent: The parent.
         """
-        QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self)
         # build ui object
         self.ui = auto_delete_project_view.Ui_Dialog()
         self.ui.setupUi(self)
@@ -54,6 +45,3 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Delete project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
-    def _close(self):
-        self.close()
