@@ -89,7 +89,11 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     # <editor-fold desc="Logic">
     def start_process_batch(self):
-        pass
+        tmp_raw_analysis_run_names: list = []
+        for row_no in range(self._view.ui.list_distance_analysis_overview.count()):
+            tmp_raw_analysis_run_names.append(self._view.ui.list_distance_analysis_overview.item(row_no).text())
+        self.job_input.emit(("job_input", tmp_raw_analysis_run_names, self._view.ui.cb_distance_analysis_ray_trace_images.isChecked()))
+        self._view.close()
 
     def structure_analysis_next(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""

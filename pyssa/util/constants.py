@@ -218,7 +218,6 @@ PAGE_HELP_PATHS_DICT = {
 
 # pymol parameters
 PYMOL_COLORS = [
-    "",
     "red",
     "green",
     "limegreen",
@@ -234,6 +233,12 @@ PYMOL_COLORS = [
     "orange",
     "lightorange",
     "white",
+]
+
+PYMOL_REPRESENTATIONS = [
+    "cartoon",
+    "ribbon",
+    "sticks"
 ]
 
 AMINO_ACID_CODE = {

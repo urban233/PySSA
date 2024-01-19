@@ -23,6 +23,7 @@
 import concurrent
 import concurrent.futures
 import collections
+import copy
 import itertools
 from queue import Queue
 from threading import Lock
@@ -32,13 +33,16 @@ import pathlib
 import shutil
 import logging
 import ast
+import collections
 import numpy as np
+from xml import sax
 from xml.etree import ElementTree
+from PyQt5 import QtCore
 from Bio import SeqRecord
 from pyssa.internal.data_structures.data_classes import basic_protein_info
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import protein, structure_analysis, chain, selection
 from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures import settings
@@ -53,6 +57,327 @@ from pyssa.util import project_util
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+
+
+class ProjectParserHandler(sax.ContentHandler):
+    def __init__(self, a_project, the_settings):
+        self.one_element_history: collections.deque = collections.deque()
+        self.one_element_history.append("root")
+        self.current_element = ""
+        self.protein_data = {}
+        self._project = a_project
+        self._app_settings = the_settings
+        self.pdb_data = []
+        self.chains = []
+        self._protein_in_pair: bool = False
+        self.protein_pair_data = {}
+        self._proteins_for_pair = []
+        self.result = []
+        self.result_obj = None
+        self.distance_analysis = {}
+        self.distance_analysis_obj = None
+
+        index_list = []
+        ref_chain_list = []
+        ref_pos_list = []
+        ref_resi_list = []
+        model_chain_list = []
+        model_pos_list = []
+        model_resi_list = []
+        distance_list = []
+        self.distances_results = {
+            "index": index_list,
+            "ref_chain": ref_chain_list,
+            "ref_pos": ref_pos_list,
+            "ref_resi": ref_resi_list,
+            "model_chain": model_chain_list,
+            "model_pos": model_pos_list,
+            "model_resi": model_resi_list,
+            "distance": distance_list,
+        }
+
+    def startElement(self, name, attrs):
+        self.current_element = name
+        tmp_last_element = self.one_element_history[-1]
+        if name == "project_info":
+            self._project = project.Project(attrs.getValue("name"), pathlib.Path(attrs.getValue("workspace_path")))
+        elif name == "sequence":
+            if tmp_last_element == "sequences":
+                self._project.sequences.append(
+                    SeqRecord.SeqRecord(name=attrs.getValue("name"), seq=attrs.getValue("seq"))
+                )
+        elif name == "protein":
+            self.protein_data = {
+                "id": attrs.getValue("id"),
+                "pymol_molecule_object": attrs.getValue("pymol_molecule_object"),
+                "pymol_selection": attrs.getValue("pymol_selection")
+            }
+            if tmp_last_element == "proteins":
+                self._protein_in_pair = False
+            elif tmp_last_element == "proteins_of_pair":
+                self._protein_in_pair = True
+        elif name == "chain":
+            tmp_sequence = sequence.Sequence(self.protein_data["pymol_molecule_object"], attrs.getValue("chain_sequence"))
+            tmp_chain = chain.Chain(attrs.getValue("chain_letter"),
+                                    tmp_sequence,
+                                    attrs.getValue("chain_type"))
+            self.chains.append(tmp_chain)
+        elif name == "pymol_parameters":
+            tmp_last_chain: "chain.Chain" = self.chains[-1]
+            tmp_last_chain.pymol_parameters = {
+                "chain_color": attrs.getValue("chain_color"),
+                "chain_representation": attrs.getValue("chain_representation"),
+            }
+        elif name == "session_data":
+            if tmp_last_element == "atom":
+                self.protein_data["session"] = attrs.getValue("session")
+            elif tmp_last_element == "distances":
+                self.result.append(attrs.getValue("session"))
+        elif name == "protein_pair":
+            self.protein_pair_data = {
+                "name": attrs.getValue("name")
+            }
+        elif name == "distance_analysis":
+            self.distance_analysis = {
+                "name": attrs.getValue("name"),
+                "cutoff": attrs.getValue("cutoff"),
+                "cycles": attrs.getValue("cycles")
+            }
+        elif name == "result":
+            self.result.append(attrs.getValue("rmsd"))
+            self.result.append(attrs.getValue("aligned_amino_acids"))
+
+        self.one_element_history.append(name)
+        self.one_element_history.popleft()
+
+    def characters(self, content):
+        if self.current_element == "atom":
+            self.pdb_data.append(content)
+        # Distance results
+        elif self.current_element == "index":
+            self.distances_results["index"] = list(content)
+        elif self.current_element == "ref_chain":
+            self.distances_results["ref_chain"] = list(content)
+        elif self.current_element == "ref_pos":
+            self.distances_results["ref_pos"] = list(content)
+        elif self.current_element == "ref_resi":
+            self.distances_results["ref_resi"] = list(content)
+        elif self.current_element == "model_chain":
+            self.distances_results["model_chain"] = list(content)
+        elif self.current_element == "model_pos":
+            self.distances_results["model_pos"] = list(content)
+        elif self.current_element == "model_resi":
+            self.distances_results["model_resi"] = list(content)
+        elif self.current_element == "distance":
+            self.distances_results["distance"] = list(content)
+
+    def endElement(self, name):
+        tmp_last_element = self.one_element_history[-1]
+        if name == "protein":
+            # Creates new protein object
+            tmp_protein = protein.Protein(self.protein_data["pymol_molecule_object"], pdb_data=self.pdb_data)
+            tmp_protein.set_id(self.protein_data["id"])
+            tmp_protein.chains = copy.deepcopy(self.chains)
+            tmp_protein.pymol_session = self.protein_data["session"]
+            tmp_protein.pymol_selection = selection.Selection(self.protein_data["pymol_molecule_object"])
+            tmp_protein.pymol_selection.selection_string = self.protein_data["pymol_selection"]
+            # Clears vars for next protein
+            self.protein_data = {}
+            self.chains = []
+            if not self._protein_in_pair:
+                # Appends protein to project for the protein model
+                self._project.proteins.append(copy.deepcopy(tmp_protein))
+            elif self._protein_in_pair:
+                # Appends protein to project for the protein pair model
+                self._proteins_for_pair.append(copy.deepcopy(tmp_protein))
+        elif name == "result":
+            index_array: np.ndarray = np.array(self.distances_results["index"])
+            ref_chain_array: np.ndarray = np.array(self.distances_results["ref_chain"])
+            ref_pos_array: np.ndarray = np.array(self.distances_results["ref_pos"])
+            ref_resi_array: np.ndarray = np.array(self.distances_results["ref_resi"])
+            model_chain_array: np.ndarray = np.array(self.distances_results["model_chain"])
+            model_pos_array: np.ndarray = np.array(self.distances_results["model_pos"])
+            model_resi_array: np.ndarray = np.array(self.distances_results["model_resi"])
+            distance_array: np.ndarray = np.array(self.distances_results["distance"])
+            result_hashtable: dict[str, np.ndarray] = {
+                "index": index_array,
+                "ref_chain": ref_chain_array,
+                "ref_pos": ref_pos_array,
+                "ref_resi": ref_resi_array,
+                "model_chain": model_chain_array,
+                "model_pos": model_pos_array,
+                "model_resi": model_resi_array,
+                "distance": distance_array,
+            }
+            self.result_obj = results.DistanceAnalysisResults(result_hashtable, self.result[2], self.result[0], self.result[1])
+        elif name == "distance_analysis":
+            self.distance_analysis_obj = structure_analysis.DistanceAnalysis(
+                self._app_settings, distance_analysis_name=self.distance_analysis["name"]
+            )
+            self.distance_analysis_obj.analysis_results = self.result_obj
+            self.distance_analysis_obj.cutoff = self.distance_analysis["cutoff"]
+            self.distance_analysis_obj.cycles = self.distance_analysis["cycles"]
+        elif name == "protein_pair":
+            tmp_protein_pair = protein_pair.ProteinPair(self._proteins_for_pair[0], self._proteins_for_pair[1])
+            tmp_protein_pair.name = self.protein_pair_data["name"]
+            tmp_protein_pair.distance_analysis = self.distance_analysis_obj
+            self._project.protein_pairs.append(tmp_protein_pair)
+            self.protein_pair_data = {}
+            self._proteins_for_pair = []
+            self.result = []
+            self.result_obj = None
+            self.distance_analysis = {}
+            self.distance_analysis_obj = None
+
+    def get_project(self):
+        return self._project
+
+    # def __init__(self, a_project):
+    #     self.current_element = ""
+    #     self.protein_data = {}
+    #     self.pdb_data = []
+    #     self.proteins = []
+    #     self._project = a_project
+    #
+    # def startElement(self, name, attrs):
+    #     self.current_element = name
+    #     if name == "protein":
+    #         self.protein_data = {"id": attrs.getValue("id"), "pymol_molecule_object": attrs.getValue("pymol_molecule_object")}
+    #     elif name == "protein_pair":
+    #         pass
+    #
+    # def characters(self, content):
+    #     if self.current_element == "atom":
+    #         self.pdb_data.append(content)
+    #         #self.protein_data["pdb_data"][-1] += content
+    #
+    # def endElement(self, name):
+    #     if name == "protein":
+    #         tmp_protein = protein.Protein(self.protein_data["id"], pdb_data=self.pdb_data)
+    #         self.proteins.append(tmp_protein)
+    #         self.protein_data = {}
+    #         self._project.proteins.append(tmp_protein)
+
+
+class ProjectParser:
+    _project: project.Project
+
+    def __init__(self, xml_reader: QtCore.QXmlStreamReader):
+        self.xml_reader = xml_reader
+        self._project = project.Project()
+
+    def parse_complete_xml(self):
+        while not self.xml_reader.atEnd() and not self.xml_reader.hasError():
+            token = self.xml_reader.readNext()
+            element_name = self.xml_reader.name()
+            if element_name == "project_info":
+                # Process project_info element
+                self._project = project.Project(self.xml_reader.attributes().value("name"),
+                                                pathlib.Path(self.xml_reader.attributes().value("workspace_path")))
+            elif element_name == "protein":
+                # Process protein element
+                id = self.xml_reader.attributes().value("id")
+                molecule_object = self.xml_reader.attributes().value("pymol_molecule_object")
+                selection = self.xml_reader.attributes().value("pymol_selection")
+                # Continue reading the elements within the protein element
+                while self.xml_reader.readNextStartElement():
+                    sub_element = self.xml_reader.name()
+                    if sub_element == "pdb_data":
+                        # Process pdb_data element
+                        # Continue reading the elements within the pdb_data element
+                        tmp_pdb_data: collections.deque = collections.deque()
+                        while self.xml_reader.readNextStartElement():
+                            atom_element = self.xml_reader.name()
+                            if atom_element == "atom":
+                                # Process atom element
+                                tmp_pdb_data.append(self.xml_reader.readElementText())
+                                # Process atom data as needed
+                            else:
+                                self.xml_reader.skipCurrentElement()  # Skip unknown elements
+                    elif sub_element == "session_data":
+                        # Process session_data element
+                        session_data = self.xml_reader.readElementText()
+                        # Process session_data as needed
+                    else:
+                        self.xml_reader.skipCurrentElement()  # Skip unknown elements
+                tmp_protein = protein.Protein(molecule_object, pdb_data=list(tmp_pdb_data))
+                print(tmp_protein.get_pdb_data())
+            elif element_name == "protein_pair":
+                # Process protein_pair element
+                pair_name = self.xml_reader.attributes().value("name").toString()
+                # Process other attributes or data as needed
+
+            else:
+                self.xml_reader.skipCurrentElement()  # Skip unknown elements
+
+        if self.xml_reader.hasError():
+            print("Error parsing XML:", self.xml_reader.errorString())
+
+    def parse_project(self):
+        while not self.xml_reader.atEnd():
+            self.xml_reader.readNext()
+            if self.xml_reader.isStartElement() and self.xml_reader.name() == "project":
+                self._project = self.parse_project_info()
+                self.parse_sequences()
+                self.parse_proteins()
+                #self.parse_protein_pairs()
+        return self._project
+
+    def parse_project_info(self):
+        while not self.xml_reader.atEnd():
+            self.xml_reader.readNext()
+            if self.xml_reader.isStartElement() and self.xml_reader.name() == "project_info":
+                # Process attributes
+                self.xml_reader.attributes()
+                project_infos = []
+                for attribute in self.xml_reader.attributes():
+                    attribute_name = attribute.name()
+                    attribute_value = attribute.value()
+                    project_infos.append((attribute_name, attribute_value))
+                return project.Project(project_infos[0][1], pathlib.Path(project_infos[1][1]))
+
+    def parse_sequences(self):
+        while not self.xml_reader.atEnd():
+            self.xml_reader.readNext()
+            if self.xml_reader.isStartElement() and self.xml_reader.name() == "sequences":
+                self.parse_sequence()
+
+    def parse_sequence(self):
+        sequence_data = {}
+        while not self.xml_reader.atEnd():
+            self.xml_reader.readNext()
+            if self.xml_reader.isStartElement() and self.xml_reader.name() == "sequence":
+                # Process attributes
+                for attribute in self.xml_reader.attributes():
+                    attribute_name = attribute.name()
+                    attribute_value = attribute.value()
+                    sequence_data[attribute_name] = attribute_value
+                self._project.sequences.append(SeqRecord.SeqRecord(name=sequence_data["name"], seq=sequence_data["seq"]))
+
+    def parse_proteins(self):
+        while not self.xml_reader.atEnd():
+            self.xml_reader.readNext()
+            if self.xml_reader.isStartElement() and self.xml_reader.name() == "proteins":
+                self.parse_protein()
+
+    def parse_protein(self):
+        protein_data = {}
+        while not self.xml_reader.atEnd():
+            self.xml_reader.readNext()
+            if self.xml_reader.isStartElement() and self.xml_reader.name() == "protein":
+                # Process attributes
+                for attribute in self.xml_reader.attributes():
+                    attribute_name = attribute.name()
+                    attribute_value = attribute.value()
+                    protein_data[attribute_name] = attribute_value
+                    print(protein_data)
+
+    def parse_protein_pairs(self):
+        while not self.xml_reader.atEnd():
+            self.xml_reader.readNext()
+            if self.xml_reader.isStartElement() and self.xml_reader.name() == "protein_pairs":
+                self.xml_reader.attributes()
+            # Process individual protein pairs
 
 
 class XmlDeserializer:
@@ -178,9 +503,9 @@ class XmlDeserializer:
                     "distance": distance_array,
                 }
 
-            tmp_protein_pair_obj.distance_analysis = distance_analysis.DistanceAnalysis(
-                tmp_protein_pair_obj,
-                app_settings,
+            tmp_protein_pair_obj.distance_analysis = structure_analysis.DistanceAnalysis(
+                protein_pair_name=tmp_protein_pair_obj.name,
+                the_app_settings=app_settings,
             )
             tmp_protein_pair_obj.distance_analysis.analysis_results = results.DistanceAnalysisResults(
                 distance_data=result_hashtable,
@@ -197,10 +522,10 @@ class XmlDeserializer:
             tmp_protein_pair_obj.distance_analysis.name = distance_analysis_settings[
                 attribute_names.DISTANCE_ANALYSIS_NAME
             ]
-            tmp_protein_pair_obj.distance_analysis.rmsd_dict["rmsd"] = float(
+            tmp_protein_pair_obj.distance_analysis.analysis_results.rmsd = float(
                 rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_RMSD],
             )
-            tmp_protein_pair_obj.distance_analysis.rmsd_dict["aligned_residues"] = str(
+            tmp_protein_pair_obj.distance_analysis.analysis_results.aligned_aa = str(
                 rmsd_aligned_aa[attribute_names.DISTANCE_ANALYSIS_ALIGNED_AA],
             )
             self.deserialize_analysis_images(
@@ -219,28 +544,44 @@ class XmlDeserializer:
             seq_records.append(tmp_seq_record_obj)
         return seq_records
 
-    def deserialize_project(self, app_settings: "settings.Settings") -> "project.Project":
+    @staticmethod
+    def deserialize_project(file_path, app_settings: "settings.Settings") -> "project.Project":
         """Deserialize the project from the XML."""
-        project_dict = {}
-        for info in self.xml_root.iter(element_names.PROJECT_INFO):
-            project_dict = info.attrib
-        tmp_project = project.Project(
-            project_dict[attribute_names.PROJECT_NAME],
-            pathlib.Path(project_dict[attribute_names.PROJECT_WORKSPACE_PATH]),
-        )
-        tmp_seq_record_objs = self.create_all_sequences_from_xml()
-        if tmp_seq_record_objs is not None:
-            for tmp_seq_record_obj in tmp_seq_record_objs:
-                tmp_project.sequences.append(tmp_seq_record_obj)
-        protein_objs = self.create_all_proteins_from_xml()
-        for tmp_protein_obj in protein_objs:
-            tmp_project.add_existing_protein(tmp_protein_obj)
-        protein_pair_objs = self.create_all_protein_pairs(tmp_project, app_settings)
-        if protein_pair_objs is not None:
-            for tmp_protein_pair_obj in protein_pair_objs:
-                tmp_project.add_protein_pair(tmp_protein_pair_obj)
+        file = QtCore.QFile(str(file_path))
+        try:
+            if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
+                print("Error: Cannot open file for reading")
+        except Exception as e:
+            print(f"Exception occurred: {e}")
+        else:
+            tmp_project = project.Project()
+            handler = ProjectParserHandler(tmp_project, app_settings)
+            parser = sax.make_parser()
+            parser.setContentHandler(handler)
+            parser.parse(file_path)
+            file.close()
+            return handler.get_project()
 
-        return tmp_project
+        # project_dict = {}
+        # for info in self.xml_root.iter(element_names.PROJECT_INFO):
+        #     project_dict = info.attrib
+        # tmp_project = project.Project(
+        #     project_dict[attribute_names.PROJECT_NAME],
+        #     pathlib.Path(project_dict[attribute_names.PROJECT_WORKSPACE_PATH]),
+        # )
+        # tmp_seq_record_objs = self.create_all_sequences_from_xml()
+        # if tmp_seq_record_objs is not None:
+        #     for tmp_seq_record_obj in tmp_seq_record_objs:
+        #         tmp_project.sequences.append(tmp_seq_record_obj)
+        # protein_objs = self.create_all_proteins_from_xml()
+        # for tmp_protein_obj in protein_objs:
+        #     tmp_project.add_existing_protein(tmp_protein_obj)
+        # protein_pair_objs = self.create_all_protein_pairs(tmp_project, app_settings)
+        # if protein_pair_objs is not None:
+        #     for tmp_protein_pair_obj in protein_pair_objs:
+        #         tmp_project.add_protein_pair(tmp_protein_pair_obj)
+        #
+        # return tmp_project
 
     def deserialize_analysis_images(
         self,

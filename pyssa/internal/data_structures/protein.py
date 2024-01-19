@@ -25,6 +25,7 @@ import pathlib
 import logging
 import uuid
 import pymol
+from PyQt5 import QtCore
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
@@ -101,6 +102,7 @@ class Protein:
         molecule_object: str,
         pdb_filepath: path_util.FilePath = "",
         pdb_xml_string: ElementTree = "",
+        pdb_data=None
     ) -> None:
         """Constructor.
 
@@ -117,6 +119,8 @@ class Protein:
             FileNotFoundError: If file not found.
         """
         # <editor-fold desc="Checks">
+        if pdb_data is None:
+            pdb_data = []
         safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
         if molecule_object == "":
             logger.error("An argument is illegal.")
@@ -128,6 +132,8 @@ class Protein:
 
         self._id = uuid.uuid4()
         self.pdb_cache_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
+        if pdb_data is not None:
+            self._pdb_data = pdb_data
         if pdb_filepath == "" and pdb_xml_string != "":
             self._pymol_molecule_object = molecule_object
             if not os.path.exists(constants.CACHE_PROTEIN_DIR):
@@ -204,6 +210,9 @@ class Protein:
             self.pymol_selection.selection_string = ""
         else:
             raise ValueError("Function has too many arguments.")
+
+    def set_id(self, value):
+        self._id = value
 
     def get_molecule_object(self) -> str:
         """This function gets the molecule object.
@@ -302,7 +311,7 @@ class Protein:
             chain_type: type of chain to append to the protein.
         """
         # TODO: add check if chain or any type of chain information already exists
-        self.chains.append(chain.Chain(chain=chain_name, chain_sequence=chain_sequence, chain_type=chain_type))
+        self.chains.append(chain.Chain(chain_letter=chain_name, chain_sequence=chain_sequence, chain_type=chain_type))
 
     def add_chain_names_to_chains(self) -> None:
         """Adds the chain names to the individual chains."""
@@ -313,6 +322,13 @@ class Protein:
                 i += 1
             else:
                 raise ValueError("Chain name exists.")
+
+    def get_chain_by_letter(self, a_letter: str) -> "chain.Chain":
+        """Returns the chain of a certain letter"""
+        for tmp_chain in self.chains:
+            if tmp_chain.chain_letter == a_letter:
+                return tmp_chain
+        return chain.Chain("", "", "")
 
     def load_protein_in_pymol(self) -> None:
         """Load a protein in PyMOL.
@@ -472,6 +488,29 @@ class Protein:
         tmp_protein.append(bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data))
         tmp_session_data = ElementTree.SubElement(tmp_protein, element_names.PROTEIN_SESSION)
         tmp_session_data.set(attribute_names.PROTEIN_SESSION, self.pymol_session)
+
+    def write_protein_to_xml_structure(self, an_xml_writer: QtCore.QXmlStreamWriter):
+        an_xml_writer.writeStartElement('protein')
+        an_xml_writer.writeAttribute('id', str(self._id))
+        an_xml_writer.writeAttribute('pymol_molecule_object', str(self._pymol_molecule_object))
+        an_xml_writer.writeAttribute('pymol_selection', str(self.pymol_selection.selection_string))
+        # Chains
+        an_xml_writer.writeStartElement('chains')
+        for tmp_chain in self.chains:
+            tmp_chain.serialize(an_xml_writer)
+        an_xml_writer.writeEndElement()
+        # PDB data
+        an_xml_writer.writeStartElement('pdb_data')
+        for tmp_atom in self._pdb_data:
+            an_xml_writer.writeStartElement('atom')
+            an_xml_writer.writeCharacters(tmp_atom)
+            an_xml_writer.writeEndElement()
+        an_xml_writer.writeEndElement()
+        # Session data
+        an_xml_writer.writeStartElement('session_data')
+        an_xml_writer.writeAttribute('session', self.pymol_session)
+        an_xml_writer.writeEndElement()
+        an_xml_writer.writeEndElement()
 
     def duplicate_protein(self):  # noqa: ANN201
         """Duplicates the protein object."""

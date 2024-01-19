@@ -49,6 +49,7 @@ def fill_combo_box(combo_box: QtWidgets.QComboBox, item_list: list) -> None:
         item_list (list):
             list of items which should be placed in the combo box
     """
+    combo_box.clear()
     for item in item_list:
         combo_box.addItem(item)
 

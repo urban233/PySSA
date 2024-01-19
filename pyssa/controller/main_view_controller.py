@@ -11,12 +11,12 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from Bio import SeqRecord
-
+from xml import sax
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
-from pyssa.internal.data_structures import project, settings
+from pyssa.internal.data_structures import project, settings, protein
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.thread import tasks, task_workers
 from pyssa.io_pyssa import safeguard, filesystem_io
@@ -97,6 +97,7 @@ class MainViewController:
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
     def _connect_all_ui_elements_with_slot_functions(self):
+        self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
         self._view.ui.actionImport.triggered.connect(self.import_project)
         self._view.ui.actionExport.triggered.connect(self.export_current_project)
@@ -117,12 +118,23 @@ class MainViewController:
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
+        self._view.cb_chain_color.currentIndexChanged.connect(self._change_chain_color_proteins)
+        self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
 
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.pushButton.clicked.connect(self._add_sequence)
 
+        self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
+
+    def _update_tab(self) -> None:
+        if self._view.ui.project_tab_widget.currentIndex() == 1:
+            print("Changed proteins")
+            self._interface_manager.refresh_protein_model()
+        elif self._view.ui.project_tab_widget.currentIndex() == 2:
+            print("Changed protein pairs")
+            self._interface_manager.refresh_protein_pair_model()
 
     def _close_project(self):
         """Closes the current project"""
@@ -169,6 +181,42 @@ class MainViewController:
         else:
             raise ValueError("Unknown type!")
         self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+
+    def _show_protein_information_of_protein_pair(self) -> None:
+        tmp_type = self._view.ui.protein_pairs_tree_view.model().data(
+            self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+        )
+        if tmp_type == "protein":
+            tmp_first_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain)
+        elif tmp_type == "chain":
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._view.ui.protein_pairs_tree_view.currentIndex())
+        elif tmp_type == "protein_pair":
+            pass
+        else:
+            print(tmp_type)
+            raise ValueError("Unknown type!")
+        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+
+    def _change_chain_color_proteins(self) -> None:
+        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
+            tmp_protein_chain.pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
+        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein.chains[0].pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
+
+    def _change_chain_representation_proteins(self) -> None:
+        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
+            tmp_protein_chain.pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
+        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein.chains[0].pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
 
     def _add_sequence(self):
         pass
@@ -376,7 +424,6 @@ class MainViewController:
     def post_analysis_process(self, an_exit_code: tuple[int, str]) -> None:
         """Post process after the analysis thread finished."""
         constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
-        self.block_box_prediction.destroy(True)
         if an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
             basic_boxes.ok(
                 "Distance analysis",
@@ -480,22 +527,22 @@ class MainViewController:
         self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
             self._interface_manager
         )
+        self._external_controller.job_input.connect(self.start_process_batch)
         self._interface_manager.get_distance_analysis_view().show()
 
-    def start_process_batch(self) -> None:
+    def start_process_batch(self, job_input: tuple) -> None:
         """Sets up the worker for the analysis task."""
         constants.PYSSA_LOGGER.info("Begin analysis process.")
 
-        tmp_raw_analysis_run_names: list = []
-        for row_no in range(self._view.ui.list_analysis_batch_overview.count()):
-            tmp_raw_analysis_run_names.append(self._view.ui.list_analysis_batch_overview.item(row_no).text())
+        _, tmp_raw_analysis_run_names, tmp_checkbox_state = job_input
+
         self._active_task = tasks.Task(
             target=main_presenter_async.run_distance_analysis,
             args=(
                 tmp_raw_analysis_run_names,
                 self._interface_manager.get_current_project(),
                 self._interface_manager.get_application_settings(),
-                self._view.ui.cb_analysis_images.isChecked(),
+                tmp_checkbox_state,
             ),
             post_func=self.post_analysis_process,
         )
@@ -503,7 +550,7 @@ class MainViewController:
 
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-        self.block_box_analysis.exec_()
+        #self.block_box_analysis.exec_()
 
     # <editor-fold desc="Settings menu methods">
     def open_settings_global(self) -> None:
@@ -731,8 +778,19 @@ class MainViewController:
             "XML Files (*.xml)",
         )
         if file_path:
-            tmp_project = project.Project("", self._workspace_path)
-            tmp_project = tmp_project.deserialize_project(pathlib.Path(file_path), self._interface_manager.get_application_settings())
+            file = QtCore.QFile(file_path)
+            if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
+                print("Error: Cannot open file for reading")
+                return
+
+            tmp_project = project.Project()
+            handler = filesystem_io.ProjectParserHandler(tmp_project, self._interface_manager.get_application_settings())
+            parser = sax.make_parser()
+            parser.setContentHandler(handler)
+            parser.parse(file_path)
+            file.close()
+            tmp_project = handler.get_project()
+
             tmp_project.set_workspace_path(self._workspace_path)
             if len(tmp_project.proteins) <= 1:
                 if self._interface_manager.get_application_settings().wsl_install == 0:
@@ -751,9 +809,13 @@ class MainViewController:
                     return
             new_filepath = pathlib.Path(f"{self._workspace_path}/{tmp_project.get_project_name()}.xml")
             tmp_project.serialize_project(new_filepath)
-            self._interface_manager.set_new_project(self._interface_manager.get_current_project().deserialize_project(
-                new_filepath, self._interface_manager.get_application_settings()))
-            constants.PYSSA_LOGGER.info(f"Opening the project {self._interface_manager.get_current_project().get_project_name()}.")
+            self._interface_manager.set_new_project(
+                self._interface_manager.get_current_project().deserialize_project(
+                    new_filepath, self._interface_manager.get_application_settings()
+                )
+            )
+            constants.PYSSA_LOGGER.info(
+                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}.")
             self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
             self._interface_manager.refresh_main_view()
             basic_boxes.ok(

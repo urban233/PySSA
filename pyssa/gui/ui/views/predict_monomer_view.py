@@ -23,16 +23,19 @@
 import os
 import pymol
 from PyQt5.QtCore import pyqtSignal
-from pymol import Qt
+from PyQt5.QtCore import Qt
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+from PyQt5 import QtWidgets
+from pyqtspinner import spinner
+
 from pyssa.gui.ui.forms.auto_generated import auto_predict_monomer_view
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, tools, gui_utils
 
 
-class PredictMonomerView(Qt.QtWidgets.QDialog):
+class PredictMonomerView(QtWidgets.QDialog):
     """Class for a dialog to add proteins to a project."""
 
     """
@@ -46,10 +49,24 @@ class PredictMonomerView(Qt.QtWidgets.QDialog):
         Args:
             parent: The parent.
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = auto_predict_monomer_view.Ui_Dialog()
         self.ui.setupUi(self)
+        self.wait_spinner = spinner.WaitingSpinner(
+            parent=self,
+            center_on_parent=True,
+            disable_parent_when_spinning=True,
+            modality=Qt.ApplicationModal,
+            roundness=100.0,
+            fade=45.0,
+            radius=14,
+            lines=8,
+            line_length=17,
+            line_width=10,
+            speed=1.25,
+            color=QtGui.QColor(75, 145, 247),
+        )
         self.ui.tabWidget.setTabEnabled(1, False)
         self._initialize_ui()
 

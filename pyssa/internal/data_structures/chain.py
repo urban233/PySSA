@@ -21,6 +21,7 @@
 #
 """This module contains the chain class."""
 import logging
+from PyQt5 import QtCore
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import sequence
 
@@ -51,21 +52,32 @@ class Chain:
 
     # </editor-fold>
 
-    def __init__(self, chain: str, chain_sequence: sequence.Sequence, chain_type: str) -> None:
+    def __init__(self, chain_letter: str, chain_sequence: sequence.Sequence, chain_type: str) -> None:
         """Constructor.
 
         Args:
-            chain:
+            chain_letter:
                 letter of the chain
             chain_sequence:
                 sequence of the chain
             chain_type:
                 type of the chain, whether it is a protein, or nuclein acid chain or something different
         """
-        self.chain_letter = chain
+        self.chain_letter = chain_letter
         self.chain_sequence = chain_sequence
         self.chain_type = chain_type
         self.pymol_parameters = {
             "chain_color": "green",
             "chain_representation": "cartoon",
         }
+
+    def serialize(self, an_xml_writer: QtCore.QXmlStreamWriter):
+        an_xml_writer.writeStartElement('chain')
+        an_xml_writer.writeAttribute('chain_letter', str(self.chain_letter))
+        an_xml_writer.writeAttribute('chain_sequence', str(self.chain_sequence.sequence))
+        an_xml_writer.writeAttribute('chain_type', str(self.chain_type))
+        an_xml_writer.writeStartElement('pymol_parameters')
+        an_xml_writer.writeAttribute('chain_color', str(self.pymol_parameters['chain_color']))
+        an_xml_writer.writeAttribute('chain_representation', str(self.pymol_parameters['chain_representation']))
+        an_xml_writer.writeEndElement()
+        an_xml_writer.writeEndElement()

@@ -97,7 +97,7 @@ class PredictMonomerViewController(QtCore.QObject):
             args=(
                 self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText(),
                 self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText(),
-                self._current_project,
+                self._interface_manager.get_current_project(),
                 tmp_proteins_to_predict,
             ),
             post_func=self.__await_mono_pred_analysis_structure_analysis_next_2,
@@ -206,7 +206,17 @@ class PredictMonomerViewController(QtCore.QObject):
         self._view.wait_spinner.stop()
 
     def start_monomer_prediction_analysis(self):
-        pass
+        tmp_prediction_runs: list[
+            prediction_protein_info.PredictionProteinInfo
+        ] = prediction_util.get_prediction_name_and_seq_from_table(
+            self._view.ui.table_pred_analysis_mono_prot_to_predict)
+        self._view.close()
+        self.job_input.emit(
+            ("job_input",
+             tmp_prediction_runs,
+             self.prediction_configuration,
+             True)
+        )
 
     def check_if_prediction_and_analysis_should_be_done(self):
         if self._view.ui.checkbox_add_analysis.isChecked():
@@ -218,103 +228,110 @@ class PredictMonomerViewController(QtCore.QObject):
 
     def switch_monomer_pred_analysis_tab(self) -> None:
         """Switches the tabs from prediction to analysis and vice versa."""
-        if self._view.ui.tabWidget.currentIndex() == 0:
-            # goes from prediction to analysis
-            self._view.ui.tabWidget.setTabEnabled(1, True)
-            self._view.ui.tabWidget.setTabEnabled(0, False)
-            self._view.ui.tabWidget.setCurrentIndex(1)
-            gui_elements_to_show = [
-                self._view.ui.lbl_pred_analysis_mono_overview,
-                self._view.ui.list_pred_analysis_mono_overview,
-                self._view.ui.btn_pred_analysis_mono_add,
-                self._view.ui.btn_pred_analysis_mono_back_pred_setup,
-            ]
-            gui_elements_to_hide = [
-                self._view.ui.btn_pred_analysis_mono_remove,
-                self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
-                self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
-                self._view.ui.lbl_analysis_batch_vs_2,
-                self._view.ui.lbl_pred_analysis_mono_ref_chains,
-                self._view.ui.list_pred_analysis_mono_ref_chains,
-                self._view.ui.btn_pred_analysis_mono_back_4,
-                self._view.ui.btn_pred_analysis_mono_next_3,
-                self._view.ui.box_pred_analysis_mono_prot_struct_1,
-                self._view.ui.box_pred_analysis_mono_prot_struct_2,
-                self._view.ui.btn_pred_analysis_mono_back_3,
-                self._view.ui.btn_pred_analysis_mono_next_2,
-                self._view.ui.lbl_pred_analysis_mono_model_chains,
-                self._view.ui.list_pred_analysis_mono_model_chains,
-                self._view.ui.btn_pred_analysis_mono_back_5,
-                self._view.ui.btn_pred_analysis_mono_next_4,
-                self._view.ui.lbl_pred_analysis_mono_images,
-                self._view.ui.cb_pred_analysis_mono_images,
-                self._view.ui.btn_pred_analysis_mono_start,
-            ]
-            gui_utils.show_gui_elements(gui_elements_to_show)
-            gui_utils.hide_gui_elements(gui_elements_to_hide)
-            if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
-                self._view.ui.btn_pred_analysis_mono_remove.show()
-                self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-                self._view.ui.btn_pred_analysis_mono_start.show()
-                self._view.ui.lbl_pred_analysis_mono_images.show()
-                self._view.ui.cb_pred_analysis_mono_images.show()
-                styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
+        if self._view.ui.btn_pred_analysis_mono_go_analysis_setup.text() == "Predict":
+            tmp_prediction_runs: list[
+                prediction_protein_info.PredictionProteinInfo
+            ] = prediction_util.get_prediction_name_and_seq_from_table(self._view.ui.table_pred_analysis_mono_prot_to_predict)
+            self._view.close()
+            self.job_input.emit(("job_input", tmp_prediction_runs, self.prediction_configuration, False))
         else:
-            # goes from analysis to prediction
-            if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+            if self._view.ui.tabWidget.currentIndex() == 0:
+                # goes from prediction to analysis
+                self._view.ui.tabWidget.setTabEnabled(1, True)
+                self._view.ui.tabWidget.setTabEnabled(0, False)
+                self._view.ui.tabWidget.setCurrentIndex(1)
                 gui_elements_to_show = [
-                    self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.table_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-                    self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+                    self._view.ui.lbl_pred_analysis_mono_overview,
+                    self._view.ui.list_pred_analysis_mono_overview,
+                    self._view.ui.btn_pred_analysis_mono_add,
+                    self._view.ui.btn_pred_analysis_mono_back_pred_setup,
                 ]
                 gui_elements_to_hide = [
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-                    self._view.ui.lbl_pred_analysis_mono_prot_name,
-                    self._view.ui.txt_pred_analysis_mono_prot_name,
-                    self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back,
-                    self._view.ui.btn_pred_analysis_mono_next,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name,
-                    self._view.ui.txt_pred_analysis_mono_seq_name,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back_2,
-                    self._view.ui.btn_pred_analysis_mono_add_protein,
-                    self._view.ui.lbl_pred_mono_advanced_config_2,
-                    self._view.ui.btn_pred_mono_advanced_config_2,
+                    self._view.ui.btn_pred_analysis_mono_remove,
+                    self._view.ui.lbl_pred_analysis_mono_prot_struct_1,
+                    self._view.ui.lbl_pred_analysis_mono_prot_struct_2,
+                    self._view.ui.lbl_analysis_batch_vs_2,
+                    self._view.ui.lbl_pred_analysis_mono_ref_chains,
+                    self._view.ui.list_pred_analysis_mono_ref_chains,
+                    self._view.ui.btn_pred_analysis_mono_back_4,
+                    self._view.ui.btn_pred_analysis_mono_next_3,
+                    self._view.ui.box_pred_analysis_mono_prot_struct_1,
+                    self._view.ui.box_pred_analysis_mono_prot_struct_2,
+                    self._view.ui.btn_pred_analysis_mono_back_3,
+                    self._view.ui.btn_pred_analysis_mono_next_2,
+                    self._view.ui.lbl_pred_analysis_mono_model_chains,
+                    self._view.ui.list_pred_analysis_mono_model_chains,
+                    self._view.ui.btn_pred_analysis_mono_back_5,
+                    self._view.ui.btn_pred_analysis_mono_next_4,
+                    self._view.ui.lbl_pred_analysis_mono_images,
+                    self._view.ui.cb_pred_analysis_mono_images,
+                    self._view.ui.btn_pred_analysis_mono_start,
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
                 gui_utils.hide_gui_elements(gui_elements_to_hide)
+                if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+                    self._view.ui.btn_pred_analysis_mono_remove.show()
+                    self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
+                    self._view.ui.btn_pred_analysis_mono_start.show()
+                    self._view.ui.lbl_pred_analysis_mono_images.show()
+                    self._view.ui.cb_pred_analysis_mono_images.show()
+                    styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
             else:
-                gui_elements_to_show = [
-                    self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.table_pred_analysis_mono_prot_to_predict,
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
-                    self._view.ui.btn_pred_analysis_mono_seq_to_predict,
-                    self._view.ui.lbl_pred_mono_advanced_config_2,
-                    self._view.ui.btn_pred_mono_advanced_config_2,
-                    self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
-                    self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
-                ]
-                gui_elements_to_hide = [
-                    self._view.ui.lbl_pred_analysis_mono_prot_name,
-                    self._view.ui.txt_pred_analysis_mono_prot_name,
-                    self._view.ui.lbl_pred_analysis_mono_prot_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back,
-                    self._view.ui.btn_pred_analysis_mono_next,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name,
-                    self._view.ui.txt_pred_analysis_mono_seq_name,
-                    self._view.ui.lbl_pred_analysis_mono_seq_name_status,
-                    self._view.ui.btn_pred_analysis_mono_back_2,
-                    self._view.ui.btn_pred_analysis_mono_add_protein,
-                ]
-                gui_utils.show_gui_elements(gui_elements_to_show)
-                gui_utils.hide_gui_elements(gui_elements_to_hide)
-                self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
-            self._view.ui.tabWidget.setTabEnabled(0, True)
-            self._view.ui.tabWidget.setTabEnabled(1, False)
-            self._view.ui.tabWidget.setCurrentIndex(0)
+                # goes from analysis to prediction
+                if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
+                    gui_elements_to_show = [
+                        self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+                        self._view.ui.table_pred_analysis_mono_prot_to_predict,
+                        self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+                        self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+                    ]
+                    gui_elements_to_hide = [
+                        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+                        self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+                        self._view.ui.lbl_pred_analysis_mono_prot_name,
+                        self._view.ui.txt_pred_analysis_mono_prot_name,
+                        self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+                        self._view.ui.btn_pred_analysis_mono_back,
+                        self._view.ui.btn_pred_analysis_mono_next,
+                        self._view.ui.lbl_pred_analysis_mono_seq_name,
+                        self._view.ui.txt_pred_analysis_mono_seq_name,
+                        self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+                        self._view.ui.btn_pred_analysis_mono_back_2,
+                        self._view.ui.btn_pred_analysis_mono_add_protein,
+                        self._view.ui.lbl_pred_mono_advanced_config_2,
+                        self._view.ui.btn_pred_mono_advanced_config_2,
+                    ]
+                    gui_utils.show_gui_elements(gui_elements_to_show)
+                    gui_utils.hide_gui_elements(gui_elements_to_hide)
+                else:
+                    gui_elements_to_show = [
+                        self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
+                        self._view.ui.table_pred_analysis_mono_prot_to_predict,
+                        self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove,
+                        self._view.ui.btn_pred_analysis_mono_seq_to_predict,
+                        self._view.ui.lbl_pred_mono_advanced_config_2,
+                        self._view.ui.btn_pred_mono_advanced_config_2,
+                        self._view.ui.btn_pred_analysis_mono_go_analysis_setup,
+                        self._view.ui.lbl_pred_analysis_mono_to_analysis_setup,
+                    ]
+                    gui_elements_to_hide = [
+                        self._view.ui.lbl_pred_analysis_mono_prot_name,
+                        self._view.ui.txt_pred_analysis_mono_prot_name,
+                        self._view.ui.lbl_pred_analysis_mono_prot_name_status,
+                        self._view.ui.btn_pred_analysis_mono_back,
+                        self._view.ui.btn_pred_analysis_mono_next,
+                        self._view.ui.lbl_pred_analysis_mono_seq_name,
+                        self._view.ui.txt_pred_analysis_mono_seq_name,
+                        self._view.ui.lbl_pred_analysis_mono_seq_name_status,
+                        self._view.ui.btn_pred_analysis_mono_back_2,
+                        self._view.ui.btn_pred_analysis_mono_add_protein,
+                    ]
+                    gui_utils.show_gui_elements(gui_elements_to_show)
+                    gui_utils.hide_gui_elements(gui_elements_to_hide)
+                    self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
+                self._view.ui.tabWidget.setTabEnabled(0, True)
+                self._view.ui.tabWidget.setTabEnabled(1, False)
+                self._view.ui.tabWidget.setCurrentIndex(0)
 
     def show_prediction_configuration(self) -> None:
         """Opens the prediction configuration dialog window."""
@@ -1007,7 +1024,7 @@ class PredictMonomerViewController(QtCore.QObject):
         for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
             protein_names.append(
                 self._view.ui.table_pred_analysis_mono_prot_to_predict.verticalHeaderItem(i).text())
-        for tmp_protein in self._current_project.proteins:
+        for tmp_protein in self._interface_manager.get_current_project().proteins:
             protein_names.append(tmp_protein.get_molecule_object())
         protein_names.insert(0, "")
         self._view.ui.box_pred_analysis_mono_prot_struct_1.clear()

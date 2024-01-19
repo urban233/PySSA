@@ -118,6 +118,8 @@ class InterfaceManager:
         self._build_sequences_model()
         self._protein_model.clear()
         self._build_proteins_model()
+        self._protein_pair_model.clear()
+        self._build_protein_pairs_model()
 
     def get_current_project(self) -> "project.Project":
         """Returns the current project."""
@@ -136,6 +138,14 @@ class InterfaceManager:
     def update_settings(self):
         """Deserializes the settings json file."""
         self._application_settings = self._application_settings.deserialize_settings()
+
+    def refresh_protein_model(self):
+        self._protein_model.clear()
+        self._build_proteins_model()
+
+    def refresh_protein_pair_model(self):
+        self._protein_pair_model.clear()
+        self._build_protein_pairs_model()
 
     def _build_workspace_model(self) -> None:
         tmp_workspace = constants.DEFAULT_WORKSPACE_PATH
@@ -160,6 +170,35 @@ class InterfaceManager:
                     tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
                     tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
                     tmp_protein_item.appendRow(tmp_chain_item)
+
+    def _build_protein_pairs_model(self) -> None:
+        if len(self._current_project.protein_pairs) > 0:
+            tmp_root_item = self._protein_pair_model.invisibleRootItem()
+            for tmp_protein_pair in self._current_project.protein_pairs:
+                tmp_protein_pair_item = QtGui.QStandardItem(tmp_protein_pair.name)
+                tmp_protein_pair_item.setData(tmp_protein_pair, enums.ModelEnum.OBJECT_ROLE)
+                tmp_protein_pair_item.setData("protein_pair", enums.ModelEnum.TYPE_ROLE)
+                # Create protein 1 item
+                tmp_protein_item_1 = QtGui.QStandardItem(tmp_protein_pair.protein_1.get_molecule_object())
+                tmp_protein_item_1.setData(tmp_protein_pair.protein_1, enums.ModelEnum.OBJECT_ROLE)
+                tmp_protein_item_1.setData("protein", enums.ModelEnum.TYPE_ROLE)
+                for tmp_chain in tmp_protein_pair.protein_1.chains:
+                    tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+                    tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+                    tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+                    tmp_protein_item_1.appendRow(tmp_chain_item)
+                # Create protein 2 item
+                tmp_protein_item_2 = QtGui.QStandardItem(tmp_protein_pair.protein_2.get_molecule_object())
+                tmp_protein_item_2.setData(tmp_protein_pair.protein_2, enums.ModelEnum.OBJECT_ROLE)
+                tmp_protein_item_2.setData("protein", enums.ModelEnum.TYPE_ROLE)
+                for tmp_chain in tmp_protein_pair.protein_2.chains:
+                    tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+                    tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+                    tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+                    tmp_protein_item_2.appendRow(tmp_chain_item)
+                tmp_protein_pair_item.appendRow(tmp_protein_item_1)
+                tmp_protein_pair_item.appendRow(tmp_protein_item_2)
+                tmp_root_item.appendRow(tmp_protein_pair_item)
 
     def _build_sequences_model(self):
         if len(self._current_project.sequences) > 0:
@@ -210,11 +249,27 @@ class InterfaceManager:
             self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
             self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
 
+        if len(self._current_project.protein_pairs) > 0:
+            self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
+            self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+
         if len(self._current_project.sequences) > 0:
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
 
     def show_chain_pymol_parameters(self, a_chain_item: QtGui.QStandardItem):
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
+        # tmp_model = QtGui.QStandardItemModel()
+        # tmp_model.setHorizontalHeaderLabels(["Column 1", "Column 2"])
+        # self._main_view.ui.proteins_table_view.setModel(tmp_model)
+        # i = 0
+        # for tmp_key in tmp_chain.pymol_parameters.keys():
+        #     tmp_value_item = QtGui.QStandardItem(tmp_chain.pymol_parameters[tmp_key])
+        #     tmp_key_item = QtGui.QStandardItem(str(tmp_key).replace("_", " "))
+        #     tmp_key_item.setFlags(tmp_key_item.flags() & ~Qt.ItemIsEditable)
+        #     tmp_model.setItem(i, 0, tmp_key_item)
+        #     tmp_model.setItem(i, 1, tmp_value_item)
+        #     i += 1
+        t0 = tmp_chain.pymol_parameters["chain_color"]
         self._main_view.setup_proteins_table(len(tmp_chain.pymol_parameters))
         i = 0
         for tmp_key in tmp_chain.pymol_parameters.keys():
@@ -224,6 +279,9 @@ class InterfaceManager:
             self._main_view.ui.proteins_table_widget.setItem(i, 0, tmp_key_item)
             self._main_view.ui.proteins_table_widget.setItem(i, 1, tmp_value_item)
             i += 1
+
+        t0 = tmp_chain.pymol_parameters["chain_color"]
+        t1 = self._main_view.cb_chain_color.findText(tmp_chain.pymol_parameters["chain_color"])
         self._main_view.cb_chain_color.setCurrentIndex(
             self._main_view.cb_chain_color.findText(tmp_chain.pymol_parameters["chain_color"])
         )
@@ -231,6 +289,26 @@ class InterfaceManager:
             self._main_view.cb_chain_representation.findText(tmp_chain.pymol_parameters["chain_representation"])
         )
         self._main_view.ui.proteins_table_widget.resizeColumnsToContents()
+
+    def show_chain_pymol_parameter_for_protein_pairs(self, a_chain_item):
+        tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
+        self._main_view.setup_protein_pairs_table(len(tmp_chain.pymol_parameters))
+        i = 0
+        for tmp_key in tmp_chain.pymol_parameters.keys():
+            tmp_value_item = QtWidgets.QTableWidgetItem(tmp_chain.pymol_parameters[tmp_key])
+            tmp_key_item = QtWidgets.QTableWidgetItem(str(tmp_key).replace("_", " "))
+            tmp_key_item.setFlags(tmp_key_item.flags() & ~Qt.ItemIsEditable)
+            self._main_view.ui.protein_pairs_table_widget.setItem(i, 0, tmp_key_item)
+            self._main_view.ui.protein_pairs_table_widget.setItem(i, 1, tmp_value_item)
+            i += 1
+        self._main_view.cb_chain_color_protein_pair.setCurrentIndex(
+            self._main_view.cb_chain_color_protein_pair.findText(tmp_chain.pymol_parameters["chain_color"])
+        )
+        self._main_view.cb_chain_representation_protein_pair.setCurrentIndex(
+            self._main_view.cb_chain_representation_protein_pair.findText(tmp_chain.pymol_parameters["chain_representation"])
+        )
+        self._main_view.ui.protein_pairs_table_widget.resizeColumnsToContents()
+
 
     def update_status_bar(self, message: str) -> None:
         """Sets a custom message into the status bar."""

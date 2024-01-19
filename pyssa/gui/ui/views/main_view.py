@@ -82,6 +82,11 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.actionCreate_drawn.setEnabled(False)
         self.ui.actionPlaceholder.setEnabled(False)
 
+        # Extra UI elements
+        self.cb_chain_color = QtWidgets.QComboBox()
+        self.cb_chain_representation = QtWidgets.QComboBox()
+        self.build_proteins_table()
+
         self.setMinimumWidth(700)
         self.setMinimumHeight(700)
 
@@ -97,20 +102,35 @@ class MainView(QtWidgets.QMainWindow):
         # constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
         # constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
+    def build_proteins_table(self):
+        self.ui.proteins_table_widget.verticalHeader().setVisible(False)
+        self.ui.proteins_table_widget.setColumnCount(2)
+        self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+        gui_utils.fill_combo_box(self.cb_chain_color, constants.PYMOL_COLORS)
+        self.cb_chain_color.adjustSize()
+        gui_utils.fill_combo_box(self.cb_chain_representation, constants.PYMOL_REPRESENTATIONS)
+        self.cb_chain_representation.adjustSize()
+
     def setup_proteins_table(self, row_count):
         self.ui.proteins_table_widget.setRowCount(row_count)
-        self.ui.proteins_table_widget.setColumnCount(2)
-        self.ui.proteins_table_widget.verticalHeader().setVisible(False)
-        self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
-        self.cb_chain_color = QtWidgets.QComboBox()
-        gui_utils.fill_combo_box(self.cb_chain_color, ["red", "green", "yellow"])
         self.ui.proteins_table_widget.setCellWidget(0, 1, self.cb_chain_color)
-        self.cb_chain_color.adjustSize()
-
-        self.cb_chain_representation = QtWidgets.QComboBox()
-        gui_utils.fill_combo_box(self.cb_chain_representation, ["ribbon", "cartoon", "sticks"])
         self.ui.proteins_table_widget.setCellWidget(1, 1, self.cb_chain_representation)
-        self.cb_chain_representation.adjustSize()
+
+    def setup_protein_pairs_table(self, row_count):
+        self.ui.protein_pairs_table_widget.setRowCount(row_count)
+        self.ui.protein_pairs_table_widget.setColumnCount(2)
+        self.ui.protein_pairs_table_widget.verticalHeader().setVisible(False)
+        self.ui.protein_pairs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+        self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
+        gui_utils.fill_combo_box(self.cb_chain_color_protein_pair, ["red", "green", "yellow"])
+        self.ui.protein_pairs_table_widget.setCellWidget(0, 1, self.cb_chain_color_protein_pair)
+        self.cb_chain_color_protein_pair.adjustSize()
+
+        self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
+        gui_utils.fill_combo_box(self.cb_chain_representation_protein_pair, ["ribbon", "cartoon", "sticks"])
+        self.ui.protein_pairs_table_widget.setCellWidget(1, 1, self.cb_chain_representation_protein_pair)
+        self.cb_chain_representation_protein_pair.adjustSize()
+
 
     #
     # def _create_all_tooltips(self) -> None:

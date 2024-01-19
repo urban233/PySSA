@@ -28,7 +28,7 @@ from datetime import datetime
 from xml.etree import ElementTree
 from xml.dom import minidom
 from typing import TYPE_CHECKING
-
+from PyQt5 import QtCore
 import numpy as np
 from Bio import SeqRecord
 
@@ -87,6 +87,10 @@ class Project:
     a list of all sequence objects of the project
     """
     sequences: list[SeqRecord.SeqRecord]
+    """
+    the xml writer to create the project.xml file
+    """
+    xml_writer: QtCore.QXmlStreamWriter
     # </editor-fold>
 
     def __init__(self, a_project_name: str = "", a_workspace_path: pathlib.Path = pathlib.Path("")) -> None:
@@ -111,6 +115,8 @@ class Project:
         self.proteins: list["protein.Protein"] = []
         self.protein_pairs: list["protein_pair.ProteinPair"] = []
         self.sequences: list[SeqRecord.SeqRecord] = []
+        self.xml_writer: QtCore.QXmlStreamWriter = QtCore.QXmlStreamWriter()
+        self.xml_writer.setAutoFormatting(True)
 
     def set_workspace_path(self, a_workspace_path: pathlib.Path) -> None:
         """Setter for the workspace path.
@@ -203,32 +209,70 @@ class Project:
 
         # </editor-fold>
 
-        project_root = ElementTree.Element(element_names.PROJECT)
-        # setup project information tree
-        project_info = ElementTree.SubElement(project_root, element_names.PROJECT_INFO)
-        project_info.set(attribute_names.PROJECT_NAME, self._project_name)
-        project_info.set(attribute_names.PROJECT_WORKSPACE_PATH, str(self._workspace))
-        project_info.set(attribute_names.PROJECT_CREATION_DATE, self._date)
-        project_info.set(attribute_names.PROJECT_OS, self._operating_system)
+        file = QtCore.QFile(str(a_filepath))
+        if not file.open(QtCore.QFile.WriteOnly | QtCore.QFile.Text):
+            print("Error: Cannot open file for writing")
+            return
+        self.xml_writer.setDevice(file)
+        self.xml_writer.writeStartDocument()
+        # Project itself
+        self.xml_writer.writeStartElement("project")
+        self.xml_writer.writeStartElement("project_info")
+        self.xml_writer.writeAttribute("name", self._project_name)
+        self.xml_writer.writeAttribute("workspace_path", str(self._workspace))
+        self.xml_writer.writeAttribute("os", self._operating_system)
+        self.xml_writer.writeEndElement()
+        # Sequences
+        if len(self.sequences) > 0:
+            self.xml_writer.writeStartElement("sequences")
+            for tmp_seq in self.sequences:
+                self.xml_writer.writeStartElement("sequence")
+                self.xml_writer.writeAttribute("name", tmp_seq.name)
+                self.xml_writer.writeAttribute("seq", tmp_seq.seq)
+                self.xml_writer.writeEndElement()
+            self.xml_writer.writeEndElement()
+        # Proteins
+        if len(self.proteins) > 0:
+            self.xml_writer.writeStartElement("proteins")
+            for tmp_protein in self.proteins:
+                tmp_protein.write_protein_to_xml_structure(self.xml_writer)
+            self.xml_writer.writeEndElement()
+        # Protein pairs
+        if len(self.protein_pairs) > 0:
+            self.xml_writer.writeStartElement("protein_pairs")
+            for tmp_protein_pair in self.protein_pairs:
+                tmp_protein_pair.serialize(self.xml_writer)
+            self.xml_writer.writeEndElement()
+        self.xml_writer.writeEndElement()
+        self.xml_writer.writeEndDocument()
+        file.close()
 
-        xml_proteins_element = ElementTree.SubElement(project_root, element_names.PROTEINS)
-        for tmp_protein in self.proteins:
-            tmp_protein.serialize_protein(xml_proteins_element)
-        xml_protein_pairs_element = ElementTree.SubElement(project_root, element_names.PROTEIN_PAIRS)
-        for tmp_protein_pair in self.protein_pairs:
-            tmp_protein_pair.serialize_protein_pair(xml_protein_pairs_element)
-        xml_sequences_element = ElementTree.SubElement(project_root, element_names.SEQUENCES)
-        for tmp_sequence in self.sequences:
-            tmp_sequence_xml = ElementTree.SubElement(xml_sequences_element, element_names.SEQUENCE)
-            tmp_sequence_xml.set(attribute_names.SEQUENCE_NAME, str(tmp_sequence.name))
-            tmp_sequence_xml.set(
-                attribute_names.SEQUENCE_SEQ,
-                str(tmp_sequence.seq),
-            )
-
-        xml_string = minidom.parseString(ElementTree.tostring(project_root)).toprettyxml(indent="   ")
-        with open(a_filepath, "w", encoding="utf-8") as tmp_file:
-            tmp_file.write(xml_string)
+        # project_root = ElementTree.Element(element_names.PROJECT)
+        # # setup project information tree
+        # project_info = ElementTree.SubElement(project_root, element_names.PROJECT_INFO)
+        # project_info.set(attribute_names.PROJECT_NAME, self._project_name)
+        # project_info.set(attribute_names.PROJECT_WORKSPACE_PATH, str(self._workspace))
+        # project_info.set(attribute_names.PROJECT_CREATION_DATE, self._date)
+        # project_info.set(attribute_names.PROJECT_OS, self._operating_system)
+        #
+        # xml_proteins_element = ElementTree.SubElement(project_root, element_names.PROTEINS)
+        # for tmp_protein in self.proteins:
+        #     tmp_protein.serialize_protein(xml_proteins_element)
+        # xml_protein_pairs_element = ElementTree.SubElement(project_root, element_names.PROTEIN_PAIRS)
+        # for tmp_protein_pair in self.protein_pairs:
+        #     tmp_protein_pair.serialize_protein_pair(xml_protein_pairs_element)
+        # xml_sequences_element = ElementTree.SubElement(project_root, element_names.SEQUENCES)
+        # for tmp_sequence in self.sequences:
+        #     tmp_sequence_xml = ElementTree.SubElement(xml_sequences_element, element_names.SEQUENCE)
+        #     tmp_sequence_xml.set(attribute_names.SEQUENCE_NAME, str(tmp_sequence.name))
+        #     tmp_sequence_xml.set(
+        #         attribute_names.SEQUENCE_SEQ,
+        #         str(tmp_sequence.seq),
+        #     )
+        #
+        # xml_string = minidom.parseString(ElementTree.tostring(project_root)).toprettyxml(indent="   ")
+        # with open(a_filepath, "w", encoding="utf-8") as tmp_file:
+        #     tmp_file.write(xml_string)
 
     @staticmethod
     def deserialize_project(a_filepath: pathlib.Path, app_settings: "settings.Settings") -> "Project":
@@ -251,7 +295,7 @@ class Project:
 
         # </editor-fold>
 
-        return filesystem_io.XmlDeserializer(a_filepath).deserialize_project(app_settings)
+        return filesystem_io.XmlDeserializer.deserialize_project(a_filepath, app_settings)
 
     def search_protein(self, a_protein_name: str) -> "protein.Protein":
         """Searches the project for a specific protein name.

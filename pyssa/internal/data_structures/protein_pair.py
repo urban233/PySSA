@@ -20,11 +20,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the protein pair class."""
+import copy
 import os
 import pathlib
 import logging
 import pymol
-
+from PyQt5 import QtCore
 from xml.etree import ElementTree
 from typing import TYPE_CHECKING, Union
 
@@ -97,8 +98,8 @@ class ProteinPair:
             logger.error(f"The argument 'protein_2' is illegal: {protein_2}!")
             raise exception.IllegalArgumentError("An argument is illegal.")
 
-        self.protein_1: protein.Protein = protein_1
-        self.protein_2: protein.Protein = protein_2
+        self.protein_1: protein.Protein = copy.deepcopy(protein_1)
+        self.protein_2: protein.Protein = copy.deepcopy(protein_2)
         self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
         self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self.name)
 
@@ -170,6 +171,22 @@ class ProteinPair:
             logger.error(f"The argument 'a_value' is illegal: {a_value}!")
             raise exception.IllegalArgumentError("")
         self.distance_analysis = a_value
+
+    def serialize(self, an_xml_writer: QtCore.QXmlStreamWriter):
+        an_xml_writer.writeStartElement("protein_pair")
+        an_xml_writer.writeAttribute("name", self.name)
+        # Proteins
+        an_xml_writer.writeStartElement("proteins_of_pair")
+        self.protein_1.write_protein_to_xml_structure(an_xml_writer)
+        self.protein_2.write_protein_to_xml_structure(an_xml_writer)
+        an_xml_writer.writeEndElement()
+        # Session data
+        an_xml_writer.writeStartElement("session_data")
+        an_xml_writer.writeAttribute("session", self.pymol_session)
+        an_xml_writer.writeEndElement()
+        self.distance_analysis.serialize_to_xml_structure(an_xml_writer)
+        an_xml_writer.writeEndElement()
+        an_xml_writer.writeEndElement()
 
     def serialize_protein_pair(self, xml_protein_pairs_element: ElementTree.Element) -> None:
         """This function serialize the protein pair object."""
