@@ -138,29 +138,31 @@ class MainViewController:
 
     def _open_project(self) -> None:
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
-        self._external_controller.return_value.connect(self._post_open_project)
+        # fixme: not using def _post_open_project() and def __await_open_project()
+        # self._external_controller.return_value.connect(self._post_open_project)
         self._interface_manager.get_open_view().show()
 
-    def _post_open_project(self, return_value: str):
-        self._interface_manager.start_wait_spinner()
-        tmp_filepath = pathlib.Path(f"{return_value}.xml")
-        self._active_task = tasks.Task(
-            target=main_presenter_async.open_project,
-            args=(
-                self._workspace_path,
-                tmp_filepath,
-                self._interface_manager.get_application_settings(),
-            ),
-            post_func=self.__await_open_project,
-        )
-        self._active_task.start()
-        self._interface_manager.update_status_bar("Opening existing project ...")
-
-    def __await_open_project(self, a_result: tuple) -> None:
-        self._interface_manager.set_new_project(a_result[1])
-        self._interface_manager.update_status_bar(self._workspace_status)
-        self._interface_manager.refresh_main_view()
-        self._interface_manager.stop_wait_spinner()
+    # fixme: not using
+    # def _post_open_project(self, return_value: str):
+    #     self._interface_manager.start_wait_spinner()
+    #     tmp_filepath = pathlib.Path(f"{return_value}.xml")
+    #     self._active_task = tasks.Task(
+    #         target=main_presenter_async.open_project,
+    #         args=(
+    #             self._workspace_path,
+    #             tmp_filepath,
+    #             self._interface_manager.get_application_settings(),
+    #         ),
+    #         post_func=self.__await_open_project,
+    #     )
+    #     self._active_task.start()
+    #     self._interface_manager.update_status_bar("Opening existing project ...")
+    #
+    # def __await_open_project(self, a_result: tuple) -> None:
+    #     self._interface_manager.set_new_project(a_result[1])
+    #     self._interface_manager.update_status_bar(self._workspace_status)
+    #     self._interface_manager.refresh_main_view()
+    #     self._interface_manager.stop_wait_spinner()
 
     def _delete_project(self) -> None:
         self._external_controller = delete_project_view_controller.DeleteProjectViewController(self._interface_manager)

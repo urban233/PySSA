@@ -63,7 +63,7 @@ class DeleteProjectViewController(QtCore.QObject):
         # if self._view.ui.list_delete_projects_view.currentIndex().isValid():
         #     self._view.ui.list_delete_projects_view.model().itemFromIndex(self._view.ui.list_delete_projects_view.currentIndex()).setSelected(False)
         # set color for lineEdit
-        input_validator.InputValidator.validate_search_input(
+        input_validator.InputValidator.validate_project_name(
             self._view.ui.list_delete_projects_view.model(),
             self._view.ui.txt_delete_search,
             self._view.ui.lbl_delete_status_search,

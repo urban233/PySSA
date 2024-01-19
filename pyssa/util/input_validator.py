@@ -36,76 +36,151 @@ class InputValidator:
 
     @staticmethod
     def validate_project_name(
-        list_of_projects: QtWidgets.QListWidget,
-        txt_for_project_name: QtWidgets.QTextEdit,
+        list_of_projects: QtCore.QStringListModel,
+        txt_for_project_name: QtWidgets.QLineEdit,
         lbl_for_status_project_name: QtWidgets.QLabel,
         btn_for_next_step: QtWidgets.QPushButton,
-        cb_for_add_reference: QtWidgets.QCheckBox = None,
+        cb_for_add_reference: QtWidgets.QCheckBox = None
+    #     list_model = list_of_projects
+    #     txt_for_project_name = txt_for_project_name
+    #     lbl_for_status_project_name = lbl_for_status_project_name
+    #     btn_for_selected_project = btn_for_next_step
+    #     cb_for_selected_project = cb_for_add_reference
+    #
+    #     if list_model is not None:
+    #         list_of_projects.currentItem().setSelected(False)
+    #     # set color for lineEdit
+    #     txt_for_project_name.setStyleSheet("color: #f44336")
+    #     if len(txt_for_project_name.text()) == 0:
+    #         lbl_for_status_project_name.hide()
+    #         if cb_for_selected_project is not None:
+    #             cb_for_selected_project.setCheckable(False)
+    #             cb_for_selected_project.setStyleSheet("color: #E1E1E1;")
+    #         btn_for_next_step.setEnabled(False)
+    #         styles.color_button_not_ready(btn_for_next_step)
+    #     elif len(txt_for_project_name.text()) > 20:
+    #         lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
+    #         btn_for_next_step.setEnabled(False)
+    #         styles.color_button_not_ready(btn_for_next_step)
+    #         return
+    #     else:
+    #         regex = Qt.QtCore.QRegularExpression()
+    #         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
+    #         validator = QtGui.QRegularExpressionValidator(regex)
+    #         for i in range(len(txt_for_project_name.text())):
+    #             result = validator.validate(txt_for_project_name.text(), i)
+    #             if result[0] > 0:
+    #                 txt_for_project_name.setStyleSheet("color: #000000")
+    #                 lbl_for_status_project_name.setText("")
+    #                 if cb_for_add_reference is not None:
+    #                     cb_for_add_reference.setCheckable(True)
+    #                     cb_for_add_reference.setStyleSheet("color: black;")
+    #                 btn_for_next_step.setEnabled(True)
+    #                 styles.color_button_ready(btn_for_next_step)
+    #             else:
+    #                 txt_for_project_name.setStyleSheet("color: #f44336")
+    #                 lbl_for_status_project_name.setText("Invalid character.")
+    #                 if cb_for_add_reference is not None:
+    #                     cb_for_add_reference.setCheckable(False)
+    #                     cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
+    #                 btn_for_next_step.setEnabled(False)
+    #                 styles.color_button_not_ready(btn_for_next_step)
+    #                 return
+    #         item = list_model.findItems(
+    #             txt_for_project_name.text(),
+    #             Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly,
+    #         )
+    #         if len(item) != 0:
+    #             list_model.setCurrentItem(item[0])
+    #             txt_for_project_name.setStyleSheet("color: #f44336")
+    #             lbl_for_status_project_name.setText("Project name already exists.")
+    #             if cb_for_add_reference is not None:
+    #                 cb_for_add_reference.setCheckable(False)
+    #                 cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
+    #             btn_for_next_step.setEnabled(False)
+    #             styles.color_button_not_ready(btn_for_next_step)
     ) -> None:
         """This function validates the input of the project name in real-time.
 
-        Args:
-            list_of_projects:
-                list widget which holds all projects from the workspace
-            txt_for_project_name:
-                line edit widget which is used to enter the project name
-            lbl_for_status_project_name:
-                label which is used to give feedback if the input is legal or not
-            btn_for_next_step:
-                push button which is used to execute either the next step or to create a project
-            cb_for_add_reference (optional):
-                checkbox widget which is used to add a reference
-        """
-        if list_of_projects.currentItem() is not None:
-            list_of_projects.currentItem().setSelected(False)
-        # set color for lineEdit
+                Args:
+                    list_of_projects:
+                        list widget which holds all projects from the workspace
+                    txt_for_project_name:
+                        line edit widget which is used to enter the project name
+                    lbl_for_status_project_name:
+                        label which is used to give feedback if the input is legal or not
+                    btn_for_next_step:
+                        push button which is used to execute either the next step or to create a project
+                    cb_for_add_reference (optional):
+                        checkbox widget which is used to add a reference
+                """
+        #if list_of_projects is not None and list_of_projects.currentIndex().isValid():
+         #    list_of_projects.clearSelection()
+
+        # Set color for lineEdit
         txt_for_project_name.setStyleSheet("color: #f44336")
+        lbl_for_status_project_name.setStyleSheet("color: #f44336")
+
         if len(txt_for_project_name.text()) == 0:
             lbl_for_status_project_name.setText("")
+
             if cb_for_add_reference is not None:
                 cb_for_add_reference.setCheckable(False)
                 cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
+
             btn_for_next_step.setEnabled(False)
             styles.color_button_not_ready(btn_for_next_step)
+
         elif len(txt_for_project_name.text()) > 20:
             lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
             btn_for_next_step.setEnabled(False)
             styles.color_button_not_ready(btn_for_next_step)
-            return
+
         else:
-            regex = Qt.QtCore.QRegularExpression()
+            regex = QtCore.QRegularExpression()
             regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
             validator = QtGui.QRegularExpressionValidator(regex)
             for i in range(len(txt_for_project_name.text())):
                 result = validator.validate(txt_for_project_name.text(), i)
+
                 if result[0] > 0:
                     txt_for_project_name.setStyleSheet("color: #000000")
                     lbl_for_status_project_name.setText("")
+
                     if cb_for_add_reference is not None:
                         cb_for_add_reference.setCheckable(True)
                         cb_for_add_reference.setStyleSheet("color: black;")
+
                     btn_for_next_step.setEnabled(True)
                     styles.color_button_ready(btn_for_next_step)
+
                 else:
                     txt_for_project_name.setStyleSheet("color: #f44336")
                     lbl_for_status_project_name.setText("Invalid character.")
+
                     if cb_for_add_reference is not None:
                         cb_for_add_reference.setCheckable(False)
                         cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
+
                     btn_for_next_step.setEnabled(False)
                     styles.color_button_not_ready(btn_for_next_step)
                     return
-            item = list_of_projects.findItems(
-                txt_for_project_name.text(),
-                Qt.QtCore.Qt.MatchContains | Qt.QtCore.Qt.MatchExactly,
+
+            item = list_of_projects.match(
+                list_of_projects.index(0, 0),
+                Qt.MatchExactly,
+                txt_for_project_name.text()
             )
+
             if len(item) != 0:
-                list_of_projects.setCurrentItem(item[0])
+                list_of_projects.index(0, 0)
                 txt_for_project_name.setStyleSheet("color: #f44336")
                 lbl_for_status_project_name.setText("Project name already exists.")
+
                 if cb_for_add_reference is not None:
                     cb_for_add_reference.setCheckable(False)
                     cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
+
                 btn_for_next_step.setEnabled(False)
                 styles.color_button_not_ready(btn_for_next_step)
 
@@ -153,6 +228,9 @@ class InputValidator:
                 lbl_for_status_search.setText("")
                 if txt_for_selected_project is not None:
                     txt_for_selected_project.setText(matching_items[0])
+                    # fixme: configure color settings for selected project in list_model
+                    # list_model.setData(txt_for_search.setStyleSheet("background-color: blue"))
+
             else:
                 txt_for_search.setStyleSheet("background-color: white; color: #f44336")
                 if status_message is None:

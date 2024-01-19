@@ -3,20 +3,21 @@ import os
 import pathlib
 import sys
 
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.gui.ui.dialogs import dialog_startup
-from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view
 from pyssa.internal.data_structures import project, settings, chain
-from pyssa.util import enums, gui_utils, constants, exception, main_window_util
+from pyssa.util import enums, constants, exception, main_window_util
 
 
 class InterfaceManager:
     """A manager for all views."""
+    string_model = QtCore.QStringListModel()
+
     _main_view: "main_view.MainView"
     _predict_monomer_view: "predict_monomer_view.PredictMonomerView"
     _distance_analysis_view: "distance_analysis_view.DistanceAnalysisView"
@@ -146,9 +147,20 @@ class InterfaceManager:
         self._workspace_model.clear()
         self._build_workspace_model()
 
+    # fixme: Does not work
     def get_workspace_model(self) -> QtGui.QStandardItemModel:
         """Returns the current workspace model"""
         return self._workspace_model
+
+    # TODO: Fix it and use it to get the code smaller
+    def get_workspace_projects(self):
+        """Returns the workspace projects."""
+        xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
+        self.string_model.setStringList(
+            # Filters the workspace for all project files based on the xml extension
+            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
+        )
+        # fixme: without setModel(self.string_model), so it MUST stand in every module.
 
     def update_settings(self):
         """Deserializes the settings json file."""

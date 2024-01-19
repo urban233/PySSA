@@ -44,12 +44,12 @@ class OpenProjectViewController(QtCore.QObject):
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
-        # self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_model())
         xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
         self.string_model.setStringList(
             # Filters the workspace for all project files based on the xml extension
             [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
         )
+        # self._interface_manager.get_workspace_projects()
         self._view.ui.projects_list_view.setModel(self.string_model)
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
@@ -57,7 +57,6 @@ class OpenProjectViewController(QtCore.QObject):
         self._view.ui.projects_list_view.clicked.connect(self._select_project_from_open_list)
         self._view.ui.txt_open_selected_project.textChanged.connect(self._activate_open_button)
         self._view.ui.btn_open_project.clicked.connect(self._open_selected_project)
-        self._view.ui.btn_cancel.clicked.connect(self._close)
 
     def _validate_open_search(self) -> None:
         """Validates the input of the project name in real-time."""
@@ -96,6 +95,3 @@ class OpenProjectViewController(QtCore.QObject):
     def _open_selected_project(self):
         self._view.close()
         self.return_value.emit(self._view.ui.txt_open_selected_project.text())
-
-    def _close(self):
-        self._view.close()

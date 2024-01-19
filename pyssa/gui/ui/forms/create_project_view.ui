@@ -57,38 +57,19 @@
       </widget>
      </item>
      <item>
-      <widget class="QListWidget" name="list_new_projects">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+      <widget class="QListView" name="list_create_projects_view"/>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="cb_new_add_reference">
+       <property name="text">
+        <string>Import existing protein</string>
        </property>
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>16777215</height>
-        </size>
+       <property name="checkable">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
     </layout>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="cb_new_add_reference">
-     <property name="text">
-      <string>Add existing protein</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
-    </widget>
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_36">
@@ -98,7 +79,7 @@
      <item>
       <widget class="QLabel" name="lbl_new_choose_reference">
        <property name="text">
-        <string>Choose an existing .pdb file or enter a PDB ID</string>
+        <string>Import an existing .pdb file or enter a PDB ID</string>
        </property>
       </widget>
      </item>
@@ -150,13 +131,6 @@
        </property>
        <property name="text">
         <string>Create</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btn_cancel">
-       <property name="text">
-        <string>Cancel</string>
        </property>
       </widget>
      </item>
