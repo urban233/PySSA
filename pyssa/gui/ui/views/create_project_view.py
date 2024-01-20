@@ -19,33 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the About Dialog."""
-import os
-import glob
-
+"""Module for the Delete Dialog."""
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
 from pyssa.gui.ui.forms.auto_generated import auto_create_project_view
-from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, input_validator
+from pyssa.util import constants
 
 
 class CreateProjectView(QtWidgets.QDialog):
-    """Class representing an About dialog."""
+    """Class representing a Create dialog."""
 
-    string_model = QtCore.QStringListModel()
-    return_value = QtCore.pyqtSignal(str)
-
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
+    def __init__(self) -> None:
         """Constructor.
-
-        Args:
-            parent: The parent.
         """
-        QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self)
         # build ui object
         self.ui = auto_create_project_view.Ui_Dialog()
         self.ui.setupUi(self)
@@ -56,6 +45,3 @@ class CreateProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Create project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
-    def _close(self):
-        self.close()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '.\open_project_view.ui'
+# Form implementation generated from reading ui file '.\pyssa\gui\ui\forms\open_project_view.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.10
 #
@@ -57,9 +57,6 @@ class Ui_Dialog(object):
         self.btn_open_project = QtWidgets.QPushButton(Dialog)
         self.btn_open_project.setObjectName("btn_open_project")
         self.horizontalLayout.addWidget(self.btn_open_project)
-        self.btn_cancel = QtWidgets.QPushButton(Dialog)
-        self.btn_cancel.setObjectName("btn_cancel")
-        self.horizontalLayout.addWidget(self.btn_cancel)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.retranslateUi(Dialog)
@@ -73,4 +70,3 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "Existing projects"))
         self.label_30.setText(_translate("Dialog", "Selected project"))
         self.btn_open_project.setText(_translate("Dialog", "Open"))
-        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

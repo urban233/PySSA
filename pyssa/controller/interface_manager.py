@@ -3,22 +3,29 @@ import os
 import pathlib
 import sys
 
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.gui.ui.dialogs import dialog_startup
+from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
+    create_project_view, open_project_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view
 from pyssa.internal.data_structures import project, settings, chain
-from pyssa.util import enums, gui_utils, constants, exception, main_window_util
+from pyssa.util import enums, constants, exception, main_window_util
 
 
 class InterfaceManager:
     """A manager for all views."""
+    string_model = QtCore.QStringListModel()
+
     _main_view: "main_view.MainView"
     _predict_monomer_view: "predict_monomer_view.PredictMonomerView"
     _distance_analysis_view: "distance_analysis_view.DistanceAnalysisView"
+    _create_project_view: "create_project_view.CreateProjectView"
+    _open_project_view: "open_project_view.OpenProjectView"
+    _delete_project_view: "delete_project_view.DeleteProjectView"
     _results_view: "results_view.ResultsView"
 
     _current_workspace: pathlib.Path
@@ -35,6 +42,9 @@ class InterfaceManager:
         self._main_view = main_view.MainView()
         self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
         self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView()
+        self._create_project_view = create_project_view.CreateProjectView()
+        self._open_project_view = open_project_view.OpenProjectView()
+        self._delete_project_view = delete_project_view.DeleteProjectView()
         self._results_view = results_view.ResultsView()
 
         # <editor-fold desc="Setup App Settings">
@@ -100,11 +110,21 @@ class InterfaceManager:
         self._sequence_model = QtGui.QStandardItemModel()
         self._protein_model = QtGui.QStandardItemModel()
         self._protein_pair_model = QtGui.QStandardItemModel()
+        self._build_workspace_model()
 
     def get_main_view(self) -> "main_view.MainView":
         return self._main_view
 
-    def get_predict_monomer_view(self) -> "predict_monomer_view":
+    def get_create_view(self) -> "create_project_view.CreateProjectView":
+        return self._create_project_view
+
+    def get_open_view(self) -> "open_project_view.OpenProjectView":
+        return self._open_project_view
+
+    def get_delete_view(self) -> "delete_project_view.DeleteProjectView":
+        return self._delete_project_view
+
+    def get_predict_monomer_view(self) -> "predict_monomer_view.PredictMonomerView":
         return self._predict_monomer_view
 
     def get_distance_analysis_view(self) -> "distance_analysis_view.DistanceAnalysisView":
@@ -136,9 +156,20 @@ class InterfaceManager:
         self._workspace_model.clear()
         self._build_workspace_model()
 
+    # fixme: Does not work
     def get_workspace_model(self) -> QtGui.QStandardItemModel:
         """Returns the current workspace model"""
         return self._workspace_model
+
+    # TODO: Fix it and use it to get the code smaller
+    def get_workspace_projects(self):
+        """Returns the workspace projects."""
+        xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
+        self.string_model.setStringList(
+            # Filters the workspace for all project files based on the xml extension
+            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
+        )
+        # fixme: without setModel(self.string_model), so it MUST stand in every module.
 
     def update_settings(self):
         """Deserializes the settings json file."""
@@ -153,7 +184,7 @@ class InterfaceManager:
         self._build_protein_pairs_model()
 
     def _build_workspace_model(self) -> None:
-        tmp_workspace = constants.DEFAULT_WORKSPACE_PATH
+        tmp_workspace = self._current_workspace
         xml_pattern = os.path.join(tmp_workspace, '*.xml')
         tmp_root_item = self._workspace_model.invisibleRootItem()
         for tmp_filename in [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]:
