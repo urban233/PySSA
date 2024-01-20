@@ -61,7 +61,7 @@ class PlotWidget(QWidget):
 
 
 class PlotView(QtWidgets.QDialog):
-    def __init__(self, protein_pair_from_project: "protein_pair.ProteinPair", a_project, a_results_name,
+    def __init__(self, protein_pair_from_project: "protein_pair.ProteinPair", a_project, the_protein_pair,
                  parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
@@ -73,7 +73,7 @@ class PlotView(QtWidgets.QDialog):
         # build gui
         self.scroll_area = QScrollArea()
         self.plot_widget = PlotWidget()
-
+        self._protein_pair = the_protein_pair
         # Create a menu bar
         self.menubar = QtWidgets.QMenuBar(self)
 
@@ -115,7 +115,6 @@ class PlotView(QtWidgets.QDialog):
         # self.ax = self.plot_widget.figure.add_subplot(111)
         self._ax_plot, self._ax_hist = self.plot_widget.figure.subplots(2)
         self._current_project = a_project
-        self.results_name = a_results_name
         self.scroll_area_layout = QtWidgets.QHBoxLayout()
         self.scroll_area_layout.addWidget(self.plot_widget)
         self.table_view = QtWidgets.QTableView()
@@ -157,15 +156,11 @@ class PlotView(QtWidgets.QDialog):
         csv_model.setHorizontalHeaderLabels(labels)
         self.table_view.setModel(csv_model)
 
-        tmp_protein_pair = self._current_project.search_protein_pair(
-            self.results_name,
-        )
-        csv_filepath = pathlib.Path(f"{constants.CACHE_CSV_DIR}/{tmp_protein_pair.name}.csv")
+        csv_filepath = pathlib.Path(f"{constants.CACHE_CSV_DIR}/{self._protein_pair.name}.csv")
         if not os.path.exists(constants.CACHE_CSV_DIR):
             os.mkdir(constants.CACHE_CSV_DIR)
-        tmp_protein_pair = self._current_project.search_protein_pair(self.results_name)
 
-        distance_data = tmp_protein_pair.distance_analysis.analysis_results.distance_data
+        distance_data = self._protein_pair.distance_analysis.analysis_results.distance_data
         distance_data_array = np.array(
             [
                 distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX],

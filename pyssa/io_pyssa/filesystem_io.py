@@ -76,15 +76,16 @@ class ProjectParserHandler(sax.ContentHandler):
         self.result_obj = None
         self.distance_analysis = {}
         self.distance_analysis_obj = None
+        self.current_content = ""
 
-        index_list = []
-        ref_chain_list = []
-        ref_pos_list = []
-        ref_resi_list = []
-        model_chain_list = []
-        model_pos_list = []
-        model_resi_list = []
-        distance_list = []
+        index_list = np.array([])
+        ref_chain_list = np.array([])
+        ref_pos_list = np.array([])
+        ref_resi_list = np.array([])
+        model_chain_list = np.array([])
+        model_pos_list = np.array([])
+        model_resi_list = np.array([])
+        distance_list = np.array([])
         self.distances_results = {
             "index": index_list,
             "ref_chain": ref_chain_list,
@@ -151,25 +152,28 @@ class ProjectParserHandler(sax.ContentHandler):
         self.one_element_history.popleft()
 
     def characters(self, content):
+        if content == "":
+            return
         if self.current_element == "atom":
             self.pdb_data.append(content)
         # Distance results
         elif self.current_element == "index":
-            self.distances_results["index"] = list(content)
+            self.current_content += content
+            print(f"index content: {content}")
         elif self.current_element == "ref_chain":
-            self.distances_results["ref_chain"] = list(content)
+            self.current_content += content
         elif self.current_element == "ref_pos":
-            self.distances_results["ref_pos"] = list(content)
+            self.current_content += content
         elif self.current_element == "ref_resi":
-            self.distances_results["ref_resi"] = list(content)
+            self.current_content += content
         elif self.current_element == "model_chain":
-            self.distances_results["model_chain"] = list(content)
+            self.current_content += content
         elif self.current_element == "model_pos":
-            self.distances_results["model_pos"] = list(content)
+            self.current_content += content
         elif self.current_element == "model_resi":
-            self.distances_results["model_resi"] = list(content)
+            self.current_content += content
         elif self.current_element == "distance":
-            self.distances_results["distance"] = list(content)
+            self.current_content += content
 
     def endElement(self, name):
         tmp_last_element = self.one_element_history[-1]
@@ -190,7 +194,34 @@ class ProjectParserHandler(sax.ContentHandler):
             elif self._protein_in_pair:
                 # Appends protein to project for the protein pair model
                 self._proteins_for_pair.append(copy.deepcopy(tmp_protein))
+        elif self.current_element == "index":
+            if self.current_content != "":
+                self.distances_results["index"] = np.array(self.current_content)
+                print(f"After np.array conversion: {self.distances_results['index']}")
+            self.current_content = ""
+        elif self.current_element == "ref_chain":
+            self.distances_results["ref_chain"] = np.array(ast.literal_eval(self.current_content))
+            self.current_content = ""
+        elif self.current_element == "ref_pos":
+            self.distances_results["ref_pos"] = np.array(ast.literal_eval(self.current_content))
+            self.current_content = ""
+        elif self.current_element == "ref_resi":
+            self.distances_results["ref_resi"] = np.array(ast.literal_eval(self.current_content))
+            self.current_content = ""
+        elif self.current_element == "model_chain":
+            self.distances_results["model_chain"] = np.array(ast.literal_eval(self.current_content))
+            self.current_content = ""
+        elif self.current_element == "model_pos":
+            self.distances_results["model_pos"] = np.array(ast.literal_eval(self.current_content))
+            self.current_content = ""
+        elif self.current_element == "model_resi":
+            self.distances_results["model_resi"] = np.array(ast.literal_eval(self.current_content))
+            self.current_content = ""
+        elif self.current_element == "distance":
+            self.distances_results["distance"] = np.array(ast.literal_eval(self.current_content))
+            self.current_content = ""
         elif name == "result":
+            print(self.distances_results)
             index_array: np.ndarray = np.array(self.distances_results["index"])
             ref_chain_array: np.ndarray = np.array(self.distances_results["ref_chain"])
             ref_pos_array: np.ndarray = np.array(self.distances_results["ref_pos"])
@@ -209,7 +240,10 @@ class ProjectParserHandler(sax.ContentHandler):
                 "model_resi": model_resi_array,
                 "distance": distance_array,
             }
-            self.result_obj = results.DistanceAnalysisResults(result_hashtable, self.result[2], self.result[0], self.result[1])
+            self.result_obj = results.DistanceAnalysisResults(result_hashtable,
+                                                              self.result[2],
+                                                              self.result[0],
+                                                              self.result[1])
         elif name == "distance_analysis":
             self.distance_analysis_obj = structure_analysis.DistanceAnalysis(
                 self._app_settings, distance_analysis_name=self.distance_analysis["name"]

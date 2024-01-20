@@ -63,17 +63,13 @@ class Project:
     """
     _workspace: pathlib.Path
     """
-    the current date
-    """
-    _date = str(datetime.now())
-    """
     the used OS
     """
     _operating_system = platform.system()
-    """
-    all top layer folder paths of the project
-    """
-    folder_paths: dict[str, pathlib.Path]
+    # """
+    # all top layer folder paths of the project
+    # """
+    # folder_paths: dict[str, pathlib.Path]
     # _session_file_name: str = "session_file_model_s.pse"
     """
     a list of all protein objects of the project

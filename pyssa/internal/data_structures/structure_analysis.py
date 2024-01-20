@@ -239,35 +239,35 @@ class DistanceAnalysis:
         an_xml_writer.writeAttribute("aligned_amino_acids", str(self.analysis_results.aligned_aa))
         # Create index_data element
         an_xml_writer.writeStartElement('index')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX]))
         an_xml_writer.writeEndElement()  # End index_data element
         # Create protein_1_chain_data element
         an_xml_writer.writeStartElement('protein_1_chain')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN]))
         an_xml_writer.writeEndElement()  # End protein_1_chain_data element
         # Create protein_1_position_data element
         an_xml_writer.writeStartElement('protein_1_position')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION]))
         an_xml_writer.writeEndElement()  # End protein_1_position_data element
         # Create protein_1_residue_data element
         an_xml_writer.writeStartElement('protein_1_residue')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI]))
         an_xml_writer.writeEndElement()  # End protein_1_residue_data element
         # Create protein_2_chain_data element
         an_xml_writer.writeStartElement('protein_2_chain')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN]))
         an_xml_writer.writeEndElement()  # End protein_2_chain_data element
         # Create protein_2_position_data element
         an_xml_writer.writeStartElement('protein_2_position')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION]))
         an_xml_writer.writeEndElement()  # End protein_2_position_data element
         # Create protein_2_residue_data element
         an_xml_writer.writeStartElement('protein_2_residue')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI]))
         an_xml_writer.writeEndElement()  # End protein_2_residue_data element
         # Create distances_data element
         an_xml_writer.writeStartElement('distances')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES].tolist()))
+        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]))
         an_xml_writer.writeEndElement()  # End distances_data element
         # Session data
         an_xml_writer.writeStartElement("session_data")

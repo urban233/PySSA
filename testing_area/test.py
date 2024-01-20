@@ -1,87 +1,106 @@
-import sys
-from PyQt5.QtCore import Qt, QEvent
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QApplication, QTableView, QStyledItemDelegate, QComboBox, QWidget, QVBoxLayout, QStyleOptionComboBox, QStyle
+import re
+from datetime import datetime
+import sqlite3
 
-class ComboBoxDelegate(QStyledItemDelegate):
-    def __init__(self, parent=None):
-        super(ComboBoxDelegate, self).__init__(parent)
-        self.current_index = None
 
-    def createEditor(self, parent, option, index):
-        combo_box = QComboBox(parent)
-        combo_box.addItems(["Option 1", "Option 2", "Option 3"])
-        combo_box.activated.connect(self.commitAndCloseEditor)
-        return combo_box
+def parse_pdb_file(file_path):
+    pdb_entry = {}
+    chains = []
+    residues = []
+    atoms = []
 
-    def updateEditorGeometry(self, editor, option, index):
-        editor.setGeometry(option.rect)
+    with open(file_path, 'r') as pdb_file:
+        i = 0
+        for line in pdb_file:
+            record_type = line[:6].strip()
 
-    def setEditorData(self, editor, index):
-        value = index.data(Qt.DisplayRole)
-        editor.setCurrentText(value)
+            if record_type == 'HEADER':
+                # Parse HEADER record for PDB ID and title
+                pdb_id = line[62:66].strip()
+                title = line[10:50].strip()
+                pdb_entry = {
+                    'pdb_id': pdb_id,
+                    'title': title,
+                }
 
-    def setModelData(self, editor, model, index):
-        model.setData(index, editor.currentText(), role=Qt.EditRole)
+            elif record_type == 'ATOM':
+                # Parse ATOM record for chain, residue, and atomic coordinates
+                chain_id = line[21]
+                residue_number = int(line[22:26].strip())
+                residue_name = line[17:20].strip()
+                atom_name = line[12:16].strip()
+                x_coord = float(line[30:38].strip())
+                y_coord = float(line[38:46].strip())
+                z_coord = float(line[46:54].strip())
+                occupancy = float(line[54:60].strip())
+                temperature_factor = float(line[60:66].strip())
 
-    def paint(self, painter, option, index):
-        value = index.data(Qt.DisplayRole)
-        style_option = QStyleOptionComboBox()
-        style_option.rect = option.rect
-        style_option.currentText = value if value is not None else ""
+                chain = {
+                    'chain_id': i,
+                    'pdb_id': pdb_entry['pdb_id'],
+                    'chain_identifier': chain_id,
+                }
 
-        # Draw the ComboBox
-        QApplication.style().drawComplexControl(QStyle.CC_ComboBox, style_option, painter)
+                residue = {
+                    'residue_id': i,
+                    'pdb_id': pdb_entry['pdb_id'],
+                    'chain_identifier': chain_id,
+                    'residue_number': residue_number,
+                    'residue_name': residue_name,
+                }
 
-        # Draw the selected item text
-        painter.drawText(option.rect, Qt.AlignLeft | Qt.AlignVCenter, str(value))
+                atom = {
+                    'atom_id': i,
+                    'pdb_id': pdb_entry['pdb_id'],
+                    'chain_identifier': chain_id,
+                    'residue_number': residue_number,
+                    'residue_name': residue_name,
+                    'atom_name': atom_name,
+                    'x_coord': x_coord,
+                    'y_coord': y_coord,
+                    'z_coord': z_coord,
+                    'occupancy': occupancy,
+                    'temperature_factor': temperature_factor,
+                }
 
-    def editorEvent(self, event, model, option, index):
-        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
-            self.current_index = index
-            view = self.parent()  # Get the view from the parent
-            if view is not None:
-                view.openPersistentEditor(index)
-            return True
-        return super().editorEvent(event, model, option, index)
+                chains.append(chain)
+                residues.append(residue)
+                atoms.append(atom)
+                i += 1
 
-    def commitAndCloseEditor(self):
-        editor = self.sender()
-        if isinstance(editor, QComboBox):
-            self.commitData.emit(editor)
-            self.closeEditor.emit(editor)
+    return pdb_entry, chains, residues, atoms
 
-class TableViewWithComboBox(QWidget):
-    def __init__(self):
-        super(TableViewWithComboBox, self).__init__()
+# Now, you can insert the parsed data into the database using the previously provided insert_data() function or a similar approach.
 
-        self.initUI()
-
-    def initUI(self):
-        self.table_view = QTableView(self)
-        self.model = QStandardItemModel(self)
-        self.model.setHorizontalHeaderLabels(["Column 1", "Column 2"])
-        self.table_view.setModel(self.model)
-
-        # Add some sample data
-        for row in range(5):
-            item1 = QStandardItem(f"Item {row + 1}")
-            item2 = QStandardItem()
-            self.model.setItem(row, 0, item1)
-            self.model.setItem(row, 1, item2)
-
-        # Set the custom delegate for the second column
-        self.table_view.setItemDelegateForColumn(1, ComboBoxDelegate(self))
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.table_view)
-        self.setLayout(layout)
-
-        self.setGeometry(100, 100, 500, 300)
-        self.setWindowTitle('TableView with ComboBox')
-        self.show()
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = TableViewWithComboBox()
-    sys.exit(app.exec_())
+    conn = sqlite3.connect(r"C:\Users\martin\.pyssa\db_workspace\project_1")
+    cursor = conn.cursor()
+
+    sql = ''' INSERT INTO Project(name,os)
+                  VALUES(:name, :os) '''
+
+    #cursor.execute(sql, {'name': "my_project", 'os': "win32"})
+    sql = '''   UPDATE Project SET name=:name, os=:os 
+                WHERE id=1
+    '''
+    cursor.execute(sql, {'name': "mybankkonto", 'os': "win64"})
+    conn.commit()
+
+    # Example usage
+    pdb_file_path = '3bmp.pdb'
+    #parsed_pdb_entry, parsed_chains, parsed_residues, parsed_atoms = parse_pdb_file(pdb_file_path)
+
+
+    # cursor.execute('''
+    #         SELECT *
+    #         FROM atom
+    #     ''')
+    # # Fetch all rows
+    # rows = cursor.fetchall()
+    #
+    # # Display the fetched data (you can customize this based on your needs)
+    # for row in rows:
+    #     print(row)
+
+    conn.close()

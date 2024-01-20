@@ -12,6 +12,8 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from Bio import SeqRecord
 from xml import sax
+
+from pyssa.controller import results_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view
@@ -103,6 +105,7 @@ class MainViewController:
         self._view.ui.actionExport.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
 
+        self._view.ui.action_results_summary.triggered.connect(self._results_summary)
         self._view.ui.actionPreview.triggered.connect(self.preview_image)
 
         self._view.ui.action_edit_settings.triggered.connect(self.open_settings_global)
@@ -127,14 +130,16 @@ class MainViewController:
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
+        self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
 
     def _update_tab(self) -> None:
-        if self._view.ui.project_tab_widget.currentIndex() == 1:
-            print("Changed proteins")
-            self._interface_manager.refresh_protein_model()
-        elif self._view.ui.project_tab_widget.currentIndex() == 2:
-            print("Changed protein pairs")
-            self._interface_manager.refresh_protein_pair_model()
+        # if self._view.ui.project_tab_widget.currentIndex() == 1:
+        #     print("Changed proteins")
+        #     self._interface_manager.refresh_protein_model()
+        # elif self._view.ui.project_tab_widget.currentIndex() == 2:
+        #     print("Changed protein pairs")
+        #     self._interface_manager.refresh_protein_pair_model()
+        pass
 
     def _close_project(self):
         """Closes the current project"""
@@ -207,6 +212,7 @@ class MainViewController:
         elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
             tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
             tmp_protein.chains[0].pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
+        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
 
     def _change_chain_representation_proteins(self) -> None:
         if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
@@ -551,6 +557,19 @@ class MainViewController:
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
         #self.block_box_analysis.exec_()
+
+    def _check_for_results(self) -> None:
+        if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
+            self._view.ui.action_results_summary.setEnabled(True)
+        else:
+            self._view.ui.action_results_summary.setEnabled(False)
+
+    def _results_summary(self) -> None:
+        tmp_protein_pair = self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(),
+                                                                              enums.ModelEnum.OBJECT_ROLE)
+        self._external_controller = results_view_controller.ResultsViewController(self._interface_manager,
+                                                                                  tmp_protein_pair)
+        self._interface_manager.get_results_view().show()
 
     # <editor-fold desc="Settings menu methods">
     def open_settings_global(self) -> None:

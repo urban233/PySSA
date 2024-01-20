@@ -9,7 +9,7 @@ from PyQt5.QtCore import Qt
 
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view
+from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view
 from pyssa.internal.data_structures import project, settings, chain
 from pyssa.util import enums, gui_utils, constants, exception, main_window_util
 
@@ -19,6 +19,7 @@ class InterfaceManager:
     _main_view: "main_view.MainView"
     _predict_monomer_view: "predict_monomer_view.PredictMonomerView"
     _distance_analysis_view: "distance_analysis_view.DistanceAnalysisView"
+    _results_view: "results_view.ResultsView"
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
@@ -34,6 +35,7 @@ class InterfaceManager:
         self._main_view = main_view.MainView()
         self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
         self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView()
+        self._results_view = results_view.ResultsView()
 
         # <editor-fold desc="Setup App Settings">
         self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -107,6 +109,9 @@ class InterfaceManager:
 
     def get_distance_analysis_view(self) -> "distance_analysis_view.DistanceAnalysisView":
         return self._distance_analysis_view
+
+    def get_results_view(self):
+        return self._results_view
 
     def get_application_settings(self) -> "settings.Settings":
         return self._application_settings
