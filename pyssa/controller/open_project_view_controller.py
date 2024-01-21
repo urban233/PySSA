@@ -44,10 +44,11 @@ class OpenProjectViewController(QtCore.QObject):
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
-        xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
+        xml_pattern = os.path.join(self._interface_manager.get_application_settings().workspace_path, '*')
         self.string_model.setStringList(
             # Filters the workspace for all project files based on the xml extension
-            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
+            # [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
+            [os.path.basename(file) for file in glob.glob(xml_pattern)]
         )
         # self._interface_manager.get_workspace_projects()
         self._view.ui.projects_list_view.setModel(self.string_model)

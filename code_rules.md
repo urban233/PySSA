@@ -210,14 +210,17 @@ def add_model(self) -> None:
 ...
 ```
 3. Connect the signal in the QMainWindow with the QDialog object and the slot function
+
 ```python
 ...
 
+
 def add_existing_protein(self) -> None:
-    """Opens a dialog to add an existing protein structure to the project."""
-    self.tmp_dialog = dialog_add_model.DialogAddModel()
-    self.tmp_dialog.return_value.connect(self.post_add_existing_protein)  # here is the connection
-    self.tmp_dialog.show()
+  """Opens a dialog to add an existing protein structure to the project."""
+  self.tmp_dialog = dialog_add_model.AddProteinView()
+  self.tmp_dialog.return_value.connect(self.post_add_existing_protein)  # here is the connection
+  self.tmp_dialog.show()
+
 
 ...
 ```

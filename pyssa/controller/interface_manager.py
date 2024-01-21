@@ -11,7 +11,7 @@ from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view
+from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.internal.data_structures import project, settings, chain
 from pyssa.util import enums, constants, exception, main_window_util
 
@@ -27,6 +27,7 @@ class InterfaceManager:
     _open_project_view: "open_project_view.OpenProjectView"
     _delete_project_view: "delete_project_view.DeleteProjectView"
     _results_view: "results_view.ResultsView"
+    _add_protein_view: "add_protein_view.AddProteinView"
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
@@ -46,6 +47,7 @@ class InterfaceManager:
         self._open_project_view = open_project_view.OpenProjectView()
         self._delete_project_view = delete_project_view.DeleteProjectView()
         self._results_view = results_view.ResultsView()
+        self._add_protein_view = add_protein_view.AddProteinView()
 
         # <editor-fold desc="Setup App Settings">
         self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -132,6 +134,9 @@ class InterfaceManager:
 
     def get_results_view(self):
         return self._results_view
+
+    def get_add_protein_view(self):
+        return self._add_protein_view
 
     def get_application_settings(self) -> "settings.Settings":
         return self._application_settings

@@ -34,7 +34,7 @@ from pyssa.util import constants, tools, gui_utils
 global_var_add_model = ("", False)
 
 
-class DialogAddModel(Qt.QtWidgets.QDialog):
+class AddProteinView(Qt.QtWidgets.QDialog):
     """Class for a dialog to add proteins to a project."""
 
     """

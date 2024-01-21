@@ -33,6 +33,7 @@ from pyssa.util import input_validator, gui_utils, constants, tools
 
 class CreateProjectViewController(QtCore.QObject):
     """Class for the Create Project View Controller."""
+    user_input = QtCore.pyqtSignal(tuple)
     string_model = QtCore.QStringListModel()
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
@@ -46,18 +47,25 @@ class CreateProjectViewController(QtCore.QObject):
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
         # self._view.ui.list_create_projects_view.setModel(self._interface_manager.get_workspace_model())
-        xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
+        xml_pattern = os.path.join(self._interface_manager.get_application_settings().workspace_path, '*')
         self.string_model.setStringList(
             # Filters the workspace for all project files based on the xml extension
-            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
+            #[os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
+            [os.path.basename(file) for file in glob.glob(xml_pattern)]
         )
         self._view.ui.list_create_projects_view.setModel(self.string_model)
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
         self._view.ui.cb_new_add_reference.clicked.connect(self.show_add_protein_options)
+        self._view.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
+        self._view.ui.btn_new_create_project.clicked.connect(self._create_new_project)
         # self._view.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
         # self._view.ui.btn_cancel(self._close)
+
+    def _create_new_project(self) -> None:
+        self._view.close()
+        self.user_input.emit((self._view.ui.txt_new_project_name.text(), self._view.ui.txt_new_choose_reference.text()))
 
     def hide_add_protein_options(self) -> None:
         self._view.ui.lbl_new_status_choose_reference.hide()

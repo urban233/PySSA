@@ -3,6 +3,8 @@ import os
 import pathlib
 import shutil
 import subprocess
+import platform
+
 import pymol
 
 from pymol import cmd
@@ -20,8 +22,9 @@ from pyssa.gui.ui.views import predict_monomer_view, delete_project_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
+from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import tasks, task_workers
-from pyssa.io_pyssa import safeguard, filesystem_io
+from pyssa.io_pyssa import safeguard, filesystem_io, path_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.presenter import main_presenter_async
 from pyssa.util import constants, enums, exception, main_window_util, exit_codes, prediction_util, gui_utils, tools
@@ -29,7 +32,7 @@ from pyssa.gui.ui.views import main_view
 from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
-    delete_project_view_controller, create_project_view_controller, open_project_view_controller
+    delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
 from pyssa.util import globals
 
 logger = logging.getLogger(__file__)
@@ -85,6 +88,7 @@ class MainViewController:
 
         self._view: "main_view.MainView" = the_interface_manager.get_main_view()
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
+        self._database_manager = database_manager.DatabaseManager("")
         self._app_model: "application_model.ApplicationModel" = application_model.ApplicationModel(project.Project())
         self._external_view = None
         self._protein_model = QtGui.QStandardItemModel()
@@ -121,15 +125,18 @@ class MainViewController:
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
+        # proteins tab
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
         self._view.cb_chain_color.currentIndexChanged.connect(self._change_chain_color_proteins)
         self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
-
+        self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
+        # seqs tab
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.pushButton.clicked.connect(self._add_sequence)
 
+        # protein pairs tab
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
@@ -151,29 +158,83 @@ class MainViewController:
 
     def _create_project(self) -> None:
         self._external_controller = create_project_view_controller.CreateProjectViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self._post_create_project)
         self._interface_manager.get_create_view().show()
+
+    def _post_create_project(self, user_input: tuple) -> None:
+        tmp_project_name, tmp_protein_name = user_input
+        self._database_manager.set_database_filepath(
+            str(pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}")))
+        self._database_manager.build_new_database()
+        self._database_manager.open_project_database()
+        tmp_project = project.Project(tmp_project_name,
+                                      self._interface_manager.get_application_settings().workspace_path)
+        self._database_manager.write_new_empty_project(tmp_project.get_project_name(),
+                                                       platform.system())
+        if len(tmp_protein_name) == 4:
+            #tmp_ref_protein = pymol_io.get_protein_from_pdb(tmp_protein_name.upper())
+            tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+            tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
+            tmp_ref_protein.create_new_pymol_session()
+            tmp_ref_protein.save_pymol_session_as_base64_string()
+            tmp_project.add_existing_protein(tmp_ref_protein)
+            self._database_manager.write_new_protein(tmp_ref_protein)
+            constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
+        elif len(tmp_protein_name) > 0:
+            # local pdb file as input
+            pdb_filepath = pathlib.Path(tmp_protein_name)
+            graphic_operations.setup_default_session_graphic_settings()
+            tmp_ref_protein = protein.Protein(
+                molecule_object=pdb_filepath.name.replace(".pdb",""),
+            )
+            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
+            tmp_ref_protein.create_new_pymol_session()
+            tmp_ref_protein.save_pymol_session_as_base64_string()
+            tmp_project.add_existing_protein(tmp_ref_protein)
+            self._database_manager.write_new_protein(tmp_ref_protein)
+            constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+        else:
+            constants.PYSSA_LOGGER.info("Create empty project finished.")
 
     def _open_project(self) -> None:
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
-        # fixme: not using def _post_open_project() and def __await_open_project()
-        # self._external_controller.return_value.connect(self._post_open_project)
+        self._external_controller.return_value.connect(self._post_open_project)
         self._interface_manager.get_open_view().show()
 
-    # fixme: not using
-    # def _post_open_project(self, return_value: str):
-    #     self._interface_manager.start_wait_spinner()
-    #     tmp_filepath = pathlib.Path(f"{return_value}.xml")
-    #     self._active_task = tasks.Task(
-    #         target=main_presenter_async.open_project,
-    #         args=(
-    #             self._workspace_path,
-    #             tmp_filepath,
-    #             self._interface_manager.get_application_settings(),
-    #         ),
-    #         post_func=self.__await_open_project,
-    #     )
-    #     self._active_task.start()
-    #     self._interface_manager.update_status_bar("Opening existing project ...")
+    def _post_open_project(self, return_value: str):
+        self._interface_manager.start_wait_spinner()
+        self._interface_manager.update_status_bar("Opening existing project ...")
+        tmp_project_name = return_value
+        tmp_project_database_filepath = str(
+            pathlib.Path(
+                f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}"
+            )
+        )
+        self._database_manager.set_database_filepath(tmp_project_database_filepath)
+        self._database_manager.open_project_database()
+        print(self._database_manager.get_number_of_sequences())
+        print(self._database_manager.get_number_of_proteins())
+        print(self._database_manager.get_number_of_protein_pairs())
+        tmp_project = self._database_manager.get_project_as_object(
+            tmp_project_name, self._interface_manager.get_application_settings().workspace_path
+        )
+        self._interface_manager.set_new_project(tmp_project)
+        self._interface_manager.refresh_main_view()
+        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.update_status_bar("Opening existing project finished.")
+        # tmp_filepath = pathlib.Path(f"{return_value}.xml")
+        #
+        # self._active_task = tasks.Task(
+        #     target=main_presenter_async.open_project,
+        #     args=(
+        #         self._workspace_path,
+        #         tmp_filepath,
+        #         self._interface_manager.get_application_settings(),
+        #     ),
+        #     post_func=self.__await_open_project,
+        # )
+        # self._active_task.start()
+
     #
     # def __await_open_project(self, a_result: tuple) -> None:
     #     self._interface_manager.set_new_project(a_result[1])
@@ -262,6 +323,10 @@ class MainViewController:
         self._interface_manager.get_predict_monomer_view().show()
 
     # <editor-fold desc="Proteins tab methods">
+    def _import_protein_structure(self):
+        self._interface_manager.get_add_protein_view().show()
+
+
     @staticmethod
     def update_scene() -> None:
         """Updates the current selected PyMOL scene."""

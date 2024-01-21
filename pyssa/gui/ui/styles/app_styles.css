@@ -183,3 +183,21 @@ QMenuBar {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);
     color: black;
 }
+
+QToolButton {
+    background-color: #DCDBE3;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 8px;
+    border-color: #DCDBE3;
+    min-width: 1.5em;
+    padding: 1px;
+}
+
+QToolButton::hover {
+    /*background: qlineargradient(x1:0, y1: 0, x2: 0, y2: 1,*/
+    /*stop: 0 #4B91F7, stop: 0.4 #367AF6, stop: 0.5 #367AF6, stop: 1.0 #4B91F7);*/
+    color: #4B91F7;
+    border-color: #4B91F7;
+    border-style: solid;
+}

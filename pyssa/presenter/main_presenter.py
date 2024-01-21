@@ -38,10 +38,8 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from pyssa.gui.ui.dialogs import dialog_settings_global
-from pyssa.gui.ui.dialogs import dialog_add_model
 from pyssa.gui.ui.dialogs import dialog_help
 from pyssa.gui.ui.dialogs import dialog_startup
-from pyssa.gui.ui.dialogs import dialog_distance_plot
 from pyssa.gui.ui.dialogs import dialog_distance_histogram
 from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
@@ -49,7 +47,7 @@ from pyssa.gui.ui.dialogs import dialog_tutorial_videos
 from pyssa.gui.ui.dialogs import dialog_rename_protein
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import plot_view
+from pyssa.gui.ui.views import plot_view, add_protein_view
 
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
@@ -1210,7 +1208,7 @@ class MainPresenter:
 
     def add_existing_protein(self) -> None:
         """Opens a dialog to adds an existing protein structure to the project."""
-        self.tmp_dialog = dialog_add_model.DialogAddModel()
+        self.tmp_dialog = view_add_protein.AddProteinView()
         self.tmp_dialog.return_value.connect(self.post_add_existing_protein)
         self.tmp_dialog.show()
 

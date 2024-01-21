@@ -207,23 +207,23 @@ class ProteinPair:
         if self.distance_analysis is not None:
             self.distance_analysis.serialize_distance_analysis(tmp_protein_pair)
 
-    def create_plain_text_memory_mirror(self) -> list[Union[str, list[tuple[str, "sequence.Sequence", str]]]]:
-        """Creates a plain text memory mirror of the current protein pair."""
-        return [
-            self.protein_1.get_molecule_object(),
-            str(self.protein_1.pdb_filepath.get_filepath()),
-            str(self.protein_1.export_dirname),
-            str(self.protein_1.pdb_filepath.get_filename()),
-            self.protein_1.pymol_selection.selection_string,
-            protein_util.get_chains_as_list_of_tuples(self.protein_1.chains),
-            self.protein_2.get_molecule_object(),
-            str(self.protein_2.pdb_filepath.get_filepath()),
-            str(self.protein_2.export_dirname),
-            str(self.protein_2.pdb_filepath.get_filename()),
-            self.protein_2.pymol_selection.selection_string,
-            protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
-            str(self.SCRATCH_DIR),
-            str(self.pymol_session_filepath.get_filepath()),
-            self.name,
-            str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
-        ]
+    # def create_plain_text_memory_mirror(self) -> list[Union[str, list[tuple[str, "sequence.Sequence", str]]]]:
+    #     """Creates a plain text memory mirror of the current protein pair."""
+    #     return [
+    #         self.protein_1.get_molecule_object(),
+    #         str(self.protein_1.pdb_filepath.get_filepath()),
+    #         str(self.protein_1.export_dirname),
+    #         str(self.protein_1.pdb_filepath.get_filename()),
+    #         self.protein_1.pymol_selection.selection_string,
+    #         protein_util.get_chains_as_list_of_tuples(self.protein_1.chains),
+    #         self.protein_2.get_molecule_object(),
+    #         str(self.protein_2.pdb_filepath.get_filepath()),
+    #         str(self.protein_2.export_dirname),
+    #         str(self.protein_2.pdb_filepath.get_filename()),
+    #         self.protein_2.pymol_selection.selection_string,
+    #         protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
+    #         str(self.SCRATCH_DIR),
+    #         str(self.pymol_session_filepath.get_filepath()),
+    #         self.name,
+    #         str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
+    #     ]
