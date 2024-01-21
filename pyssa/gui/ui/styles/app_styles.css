@@ -184,6 +184,33 @@ QMenuBar {
     color: black;
 }
 
+QMenuBar::item:selected {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #E8E8E8, stop:1 #DBDBDB);;
+}
+
+QMenu {
+    background-color: white;
+    margin: 2px; /* some spacing around the menu */
+}
+
+QMenu::item {
+    padding: 2px 25px 2px 20px;
+}
+
+QMenu::item:selected {
+    background: #C5DBFB;
+    border-width: 3px;
+    border-radius: 6px;
+    border-color: white;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #E2E2E2;
+    margin-left: 10px;
+    margin-right: 5px;
+}
+
 QToolButton {
     background-color: #DCDBE3;
     border-style: solid;
