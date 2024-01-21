@@ -324,6 +324,7 @@ class MainViewController:
         tmp_fasta_filepath, _ = return_value
         tmp_record = SeqIO.read(tmp_fasta_filepath, "fasta")
         self._interface_manager.get_current_project().sequences.append(tmp_record)
+        self._database_manager.insert_new_sequence(tmp_record)
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
 

@@ -2,6 +2,8 @@ import logging
 import pathlib
 import sqlite3
 import numpy as np
+from Bio import SeqRecord
+
 from pyssa.internal.data_structures import protein, project, protein_pair, structure_analysis, results, chain, sequence
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import enums, pyssa_keys
@@ -211,6 +213,19 @@ class DatabaseManager:
         self._cursor.close()
         self._connection.close()
 
+    # </editor-fold>
+
+    # <editor-fold desc="SeqRecord objects inserts">
+    def insert_new_sequence(self, a_seq_record: SeqRecord.SeqRecord):
+        self._insert_sequence(a_seq_record.id, a_seq_record.seq, a_seq_record.name)
+
+    def _insert_sequence(self, a_seq_id, a_seq, a_name):
+        sql = """   INSERT INTO SeqRecord(seq_id, seq, name, project_id)
+                    VALUES (?, ?, ?, ?)
+        """
+        self._cursor.execute(sql, (str(a_seq_id), str(a_seq), str(a_name), 1))  # fixme: not the best solution with the id=1
+        self._connection.commit()
+        return self.get_last_id()
     # </editor-fold>
 
     # <editor-fold desc="Protein object inserts">
@@ -522,6 +537,11 @@ class DatabaseManager:
         tmp_project_id, = self._get_project(a_project_name)
         tmp_project.set_id(tmp_project_id)
 
+        for tmp_seq_info in self._get_sequence():
+            tmp_seq_id, tmp_seq, tmp_seq_name = tmp_seq_info
+            tmp_sequence = SeqRecord.SeqRecord(tmp_seq, id=tmp_seq_id, name=tmp_seq_name)
+            tmp_project.sequences.append(tmp_sequence)
+
         # create protein objects
         for tmp_protein_info in self._get_protein(tmp_project_id):
             tmp_protein_id, tmp_protein_name, tmp_pymol_session = tmp_protein_info
@@ -669,3 +689,8 @@ class DatabaseManager:
         return self._cursor.fetchall()
 
     # </editor-fold>
+
+    def _get_sequence(self) -> list[tuple]:
+        sql = """SELECT seq_id, seq, name FROM SeqRecord WHERE project_id = ?"""
+        self._cursor.execute(sql, (1,))  # fixme: this is not the best solution
+        return self._cursor.fetchall()
