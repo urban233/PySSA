@@ -137,7 +137,7 @@
           <item>
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>Placeholder</string>
+             <string>Additional Information</string>
             </property>
            </widget>
           </item>
@@ -420,8 +420,6 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionHelp"/>
-    <addaction name="separator"/>
     <addaction name="actionDocumentation"/>
     <addaction name="actionTutorials"/>
     <addaction name="actionShow_log_in_explorer"/>
@@ -434,14 +432,14 @@
      <string>Image</string>
     </property>
     <addaction name="actionPreview"/>
-    <addaction name="actionCreate_ray_ta"/>
-    <addaction name="actionCreate_drawn"/>
+    <addaction name="action_ray_tracing"/>
+    <addaction name="action_simple"/>
    </widget>
    <widget class="QMenu" name="menuHotspots">
     <property name="title">
      <string>Hotspots</string>
     </property>
-    <addaction name="actionPlaceholder"/>
+    <addaction name="action_protein_regions"/>
    </widget>
    <addaction name="menuProject"/>
    <addaction name="menuPrediction"/>
@@ -508,14 +506,14 @@
     <string>Restore</string>
    </property>
   </action>
-  <action name="actionCreate_ray_ta">
+  <action name="action_ray_tracing">
    <property name="text">
-    <string>Create ray-traced</string>
+    <string>Ray-Tracing</string>
    </property>
   </action>
-  <action name="actionCreate_drawn">
+  <action name="action_simple">
    <property name="text">
-    <string>Create basic</string>
+    <string>Simple</string>
    </property>
   </action>
   <action name="actionPreview">
@@ -523,9 +521,9 @@
     <string>Preview</string>
    </property>
   </action>
-  <action name="actionPlaceholder">
+  <action name="action_protein_regions">
    <property name="text">
-    <string>Placeholder</string>
+    <string>Protein Regions</string>
    </property>
   </action>
   <action name="actionImport">

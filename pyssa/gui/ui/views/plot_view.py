@@ -118,7 +118,7 @@ class PlotView(QtWidgets.QDialog):
         self.scroll_area_layout = QtWidgets.QHBoxLayout()
         self.scroll_area_layout.addWidget(self.plot_widget)
         self.table_view = QtWidgets.QTableView()
-        self.table_view.setMinimumWidth(300)
+        self.table_view.setMinimumWidth(450)
         self.scroll_area_layout.addWidget(self.table_view)
         self.scroll_area.setLayout(self.scroll_area_layout)
 
@@ -135,7 +135,6 @@ class PlotView(QtWidgets.QDialog):
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         custom_pyssa_styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
 
 
         # --BEGIN
@@ -242,6 +241,7 @@ class PlotView(QtWidgets.QDialog):
 
         # Connect the mouse click event
         #self.plot_widget.canvas.mpl_connect('button_press_event', self.on_canvas_click)
+        self.resize(1400, 800)
         self.create_all_graphics()
         self._connect_all_signals()
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)

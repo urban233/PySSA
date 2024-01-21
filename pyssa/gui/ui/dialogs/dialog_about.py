@@ -43,14 +43,43 @@ class DialogAbout(QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         self.ui.btn_ok.clicked.connect(self.close_dialog)
-        original_pixmap = QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png")
+        original_pixmap = QtGui.QPixmap(f"{constants.PLUGIN_ROOT_PATH}\\assets\\images\\pyssa_logo.png")
         scaled_pixmap = original_pixmap.scaled(150, 150)
         self.ui.lbl_pyssa_logo.setPixmap(scaled_pixmap)
-        self.ui.label_2.setText(f"Version: {constants.VERSION_NUMBER}")
         styles.set_stylesheet(self)
+        self.ui.label_2.setText(f"Version: {constants.VERSION_NUMBER}")
+        self.ui.label_2.setStyleSheet("font-weight: bold;")
+        self.ui.label.setStyleSheet("font-size: 19px")
+
+        self._fill_table_view()
+
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("About")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+    def _fill_table_view(self):
+        """Fill the table with the packages"""
+        tmp_table_model = QtGui.QStandardItemModel()
+        tmp_table_model.setHorizontalHeaderLabels(["Name", "Version", "License"])
+        # Sample data
+        data = [
+            ["Biopython", "1.78", "Open Source"],
+            ["Matplotlib", "3.8.0", "Open Source"],
+            ["Numpy", "1.26.2", "Open Source"],
+            ["Pandas", "2.1.1", "Open Source"],
+            ["PyQt5", "5.15.10", "Open Source"],
+            ["SQLite", "3.41.2", "Open Source"],
+            ["PyMOL Open-Source", "2.5.0", "Open Source"]
+        ]
+
+        # Populate the model with data
+        for row, row_data in enumerate(data):
+            for col, value in enumerate(row_data):
+                item = QtGui.QStandardItem(str(value))  # or QStandardItem(str(value)) for QStandardItemModel
+                tmp_table_model.setItem(row, col, item)
+        self.ui.tableView.setModel(tmp_table_model)
+        self.ui.tableView.resizeColumnsToContents()
+        self.ui.tableView.setEditTriggers(QtWidgets.QTableView.NoEditTriggers)
 
     # @SLOT
     def close_dialog(self) -> None:

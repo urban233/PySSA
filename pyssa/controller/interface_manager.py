@@ -359,7 +359,6 @@ class InterfaceManager:
         )
         self._main_view.ui.protein_pairs_table_widget.resizeColumnsToContents()
 
-
     def update_status_bar(self, message: str) -> None:
         """Sets a custom message into the status bar."""
         self._main_view.status_bar.showMessage(message)
@@ -370,11 +369,17 @@ class InterfaceManager:
         self._main_view.ui.seqs_table_widget.verticalHeader().setVisible(False)
         self._main_view.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
-        self._main_view.ui.seqs_table_widget.setItem(0, 0, QtWidgets.QTableWidgetItem("Name"))
+        tmp_name_label_item = QtWidgets.QTableWidgetItem("Name")
+        self._main_view.ui.seqs_table_widget.setItem(0, 0, tmp_name_label_item)
         self._main_view.ui.seqs_table_widget.setItem(0, 1, QtWidgets.QTableWidgetItem(tmp_sequence.name))
-        self._main_view.ui.seqs_table_widget.setItem(1, 0, QtWidgets.QTableWidgetItem("Sequence"))
-        self._main_view.ui.seqs_table_widget.setItem(1, 1, QtWidgets.QTableWidgetItem(tmp_sequence.seq))
+        tmp_sequence_label_item = QtWidgets.QTableWidgetItem("Sequence")
+        self._main_view.ui.seqs_table_widget.setItem(1, 0, tmp_sequence_label_item)
+        tmp_name_label_item.setFlags(tmp_name_label_item.flags() & ~Qt.ItemIsEditable)
+        tmp_sequence_label_item.setFlags(tmp_sequence_label_item.flags() & ~Qt.ItemIsEditable)
+        #self._main_view.ui.seqs_table_widget.setItem(1, 1, QtWidgets.QTableWidgetItem(tmp_sequence.seq))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
+        self._main_view.btn_show_sequence.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self._main_view.ui.seqs_table_widget.setCellWidget(1, 1, self._main_view.btn_show_sequence)
 
     def start_wait_spinner(self) -> None:
         """Starts the spinner."""

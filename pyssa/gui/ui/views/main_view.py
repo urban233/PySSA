@@ -27,7 +27,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyqtspinner import spinner
-
+from pyssa.gui.ui.custom_widgets import custom_tree_view
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project
@@ -78,14 +78,18 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.action_distance_analysis.setEnabled(False)
         self.ui.action_results_summary.setEnabled(False)
         self.ui.actionPreview.setEnabled(False)
-        self.ui.actionCreate_ray_ta.setEnabled(False)
-        self.ui.actionCreate_drawn.setEnabled(False)
-        self.ui.actionPlaceholder.setEnabled(False)
+        self.ui.action_ray_tracing.setEnabled(False)
+        self.ui.action_simple.setEnabled(False)
+        self.ui.action_protein_regions.setEnabled(False)
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
         self.cb_chain_representation = QtWidgets.QComboBox()
+        self.btn_show_sequence = QtWidgets.QPushButton()
+        self.btn_show_sequence.setText("Show")
         self.build_proteins_table()
+
+        self.ui.proteins_tree_view.setContextMenuPolicy(Qt.DefaultContextMenu)
 
         self.setMinimumWidth(700)
         self.setMinimumHeight(700)
@@ -101,6 +105,12 @@ class MainView(QtWidgets.QMainWindow):
         self.setWindowTitle("PySSA")
         # constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
         # constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
+
+    def build_sequence_table(self):
+        self.ui.seqs_table_widget.verticalHeader().setVisible(False)
+        self.ui.seqs_table_widget.setColumnCount(2)
+        self.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+        self.btn_show_sequence.adjustSize()
 
     def build_proteins_table(self):
         self.ui.proteins_table_widget.verticalHeader().setVisible(False)
