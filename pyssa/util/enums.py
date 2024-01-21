@@ -24,3 +24,9 @@ class DatabaseEnum(enum.Enum):
     PROTEIN_PYMOL_SESSION_FILEPATH = "pymol_session_filepath"
     PROTEIN_PYMOL_SESSION = "pymol_session"
     # add more for the rest of the tables
+
+
+class PymolParameterEnum(enum.Enum):
+    """An enum for all pymol parameters."""
+    COLOR = "chain_color"
+    REPRESENTATION = "chain_representation"

@@ -83,18 +83,22 @@ class Protein:
     a list of pdb information
     """
     _pdb_data: list
+    """
+    the project id from the database
+    """
+    db_project_id: int
 
     # </editor-fold>
 
     def __init__(
         self,
-        molecule_object: str,
+        molecule_object: str
     ) -> None:
         """Constructor.
 
         Args:
-            molecule_object (str):
-                the name of the protein which is also used within pymol
+            molecule_object (str): the name of the protein which is also used within pymol
+            the_project_id (int): the id of the project in the database
 
         Raises:
             NotADirectoryError: If directory not found.
@@ -197,11 +201,7 @@ class Protein:
 
     def add_protein_structure_data_from_pdb_db(self, a_pdb_id) -> None:
         """Adds protein structure data based on a protein from the PDB database."""
-        # TODO: don't use biopython, just use PyMOL for PDB db processes!!!
-        # tmp_pdb_db_access = PDB.PDBList(pdb=constants.CACHE_PROTEIN_DIR)
-        # tmp_pdb_db_access.retrieve_pdb_file(a_pdb_id, file_format="pdb")
         tmp_pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb")
-
         bio_data.download_pdb_file(a_pdb_id, tmp_pdb_filepath)
         self.chains = protein_operations.get_protein_chains(
             self._pymol_molecule_object,
@@ -211,8 +211,8 @@ class Protein:
         self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
         self.check_states_and_reduce_to_one_state_if_necessary()
         try:
-            os.remove(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb")
-            os.remove(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb")
+            os.remove(str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb")))
+            os.remove(str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb")))
         except Exception as e:
             logger.error(f"Could not delete pdb file! Ran into error: {e}")
 
@@ -505,7 +505,6 @@ class Protein:
             pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(clean_prot.get_id()))
             cleaned_prot = Protein(
                 molecule_object=clean_prot_molecule_object,
-                pdb_xml_string=bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)),
             )
             return cleaned_prot  # noqa: RET504 #TODO: needs more thoughts
 
@@ -536,6 +535,7 @@ class Protein:
         return {
             enums.DatabaseEnum.PROTEIN_NAME.value: self._pymol_molecule_object,
             enums.DatabaseEnum.PROTEIN_PYMOL_SESSION.value: self.pymol_session,
+            "project_id": self.db_project_id,
         }
 
     def write_protein_to_xml_structure(self, an_xml_writer: QtCore.QXmlStreamWriter):
@@ -565,7 +565,6 @@ class Protein:
         """Duplicates the protein object."""
         tmp_protein = Protein(
             molecule_object=self._pymol_molecule_object,
-            pdb_xml_string=bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data),
         )
         logger.debug(tmp_protein.chains[0])
         # tmp_protein.pymol_selection.selection_string = self.pymol_selection.selection_string

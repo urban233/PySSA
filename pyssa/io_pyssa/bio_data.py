@@ -240,9 +240,20 @@ def parse_pdb_file(a_filepath):
                     records.append({
                         'record_type': record_type,
                         'atom_number': atom_number_ter,
+                        'atom_name': "",
+                        'alternate_location_indicator': "",
                         'residue_name': residue_name_ter,
                         'chain_identifier': chain_identifier_ter,
-                        'residue_sequence_number': residue_sequence_number_ter
+                        'residue_sequence_number': residue_sequence_number_ter,
+                        'code_for_insertions_of_residues': "",
+                        'x_coord': 0.0,
+                        'y_coord': 0.0,
+                        'z_coord': 0.0,
+                        'occupancy': 0.0,
+                        'temperature_factor': 0.0,
+                        'segment_identifier': "",
+                        'element_symbol': "",
+                        'charge': ""
                     })
                 except ValueError:
                     print("PDB file has only the record type for TER.")
@@ -268,9 +279,11 @@ def parse_pdb_file(a_filepath):
                     'record_type': record_type,
                     'atom_number': atom_number_het,
                     'atom_name': atom_name_het,
+                    'alternate_location_indicator': "",
                     'residue_name': residue_name_het,
                     'chain_identifier': chain_identifier_het,
                     'residue_sequence_number': residue_sequence_number_het,
+                    'code_for_insertions_of_residues': "",
                     'x_coord': x_coord_het,
                     'y_coord': y_coord_het,
                     'z_coord': z_coord_het,

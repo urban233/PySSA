@@ -55,6 +55,11 @@ class ProteinPair:
 
     # <editor-fold desc="Class attributes">
     """
+    the unique identifier of the protein
+    """
+    _id: int
+
+    """
     the first protein of the protein pair
     """
     protein_1: "protein.Protein"
@@ -78,6 +83,11 @@ class ProteinPair:
     a base64 string of the pymol session
     """
     pymol_session: str
+
+    """
+    the project id from the database
+    """
+    db_project_id: int
 
     def __init__(self, protein_1: "protein.Protein", protein_2: "protein.Protein") -> None:
         """Constructor.
@@ -206,6 +216,12 @@ class ProteinPair:
         tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, self.pymol_session)
         if self.distance_analysis is not None:
             self.distance_analysis.serialize_distance_analysis(tmp_protein_pair)
+
+    def get_id(self):
+        return self._id
+
+    def set_id(self, value):
+        self._id = value
 
     # def create_plain_text_memory_mirror(self) -> list[Union[str, list[tuple[str, "sequence.Sequence", str]]]]:
     #     """Creates a plain text memory mirror of the current protein pair."""

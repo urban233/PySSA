@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING
 
 from pymol import cmd
 
+from pyssa.controller import database_manager
 from pyssa.internal.data_structures import project, protein, structure_analysis, structure_prediction
 from pyssa.internal.data_structures.data_classes import (
     prediction_protein_info,
@@ -405,7 +406,15 @@ def run_distance_analysis(
             a_project,
             the_settings,
         )
+        logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
         analysis_runs.run_analysis("distance", an_make_images_flag)
+        tmp_database_manager = database_manager.DatabaseManager(str(a_project.get_database_filepath()))
+        tmp_database_manager.open_project_database()
+        logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
+        for tmp_protein_pair in analysis_runs.analysis_list:
+            tmp_protein_pair.db_project_id = a_project.get_id()
+            tmp_database_manager.insert_new_protein_pair(tmp_protein_pair)
+        tmp_database_manager.close_project_database()
     except exception.UnableToSetupAnalysisError:
         logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
         return (
@@ -416,7 +425,7 @@ def run_distance_analysis(
         logger.error(f"Unknown error: {e}")
         return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
     else:
-        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
+        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1], analysis_runs.analysis_list)
 
 
 def load_results(a_project: "project.Project", a_results_name: str) -> tuple:

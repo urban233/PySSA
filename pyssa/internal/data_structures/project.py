@@ -55,6 +55,10 @@ class Project:
 
     # <editor-fold desc="Class attributes">
     """
+    the id of the project in the database
+    """
+    _id: int
+    """
     the name of the project
     """
     _project_name: str
@@ -113,6 +117,12 @@ class Project:
         self.sequences: list[SeqRecord.SeqRecord] = []
         self.xml_writer: QtCore.QXmlStreamWriter = QtCore.QXmlStreamWriter()
         self.xml_writer.setAutoFormatting(True)
+
+    def set_id(self, an_id: int) -> None:
+        self._id = an_id
+
+    def get_id(self):
+        return self._id
 
     def set_workspace_path(self, a_workspace_path: pathlib.Path) -> None:
         """Setter for the workspace path.
@@ -190,6 +200,9 @@ class Project:
             the path of the projects xml file
         """
         return pathlib.Path(f"{self._workspace}/{self.get_project_name()}.xml")
+
+    def get_database_filepath(self) -> pathlib.Path:
+        return pathlib.Path(f"{self._workspace}/{self.get_project_name()}")
 
     def serialize_project(self, a_filepath: pathlib.Path) -> None:
         """Serializes the project to a xml file.

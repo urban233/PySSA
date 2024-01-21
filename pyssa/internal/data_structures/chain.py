@@ -22,6 +22,7 @@
 """This module contains the chain class."""
 import logging
 from PyQt5 import QtCore
+from pyssa.util import enums
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import sequence
 
@@ -34,21 +35,25 @@ class Chain:
 
     # <editor-fold desc="Class attributes">
     """
-    letter of the chain
+    a letter of the chain
     """
     chain_letter: str
     """
-    sequence of the chain
+    a sequence of the chain
     """
     chain_sequence: sequence.Sequence
     """
-    type of the chain, whether it is a protein, or nuclein acid chain or something different
+    a type of the chain, whether it is a protein, or nuclein acid chain or something different
     """
     chain_type: str
     """
     a dict of parameters that can be changed in pymol
     """
     pymol_parameters: dict
+    """
+    the protein id from the project database
+    """
+    db_protein_id: int
 
     # </editor-fold>
 
@@ -67,8 +72,8 @@ class Chain:
         self.chain_sequence = chain_sequence
         self.chain_type = chain_type
         self.pymol_parameters = {
-            "chain_color": "green",
-            "chain_representation": "cartoon",
+            enums.PymolParameterEnum.COLOR.value: "green",
+            enums.PymolParameterEnum.REPRESENTATION.value: "cartoon",
         }
 
     def serialize(self, an_xml_writer: QtCore.QXmlStreamWriter):

@@ -13,6 +13,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from Bio import SeqRecord
+from Bio import SeqIO
 from xml import sax
 
 from pyssa.controller import results_view_controller
@@ -135,6 +136,7 @@ class MainViewController:
         # seqs tab
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.pushButton.clicked.connect(self._add_sequence)
+        self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
 
         # protein pairs tab
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
@@ -169,32 +171,35 @@ class MainViewController:
         self._database_manager.open_project_database()
         tmp_project = project.Project(tmp_project_name,
                                       self._interface_manager.get_application_settings().workspace_path)
-        self._database_manager.write_new_empty_project(tmp_project.get_project_name(),
-                                                       platform.system())
+        tmp_project.set_id(self._database_manager.insert_new_project(tmp_project.get_project_name(),
+                                                                     platform.system()))
         if len(tmp_protein_name) == 4:
-            #tmp_ref_protein = pymol_io.get_protein_from_pdb(tmp_protein_name.upper())
             tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+            tmp_ref_protein.db_project_id = tmp_project.get_id()
             tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             tmp_project.add_existing_protein(tmp_ref_protein)
-            self._database_manager.write_new_protein(tmp_ref_protein)
+            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
             constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
         elif len(tmp_protein_name) > 0:
             # local pdb file as input
             pdb_filepath = pathlib.Path(tmp_protein_name)
             graphic_operations.setup_default_session_graphic_settings()
             tmp_ref_protein = protein.Protein(
-                molecule_object=pdb_filepath.name.replace(".pdb",""),
+                pdb_filepath.name.replace(".pdb","")
             )
+            tmp_ref_protein.db_project_id = tmp_project.get_id()
             tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             tmp_project.add_existing_protein(tmp_ref_protein)
-            self._database_manager.write_new_protein(tmp_ref_protein)
+            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
         else:
             constants.PYSSA_LOGGER.info("Create empty project finished.")
+        self._interface_manager.set_new_project(tmp_project)
+        self._interface_manager.refresh_main_view()
 
     def _open_project(self) -> None:
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
@@ -322,10 +327,52 @@ class MainViewController:
         self._external_controller.job_input.connect(self._post_predict_monomer)
         self._interface_manager.get_predict_monomer_view().show()
 
+    # <editor-fold desc="Sequences tab methods">
+    def _import_sequence(self) -> None:
+        self._interface_manager.get_import_sequence_view().return_value.connect(self._post_import_sequence)
+        self._interface_manager.get_import_sequence_view().show()
+
+    def _post_import_sequence(self, return_value: tuple):
+        tmp_fasta_filepath, _ = return_value
+        tmp_record = SeqIO.read(tmp_fasta_filepath, "fasta")
+        self._interface_manager.get_current_project().sequences.append(tmp_record)
+        self._interface_manager.refresh_sequence_model()
+        self._interface_manager.refresh_main_view()
+
+    # </editor-fold>
+
     # <editor-fold desc="Proteins tab methods">
     def _import_protein_structure(self):
+        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
         self._interface_manager.get_add_protein_view().show()
 
+    def _post_import_protein_structure(self, return_value: tuple):
+        tmp_protein_name, tmp_name_len = return_value
+        if tmp_name_len == 4:
+            tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
+            tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
+            tmp_ref_protein.create_new_pymol_session()
+            tmp_ref_protein.save_pymol_session_as_base64_string()
+            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
+            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
+        elif tmp_name_len > 0:
+            # local pdb file as input
+            pdb_filepath = pathlib.Path(tmp_protein_name)
+            graphic_operations.setup_default_session_graphic_settings()
+            tmp_ref_protein = protein.Protein(
+                pdb_filepath.name.replace(".pdb","")
+            )
+            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
+            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
+            tmp_ref_protein.create_new_pymol_session()
+            tmp_ref_protein.save_pymol_session_as_base64_string()
+            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
+            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+        self._interface_manager.refresh_protein_model()
+        self._interface_manager.refresh_main_view()
 
     @staticmethod
     def update_scene() -> None:
@@ -445,6 +492,7 @@ class MainViewController:
                 tmp_raw_analysis_run_names.append(
                     self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.item(row_no).text())
 
+            self._database_manager.close_project_database()
             self._active_task = tasks.Task(
                 target=main_presenter_async.run_distance_analysis,
                 args=(
@@ -503,7 +551,7 @@ class MainViewController:
         self._view.wait_spinner.stop()
         self._interface_manager.refresh_main_view()
 
-    def post_analysis_process(self, an_exit_code: tuple[int, str]) -> None:
+    def post_analysis_process(self, an_exit_code: tuple[int, str, list]) -> None:
         """Post process after the analysis thread finished."""
         constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
         if an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
@@ -525,16 +573,17 @@ class MainViewController:
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
-            self._interface_manager.get_current_project().serialize_project(
-                self._interface_manager.get_current_project().get_project_xml_path()
-            )
-            constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+            # self._interface_manager.get_current_project().serialize_project(
+            #     self._interface_manager.get_current_project().get_project_xml_path()
+            # )
+            constants.PYSSA_LOGGER.info("Project has been saved to project database.")
             basic_boxes.ok(
                 "Structure analysis",
                 "All structure analysis' are done. Go to results to check the new results.",
                 QtWidgets.QMessageBox.Information,
             )
             constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+        self._database_manager.open_project_database()
         self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
 

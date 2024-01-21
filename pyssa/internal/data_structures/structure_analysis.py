@@ -164,7 +164,6 @@ class Analysis:
             # save pymol session of distance analysis
             tmp_protein_pair.save_session_of_protein_pair()
             self.app_project.add_protein_pair(tmp_protein_pair)
-        self.analysis_list.clear()
 
     def run_analysis(self, the_analysis_type: str, the_image_option: bool) -> None:
         """This function is used to run the analysis.
