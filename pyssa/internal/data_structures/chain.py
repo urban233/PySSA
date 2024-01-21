@@ -34,6 +34,7 @@ class Chain:
     """This class contains information about a single chain."""
 
     # <editor-fold desc="Class attributes">
+    _id: int
     """
     a letter of the chain
     """
@@ -75,6 +76,12 @@ class Chain:
             enums.PymolParameterEnum.COLOR.value: "green",
             enums.PymolParameterEnum.REPRESENTATION.value: "cartoon",
         }
+
+    def get_id(self):
+        return self._id
+
+    def set_id(self, value):
+        self._id = value
 
     def serialize(self, an_xml_writer: QtCore.QXmlStreamWriter):
         an_xml_writer.writeStartElement('chain')

@@ -90,6 +90,7 @@ class MainViewController:
         self._view: "main_view.MainView" = the_interface_manager.get_main_view()
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
         self._database_manager = database_manager.DatabaseManager("")
+        self._database_manager.set_application_settings(self._interface_manager.get_application_settings())
         self._app_model: "application_model.ApplicationModel" = application_model.ApplicationModel(project.Project())
         self._external_view = None
         self._protein_model = QtGui.QStandardItemModel()
@@ -217,9 +218,6 @@ class MainViewController:
         )
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._database_manager.open_project_database()
-        print(self._database_manager.get_number_of_sequences())
-        print(self._database_manager.get_number_of_proteins())
-        print(self._database_manager.get_number_of_protein_pairs())
         tmp_project = self._database_manager.get_project_as_object(
             tmp_project_name, self._interface_manager.get_application_settings().workspace_path
         )
@@ -301,16 +299,6 @@ class MainViewController:
             tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
             tmp_protein.chains[0].pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
 
-    def _add_sequence(self):
-        pass
-
-    def _post_add_sequence(self, return_value: tuple):
-        tmp_seq_name = return_value[0]
-        tmp_sequence = return_value[1]
-        tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, name=tmp_seq_name)
-        self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
-        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
-
     def _show_sequence_information(self):
         self._interface_manager.show_sequence_parameters(
             self._view.ui.seqs_list_view.currentIndex()
@@ -338,6 +326,16 @@ class MainViewController:
         self._interface_manager.get_current_project().sequences.append(tmp_record)
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
+
+    def _add_sequence(self):
+        pass
+
+    def _post_add_sequence(self, return_value: tuple):
+        tmp_seq_name = return_value[0]
+        tmp_sequence = return_value[1]
+        tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, name=tmp_seq_name)
+        self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
+        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
 
     # </editor-fold>
 

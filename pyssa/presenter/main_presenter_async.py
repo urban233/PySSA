@@ -409,6 +409,7 @@ def run_distance_analysis(
         logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
         analysis_runs.run_analysis("distance", an_make_images_flag)
         tmp_database_manager = database_manager.DatabaseManager(str(a_project.get_database_filepath()))
+        tmp_database_manager.set_application_settings(the_settings)
         tmp_database_manager.open_project_database()
         logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
         for tmp_protein_pair in analysis_runs.analysis_list:

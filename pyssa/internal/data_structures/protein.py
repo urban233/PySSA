@@ -117,6 +117,7 @@ class Protein:
         self._pymol_molecule_object = molecule_object
         self.pymol_selection = selection.Selection(self._pymol_molecule_object)
         self.pymol_selection.selection_string = ""
+        self.chains: list["chain.Chain"] = []
 
         #self._id = uuid.uuid4()
         #self.pdb_cache_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
