@@ -275,9 +275,9 @@ class InterfaceManager:
             self._main_view.ui.action_predict_monomer.setEnabled(True)
             self._main_view.ui.action_distance_analysis.setEnabled(True)
             self._main_view.ui.actionPreview.setEnabled(True)
-            self._main_view.ui.actionCreate_ray_ta.setEnabled(True)
-            self._main_view.ui.actionCreate_drawn.setEnabled(True)
-            self._main_view.ui.actionPlaceholder.setEnabled(True)
+            self._main_view.ui.action_ray_tracing.setEnabled(True)
+            self._main_view.ui.action_simple.setEnabled(True)
+            self._main_view.ui.action_protein_regions.setEnabled(True)
             self._main_view.ui.project_tab_widget.setCurrentIndex(0)
         else:
             # No project is open
@@ -291,9 +291,9 @@ class InterfaceManager:
             self._main_view.ui.actionExport.setEnabled(False)
             self._main_view.ui.action_close_project.setEnabled(False)
             self._main_view.ui.actionPreview.setEnabled(False)
-            self._main_view.ui.actionCreate_ray_ta.setEnabled(False)
-            self._main_view.ui.actionCreate_drawn.setEnabled(False)
-            self._main_view.ui.actionPlaceholder.setEnabled(False)
+            self._main_view.ui.action_ray_tracing.setEnabled(False)
+            self._main_view.ui.action_simple.setEnabled(False)
+            self._main_view.ui.action_protein_regions.setEnabled(False)
 
         if len(self._current_project.proteins) > 0:
             self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
