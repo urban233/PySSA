@@ -101,13 +101,8 @@ class MainViewController:
         self._setup_statusbar()
         self._connect_all_ui_elements_with_slot_functions()
 
-    def _setup_statusbar(self) -> None:
-        """Sets up the status bar and fills it with the current workspace."""
-        self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
-
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_new_project.triggered.connect(self._create_project)
-        self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
         self._view.ui.action_delete_project.triggered.connect(self._delete_project)
         self._view.ui.actionImport.triggered.connect(self.import_project)
@@ -145,15 +140,20 @@ class MainViewController:
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
 
-    def _update_tab(self) -> None:
-        # if self._view.ui.project_tab_widget.currentIndex() == 1:
-        #     print("Changed proteins")
-        #     self._interface_manager.refresh_protein_model()
-        # elif self._view.ui.project_tab_widget.currentIndex() == 2:
-        #     print("Changed protein pairs")
-        #     self._interface_manager.refresh_protein_pair_model()
-        pass
+    # <editor-fold desc="Util methods">
+    def update_status(self, message: str) -> None:
+        """Updates the status bar of the main view with a custom message."""
+        self._view.status_bar.showMessage(message)
 
+    def _setup_statusbar(self) -> None:
+        """Sets up the status bar and fills it with the current workspace."""
+        self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Menu bar methods">
+
+    # <editor-fold desc="Project menu">
     def _close_project(self):
         """Closes the current project"""
         self._interface_manager.set_new_project(project.Project())
@@ -238,7 +238,6 @@ class MainViewController:
         # )
         # self._active_task.start()
 
-    #
     # def __await_open_project(self, a_result: tuple) -> None:
     #     self._interface_manager.set_new_project(a_result[1])
     #     self._interface_manager.update_status_bar(self._workspace_status)
@@ -249,65 +248,116 @@ class MainViewController:
         self._external_controller = delete_project_view_controller.DeleteProjectViewController(self._interface_manager)
         self._interface_manager.get_delete_view().show()
 
-    def _show_protein_information(self) -> None:
-        tmp_type = self._view.ui.proteins_tree_view.model().data(
-            self._view.ui.proteins_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+    def import_project(self) -> None:
+        """Imports a project.xml into the current workspace."""
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getOpenFileName(
+            self._view,
+            "Select a project file to import",
+            "",
+            "XML Files (*.xml)",
         )
-        if tmp_type == "protein":
-            tmp_first_chain = self._view.ui.proteins_tree_view.currentIndex().child(0, 0)
-            self._interface_manager.show_chain_pymol_parameters(tmp_first_chain)
-        elif tmp_type == "chain":
-            self._interface_manager.show_chain_pymol_parameters(self._view.ui.proteins_tree_view.currentIndex())
-        else:
-            raise ValueError("Unknown type!")
-        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+        if file_path:
+            file = QtCore.QFile(file_path)
+            if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
+                print("Error: Cannot open file for reading")
+                return
 
-    def _show_protein_information_of_protein_pair(self) -> None:
-        tmp_type = self._view.ui.protein_pairs_tree_view.model().data(
-            self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+            tmp_project = project.Project()
+            handler = filesystem_io.ProjectParserHandler(tmp_project,
+                                                         self._interface_manager.get_application_settings())
+            parser = sax.make_parser()
+            parser.setContentHandler(handler)
+            parser.parse(file_path)
+            file.close()
+            tmp_project = handler.get_project()
+
+            tmp_project.set_workspace_path(self._workspace_path)
+            if len(tmp_project.proteins) <= 1:
+                if self._interface_manager.get_application_settings().wsl_install == 0:
+                    basic_boxes.ok(
+                        "Create new project",
+                        "Please install local colabfold to import this project!",
+                        QtWidgets.QMessageBox.Warning,
+                    )
+                    return
+                elif self._interface_manager.get_application_settings().local_colabfold == 0:  # noqa: RET505
+                    basic_boxes.ok(
+                        "Create new project",
+                        "Please install local colabfold to import this project!",
+                        QtWidgets.QMessageBox.Warning,
+                    )
+                    return
+            new_filepath = pathlib.Path(f"{self._workspace_path}/{tmp_project.get_project_name()}.xml")
+            tmp_project.serialize_project(new_filepath)
+            self._interface_manager.set_new_project(
+                self._interface_manager.get_current_project().deserialize_project(
+                    new_filepath, self._interface_manager.get_application_settings()
+                )
+            )
+            constants.PYSSA_LOGGER.info(
+                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}.")
+            self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
+            self._interface_manager.refresh_main_view()
+            basic_boxes.ok(
+                "Import Project",
+                "The project was successfully imported.",
+                QtWidgets.QMessageBox.Information,
+            )
+
+    def export_current_project(self) -> None:
+        """Exports the current project to an importable format."""
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(self._view, "Save current project", "", "XML Files (*.xml)")
+        if file_path:
+            self._interface_manager.get_current_project().serialize_project(pathlib.Path(file_path))
+            basic_boxes.ok(
+                "Export Project",
+                "The project was successfully exported.",
+                QtWidgets.QMessageBox.Information,
+            )
+
+    # </editor-fold>
+
+    # <editor-fold desc="Analysis menu">
+    def _distance_analysis(self):
+        self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
+            self._interface_manager
         )
-        if tmp_type == "protein":
-            tmp_first_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain)
-        elif tmp_type == "chain":
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._view.ui.protein_pairs_tree_view.currentIndex())
-        elif tmp_type == "protein_pair":
-            pass
-        else:
-            print(tmp_type)
-            raise ValueError("Unknown type!")
-        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+        self._external_controller.job_input.connect(self.start_process_batch)
+        self._interface_manager.get_distance_analysis_view().show()
 
-    def _change_chain_color_proteins(self) -> None:
-        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
-            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
-            tmp_protein_chain.pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
-        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein.chains[0].pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
-        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
+    def start_process_batch(self, job_input: tuple) -> None:
+        """Sets up the worker for the analysis task."""
+        constants.PYSSA_LOGGER.info("Begin analysis process.")
 
-    def _change_chain_representation_proteins(self) -> None:
-        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
-            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
-            tmp_protein_chain.pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
-        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein.chains[0].pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
+        _, tmp_raw_analysis_run_names, tmp_checkbox_state = job_input
 
-    def _show_sequence_information(self):
-        self._interface_manager.show_sequence_parameters(
-            self._view.ui.seqs_list_view.currentIndex()
+        self._active_task = tasks.Task(
+            target=main_presenter_async.run_distance_analysis,
+            args=(
+                tmp_raw_analysis_run_names,
+                self._interface_manager.get_current_project(),
+                self._interface_manager.get_application_settings(),
+                tmp_checkbox_state,
+            ),
+            post_func=self.post_analysis_process,
         )
+        self._active_task.start()
 
-    def update_status(self, message: str) -> None:
-        """Updates the status bar of the main view with a custom message."""
-        self._view.status_bar.showMessage(message)
+        if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+            os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+        #self.block_box_analysis.exec_()
 
+    # </editor-fold>
+
+    # <editor-fold desc="Prediction menu">
+
+    # <editor-fold desc="Monomer">
     def _predict_monomer(self):
         self._external_controller = predict_monomer_view_controller.PredictMonomerViewController(
             self._interface_manager
@@ -315,79 +365,6 @@ class MainViewController:
         self._external_controller.job_input.connect(self._post_predict_monomer)
         self._interface_manager.get_predict_monomer_view().show()
 
-    # <editor-fold desc="Sequences tab methods">
-    def _import_sequence(self) -> None:
-        self._interface_manager.get_import_sequence_view().return_value.connect(self._post_import_sequence)
-        self._interface_manager.get_import_sequence_view().show()
-
-    def _post_import_sequence(self, return_value: tuple):
-        tmp_fasta_filepath, _ = return_value
-        tmp_record = SeqIO.read(tmp_fasta_filepath, "fasta")
-        self._interface_manager.get_current_project().sequences.append(tmp_record)
-        self._database_manager.insert_new_sequence(tmp_record)
-        self._interface_manager.refresh_sequence_model()
-        self._interface_manager.refresh_main_view()
-
-    def _add_sequence(self):
-        pass
-
-    def _post_add_sequence(self, return_value: tuple):
-        tmp_seq_name = return_value[0]
-        tmp_sequence = return_value[1]
-        tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, name=tmp_seq_name)
-        self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
-        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
-
-    # </editor-fold>
-
-    # <editor-fold desc="Proteins tab methods">
-    def _import_protein_structure(self):
-        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
-        self._interface_manager.get_add_protein_view().show()
-
-    def _post_import_protein_structure(self, return_value: tuple):
-        tmp_protein_name, tmp_name_len = return_value
-        if tmp_name_len == 4:
-            tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
-            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
-            tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
-            tmp_ref_protein.create_new_pymol_session()
-            tmp_ref_protein.save_pymol_session_as_base64_string()
-            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
-            constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
-        elif tmp_name_len > 0:
-            # local pdb file as input
-            pdb_filepath = pathlib.Path(tmp_protein_name)
-            graphic_operations.setup_default_session_graphic_settings()
-            tmp_ref_protein = protein.Protein(
-                pdb_filepath.name.replace(".pdb","")
-            )
-            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
-            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
-            tmp_ref_protein.create_new_pymol_session()
-            tmp_ref_protein.save_pymol_session_as_base64_string()
-            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
-            constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
-        self._interface_manager.refresh_protein_model()
-        self._interface_manager.refresh_main_view()
-
-    @staticmethod
-    def update_scene() -> None:
-        """Updates the current selected PyMOL scene."""
-        cmd.scene(key="auto", action="update")
-
-    def save_scene(self) -> None:
-        """Saves the current view as a new PyMOL scene."""
-        # returns tuple with (name, bool)
-        scene_name = QtWidgets.QInputDialog.getText(self._view, "Save Scene", "Enter scene name:")
-        if scene_name[1]:
-            cmd.scene(key=scene_name[0], action="append")
-
-    # </editor-fold>
-
-    # <editor-fold desc="Logic">
     def _post_predict_monomer(self, result: tuple) -> None:
         """Sets up the worker for the prediction of the proteins."""
         self._view.wait_spinner.start()
@@ -653,47 +630,7 @@ class MainViewController:
 
     # </editor-fold>
 
-    def _distance_analysis(self):
-        self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
-            self._interface_manager
-        )
-        self._external_controller.job_input.connect(self.start_process_batch)
-        self._interface_manager.get_distance_analysis_view().show()
-
-    def start_process_batch(self, job_input: tuple) -> None:
-        """Sets up the worker for the analysis task."""
-        constants.PYSSA_LOGGER.info("Begin analysis process.")
-
-        _, tmp_raw_analysis_run_names, tmp_checkbox_state = job_input
-
-        self._active_task = tasks.Task(
-            target=main_presenter_async.run_distance_analysis,
-            args=(
-                tmp_raw_analysis_run_names,
-                self._interface_manager.get_current_project(),
-                self._interface_manager.get_application_settings(),
-                tmp_checkbox_state,
-            ),
-            post_func=self.post_analysis_process,
-        )
-        self._active_task.start()
-
-        if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
-            os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-        #self.block_box_analysis.exec_()
-
-    def _check_for_results(self) -> None:
-        if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
-            self._view.ui.action_results_summary.setEnabled(True)
-        else:
-            self._view.ui.action_results_summary.setEnabled(False)
-
-    def _results_summary(self) -> None:
-        tmp_protein_pair = self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(),
-                                                                              enums.ModelEnum.OBJECT_ROLE)
-        self._external_controller = results_view_controller.ResultsViewController(self._interface_manager,
-                                                                                  tmp_protein_pair)
-        self._interface_manager.get_results_view().show()
+    # </editor-fold>
 
     # <editor-fold desc="Settings menu methods">
     def open_settings_global(self) -> None:
@@ -740,10 +677,12 @@ class MainViewController:
             except PermissionError:
                 print("The active log file was not deleted.")
             if len(os.listdir(str(constants.LOG_PATH))) == 1:
-                basic_boxes.ok("Clear log files", "All log files could be deleted.", QtWidgets.QMessageBox.Information)
+                basic_boxes.ok("Clear log files", "All log files could be deleted.",
+                               QtWidgets.QMessageBox.Information)
                 constants.PYSSA_LOGGER.info("All log files were deleted.")
             else:
-                basic_boxes.ok("Clear log files", "Not all log files could be deleted.", QtWidgets.QMessageBox.Warning)
+                basic_boxes.ok("Clear log files", "Not all log files could be deleted.",
+                               QtWidgets.QMessageBox.Warning)
                 constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
 
     @staticmethod
@@ -769,8 +708,8 @@ class MainViewController:
     # TODO: images need to be reimplemented
     def post_preview_image(self) -> None:
         """Hides the block box of the preview process."""
-        #self.block_box_uni.hide()
-        #self.block_box_uni.destroy(True)
+        # self.block_box_uni.hide()
+        # self.block_box_uni.destroy(True)
         self._view.status_bar.showMessage("Finished preview of ray-traced image.")
         QtWidgets.QApplication.restoreOverrideCursor()
 
@@ -798,7 +737,7 @@ class MainViewController:
                 "Preview ray-trace image",
                 "Creating preview for the ray-traced image ...",
             )
-            #self.block_box_uni.exec_()
+            # self.block_box_uni.exec_()
         else:
             self._view.status_bar.showMessage("Preview draw image ...")
             cmd.draw(2400, 2400)
@@ -908,77 +847,147 @@ class MainViewController:
 
     # </editor-fold>
 
-    # <editor-fold desc="Import, Export functions">
-    def import_project(self) -> None:
-        """Imports a project.xml into the current workspace."""
-        file_dialog = QtWidgets.QFileDialog()
-        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
-        file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getOpenFileName(
-            self._view,
-            "Select a project file to import",
-            "",
-            "XML Files (*.xml)",
+    # </editor-fold>
+
+    # <editor-fold desc="Sequences tab methods">
+    def _show_sequence_information(self):
+        self._interface_manager.show_sequence_parameters(
+            self._view.ui.seqs_list_view.currentIndex()
         )
-        if file_path:
-            file = QtCore.QFile(file_path)
-            if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
-                print("Error: Cannot open file for reading")
-                return
 
-            tmp_project = project.Project()
-            handler = filesystem_io.ProjectParserHandler(tmp_project, self._interface_manager.get_application_settings())
-            parser = sax.make_parser()
-            parser.setContentHandler(handler)
-            parser.parse(file_path)
-            file.close()
-            tmp_project = handler.get_project()
+    def _import_sequence(self) -> None:
+        self._interface_manager.get_import_sequence_view().return_value.connect(self._post_import_sequence)
+        self._interface_manager.get_import_sequence_view().show()
 
-            tmp_project.set_workspace_path(self._workspace_path)
-            if len(tmp_project.proteins) <= 1:
-                if self._interface_manager.get_application_settings().wsl_install == 0:
-                    basic_boxes.ok(
-                        "Create new project",
-                        "Please install local colabfold to import this project!",
-                        QtWidgets.QMessageBox.Warning,
-                    )
-                    return
-                elif self._interface_manager.get_application_settings().local_colabfold == 0:  # noqa: RET505
-                    basic_boxes.ok(
-                        "Create new project",
-                        "Please install local colabfold to import this project!",
-                        QtWidgets.QMessageBox.Warning,
-                    )
-                    return
-            new_filepath = pathlib.Path(f"{self._workspace_path}/{tmp_project.get_project_name()}.xml")
-            tmp_project.serialize_project(new_filepath)
-            self._interface_manager.set_new_project(
-                self._interface_manager.get_current_project().deserialize_project(
-                    new_filepath, self._interface_manager.get_application_settings()
-                )
-            )
-            constants.PYSSA_LOGGER.info(
-                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}.")
-            self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
-            self._interface_manager.refresh_main_view()
-            basic_boxes.ok(
-                "Import Project",
-                "The project was successfully imported.",
-                QtWidgets.QMessageBox.Information,
-            )
+    def _post_import_sequence(self, return_value: tuple):
+        tmp_fasta_filepath, _ = return_value
+        tmp_record = SeqIO.read(tmp_fasta_filepath, "fasta")
+        self._interface_manager.get_current_project().sequences.append(tmp_record)
+        self._database_manager.insert_new_sequence(tmp_record)
+        self._interface_manager.refresh_sequence_model()
+        self._interface_manager.refresh_main_view()
 
-    def export_current_project(self) -> None:
-        """Exports the current project to an importable format."""
-        file_dialog = QtWidgets.QFileDialog()
-        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
-        file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getSaveFileName(self._view, "Save current project", "", "XML Files (*.xml)")
-        if file_path:
-            self._interface_manager.get_current_project().serialize_project(pathlib.Path(file_path))
-            basic_boxes.ok(
-                "Export Project",
-                "The project was successfully exported.",
-                QtWidgets.QMessageBox.Information,
+    def _add_sequence(self):
+        pass
+
+    def _post_add_sequence(self, return_value: tuple):
+        tmp_seq_name = return_value[0]
+        tmp_sequence = return_value[1]
+        tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, name=tmp_seq_name)
+        self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
+        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
+
+    # </editor-fold>
+
+    # <editor-fold desc="Proteins tab methods">
+    def _show_protein_information(self) -> None:
+        tmp_type = self._view.ui.proteins_tree_view.model().data(
+            self._view.ui.proteins_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+        )
+        if tmp_type == "protein":
+            tmp_first_chain = self._view.ui.proteins_tree_view.currentIndex().child(0, 0)
+            self._interface_manager.show_chain_pymol_parameters(tmp_first_chain)
+        elif tmp_type == "chain":
+            self._interface_manager.show_chain_pymol_parameters(self._view.ui.proteins_tree_view.currentIndex())
+        else:
+            raise ValueError("Unknown type!")
+        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+
+    def _change_chain_color_proteins(self) -> None:
+        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
+            tmp_protein_chain.pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
+        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein.chains[0].pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
+        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
+
+    def _change_chain_representation_proteins(self) -> None:
+        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
+            tmp_protein_chain.pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
+        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein.chains[0].pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
+
+    def _import_protein_structure(self):
+        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
+        self._interface_manager.get_add_protein_view().show()
+
+    def _post_import_protein_structure(self, return_value: tuple):
+        tmp_protein_name, tmp_name_len = return_value
+        if tmp_name_len == 4:
+            tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
+            tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
+            tmp_ref_protein.create_new_pymol_session()
+            tmp_ref_protein.save_pymol_session_as_base64_string()
+            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
+            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
+        elif tmp_name_len > 0:
+            # local pdb file as input
+            pdb_filepath = pathlib.Path(tmp_protein_name)
+            graphic_operations.setup_default_session_graphic_settings()
+            tmp_ref_protein = protein.Protein(
+                pdb_filepath.name.replace(".pdb","")
             )
+            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
+            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
+            tmp_ref_protein.create_new_pymol_session()
+            tmp_ref_protein.save_pymol_session_as_base64_string()
+            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
+            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+        self._interface_manager.refresh_protein_model()
+        self._interface_manager.refresh_main_view()
+
+    @staticmethod
+    def update_scene() -> None:
+        """Updates the current selected PyMOL scene."""
+        cmd.scene(key="auto", action="update")
+
+    def save_scene(self) -> None:
+        """Saves the current view as a new PyMOL scene."""
+        # returns tuple with (name, bool)
+        scene_name = QtWidgets.QInputDialog.getText(self._view, "Save Scene", "Enter scene name:")
+        if scene_name[1]:
+            cmd.scene(key=scene_name[0], action="append")
+
+    # </editor-fold>
+
+    # <editor-fold desc="Protein Pairs tab methods">
+    def _show_protein_information_of_protein_pair(self) -> None:
+        tmp_type = self._view.ui.protein_pairs_tree_view.model().data(
+            self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
+        )
+        if tmp_type == "protein":
+            tmp_first_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain)
+        elif tmp_type == "chain":
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._view.ui.protein_pairs_tree_view.currentIndex())
+        elif tmp_type == "protein_pair":
+            pass
+        else:
+            print(tmp_type)
+            raise ValueError("Unknown type!")
+        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+
+    def _check_for_results(self) -> None:
+        if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
+            self._view.ui.action_results_summary.setEnabled(True)
+        else:
+            self._view.ui.action_results_summary.setEnabled(False)
+
+    def _results_summary(self) -> None:
+        tmp_protein_pair = self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(),
+                                                                              enums.ModelEnum.OBJECT_ROLE)
+        self._external_controller = results_view_controller.ResultsViewController(self._interface_manager,
+                                                                                  tmp_protein_pair)
+        self._interface_manager.get_results_view().show()
 
     # </editor-fold>
