@@ -175,8 +175,11 @@ def build_pdb_file(records, a_filepath):
                            f"{record['occupancy']:6.2f}{record['temperature_factor']:6.2f}           " \
                            f"{record['element_symbol']:2s}{record['charge']:2s}\n"
             elif record_type == 'TER':
-                pdb_line = f"{record_type:3s}   {record['atom_number']:5d}      {record['residue_name']:3s}" \
-                           f" {record['chain_identifier']:1s}{record['residue_sequence_number']:4d}\n"
+                try:
+                    pdb_line = f"{record_type:3s}   {record['atom_number']:5d}      {record['residue_name']:3s}" \
+                               f" {record['chain_identifier']:1s}{record['residue_sequence_number']:4d}\n"
+                except KeyError:
+                    pdb_line = ""
             elif record_type == 'HETATM':
                 pdb_line = f"{record_type:6s}{record['atom_number']:5d}  {record['atom_name']:4s}" \
                            f"{record['residue_name']:3s} {record['chain_identifier']:1s}" \

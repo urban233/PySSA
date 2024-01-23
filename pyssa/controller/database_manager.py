@@ -21,6 +21,7 @@ class DatabaseManager:
 
     def __init__(self, the_database_filepath: str) -> None:
         self._database_filepath = the_database_filepath
+        self._connection = None
 
     # <editor-fold desc="Util methods">
     def get_last_id(self):
@@ -29,8 +30,27 @@ class DatabaseManager:
         tmp_id, = self._cursor.fetchall()[0]
         return tmp_id
 
+    def get_database_filepath(self):
+        return self._database_filepath
+
     def set_application_settings(self, the_app_settings):
         self._application_settings = the_app_settings
+
+    def get_latest_id_of_protein_table(self):
+        self.open_project_database()
+        # Assuming your_table_name has an auto-incrementing primary key column named 'id'
+        self._cursor.execute("SELECT MAX(id) FROM Protein")
+        latest_id_before_insert = self._cursor.fetchone()[0]
+        self.close_project_database()
+        return latest_id_before_insert if latest_id_before_insert is not None else 0
+
+    def get_latest_id_of_a_specific_table(self, a_table_name):
+        self.open_project_database()
+        # Assuming your_table_name has an auto-incrementing primary key column named 'id'
+        self._cursor.execute(f"SELECT MAX(id) FROM {a_table_name}")
+        latest_id_before_insert = self._cursor.fetchone()[0]
+        self.close_project_database()
+        return latest_id_before_insert if latest_id_before_insert is not None else 0
 
     # </editor-fold>
 
@@ -213,6 +233,15 @@ class DatabaseManager:
         self._cursor.close()
         self._connection.close()
 
+    def __enter__(self):
+        self._connection = sqlite3.connect(self._database_filepath)
+        self._cursor = self._connection.cursor()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self._connection:
+            self._connection.close()
+
     # </editor-fold>
 
     # <editor-fold desc="SeqRecord objects inserts">
@@ -312,6 +341,56 @@ class DatabaseManager:
             the_protein_id
         )
         self._cursor.execute(sql, tmp_params)
+        self._connection.commit()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Delete statements for protein object">
+    def delete_existing_protein(self, a_protein_id: int):
+        self._delete_pdb_atom(a_protein_id)
+        self._delete_pymol_selection(a_protein_id)
+        for tmp_chain_info in self._get_chain(a_protein_id):
+            self._delete_pymol_parameter(tmp_chain_info[0])
+        self._delete_chains(a_protein_id)
+        self._delete_protein(a_protein_id)
+
+    def _delete_protein(self, the_protein_id: int):
+        sql = """   
+            DELETE FROM Protein
+            WHERE id = ?
+        """
+        self._cursor.execute(sql, (the_protein_id,))
+        self._connection.commit()
+
+    def _delete_chains(self, the_protein_id: int):
+        sql = """   
+            DELETE FROM Chain
+            WHERE protein_id = ?
+        """
+        self._cursor.execute(sql, (the_protein_id,))
+        self._connection.commit()
+
+    def _delete_pymol_parameter(self, the_chain_id):
+        sql = """   
+            DELETE FROM PyMOLParameter
+            WHERE chain_id = ?
+        """
+        self._cursor.execute(sql, (the_chain_id,))
+        self._connection.commit()
+
+    def _delete_pymol_selection(self, the_protein_id: int):
+        sql = """   
+            DELETE FROM PyMOLSelection
+            WHERE protein_id = ?
+        """
+        self._cursor.execute(sql, (the_protein_id,))
+        self._connection.commit()
+
+    def _delete_pdb_atom(self, the_protein_id: int):
+        sql = """   DELETE FROM PdbAtom
+                    WHERE protein_id = ?
+        """
+        self._cursor.execute(sql, (the_protein_id,))
         self._connection.commit()
 
     # </editor-fold>
@@ -531,7 +610,7 @@ class DatabaseManager:
         self._connection.commit()
         return self.get_last_id()
 
-    def get_project_as_object(self, a_project_name: str, a_workspace_path: pathlib.Path) -> "project.Project":
+    def get_project_as_object(self, a_project_name: str, a_workspace_path: pathlib.Path, the_app_settings) -> "project.Project":
         """Creates a project object based on the data from the project database."""
         tmp_project = project.Project(a_project_name, a_workspace_path)
         tmp_project_id, = self._get_project(a_project_name)
@@ -582,7 +661,7 @@ class DatabaseManager:
             # create distance analysis object
             tmp_distance_analysis_info = self._get_distance_analysis(tmp_protein_pair_id)
             tmp_distance_analysis_id, tmp_name, tmp_cutoff, tmp_cycles, tmp_figure_size_x, tmp_figure_size_y = tmp_distance_analysis_info
-            tmp_distance_analysis = structure_analysis.DistanceAnalysis(self._application_settings)
+            tmp_distance_analysis = structure_analysis.DistanceAnalysis(the_app_settings)
             tmp_distance_analysis.name = tmp_name
             tmp_distance_analysis.cutoff = tmp_cutoff
             tmp_distance_analysis.cycles = tmp_cycles
@@ -690,7 +769,32 @@ class DatabaseManager:
 
     # </editor-fold>
 
+    # <editor-fold desc="Select statements for sequences">
     def _get_sequence(self) -> list[tuple]:
         sql = """SELECT seq_id, seq, name FROM SeqRecord WHERE project_id = ?"""
         self._cursor.execute(sql, (1,))  # fixme: this is not the best solution
         return self._cursor.fetchall()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Update statements for protein objects">
+    def update_protein_chain_color(self, a_chain_id: int, a_color: str):
+        sql = """
+            UPDATE PyMOLParameter 
+            SET color = ?
+            WHERE chain_id = ?
+        """
+        self._cursor.execute(sql, (a_color, a_chain_id))
+        self._connection.commit()
+
+    def update_protein_chain_representation(self, a_chain_id: int, a_representation: str):
+        sql = """
+            UPDATE PyMOLParameter 
+            SET representation = ?
+            WHERE chain_id = ?
+        """
+        self._cursor.execute(sql, (a_representation, a_chain_id))
+        self._connection.commit()
+
+    # </editor-fold>
+

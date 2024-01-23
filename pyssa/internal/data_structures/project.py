@@ -407,7 +407,6 @@ class Project:
         protein_obj = self.search_protein(a_protein_name)
         if protein_obj in self.proteins:
             self.proteins.remove(protein_obj)
-            self.serialize_project(self.get_project_xml_path())
         else:
             raise ValueError("An argument is not in the list.")
 

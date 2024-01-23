@@ -174,11 +174,12 @@ class InterfaceManager:
     # TODO: Fix it and use it to get the code smaller
     def get_workspace_projects(self):
         """Returns the workspace projects."""
-        xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
+        db_pattern = os.path.join(self._application_settings.get_workspace_path(), '*.db')
         self.string_model.setStringList(
             # Filters the workspace for all project files based on the xml extension
-            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
+            [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]
         )
+        return self.string_model
         # fixme: without setModel(self.string_model), so it MUST stand in every module.
 
     def update_settings(self):

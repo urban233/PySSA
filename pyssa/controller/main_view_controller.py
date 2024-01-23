@@ -22,9 +22,9 @@ from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein
-from pyssa.internal.data_structures.data_classes import prediction_protein_info
+from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
-from pyssa.internal.thread import tasks, task_workers
+from pyssa.internal.thread import tasks, task_workers, database_thread
 from pyssa.io_pyssa import safeguard, filesystem_io, path_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.presenter import main_presenter_async
@@ -73,6 +73,11 @@ class MainViewController:
     """
     _active_task: tasks.Task
 
+    """
+    a thread for database related processes
+    """
+    _database_thread: "database_thread.DatabaseThread"
+
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
         """Constructor.
 
@@ -91,6 +96,8 @@ class MainViewController:
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
         self._database_manager = database_manager.DatabaseManager("")
         self._database_manager.set_application_settings(self._interface_manager.get_application_settings())
+        self._database_thread: "database_thread.DatabaseThread" = database_thread.DatabaseThread("")
+
         self._app_model: "application_model.ApplicationModel" = application_model.ApplicationModel(project.Project())
         self._external_view = None
         self._protein_model = QtGui.QStandardItemModel()
@@ -129,6 +136,7 @@ class MainViewController:
         self._view.cb_chain_color.currentIndexChanged.connect(self._change_chain_color_proteins)
         self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
+        self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
         # seqs tab
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.pushButton.clicked.connect(self._add_sequence)
@@ -167,7 +175,10 @@ class MainViewController:
     def _post_create_project(self, user_input: tuple) -> None:
         tmp_project_name, tmp_protein_name = user_input
         self._database_manager.set_database_filepath(
-            str(pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}")))
+            str(
+                pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db")
+            )
+        )
         self._database_manager.build_new_database()
         self._database_manager.open_project_database()
         tmp_project = project.Project(tmp_project_name,
@@ -181,7 +192,7 @@ class MainViewController:
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             tmp_project.add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            tmp_ref_protein.set_id(self._database_manager.insert_new_protein(tmp_ref_protein))
             constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
         elif len(tmp_protein_name) > 0:
             # local pdb file as input
@@ -213,13 +224,17 @@ class MainViewController:
         tmp_project_name = return_value
         tmp_project_database_filepath = str(
             pathlib.Path(
-                f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}"
+                f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"
             )
         )
+        self._database_thread.set_database_filepath(tmp_project_database_filepath)
+        self._database_thread.start()
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._database_manager.open_project_database()
         tmp_project = self._database_manager.get_project_as_object(
-            tmp_project_name, self._interface_manager.get_application_settings().workspace_path
+            tmp_project_name,
+            self._interface_manager.get_application_settings().workspace_path,
+            self._interface_manager.get_application_settings()
         )
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
@@ -894,25 +909,39 @@ class MainViewController:
         self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
 
     def _change_chain_color_proteins(self) -> None:
+        # TODO: changes need to be propagated to pymol!
         if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            self._view.ui.btn_delete_protein.setEnabled(False)
+
             tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
             tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
             tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
-            tmp_protein_chain.pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
+            tmp_color: str = self._view.cb_chain_color.currentText()
+            tmp_protein_chain.pymol_parameters["chain_color"] = tmp_color
+            self._database_manager.update_protein_chain_color(tmp_protein_chain.get_id(), tmp_color)
         elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            self._view.ui.btn_delete_protein.setEnabled(True)
+
             tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein.chains[0].pymol_parameters["chain_color"] = self._view.cb_chain_color.currentText()
-        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
+            tmp_color = self._view.cb_chain_color.currentText()
+            tmp_protein.chains[0].pymol_parameters["chain_color"] = tmp_color
+            self._database_manager.update_protein_chain_color(tmp_protein.chains[0].get_id(), tmp_color)
 
     def _change_chain_representation_proteins(self) -> None:
+        # TODO: changes need to be propagated to pymol!
+        tmp_representation = self._view.cb_chain_representation.currentText()
         if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
             tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
             tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
             tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
-            tmp_protein_chain.pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
+            tmp_protein_chain.pymol_parameters["chain_representation"] = tmp_representation
+            self._database_manager.update_protein_chain_representation(tmp_protein_chain.get_id(),
+                                                                       tmp_representation)
         elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
             tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein.chains[0].pymol_parameters["chain_representation"] = self._view.cb_chain_representation.currentText()
+            tmp_protein.chains[0].pymol_parameters["chain_representation"] = tmp_representation
+            self._database_manager.update_protein_chain_representation(tmp_protein.chains[0].get_id(),
+                                                                       tmp_representation)
 
     def _import_protein_structure(self):
         self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
@@ -922,12 +951,15 @@ class MainViewController:
         tmp_protein_name, tmp_name_len = return_value
         if tmp_name_len == 4:
             tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+            tmp_ref_protein.set_id(self._database_manager.get_latest_id_of_protein_table())
             tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
             tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
+            tmp_ref_protein.add_id_to_all_chains(self._database_manager.get_latest_id_of_a_specific_table("Chain"))
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            tmp_work = (enums.SQLQueryType.INSERT_NEW_PROTEIN, (0, tmp_ref_protein))
+            self._database_thread.put_database_operation_into_queue(tmp_work)
             constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
         elif tmp_name_len > 0:
             # local pdb file as input
@@ -943,6 +975,18 @@ class MainViewController:
             self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
             tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+        self._interface_manager.refresh_protein_model()
+        self._interface_manager.refresh_main_view()
+
+    def _delete_protein(self):
+        tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+        #self._database_manager.delete_existing_protein(tmp_protein.get_id())
+        tmp_database_filepath = self._database_manager.get_database_filepath()
+        self._database_manager.close_project_database()
+        tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
+                                                                      (0, tmp_protein.get_id()))
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
 

@@ -30,3 +30,10 @@ class PymolParameterEnum(enum.Enum):
     """An enum for all pymol parameters."""
     COLOR = "chain_color"
     REPRESENTATION = "chain_representation"
+
+
+class SQLQueryType(enum.Enum):
+    """An enum for all possible sql queries for the database thread."""
+    INSERT_NEW_PROTEIN = 'insert_new_protein'
+    DELETE_EXISTING_PROTEIN = 'delete_existing_protein'
+

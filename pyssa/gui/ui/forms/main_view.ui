@@ -179,21 +179,21 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_5">
+             <widget class="QPushButton" name="btn_clean_protein">
               <property name="text">
                <string>Clean</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_7">
+             <widget class="QPushButton" name="btn_save_protein">
               <property name="text">
                <string>Save</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="pushButton_6">
+             <widget class="QPushButton" name="btn_delete_protein">
               <property name="text">
                <string>Delete</string>
               </property>

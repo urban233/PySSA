@@ -11,6 +11,7 @@ Authors: Hannah Kullik & Martin Urban
 * [Exception handling](#Exception-handling)
 * [Communication](#communication)
 * [Threading](#threading)
+* [Database](#database)
 * [Terminology](#Terminology)
 * [Code formatting](#Code-formatting)
 * [Code documentation](#code-documentation)
@@ -266,6 +267,68 @@ have the signature `__await`.
 This design decision is based on intuition because the `__async` function
 runs **asynchronous** in the QThread and the `__await` function **waits**
 for the QThread (`__async` function) to finish,
+
+## Database
+PySSA uses a SQLite database for every single project. 
+
+### Basic interaction with DatabaseX classes
+The interaction is managed through the `DatabaseManager` class.
+The interaction with the manager from a controller is done through the 
+`DatabaseThread` class. The `DatabaseThread` has a queue which 
+accepts objects of the type `DatabaseOperation`. 
+
+To run an INSERT statement from a controller, you have to create
+a `DatabaseOperation` object with the `SQLQueryType` (in this case INSERT_...)
+and put it into the queue of the `DatabaseThread`.
+
+```python
+def _delete_protein(self):
+    """Deletes an existing protein from the project."""
+    tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+    
+    # Below is the creation of the DatabaseOperation object
+    tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN, 
+                                                                  (0, tmp_protein.get_id()))
+    # Here the DatabaseOperation object will be put into the queue of the DatabaseThread
+    self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+    
+    # -- The rest of the function
+    self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
+    self._interface_manager.refresh_protein_model()
+    self._interface_manager.refresh_main_view()
+```
+
+### Adding new SQL queries to the DatabaseThread
+Every SQL statement has to be implemented in the `DatabaseManager` class!
+For proper functionality of the `DatabaseThread` class 
+it is necessary to add the SQL statements from the 
+database manager into a _wrapper_ function and map this function against 
+an appropriate SQLQueryType enum.
+
+An example for a wrapper function.
+```python
+@staticmethod
+def __wrapper_delete_existing_protein(the_db_manager, the_buffered_data: tuple):
+    # It is import to unpack the first element of the tuple with an _ !   
+    _, tmp_protein_id = the_buffered_data  
+    the_db_manager.delete_existing_protein(tmp_protein_id)
+```
+
+An example for the mapping process
+```python
+def _setup_operations_mapping(self):
+    self._operations_mapping = {
+        enums.SQLQueryType.INSERT_NEW_PROTEIN: self.__wrapper_insert_new_protein,
+        enums.SQLQueryType.DELETE_EXISTING_PROTEIN: self.__wrapper_delete_existing_protein
+    }
+```
+and the SQLQueryType enum class
+```python
+class SQLQueryType(enum.Enum):
+    """An enum for all possible sql queries for the database thread."""
+    INSERT_NEW_PROTEIN = 'insert_new_protein'
+    DELETE_EXISTING_PROTEIN = 'delete_existing_protein'
+```
 
 ## Terminology
 ### Path, dir, file & filepath
