@@ -19,34 +19,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the Open Dialog."""
-
-import os
-import glob
+"""Module for the Hotspots Dialog."""
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
-from pyssa.gui.ui.forms.auto_generated import auto_open_project_view
-from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, input_validator
+from pyssa.gui.ui.forms.auto_generated import auto_hotspots_protein_regions_view
+from pyssa.util import constants
 
 
-class OpenProjectView(QtWidgets.QDialog):
-    """Class representing an Open dialog."""
+class HotspotsProteinRegionsView(QtWidgets.QDialog):
+    """Class representing a Hotspots dialog."""
 
     def __init__(self) -> None:
         """Constructor."""
         QtWidgets.QDialog.__init__(self)
         # build ui object
-        self.ui = auto_open_project_view.Ui_Dialog()
+        self.ui = auto_hotspots_protein_regions_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
-        self.ui.lbl_open_status_search.setText("")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Open project")
+        self.setWindowTitle("Protein Regions")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

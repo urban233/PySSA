@@ -19,34 +19,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the Open Dialog."""
+"""Module for the Hotspots Dialog."""
 
-import os
 import glob
-
-from PyQt5 import QtWidgets
-from PyQt5 import QtGui
+import os
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from pyssa.gui.ui.forms.auto_generated import auto_open_project_view
+
+from pyssa.controller import interface_manager
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, input_validator
+from pyssa.util import input_validator, constants
 
 
-class OpenProjectView(QtWidgets.QDialog):
-    """Class representing an Open dialog."""
+class OpenProjectViewController(QtCore.QObject):
+    """Class for the Hotspots Protein Regions View Controller."""
+    return_value = QtCore.pyqtSignal(str)
 
-    def __init__(self) -> None:
-        """Constructor."""
-        QtWidgets.QDialog.__init__(self)
-        # build ui object
-        self.ui = auto_open_project_view.Ui_Dialog()
-        self.ui.setupUi(self)
-        self._initialize_ui()
+    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+        super().__init__()
+        self._interface_manager = the_interface_manager
+        self._view = the_interface_manager.get_hotspots_protein_regions_view()
+        self._connect_all_ui_elements_to_slot_functions()
 
-    def _initialize_ui(self) -> None:
-        """Initialize the UI elements."""
-        self.ui.lbl_open_status_search.setText("")
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Open project")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+    def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        pass

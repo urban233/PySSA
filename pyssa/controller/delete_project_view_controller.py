@@ -19,8 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 """Module for the Delete Dialog."""
-import glob
+
 import os
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -32,7 +33,6 @@ from pyssa.util import input_validator, gui_utils, constants, enums
 
 class DeleteProjectViewController(QtCore.QObject):
     """Class for the Delete Project View Controller."""
-    string_model = QtCore.QStringListModel()
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
         super().__init__()
@@ -43,14 +43,7 @@ class DeleteProjectViewController(QtCore.QObject):
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
-        # self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_model())
-        # fixme: maybe the code below should stay in get_workspace_model() as above.
-        xml_pattern = os.path.join(constants.DEFAULT_WORKSPACE_PATH, '*.xml')
-        self.string_model.setStringList(
-            # Filters the workspace for all project files based on the xml extension
-            [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]
-        )
-        self._view.ui.list_delete_projects_view.setModel(self.string_model)
+        self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_projects())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
