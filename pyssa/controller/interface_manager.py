@@ -7,6 +7,7 @@ from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
+from pyssa.controller import database_manager
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view
@@ -341,22 +342,38 @@ class InterfaceManager:
         )
         self._main_view.ui.proteins_table_widget.resizeColumnsToContents()
 
-    def show_chain_pymol_parameter_for_protein_pairs(self, a_chain_item):
+    def show_chain_pymol_parameter_for_protein_pairs(self,
+                                                     a_chain_item,
+                                                     a_protein_pair_id: int,
+                                                     a_protein_id: int):
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
         self._main_view.setup_protein_pairs_table(len(tmp_chain.pymol_parameters))
+        with database_manager.DatabaseManager(str(self._current_project.get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            tmp_color = db_manager.get_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                a_protein_pair_id, a_protein_id, tmp_chain.chain_letter, enums.PymolParameterEnum.COLOR.value
+            )
+            tmp_representation = db_manager.get_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                a_protein_pair_id, a_protein_id, tmp_chain.chain_letter, enums.PymolParameterEnum.REPRESENTATION.value
+            )
+            db_manager.close_project_database()
+        tmp_pymol_parameters = {
+            enums.PymolParameterEnum.COLOR.value: tmp_color[0],
+            enums.PymolParameterEnum.REPRESENTATION.value: tmp_representation[0],
+        }
         i = 0
-        for tmp_key in tmp_chain.pymol_parameters.keys():
-            tmp_value_item = QtWidgets.QTableWidgetItem(tmp_chain.pymol_parameters[tmp_key])
+        for tmp_key in tmp_pymol_parameters.keys():
+            tmp_value_item = QtWidgets.QTableWidgetItem(tmp_pymol_parameters[tmp_key])
             tmp_key_item = QtWidgets.QTableWidgetItem(str(tmp_key).replace("_", " "))
             tmp_key_item.setFlags(tmp_key_item.flags() & ~Qt.ItemIsEditable)
             self._main_view.ui.protein_pairs_table_widget.setItem(i, 0, tmp_key_item)
             self._main_view.ui.protein_pairs_table_widget.setItem(i, 1, tmp_value_item)
             i += 1
         self._main_view.cb_chain_color_protein_pair.setCurrentIndex(
-            self._main_view.cb_chain_color_protein_pair.findText(tmp_chain.pymol_parameters["chain_color"])
+            self._main_view.cb_chain_color_protein_pair.findText(tmp_pymol_parameters[enums.PymolParameterEnum.COLOR.value])
         )
         self._main_view.cb_chain_representation_protein_pair.setCurrentIndex(
-            self._main_view.cb_chain_representation_protein_pair.findText(tmp_chain.pymol_parameters["chain_representation"])
+            self._main_view.cb_chain_representation_protein_pair.findText(tmp_pymol_parameters[enums.PymolParameterEnum.REPRESENTATION.value])
         )
         self._main_view.ui.protein_pairs_table_widget.resizeColumnsToContents()
 

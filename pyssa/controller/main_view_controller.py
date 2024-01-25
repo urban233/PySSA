@@ -21,7 +21,7 @@ from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
-from pyssa.internal.data_structures import project, settings, protein
+from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import tasks, task_workers, database_thread
@@ -147,6 +147,8 @@ class MainViewController:
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
+        self._view.cb_chain_color_protein_pair.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
+        self._view.cb_chain_representation_protein_pair.currentIndexChanged.connect(self._change_chain_representation_protein_pairs)
 
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
@@ -164,8 +166,25 @@ class MainViewController:
     # <editor-fold desc="Project menu">
     def _close_project(self):
         """Closes the current project"""
+        # TODO: runs in an infinite loop if the database thread gets under "heavy" work
+        self._active_task = tasks.Task(
+            target=main_presenter_async.close_project,
+            args=(self._database_thread, ""),
+            post_func=self.__await_close_project,
+        )
+        self._active_task.start()
+        self._view.wait_spinner.start()
+        self.msg_box = basic_boxes.no_buttons("Saving Project",
+                                              "Please wait the program is saving your project.",
+                                              QtWidgets.QMessageBox.Information)
+        self.msg_box.show()
+
+    def __await_close_project(self):
+        """Await the async closing process."""
         self._interface_manager.set_new_project(project.Project())
         self._interface_manager.refresh_main_view()
+        self.msg_box.hide()
+        self._view.wait_spinner.stop()
 
     def _create_project(self) -> None:
         self._external_controller = create_project_view_controller.CreateProjectViewController(self._interface_manager)
@@ -174,12 +193,11 @@ class MainViewController:
 
     def _post_create_project(self, user_input: tuple) -> None:
         tmp_project_name, tmp_protein_name = user_input
-        self._database_manager.set_database_filepath(
-            str(
-                pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db")
-            )
-        )
+        tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
+        self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._database_manager.build_new_database()
+        self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
+        self._database_thread.start()
         self._database_manager.open_project_database()
         tmp_project = project.Project(tmp_project_name,
                                       self._interface_manager.get_application_settings().workspace_path)
@@ -227,7 +245,7 @@ class MainViewController:
                 f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"
             )
         )
-        self._database_thread.set_database_filepath(tmp_project_database_filepath)
+        self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
         self._database_thread.start()
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._database_manager.open_project_database()
@@ -359,6 +377,7 @@ class MainViewController:
                 self._interface_manager.get_current_project(),
                 self._interface_manager.get_application_settings(),
                 tmp_checkbox_state,
+                self._database_thread
             ),
             post_func=self.post_analysis_process,
         )
@@ -491,6 +510,7 @@ class MainViewController:
                     self._interface_manager.get_current_project(),
                     self._interface_manager.get_application_settings(),
                     self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
+                    self._database_thread
                 ),
                 post_func=self.post_analysis_process,
             )
@@ -575,6 +595,7 @@ class MainViewController:
             )
             constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._database_manager.open_project_database()
+        self._interface_manager.refresh_protein_pair_model()
         self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
 
@@ -958,8 +979,11 @@ class MainViewController:
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            tmp_work = (enums.SQLQueryType.INSERT_NEW_PROTEIN, (0, tmp_ref_protein))
-            self._database_thread.put_database_operation_into_queue(tmp_work)
+            self._database_thread.put_database_operation_into_queue(
+                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
+                                                     (0, tmp_ref_protein)))
+            # tmp_work = (enums.SQLQueryType.INSERT_NEW_PROTEIN, (0, tmp_ref_protein))
+            # self._database_thread.put_database_operation_into_queue(tmp_work)
             constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
         elif tmp_name_len > 0:
             # local pdb file as input
@@ -973,7 +997,10 @@ class MainViewController:
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            self._database_thread.put_database_operation_into_queue(
+                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
+                                                     (0, tmp_ref_protein)))
+            # tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
@@ -1010,16 +1037,117 @@ class MainViewController:
             self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
         )
         if tmp_type == "protein":
+            tmp_protein = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex().parent(), enums.ModelEnum.OBJECT_ROLE
+            )
             tmp_first_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain)
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain,
+                                                                                 tmp_protein_pair.get_id(),
+                                                                                 tmp_protein.get_id())
         elif tmp_type == "chain":
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._view.ui.protein_pairs_tree_view.currentIndex())
+            tmp_protein = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex().parent(), enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent(), enums.ModelEnum.OBJECT_ROLE
+            )
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), tmp_protein_pair.get_id(), tmp_protein.get_id()
+            )
         elif tmp_type == "protein_pair":
-            pass
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair.load_pymol_session()
         else:
             print(tmp_type)
             raise ValueError("Unknown type!")
-        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+        tmp_current_active_obj = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole
+        )
+        self._view.status_bar.showMessage(f"Active PyMOL Object: {tmp_current_active_obj}")
+
+    def _change_chain_color_protein_pairs(self) -> None:
+        if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            self._view.ui.btn_delete_protein.setEnabled(False)
+            tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
+        elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            self._view.ui.btn_delete_protein.setEnabled(True)
+            tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(enums.ModelEnum.OBJECT_ROLE)
+        else:
+            return
+
+        # Update pymol parameter in database
+        tmp_color: str = self._view.cb_chain_color_protein_pair.currentText()
+        with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                tmp_protein_pair.get_id(),
+                tmp_protein.get_id(),
+                tmp_chain.chain_letter,
+                enums.PymolParameterEnum.COLOR.value,
+                tmp_color,
+            )
+            db_manager.close_project_database()
+        # Update pymol parameter in PyMOL
+        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        tmp_protein.pymol_selection.color_selection(tmp_color)
+
+    def _change_chain_representation_protein_pairs(self) -> None:
+        if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            self._view.ui.btn_delete_protein.setEnabled(False)
+            tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
+        elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            self._view.ui.btn_delete_protein.setEnabled(True)
+            tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(
+                enums.ModelEnum.OBJECT_ROLE)
+        else:
+            return
+        # Update pymol parameter in database
+        tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
+        with database_manager.DatabaseManager(
+                str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                tmp_protein_pair.get_id(),
+                tmp_protein.get_id(),
+                tmp_chain.chain_letter,
+                enums.PymolParameterEnum.REPRESENTATION.value,
+                tmp_representation,
+            )
+            db_manager.close_project_database()
+
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
+            (0, tmp_protein_pair.get_id(), tmp_protein_pair)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        # Update pymol parameter in PyMOL
+        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:

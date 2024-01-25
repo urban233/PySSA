@@ -657,6 +657,7 @@ class DatabaseManager:
             tmp_protein_pair.set_id(tmp_protein_pair_id)
             tmp_protein_pair.db_project_id = tmp_project_id
             tmp_protein_pair.name = tmp_pp_name
+            tmp_protein_pair.pymol_session = tmp_pymol_session
 
             # create distance analysis object
             tmp_distance_analysis_info = self._get_distance_analysis(tmp_protein_pair_id)
@@ -742,6 +743,37 @@ class DatabaseManager:
         sql = """SELECT pymol_molecule_object FROM Protein WHERE id = ?"""
         self._cursor.execute(sql, (a_protein_id,))
         return self._cursor.fetchall()[0]
+
+    def get_pdb_atoms_of_protein(self, the_protein_id: int) -> list[tuple]:
+        sql = """   
+            SELECT record_type, atom_number, atom_name, alternate_location_indicator, residue_name,
+            chain_identifier, residue_sequence_number, code_for_insertions_of_residues, 
+            x_coord, y_coord, z_coord, occupancy, temperature_factor, segment_identifier, element_symbol, 
+            charge, protein_id 
+            FROM PdbAtom 
+            WHERE protein_id = ?"""
+        # tmp_params = (
+        #     a_pdb_atom_dict["record_type"],
+        #     a_pdb_atom_dict["atom_number"],
+        #     a_pdb_atom_dict["atom_name"],
+        #     a_pdb_atom_dict["alternate_location_indicator"],
+        #     a_pdb_atom_dict["residue_name"],
+        #     a_pdb_atom_dict["chain_identifier"],
+        #     a_pdb_atom_dict["residue_sequence_number"],
+        #     a_pdb_atom_dict["code_for_insertions_of_residues"],
+        #     a_pdb_atom_dict["x_coord"],
+        #     a_pdb_atom_dict["y_coord"],
+        #     a_pdb_atom_dict["z_coord"],
+        #     a_pdb_atom_dict["occupancy"],
+        #     a_pdb_atom_dict["temperature_factor"],
+        #     a_pdb_atom_dict["segment_identifier"],
+        #     a_pdb_atom_dict["element_symbol"],
+        #     a_pdb_atom_dict["charge"],
+        #     the_protein_id
+        # )
+        self._cursor.execute(sql, (the_protein_id,))
+        return self._cursor.fetchall()
+
     # </editor-fold>
 
     # <editor-fold desc="Select statements for protein pair objects">
@@ -766,6 +798,17 @@ class DatabaseManager:
                     FROM DistanceAnalysisResultData WHERE distance_analysis_results_id = ?"""
         self._cursor.execute(sql, (the_distance_analysis_results_id,))
         return self._cursor.fetchall()
+
+    def get_pymol_parameter_for_certain_protein_chain_in_protein_pair(self,
+                                                                      a_protein_pair_id: int,
+                                                                      a_protein_id: int,
+                                                                      a_chain_letter: str,
+                                                                      a_parameter_name: str) -> tuple:
+        sql = """   
+            SELECT parameter_value
+            FROM PyMOLParameterProteinPair WHERE protein_id = ? and chain_letter = ? and protein_pair_id = ? and parameter_name = ?"""
+        self._cursor.execute(sql, (a_protein_id, a_chain_letter, a_protein_pair_id, a_parameter_name))
+        return self._cursor.fetchall()[0]
 
     # </editor-fold>
 
@@ -798,3 +841,30 @@ class DatabaseManager:
 
     # </editor-fold>
 
+    def update_pymol_parameter_for_certain_protein_chain_in_protein_pair(self,
+                                                                         a_protein_pair_id: int,
+                                                                         a_protein_id: int,
+                                                                         a_chain_letter: str,
+                                                                         the_parameter_name: str,
+                                                                         the_new_parameter_value: str):
+        sql = """
+                    UPDATE PyMOLParameterProteinPair 
+                    SET parameter_value = ?
+                    WHERE protein_id = ? and chain_letter = ? and protein_pair_id = ? and parameter_name = ?
+                """
+        self._cursor.execute(sql, (the_new_parameter_value, a_protein_id, a_chain_letter, a_protein_pair_id, the_parameter_name))
+        self._connection.commit()
+        # sql = """
+        #     UPDATE PyMOLParameterProteinPair
+        #     FROM PyMOLParameterProteinPair WHERE protein_id = ? and chain_letter = ? and protein_pair_id = ? and parameter_name = ?"""
+        # self._cursor.execute(sql, (a_protein_id, a_chain_letter, a_protein_pair_id, a_parameter_name))
+        # return self._cursor.fetchall()[0]
+
+    def update_pymol_session_of_protein_pair(self, the_protein_pair_id: int, the_new_pymol_session: str):
+        sql = """
+                            UPDATE ProteinPair 
+                            SET pymol_session = ?
+                            WHERE id = ?
+                        """
+        self._cursor.execute(sql, (str(the_new_pymol_session), int(the_protein_pair_id)))
+        self._connection.commit()

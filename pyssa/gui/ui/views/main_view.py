@@ -86,8 +86,11 @@ class MainView(QtWidgets.QMainWindow):
         self.cb_chain_color = QtWidgets.QComboBox()
         self.cb_chain_representation = QtWidgets.QComboBox()
         self.btn_show_sequence = QtWidgets.QPushButton()
+        self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
+        self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
         self.btn_show_sequence.setText("Show")
         self.build_proteins_table()
+        self.build_protein_pairs_table()
 
         self.ui.proteins_tree_view.setContextMenuPolicy(Qt.DefaultContextMenu)
 
@@ -121,6 +124,15 @@ class MainView(QtWidgets.QMainWindow):
         gui_utils.fill_combo_box(self.cb_chain_representation, constants.PYMOL_REPRESENTATIONS)
         self.cb_chain_representation.adjustSize()
 
+    def build_protein_pairs_table(self):
+        self.ui.protein_pairs_table_widget.setColumnCount(2)
+        self.ui.protein_pairs_table_widget.verticalHeader().setVisible(False)
+        self.ui.protein_pairs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+        gui_utils.fill_combo_box(self.cb_chain_color_protein_pair, constants.PYMOL_COLORS)
+        self.cb_chain_color_protein_pair.adjustSize()
+        gui_utils.fill_combo_box(self.cb_chain_representation_protein_pair, constants.PYMOL_REPRESENTATIONS)
+        self.cb_chain_representation_protein_pair.adjustSize()
+
     def setup_proteins_table(self, row_count):
         self.ui.proteins_table_widget.setRowCount(row_count)
         self.ui.proteins_table_widget.setCellWidget(0, 1, self.cb_chain_color)
@@ -128,18 +140,8 @@ class MainView(QtWidgets.QMainWindow):
 
     def setup_protein_pairs_table(self, row_count):
         self.ui.protein_pairs_table_widget.setRowCount(row_count)
-        self.ui.protein_pairs_table_widget.setColumnCount(2)
-        self.ui.protein_pairs_table_widget.verticalHeader().setVisible(False)
-        self.ui.protein_pairs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
-        self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
-        gui_utils.fill_combo_box(self.cb_chain_color_protein_pair, ["red", "green", "yellow"])
         self.ui.protein_pairs_table_widget.setCellWidget(0, 1, self.cb_chain_color_protein_pair)
-        self.cb_chain_color_protein_pair.adjustSize()
-
-        self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
-        gui_utils.fill_combo_box(self.cb_chain_representation_protein_pair, ["ribbon", "cartoon", "sticks"])
         self.ui.protein_pairs_table_widget.setCellWidget(1, 1, self.cb_chain_representation_protein_pair)
-        self.cb_chain_representation_protein_pair.adjustSize()
 
 
     #
