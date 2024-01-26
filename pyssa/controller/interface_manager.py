@@ -387,17 +387,24 @@ class InterfaceManager:
         self._main_view.ui.seqs_table_widget.verticalHeader().setVisible(False)
         self._main_view.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
+        # Table label items
         tmp_name_label_item = QtWidgets.QTableWidgetItem("Name")
         self._main_view.ui.seqs_table_widget.setItem(0, 0, tmp_name_label_item)
-        self._main_view.ui.seqs_table_widget.setItem(0, 1, QtWidgets.QTableWidgetItem(tmp_sequence.name))
         tmp_sequence_label_item = QtWidgets.QTableWidgetItem("Sequence")
         self._main_view.ui.seqs_table_widget.setItem(1, 0, tmp_sequence_label_item)
+        # Table value items
+        tmp_seq_name_item = QtWidgets.QTableWidgetItem(tmp_sequence.name)
+        tmp_seq_name_item.setToolTip("Double click to edit name")
+        self._main_view.ui.seqs_table_widget.setItem(0, 1, tmp_seq_name_item)
+        tmp_sequence_item = QtWidgets.QTableWidgetItem(f"{tmp_sequence.seq[:15]} ...")
+        tmp_sequence_item.setToolTip("Click to view complete sequence")
+        tmp_sequence_item.setData(enums.ModelEnum.OBJECT_ROLE, tmp_sequence)
+        self._main_view.ui.seqs_table_widget.setItem(1, 1, tmp_sequence_item)
+        # Table item flags
+        tmp_sequence_item.setFlags(tmp_sequence_item.flags() & ~Qt.ItemIsEditable)
         tmp_name_label_item.setFlags(tmp_name_label_item.flags() & ~Qt.ItemIsEditable)
         tmp_sequence_label_item.setFlags(tmp_sequence_label_item.flags() & ~Qt.ItemIsEditable)
-        #self._main_view.ui.seqs_table_widget.setItem(1, 1, QtWidgets.QTableWidgetItem(tmp_sequence.seq))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
-        self._main_view.btn_show_sequence.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self._main_view.ui.seqs_table_widget.setCellWidget(1, 1, self._main_view.btn_show_sequence)
 
     def start_wait_spinner(self) -> None:
         """Starts the spinner."""

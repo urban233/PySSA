@@ -297,3 +297,8 @@ QToolButton::hover {
     border-color: #4B91F7;
     border-style: solid;
 }
+
+QToolTip {
+    font: bold;
+    font-size: 12px;
+}

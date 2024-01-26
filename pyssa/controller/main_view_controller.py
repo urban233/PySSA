@@ -142,6 +142,8 @@ class MainViewController:
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.pushButton.clicked.connect(self._add_sequence)
         self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
+        self._view.ui.seqs_table_widget.cellClicked.connect(self.open_text_editor_for_seq)
+        self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
 
         # protein pairs tab
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
@@ -887,10 +889,36 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Sequences tab methods">
+    def open_text_editor_for_seq(self):
+        self.tmp_txt_browser = QtWidgets.QTextBrowser()
+        try:
+            self.tmp_txt_browser.setText(
+                self._view.ui.seqs_table_widget.currentItem().data(enums.ModelEnum.OBJECT_ROLE).seq
+            )
+        except AttributeError:
+            return
+        else:
+            self.tmp_txt_browser.setWindowTitle("View Sequence")
+            self.tmp_txt_browser.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+            self.tmp_txt_browser.resize(500, 150)
+            self.tmp_txt_browser.show()
+
+    def _rename_sequence(self):
+        tmp_old_name = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name
+        tmp_new_name = self._view.ui.seqs_table_widget.currentItem().text()
+        tmp_seq = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).seq
+        self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name = tmp_new_name
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+
     def _show_sequence_information(self):
+        self._view.ui.seqs_table_widget.cellChanged.disconnect(self._rename_sequence)
         self._interface_manager.show_sequence_parameters(
             self._view.ui.seqs_list_view.currentIndex()
         )
+        self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
 
     def _import_sequence(self) -> None:
         self._interface_manager.get_import_sequence_view().return_value.connect(self._post_import_sequence)

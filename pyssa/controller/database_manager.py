@@ -868,3 +868,12 @@ class DatabaseManager:
                         """
         self._cursor.execute(sql, (str(the_new_pymol_session), int(the_protein_pair_id)))
         self._connection.commit()
+
+    def update_sequence_name(self, the_new_seq_name: str, the_old_seq_name: str, the_sequence: str):
+        sql = """
+            UPDATE SeqRecord 
+            SET name = ?
+            WHERE name = ? and seq = ?
+        """
+        self._cursor.execute(sql, (the_new_seq_name, the_old_seq_name, the_sequence))
+        self._connection.commit()

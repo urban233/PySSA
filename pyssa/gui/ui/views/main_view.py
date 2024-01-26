@@ -85,10 +85,10 @@ class MainView(QtWidgets.QMainWindow):
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
         self.cb_chain_representation = QtWidgets.QComboBox()
-        self.btn_show_sequence = QtWidgets.QPushButton()
+        #self.btn_show_sequence = QtWidgets.QPushButton()
         self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
         self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
-        self.btn_show_sequence.setText("Show")
+        #self.btn_show_sequence.setText("Show")
         self.build_proteins_table()
         self.build_protein_pairs_table()
 
