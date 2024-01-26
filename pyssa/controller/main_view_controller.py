@@ -130,6 +130,7 @@ class MainViewController:
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
         # proteins tab
+        self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
@@ -166,18 +167,17 @@ class MainViewController:
     # <editor-fold desc="Project menu">
     def _close_project(self):
         """Closes the current project"""
-        # TODO: runs in an infinite loop if the database thread gets under "heavy" work
         self._active_task = tasks.Task(
             target=main_presenter_async.close_project,
             args=(self._database_thread, ""),
             post_func=self.__await_close_project,
         )
         self._active_task.start()
-        self._view.wait_spinner.start()
         self.msg_box = basic_boxes.no_buttons("Saving Project",
                                               "Please wait the program is saving your project.",
                                               QtWidgets.QMessageBox.Information)
         self.msg_box.show()
+        self._view.wait_spinner.start()
 
     def __await_close_project(self):
         """Await the async closing process."""
@@ -331,7 +331,8 @@ class MainViewController:
                 )
             )
             constants.PYSSA_LOGGER.info(
-                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}.")
+                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}."
+            )
             self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
             self._interface_manager.refresh_main_view()
             basic_boxes.ok(
@@ -916,6 +917,24 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Proteins tab methods">
+    def open_context_menu_for_proteins(self, position):
+        indexes = self._view.ui.proteins_tree_view.selectedIndexes()
+        if len(indexes) > 0:
+            level = 0
+            index = indexes[0]
+            while index.parent().isValid():
+                index = index.parent()
+                level += 1
+        menu = QtWidgets.QMenu()
+        if level == 0:
+            menu.addAction(self._view.tr("Clean current protein"))
+            menu.addAction(self._view.tr("Clean and create new protein"))
+        elif level == 1:
+            menu.addAction(self._view.tr("Edit object/container"))
+        elif level == 2:
+            menu.addAction(self._view.tr("Edit object"))
+        menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
+
     def _show_protein_information(self) -> None:
         tmp_type = self._view.ui.proteins_tree_view.model().data(
             self._view.ui.proteins_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE

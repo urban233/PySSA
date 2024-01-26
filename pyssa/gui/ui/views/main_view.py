@@ -92,10 +92,18 @@ class MainView(QtWidgets.QMainWindow):
         self.build_proteins_table()
         self.build_protein_pairs_table()
 
-        self.ui.proteins_tree_view.setContextMenuPolicy(Qt.DefaultContextMenu)
-
+        self.ui.proteins_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setMinimumWidth(700)
         self.setMinimumHeight(700)
+
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
+        icon = self.style().standardIcon(pixmapi)
+        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setText("")
+        self.ui.btn_help_2.setIcon(icon)
+        self.ui.btn_help_2.setText("")
+        self.ui.btn_help_3.setIcon(icon)
+        self.ui.btn_help_3.setText("")
 
         pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
         # Resize the pixmap
@@ -106,8 +114,8 @@ class MainView(QtWidgets.QMainWindow):
         styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("PySSA")
-        # constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
-        # constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
+        constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
+        constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
     def build_sequence_table(self):
         self.ui.seqs_table_widget.verticalHeader().setVisible(False)
