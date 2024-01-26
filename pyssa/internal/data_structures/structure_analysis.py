@@ -29,11 +29,13 @@ import pymol
 from pymol import cmd
 from typing import TYPE_CHECKING
 from PyQt5 import QtCore
+
+from pyssa.controller import database_manager
 from pyssa.internal.portal import pymol_io
 from pyssa.io_pyssa import path_util, filesystem_helpers
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants, distance_analysis_util, pyssa_keys
+from pyssa.util import constants, distance_analysis_util, pyssa_keys, enums
 from pyssa.util import exception
 
 if TYPE_CHECKING:
@@ -60,6 +62,20 @@ class Analysis:
         """
         self.app_project: "project.Project" = app_project
 
+    def _fetch_pdb_atoms_for_all_proteins(self):
+        with database_manager.DatabaseManager(str(self.app_project.get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            for tmp_protein_pair in self.analysis_list:
+                tmp_pdb_atom_db_data_1 = db_manager.get_pdb_atoms_of_protein(tmp_protein_pair.protein_1.get_id())
+                tmp_pdb_atom_db_data_2 = db_manager.get_pdb_atoms_of_protein(tmp_protein_pair.protein_2.get_id())
+                pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in
+                                   tmp_pdb_atom_db_data_1]
+                pdb_atom_dict_2 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in
+                                   tmp_pdb_atom_db_data_2]
+                tmp_protein_pair.protein_1.set_pdb_data(pdb_atom_dict_1)
+                tmp_protein_pair.protein_2.set_pdb_data(pdb_atom_dict_2)
+            db_manager.close_project_database()
+
     def run_distance_analysis(self, the_image_creation_option: bool) -> None:
         """Runs the distance analysis for all protein pairs of the analysis job.
 
@@ -79,6 +95,7 @@ class Analysis:
         logger.debug(
             f"The function argument of the value for the image_creation_option is: {the_image_creation_option}",
         )
+        self._fetch_pdb_atoms_for_all_proteins()
         # create scratch dirs
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_ANALYSIS)
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)

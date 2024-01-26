@@ -27,6 +27,7 @@ class ResultsViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
         self._build_table_widget()
         self._fill_table_widget()
+        self._view.setWindowTitle(f"Results Summary Of {self._protein_pair.name}")
 
     def _connect_all_ui_elements_to_slot_functions(self):
         self._view.ui.btn_view_plots.clicked.connect(self._open_plot_view)
@@ -43,7 +44,7 @@ class ResultsViewController(QtCore.QObject):
 
     def _fill_table_widget(self):
         # RMSD value item for table widget
-        tmp_rmsd_label_item = QtWidgets.QTableWidgetItem("RMSD")
+        tmp_rmsd_label_item = QtWidgets.QTableWidgetItem("RMSD (Å)")
         tmp_result_rmsd_item = QtWidgets.QTableWidgetItem(
             str(self._protein_pair.distance_analysis.analysis_results.rmsd))
         self._view.ui.table_widget_results.setItem(0, 0, tmp_rmsd_label_item)

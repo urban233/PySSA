@@ -294,7 +294,7 @@ class ProjectParserHandler(sax.ContentHandler):
 
 
 class ProjectParser:
-    _project: project.Project
+    _project: "project.Project"
 
     def __init__(self, xml_reader: QtCore.QXmlStreamReader):
         self.xml_reader = xml_reader
@@ -765,7 +765,7 @@ class ObjectDeserializer:
 
     def deserialize_project(self, app_settings: "settings.Settings") -> "project.Project":
         """Deserializes the project object from the JSON file."""
-        tmp_project: project.Project = project.Project(
+        tmp_project: "project.Project" = project.Project(
             self.object_dict.get("_project_name"),
             self.object_dict.get("_workspace"),
         )

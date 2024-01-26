@@ -21,9 +21,14 @@
 #
 """This module contains the selection class."""
 import logging
+
+from pymol import cmd
+from pyssa.internal.portal import graphic_operations
 from pyssa.io_pyssa import safeguard
 from pyssa.logging_pyssa import log_handlers
 from typing import TYPE_CHECKING
+
+from pyssa.util import constants
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import chain
@@ -106,10 +111,26 @@ class Selection:
         """
         self.selection_string = f"/{self.molecule_object}/{segi}/{chain}/{resi}/{atom_name}"
 
-    def set_custom_selection(self, sele_string: str) -> None:
+    def set_selection_for_a_single_chain(self, a_chain_letter: str):
+        """Sets a selection for a single chain."""
+        self.selection_string = f"/{self.molecule_object}//{a_chain_letter}"
+
+    def set_custom_selection(self, a_sele_string: str) -> None:
         """Sets a custom selection as selection string.
 
         Args:
-            sele_string: a custom pymol selection string.
+            a_sele_string: a custom pymol selection string.
         """
-        self.selection_string = sele_string
+        self.selection_string = a_sele_string
+
+    def color_selection(self, a_color: str) -> None:
+        """Sets a custom color to the active selection."""
+        graphic_operations.color_protein(a_color, self.selection_string)
+
+    def change_representaion_of_selection(self, a_representation: str) -> None:
+        """Sets a custom representation to the active selection."""
+        # for tmp_repr in constants.PYMOL_REPRESENTATIONS:
+        #     if tmp_repr != a_representation:
+        #         cmd.hide()
+        cmd.hide("everything", self.selection_string)
+        cmd.show(a_representation, self.selection_string)

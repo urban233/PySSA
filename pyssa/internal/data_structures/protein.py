@@ -27,6 +27,8 @@ import uuid
 import pymol
 from Bio import PDB
 from PyQt5 import QtCore
+
+from pyssa.controller import database_manager
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
@@ -82,7 +84,7 @@ class Protein:
     """
     a list of pdb information
     """
-    _pdb_data: list
+    _pdb_data: list[dict]
     """
     the project id from the database
     """
@@ -118,6 +120,7 @@ class Protein:
         self.pymol_selection = selection.Selection(self._pymol_molecule_object)
         self.pymol_selection.selection_string = ""
         self.chains: list["chain.Chain"] = []
+        self._pdb_data = []
 
         #self._id = uuid.uuid4()
         #self.pdb_cache_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
@@ -314,6 +317,9 @@ class Protein:
         """Gets the pdb information of the protein."""
         return self._pdb_data
 
+    def set_pdb_data(self, pdb_data: list) -> None:
+        self._pdb_data = pdb_data
+
     def get_id(self) -> int:
         """Gets the id of the protein."""
         return self._id
@@ -397,6 +403,10 @@ class Protein:
             os.mkdir(constants.CACHE_PROTEIN_DIR)
 
         # </editor-fold>
+
+        if len(self._pdb_data) == 0:
+            raise ValueError("No pdb data in current object!")
+
         try:
             bio_data.build_pdb_file(self._pdb_data, pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))
         except exception.IllegalArgumentError:

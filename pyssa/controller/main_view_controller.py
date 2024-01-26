@@ -19,8 +19,9 @@ from xml import sax
 from pyssa.controller import results_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
+from pyssa.gui.ui.views import predict_monomer_view, delete_project_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
-from pyssa.internal.data_structures import project, settings, protein
+from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import tasks, task_workers, database_thread
@@ -29,10 +30,10 @@ from pyssa.logging_pyssa import log_handlers
 from pyssa.presenter import main_presenter_async
 from pyssa.util import constants, enums, exception, main_window_util, exit_codes, prediction_util, gui_utils, tools
 from pyssa.gui.ui.views import main_view
+from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
-    delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager, \
-    hotspots_protein_regions_view_controller
+    delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
 from pyssa.util import globals
 
 logger = logging.getLogger(__file__)
@@ -108,7 +109,6 @@ class MainViewController:
         self._connect_all_ui_elements_with_slot_functions()
 
     def _connect_all_ui_elements_with_slot_functions(self):
-        # project
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
         self._view.ui.action_delete_project.triggered.connect(self._delete_project)
@@ -116,33 +116,21 @@ class MainViewController:
         self._view.ui.actionExport.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
 
-        # prediction
-        # self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
-
-        # analysis
-        self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
-
-        # results
         self._view.ui.action_results_summary.triggered.connect(self._results_summary)
+        self._view.ui.actionPreview.triggered.connect(self.preview_image)
 
-        # image
-        # self._view.ui.actionPreview.triggered.connect(self.preview_image)
-
-        # hotspots
-        self._view.ui.action_protein_regions.triggered.connect(self.hotspots_protein_regions)
-
-        # settings
         self._view.ui.action_edit_settings.triggered.connect(self.open_settings_global)
         self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
-
-        # help
-        self._view.ui.actionDocumentation.triggered.connect(self.open_documentation)
-        self._view.ui.actionTutorials.triggered.connect(self.open_tutorial)
         self._view.ui.actionShow_log_in_explorer.triggered.connect(self.open_logs)
         self._view.ui.actionClear_Logs.triggered.connect(self.clear_all_log_files)
+        self._view.ui.actionDocumentation.triggered.connect(self.open_documentation)
+        self._view.ui.actionTutorials.triggered.connect(self.open_tutorial)
         self._view.ui.action_about.triggered.connect(self.open_about)
+        self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
+        self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
         # proteins tab
+        self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
@@ -160,6 +148,8 @@ class MainViewController:
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
+        self._view.cb_chain_color_protein_pair.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
+        self._view.cb_chain_representation_protein_pair.currentIndexChanged.connect(self._change_chain_representation_protein_pairs)
 
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
@@ -177,8 +167,24 @@ class MainViewController:
     # <editor-fold desc="Project menu">
     def _close_project(self):
         """Closes the current project"""
+        self._active_task = tasks.Task(
+            target=main_presenter_async.close_project,
+            args=(self._database_thread, ""),
+            post_func=self.__await_close_project,
+        )
+        self._active_task.start()
+        self.msg_box = basic_boxes.no_buttons("Saving Project",
+                                              "Please wait the program is saving your project.",
+                                              QtWidgets.QMessageBox.Information)
+        self.msg_box.show()
+        self._view.wait_spinner.start()
+
+    def __await_close_project(self):
+        """Await the async closing process."""
         self._interface_manager.set_new_project(project.Project())
         self._interface_manager.refresh_main_view()
+        self.msg_box.hide()
+        self._view.wait_spinner.stop()
 
     def _create_project(self) -> None:
         self._external_controller = create_project_view_controller.CreateProjectViewController(self._interface_manager)
@@ -187,12 +193,11 @@ class MainViewController:
 
     def _post_create_project(self, user_input: tuple) -> None:
         tmp_project_name, tmp_protein_name = user_input
-        self._database_manager.set_database_filepath(
-            str(
-                pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db")
-            )
-        )
+        tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
+        self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._database_manager.build_new_database()
+        self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
+        self._database_thread.start()
         self._database_manager.open_project_database()
         tmp_project = project.Project(tmp_project_name,
                                       self._interface_manager.get_application_settings().workspace_path)
@@ -240,7 +245,7 @@ class MainViewController:
                 f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"
             )
         )
-        self._database_thread.set_database_filepath(tmp_project_database_filepath)
+        self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
         self._database_thread.start()
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._database_manager.open_project_database()
@@ -326,7 +331,8 @@ class MainViewController:
                 )
             )
             constants.PYSSA_LOGGER.info(
-                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}.")
+                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}."
+            )
             self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
             self._interface_manager.refresh_main_view()
             basic_boxes.ok(
@@ -351,283 +357,6 @@ class MainViewController:
 
     # </editor-fold>
 
-    # <editor-fold desc="Prediction menu">
-
-        # <editor-fold desc="Monomer">
-        def _predict_monomer(self):
-            self._external_controller = predict_monomer_view_controller.PredictMonomerViewController(
-                self._interface_manager
-            )
-            self._external_controller.job_input.connect(self._post_predict_monomer)
-            self._interface_manager.get_predict_monomer_view().show()
-
-        def _post_predict_monomer(self, result: tuple) -> None:
-            """Sets up the worker for the prediction of the proteins."""
-            self._view.wait_spinner.start()
-
-            # <editor-fold desc="Check if WSL2 and ColabFold are installed">
-            if globals.g_os == "win32":
-                constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
-                if not dialog_settings_global.is_wsl2_installed():
-                    constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
-                    self._interface_manager.get_application_settings().wsl_install = 0
-                    basic_boxes.ok(
-                        "Prediction",
-                        "Prediction failed because the WSL2 environment is not installed!",
-                        QtWidgets.QMessageBox.Critical,
-                    )
-                    return
-                constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
-                if not dialog_settings_global.is_local_colabfold_installed():
-                    constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
-                    self._interface_manager.get_application_settings().local_colabfold = 0
-                    basic_boxes.ok(
-                        "Prediction",
-                        "Prediction failed because the ColabFold is not installed!",
-                        QtWidgets.QMessageBox.Critical,
-                    )
-                    return
-
-            # </editor-fold>
-
-            self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
-            constants.PYSSA_LOGGER.info("Begin prediction process.")
-            self._interface_manager.update_status_bar("Begin prediction process ...")
-            if result[3] is True:
-                constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
-                # Analysis should be run after the prediction
-                self._active_task = tasks.Task(
-                    target=main_presenter_async.predict_protein_with_colabfold,
-                    args=(
-                        result[1],
-                        result[2],
-                        self._interface_manager.get_current_project(),
-                    ),
-                    post_func=self.__await_monomer_prediction_for_subsequent_analysis,
-                )
-                self._active_task.start()
-            else:
-                constants.PYSSA_LOGGER.info("Running only a prediction.")
-                # No analysis after prediction
-                self._active_task = tasks.Task(
-                    target=main_presenter_async.predict_protein_with_colabfold,
-                    args=(
-                        result[1],
-                        result[2],
-                        self._interface_manager.get_current_project(),
-                    ),
-                    post_func=self.__await_predict_protein_with_colabfold,
-                )
-                self._active_task.start()
-
-            self._view.status_bar.showMessage("A prediction is currently running ...")
-            self.block_box_prediction = QtWidgets.QMessageBox()
-            self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-            self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-            styles.set_stylesheet(self.block_box_prediction)
-            self.block_box_prediction.setWindowTitle("Structure Prediction")
-            self.block_box_prediction.setText("A prediction is currently running.")
-            btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
-            self.block_box_prediction.exec_()
-            if self.block_box_prediction.clickedButton() == btn_abort:
-                self.abort_prediction()
-                self.block_box_prediction.close()
-                self._view.wait_spinner.stop()
-            else:
-                self.block_box_prediction.close()
-                self._view.wait_spinner.stop()
-            # self._interface_manager.update_status_bar("")
-
-        def abort_prediction(self) -> None:
-            """Aborts the running prediction."""
-            constants.PYSSA_LOGGER.info("Structure prediction process was aborted manually.")
-            subprocess.run(["wsl", "--shutdown"])
-            constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
-            filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
-            constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
-            basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QtWidgets.QMessageBox.Information)
-            self._interface_manager.refresh_main_view()
-
-        def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
-            tmp_exit_code = result[0]
-            tmp_exit_code_description = [1]
-            if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
-                # Prediction was successful
-                self.block_box_prediction.destroy(True)
-                constants.PYSSA_LOGGER.info("All structure predictions are done.")
-                self._interface_manager.update_status_bar("All structure predictions are done.")
-                constants.PYSSA_LOGGER.info("Begin analysis process.")
-                self._interface_manager.update_status_bar("Running analysis process ...")
-
-                tmp_raw_analysis_run_names: list = []
-                for row_no in range(self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.count()):
-                    tmp_raw_analysis_run_names.append(
-                        self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.item(row_no).text())
-
-                self._database_manager.close_project_database()
-                self._active_task = tasks.Task(
-                    target=main_presenter_async.run_distance_analysis,
-                    args=(
-                        tmp_raw_analysis_run_names,
-                        self._interface_manager.get_current_project(),
-                        self._interface_manager.get_application_settings(),
-                        self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
-                    ),
-                    post_func=self.post_analysis_process,
-                )
-                self._active_task.start()
-                if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
-                    os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-
-            elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because there was an error writing the fasta file(s)!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-            elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because the fasta file(s) could not be found!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-            elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because a subprocess failed!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-                self._view.wait_spinner.stop()
-            elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because of an unknown error!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-            self._view.wait_spinner.stop()
-            self._interface_manager.refresh_main_view()
-
-        def post_analysis_process(self, an_exit_code: tuple[int, str, list]) -> None:
-            """Post process after the analysis thread finished."""
-            constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
-            if an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
-                basic_boxes.ok(
-                    "Distance analysis",
-                    "Distance analysis failed because there was an error during the analysis!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
-                )
-            elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-                basic_boxes.ok(
-                    "Distance analysis",
-                    "Distance analysis failed because of an unknown error!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
-                )
-            elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
-                # self._interface_manager.get_current_project().serialize_project(
-                #     self._interface_manager.get_current_project().get_project_xml_path()
-                # )
-                constants.PYSSA_LOGGER.info("Project has been saved to project database.")
-                basic_boxes.ok(
-                    "Structure analysis",
-                    "All structure analysis' are done. Go to results to check the new results.",
-                    QtWidgets.QMessageBox.Information,
-                )
-                constants.PYSSA_LOGGER.info("All structure analysis' are done.")
-            self._database_manager.open_project_database()
-            self._interface_manager.refresh_main_view()
-            self._interface_manager.stop_wait_spinner()
-
-        def __await_predict_protein_with_colabfold(self, result: tuple) -> None:
-            """Process which runs after each prediction job."""
-            print(result)
-            tmp_exit_code = result[0]
-            tmp_exit_code_description = result[1]
-            if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because there was an error writing the fasta file(s)!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-            elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because the fasta file(s) could not be found!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-            elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because a subprocess failed!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-            elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because of an unknown error!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-                constants.PYSSA_LOGGER.error(
-                    f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-                )
-            elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
-                # Prediction was successful
-                self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
-                constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Structure prediction",
-                    "All structure predictions are done. Go to View to check the new proteins.",
-                    QtWidgets.QMessageBox.Information,
-                )
-                constants.PYSSA_LOGGER.info("All structure predictions are done.")
-            else:
-                self.block_box_prediction.destroy(True)
-                basic_boxes.ok(
-                    "Prediction",
-                    "Prediction failed because of an unknown case!",
-                    QtWidgets.QMessageBox.Critical,
-                )
-            self._view.wait_spinner.stop()
-
-        # </editor-fold>
-
-        # </editor-fold>
-
     # <editor-fold desc="Analysis menu">
     def _distance_analysis(self):
         self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
@@ -649,6 +378,7 @@ class MainViewController:
                 self._interface_manager.get_current_project(),
                 self._interface_manager.get_application_settings(),
                 tmp_checkbox_state,
+                self._database_thread
             ),
             post_func=self.post_analysis_process,
         )
@@ -660,148 +390,284 @@ class MainViewController:
 
     # </editor-fold>
 
-    # <editor-fold desc="Image menu methods">
-        # TODO: images need to be reimplemented
-        def post_preview_image(self) -> None:
-            """Hides the block box of the preview process."""
-            # self.block_box_uni.hide()
-            # self.block_box_uni.destroy(True)
-            self._view.status_bar.showMessage("Finished preview of ray-traced image.")
-            QtWidgets.QApplication.restoreOverrideCursor()
+    # <editor-fold desc="Prediction menu">
 
-        def preview_image(self) -> None:
-            """Previews the image."""
-            QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-            if self._view.ui.cb_ray_tracing.isChecked():
-                self._view.status_bar.showMessage("Preview ray-traced image ...")
-                # <editor-fold desc="Worker setup">
-                # --Begin: worker setup
-                self.tmp_thread = QtCore.QThread()
-                self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
-                self.tmp_thread = task_workers.setup_worker_for_work(
-                    self.tmp_thread,
-                    self.tmp_worker,
-                    self.display_view_page,
+    # <editor-fold desc="Monomer">
+    def _predict_monomer(self):
+        self._external_controller = predict_monomer_view_controller.PredictMonomerViewController(
+            self._interface_manager
+        )
+        self._external_controller.job_input.connect(self._post_predict_monomer)
+        self._interface_manager.get_predict_monomer_view().show()
+
+    def _post_predict_monomer(self, result: tuple) -> None:
+        """Sets up the worker for the prediction of the proteins."""
+        self._view.wait_spinner.start()
+
+        # <editor-fold desc="Check if WSL2 and ColabFold are installed">
+        if globals.g_os == "win32":
+            constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
+            if not dialog_settings_global.is_wsl2_installed():
+                constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
+                self._interface_manager.get_application_settings().wsl_install = 0
+                basic_boxes.ok(
+                    "Prediction",
+                    "Prediction failed because the WSL2 environment is not installed!",
+                    QtWidgets.QMessageBox.Critical,
                 )
-                self.tmp_worker.finished.connect(self.post_preview_image)
-                self.tmp_thread.start()
-                # --End: worker setup
-
-                # </editor-fold>
-                gui_utils.setup_standard_block_box(
-                    self.block_box_uni,
-                    "Preview ray-trace image",
-                    "Creating preview for the ray-traced image ...",
+                return
+            constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
+            if not dialog_settings_global.is_local_colabfold_installed():
+                constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
+                self._interface_manager.get_application_settings().local_colabfold = 0
+                basic_boxes.ok(
+                    "Prediction",
+                    "Prediction failed because the ColabFold is not installed!",
+                    QtWidgets.QMessageBox.Critical,
                 )
-                # self.block_box_uni.exec_()
-            else:
-                self._view.status_bar.showMessage("Preview draw image ...")
-                cmd.draw(2400, 2400)
-                self._view.status_bar.showMessage("Finished preview of drawn image.")
-                QtWidgets.QApplication.restoreOverrideCursor()
-
-        def post_save_image(self) -> None:
-            """Displays a message box which informs that the process has finished."""
-            self.block_box_uni.hide()
-            self.block_box_uni.destroy(True)
-            self._view.status_bar.showMessage("Finished image creation.")
-            QtWidgets.QApplication.restoreOverrideCursor()
-            basic_boxes.ok("Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information)
-
-        def save_image(self) -> None:
-            """Saves the image as a png file."""
-            QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-            if self._view.ui.cb_ray_tracing.isChecked():
-                save_dialog = QtWidgets.QFileDialog()
-                try:
-                    full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
-                    if full_file_name == ("", ""):
-                        tools.quick_log_and_display(
-                            "info",
-                            "No file has been selected.",
-                            self._view.status_bar,
-                            "No file has been selected.",
-                        )
-                        return
-                    self._view.status_bar.showMessage("Creating ray-traced image ...")
-
-                    # <editor-fold desc="Worker setup">
-                    # --Begin: worker setup
-                    self.tmp_thread = QtCore.QThread()
-                    self.tmp_worker = task_workers.SaveRayImageWorker(self.renderer, full_file_name[0])
-                    self.tmp_thread = task_workers.setup_worker_for_work(
-                        self.tmp_thread,
-                        self.tmp_worker,
-                        self.display_view_page,
-                    )
-                    self.tmp_worker.finished.connect(self.post_save_image)
-                    self.tmp_thread.start()
-                    # --End: worker setup
-
-                    # </editor-fold>
-                    gui_utils.setup_standard_block_box(
-                        self.block_box_uni,
-                        "Save ray-trace image",
-                        "Creating the ray-traced image ...",
-                    )
-                    self.block_box_uni.exec_()
-
-                    # cmd.ray(2400, 2400, renderer=int(self.renderer))
-                    # cmd.png(full_file_name[0], dpi=300)
-
-                except FileExistsError:
-                    tools.quick_log_and_display(
-                        "error",
-                        "File exists already.",
-                        self._view.status_bar,
-                        "File exists already.",
-                    )
-                except pymol.CmdException:
-                    tools.quick_log_and_display(
-                        "error",
-                        "Unexpected Error from PyMOL while saving the " "an image",
-                        self._view.status_bar,
-                        "Unexpected Error from PyMOL",
-                    )
-            else:
-                save_dialog = QtWidgets.QFileDialog()
-                try:
-                    full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
-                    if full_file_name == ("", ""):
-                        tools.quick_log_and_display(
-                            "info",
-                            "No file has been selected.",
-                            self._view.status_bar,
-                            "No file has been selected.",
-                        )
-                        return
-                    self._view.status_bar.showMessage("Creating draw image ...")
-                    cmd.draw(2400, 2400)
-                    cmd.png(full_file_name[0], dpi=300)
-                    self._view.status_bar.showMessage("Finished image creation.")
-                    basic_boxes.ok(
-                        "Finished image creation",
-                        "The image has been created.",
-                        QtWidgets.QMessageBox.Information,
-                    )
-                except FileExistsError:
-                    tools.quick_log_and_display(
-                        "error",
-                        "File exists already.",
-                        self._view.status_bar,
-                        "File exists already.",
-                    )
-                except pymol.CmdException:
-                    tools.quick_log_and_display(
-                        "error",
-                        "Unexpected Error from PyMOL while saving the " "an image",
-                        self._view.status_bar,
-                        "Unexpected Error from PyMOL",
-                    )
-                finally:
-                    QtWidgets.QApplication.restoreOverrideCursor()
+                return
 
         # </editor-fold>
+
+        self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
+        constants.PYSSA_LOGGER.info("Begin prediction process.")
+        self._interface_manager.update_status_bar("Begin prediction process ...")
+        if result[3] is True:
+            constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
+            # Analysis should be run after the prediction
+            self._active_task = tasks.Task(
+                target=main_presenter_async.predict_protein_with_colabfold,
+                args=(
+                    result[1],
+                    result[2],
+                    self._interface_manager.get_current_project(),
+                ),
+                post_func=self.__await_monomer_prediction_for_subsequent_analysis,
+            )
+            self._active_task.start()
+        else:
+            constants.PYSSA_LOGGER.info("Running only a prediction.")
+            # No analysis after prediction
+            self._active_task = tasks.Task(
+                target=main_presenter_async.predict_protein_with_colabfold,
+                args=(
+                    result[1],
+                    result[2],
+                    self._interface_manager.get_current_project(),
+                ),
+                post_func=self.__await_predict_protein_with_colabfold,
+            )
+            self._active_task.start()
+
+        self._view.status_bar.showMessage("A prediction is currently running ...")
+        self.block_box_prediction = QtWidgets.QMessageBox()
+        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
+        self.block_box_prediction.exec_()
+        if self.block_box_prediction.clickedButton() == btn_abort:
+            self.abort_prediction()
+            self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+        else:
+            self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+        # self._interface_manager.update_status_bar("")
+
+    def abort_prediction(self) -> None:
+        """Aborts the running prediction."""
+        constants.PYSSA_LOGGER.info("Structure prediction process was aborted manually.")
+        subprocess.run(["wsl", "--shutdown"])
+        constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
+        filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+        constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
+        basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QtWidgets.QMessageBox.Information)
+        self._interface_manager.refresh_main_view()
+
+    def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
+        tmp_exit_code = result[0]
+        tmp_exit_code_description = [1]
+        if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            self.block_box_prediction.destroy(True)
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            self._interface_manager.update_status_bar("All structure predictions are done.")
+            constants.PYSSA_LOGGER.info("Begin analysis process.")
+            self._interface_manager.update_status_bar("Running analysis process ...")
+
+            tmp_raw_analysis_run_names: list = []
+            for row_no in range(self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.count()):
+                tmp_raw_analysis_run_names.append(
+                    self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.item(row_no).text())
+
+            self._database_manager.close_project_database()
+            self._active_task = tasks.Task(
+                target=main_presenter_async.run_distance_analysis,
+                args=(
+                    tmp_raw_analysis_run_names,
+                    self._interface_manager.get_current_project(),
+                    self._interface_manager.get_application_settings(),
+                    self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
+                    self._database_thread
+                ),
+                post_func=self.post_analysis_process,
+            )
+            self._active_task.start()
+            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+
+        elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because there was an error writing the fasta file(s)!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because the fasta file(s) could not be found!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because a subprocess failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        self._view.wait_spinner.stop()
+        self._interface_manager.refresh_main_view()
+
+    def post_analysis_process(self, an_exit_code: tuple[int, str, list]) -> None:
+        """Post process after the analysis thread finished."""
+        constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
+        if an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
+            basic_boxes.ok(
+                "Distance analysis",
+                "Distance analysis failed because there was an error during the analysis!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
+            )
+        elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            basic_boxes.ok(
+                "Distance analysis",
+                "Distance analysis failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
+            )
+        elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
+            # self._interface_manager.get_current_project().serialize_project(
+            #     self._interface_manager.get_current_project().get_project_xml_path()
+            # )
+            constants.PYSSA_LOGGER.info("Project has been saved to project database.")
+            basic_boxes.ok(
+                "Structure analysis",
+                "All structure analysis' are done. Go to results to check the new results.",
+                QtWidgets.QMessageBox.Information,
+            )
+            constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+        self._database_manager.open_project_database()
+        self._interface_manager.refresh_protein_pair_model()
+        self._interface_manager.refresh_main_view()
+        self._interface_manager.stop_wait_spinner()
+
+    def __await_predict_protein_with_colabfold(self, result: tuple) -> None:
+        """Process which runs after each prediction job."""
+        print(result)
+        tmp_exit_code = result[0]
+        tmp_exit_code_description = result[1]
+        if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because there was an error writing the fasta file(s)!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because the fasta file(s) could not be found!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because a subprocess failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
+            constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Structure prediction",
+                "All structure predictions are done. Go to View to check the new proteins.",
+                QtWidgets.QMessageBox.Information,
+            )
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+        else:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown case!",
+                QtWidgets.QMessageBox.Critical,
+            )
+        self._view.wait_spinner.stop()
+
+    # </editor-fold>
+
+    # </editor-fold>
 
     # <editor-fold desc="Settings menu methods">
     def open_settings_global(self) -> None:
@@ -825,25 +691,14 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="About menu methods">
-    @staticmethod
-    def open_documentation() -> None:
-        """Opens the official plugin documentation as PDF."""
-        os.startfile(constants.DOCS_PATH)
-
-    @staticmethod
-    def open_tutorial() -> None:
-        """Opens the official tutorial pdf file."""
-        tmp_dialog = dialog_tutorial_videos.TutorialVideosDialog()
-        tmp_dialog.exec_()
-
     def open_logs(self) -> None:
-            """Opens a file explorer with all log files and can open a log file in the default application."""
-            file_dialog = QtWidgets.QFileDialog()
-            log_path = str(constants.LOG_PATH)
-            file_dialog.setDirectory(log_path)
-            file_path, _ = file_dialog.getOpenFileName(self._view, "Select a log file to open", "", "LOG File (*.log)")
-            if file_path:
-                os.startfile(file_path)
+        """Opens a file explorer with all log files and can open a log file in the default application."""
+        file_dialog = QtWidgets.QFileDialog()
+        log_path = str(constants.LOG_PATH)
+        file_dialog.setDirectory(log_path)
+        file_path, _ = file_dialog.getOpenFileName(self._view, "Select a log file to open", "", "LOG File (*.log)")
+        if file_path:
+            os.startfile(file_path)
 
     @staticmethod
     def clear_all_log_files() -> None:
@@ -868,6 +723,17 @@ class MainViewController:
                 constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
 
     @staticmethod
+    def open_tutorial() -> None:
+        """Opens the official tutorial pdf file."""
+        tmp_dialog = dialog_tutorial_videos.TutorialVideosDialog()
+        tmp_dialog.exec_()
+
+    @staticmethod
+    def open_documentation() -> None:
+        """Opens the official plugin documentation as PDF."""
+        os.startfile(constants.DOCS_PATH)
+
+    @staticmethod
     def open_about() -> None:
         """Opens the About dialog."""
         dialog = dialog_about.DialogAbout()
@@ -875,12 +741,149 @@ class MainViewController:
 
     # </editor-fold>
 
+    # <editor-fold desc="Image menu methods">
+    # TODO: images need to be reimplemented
+    def post_preview_image(self) -> None:
+        """Hides the block box of the preview process."""
+        # self.block_box_uni.hide()
+        # self.block_box_uni.destroy(True)
+        self._view.status_bar.showMessage("Finished preview of ray-traced image.")
+        QtWidgets.QApplication.restoreOverrideCursor()
+
+    def preview_image(self) -> None:
+        """Previews the image."""
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+        if self._view.ui.cb_ray_tracing.isChecked():
+            self._view.status_bar.showMessage("Preview ray-traced image ...")
+            # <editor-fold desc="Worker setup">
+            # --Begin: worker setup
+            self.tmp_thread = QtCore.QThread()
+            self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
+            self.tmp_thread = task_workers.setup_worker_for_work(
+                self.tmp_thread,
+                self.tmp_worker,
+                self.display_view_page,
+            )
+            self.tmp_worker.finished.connect(self.post_preview_image)
+            self.tmp_thread.start()
+            # --End: worker setup
+
+            # </editor-fold>
+            gui_utils.setup_standard_block_box(
+                self.block_box_uni,
+                "Preview ray-trace image",
+                "Creating preview for the ray-traced image ...",
+            )
+            # self.block_box_uni.exec_()
+        else:
+            self._view.status_bar.showMessage("Preview draw image ...")
+            cmd.draw(2400, 2400)
+            self._view.status_bar.showMessage("Finished preview of drawn image.")
+            QtWidgets.QApplication.restoreOverrideCursor()
+
+    def post_save_image(self) -> None:
+        """Displays a message box which informs that the process has finished."""
+        self.block_box_uni.hide()
+        self.block_box_uni.destroy(True)
+        self._view.status_bar.showMessage("Finished image creation.")
+        QtWidgets.QApplication.restoreOverrideCursor()
+        basic_boxes.ok("Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information)
+
+    def save_image(self) -> None:
+        """Saves the image as a png file."""
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+        if self._view.ui.cb_ray_tracing.isChecked():
+            save_dialog = QtWidgets.QFileDialog()
+            try:
+                full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
+                if full_file_name == ("", ""):
+                    tools.quick_log_and_display(
+                        "info",
+                        "No file has been selected.",
+                        self._view.status_bar,
+                        "No file has been selected.",
+                    )
+                    return
+                self._view.status_bar.showMessage("Creating ray-traced image ...")
+
+                # <editor-fold desc="Worker setup">
+                # --Begin: worker setup
+                self.tmp_thread = QtCore.QThread()
+                self.tmp_worker = task_workers.SaveRayImageWorker(self.renderer, full_file_name[0])
+                self.tmp_thread = task_workers.setup_worker_for_work(
+                    self.tmp_thread,
+                    self.tmp_worker,
+                    self.display_view_page,
+                )
+                self.tmp_worker.finished.connect(self.post_save_image)
+                self.tmp_thread.start()
+                # --End: worker setup
+
+                # </editor-fold>
+                gui_utils.setup_standard_block_box(
+                    self.block_box_uni,
+                    "Save ray-trace image",
+                    "Creating the ray-traced image ...",
+                )
+                self.block_box_uni.exec_()
+
+                # cmd.ray(2400, 2400, renderer=int(self.renderer))
+                # cmd.png(full_file_name[0], dpi=300)
+
+            except FileExistsError:
+                tools.quick_log_and_display(
+                    "error",
+                    "File exists already.",
+                    self._view.status_bar,
+                    "File exists already.",
+                )
+            except pymol.CmdException:
+                tools.quick_log_and_display(
+                    "error",
+                    "Unexpected Error from PyMOL while saving the " "an image",
+                    self._view.status_bar,
+                    "Unexpected Error from PyMOL",
+                )
+        else:
+            save_dialog = QtWidgets.QFileDialog()
+            try:
+                full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
+                if full_file_name == ("", ""):
+                    tools.quick_log_and_display(
+                        "info",
+                        "No file has been selected.",
+                        self._view.status_bar,
+                        "No file has been selected.",
+                    )
+                    return
+                self._view.status_bar.showMessage("Creating draw image ...")
+                cmd.draw(2400, 2400)
+                cmd.png(full_file_name[0], dpi=300)
+                self._view.status_bar.showMessage("Finished image creation.")
+                basic_boxes.ok(
+                    "Finished image creation",
+                    "The image has been created.",
+                    QtWidgets.QMessageBox.Information,
+                )
+            except FileExistsError:
+                tools.quick_log_and_display(
+                    "error",
+                    "File exists already.",
+                    self._view.status_bar,
+                    "File exists already.",
+                )
+            except pymol.CmdException:
+                tools.quick_log_and_display(
+                    "error",
+                    "Unexpected Error from PyMOL while saving the " "an image",
+                    self._view.status_bar,
+                    "Unexpected Error from PyMOL",
+                )
+            finally:
+                QtWidgets.QApplication.restoreOverrideCursor()
+
     # </editor-fold>
 
-    # <editor-fold desc="Hotspots">
-    def hotspots_protein_regions(self) -> None:
-        #self._external_controller = hotspots_protein_regions_view_controller.
-        self._interface_manager.get_hotspots_protein_regions_view().show()
     # </editor-fold>
 
     # <editor-fold desc="Sequences tab methods">
@@ -914,6 +917,24 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Proteins tab methods">
+    def open_context_menu_for_proteins(self, position):
+        indexes = self._view.ui.proteins_tree_view.selectedIndexes()
+        if len(indexes) > 0:
+            level = 0
+            index = indexes[0]
+            while index.parent().isValid():
+                index = index.parent()
+                level += 1
+        menu = QtWidgets.QMenu()
+        if level == 0:
+            menu.addAction(self._view.tr("Clean current protein"))
+            menu.addAction(self._view.tr("Clean and create new protein"))
+        elif level == 1:
+            menu.addAction(self._view.tr("Edit object/container"))
+        elif level == 2:
+            menu.addAction(self._view.tr("Edit object"))
+        menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
+
     def _show_protein_information(self) -> None:
         tmp_type = self._view.ui.proteins_tree_view.model().data(
             self._view.ui.proteins_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
@@ -977,8 +998,11 @@ class MainViewController:
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            tmp_work = (enums.SQLQueryType.INSERT_NEW_PROTEIN, (0, tmp_ref_protein))
-            self._database_thread.put_database_operation_into_queue(tmp_work)
+            self._database_thread.put_database_operation_into_queue(
+                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
+                                                     (0, tmp_ref_protein)))
+            # tmp_work = (enums.SQLQueryType.INSERT_NEW_PROTEIN, (0, tmp_ref_protein))
+            # self._database_thread.put_database_operation_into_queue(tmp_work)
             constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
         elif tmp_name_len > 0:
             # local pdb file as input
@@ -992,7 +1016,10 @@ class MainViewController:
             tmp_ref_protein.create_new_pymol_session()
             tmp_ref_protein.save_pymol_session_as_base64_string()
             self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+            self._database_thread.put_database_operation_into_queue(
+                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
+                                                     (0, tmp_ref_protein)))
+            # tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
@@ -1029,16 +1056,117 @@ class MainViewController:
             self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
         )
         if tmp_type == "protein":
+            tmp_protein = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex().parent(), enums.ModelEnum.OBJECT_ROLE
+            )
             tmp_first_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain)
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain,
+                                                                                 tmp_protein_pair.get_id(),
+                                                                                 tmp_protein.get_id())
         elif tmp_type == "chain":
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._view.ui.protein_pairs_tree_view.currentIndex())
+            tmp_protein = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex().parent(), enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent(), enums.ModelEnum.OBJECT_ROLE
+            )
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), tmp_protein_pair.get_id(), tmp_protein.get_id()
+            )
         elif tmp_type == "protein_pair":
-            pass
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair.load_pymol_session()
         else:
             print(tmp_type)
             raise ValueError("Unknown type!")
-        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+        tmp_current_active_obj = self._view.ui.protein_pairs_tree_view.model().data(
+                self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole
+        )
+        self._view.status_bar.showMessage(f"Active PyMOL Object: {tmp_current_active_obj}")
+
+    def _change_chain_color_protein_pairs(self) -> None:
+        if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            self._view.ui.btn_delete_protein.setEnabled(False)
+            tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
+        elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            self._view.ui.btn_delete_protein.setEnabled(True)
+            tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(enums.ModelEnum.OBJECT_ROLE)
+        else:
+            return
+
+        # Update pymol parameter in database
+        tmp_color: str = self._view.cb_chain_color_protein_pair.currentText()
+        with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                tmp_protein_pair.get_id(),
+                tmp_protein.get_id(),
+                tmp_chain.chain_letter,
+                enums.PymolParameterEnum.COLOR.value,
+                tmp_color,
+            )
+            db_manager.close_project_database()
+        # Update pymol parameter in PyMOL
+        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        tmp_protein.pymol_selection.color_selection(tmp_color)
+
+    def _change_chain_representation_protein_pairs(self) -> None:
+        if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+            self._view.ui.btn_delete_protein.setEnabled(False)
+            tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
+        elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+            self._view.ui.btn_delete_protein.setEnabled(True)
+            tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
+            tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(
+                enums.ModelEnum.OBJECT_ROLE)
+        else:
+            return
+        # Update pymol parameter in database
+        tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
+        with database_manager.DatabaseManager(
+                str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                tmp_protein_pair.get_id(),
+                tmp_protein.get_id(),
+                tmp_chain.chain_letter,
+                enums.PymolParameterEnum.REPRESENTATION.value,
+                tmp_representation,
+            )
+            db_manager.close_project_database()
+
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
+            (0, tmp_protein_pair.get_id(), tmp_protein_pair)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        # Update pymol parameter in PyMOL
+        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:

@@ -202,7 +202,7 @@ class Project:
         return pathlib.Path(f"{self._workspace}/{self.get_project_name()}.xml")
 
     def get_database_filepath(self) -> pathlib.Path:
-        return pathlib.Path(f"{self._workspace}/{self.get_project_name()}")
+        return pathlib.Path(f"{self._workspace}/{self.get_project_name()}.db")
 
     def serialize_project(self, a_filepath: pathlib.Path) -> None:
         """Serializes the project to a xml file.

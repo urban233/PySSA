@@ -26,6 +26,26 @@ class DatabaseEnum(enum.Enum):
     # add more for the rest of the tables
 
 
+class PdbAtomEnum(enum.Enum):
+    """An enum for the PdbAtom table of the database"""
+    RECORD_TYPE = "record_type"
+    ATOM_NUMBER = "atom_number"
+    ATOM_NAME = "atom_name"
+    ALTERNATE_LOCATION_INDICATOR = "alternate_location_indicator"
+    RESIDUE_NAME = "residue_name"
+    CHAIN_IDENTIFIER = "chain_identifier"
+    RESIDUE_SEQUENCE_NUMBER = "residue_sequence_number"
+    CODE_FOR_INSERTIONS_OF_RESIDUES = "code_for_insertions_of_residues"
+    X_COORD = "x_coord"
+    Y_COORD = "y_coord"
+    Z_COORD = "z_coord"
+    OCCUPANCY = "occupancy"
+    TEMPERATURE_FACTOR = "temperature_factor"
+    SEGMENT_IDENTIFIER = "segment_identifier"
+    ELEMENT_SYMBOL = "element_symbol"
+    CHARGE = "charge"
+
+
 class PymolParameterEnum(enum.Enum):
     """An enum for all pymol parameters."""
     COLOR = "chain_color"
@@ -34,6 +54,8 @@ class PymolParameterEnum(enum.Enum):
 
 class SQLQueryType(enum.Enum):
     """An enum for all possible sql queries for the database thread."""
+    CLOSE_PROJECT = "close_project"
     INSERT_NEW_PROTEIN = 'insert_new_protein'
+    INSERT_NEW_PROTEIN_PAIR = 'insert_new_protein_pair'
     DELETE_EXISTING_PROTEIN = 'delete_existing_protein'
-
+    UPDATE_PYMOL_SESSION_PROTEIN_PAIR = 'update_pymol_session_protein_pair'

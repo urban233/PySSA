@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all asynchronous functions used in the main presenter."""
+import copy
 import logging
 import os
 import pathlib
@@ -34,12 +35,13 @@ from pyssa.internal.data_structures import project, protein, structure_analysis,
 from pyssa.internal.data_structures.data_classes import (
     prediction_protein_info,
     prediction_configuration,
-    current_session,
+    current_session, database_operation,
 )
 from pyssa.internal.portal import pymol_io, graphic_operations
+from pyssa.internal.thread import database_thread
 from pyssa.io_pyssa import path_util, filesystem_io, bio_data
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import analysis_util, exception, exit_codes, constants
+from pyssa.util import analysis_util, exception, exit_codes, constants, enums
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import settings
@@ -385,6 +387,7 @@ def run_distance_analysis(
     a_project: "project.Project",
     the_settings: "settings.Settings",
     an_make_images_flag: bool,
+    the_database_thread: "database_thread.DatabaseThread",
 ) -> tuple:
     """Runs the distance analysis for all protein pairs in the given job.
 
@@ -408,14 +411,19 @@ def run_distance_analysis(
         )
         logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
         analysis_runs.run_analysis("distance", an_make_images_flag)
-        tmp_database_manager = database_manager.DatabaseManager(str(a_project.get_database_filepath()))
-        tmp_database_manager.set_application_settings(the_settings)
-        tmp_database_manager.open_project_database()
+        # tmp_database_manager = database_manager.DatabaseManager(str(a_project.get_database_filepath()))
+        # tmp_database_manager.set_application_settings(the_settings)
+        # tmp_database_manager.open_project_database()
         logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
         for tmp_protein_pair in analysis_runs.analysis_list:
             tmp_protein_pair.db_project_id = a_project.get_id()
-            tmp_database_manager.insert_new_protein_pair(tmp_protein_pair)
-        tmp_database_manager.close_project_database()
+            copy_tmp_protein_pair = copy.deepcopy(tmp_protein_pair)
+            the_database_thread.put_database_operation_into_queue(
+                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN_PAIR,
+                                                     (0, copy_tmp_protein_pair))
+            )
+            #tmp_database_manager.insert_new_protein_pair(tmp_protein_pair)
+        #tmp_database_manager.close_project_database()
     except exception.UnableToSetupAnalysisError:
         logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
         return (
@@ -638,3 +646,15 @@ def check_chains_for_subsequent_analysis_for_multimers(
     else:
         tmp_analysis_run_name = ""
     return ("result", tmp_analysis_run_name)
+
+
+def close_project(the_database_thread, placeholder: str) -> tuple:
+    try:
+        the_database_thread.put_database_operation_into_queue(database_operation.DatabaseOperation(
+            enums.SQLQueryType.CLOSE_PROJECT, (0, ""))
+        )
+    except Exception as e:
+        logger.error(f"Unknown error occurred while waiting for the database thread to finish: {e}.")
+        return False, "Waiting for database thread queue failed!"
+    else:
+        return True, "Waiting for database thread queue finished."
