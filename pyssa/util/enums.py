@@ -54,6 +54,7 @@ class PymolParameterEnum(enum.Enum):
 
 class SQLQueryType(enum.Enum):
     """An enum for all possible sql queries for the database thread."""
+    CLOSE_PROJECT = "close_project"
     INSERT_NEW_PROTEIN = 'insert_new_protein'
     INSERT_NEW_PROTEIN_PAIR = 'insert_new_protein_pair'
     DELETE_EXISTING_PROTEIN = 'delete_existing_protein'

@@ -1,8 +1,13 @@
+import logging
 import threading
 import queue
 from pyssa.controller import database_manager
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, enums
 from pyssa.internal.data_structures.data_classes import database_operation
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class DatabaseThread(threading.Thread):
@@ -36,15 +41,20 @@ class DatabaseThread(threading.Thread):
         with database_manager.DatabaseManager(self._database_filepath) as db_manager:
             while not self._stop_event.is_set():
                 try:
-                    tmp_database_operation = self._queue.get(timeout=1)
+                    tmp_database_operation: database_operation.DatabaseOperation = self._queue.get(timeout=1)
+                    if tmp_database_operation.sql_query_type is enums.SQLQueryType.CLOSE_PROJECT:
+                        logger.info("Received request to close the project.")
+                        break
+                    logger.info(f"Running {tmp_database_operation.sql_query_type} database operation.")
                     self._process_work(db_manager, tmp_database_operation)
+                    logger.info(f"Finished {tmp_database_operation.sql_query_type} database operation.")
                 except queue.Empty:
                     pass  # Continue checking for new tasks
+            self._stop_event.set()
             self._queue.join()
 
     def join(self, timeout=None):
         """ Stop the thread. """
-        self._stop_event.set()
         threading.Thread.join(self, timeout)
 
     def _process_work(self, the_db_manager, a_database_operation: database_operation.DatabaseOperation):

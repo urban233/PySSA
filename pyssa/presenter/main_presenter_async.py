@@ -650,9 +650,11 @@ def check_chains_for_subsequent_analysis_for_multimers(
 
 def close_project(the_database_thread, placeholder: str) -> tuple:
     try:
-        the_database_thread.join()
+        the_database_thread.put_database_operation_into_queue(database_operation.DatabaseOperation(
+            enums.SQLQueryType.CLOSE_PROJECT, (0, ""))
+        )
     except Exception as e:
         logger.error(f"Unknown error occurred while waiting for the database thread to finish: {e}.")
-        return (False, "Waiting for database thread queue failed!")
+        return False, "Waiting for database thread queue failed!"
     else:
-        return (True, "Waiting for database thread queue finished.")
+        return True, "Waiting for database thread queue finished."
