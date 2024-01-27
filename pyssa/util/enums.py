@@ -58,5 +58,6 @@ class SQLQueryType(enum.Enum):
     INSERT_NEW_PROTEIN = 'insert_new_protein'
     INSERT_NEW_PROTEIN_PAIR = 'insert_new_protein_pair'
     DELETE_EXISTING_PROTEIN = 'delete_existing_protein'
+    UPDATE_PYMOL_SESSION_PROTEIN = 'update_pymol_session_protein'
     UPDATE_PYMOL_SESSION_PROTEIN_PAIR = 'update_pymol_session_protein_pair'
     UPDATE_SEQUENCE_NAME = 'update_sequence_name'

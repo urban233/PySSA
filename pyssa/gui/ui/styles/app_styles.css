@@ -56,7 +56,6 @@ QLabel#lbl_active_object {
     padding: 3px;
 }
 
-
 QListView {
     border-style: solid;
     border-width: 2px;

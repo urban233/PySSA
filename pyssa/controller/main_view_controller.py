@@ -112,41 +112,45 @@ class MainViewController:
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
         self._view.ui.action_delete_project.triggered.connect(self._delete_project)
-        self._view.ui.actionImport.triggered.connect(self.import_project)
-        self._view.ui.actionExport.triggered.connect(self.export_current_project)
+        self._view.ui.action_import_project.triggered.connect(self.import_project)
+        self._view.ui.action_export_project.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
 
         self._view.ui.action_results_summary.triggered.connect(self._results_summary)
-        self._view.ui.actionPreview.triggered.connect(self.preview_image)
+        self._view.ui.action_preview_image.triggered.connect(self.preview_image)
 
         self._view.ui.action_edit_settings.triggered.connect(self.open_settings_global)
         self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
-        self._view.ui.actionShow_log_in_explorer.triggered.connect(self.open_logs)
-        self._view.ui.actionClear_Logs.triggered.connect(self.clear_all_log_files)
-        self._view.ui.actionDocumentation.triggered.connect(self.open_documentation)
-        self._view.ui.actionTutorials.triggered.connect(self.open_tutorial)
+        self._view.ui.action_show_log_in_explorer.triggered.connect(self.open_logs)
+        self._view.ui.action_clear_logs.triggered.connect(self.clear_all_log_files)
+        self._view.ui.action_documentation.triggered.connect(self.open_documentation)
+        self._view.ui.action_tutorials.triggered.connect(self.open_tutorial)
         self._view.ui.action_about.triggered.connect(self.open_about)
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
+        # seqs tab
+        self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
+        self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
+        self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
+        self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
+        self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
+        self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
+
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
+        self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
         self._view.cb_chain_color.currentIndexChanged.connect(self._change_chain_color_proteins)
         self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
         self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
-        # seqs tab
-        self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
-        self._view.ui.pushButton.clicked.connect(self._add_sequence)
-        self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
-        self._view.ui.seqs_table_widget.cellClicked.connect(self.open_text_editor_for_seq)
-        self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
 
         # protein pairs tab
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
+        self._view.ui.btn_open_protein_pair_session.clicked.connect(self._open_protein_pair_pymol_session)
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
@@ -178,14 +182,17 @@ class MainViewController:
         self.msg_box = basic_boxes.no_buttons("Saving Project",
                                               "Please wait the program is saving your project.",
                                               QtWidgets.QMessageBox.Information)
-        self.msg_box.show()
+        #self.msg_box.show()
+        self._interface_manager.restore_default_main_view()
+        self.update_status("Saving current project ...")
         self._view.wait_spinner.start()
 
     def __await_close_project(self):
         """Await the async closing process."""
         self._interface_manager.set_new_project(project.Project())
         self._interface_manager.refresh_main_view()
-        self.msg_box.hide()
+        #self.msg_box.hide()
+        self.update_status("Closing project finished.")
         self._view.wait_spinner.stop()
 
     def _create_project(self) -> None:
@@ -889,7 +896,7 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Sequences tab methods">
-    def open_text_editor_for_seq(self):
+    def _open_text_editor_for_seq(self):
         self.tmp_txt_browser = QtWidgets.QTextBrowser()
         try:
             self.tmp_txt_browser.setText(
@@ -903,11 +910,19 @@ class MainViewController:
             self.tmp_txt_browser.resize(500, 150)
             self.tmp_txt_browser.show()
 
+    def _set_new_sequence_name_in_table_item(self):
+        try:
+            tmp_new_seq = self._view.line_edit_seq_name.text()
+            self._view.ui.seqs_table_widget.currentItem().setText(tmp_new_seq)
+        except AttributeError:
+            return
+
     def _rename_sequence(self):
         tmp_old_name = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name
         tmp_new_name = self._view.ui.seqs_table_widget.currentItem().text()
         tmp_seq = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).seq
         self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name = tmp_new_name
+        self._view.ui.seqs_list_view.model().setData(self._view.ui.seqs_list_view.currentIndex(), tmp_new_name, Qt.DisplayRole)
         tmp_database_operation = database_operation.DatabaseOperation(
             enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq)
         )
@@ -964,52 +979,98 @@ class MainViewController:
         menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
     def _show_protein_information(self) -> None:
-        tmp_type = self._view.ui.proteins_tree_view.model().data(
-            self._view.ui.proteins_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
-        )
+        tmp_type = self._interface_manager.get_current_protein_tree_index_type()
+
         if tmp_type == "protein":
-            tmp_first_chain = self._view.ui.proteins_tree_view.currentIndex().child(0, 0)
-            self._interface_manager.show_chain_pymol_parameters(tmp_first_chain)
+            self._interface_manager.show_chain_pymol_parameters(
+                self._interface_manager.get_child_index_of_get_current_protein_tree_index()
+            )
+            tmp_protein = self._interface_manager.get_current_protein_tree_index_object()
         elif tmp_type == "chain":
-            self._interface_manager.show_chain_pymol_parameters(self._view.ui.proteins_tree_view.currentIndex())
+            self._interface_manager.show_chain_pymol_parameters(
+                self._interface_manager.get_current_protein_tree_index()
+            )
+            tmp_protein = self._interface_manager.get_parent_index_object_of_current_protein_tree_index()
         else:
-            raise ValueError("Unknown type!")
-        self._view.status_bar.showMessage(f"Active protein structure: {tmp_type}")
+            logger.warning("Unknown object type occurred in Protein tab.")
+            return
+        self._interface_manager.manage_buttons_for_proteins_tab(
+            tmp_type, self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
+                tmp_protein.get_molecule_object()
+            )
+        )
+
+    def _open_protein_pymol_session(self):
+        tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
+        tmp_protein.load_protein_pymol_session()
 
     def _change_chain_color_proteins(self) -> None:
-        # TODO: changes need to be propagated to pymol!
-        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
-            self._view.ui.btn_delete_protein.setEnabled(False)
+        tmp_type = self._interface_manager.get_current_protein_tree_index_type()
+        tmp_color = self._view.cb_chain_color.currentText()
+        if tmp_type == "chain":
+            tmp_protein: "protein.Protein" = self._interface_manager.get_parent_index_object_of_current_protein_tree_index()
+            tmp_raw_chain = self._interface_manager.get_current_protein_tree_index_object()
+            tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
+        elif tmp_type == "protein":
+            tmp_protein = self._interface_manager.get_current_protein_tree_index_object()
+            tmp_chain = tmp_protein.chains[0]
+        else:
+            return
 
-            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
-            tmp_color: str = self._view.cb_chain_color.currentText()
-            tmp_protein_chain.pymol_parameters["chain_color"] = tmp_color
-            self._database_manager.update_protein_chain_color(tmp_protein_chain.get_id(), tmp_color)
-        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            self._view.ui.btn_delete_protein.setEnabled(True)
-
-            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_color = self._view.cb_chain_color.currentText()
-            tmp_protein.chains[0].pymol_parameters["chain_color"] = tmp_color
-            self._database_manager.update_protein_chain_color(tmp_protein.chains[0].get_id(), tmp_color)
+        # Update pymol parameter in PyMOL
+        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        try:
+            tmp_protein.pymol_selection.color_selection(tmp_color)
+        except pymol.CmdException:
+            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+            logger.warning("No protein in session found. This can lead to more serious problems.")
+        else:
+            # Update pymol parameter in memory
+            tmp_chain.pymol_parameters["chain_color"] = tmp_color
+            # Update pymol parameter in database
+            with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                db_manager.open_project_database()
+                db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
+                db_manager.close_project_database()
+            self._save_protein_pymol_session(tmp_protein)
 
     def _change_chain_representation_proteins(self) -> None:
-        # TODO: changes need to be propagated to pymol!
+        tmp_type = self._interface_manager.get_current_protein_tree_index_type()
         tmp_representation = self._view.cb_chain_representation.currentText()
-        if self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
-            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_chain = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein_chain = tmp_protein.get_chain_by_letter(tmp_chain.chain_letter)
-            tmp_protein_chain.pymol_parameters["chain_representation"] = tmp_representation
-            self._database_manager.update_protein_chain_representation(tmp_protein_chain.get_id(),
-                                                                       tmp_representation)
-        elif self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            tmp_protein = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein.chains[0].pymol_parameters["chain_representation"] = tmp_representation
-            self._database_manager.update_protein_chain_representation(tmp_protein.chains[0].get_id(),
-                                                                       tmp_representation)
+        if tmp_type == "chain":
+            tmp_protein: "protein.Protein" = self._interface_manager.get_parent_index_object_of_current_protein_tree_index()
+            tmp_raw_chain = self._interface_manager.get_current_protein_tree_index_object()
+            tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
+        elif tmp_type == "protein":
+            tmp_protein = self._interface_manager.get_current_protein_tree_index_object()
+            tmp_chain = tmp_protein.chains[0]
+        else:
+            return
+
+        # Update pymol parameter in PyMOL
+        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        try:
+            tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
+        except pymol.CmdException:
+            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+            logger.warning("No protein in session found. This can lead to more serious problems.")
+        else:
+            # Update pymol parameter in memory
+            tmp_chain.pymol_parameters[enums.PymolParameterEnum.REPRESENTATION.value] = tmp_representation
+            # Update pymol parameter in database
+            with database_manager.DatabaseManager(
+                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                db_manager.open_project_database()
+                db_manager.update_protein_chain_representation(tmp_chain.get_id(), tmp_representation)
+                db_manager.close_project_database()
+            self._save_protein_pymol_session(tmp_protein)
+
+    def _save_protein_pymol_session(self, a_protein: "protein.Protein"):
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
+            (0, a_protein.get_id(), a_protein)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def _import_protein_structure(self):
         self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
@@ -1079,122 +1140,172 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs tab methods">
-    def _show_protein_information_of_protein_pair(self) -> None:
+    def _get_protein_information_of_protein_pair(self):
         tmp_type = self._view.ui.protein_pairs_tree_view.model().data(
             self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
         )
         if tmp_type == "protein":
-            tmp_protein = self._view.ui.protein_pairs_tree_view.model().data(
-                self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
-                self._view.ui.protein_pairs_tree_view.currentIndex().parent(), enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_first_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_first_chain,
-                                                                                 tmp_protein_pair.get_id(),
-                                                                                 tmp_protein.get_id())
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index()
+            tmp_protein = self._interface_manager.get_current_protein_pair_tree_index_object()
+            tmp_chain_index = self._interface_manager.get_child_index_of_get_current_protein_pair_tree_index()
         elif tmp_type == "chain":
-            tmp_protein = self._view.ui.protein_pairs_tree_view.model().data(
-                self._view.ui.protein_pairs_tree_view.currentIndex().parent(), enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
-                self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent(), enums.ModelEnum.OBJECT_ROLE
-            )
-            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(
-                self._view.ui.protein_pairs_tree_view.currentIndex(), tmp_protein_pair.get_id(), tmp_protein.get_id()
-            )
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_grand_parent_index_object_of_current_protein_pair_tree_index()
+            tmp_protein = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index()
+            tmp_chain_index = self._interface_manager.get_current_protein_pair_tree_index()
         elif tmp_type == "protein_pair":
-            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.model().data(
-                self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_protein_pair.load_pymol_session()
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
+            tmp_protein = self._interface_manager.get_current_protein_pair_tree_index().child(0, 0).data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain_index = self._interface_manager.get_current_protein_pair_tree_index().child(0, 0).child(0, 0)
         else:
-            print(tmp_type)
-            raise ValueError("Unknown type!")
+            return "", "", "", ""
+        return tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index
+
+    def _show_protein_information_of_protein_pair(self) -> None:
+        tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
+        self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_chain_index,
+                                                                             tmp_protein_pair.get_id(),
+                                                                             tmp_protein.get_id())
+        self._interface_manager.manage_buttons_for_protein_pairs_tab(tmp_type)
         tmp_current_active_obj = self._view.ui.protein_pairs_tree_view.model().data(
                 self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole
         )
         self._view.status_bar.showMessage(f"Active PyMOL Object: {tmp_current_active_obj}")
 
+    def _open_protein_pair_pymol_session(self):
+        tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
+        tmp_protein_pair.load_pymol_session()
+
     def _change_chain_color_protein_pairs(self) -> None:
-        if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
-            self._view.ui.btn_delete_protein.setEnabled(False)
-            tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+        tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
+        tmp_color: str = self._view.cb_chain_color_protein_pair.currentText()
+        if tmp_type == "chain":
+            # self._view.ui.btn_delete_protein.setEnabled(False)
+            # tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+            #     enums.ModelEnum.OBJECT_ROLE
+            # )
+            tmp_raw_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
             tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
         elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            self._view.ui.btn_delete_protein.setEnabled(True)
-            tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(enums.ModelEnum.OBJECT_ROLE)
+            # self._view.ui.btn_delete_protein.setEnabled(True)
+            # tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+            #     enums.ModelEnum.OBJECT_ROLE
+            # )
+            tmp_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
         else:
             return
 
-        # Update pymol parameter in database
-        tmp_color: str = self._view.cb_chain_color_protein_pair.currentText()
-        with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-            db_manager.open_project_database()
-            db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                tmp_protein_pair.get_id(),
-                tmp_protein.get_id(),
-                tmp_chain.chain_letter,
-                enums.PymolParameterEnum.COLOR.value,
-                tmp_color,
-            )
-            db_manager.close_project_database()
         # Update pymol parameter in PyMOL
         tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        tmp_protein.pymol_selection.color_selection(tmp_color)
+        try:
+            tmp_protein.pymol_selection.color_selection(tmp_color)
+        except pymol.CmdException:
+            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+            logger.warning("No protein in session found. This can lead to more serious problems.")
+        else:
+            # Update pymol parameter in database
+            with database_manager.DatabaseManager(
+                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                db_manager.open_project_database()
+                db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                    tmp_protein_pair.get_id(),
+                    tmp_protein.get_id(),
+                    tmp_chain.chain_letter,
+                    enums.PymolParameterEnum.COLOR.value,
+                    tmp_color,
+                )
+                db_manager.close_project_database()
+            self._save_protein_pair_pymol_session(tmp_protein_pair)
 
     def _change_chain_representation_protein_pairs(self) -> None:
-        if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
-            self._view.ui.btn_delete_protein.setEnabled(False)
-            tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+        tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
+        tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
+        if tmp_type == "chain":
+            # self._view.ui.btn_delete_protein.setEnabled(False)
+            # tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+            #     enums.ModelEnum.OBJECT_ROLE
+            # )
+            tmp_raw_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
             tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
         elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            self._view.ui.btn_delete_protein.setEnabled(True)
-            tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
-            )
-            tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(
-                enums.ModelEnum.OBJECT_ROLE)
+            # self._view.ui.btn_delete_protein.setEnabled(True)
+            # tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+            #     enums.ModelEnum.OBJECT_ROLE
+            # )
+            tmp_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
         else:
             return
-        # Update pymol parameter in database
-        tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
-        with database_manager.DatabaseManager(
-                str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-            db_manager.open_project_database()
-            db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                tmp_protein_pair.get_id(),
-                tmp_protein.get_id(),
-                tmp_chain.chain_letter,
-                enums.PymolParameterEnum.REPRESENTATION.value,
-                tmp_representation,
-            )
-            db_manager.close_project_database()
 
-        tmp_database_operation = database_operation.DatabaseOperation(
-            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
-            (0, tmp_protein_pair.get_id(), tmp_protein_pair)
-        )
-        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         # Update pymol parameter in PyMOL
         tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
+        try:
+            tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
+        except pymol.CmdException:
+            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+            logger.warning("No protein in session found. This can lead to more serious problems.")
+        else:
+            # Update pymol parameter in database
+            with database_manager.DatabaseManager(
+                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                db_manager.open_project_database()
+                db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                    tmp_protein_pair.get_id(),
+                    tmp_protein.get_id(),
+                    tmp_chain.chain_letter,
+                    enums.PymolParameterEnum.REPRESENTATION.value,
+                    tmp_representation,
+                )
+                db_manager.close_project_database()
+            self._save_protein_pair_pymol_session(tmp_protein_pair)
+
+        # if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
+        #     self._view.ui.btn_delete_protein.setEnabled(False)
+        #     tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+        #         enums.ModelEnum.OBJECT_ROLE
+        #     )
+        #     tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+        #         enums.ModelEnum.OBJECT_ROLE
+        #     )
+        #     tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+        #     tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
+        # elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+        #     self._view.ui.btn_delete_protein.setEnabled(True)
+        #     tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+        #     tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
+        #         enums.ModelEnum.OBJECT_ROLE
+        #     )
+        #     tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(
+        #         enums.ModelEnum.OBJECT_ROLE)
+        # else:
+        #     return
+        # # Update pymol parameter in database
+        # tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
+        # with database_manager.DatabaseManager(
+        #         str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+        #     db_manager.open_project_database()
+        #     db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+        #         tmp_protein_pair.get_id(),
+        #         tmp_protein.get_id(),
+        #         tmp_chain.chain_letter,
+        #         enums.PymolParameterEnum.REPRESENTATION.value,
+        #         tmp_representation,
+        #     )
+        #     db_manager.close_project_database()
+        #
+        #
+        # # Update pymol parameter in PyMOL
+        # tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        # tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
+
+    def _save_protein_pair_pymol_session(self, a_protein_pair):
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
+            (0, a_protein_pair.get_id(), a_protein_pair)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
