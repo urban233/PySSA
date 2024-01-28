@@ -16,7 +16,8 @@ from Bio import SeqRecord
 from Bio import SeqIO
 from xml import sax
 
-from pyssa.controller import results_view_controller, rename_protein_view_controller
+from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
+    pymol_session_manager
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -69,6 +70,8 @@ class MainViewController:
     """
     _interface_manager: "interface_manager.InterfaceManager"
 
+    _pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+
     """
     The active task of the application.
     """
@@ -79,7 +82,9 @@ class MainViewController:
     """
     _database_thread: "database_thread.DatabaseThread"
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+    def __init__(self,
+                 the_interface_manager: "interface_manager.InterfaceManager",
+                 the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> None:
         """Constructor.
 
         Args:
@@ -95,6 +100,7 @@ class MainViewController:
 
         self._view: "main_view.MainView" = the_interface_manager.get_main_view()
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
+        self._pymol_session_manager = the_pymol_session_manager
         self._database_manager = database_manager.DatabaseManager("")
         self._database_manager.set_application_settings(self._interface_manager.get_application_settings())
         self._database_thread: "database_thread.DatabaseThread" = database_thread.DatabaseThread("")
@@ -112,6 +118,7 @@ class MainViewController:
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
+        self._view.ui.action_use_project.triggered.connect(self._use_project)
         self._view.ui.action_delete_project.triggered.connect(self._delete_project)
         self._view.ui.action_import_project.triggered.connect(self.import_project)
         self._view.ui.action_export_project.triggered.connect(self.export_current_project)
@@ -196,7 +203,7 @@ class MainViewController:
         """Closes the current project"""
         self._active_task = tasks.Task(
             target=main_presenter_async.close_project,
-            args=(self._database_thread, ""),
+            args=(self._database_thread, self._pymol_session_manager),
             post_func=self.__await_close_project,
         )
         self._active_task.start()
@@ -260,6 +267,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Create empty project finished.")
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.reinitialize_session()
 
     def _open_project(self) -> None:
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
@@ -286,6 +294,7 @@ class MainViewController:
         )
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.reinitialize_session()
         self._interface_manager.stop_wait_spinner()
         self._interface_manager.update_status_bar("Opening existing project finished.")
         # tmp_filepath = pathlib.Path(f"{return_value}.xml")
@@ -300,6 +309,19 @@ class MainViewController:
         #     post_func=self.__await_open_project,
         # )
         # self._active_task.start()
+
+    def _use_project(self) -> None:
+        self._external_controller = use_project_view_controller.UseProjectViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self._post_use_project)
+        self._interface_manager.get_use_project_view().show()
+
+    def _post_use_project(self, user_input: tuple) -> None:
+        # TODO: needs actual implementation of project creation process!
+        #self._interface_manager.set_new_project(tmp_project)
+        self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.reinitialize_session()
+        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.update_status_bar("Opening existing project finished.")
 
     # def __await_open_project(self, a_result: tuple) -> None:
     #     self._interface_manager.set_new_project(a_result[1])
@@ -1090,17 +1112,29 @@ class MainViewController:
                 tmp_protein.get_molecule_object()
             )
         )
-        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
-        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
-            self._view.ui.proteins_table_widget.setEnabled(True)
+        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
+            self._view.cb_chain_color.setEnabled(True)
+            self._view.cb_chain_representation.setEnabled(True)
         else:
-            self._view.ui.proteins_table_widget.setEnabled(False)
+            self._view.cb_chain_color.setEnabled(False)
+            self._view.cb_chain_representation.setEnabled(False)
 
     def _open_protein_pymol_session(self):
+        if not self._pymol_session_manager.is_the_current_session_empty():
+            logger.info("The current session is not empty. Reinitialize session now ...")
+            self._pymol_session_manager.reinitialize_session()
+            logger.info("Reinitializing session finished.")
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
-        self._interface_manager.set_new_session_information(tmp_protein.get_molecule_object(), "protein")
-        tmp_protein.load_protein_pymol_session()
-        self._view.ui.proteins_table_widget.setEnabled(True)
+        try:
+            self._pymol_session_manager.load_protein_session(tmp_protein)
+        except RuntimeError:
+            logger.error("The protein name could not be found in the object list in PyMOL!")
+            self._view.cb_chain_color.setEnabled(False)
+            self._view.cb_chain_representation.setEnabled(False)
+        else:
+            self._view.cb_chain_color.setEnabled(True)
+            self._view.cb_chain_representation.setEnabled(True)
+            logger.info("Successfully opened protein session.")
 
     def _change_chain_color_proteins(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1115,14 +1149,12 @@ class MainViewController:
         else:
             return
 
-        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
-        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
+        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             # Update pymol parameter in PyMOL
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             try:
                 tmp_protein.pymol_selection.color_selection(tmp_color)
             except pymol.CmdException:
-                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
                 logger.warning("No protein in session found. This can lead to more serious problems.")
             else:
                 # Update pymol parameter in memory
@@ -1133,6 +1165,8 @@ class MainViewController:
                     db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
                     db_manager.close_project_database()
                 self._save_protein_pymol_session(tmp_protein)
+        else:
+            logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _change_chain_representation_proteins(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1147,14 +1181,12 @@ class MainViewController:
         else:
             return
 
-        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
-        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
+        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             # Update pymol parameter in PyMOL
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             try:
                 tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
             except pymol.CmdException:
-                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
                 logger.warning("No protein in session found. This can lead to more serious problems.")
             else:
                 # Update pymol parameter in memory
@@ -1166,6 +1198,8 @@ class MainViewController:
                     db_manager.update_protein_chain_representation(tmp_chain.get_id(), tmp_representation)
                     db_manager.close_project_database()
                 self._save_protein_pymol_session(tmp_protein)
+        else:
+            logger.warning("The representation of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _save_protein_pymol_session(self, a_protein: "protein.Protein"):
         tmp_database_operation = database_operation.DatabaseOperation(
@@ -1382,8 +1416,9 @@ class MainViewController:
 
     def _open_protein_pair_pymol_session(self):
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
-        self._interface_manager.set_new_session_information(tmp_protein_pair.name, "protein_pair")
-        tmp_protein_pair.load_pymol_session()
+        self._pymol_session_manager.load_protein_pair_session(tmp_protein_pair)
+        # self._interface_manager.set_new_session_information(tmp_protein_pair.name, "protein_pair")
+        # tmp_protein_pair.load_pymol_session()
 
     def _change_chain_color_protein_pairs(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
@@ -1396,27 +1431,29 @@ class MainViewController:
         else:
             return
 
-        # Update pymol parameter in PyMOL
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        try:
-            tmp_protein.pymol_selection.color_selection(tmp_color)
-        except pymol.CmdException:
-            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
-            logger.warning("No protein in session found. This can lead to more serious problems.")
+        if self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.session_name == tmp_protein_pair.name:
+            # Update pymol parameter in PyMOL
+            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            try:
+                tmp_protein.pymol_selection.color_selection(tmp_color)
+            except pymol.CmdException:
+                logger.warning("No protein in session found. This can lead to more serious problems.")
+            else:
+                # Update pymol parameter in database
+                with database_manager.DatabaseManager(
+                        str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                    db_manager.open_project_database()
+                    db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                        tmp_protein_pair.get_id(),
+                        tmp_protein.get_id(),
+                        tmp_chain.chain_letter,
+                        enums.PymolParameterEnum.COLOR.value,
+                        tmp_color,
+                    )
+                    db_manager.close_project_database()
+                self._save_protein_pair_pymol_session(tmp_protein_pair)
         else:
-            # Update pymol parameter in database
-            with database_manager.DatabaseManager(
-                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
-                db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                    tmp_protein_pair.get_id(),
-                    tmp_protein.get_id(),
-                    tmp_chain.chain_letter,
-                    enums.PymolParameterEnum.COLOR.value,
-                    tmp_color,
-                )
-                db_manager.close_project_database()
-            self._save_protein_pair_pymol_session(tmp_protein_pair)
+            logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _change_chain_representation_protein_pairs(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
@@ -1429,28 +1466,30 @@ class MainViewController:
         else:
             return
 
-        # Update pymol parameter in PyMOL
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        try:
-            tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
-        except pymol.CmdException:
-            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
-            logger.warning("No protein in session found. This can lead to more serious problems.")
+        if self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.session_name == tmp_protein_pair.name:
+            # Update pymol parameter in PyMOL
+            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            try:
+                tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
+            except pymol.CmdException:
+                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+                logger.warning("No protein in session found. This can lead to more serious problems.")
+            else:
+                # Update pymol parameter in database
+                with database_manager.DatabaseManager(
+                        str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                    db_manager.open_project_database()
+                    db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                        tmp_protein_pair.get_id(),
+                        tmp_protein.get_id(),
+                        tmp_chain.chain_letter,
+                        enums.PymolParameterEnum.REPRESENTATION.value,
+                        tmp_representation,
+                    )
+                    db_manager.close_project_database()
+                self._save_protein_pair_pymol_session(tmp_protein_pair)
         else:
-            # Update pymol parameter in database
-            with database_manager.DatabaseManager(
-                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
-                db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                    tmp_protein_pair.get_id(),
-                    tmp_protein.get_id(),
-                    tmp_chain.chain_letter,
-                    enums.PymolParameterEnum.REPRESENTATION.value,
-                    tmp_representation,
-                )
-                db_manager.close_project_database()
-            self._save_protein_pair_pymol_session(tmp_protein_pair)
-
+            logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
         # if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
         #     self._view.ui.btn_delete_protein.setEnabled(False)
         #     tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(

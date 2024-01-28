@@ -71,7 +71,7 @@ class MainView(QtWidgets.QMainWindow):
         """Initialize the UI elements."""
         self.ui.lbl_project_name.hide()
         self.ui.project_tab_widget.hide()
-
+        self.ui.action_use_project.setEnabled(False)
         self.ui.action_export_project.setEnabled(False)
         self.ui.action_close_project.setEnabled(False)
         self.ui.action_predict_monomer.setEnabled(False)
