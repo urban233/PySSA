@@ -21,7 +21,7 @@ from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
-    dialog_rename_protein
+    dialog_rename_protein, dialog_help
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
@@ -118,7 +118,9 @@ class MainViewController:
         self._view.ui.action_close_project.triggered.connect(self._close_project)
 
         self._view.ui.action_results_summary.triggered.connect(self._results_summary)
-        self._view.ui.action_preview_image.triggered.connect(self.preview_image)
+        self._view.ui.action_preview_image.triggered.connect(self._preview_image)
+        self._view.ui.action_ray_tracing_image.triggered.connect(self._create_ray_traced_image)
+        self._view.ui.action_simple_image.triggered.connect(self._create_drawn_image)
 
         self._view.ui.action_edit_settings.triggered.connect(self.open_settings_global)
         self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
@@ -137,6 +139,7 @@ class MainViewController:
         self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
+        self._view.ui.btn_help.clicked.connect(self.open_help)
 
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
@@ -171,6 +174,18 @@ class MainViewController:
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
+
+    def open_help(self):
+        # with open(
+        #     r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html",
+        #     "r",
+        #     encoding="utf-8",
+        # ) as file:
+        #     html_content = file.read()
+        #     file.close()
+        # tmp_dialog = dialog_help.DialogHelp(html_content)
+        # tmp_dialog.exec_()
+        pass
 
     # </editor-fold>
 
@@ -758,43 +773,108 @@ class MainViewController:
 
     # <editor-fold desc="Image menu methods">
     # TODO: images need to be reimplemented
-    def post_preview_image(self) -> None:
-        """Hides the block box of the preview process."""
-        # self.block_box_uni.hide()
-        # self.block_box_uni.destroy(True)
-        self._view.status_bar.showMessage("Finished preview of ray-traced image.")
-        QtWidgets.QApplication.restoreOverrideCursor()
+    # def post_preview_image(self) -> None:
+    #     """Hides the block box of the preview process."""
+    #     # self.block_box_uni.hide()
+    #     # self.block_box_uni.destroy(True)
+    #     self._view.status_bar.showMessage("Finished preview of ray-traced image.")
+    #     QtWidgets.QApplication.restoreOverrideCursor()
+    #
+    # def preview_image(self) -> None:
+    #     """Previews the image."""
+    #     QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+    #     if self._view.ui.cb_ray_tracing.isChecked():
+    #         self._view.status_bar.showMessage("Preview ray-traced image ...")
+    #         # <editor-fold desc="Worker setup">
+    #         # --Begin: worker setup
+    #         self.tmp_thread = QtCore.QThread()
+    #         self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
+    #         self.tmp_thread = task_workers.setup_worker_for_work(
+    #             self.tmp_thread,
+    #             self.tmp_worker,
+    #             self.display_view_page,
+    #         )
+    #         self.tmp_worker.finished.connect(self.post_preview_image)
+    #         self.tmp_thread.start()
+    #         # --End: worker setup
+    #
+    #         # </editor-fold>
+    #         gui_utils.setup_standard_block_box(
+    #             self.block_box_uni,
+    #             "Preview ray-trace image",
+    #             "Creating preview for the ray-traced image ...",
+    #         )
+    #         # self.block_box_uni.exec_()
+    #     else:
+    #         self._view.status_bar.showMessage("Preview draw image ...")
+    #         cmd.draw(2400, 2400)
+    #         self._view.status_bar.showMessage("Finished preview of drawn image.")
+    #         QtWidgets.QApplication.restoreOverrideCursor()
 
-    def preview_image(self) -> None:
-        """Previews the image."""
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-        if self._view.ui.cb_ray_tracing.isChecked():
-            self._view.status_bar.showMessage("Preview ray-traced image ...")
-            # <editor-fold desc="Worker setup">
-            # --Begin: worker setup
-            self.tmp_thread = QtCore.QThread()
-            self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
-            self.tmp_thread = task_workers.setup_worker_for_work(
-                self.tmp_thread,
-                self.tmp_worker,
-                self.display_view_page,
-            )
-            self.tmp_worker.finished.connect(self.post_preview_image)
-            self.tmp_thread.start()
-            # --End: worker setup
+    def _preview_image(self):
+        self._active_task = tasks.Task(
+            target=main_presenter_async.preview_image,
+            args=(0, 0),
+            post_func=self.__await_preview_image,
+        )
+        self._active_task.start()
+        self.update_status("Creating preview of image ...")
+        self._view.wait_spinner.start()
 
-            # </editor-fold>
-            gui_utils.setup_standard_block_box(
-                self.block_box_uni,
-                "Preview ray-trace image",
-                "Creating preview for the ray-traced image ...",
+    def __await_preview_image(self, return_value: tuple):
+        self._view.wait_spinner.stop()
+        self.update_status("Preview finished.")
+
+    def _create_ray_traced_image(self) -> None:
+        save_dialog = QtWidgets.QFileDialog()
+        full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
+        if full_file_name == ("", ""):
+            tools.quick_log_and_display(
+                "info",
+                "No file has been selected.",
+                self._view.status_bar,
+                "No file has been selected.",
             )
-            # self.block_box_uni.exec_()
-        else:
-            self._view.status_bar.showMessage("Preview draw image ...")
-            cmd.draw(2400, 2400)
-            self._view.status_bar.showMessage("Finished preview of drawn image.")
-            QtWidgets.QApplication.restoreOverrideCursor()
+            return
+
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_ray_traced_image,
+            args=(full_file_name[0], 0),
+            post_func=self.__await_create_ray_traced_image,
+        )
+        self._active_task.start()
+        self.update_status("Creating ray-traced image ...")
+        self._view.wait_spinner.start()
+
+    def __await_create_ray_traced_image(self, return_value: tuple) -> None:
+        self._view.wait_spinner.stop()
+        self.update_status("Image creation finished.")
+
+    def _create_drawn_image(self) -> None:
+        save_dialog = QtWidgets.QFileDialog()
+        full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
+        if full_file_name == ("", ""):
+            tools.quick_log_and_display(
+                "info",
+                "No file has been selected.",
+                self._view.status_bar,
+                "No file has been selected.",
+            )
+            return
+
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_drawn_image,
+            args=(full_file_name[0], 0),
+            post_func=self.__await_create_drawn_image,
+        )
+        self._active_task.start()
+        self.update_status("Creating simple image ...")
+        self._view.wait_spinner.start()
+
+    def __await_create_drawn_image(self, return_value: tuple) -> None:
+        self._view.wait_spinner.stop()
+        self.update_status("Image creation finished.")
+
 
     def post_save_image(self) -> None:
         """Displays a message box which informs that the process has finished."""

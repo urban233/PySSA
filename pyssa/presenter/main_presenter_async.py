@@ -28,6 +28,7 @@ import shutil
 import subprocess
 from typing import TYPE_CHECKING
 
+import pymol
 from pymol import cmd
 
 from pyssa.controller import database_manager
@@ -676,3 +677,31 @@ def close_project(the_database_thread, placeholder: str) -> tuple:
         return False, "Waiting for database thread queue failed!"
     else:
         return True, "Waiting for database thread queue finished."
+
+
+def preview_image(a_placeholder_1: int, a_placeholder_2: int) -> tuple:
+    # TODO: the renderer should be changeable
+    try:
+        cmd.ray(2400, 2400, renderer=int(0))
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    return 0, ""
+
+
+def create_ray_traced_image(an_image_filepath: str, a_placeholder_1: int) -> tuple:
+    # TODO: the renderer should be changeable
+    try:
+        cmd.ray(2400, 2400, renderer=int(0))
+        cmd.png(an_image_filepath, dpi=300)
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    return 0, ""
+
+
+def create_drawn_image(an_image_filepath: str, a_placeholder_1: int) -> tuple:
+    try:
+        cmd.draw(2400, 2400)
+        cmd.png(an_image_filepath, dpi=300)
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    return 0, ""
