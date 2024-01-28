@@ -27,7 +27,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyqtspinner import spinner
-from pyssa.gui.ui.custom_widgets import custom_tree_view
+from pyssa.gui.ui.custom_widgets import custom_tree_view, custom_line_edit
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project
@@ -71,24 +71,42 @@ class MainView(QtWidgets.QMainWindow):
         """Initialize the UI elements."""
         self.ui.lbl_project_name.hide()
         self.ui.project_tab_widget.hide()
-        self.ui.actionExport.setEnabled(False)
+
+        self.ui.action_export_project.setEnabled(False)
         self.ui.action_close_project.setEnabled(False)
         self.ui.action_predict_monomer.setEnabled(False)
         self.ui.action_predict_multimer.setEnabled(False)
         self.ui.action_distance_analysis.setEnabled(False)
         self.ui.action_results_summary.setEnabled(False)
-        self.ui.actionPreview.setEnabled(False)
-        self.ui.action_ray_tracing.setEnabled(False)
-        self.ui.action_simple.setEnabled(False)
+        self.ui.action_preview_image.setEnabled(False)
+        self.ui.action_ray_tracing_image.setEnabled(False)
+        self.ui.action_simple_image.setEnabled(False)
         self.ui.action_protein_regions.setEnabled(False)
+
+        # Sequences tab
+        self.ui.btn_save_sequence.setEnabled(False)
+        self.ui.btn_delete_sequence.setEnabled(False)
+
+        # Proteins tab
+        self.ui.btn_save_protein.setEnabled(False)
+        self.ui.btn_delete_protein.setEnabled(False)
+        self.ui.btn_open_protein_session.setEnabled(False)
+        self.ui.btn_create_protein_scene.setEnabled(False)
+        self.ui.btn_update_protein_scene.setEnabled(False)
+
+        # Protein Pairs tab
+        self.ui.btn_delete_protein_pair.setEnabled(False)
+        self.ui.btn_open_protein_pair_session.setEnabled(False)
+        self.ui.btn_create_protein_pair_scene.setEnabled(False)
+        self.ui.btn_update_protein_pair_scene.setEnabled(False)
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
         self.cb_chain_representation = QtWidgets.QComboBox()
-        self.btn_show_sequence = QtWidgets.QPushButton()
         self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
         self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
-        self.btn_show_sequence.setText("Show")
+        self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
+        self.build_sequence_table()
         self.build_proteins_table()
         self.build_protein_pairs_table()
 
@@ -105,6 +123,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_help_3.setIcon(icon)
         self.ui.btn_help_3.setText("")
 
+        self._create_all_tooltips()
         pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
         # Resize the pixmap
         scaled_pixmap = pixmap.scaled(700, 700, aspectRatioMode=Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
@@ -121,7 +140,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.seqs_table_widget.verticalHeader().setVisible(False)
         self.ui.seqs_table_widget.setColumnCount(2)
         self.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
-        self.btn_show_sequence.adjustSize()
 
     def build_proteins_table(self):
         self.ui.proteins_table_widget.verticalHeader().setVisible(False)
@@ -141,6 +159,11 @@ class MainView(QtWidgets.QMainWindow):
         gui_utils.fill_combo_box(self.cb_chain_representation_protein_pair, constants.PYMOL_REPRESENTATIONS)
         self.cb_chain_representation_protein_pair.adjustSize()
 
+    def setup_sequences_table(self, row_count):
+        self.line_edit_seq_name.setStyleSheet("QLineEdit { background-color: white; border-radius: 0; }")
+        self.ui.seqs_table_widget.setRowCount(row_count)
+        self.ui.seqs_table_widget.setCellWidget(0, 1, self.line_edit_seq_name)
+
     def setup_proteins_table(self, row_count):
         self.ui.proteins_table_widget.setRowCount(row_count)
         self.ui.proteins_table_widget.setCellWidget(0, 1, self.cb_chain_color)
@@ -151,10 +174,33 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.protein_pairs_table_widget.setCellWidget(0, 1, self.cb_chain_color_protein_pair)
         self.ui.protein_pairs_table_widget.setCellWidget(1, 1, self.cb_chain_representation_protein_pair)
 
+    def _create_all_tooltips(self) -> None:
+        """Creates all tooltips for the gui elements."""
+        self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
+        self.ui.seqs_table_widget.setToolTip("A table with additional information about the selected sequence")
+        self.ui.btn_import_seq.setToolTip("Click to import an existing .fasta file")
+        self.ui.btn_add_sequence.setToolTip("Click to add a sequence by pasting the sequence string")
+        self.ui.btn_save_sequence.setToolTip("Click to save the selected sequence as .fasta file")
+        self.ui.btn_delete_sequence.setToolTip("Click to delete the selected sequence from the project")
 
-    #
-    # def _create_all_tooltips(self) -> None:
-    #     """Creates all tooltips for the gui elements."""
+        self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
+        self.ui.proteins_table_widget.setToolTip(
+            "A table with changeable PyMOL parameters for the currently active session"
+        )
+        self.ui.btn_import_protein.setToolTip("Click to import an existing .pdb file")
+        self.ui.btn_save_protein.setToolTip("Click to save the selected protein as .pdb file")
+        self.ui.btn_delete_protein.setToolTip("Click to delete the selected protein from the project")
+        self.ui.btn_create_protein_scene.setToolTip("Click to create a new PyMOL scene")
+        self.ui.btn_update_protein_scene.setToolTip("Click to update the current scene in PyMOL")
+
+        self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
+        self.ui.protein_pairs_table_widget.setToolTip(
+            "A table with changeable PyMOL parameters for the currently active session"
+        )
+        self.ui.btn_delete_protein_pair.setToolTip("Click to delete the selected protein pair from the project")
+        self.ui.btn_create_protein_pair_scene.setToolTip("Click to create a new PyMOL scene")
+        self.ui.btn_update_protein_pair_scene.setToolTip("Click to update the current scene in PyMOL")
+
     #     self.status_bar.setToolTip("Status information: Current process")
     #     # new project page
     #     self.ui.btn_new_choose_reference.setToolTip("Click to add a .pdb file")

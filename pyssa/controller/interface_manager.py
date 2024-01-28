@@ -8,12 +8,14 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.controller import database_manager
+from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.gui.ui.views import hotspots_protein_regions_view
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain
+from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.util import enums, constants, exception, main_window_util
 
 
@@ -34,6 +36,7 @@ class InterfaceManager:
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
+    _current_pymol_session: "current_session.CurrentPymolSession"
     _application_settings: "settings.Settings"
 
     _workspace_model: QtGui.QStandardItemModel
@@ -112,6 +115,7 @@ class InterfaceManager:
         # General attributes definitions
         self._current_workspace = self._application_settings.workspace_path
         self._current_project = project.Project()
+        self._current_pymol_session = current_session.CurrentPymolSession("", "")
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
         self._sequence_model = QtGui.QStandardItemModel()
@@ -184,6 +188,13 @@ class InterfaceManager:
             [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]
         )
         return self.string_model
+
+    def get_information_about_current_session(self):
+        return self._current_pymol_session.session_name, self._current_pymol_session.object_type
+
+    def set_new_session_information(self, a_session_name: str, an_object_name: str) -> None:
+        self._current_pymol_session.session_name = a_session_name
+        self._current_pymol_session.object_type = an_object_name
 
     def update_settings(self):
         """Deserializes the settings json file."""
@@ -273,14 +284,14 @@ class InterfaceManager:
             self._main_view.ui.action_new_project.setEnabled(False)
             self._main_view.ui.action_open_project.setEnabled(False)
             self._main_view.ui.action_delete_project.setEnabled(False)
-            self._main_view.ui.actionImport.setEnabled(False)
-            self._main_view.ui.actionExport.setEnabled(True)
+            self._main_view.ui.action_import_project.setEnabled(False)
+            self._main_view.ui.action_export_project.setEnabled(True)
             self._main_view.ui.action_close_project.setEnabled(True)
             self._main_view.ui.action_predict_monomer.setEnabled(True)
             self._main_view.ui.action_distance_analysis.setEnabled(True)
-            self._main_view.ui.actionPreview.setEnabled(True)
-            self._main_view.ui.action_ray_tracing.setEnabled(True)
-            self._main_view.ui.action_simple.setEnabled(True)
+            self._main_view.ui.action_preview_image.setEnabled(True)
+            self._main_view.ui.action_ray_tracing_image.setEnabled(True)
+            self._main_view.ui.action_simple_image.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(True)
             self._main_view.ui.project_tab_widget.setCurrentIndex(0)
         else:
@@ -291,12 +302,12 @@ class InterfaceManager:
             self._main_view.ui.action_new_project.setEnabled(True)
             self._main_view.ui.action_open_project.setEnabled(True)
             self._main_view.ui.action_delete_project.setEnabled(True)
-            self._main_view.ui.actionImport.setEnabled(True)
-            self._main_view.ui.actionExport.setEnabled(False)
+            self._main_view.ui.action_import_project.setEnabled(True)
+            self._main_view.ui.action_export_project.setEnabled(False)
             self._main_view.ui.action_close_project.setEnabled(False)
-            self._main_view.ui.actionPreview.setEnabled(False)
-            self._main_view.ui.action_ray_tracing.setEnabled(False)
-            self._main_view.ui.action_simple.setEnabled(False)
+            self._main_view.ui.action_preview_image.setEnabled(False)
+            self._main_view.ui.action_ray_tracing_image.setEnabled(False)
+            self._main_view.ui.action_simple_image.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
         if len(self._current_project.proteins) > 0:
@@ -310,20 +321,21 @@ class InterfaceManager:
         if len(self._current_project.sequences) > 0:
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
 
+    def restore_default_main_view(self):
+        # Restore sequences table
+        self._main_view.ui.seqs_table_widget.clear()
+        self._main_view.ui.seqs_table_widget.setRowCount(0)
+        # Restore proteins table
+        self._main_view.ui.proteins_table_widget.clear()
+        self._main_view.ui.proteins_table_widget.setRowCount(0)
+        # Restore protein pairs table
+        self._main_view.ui.protein_pairs_table_widget.clear()
+        self._main_view.ui.protein_pairs_table_widget.setRowCount(0)
+        # Initialize UI
+        self._main_view.initialize_ui()
+
     def show_chain_pymol_parameters(self, a_chain_item: QtGui.QStandardItem):
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
-        # tmp_model = QtGui.QStandardItemModel()
-        # tmp_model.setHorizontalHeaderLabels(["Column 1", "Column 2"])
-        # self._main_view.ui.proteins_table_view.setModel(tmp_model)
-        # i = 0
-        # for tmp_key in tmp_chain.pymol_parameters.keys():
-        #     tmp_value_item = QtGui.QStandardItem(tmp_chain.pymol_parameters[tmp_key])
-        #     tmp_key_item = QtGui.QStandardItem(str(tmp_key).replace("_", " "))
-        #     tmp_key_item.setFlags(tmp_key_item.flags() & ~Qt.ItemIsEditable)
-        #     tmp_model.setItem(i, 0, tmp_key_item)
-        #     tmp_model.setItem(i, 1, tmp_value_item)
-        #     i += 1
-        t0 = tmp_chain.pymol_parameters["chain_color"]
         self._main_view.setup_proteins_table(len(tmp_chain.pymol_parameters))
         i = 0
         for tmp_key in tmp_chain.pymol_parameters.keys():
@@ -334,8 +346,6 @@ class InterfaceManager:
             self._main_view.ui.proteins_table_widget.setItem(i, 1, tmp_value_item)
             i += 1
 
-        t0 = tmp_chain.pymol_parameters["chain_color"]
-        t1 = self._main_view.cb_chain_color.findText(tmp_chain.pymol_parameters["chain_color"])
         self._main_view.cb_chain_color.setCurrentIndex(
             self._main_view.cb_chain_color.findText(tmp_chain.pymol_parameters["chain_color"])
         )
@@ -384,22 +394,102 @@ class InterfaceManager:
         self._main_view.status_bar.showMessage(message)
 
     def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
-        self._main_view.ui.seqs_table_widget.setRowCount(2)
-        self._main_view.ui.seqs_table_widget.setColumnCount(2)
-        self._main_view.ui.seqs_table_widget.verticalHeader().setVisible(False)
-        self._main_view.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+        self._main_view.setup_sequences_table(2)
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
+        # Table label items
         tmp_name_label_item = QtWidgets.QTableWidgetItem("Name")
         self._main_view.ui.seqs_table_widget.setItem(0, 0, tmp_name_label_item)
-        self._main_view.ui.seqs_table_widget.setItem(0, 1, QtWidgets.QTableWidgetItem(tmp_sequence.name))
         tmp_sequence_label_item = QtWidgets.QTableWidgetItem("Sequence")
         self._main_view.ui.seqs_table_widget.setItem(1, 0, tmp_sequence_label_item)
+        # Table value items
+        tmp_seq_name_item = QtWidgets.QTableWidgetItem(tmp_sequence.name)
+        tmp_seq_name_item.setToolTip("Double click to edit name")
+        self._main_view.ui.seqs_table_widget.setItem(0, 1, tmp_seq_name_item)
+        tmp_sequence_item = QtWidgets.QTableWidgetItem(f"{tmp_sequence.seq[:15]} ...")
+        tmp_sequence_item.setToolTip("Click to view complete sequence")
+        tmp_sequence_item.setData(enums.ModelEnum.OBJECT_ROLE, tmp_sequence)
+        self._main_view.ui.seqs_table_widget.setItem(1, 1, tmp_sequence_item)
+        # Table item flags
+        tmp_sequence_item.setFlags(tmp_sequence_item.flags() & ~Qt.ItemIsEditable)
         tmp_name_label_item.setFlags(tmp_name_label_item.flags() & ~Qt.ItemIsEditable)
         tmp_sequence_label_item.setFlags(tmp_sequence_label_item.flags() & ~Qt.ItemIsEditable)
-        #self._main_view.ui.seqs_table_widget.setItem(1, 1, QtWidgets.QTableWidgetItem(tmp_sequence.seq))
+        # Extra cell widgets
+
+        self._main_view.line_edit_seq_name.setText(tmp_seq_name_item.data(Qt.DisplayRole))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
-        self._main_view.btn_show_sequence.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self._main_view.ui.seqs_table_widget.setCellWidget(1, 1, self._main_view.btn_show_sequence)
+
+    def manage_buttons_for_proteins_tab(self, an_object_type: str, is_protein_in_pair: bool):
+        if an_object_type == "protein":
+            self._main_view.ui.btn_save_protein.setEnabled(True)
+            self._main_view.ui.btn_open_protein_session.setEnabled(True)
+            self._main_view.ui.btn_create_protein_scene.setEnabled(True)
+            self._main_view.ui.btn_update_protein_scene.setEnabled(True)
+        elif an_object_type == "chain":
+            self._main_view.ui.btn_save_protein.setEnabled(False)
+            self._main_view.ui.btn_open_protein_session.setEnabled(False)
+            self._main_view.ui.btn_create_protein_scene.setEnabled(True)
+            self._main_view.ui.btn_update_protein_scene.setEnabled(True)
+        else:
+            constants.PYSSA_LOGGER.warning("Unknown object type on proteins tab selected.")
+
+        if is_protein_in_pair:
+            self._main_view.ui.btn_delete_protein.setEnabled(False)
+        else:
+            self._main_view.ui.btn_delete_protein.setEnabled(True)
+
+    def manage_buttons_for_protein_pairs_tab(self, an_object_type: str):
+        if an_object_type == "protein_pair":
+            self._main_view.ui.btn_delete_protein_pair.setEnabled(True)
+            self._main_view.ui.btn_open_protein_pair_session.setEnabled(True)
+            self._main_view.ui.btn_create_protein_pair_scene.setEnabled(True)
+            self._main_view.ui.btn_update_protein_pair_scene.setEnabled(True)
+        else:
+            self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
+            self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
+            self._main_view.ui.btn_create_protein_pair_scene.setEnabled(True)
+            self._main_view.ui.btn_update_protein_pair_scene.setEnabled(True)
+
+    # <editor-fold desc="Getter methods for protein tab in main view">
+    def get_current_protein_tree_index(self):
+        return self._main_view.ui.proteins_tree_view.currentIndex()
+
+    def get_child_index_of_get_current_protein_tree_index(self):
+        return self._main_view.ui.proteins_tree_view.currentIndex().child(0, 0)
+
+    def get_current_protein_tree_index_type(self):
+        return self._main_view.ui.proteins_tree_view.model().data(
+            self.get_current_protein_tree_index(), enums.ModelEnum.TYPE_ROLE
+        )
+
+    def get_current_protein_tree_index_object(self):
+        return self.get_current_protein_tree_index().data(enums.ModelEnum.OBJECT_ROLE)
+
+    def get_parent_index_object_of_current_protein_tree_index(self):
+        return self.get_current_protein_tree_index().parent().data(enums.ModelEnum.OBJECT_ROLE)
+
+    # </editor-fold>
+
+    # <editor-fold desc="Getter methods for protein pairs tab in main view">
+    def get_current_protein_pair_tree_index(self):
+        return self._main_view.ui.protein_pairs_tree_view.currentIndex()
+
+    def get_child_index_of_get_current_protein_pair_tree_index(self):
+        return self._main_view.ui.protein_pairs_tree_view.currentIndex().child(0, 0)
+
+    def get_current_protein_pair_tree_index_type(self):
+        return self._main_view.ui.protein_pairs_tree_view.model().data(
+            self.get_current_protein_pair_tree_index(), enums.ModelEnum.TYPE_ROLE
+        )
+
+    def get_current_protein_pair_tree_index_object(self):
+        return self.get_current_protein_pair_tree_index().data(enums.ModelEnum.OBJECT_ROLE)
+
+    def get_parent_index_object_of_current_protein_pair_tree_index(self):
+        return self.get_current_protein_pair_tree_index().parent().data(enums.ModelEnum.OBJECT_ROLE)
+
+    def get_grand_parent_index_object_of_current_protein_pair_tree_index(self):
+        return self.get_current_protein_pair_tree_index().parent().parent().data(enums.ModelEnum.OBJECT_ROLE)
+    # </editor-fold>
 
     def start_wait_spinner(self) -> None:
         """Starts the spinner."""

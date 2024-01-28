@@ -1,40 +1,46 @@
-import os
-import requests
-from concurrent.futures import ThreadPoolExecutor
+from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QLineEdit
+from PyQt5.QtCore import Qt
 
-def download_file(file_url, file_path):
-    with requests.get(file_url, stream=True) as response:
-        with open(file_path, 'wb') as file:
-            for chunk in response.iter_content(chunk_size=128):
-                file.write(chunk)
+class CustomLineEdit(QLineEdit):
+    def keyPressEvent(self, event):
+        # Get the key code
+        key = event.key()
 
-def download_directory(url, local_path, num_threads=5):
-    response = requests.get(url)
+        # Check if the key is allowed (e.g., disallow 'ä' in any case)
+        if key == Qt.Key_Adiaeresis:
+            # Ignore the key event
+            return
 
-    if response.status_code == 200:
-        if not os.path.exists(local_path):
-            os.makedirs(local_path)
+        # Call the base class implementation to handle other keys
+        super(CustomLineEdit, self).keyPressEvent(event)
 
-        files = response.json()
+class MainWindow(QWidget):
+    def __init__(self):
+        super(MainWindow, self).__init__()
 
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = []
+        # Create a table widget with 3 rows and 3 columns
+        self.table_widget = QTableWidget(3, 3)
 
-            for file_name in files:
-                file_url = f"{url}/{file_name}"
-                file_path = os.path.join(local_path, file_name)
-                future = executor.submit(download_file, file_url, file_path)
-                futures.append(future)
+        # Use the custom line edit in the table widget
+        for row in range(self.table_widget.rowCount()):
+            for col in range(self.table_widget.columnCount()):
+                line_edit = CustomLineEdit()
+                self.table_widget.setCellWidget(row, col, line_edit)
 
-            for future in futures:
-                future.result()
+        # Add the table widget to a layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.table_widget)
 
-        print("Download complete.")
-    else:
-        print(f"Failed to download directory. Status code: {response.status_code}")
-if __name__ == "__main__":
-    # Example usage
-    server_url = "http://192.168.40.67:8000/local_music/"
-    local_directory = "local_directory"
+        # Set the layout
+        self.setLayout(layout)
 
-    download_directory(server_url, local_directory)
+if __name__ == '__main__':
+    app = QApplication([])
+
+    # Create the main window
+    main_window = MainWindow()
+    main_window.setWindowTitle('Table Widget Example')
+    main_window.show()
+
+    app.exec_()
+

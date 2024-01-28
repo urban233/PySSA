@@ -530,6 +530,62 @@ class DatabaseManager:
 
     # </editor-fold>
 
+    # <editor-fold desc="Protein pair delete statements">
+    def delete_existing_protein_pair(self, a_protein_pair_id: int) -> None:
+        # Get ids of distance analysis related objects
+        tmp_distance_analysis_info = self._get_distance_analysis(a_protein_pair_id)
+        tmp_distance_analysis_id, _, _, _, _, _ = tmp_distance_analysis_info
+        tmp_distance_analysis_results_info = self._get_distance_analysis_results(tmp_distance_analysis_id)
+        tmp_dist_analysis_results_id, _, _, _ = tmp_distance_analysis_results_info
+
+        # delete statements
+        self._delete_distance_analysis_result_data(tmp_dist_analysis_results_id)
+        self._delete_distance_analysis_results(tmp_distance_analysis_id)
+        self._delete_distance_analysis(a_protein_pair_id)
+        self._delete_pymol_parameters_protein_pair(a_protein_pair_id)
+        self._delete_protein_pair(a_protein_pair_id)
+
+    def _delete_protein_pair(self, a_protein_pair_id: int) -> None:
+        sql = """   
+            DELETE FROM ProteinPair
+            WHERE id = ?
+        """
+        self._cursor.execute(sql, (a_protein_pair_id,))
+        self._connection.commit()
+
+    def _delete_pymol_parameters_protein_pair(self, a_protein_pair_id: int) -> None:
+        sql = """   
+            DELETE FROM PyMOLParameterProteinPair
+            WHERE protein_pair_id = ?
+        """
+        self._cursor.execute(sql, (a_protein_pair_id,))
+        self._connection.commit()
+
+    def _delete_distance_analysis(self, a_protein_pair_id: int) -> None:
+        sql = """   
+            DELETE FROM DistanceAnalysis
+            WHERE protein_pair_id = ?
+        """
+        self._cursor.execute(sql, (a_protein_pair_id,))
+        self._connection.commit()
+
+    def _delete_distance_analysis_results(self, a_distance_analysis_id: int) -> None:
+        sql = """   
+            DELETE FROM DistanceAnalysisResults
+            WHERE distance_analysis_id = ?
+        """
+        self._cursor.execute(sql, (a_distance_analysis_id,))
+        self._connection.commit()
+
+    def _delete_distance_analysis_result_data(self, a_distance_analysis_results_id: int) -> None:
+        sql = """   
+            DELETE FROM DistanceAnalysisResultData
+            WHERE distance_analysis_results_id = ?
+        """
+        self._cursor.execute(sql, (a_distance_analysis_results_id,))
+        self._connection.commit()
+    # </editor-fold>
+
     # <editor-fold desc="Get all data of a specific table">
     def get_all_protein_table_data(self):
         """Gets all records from the Protein table.
@@ -867,4 +923,22 @@ class DatabaseManager:
                             WHERE id = ?
                         """
         self._cursor.execute(sql, (str(the_new_pymol_session), int(the_protein_pair_id)))
+        self._connection.commit()
+
+    def update_pymol_session_of_protein(self, the_protein_id: int, the_new_pymol_session: str):
+        sql = """
+                            UPDATE Protein 
+                            SET pymol_session = ?
+                            WHERE id = ?
+                        """
+        self._cursor.execute(sql, (str(the_new_pymol_session), int(the_protein_id)))
+        self._connection.commit()
+
+    def update_sequence_name(self, the_new_seq_name: str, the_old_seq_name: str, the_sequence: str):
+        sql = """
+            UPDATE SeqRecord 
+            SET name = ?
+            WHERE name = ? and seq = ?
+        """
+        self._cursor.execute(sql, (the_new_seq_name, the_old_seq_name, the_sequence))
         self._connection.commit()

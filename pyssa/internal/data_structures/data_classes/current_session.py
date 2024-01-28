@@ -31,8 +31,21 @@ class CurrentSession:
         type (str)
         name (str)
         session (str)
+
+    DO NOT USE THIS CLASS ANYMORE IN PRODUCTION!
     """
 
     type: str  # noqa: A003
     name: str
     session: str
+
+
+class CurrentPymolSession:
+    """Class which holds information about the current pymol session"""
+
+    session_name: str
+    object_type: str
+
+    def __init__(self, a_session_name: str, an_object_type) -> None:
+        self.session_name = a_session_name
+        self.object_type = an_object_type

@@ -56,7 +56,6 @@ QLabel#lbl_active_object {
     padding: 3px;
 }
 
-
 QListView {
     border-style: solid;
     border-width: 2px;
@@ -296,4 +295,9 @@ QToolButton::hover {
     color: #4B91F7;
     border-color: #4B91F7;
     border-style: solid;
+}
+
+QToolTip {
+    font: bold;
+    font-size: 12px;
 }

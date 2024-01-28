@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>659</width>
+    <width>680</width>
     <height>802</height>
    </rect>
   </property>
@@ -127,14 +127,21 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton">
+                  <widget class="QPushButton" name="btn_add_sequence">
                    <property name="text">
                     <string>Add</string>
                    </property>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButton_2">
+                  <widget class="QPushButton" name="btn_save_sequence">
+                   <property name="text">
+                    <string>Save</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="btn_delete_sequence">
                    <property name="text">
                     <string>Delete</string>
                    </property>
@@ -156,7 +163,14 @@
               </widget>
              </item>
              <item>
-              <widget class="QTableWidget" name="seqs_table_widget"/>
+              <widget class="QTableWidget" name="seqs_table_widget">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -289,7 +303,14 @@
               </widget>
              </item>
              <item>
-              <widget class="QTableWidget" name="proteins_table_widget"/>
+              <widget class="QTableWidget" name="proteins_table_widget">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+              </widget>
              </item>
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -305,6 +326,13 @@
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btn_open_protein_session">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="btn_create_protein_scene">
@@ -419,7 +447,7 @@
                 </spacer>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_9">
+                <widget class="QPushButton" name="btn_delete_protein_pair">
                  <property name="text">
                   <string>Delete</string>
                  </property>
@@ -459,6 +487,13 @@
                   </size>
                  </property>
                 </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="btn_open_protein_pair_session">
+                 <property name="text">
+                  <string>Open</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="btn_create_protein_pair_scene">
@@ -528,7 +563,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>659</width>
+     <width>680</width>
      <height>21</height>
     </rect>
    </property>
@@ -539,8 +574,8 @@
     <addaction name="action_new_project"/>
     <addaction name="action_open_project"/>
     <addaction name="action_delete_project"/>
-    <addaction name="actionImport"/>
-    <addaction name="actionExport"/>
+    <addaction name="action_import_project"/>
+    <addaction name="action_export_project"/>
     <addaction name="separator"/>
     <addaction name="action_close_project"/>
    </widget>
@@ -574,10 +609,10 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionDocumentation"/>
-    <addaction name="actionTutorials"/>
-    <addaction name="actionShow_log_in_explorer"/>
-    <addaction name="actionClear_Logs"/>
+    <addaction name="action_documentation"/>
+    <addaction name="action_tutorials"/>
+    <addaction name="action_show_log_in_explorer"/>
+    <addaction name="action_clear_logs"/>
     <addaction name="separator"/>
     <addaction name="action_about"/>
    </widget>
@@ -585,9 +620,9 @@
     <property name="title">
      <string>Image</string>
     </property>
-    <addaction name="actionPreview"/>
-    <addaction name="action_ray_tracing"/>
-    <addaction name="action_simple"/>
+    <addaction name="action_preview_image"/>
+    <addaction name="action_ray_tracing_image"/>
+    <addaction name="action_simple_image"/>
    </widget>
    <widget class="QMenu" name="menuHotspots">
     <property name="title">
@@ -660,17 +695,17 @@
     <string>Restore</string>
    </property>
   </action>
-  <action name="action_ray_tracing">
+  <action name="action_ray_tracing_image">
    <property name="text">
     <string>Ray-Tracing</string>
    </property>
   </action>
-  <action name="action_simple">
+  <action name="action_simple_image">
    <property name="text">
     <string>Simple</string>
    </property>
   </action>
-  <action name="actionPreview">
+  <action name="action_preview_image">
    <property name="text">
     <string>Preview</string>
    </property>
@@ -680,22 +715,22 @@
     <string>Protein Regions</string>
    </property>
   </action>
-  <action name="actionImport">
+  <action name="action_import_project">
    <property name="text">
     <string>Import</string>
    </property>
   </action>
-  <action name="actionExport">
+  <action name="action_export_project">
    <property name="text">
     <string>Export</string>
    </property>
   </action>
-  <action name="actionTutorials">
+  <action name="action_tutorials">
    <property name="text">
     <string>Tutorials</string>
    </property>
   </action>
-  <action name="actionDocumentation">
+  <action name="action_documentation">
    <property name="text">
     <string>Documentation</string>
    </property>
@@ -705,12 +740,12 @@
     <string>Help</string>
    </property>
   </action>
-  <action name="actionShow_log_in_explorer">
+  <action name="action_show_log_in_explorer">
    <property name="text">
     <string>Show Logs in Explorer</string>
    </property>
   </action>
-  <action name="actionClear_Logs">
+  <action name="action_clear_logs">
    <property name="text">
     <string>Clear Logs</string>
    </property>

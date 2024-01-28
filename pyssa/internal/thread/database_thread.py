@@ -26,7 +26,10 @@ class DatabaseThread(threading.Thread):
             enums.SQLQueryType.INSERT_NEW_PROTEIN: self.__wrapper_insert_new_protein,
             enums.SQLQueryType.DELETE_EXISTING_PROTEIN: self.__wrapper_delete_existing_protein,
             enums.SQLQueryType.INSERT_NEW_PROTEIN_PAIR: self.__wrapper_insert_new_protein_pair,
+            enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR: self.__wrapper_delete_existing_protein_pair,
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN: self.__wrapper_update_pymol_session_of_protein,
             enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR: self.__wrapper_update_pymol_session_of_protein_pair,
+            enums.SQLQueryType.UPDATE_SEQUENCE_NAME: self.__wrapper_update_sequence_name,
         }
 
     def set_database_filepath(self, a_filepath: str) -> None:
@@ -83,10 +86,26 @@ class DatabaseThread(threading.Thread):
         the_db_manager.insert_new_protein_pair(tmp_protein_pair)
 
     @staticmethod
+    def __wrapper_delete_existing_protein_pair(the_db_manager, the_buffered_data: tuple):
+        _, tmp_protein_pair_id = the_buffered_data
+        the_db_manager.delete_existing_protein_pair(tmp_protein_pair_id)
+
+    @staticmethod
+    def __wrapper_update_pymol_session_of_protein(the_db_manager, the_buffered_data: tuple):
+        _, tmp_new_pymol_session, tmp_protein = the_buffered_data
+        tmp_protein.save_pymol_session_as_base64_string()
+        the_db_manager.update_pymol_session_of_protein(tmp_protein.get_id(), tmp_protein.pymol_session)
+
+    @staticmethod
     def __wrapper_update_pymol_session_of_protein_pair(the_db_manager, the_buffered_data: tuple):
         _, tmp_new_pymol_session, tmp_protein_pair = the_buffered_data
         tmp_protein_pair.save_session_of_protein_pair()
         the_db_manager.update_pymol_session_of_protein_pair(tmp_protein_pair.get_id(), tmp_protein_pair.pymol_session)
+
+    @staticmethod
+    def __wrapper_update_sequence_name(the_db_manager, the_buffered_data: tuple):
+        _, tmp_new_seq_name, tmp_old_seq_name, tmp_seq = the_buffered_data
+        the_db_manager.update_sequence_name(tmp_new_seq_name, tmp_old_seq_name, tmp_seq)
 
     def stop(self):
         # Stop the thread
