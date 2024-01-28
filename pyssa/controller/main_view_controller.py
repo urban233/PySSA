@@ -150,6 +150,7 @@ class MainViewController:
 
         # protein pairs tab
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
+        self._view.ui.btn_delete_protein_pair.clicked.connect(self._delete_protein_pair_from_project)
         self._view.ui.btn_open_protein_pair_session.clicked.connect(self._open_protein_pair_pymol_session)
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
@@ -999,10 +1000,17 @@ class MainViewController:
                 tmp_protein.get_molecule_object()
             )
         )
+        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
+        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
+            self._view.ui.proteins_table_widget.setEnabled(True)
+        else:
+            self._view.ui.proteins_table_widget.setEnabled(False)
 
     def _open_protein_pymol_session(self):
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
+        self._interface_manager.set_new_session_information(tmp_protein.get_molecule_object(), "protein")
         tmp_protein.load_protein_pymol_session()
+        self._view.ui.proteins_table_widget.setEnabled(True)
 
     def _change_chain_color_proteins(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1017,22 +1025,24 @@ class MainViewController:
         else:
             return
 
-        # Update pymol parameter in PyMOL
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        try:
-            tmp_protein.pymol_selection.color_selection(tmp_color)
-        except pymol.CmdException:
-            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
-            logger.warning("No protein in session found. This can lead to more serious problems.")
-        else:
-            # Update pymol parameter in memory
-            tmp_chain.pymol_parameters["chain_color"] = tmp_color
-            # Update pymol parameter in database
-            with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
-                db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
-                db_manager.close_project_database()
-            self._save_protein_pymol_session(tmp_protein)
+        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
+        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
+            # Update pymol parameter in PyMOL
+            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            try:
+                tmp_protein.pymol_selection.color_selection(tmp_color)
+            except pymol.CmdException:
+                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+                logger.warning("No protein in session found. This can lead to more serious problems.")
+            else:
+                # Update pymol parameter in memory
+                tmp_chain.pymol_parameters["chain_color"] = tmp_color
+                # Update pymol parameter in database
+                with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                    db_manager.open_project_database()
+                    db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
+                    db_manager.close_project_database()
+                self._save_protein_pymol_session(tmp_protein)
 
     def _change_chain_representation_proteins(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1047,23 +1057,25 @@ class MainViewController:
         else:
             return
 
-        # Update pymol parameter in PyMOL
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        try:
-            tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
-        except pymol.CmdException:
-            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
-            logger.warning("No protein in session found. This can lead to more serious problems.")
-        else:
-            # Update pymol parameter in memory
-            tmp_chain.pymol_parameters[enums.PymolParameterEnum.REPRESENTATION.value] = tmp_representation
-            # Update pymol parameter in database
-            with database_manager.DatabaseManager(
-                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
-                db_manager.update_protein_chain_representation(tmp_chain.get_id(), tmp_representation)
-                db_manager.close_project_database()
-            self._save_protein_pymol_session(tmp_protein)
+        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
+        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
+            # Update pymol parameter in PyMOL
+            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            try:
+                tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
+            except pymol.CmdException:
+                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+                logger.warning("No protein in session found. This can lead to more serious problems.")
+            else:
+                # Update pymol parameter in memory
+                tmp_chain.pymol_parameters[enums.PymolParameterEnum.REPRESENTATION.value] = tmp_representation
+                # Update pymol parameter in database
+                with database_manager.DatabaseManager(
+                        str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                    db_manager.open_project_database()
+                    db_manager.update_protein_chain_representation(tmp_chain.get_id(), tmp_representation)
+                    db_manager.close_project_database()
+                self._save_protein_pymol_session(tmp_protein)
 
     def _save_protein_pymol_session(self, a_protein: "protein.Protein"):
         tmp_database_operation = database_operation.DatabaseOperation(
@@ -1115,7 +1127,6 @@ class MainViewController:
 
     def _delete_protein(self):
         tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-        #self._database_manager.delete_existing_protein(tmp_protein.get_id())
         tmp_database_filepath = self._database_manager.get_database_filepath()
         self._database_manager.close_project_database()
         tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
@@ -1162,9 +1173,10 @@ class MainViewController:
 
     def _show_protein_information_of_protein_pair(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
-        self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_chain_index,
-                                                                             tmp_protein_pair.get_id(),
-                                                                             tmp_protein.get_id())
+        if tmp_type == "protein" or tmp_type == "chain":
+            self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_chain_index,
+                                                                                 tmp_protein_pair.get_id(),
+                                                                                 tmp_protein.get_id())
         self._interface_manager.manage_buttons_for_protein_pairs_tab(tmp_type)
         tmp_current_active_obj = self._view.ui.protein_pairs_tree_view.model().data(
                 self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole
@@ -1173,25 +1185,16 @@ class MainViewController:
 
     def _open_protein_pair_pymol_session(self):
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
+        self._interface_manager.set_new_session_information(tmp_protein_pair.name, "protein_pair")
         tmp_protein_pair.load_pymol_session()
 
     def _change_chain_color_protein_pairs(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
         tmp_color: str = self._view.cb_chain_color_protein_pair.currentText()
         if tmp_type == "chain":
-            # self._view.ui.btn_delete_protein.setEnabled(False)
-            # tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-            #     enums.ModelEnum.OBJECT_ROLE
-            # )
             tmp_raw_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
             tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
         elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            # self._view.ui.btn_delete_protein.setEnabled(True)
-            # tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
-            #     enums.ModelEnum.OBJECT_ROLE
-            # )
             tmp_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
         else:
             return
@@ -1222,19 +1225,9 @@ class MainViewController:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
         tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
         if tmp_type == "chain":
-            # self._view.ui.btn_delete_protein.setEnabled(False)
-            # tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-            #     enums.ModelEnum.OBJECT_ROLE
-            # )
             tmp_raw_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
             tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
         elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-            # self._view.ui.btn_delete_protein.setEnabled(True)
-            # tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-            # tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
-            #     enums.ModelEnum.OBJECT_ROLE
-            # )
             tmp_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
         else:
             return
@@ -1306,6 +1299,16 @@ class MainViewController:
             (0, a_protein_pair.get_id(), a_protein_pair)
         )
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+
+    def _delete_protein_pair_from_project(self):
+        tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id())
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
+        self._interface_manager.refresh_protein_pair_model()
+        self._interface_manager.refresh_main_view()
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:

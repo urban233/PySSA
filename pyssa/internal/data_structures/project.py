@@ -410,6 +410,26 @@ class Project:
         else:
             raise ValueError("An argument is not in the list.")
 
+    def delete_specific_protein_pair(self, a_protein_pair_name: str) -> None:
+        """Deletes a certain protein from the project based on the protein name.
+
+        Args:
+            a_protein_pair_name (str): the name of the protein pair to delete
+
+        Raises:
+            ValueError: if one of the arguments are None
+        """
+        # <editor-fold desc="Checks">
+        safeguard.Safeguard.check_if_value_is_not_none(a_protein_pair_name, logger)
+
+        # </editor-fold>
+
+        protein_pair_obj = self.search_protein_pair(a_protein_pair_name)
+        if protein_pair_obj in self.protein_pairs:
+            self.protein_pairs.remove(protein_pair_obj)
+        else:
+            raise ValueError("An argument is not in the list.")
+
     def convert_list_of_proteins_to_list_of_protein_infos(self) -> np.ndarray:
         """Converts the list of proteins into an array of basic_protein_info objects."""
         tmp_protein_infos: collections.deque = collections.deque()

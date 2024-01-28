@@ -15,6 +15,7 @@ from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysi
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.internal.data_structures import project, settings, chain
+from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.util import enums, constants, exception, main_window_util
 
 
@@ -34,6 +35,7 @@ class InterfaceManager:
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
+    _current_pymol_session: "current_session.CurrentPymolSession"
     _application_settings: "settings.Settings"
 
     _workspace_model: QtGui.QStandardItemModel
@@ -111,6 +113,7 @@ class InterfaceManager:
         # General attributes definitions
         self._current_workspace = self._application_settings.workspace_path
         self._current_project = project.Project()
+        self._current_pymol_session = current_session.CurrentPymolSession("", "")
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
         self._sequence_model = QtGui.QStandardItemModel()
@@ -183,6 +186,13 @@ class InterfaceManager:
         )
         return self.string_model
         # fixme: without setModel(self.string_model), so it MUST stand in every module.
+
+    def get_information_about_current_session(self):
+        return self._current_pymol_session.session_name, self._current_pymol_session.object_type
+
+    def set_new_session_information(self, a_session_name: str, an_object_name: str) -> None:
+        self._current_pymol_session.session_name = a_session_name
+        self._current_pymol_session.object_type = an_object_name
 
     def update_settings(self):
         """Deserializes the settings json file."""
