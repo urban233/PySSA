@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Open Dialog."""
+
 import glob
 import os
 from PyQt5 import QtCore
@@ -32,7 +33,6 @@ from pyssa.util import input_validator, constants
 
 class OpenProjectViewController(QtCore.QObject):
     """Class for the Open Project View Controller."""
-    string_model = QtCore.QStringListModel()
     return_value = QtCore.pyqtSignal(str)
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:

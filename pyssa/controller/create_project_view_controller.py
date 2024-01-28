@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Create Dialog."""
+
 import glob
 import os
 import pymol
@@ -34,7 +35,6 @@ from pyssa.util import input_validator, gui_utils, constants, tools
 class CreateProjectViewController(QtCore.QObject):
     """Class for the Create Project View Controller."""
     user_input = QtCore.pyqtSignal(tuple)
-    string_model = QtCore.QStringListModel()
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
         super().__init__()

@@ -13,7 +13,10 @@ from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view
 from pyssa.gui.ui.styles import styles
+from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
+from pyssa.gui.ui.views import hotspots_protein_regions_view
+from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.util import enums, constants, exception, main_window_util
@@ -34,6 +37,7 @@ class InterfaceManager:
     _import_sequence_view: "import_sequence_view.ImportSequenceView"
     _rename_protein_view: "rename_protein_view.RenameProteinView"
     _use_project_view: "use_project_view.UseProjectView"
+    _hotspots_protein_regions_view: "hotspots_protein_regions_view.HotspotsProteinRegionsView"
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
@@ -53,6 +57,7 @@ class InterfaceManager:
         self._create_project_view = create_project_view.CreateProjectView()
         self._open_project_view = open_project_view.OpenProjectView()
         self._delete_project_view = delete_project_view.DeleteProjectView()
+        self._hotspots_protein_regions_view = hotspots_protein_regions_view.HotspotsProteinRegionsView()
         self._results_view = results_view.ResultsView()
         self._add_protein_view = add_protein_view.AddProteinView()
         self._import_sequence_view: "import_sequence_view.ImportSequenceView" = import_sequence_view.ImportSequenceView()
@@ -137,6 +142,9 @@ class InterfaceManager:
     def get_delete_view(self) -> "delete_project_view.DeleteProjectView":
         return self._delete_project_view
 
+    def get_import_sequence_view(self):
+        return self._import_sequence_view
+
     def get_predict_monomer_view(self) -> "predict_monomer_view.PredictMonomerView":
         return self._predict_monomer_view
 
@@ -149,8 +157,8 @@ class InterfaceManager:
     def get_add_protein_view(self):
         return self._add_protein_view
 
-    def get_import_sequence_view(self):
-        return self._import_sequence_view
+    def get_hotspots_protein_regions_view(self) -> "hotspots_protein_regions_view.HotspotsProteinRegionsView":
+        return self._hotspots_protein_regions_view
 
     def get_rename_protein_view(self):
         return self._rename_protein_view
@@ -184,12 +192,10 @@ class InterfaceManager:
         self._workspace_model.clear()
         self._build_workspace_model()
 
-    # fixme: Does not work
     def get_workspace_model(self) -> QtGui.QStandardItemModel:
         """Returns the current workspace model"""
         return self._workspace_model
 
-    # TODO: Fix it and use it to get the code smaller
     def get_workspace_projects(self):
         """Returns the workspace projects."""
         db_pattern = os.path.join(self._application_settings.get_workspace_path(), '*.db')
@@ -198,7 +204,6 @@ class InterfaceManager:
             [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]
         )
         return self.string_model
-        # fixme: without setModel(self.string_model), so it MUST stand in every module.
 
     def get_workspace_projects_as_list(self) -> list:
         db_pattern = os.path.join(self._application_settings.get_workspace_path(), '*.db')
