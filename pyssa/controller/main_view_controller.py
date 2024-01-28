@@ -140,6 +140,7 @@ class MainViewController:
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
+        self._view.ui.btn_save_protein.clicked.connect(self._save_selected_protein_structure_as_pdb_file)
         self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
@@ -1133,6 +1134,56 @@ class MainViewController:
                                                                       (0, tmp_protein.get_id()))
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
+        self._interface_manager.refresh_protein_model()
+        self._interface_manager.refresh_main_view()
+
+    def _save_selected_protein_structure_as_pdb_file(self) -> None:
+        """Saves selected protein as pdb file."""
+        self._view.wait_spinner.start()
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(
+            self._view,
+            "Save protein structure",
+            "",
+            "Protein Data Bank File (*.pdb)",
+        )
+        if file_path:
+            tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
+            self._active_task = tasks.Task(
+                target=main_presenter_async.save_selected_protein_structure_as_pdb_file,
+                args=(
+                    tmp_protein,
+                    file_path,
+                    self._interface_manager.get_current_project().get_database_filepath()
+                ),
+                post_func=self.__await_save_selected_protein_structure_as_pdb_file,
+            )
+            self._active_task.start()
+        else:
+            self._view.wait_spinner.stop()
+
+    def __await_save_selected_protein_structure_as_pdb_file(self, result: tuple) -> None:
+        self._view.wait_spinner.stop()
+        if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            basic_boxes.ok(
+                "Save protein structure",
+                "Saving the protein as .pdb file failed!",
+                QtWidgets.QMessageBox.Error,
+            )
+        elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
+            basic_boxes.ok(
+                "Save protein structure",
+                "The protein was successfully saved as .pdb file.",
+                QtWidgets.QMessageBox.Information,
+            )
+        else:
+            basic_boxes.ok(
+                "Save protein structure",
+                "Saving the protein as .pdb file failed with an unexpected error!",
+                QtWidgets.QMessageBox.Error,
+            )
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
 

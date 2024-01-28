@@ -163,6 +163,7 @@ def convert_pdb_data_list_to_xml_string(pdb_data: list) -> ElementTree.Element:
             atom.text = line
     return root
 
+
 def build_pdb_file(records, a_filepath):
     with open(a_filepath, 'w') as pdb_file:
         for record in records:

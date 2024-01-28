@@ -268,17 +268,21 @@ def add_existing_protein_to_project(the_protein_information: tuple, a_project: "
 
 
 def save_selected_protein_structure_as_pdb_file(
-    a_protein_name: str,
-    a_project: "project.Project",
+    a_protein: "protein.Protein",
     a_filepath: str,
+    the_database_filepath: str,
 ) -> tuple:
     """Saves a given protein structure to a pdb file."""
-    tmp_protein = a_project.search_protein(a_protein_name)
+    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
+        tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
+        a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
+        db_manager.close_project_database()
     try:
-        bio_data.convert_xml_string_to_pdb_file(
-            bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()),
-            pathlib.Path(a_filepath),
-        )
+        bio_data.build_pdb_file(a_protein.get_pdb_data(), a_filepath)
+        # reset pdb data to reduce memory space
+        a_protein.set_pdb_data([])
     except Exception as e:
         logger.error(f"Saving protein to pdb file ended with error: {e}")
         return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
