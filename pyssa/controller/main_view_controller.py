@@ -970,12 +970,15 @@ class MainViewController:
             while index.parent().isValid():
                 index = index.parent()
                 level += 1
+        else:
+            return
         menu = QtWidgets.QMenu()
         if level == 0:
-            menu.addAction(self._view.tr("Clean current protein"))
-            menu.addAction(self._view.tr("Clean and create new protein"))
+            tmp_clean_action = menu.addAction(self._view.tr("Clean current protein"))
+            tmp_clean_action.triggered.connect(self.clean_protein_update)
+            # menu.addAction(self._view.tr("Clean and create new protein"))
         elif level == 1:
-            menu.addAction(self._view.tr("Edit object/container"))
+            menu.addAction(self._view.tr("Show sequence"))
         elif level == 2:
             menu.addAction(self._view.tr("Edit object"))
         menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
@@ -1186,6 +1189,32 @@ class MainViewController:
             )
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
+
+    def clean_protein_update(self) -> None:
+        """Cleans the selected protein structure."""
+        self._view.wait_spinner.start()
+        if basic_boxes.yes_or_no(
+            "Clean protein",
+            "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!",
+            QtWidgets.QMessageBox.Information,
+        ):
+
+            self._active_task = tasks.Task(
+                target=main_presenter_async.clean_protein_update,
+                args=(
+                    self._interface_manager.get_current_protein_tree_index_object(),
+                    self._interface_manager.get_current_project().get_database_filepath(),
+                ),
+                post_func=self.__await_clean_protein_update,
+            )
+            self._active_task.start()
+            self.update_status("Cleaning protein ...")
+        else:
+            constants.PYSSA_LOGGER.info("No protein has been cleaned.")
+            self._view.wait_spinner.stop()
+
+    def __await_clean_protein_update(self) -> None:
+        self._view.wait_spinner.stop()
 
     @staticmethod
     def update_scene() -> None:

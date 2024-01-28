@@ -171,11 +171,11 @@ def clean_protein_new(
     return ("result", a_project)
 
 
-def clean_protein_update(a_protein_name: str, a_project: "project.Project") -> tuple:
+def clean_protein_update(a_protein: "protein.Protein", the_database_filepath :str) -> tuple:
     """Cleans a protein by removing all solvent and sugar molecules in the current molecule object.
 
     Args:
-        a_protein_name: the name of the protein to clean.
+        a_protein: the protein object to clean.
         a_project: the current project.
 
     Returns:
@@ -183,13 +183,21 @@ def clean_protein_update(a_protein_name: str, a_project: "project.Project") -> t
     """
     # TODO: needs checks
     # TODO: needs tests!
-    tmp_protein = a_project.search_protein(
-        a_protein_name,
-    )
-    tmp_protein.clean_protein()
-    constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", tmp_protein.get_molecule_object())
-    a_project.serialize_project(a_project.get_project_xml_path())
-    return ("result", a_project)
+    a_protein.clean_protein()
+    if len(a_protein.get_pdb_data()) == 0:
+        logger.error("No PDB data found after cleaning process!")
+        raise ValueError("No PDB data found after cleaning process!")
+
+    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        # tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
+        # tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
+        # a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
+        db_manager.update_protein_pdb_atom_data(a_protein.get_id(), a_protein.get_pdb_data())
+        db_manager.close_project_database()
+        a_protein.set_pdb_data([])
+    constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", a_protein.get_molecule_object())
+    return ("result", a_protein)
 
 
 def delete_protein(a_protein_name: str, a_project: "project.Project") -> tuple:

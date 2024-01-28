@@ -100,7 +100,7 @@ def get_protein_from_pdb(pdb_id: str) -> "protein.Protein":
         print("File could not be found.")
 
 
-def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str) -> None:
+def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str) -> tuple[bool, pathlib.Path]:
     """Saves a protein from the current pymol session as a .pdb file.
 
     Args:
@@ -115,6 +115,9 @@ def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str
     # save the pdb file under the path (export_data_dir)
     tmp_filepath: pathlib.Path = pathlib.Path(f"{export_filepath.parent}/{molecule_object}.pdb")
     cmd.save(str(tmp_filepath))
+    if os.path.exists(tmp_filepath):
+        return True, tmp_filepath
+    raise FileNotFoundError(f"The filepath {tmp_filepath} was not found!")
 
 
 def load_pymol_session(pymol_session_filepath: pathlib.Path) -> None:
