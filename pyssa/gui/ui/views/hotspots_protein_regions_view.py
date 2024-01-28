@@ -24,6 +24,7 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+
 from pyssa.gui.ui.forms.auto_generated import auto_hotspots_protein_regions_view
 from pyssa.util import constants
 
@@ -41,6 +42,10 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
+        icon = self.style().standardIcon(pixmapi)
+        self.ui.btn_info.setIcon(icon)
+        self.ui.btn_info.setText("")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Protein Regions")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
