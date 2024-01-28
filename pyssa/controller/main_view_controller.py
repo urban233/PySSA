@@ -16,11 +16,12 @@ from Bio import SeqRecord
 from Bio import SeqIO
 from xml import sax
 
-from pyssa.controller import results_view_controller
+from pyssa.controller import results_view_controller, rename_protein_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import predict_monomer_view, delete_project_view
-from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
+from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
+from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
+    dialog_rename_protein
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
@@ -148,6 +149,9 @@ class MainViewController:
         self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
         self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
+        # Context menu
+        self._interface_manager.get_rename_protein_view().dialogClosed.connect(
+            self.post_rename_selected_protein_structure)
 
         # protein pairs tab
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
@@ -974,8 +978,10 @@ class MainViewController:
             return
         menu = QtWidgets.QMenu()
         if level == 0:
-            tmp_clean_action = menu.addAction(self._view.tr("Clean current protein"))
+            tmp_clean_action = menu.addAction(self._view.tr("Clean selected protein"))
             tmp_clean_action.triggered.connect(self.clean_protein_update)
+            tmp_rename_action = menu.addAction(self._view.tr("Rename selected protein"))
+            tmp_rename_action.triggered.connect(self.rename_selected_protein_structure)
             # menu.addAction(self._view.tr("Clean and create new protein"))
         elif level == 1:
             menu.addAction(self._view.tr("Show sequence"))
@@ -1214,6 +1220,37 @@ class MainViewController:
             self._view.wait_spinner.stop()
 
     def __await_clean_protein_update(self) -> None:
+        self._view.wait_spinner.stop()
+
+    def rename_selected_protein_structure(self) -> None:
+        """Opens a new view to rename the selected protein."""
+        self._view.wait_spinner.start()
+        self._external_controller = rename_protein_view_controller.RenameProteinViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self.post_rename_selected_protein_structure)
+        self._interface_manager.get_rename_protein_view().show()
+
+    def post_rename_selected_protein_structure(self, return_value: tuple) -> None:
+        """Renames a selected protein structure."""
+        if return_value[1] is True:
+            self._active_task = tasks.Task(
+                target=main_presenter_async.rename_selected_protein_structure,
+                args=(
+                    self._interface_manager.get_current_protein_tree_index_object(),
+                    return_value[0],
+                    self._interface_manager.get_current_project().get_database_filepath()
+                ),
+                post_func=self.__await_post_rename_selected_protein_structure,
+            )
+            self._active_task.start()
+        else:
+            self._view.wait_spinner.stop()
+
+    def __await_post_rename_selected_protein_structure(self, result: tuple) -> None:
+        self._view.ui.proteins_tree_view.model().setData(
+            self._interface_manager.get_current_protein_tree_index(), result[1], enums.ModelEnum.OBJECT_ROLE
+        )
+        self._interface_manager.refresh_protein_model()
+        self._interface_manager.refresh_main_view()
         self._view.wait_spinner.stop()
 
     @staticmethod

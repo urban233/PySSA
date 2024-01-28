@@ -28,6 +28,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSignal
 
+from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.forms.auto_generated import auto_dialog_rename_protein
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, workspace_util, input_validator
@@ -77,6 +78,12 @@ class DialogRenameProtein(Qt.QtWidgets.QDialog):
             "background: #ffffff;",
         )
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self._temporary_ui_redesign()
+
+    def _temporary_ui_redesign(self):
+        self.ui.list_workspace_proteins.hide()
+        self.ui.label_2.hide()
+        self.ui.txt_rename_protein = custom_line_edit.CustomLineEdit()
 
     def rename_protein(self) -> None:
         """Renames the current selected protein."""

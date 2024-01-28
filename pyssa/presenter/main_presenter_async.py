@@ -299,25 +299,31 @@ def save_selected_protein_structure_as_pdb_file(
 
 
 def rename_selected_protein_structure(
-    a_protein_name: str,
+    a_protein: "protein.Protein",
     the_new_protein_name: str,
-    a_project: "project.Project",
+    the_database_filepath: str,
 ) -> tuple:
     """Deletes a certain protein from a project.
 
     Args:
-        a_protein_name: the name of the protein to rename.
+        a_protein: the protein object to rename.
         the_new_protein_name: the new name for the given protein.
-        a_project: the current project.
+        the_database_filepath: the filepath of the project database.
 
     Returns:
         a tuple with ("result", an_existing_protein_object)
     """
-    tmp_protein = a_project.search_protein(
-        a_protein_name,
-    )
-    tmp_protein.set_molecule_object(the_new_protein_name)
-    return ("result", tmp_protein)
+    tmp_old_protein_name = a_protein.get_molecule_object()
+    # Update in memory
+    a_protein.set_molecule_object(the_new_protein_name)
+    # Update in database
+    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        db_manager.update_protein_name(
+            the_new_protein_name, tmp_old_protein_name, a_protein.get_id()
+        )
+        db_manager.close_project_database()
+    return ("result", a_protein)
 
 
 def predict_protein_with_colabfold(

@@ -895,6 +895,15 @@ class DatabaseManager:
         self._cursor.execute(sql, (a_representation, a_chain_id))
         self._connection.commit()
 
+    def update_protein_name(self, the_new_protein_name: str, the_old_protein_name: str, the_protein_id: int):
+        sql = """
+            UPDATE Protein 
+            SET pymol_molecule_object = ?
+            WHERE pymol_molecule_object = ? and id = ?
+        """
+        self._cursor.execute(sql, (the_new_protein_name, the_old_protein_name, the_protein_id))
+        self._connection.commit()
+
     def update_protein_pdb_atom_data(self, the_protein_id: int, a_pdb_atom_dict_list: list[dict]):
         self._delete_pdb_atom(the_protein_id)
 

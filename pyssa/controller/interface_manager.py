@@ -11,7 +11,7 @@ from pyssa.controller import database_manager
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
-    create_project_view, open_project_view, import_sequence_view
+    create_project_view, open_project_view, import_sequence_view, rename_protein_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.internal.data_structures import project, settings, chain
@@ -32,6 +32,7 @@ class InterfaceManager:
     _results_view: "results_view.ResultsView"
     _add_protein_view: "add_protein_view.AddProteinView"
     _import_sequence_view: "import_sequence_view.ImportSequenceView"
+    _rename_protein_view: "rename_protein_view.RenameProteinView"
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
@@ -54,6 +55,7 @@ class InterfaceManager:
         self._results_view = results_view.ResultsView()
         self._add_protein_view = add_protein_view.AddProteinView()
         self._import_sequence_view: "import_sequence_view.ImportSequenceView" = import_sequence_view.ImportSequenceView()
+        self._rename_protein_view = rename_protein_view.RenameProteinView()
 
         # <editor-fold desc="Setup App Settings">
         self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -148,6 +150,9 @@ class InterfaceManager:
     def get_import_sequence_view(self):
         return self._import_sequence_view
 
+    def get_rename_protein_view(self):
+        return self._rename_protein_view
+
     def get_application_settings(self) -> "settings.Settings":
         return self._application_settings
 
@@ -164,6 +169,9 @@ class InterfaceManager:
     def get_current_project(self) -> "project.Project":
         """Returns the current project."""
         return self._current_project
+
+    def get_workspace_path(self):
+        return self._current_workspace
 
     def set_new_workspace(self, the_current_workspace) -> None:
         """Sets the new current workspace into the interface manager."""
