@@ -16,11 +16,13 @@ from Bio import SeqRecord
 from Bio import SeqIO
 from xml import sax
 
-from pyssa.controller import results_view_controller
+from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
+    pymol_session_manager
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import predict_monomer_view, delete_project_view
-from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about
+from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
+from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
+    dialog_rename_protein, dialog_help
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
@@ -68,6 +70,8 @@ class MainViewController:
     """
     _interface_manager: "interface_manager.InterfaceManager"
 
+    _pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+
     """
     The active task of the application.
     """
@@ -78,7 +82,9 @@ class MainViewController:
     """
     _database_thread: "database_thread.DatabaseThread"
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+    def __init__(self,
+                 the_interface_manager: "interface_manager.InterfaceManager",
+                 the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> None:
         """Constructor.
 
         Args:
@@ -94,6 +100,7 @@ class MainViewController:
 
         self._view: "main_view.MainView" = the_interface_manager.get_main_view()
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
+        self._pymol_session_manager = the_pymol_session_manager
         self._database_manager = database_manager.DatabaseManager("")
         self._database_manager.set_application_settings(self._interface_manager.get_application_settings())
         self._database_thread: "database_thread.DatabaseThread" = database_thread.DatabaseThread("")
@@ -111,13 +118,16 @@ class MainViewController:
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
+        self._view.ui.action_use_project.triggered.connect(self._use_project)
         self._view.ui.action_delete_project.triggered.connect(self._delete_project)
         self._view.ui.action_import_project.triggered.connect(self.import_project)
         self._view.ui.action_export_project.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
 
         self._view.ui.action_results_summary.triggered.connect(self._results_summary)
-        self._view.ui.action_preview_image.triggered.connect(self.preview_image)
+        self._view.ui.action_preview_image.triggered.connect(self._preview_image)
+        self._view.ui.action_ray_tracing_image.triggered.connect(self._create_ray_traced_image)
+        self._view.ui.action_simple_image.triggered.connect(self._create_drawn_image)
 
         self._view.ui.action_edit_settings.triggered.connect(self.open_settings_global)
         self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
@@ -136,10 +146,12 @@ class MainViewController:
         self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
+        self._view.ui.btn_help.clicked.connect(self.open_help)
 
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
+        self._view.ui.btn_save_protein.clicked.connect(self._save_selected_protein_structure_as_pdb_file)
         self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
@@ -147,6 +159,9 @@ class MainViewController:
         self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
         self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
+        # Context menu
+        self._interface_manager.get_rename_protein_view().dialogClosed.connect(
+            self.post_rename_selected_protein_structure)
 
         # protein pairs tab
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
@@ -167,6 +182,18 @@ class MainViewController:
         """Sets up the status bar and fills it with the current workspace."""
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
+    def open_help(self):
+        # with open(
+        #     r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html",
+        #     "r",
+        #     encoding="utf-8",
+        # ) as file:
+        #     html_content = file.read()
+        #     file.close()
+        # tmp_dialog = dialog_help.DialogHelp(html_content)
+        # tmp_dialog.exec_()
+        pass
+
     # </editor-fold>
 
     # <editor-fold desc="Menu bar methods">
@@ -176,7 +203,7 @@ class MainViewController:
         """Closes the current project"""
         self._active_task = tasks.Task(
             target=main_presenter_async.close_project,
-            args=(self._database_thread, ""),
+            args=(self._database_thread, self._pymol_session_manager),
             post_func=self.__await_close_project,
         )
         self._active_task.start()
@@ -240,6 +267,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Create empty project finished.")
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.reinitialize_session()
 
     def _open_project(self) -> None:
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
@@ -266,6 +294,7 @@ class MainViewController:
         )
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.reinitialize_session()
         self._interface_manager.stop_wait_spinner()
         self._interface_manager.update_status_bar("Opening existing project finished.")
         # tmp_filepath = pathlib.Path(f"{return_value}.xml")
@@ -280,6 +309,19 @@ class MainViewController:
         #     post_func=self.__await_open_project,
         # )
         # self._active_task.start()
+
+    def _use_project(self) -> None:
+        self._external_controller = use_project_view_controller.UseProjectViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self._post_use_project)
+        self._interface_manager.get_use_project_view().show()
+
+    def _post_use_project(self, user_input: tuple) -> None:
+        # TODO: needs actual implementation of project creation process!
+        #self._interface_manager.set_new_project(tmp_project)
+        self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.reinitialize_session()
+        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.update_status_bar("Opening existing project finished.")
 
     # def __await_open_project(self, a_result: tuple) -> None:
     #     self._interface_manager.set_new_project(a_result[1])
@@ -753,43 +795,108 @@ class MainViewController:
 
     # <editor-fold desc="Image menu methods">
     # TODO: images need to be reimplemented
-    def post_preview_image(self) -> None:
-        """Hides the block box of the preview process."""
-        # self.block_box_uni.hide()
-        # self.block_box_uni.destroy(True)
-        self._view.status_bar.showMessage("Finished preview of ray-traced image.")
-        QtWidgets.QApplication.restoreOverrideCursor()
+    # def post_preview_image(self) -> None:
+    #     """Hides the block box of the preview process."""
+    #     # self.block_box_uni.hide()
+    #     # self.block_box_uni.destroy(True)
+    #     self._view.status_bar.showMessage("Finished preview of ray-traced image.")
+    #     QtWidgets.QApplication.restoreOverrideCursor()
+    #
+    # def preview_image(self) -> None:
+    #     """Previews the image."""
+    #     QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+    #     if self._view.ui.cb_ray_tracing.isChecked():
+    #         self._view.status_bar.showMessage("Preview ray-traced image ...")
+    #         # <editor-fold desc="Worker setup">
+    #         # --Begin: worker setup
+    #         self.tmp_thread = QtCore.QThread()
+    #         self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
+    #         self.tmp_thread = task_workers.setup_worker_for_work(
+    #             self.tmp_thread,
+    #             self.tmp_worker,
+    #             self.display_view_page,
+    #         )
+    #         self.tmp_worker.finished.connect(self.post_preview_image)
+    #         self.tmp_thread.start()
+    #         # --End: worker setup
+    #
+    #         # </editor-fold>
+    #         gui_utils.setup_standard_block_box(
+    #             self.block_box_uni,
+    #             "Preview ray-trace image",
+    #             "Creating preview for the ray-traced image ...",
+    #         )
+    #         # self.block_box_uni.exec_()
+    #     else:
+    #         self._view.status_bar.showMessage("Preview draw image ...")
+    #         cmd.draw(2400, 2400)
+    #         self._view.status_bar.showMessage("Finished preview of drawn image.")
+    #         QtWidgets.QApplication.restoreOverrideCursor()
 
-    def preview_image(self) -> None:
-        """Previews the image."""
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-        if self._view.ui.cb_ray_tracing.isChecked():
-            self._view.status_bar.showMessage("Preview ray-traced image ...")
-            # <editor-fold desc="Worker setup">
-            # --Begin: worker setup
-            self.tmp_thread = QtCore.QThread()
-            self.tmp_worker = task_workers.PreviewRayImageWorker(self.renderer)
-            self.tmp_thread = task_workers.setup_worker_for_work(
-                self.tmp_thread,
-                self.tmp_worker,
-                self.display_view_page,
-            )
-            self.tmp_worker.finished.connect(self.post_preview_image)
-            self.tmp_thread.start()
-            # --End: worker setup
+    def _preview_image(self):
+        self._active_task = tasks.Task(
+            target=main_presenter_async.preview_image,
+            args=(0, 0),
+            post_func=self.__await_preview_image,
+        )
+        self._active_task.start()
+        self.update_status("Creating preview of image ...")
+        self._view.wait_spinner.start()
 
-            # </editor-fold>
-            gui_utils.setup_standard_block_box(
-                self.block_box_uni,
-                "Preview ray-trace image",
-                "Creating preview for the ray-traced image ...",
+    def __await_preview_image(self, return_value: tuple):
+        self._view.wait_spinner.stop()
+        self.update_status("Preview finished.")
+
+    def _create_ray_traced_image(self) -> None:
+        save_dialog = QtWidgets.QFileDialog()
+        full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
+        if full_file_name == ("", ""):
+            tools.quick_log_and_display(
+                "info",
+                "No file has been selected.",
+                self._view.status_bar,
+                "No file has been selected.",
             )
-            # self.block_box_uni.exec_()
-        else:
-            self._view.status_bar.showMessage("Preview draw image ...")
-            cmd.draw(2400, 2400)
-            self._view.status_bar.showMessage("Finished preview of drawn image.")
-            QtWidgets.QApplication.restoreOverrideCursor()
+            return
+
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_ray_traced_image,
+            args=(full_file_name[0], 0),
+            post_func=self.__await_create_ray_traced_image,
+        )
+        self._active_task.start()
+        self.update_status("Creating ray-traced image ...")
+        self._view.wait_spinner.start()
+
+    def __await_create_ray_traced_image(self, return_value: tuple) -> None:
+        self._view.wait_spinner.stop()
+        self.update_status("Image creation finished.")
+
+    def _create_drawn_image(self) -> None:
+        save_dialog = QtWidgets.QFileDialog()
+        full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
+        if full_file_name == ("", ""):
+            tools.quick_log_and_display(
+                "info",
+                "No file has been selected.",
+                self._view.status_bar,
+                "No file has been selected.",
+            )
+            return
+
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_drawn_image,
+            args=(full_file_name[0], 0),
+            post_func=self.__await_create_drawn_image,
+        )
+        self._active_task.start()
+        self.update_status("Creating simple image ...")
+        self._view.wait_spinner.start()
+
+    def __await_create_drawn_image(self, return_value: tuple) -> None:
+        self._view.wait_spinner.stop()
+        self.update_status("Image creation finished.")
+
 
     def post_save_image(self) -> None:
         """Displays a message box which informs that the process has finished."""
@@ -969,12 +1076,17 @@ class MainViewController:
             while index.parent().isValid():
                 index = index.parent()
                 level += 1
+        else:
+            return
         menu = QtWidgets.QMenu()
         if level == 0:
-            menu.addAction(self._view.tr("Clean current protein"))
-            menu.addAction(self._view.tr("Clean and create new protein"))
+            tmp_clean_action = menu.addAction(self._view.tr("Clean selected protein"))
+            tmp_clean_action.triggered.connect(self.clean_protein_update)
+            tmp_rename_action = menu.addAction(self._view.tr("Rename selected protein"))
+            tmp_rename_action.triggered.connect(self.rename_selected_protein_structure)
+            # menu.addAction(self._view.tr("Clean and create new protein"))
         elif level == 1:
-            menu.addAction(self._view.tr("Edit object/container"))
+            menu.addAction(self._view.tr("Show sequence"))
         elif level == 2:
             menu.addAction(self._view.tr("Edit object"))
         menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
@@ -1000,17 +1112,29 @@ class MainViewController:
                 tmp_protein.get_molecule_object()
             )
         )
-        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
-        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
-            self._view.ui.proteins_table_widget.setEnabled(True)
+        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
+            self._view.cb_chain_color.setEnabled(True)
+            self._view.cb_chain_representation.setEnabled(True)
         else:
-            self._view.ui.proteins_table_widget.setEnabled(False)
+            self._view.cb_chain_color.setEnabled(False)
+            self._view.cb_chain_representation.setEnabled(False)
 
     def _open_protein_pymol_session(self):
+        if not self._pymol_session_manager.is_the_current_session_empty():
+            logger.info("The current session is not empty. Reinitialize session now ...")
+            self._pymol_session_manager.reinitialize_session()
+            logger.info("Reinitializing session finished.")
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
-        self._interface_manager.set_new_session_information(tmp_protein.get_molecule_object(), "protein")
-        tmp_protein.load_protein_pymol_session()
-        self._view.ui.proteins_table_widget.setEnabled(True)
+        try:
+            self._pymol_session_manager.load_protein_session(tmp_protein)
+        except RuntimeError:
+            logger.error("The protein name could not be found in the object list in PyMOL!")
+            self._view.cb_chain_color.setEnabled(False)
+            self._view.cb_chain_representation.setEnabled(False)
+        else:
+            self._view.cb_chain_color.setEnabled(True)
+            self._view.cb_chain_representation.setEnabled(True)
+            logger.info("Successfully opened protein session.")
 
     def _change_chain_color_proteins(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1025,14 +1149,12 @@ class MainViewController:
         else:
             return
 
-        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
-        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
+        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             # Update pymol parameter in PyMOL
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             try:
                 tmp_protein.pymol_selection.color_selection(tmp_color)
             except pymol.CmdException:
-                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
                 logger.warning("No protein in session found. This can lead to more serious problems.")
             else:
                 # Update pymol parameter in memory
@@ -1043,6 +1165,8 @@ class MainViewController:
                     db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
                     db_manager.close_project_database()
                 self._save_protein_pymol_session(tmp_protein)
+        else:
+            logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _change_chain_representation_proteins(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1057,14 +1181,12 @@ class MainViewController:
         else:
             return
 
-        tmp_session_name, tmp_object_type = self._interface_manager.get_information_about_current_session()
-        if tmp_object_type == "protein" and tmp_session_name == tmp_protein.get_molecule_object():
+        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             # Update pymol parameter in PyMOL
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             try:
                 tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
             except pymol.CmdException:
-                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
                 logger.warning("No protein in session found. This can lead to more serious problems.")
             else:
                 # Update pymol parameter in memory
@@ -1076,6 +1198,8 @@ class MainViewController:
                     db_manager.update_protein_chain_representation(tmp_chain.get_id(), tmp_representation)
                     db_manager.close_project_database()
                 self._save_protein_pymol_session(tmp_protein)
+        else:
+            logger.warning("The representation of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _save_protein_pymol_session(self, a_protein: "protein.Protein"):
         tmp_database_operation = database_operation.DatabaseOperation(
@@ -1136,6 +1260,113 @@ class MainViewController:
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
 
+    def _save_selected_protein_structure_as_pdb_file(self) -> None:
+        """Saves selected protein as pdb file."""
+        self._view.wait_spinner.start()
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(
+            self._view,
+            "Save protein structure",
+            "",
+            "Protein Data Bank File (*.pdb)",
+        )
+        if file_path:
+            tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
+            self._active_task = tasks.Task(
+                target=main_presenter_async.save_selected_protein_structure_as_pdb_file,
+                args=(
+                    tmp_protein,
+                    file_path,
+                    self._interface_manager.get_current_project().get_database_filepath()
+                ),
+                post_func=self.__await_save_selected_protein_structure_as_pdb_file,
+            )
+            self._active_task.start()
+        else:
+            self._view.wait_spinner.stop()
+
+    def __await_save_selected_protein_structure_as_pdb_file(self, result: tuple) -> None:
+        self._view.wait_spinner.stop()
+        if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            basic_boxes.ok(
+                "Save protein structure",
+                "Saving the protein as .pdb file failed!",
+                QtWidgets.QMessageBox.Error,
+            )
+        elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
+            basic_boxes.ok(
+                "Save protein structure",
+                "The protein was successfully saved as .pdb file.",
+                QtWidgets.QMessageBox.Information,
+            )
+        else:
+            basic_boxes.ok(
+                "Save protein structure",
+                "Saving the protein as .pdb file failed with an unexpected error!",
+                QtWidgets.QMessageBox.Error,
+            )
+        self._interface_manager.refresh_protein_model()
+        self._interface_manager.refresh_main_view()
+
+    def clean_protein_update(self) -> None:
+        """Cleans the selected protein structure."""
+        self._view.wait_spinner.start()
+        if basic_boxes.yes_or_no(
+            "Clean protein",
+            "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!",
+            QtWidgets.QMessageBox.Information,
+        ):
+
+            self._active_task = tasks.Task(
+                target=main_presenter_async.clean_protein_update,
+                args=(
+                    self._interface_manager.get_current_protein_tree_index_object(),
+                    self._interface_manager.get_current_project().get_database_filepath(),
+                ),
+                post_func=self.__await_clean_protein_update,
+            )
+            self._active_task.start()
+            self.update_status("Cleaning protein ...")
+        else:
+            constants.PYSSA_LOGGER.info("No protein has been cleaned.")
+            self._view.wait_spinner.stop()
+
+    def __await_clean_protein_update(self) -> None:
+        self._view.wait_spinner.stop()
+
+    def rename_selected_protein_structure(self) -> None:
+        """Opens a new view to rename the selected protein."""
+        self._view.wait_spinner.start()
+        self._external_controller = rename_protein_view_controller.RenameProteinViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self.post_rename_selected_protein_structure)
+        self._interface_manager.get_rename_protein_view().show()
+
+    def post_rename_selected_protein_structure(self, return_value: tuple) -> None:
+        """Renames a selected protein structure."""
+        if return_value[1] is True:
+            self._active_task = tasks.Task(
+                target=main_presenter_async.rename_selected_protein_structure,
+                args=(
+                    self._interface_manager.get_current_protein_tree_index_object(),
+                    return_value[0],
+                    self._interface_manager.get_current_project().get_database_filepath()
+                ),
+                post_func=self.__await_post_rename_selected_protein_structure,
+            )
+            self._active_task.start()
+        else:
+            self._view.wait_spinner.stop()
+
+    def __await_post_rename_selected_protein_structure(self, result: tuple) -> None:
+        self._view.ui.proteins_tree_view.model().setData(
+            self._interface_manager.get_current_protein_tree_index(), result[1], enums.ModelEnum.OBJECT_ROLE
+        )
+        self._interface_manager.refresh_protein_model()
+        self._interface_manager.refresh_main_view()
+        self._view.wait_spinner.stop()
+
     @staticmethod
     def update_scene() -> None:
         """Updates the current selected PyMOL scene."""
@@ -1185,8 +1416,9 @@ class MainViewController:
 
     def _open_protein_pair_pymol_session(self):
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
-        self._interface_manager.set_new_session_information(tmp_protein_pair.name, "protein_pair")
-        tmp_protein_pair.load_pymol_session()
+        self._pymol_session_manager.load_protein_pair_session(tmp_protein_pair)
+        # self._interface_manager.set_new_session_information(tmp_protein_pair.name, "protein_pair")
+        # tmp_protein_pair.load_pymol_session()
 
     def _change_chain_color_protein_pairs(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
@@ -1199,27 +1431,29 @@ class MainViewController:
         else:
             return
 
-        # Update pymol parameter in PyMOL
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        try:
-            tmp_protein.pymol_selection.color_selection(tmp_color)
-        except pymol.CmdException:
-            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
-            logger.warning("No protein in session found. This can lead to more serious problems.")
+        if self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.session_name == tmp_protein_pair.name:
+            # Update pymol parameter in PyMOL
+            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            try:
+                tmp_protein.pymol_selection.color_selection(tmp_color)
+            except pymol.CmdException:
+                logger.warning("No protein in session found. This can lead to more serious problems.")
+            else:
+                # Update pymol parameter in database
+                with database_manager.DatabaseManager(
+                        str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                    db_manager.open_project_database()
+                    db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                        tmp_protein_pair.get_id(),
+                        tmp_protein.get_id(),
+                        tmp_chain.chain_letter,
+                        enums.PymolParameterEnum.COLOR.value,
+                        tmp_color,
+                    )
+                    db_manager.close_project_database()
+                self._save_protein_pair_pymol_session(tmp_protein_pair)
         else:
-            # Update pymol parameter in database
-            with database_manager.DatabaseManager(
-                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
-                db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                    tmp_protein_pair.get_id(),
-                    tmp_protein.get_id(),
-                    tmp_chain.chain_letter,
-                    enums.PymolParameterEnum.COLOR.value,
-                    tmp_color,
-                )
-                db_manager.close_project_database()
-            self._save_protein_pair_pymol_session(tmp_protein_pair)
+            logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _change_chain_representation_protein_pairs(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
@@ -1232,28 +1466,30 @@ class MainViewController:
         else:
             return
 
-        # Update pymol parameter in PyMOL
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        try:
-            tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
-        except pymol.CmdException:
-            # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
-            logger.warning("No protein in session found. This can lead to more serious problems.")
+        if self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.session_name == tmp_protein_pair.name:
+            # Update pymol parameter in PyMOL
+            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            try:
+                tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
+            except pymol.CmdException:
+                # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
+                logger.warning("No protein in session found. This can lead to more serious problems.")
+            else:
+                # Update pymol parameter in database
+                with database_manager.DatabaseManager(
+                        str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                    db_manager.open_project_database()
+                    db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                        tmp_protein_pair.get_id(),
+                        tmp_protein.get_id(),
+                        tmp_chain.chain_letter,
+                        enums.PymolParameterEnum.REPRESENTATION.value,
+                        tmp_representation,
+                    )
+                    db_manager.close_project_database()
+                self._save_protein_pair_pymol_session(tmp_protein_pair)
         else:
-            # Update pymol parameter in database
-            with database_manager.DatabaseManager(
-                    str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
-                db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                    tmp_protein_pair.get_id(),
-                    tmp_protein.get_id(),
-                    tmp_chain.chain_letter,
-                    enums.PymolParameterEnum.REPRESENTATION.value,
-                    tmp_representation,
-                )
-                db_manager.close_project_database()
-            self._save_protein_pair_pymol_session(tmp_protein_pair)
-
+            logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
         # if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
         #     self._view.ui.btn_delete_protein.setEnabled(False)
         #     tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(

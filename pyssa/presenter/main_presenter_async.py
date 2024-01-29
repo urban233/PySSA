@@ -28,6 +28,7 @@ import shutil
 import subprocess
 from typing import TYPE_CHECKING
 
+import pymol
 from pymol import cmd
 
 from pyssa.controller import database_manager
@@ -171,11 +172,11 @@ def clean_protein_new(
     return ("result", a_project)
 
 
-def clean_protein_update(a_protein_name: str, a_project: "project.Project") -> tuple:
+def clean_protein_update(a_protein: "protein.Protein", the_database_filepath :str) -> tuple:
     """Cleans a protein by removing all solvent and sugar molecules in the current molecule object.
 
     Args:
-        a_protein_name: the name of the protein to clean.
+        a_protein: the protein object to clean.
         a_project: the current project.
 
     Returns:
@@ -183,13 +184,21 @@ def clean_protein_update(a_protein_name: str, a_project: "project.Project") -> t
     """
     # TODO: needs checks
     # TODO: needs tests!
-    tmp_protein = a_project.search_protein(
-        a_protein_name,
-    )
-    tmp_protein.clean_protein()
-    constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", tmp_protein.get_molecule_object())
-    a_project.serialize_project(a_project.get_project_xml_path())
-    return ("result", a_project)
+    a_protein.clean_protein()
+    if len(a_protein.get_pdb_data()) == 0:
+        logger.error("No PDB data found after cleaning process!")
+        raise ValueError("No PDB data found after cleaning process!")
+
+    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        # tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
+        # tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
+        # a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
+        db_manager.update_protein_pdb_atom_data(a_protein.get_id(), a_protein.get_pdb_data())
+        db_manager.close_project_database()
+        a_protein.set_pdb_data([])
+    constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", a_protein.get_molecule_object())
+    return ("result", a_protein)
 
 
 def delete_protein(a_protein_name: str, a_project: "project.Project") -> tuple:
@@ -268,17 +277,21 @@ def add_existing_protein_to_project(the_protein_information: tuple, a_project: "
 
 
 def save_selected_protein_structure_as_pdb_file(
-    a_protein_name: str,
-    a_project: "project.Project",
+    a_protein: "protein.Protein",
     a_filepath: str,
+    the_database_filepath: str,
 ) -> tuple:
     """Saves a given protein structure to a pdb file."""
-    tmp_protein = a_project.search_protein(a_protein_name)
+    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
+        tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
+        a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
+        db_manager.close_project_database()
     try:
-        bio_data.convert_xml_string_to_pdb_file(
-            bio_data.convert_pdb_data_list_to_xml_string(tmp_protein.get_pdb_data()),
-            pathlib.Path(a_filepath),
-        )
+        bio_data.build_pdb_file(a_protein.get_pdb_data(), a_filepath)
+        # reset pdb data to reduce memory space
+        a_protein.set_pdb_data([])
     except Exception as e:
         logger.error(f"Saving protein to pdb file ended with error: {e}")
         return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
@@ -287,25 +300,31 @@ def save_selected_protein_structure_as_pdb_file(
 
 
 def rename_selected_protein_structure(
-    a_protein_name: str,
+    a_protein: "protein.Protein",
     the_new_protein_name: str,
-    a_project: "project.Project",
+    the_database_filepath: str,
 ) -> tuple:
     """Deletes a certain protein from a project.
 
     Args:
-        a_protein_name: the name of the protein to rename.
+        a_protein: the protein object to rename.
         the_new_protein_name: the new name for the given protein.
-        a_project: the current project.
+        the_database_filepath: the filepath of the project database.
 
     Returns:
         a tuple with ("result", an_existing_protein_object)
     """
-    tmp_protein = a_project.search_protein(
-        a_protein_name,
-    )
-    tmp_protein.set_molecule_object(the_new_protein_name)
-    return ("result", tmp_protein)
+    tmp_old_protein_name = a_protein.get_molecule_object()
+    # Update in memory
+    a_protein.set_molecule_object(the_new_protein_name)
+    # Update in database
+    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        db_manager.update_protein_name(
+            the_new_protein_name, tmp_old_protein_name, a_protein.get_id()
+        )
+        db_manager.close_project_database()
+    return ("result", a_protein)
 
 
 def predict_protein_with_colabfold(
@@ -648,13 +667,42 @@ def check_chains_for_subsequent_analysis_for_multimers(
     return ("result", tmp_analysis_run_name)
 
 
-def close_project(the_database_thread, placeholder: str) -> tuple:
+def close_project(the_database_thread, the_pymol_session_manager) -> tuple:
     try:
         the_database_thread.put_database_operation_into_queue(database_operation.DatabaseOperation(
             enums.SQLQueryType.CLOSE_PROJECT, (0, ""))
         )
+        the_pymol_session_manager.reinitialize_session()
     except Exception as e:
         logger.error(f"Unknown error occurred while waiting for the database thread to finish: {e}.")
         return False, "Waiting for database thread queue failed!"
     else:
         return True, "Waiting for database thread queue finished."
+
+
+def preview_image(a_placeholder_1: int, a_placeholder_2: int) -> tuple:
+    # TODO: the renderer should be changeable
+    try:
+        cmd.ray(2400, 2400, renderer=int(0))
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    return 0, ""
+
+
+def create_ray_traced_image(an_image_filepath: str, a_placeholder_1: int) -> tuple:
+    # TODO: the renderer should be changeable
+    try:
+        cmd.ray(2400, 2400, renderer=int(0))
+        cmd.png(an_image_filepath, dpi=300)
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    return 0, ""
+
+
+def create_drawn_image(an_image_filepath: str, a_placeholder_1: int) -> tuple:
+    try:
+        cmd.draw(2400, 2400)
+        cmd.png(an_image_filepath, dpi=300)
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    return 0, ""

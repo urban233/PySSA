@@ -895,6 +895,65 @@ class DatabaseManager:
         self._cursor.execute(sql, (a_representation, a_chain_id))
         self._connection.commit()
 
+    def update_protein_name(self, the_new_protein_name: str, the_old_protein_name: str, the_protein_id: int):
+        sql = """
+            UPDATE Protein 
+            SET pymol_molecule_object = ?
+            WHERE pymol_molecule_object = ? and id = ?
+        """
+        self._cursor.execute(sql, (the_new_protein_name, the_old_protein_name, the_protein_id))
+        self._connection.commit()
+
+    def update_protein_pdb_atom_data(self, the_protein_id: int, a_pdb_atom_dict_list: list[dict]):
+        self._delete_pdb_atom(the_protein_id)
+
+        for tmp_pdb_atom_dict in a_pdb_atom_dict_list:
+            self._insert_pdb_atom(the_protein_id, tmp_pdb_atom_dict)
+
+        # sql = """
+        #     UPDATE PdbAtom
+        #     SET
+        #         record_type = ?,
+        #         atom_number = ?,
+        #         atom_name = ?,
+        #         alternate_location_indicator = ?,
+        #         residue_name = ?,
+        #         chain_identifier = ?,
+        #         residue_sequence_number = ?,
+        #         code_for_insertions_of_residues = ?,
+        #         x_coord = ?,
+        #         y_coord = ?,
+        #         z_coord = ?,
+        #         occupancy = ?,
+        #         temperature_factor = ?,
+        #         segment_identifier = ?,
+        #         element_symbol = ?,
+        #         charge = ?
+        #     WHERE
+        #         protein_id = ?;
+        #     """
+        # tmp_params = (
+        #     a_pdb_atom_dict["record_type"],
+        #     a_pdb_atom_dict["atom_number"],
+        #     a_pdb_atom_dict["atom_name"],
+        #     a_pdb_atom_dict["alternate_location_indicator"],
+        #     a_pdb_atom_dict["residue_name"],
+        #     a_pdb_atom_dict["chain_identifier"],
+        #     a_pdb_atom_dict["residue_sequence_number"],
+        #     a_pdb_atom_dict["code_for_insertions_of_residues"],
+        #     a_pdb_atom_dict["x_coord"],
+        #     a_pdb_atom_dict["y_coord"],
+        #     a_pdb_atom_dict["z_coord"],
+        #     a_pdb_atom_dict["occupancy"],
+        #     a_pdb_atom_dict["temperature_factor"],
+        #     a_pdb_atom_dict["segment_identifier"],
+        #     a_pdb_atom_dict["element_symbol"],
+        #     a_pdb_atom_dict["charge"],
+        #     the_protein_id
+        # )
+        # self._cursor.execute(sql, tmp_params)
+        # self._connection.commit()
+
     # </editor-fold>
 
     def update_pymol_parameter_for_certain_protein_chain_in_protein_pair(self,

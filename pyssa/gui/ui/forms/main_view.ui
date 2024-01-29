@@ -573,6 +573,7 @@
     </property>
     <addaction name="action_new_project"/>
     <addaction name="action_open_project"/>
+    <addaction name="action_use_project"/>
     <addaction name="action_delete_project"/>
     <addaction name="action_import_project"/>
     <addaction name="action_export_project"/>
@@ -748,6 +749,11 @@
   <action name="action_clear_logs">
    <property name="text">
     <string>Clear Logs</string>
+   </property>
+  </action>
+  <action name="action_use_project">
+   <property name="text">
+    <string>Use</string>
    </property>
   </action>
  </widget>

@@ -72,27 +72,30 @@ def run_plugin_gui() -> None:
         app = Qt.QtWidgets.QApplication(sys.argv)
         app.exec_()
     """
-    from .pyssa.gui.ui.views import main_view
+    from .pyssa.gui.ui.styles import styles
     from .pyssa.controller import main_view_controller
     from .pyssa.controller import interface_manager
+    from .pyssa.controller import pymol_session_manager
 
     # getting the value of the global var mainWindow
     global mainWindow
     global mainViewController
     global interfaceManager
+    global pymolSessionManager
 
     if mainWindow is None:
         interfaceManager = interface_manager.InterfaceManager()
+        pymolSessionManager = pymol_session_manager.PymolSessionManager()
         mainWindow = interfaceManager.get_main_view()
-        mainViewController = main_view_controller.MainViewController(interfaceManager)
-        # Open the qss styles file and read in the css-alike styling code
-        if sys.platform.startswith("linux"):
-            with open(styles_path_list[0], "r", encoding="utf-8") as file:
-                style = file.read()
-        elif sys.platform.startswith("win32"):
-            with open(styles_path_list[1], "r", encoding="utf-8") as file:
-                style = file.read()
+        mainViewController = main_view_controller.MainViewController(interfaceManager, pymolSessionManager)
+        # # Open the qss styles file and read in the css-alike styling code
+        # if sys.platform.startswith("linux"):
+        #     with open(styles_path_list[0], "r", encoding="utf-8") as file:
+        #         style = file.read()
+        # elif sys.platform.startswith("win32"):
+        #     with open(styles_path_list[1], "r", encoding="utf-8") as file:
+        #         style = file.read()
         # Set the stylesheet of the application
-        mainWindow.setStyleSheet(style)
+        styles.set_stylesheet(mainWindow)
 
     mainWindow.show()

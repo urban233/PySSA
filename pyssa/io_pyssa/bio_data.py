@@ -163,6 +163,7 @@ def convert_pdb_data_list_to_xml_string(pdb_data: list) -> ElementTree.Element:
             atom.text = line
     return root
 
+
 def build_pdb_file(records, a_filepath):
     with open(a_filepath, 'w') as pdb_file:
         for record in records:
@@ -198,7 +199,6 @@ def parse_pdb_file(a_filepath):
     with open(a_filepath, 'r') as pdb_file:
         for line in pdb_file:
             record_type = line[0:6].strip()
-
             if record_type == "ATOM":
                 atom_number = int(line[6:11])
                 atom_name = line[12:16].strip()
@@ -259,9 +259,24 @@ def parse_pdb_file(a_filepath):
                         'charge': ""
                     })
                 except ValueError:
-                    print("PDB file has only the record type for TER.")
+                    logger.warning("PDB file has only the record type for TER.")
                     records.append({
                         'record_type': record_type,
+                        'atom_number': "",
+                        'atom_name': "",
+                        'alternate_location_indicator': "",
+                        'residue_name': "",
+                        'chain_identifier': "",
+                        'residue_sequence_number': "",
+                        'code_for_insertions_of_residues': "",
+                        'x_coord': 0.0,
+                        'y_coord': 0.0,
+                        'z_coord': 0.0,
+                        'occupancy': 0.0,
+                        'temperature_factor': 0.0,
+                        'segment_identifier': "",
+                        'element_symbol': "",
+                        'charge': ""
                     })
             elif record_type == "HETATM":
                 atom_number_het = int(line[6:11])

@@ -504,12 +504,14 @@ class Protein:
                 protein_operations.remove_organic_molecules_in_protein()
             except pymol.CmdException:
                 return  # noqa: RET502 #TODO: needs more thoughts
-            tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
-            pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(self._id))
-            self._pdb_data.clear()
-            self._pdb_data = bio_data.convert_pdb_xml_string_to_list(  # noqa: RET503 #TODO: needs more thoughts
-                bio_data.convert_pdb_file_into_xml_element(path_util.FilePath(tmp_full_pdb_path)),
-            )
+            # tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
+            tmp_was_successful, tmp_pdb_filepath = pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(self._id))
+            if tmp_was_successful:
+                self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
+                logger.debug(self._pdb_data)
+            else:
+                logger.error("The protein could not be cleaned, because the new pdb file could not be found!")
+                raise RuntimeError("The protein could not be cleaned, because the new pdb file could not be found!")
         else:
             clean_prot = self.duplicate_protein()
             # clean_prot.load_protein_in_pymol()

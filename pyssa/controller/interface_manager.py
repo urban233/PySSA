@@ -10,6 +10,9 @@ from PyQt5.QtCore import Qt
 from pyssa.controller import database_manager
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
+from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
+    create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view
+from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.gui.ui.views import hotspots_protein_regions_view
@@ -32,6 +35,8 @@ class InterfaceManager:
     _results_view: "results_view.ResultsView"
     _add_protein_view: "add_protein_view.AddProteinView"
     _import_sequence_view: "import_sequence_view.ImportSequenceView"
+    _rename_protein_view: "rename_protein_view.RenameProteinView"
+    _use_project_view: "use_project_view.UseProjectView"
     _hotspots_protein_regions_view: "hotspots_protein_regions_view.HotspotsProteinRegionsView"
 
     _current_workspace: pathlib.Path
@@ -56,6 +61,8 @@ class InterfaceManager:
         self._results_view = results_view.ResultsView()
         self._add_protein_view = add_protein_view.AddProteinView()
         self._import_sequence_view: "import_sequence_view.ImportSequenceView" = import_sequence_view.ImportSequenceView()
+        self._rename_protein_view = rename_protein_view.RenameProteinView()
+        self._use_project_view = use_project_view.UseProjectView()
 
         # <editor-fold desc="Setup App Settings">
         self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -153,6 +160,12 @@ class InterfaceManager:
     def get_hotspots_protein_regions_view(self) -> "hotspots_protein_regions_view.HotspotsProteinRegionsView":
         return self._hotspots_protein_regions_view
 
+    def get_rename_protein_view(self):
+        return self._rename_protein_view
+
+    def get_use_project_view(self):
+        return self._use_project_view
+
     def get_application_settings(self) -> "settings.Settings":
         return self._application_settings
 
@@ -169,6 +182,9 @@ class InterfaceManager:
     def get_current_project(self) -> "project.Project":
         """Returns the current project."""
         return self._current_project
+
+    def get_workspace_path(self):
+        return self._current_workspace
 
     def set_new_workspace(self, the_current_workspace) -> None:
         """Sets the new current workspace into the interface manager."""
@@ -188,6 +204,10 @@ class InterfaceManager:
             [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]
         )
         return self.string_model
+
+    def get_workspace_projects_as_list(self) -> list:
+        db_pattern = os.path.join(self._application_settings.get_workspace_path(), '*.db')
+        return [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]
 
     def get_information_about_current_session(self):
         return self._current_pymol_session.session_name, self._current_pymol_session.object_type
@@ -283,6 +303,7 @@ class InterfaceManager:
             self._main_view.ui.project_tab_widget.show()
             self._main_view.ui.action_new_project.setEnabled(False)
             self._main_view.ui.action_open_project.setEnabled(False)
+            self._main_view.ui.action_use_project.setEnabled(True)
             self._main_view.ui.action_delete_project.setEnabled(False)
             self._main_view.ui.action_import_project.setEnabled(False)
             self._main_view.ui.action_export_project.setEnabled(True)
@@ -301,6 +322,7 @@ class InterfaceManager:
             self._main_view.ui.lbl_logo.show()
             self._main_view.ui.action_new_project.setEnabled(True)
             self._main_view.ui.action_open_project.setEnabled(True)
+            self._main_view.ui.action_use_project.setEnabled(False)
             self._main_view.ui.action_delete_project.setEnabled(True)
             self._main_view.ui.action_import_project.setEnabled(True)
             self._main_view.ui.action_export_project.setEnabled(False)

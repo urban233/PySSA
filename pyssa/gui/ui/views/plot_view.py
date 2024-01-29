@@ -35,7 +35,6 @@ import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
 from pyssa.internal.data_structures import protein_pair
 from pyssa.util import pyssa_keys
-from pyssa.gui.ui.forms.auto_generated.auto_dialog_distance_plot import Ui_Dialog
 from pyssa.util import constants
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QScrollArea
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
