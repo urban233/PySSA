@@ -23,7 +23,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
     dialog_rename_protein, dialog_help
-from pyssa.internal.data_structures import project, settings, protein, protein_pair
+from pyssa.internal.data_structures import project, settings, protein, protein_pair, chain
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.internal.thread import tasks, task_workers, database_thread
@@ -113,7 +113,6 @@ class MainViewController:
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
         self._setup_statusbar()
-        self._alter_pymol_behaviour()
         self._connect_all_ui_elements_with_slot_functions()
 
     def _connect_all_ui_elements_with_slot_functions(self):
@@ -1143,7 +1142,8 @@ class MainViewController:
             # </editor-fold>
 
         elif level == 1:
-            self.protein_context_menu.addAction(self._view.tr("Show sequence"))
+            tmp_show_sequence_action = self.protein_context_menu.addAction(self._view.tr("Show sequence"))
+            tmp_show_sequence_action.triggered.connect(self._show_protein_chain_sequence)
         elif level == 2:
             self.protein_context_menu.addAction(self._view.tr("Edit object"))
 
@@ -1425,6 +1425,26 @@ class MainViewController:
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
         self._view.wait_spinner.stop()
+
+    def _show_protein_chain_sequence(self) -> None:
+        self.tmp_txt_browser = QtWidgets.QTextBrowser()
+        try:
+            tmp_chain: "chain.Chain" = self._interface_manager.get_current_protein_tree_index_object()
+            if tmp_chain.chain_sequence.sequence == "":
+                self.tmp_txt_browser.setText(
+                    "This chain is a non-protein chain."
+                )
+            else:
+                self.tmp_txt_browser.setText(
+                    tmp_chain.chain_sequence.sequence
+                )
+        except AttributeError:
+            return
+        else:
+            self.tmp_txt_browser.setWindowTitle("View Protein Sequence")
+            self.tmp_txt_browser.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+            self.tmp_txt_browser.resize(500, 150)
+            self.tmp_txt_browser.show()
 
     @staticmethod
     def update_scene() -> None:

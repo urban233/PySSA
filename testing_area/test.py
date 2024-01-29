@@ -1,46 +1,36 @@
-from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QLineEdit
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QHBoxLayout, QWidget
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+import sys
 
-class CustomLineEdit(QLineEdit):
-    def keyPressEvent(self, event):
-        # Get the key code
-        key = event.key()
 
-        # Check if the key is allowed (e.g., disallow 'ä' in any case)
-        if key == Qt.Key_Adiaeresis:
-            # Ignore the key event
-            return
+class HelpDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
-        # Call the base class implementation to handle other keys
-        super(CustomLineEdit, self).keyPressEvent(event)
+        self.initUI()
 
-class MainWindow(QWidget):
-    def __init__(self):
-        super(MainWindow, self).__init__()
+    def initUI(self):
+        self.setGeometry(100, 100, 700, 800)
+        self.setWindowTitle('My PyQt Help System')
+        central_layout = QVBoxLayout(self)
+        self.browser = QWebEngineView()
+        central_layout.addWidget(self.browser)
 
-        # Create a table widget with 3 rows and 3 columns
-        self.table_widget = QTableWidget(3, 3)
+    def loadHelpContent(self, content_path):
+        with open(content_path, 'r', encoding='utf-8') as file:
+            html_content = file.read()
 
-        # Use the custom line edit in the table widget
-        for row in range(self.table_widget.rowCount()):
-            for col in range(self.table_widget.columnCount()):
-                line_edit = CustomLineEdit()
-                self.table_widget.setCellWidget(row, col, line_edit)
-
-        # Add the table widget to a layout
-        layout = QVBoxLayout()
-        layout.addWidget(self.table_widget)
-
-        # Set the layout
-        self.setLayout(layout)
+        self.browser.setHtml(html_content)
 
 if __name__ == '__main__':
-    app = QApplication([])
+    app = QApplication(sys.argv)
+    helpDialog = HelpDialog()
+    helpDialog.loadHelpContent(r'C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html')
 
-    # Create the main window
-    main_window = MainWindow()
-    main_window.setWindowTitle('Table Widget Example')
-    main_window.show()
+    # You can show the dialog using exec_() or show()
+    # helpDialog.exec_()  # If you want a modal dialog
+    helpDialog.show()
 
-    app.exec_()
+    sys.exit(app.exec_())
+
 
