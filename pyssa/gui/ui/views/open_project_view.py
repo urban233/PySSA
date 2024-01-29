@@ -35,6 +35,7 @@ from pyssa.util import constants, input_validator
 
 class OpenProjectView(QtWidgets.QDialog):
     """Class representing an Open dialog."""
+    dialogClosed = QtCore.pyqtSignal(tuple)
 
     def __init__(self) -> None:
         """Constructor."""
@@ -50,3 +51,8 @@ class OpenProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Open project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+    def closeEvent(self, event):
+        # Emit the custom signal when the window is closed
+        self.dialogClosed.emit(("", False))
+        event.accept()

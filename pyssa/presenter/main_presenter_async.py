@@ -26,6 +26,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import platform
 from typing import TYPE_CHECKING
 
 import pymol
@@ -93,7 +94,6 @@ def delete_project() -> None:
 def create_new_project(
     the_project_name: str,
     the_workspace_path: pathlib.Path,
-    an_add_protein_flag: bool = False,
     protein_source_information: str = "",
 ) -> tuple:
     """Creates a new project object.
@@ -108,28 +108,70 @@ def create_new_project(
         a tuple with ("results", a_new_project_obj)
     """
     # TODO: checks are needed
-    tmp_project: "project.Project" = project.Project(the_project_name, the_workspace_path)
-    if an_add_protein_flag:
-        if len(protein_source_information) == 4:
-            tmp_ref_protein = pymol_io.get_protein_from_pdb(protein_source_information.upper())
-        else:
-            # local pdb file as input
-            pdb_filepath = path_util.FilePath(pathlib.Path(protein_source_information))
-            graphic_operations.setup_default_session_graphic_settings()
-            tmp_ref_protein = protein.Protein(
-                molecule_object=pdb_filepath.get_filename(),
-                pdb_filepath=pdb_filepath,
-            )
-        # fixme: should the disulfid-bonds be displayed globally
-        # cmd.select(name="disulfides", selection="byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
-        # cmd.color(color="atomic", selection="disulfides and not elem C")
-        # cmd.set("valence", 0)  # this needs to be better implemented
-        # cmd.show("sticks", "disulfides")
+    tmp_project = project.Project(the_project_name, the_workspace_path)
+
+    tmp_database_filepath = str(pathlib.Path(f"{the_workspace_path}/{the_project_name}.db"))
+    with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
+        db_manager.close_project_database()
+
+    if len(protein_source_information) == 4:
+        tmp_ref_protein = protein.Protein(protein_source_information.upper())
+        tmp_ref_protein.db_project_id = tmp_project.get_id()
+        tmp_ref_protein.add_protein_structure_data_from_pdb_db(protein_source_information.upper())
+        tmp_ref_protein.create_new_pymol_session()
+        tmp_ref_protein.save_pymol_session_as_base64_string()
         tmp_project.add_existing_protein(tmp_ref_protein)
-    tmp_project.serialize_project(
-        pathlib.Path(f"{the_workspace_path}/{tmp_project.get_project_name()}.xml"),
-    )
+        with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+            db_manager.open_project_database()
+            tmp_project.set_id(db_manager.insert_new_protein(tmp_ref_protein))
+            db_manager.close_project_database()
+        constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
+    elif len(protein_source_information) > 0:
+        # local pdb file as input
+        pdb_filepath = pathlib.Path(protein_source_information)
+        graphic_operations.setup_default_session_graphic_settings()
+        tmp_ref_protein = protein.Protein(
+            pdb_filepath.name.replace(".pdb", "")
+        )
+        tmp_ref_protein.db_project_id = tmp_project.get_id()
+        tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(protein_source_information))
+        tmp_ref_protein.create_new_pymol_session()
+        tmp_ref_protein.save_pymol_session_as_base64_string()
+        tmp_project.add_existing_protein(tmp_ref_protein)
+        with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+            db_manager.open_project_database()
+            tmp_project.set_id(db_manager.insert_new_protein(tmp_ref_protein))
+            db_manager.close_project_database()
+        constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+    else:
+        constants.PYSSA_LOGGER.info("Create empty project finished.")
     return ("result", tmp_project)
+
+
+    # tmp_project: "project.Project" = project.Project(the_project_name, the_workspace_path)
+    # if an_add_protein_flag:
+    #     if len(protein_source_information) == 4:
+    #         tmp_ref_protein = pymol_io.get_protein_from_pdb(protein_source_information.upper())
+    #     else:
+    #         # local pdb file as input
+    #         pdb_filepath = path_util.FilePath(pathlib.Path(protein_source_information))
+    #         graphic_operations.setup_default_session_graphic_settings()
+    #         tmp_ref_protein = protein.Protein(
+    #             molecule_object=pdb_filepath.get_filename(),
+    #             pdb_filepath=pdb_filepath,
+    #         )
+    #     # fixme: should the disulfid-bonds be displayed globally
+    #     # cmd.select(name="disulfides", selection="byres (resn CYS and name SG) within 2 of (resn CYS and name SG)")
+    #     # cmd.color(color="atomic", selection="disulfides and not elem C")
+    #     # cmd.set("valence", 0)  # this needs to be better implemented
+    #     # cmd.show("sticks", "disulfides")
+    #     tmp_project.add_existing_protein(tmp_ref_protein)
+    # tmp_project.serialize_project(
+    #     pathlib.Path(f"{the_workspace_path}/{tmp_project.get_project_name()}.xml"),
+    # )
+
 
 
 def save_project(a_project: "project.Project", placeholder: int) -> tuple:
