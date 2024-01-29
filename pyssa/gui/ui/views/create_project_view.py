@@ -30,6 +30,7 @@ from pyssa.util import constants
 
 class CreateProjectView(QtWidgets.QDialog):
     """Class representing a Create dialog."""
+    dialogClosed = QtCore.pyqtSignal(tuple)
 
     def __init__(self) -> None:
         """Constructor.
@@ -45,3 +46,8 @@ class CreateProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Create project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+    def closeEvent(self, event):
+        # Emit the custom signal when the window is closed
+        self.dialogClosed.emit(("", False))
+        event.accept()

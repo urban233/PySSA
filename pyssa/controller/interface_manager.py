@@ -425,7 +425,7 @@ class InterfaceManager:
         self._main_view.ui.seqs_table_widget.setItem(1, 0, tmp_sequence_label_item)
         # Table value items
         tmp_seq_name_item = QtWidgets.QTableWidgetItem(tmp_sequence.name)
-        tmp_seq_name_item.setToolTip("Double click to edit name")
+        tmp_seq_name_item.setToolTip("Click to edit name")
         self._main_view.ui.seqs_table_widget.setItem(0, 1, tmp_seq_name_item)
         tmp_sequence_item = QtWidgets.QTableWidgetItem(f"{tmp_sequence.seq[:15]} ...")
         tmp_sequence_item.setToolTip("Click to view complete sequence")
@@ -440,7 +440,9 @@ class InterfaceManager:
         self._main_view.line_edit_seq_name.setText(tmp_seq_name_item.data(Qt.DisplayRole))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
 
-    def manage_buttons_for_proteins_tab(self, an_object_type: str, is_protein_in_pair: bool):
+    def manage_buttons_for_proteins_tab(self,
+                                        an_object_type: str,
+                                        is_protein_in_pair: bool):
         if an_object_type == "protein":
             self._main_view.ui.btn_save_protein.setEnabled(True)
             self._main_view.ui.btn_open_protein_session.setEnabled(True)

@@ -113,11 +113,14 @@ class MainViewController:
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
         self._setup_statusbar()
+        self._alter_pymol_behaviour()
         self._connect_all_ui_elements_with_slot_functions()
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_new_project.triggered.connect(self._create_project)
+        self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
+        self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
         self._view.ui.action_use_project.triggered.connect(self._use_project)
         self._view.ui.action_delete_project.triggered.connect(self._delete_project)
         self._view.ui.action_import_project.triggered.connect(self.import_project)
@@ -224,58 +227,91 @@ class MainViewController:
         self._view.wait_spinner.stop()
 
     def _create_project(self) -> None:
+        self._interface_manager.start_wait_spinner()
         self._external_controller = create_project_view_controller.CreateProjectViewController(self._interface_manager)
         self._external_controller.user_input.connect(self._post_create_project)
         self._interface_manager.get_create_view().show()
 
     def _post_create_project(self, user_input: tuple) -> None:
         tmp_project_name, tmp_protein_name = user_input
-        tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
-        self._database_manager.set_database_filepath(tmp_project_database_filepath)
-        self._database_manager.build_new_database()
+        tmp_project_database_filepath = str(
+            pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
+        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+            db_manager.build_new_database()
+            db_manager.close_project_database()
         self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
         self._database_thread.start()
-        self._database_manager.open_project_database()
-        tmp_project = project.Project(tmp_project_name,
-                                      self._interface_manager.get_application_settings().workspace_path)
-        tmp_project.set_id(self._database_manager.insert_new_project(tmp_project.get_project_name(),
-                                                                     platform.system()))
-        if len(tmp_protein_name) == 4:
-            tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
-            tmp_ref_protein.db_project_id = tmp_project.get_id()
-            tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
-            tmp_ref_protein.create_new_pymol_session()
-            tmp_ref_protein.save_pymol_session_as_base64_string()
-            tmp_project.add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.set_id(self._database_manager.insert_new_protein(tmp_ref_protein))
-            constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
-        elif len(tmp_protein_name) > 0:
-            # local pdb file as input
-            pdb_filepath = pathlib.Path(tmp_protein_name)
-            graphic_operations.setup_default_session_graphic_settings()
-            tmp_ref_protein = protein.Protein(
-                pdb_filepath.name.replace(".pdb","")
-            )
-            tmp_ref_protein.db_project_id = tmp_project.get_id()
-            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
-            tmp_ref_protein.create_new_pymol_session()
-            tmp_ref_protein.save_pymol_session_as_base64_string()
-            tmp_project.add_existing_protein(tmp_ref_protein)
-            tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
-            constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
-        else:
-            constants.PYSSA_LOGGER.info("Create empty project finished.")
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_new_project,
+            args=(
+                tmp_project_name,
+                self._interface_manager.get_application_settings().get_workspace_path(),
+                tmp_protein_name
+            ),
+            post_func=self.__await_create_project,
+        )
+        self._active_task.start()
+
+        #
+        # tmp_project_name, tmp_protein_name = user_input
+        # tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
+        # self._database_manager.set_database_filepath(tmp_project_database_filepath)
+        # self._database_manager.build_new_database()
+        # self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
+        # self._database_thread.start()
+        # self._database_manager.open_project_database()
+        # tmp_project = project.Project(tmp_project_name,
+        #                               self._interface_manager.get_application_settings().workspace_path)
+        # tmp_project.set_id(self._database_manager.insert_new_project(tmp_project.get_project_name(),
+        #                                                              platform.system()))
+        # if len(tmp_protein_name) == 4:
+        #     tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+        #     tmp_ref_protein.db_project_id = tmp_project.get_id()
+        #     tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
+        #     tmp_ref_protein.create_new_pymol_session()
+        #     tmp_ref_protein.save_pymol_session_as_base64_string()
+        #     tmp_project.add_existing_protein(tmp_ref_protein)
+        #     tmp_ref_protein.set_id(self._database_manager.insert_new_protein(tmp_ref_protein))
+        #     constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
+        # elif len(tmp_protein_name) > 0:
+        #     # local pdb file as input
+        #     pdb_filepath = pathlib.Path(tmp_protein_name)
+        #     graphic_operations.setup_default_session_graphic_settings()
+        #     tmp_ref_protein = protein.Protein(
+        #         pdb_filepath.name.replace(".pdb","")
+        #     )
+        #     tmp_ref_protein.db_project_id = tmp_project.get_id()
+        #     tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
+        #     tmp_ref_protein.create_new_pymol_session()
+        #     tmp_ref_protein.save_pymol_session_as_base64_string()
+        #     tmp_project.add_existing_protein(tmp_ref_protein)
+        #     tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
+        #     constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+        # else:
+        #     constants.PYSSA_LOGGER.info("Create empty project finished.")
+
+    def __await_create_project(self, return_value: tuple):
+        if return_value[1] is False:
+            self._interface_manager.stop_wait_spinner()
+            return
+
+        _, tmp_project = return_value
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
+        self._interface_manager.stop_wait_spinner()
 
     def _open_project(self) -> None:
+        self._interface_manager.start_wait_spinner()
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
         self._external_controller.return_value.connect(self._post_open_project)
         self._interface_manager.get_open_view().show()
 
     def _post_open_project(self, return_value: str):
-        self._interface_manager.start_wait_spinner()
+        if return_value[1] is False:
+            self._interface_manager.stop_wait_spinner()
+            return
+
         self._interface_manager.update_status_bar("Opening existing project ...")
         tmp_project_name = return_value
         tmp_project_database_filepath = str(
@@ -1078,18 +1114,40 @@ class MainViewController:
                 level += 1
         else:
             return
-        menu = QtWidgets.QMenu()
+
+        tmp_type = self._interface_manager.get_current_protein_tree_index_type()
+
+        if tmp_type == "protein":
+            tmp_protein = self._interface_manager.get_current_protein_tree_index_object()
+        elif tmp_type == "chain":
+            tmp_protein = self._interface_manager.get_parent_index_object_of_current_protein_tree_index()
+        else:
+            logger.warning("Unknown object type occurred in Protein tab.")
+            return
+        tmp_is_protein_in_any_pair: bool = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
+            tmp_protein.get_molecule_object()
+        )
+        self.protein_context_menu = QtWidgets.QMenu()
         if level == 0:
-            tmp_clean_action = menu.addAction(self._view.tr("Clean selected protein"))
-            tmp_clean_action.triggered.connect(self.clean_protein_update)
-            tmp_rename_action = menu.addAction(self._view.tr("Rename selected protein"))
-            tmp_rename_action.triggered.connect(self.rename_selected_protein_structure)
-            # menu.addAction(self._view.tr("Clean and create new protein"))
+            self.proteins_context_menu_clean_action = self.protein_context_menu.addAction(self._view.tr("Clean selected protein"))
+            self.proteins_context_menu_clean_action.triggered.connect(self.clean_protein_update)
+            self.proteins_context_menu_rename_action = self.protein_context_menu.addAction(self._view.tr("Rename selected protein"))
+            self.proteins_context_menu_rename_action.triggered.connect(self.rename_selected_protein_structure)
+
+            # <editor-fold desc="Check if protein is in any protein pair">
+            if tmp_is_protein_in_any_pair:
+                self.proteins_context_menu_rename_action.setEnabled(False)
+            else:
+                self.proteins_context_menu_rename_action.setEnabled(True)
+
+            # </editor-fold>
+
         elif level == 1:
-            menu.addAction(self._view.tr("Show sequence"))
+            self.protein_context_menu.addAction(self._view.tr("Show sequence"))
         elif level == 2:
-            menu.addAction(self._view.tr("Edit object"))
-        menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
+            self.protein_context_menu.addAction(self._view.tr("Edit object"))
+
+        self.protein_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
     def _show_protein_information(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1108,9 +1166,10 @@ class MainViewController:
             logger.warning("Unknown object type occurred in Protein tab.")
             return
         self._interface_manager.manage_buttons_for_proteins_tab(
-            tmp_type, self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
+            tmp_type,
+            self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
                 tmp_protein.get_molecule_object()
-            )
+            ),
         )
         if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             self._view.cb_chain_color.setEnabled(True)

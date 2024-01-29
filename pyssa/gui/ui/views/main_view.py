@@ -190,6 +190,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_import_protein.setToolTip("Click to import an existing .pdb file")
         self.ui.btn_save_protein.setToolTip("Click to save the selected protein as .pdb file")
         self.ui.btn_delete_protein.setToolTip("Click to delete the selected protein from the project")
+        self.ui.btn_open_protein_session.setToolTip("Click to open protein PyMOL session")
         self.ui.btn_create_protein_scene.setToolTip("Click to create a new PyMOL scene")
         self.ui.btn_update_protein_scene.setToolTip("Click to update the current scene in PyMOL")
 
@@ -198,6 +199,7 @@ class MainView(QtWidgets.QMainWindow):
             "A table with changeable PyMOL parameters for the currently active session"
         )
         self.ui.btn_delete_protein_pair.setToolTip("Click to delete the selected protein pair from the project")
+        self.ui.btn_open_protein_pair_session.setToolTip("Click to open protein pair PyMOL session")
         self.ui.btn_create_protein_pair_scene.setToolTip("Click to create a new PyMOL scene")
         self.ui.btn_update_protein_pair_scene.setToolTip("Click to update the current scene in PyMOL")
 
