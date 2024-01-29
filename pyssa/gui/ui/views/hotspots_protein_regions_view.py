@@ -31,6 +31,8 @@ from pyssa.util import constants
 
 class HotspotsProteinRegionsView(QtWidgets.QDialog):
     """Class representing a Hotspots dialog."""
+    # Define a custom signal
+    dialogClosed = QtCore.pyqtSignal(tuple)
 
     def __init__(self) -> None:
         """Constructor."""
@@ -44,8 +46,15 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
         """Initialize the UI elements."""
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
-        self.ui.btn_info.setIcon(icon)
-        self.ui.btn_info.setText("")
+        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setText("")
+        self.ui.cb_disulfide_bonds.setMinimumWidth(80)
+        self.ui.cb_disulfide_bonds.setMaximumWidth(80)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Protein Regions")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+    def closeEvent(self, event):
+        # Emit the custom signal when the window is closed
+        self.dialogClosed.emit(("", False))
+        event.accept()

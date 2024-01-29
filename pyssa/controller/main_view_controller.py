@@ -17,7 +17,7 @@ from Bio import SeqIO
 from xml import sax
 
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
-    pymol_session_manager
+    pymol_session_manager, hotspots_protein_regions_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -128,6 +128,8 @@ class MainViewController:
         self._view.ui.action_preview_image.triggered.connect(self._preview_image)
         self._view.ui.action_ray_tracing_image.triggered.connect(self._create_ray_traced_image)
         self._view.ui.action_simple_image.triggered.connect(self._create_drawn_image)
+        self._view.ui.action_protein_regions.triggered.connect(self._hotspots_protein_regions)
+        self._interface_manager.get_hotspots_protein_regions_view().dialogClosed.connect(self.post_hotspots_protein_regions)
 
         self._view.ui.action_edit_settings.triggered.connect(self.open_settings_global)
         self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
@@ -718,6 +720,18 @@ class MainViewController:
         self._view.wait_spinner.stop()
 
     # </editor-fold>
+
+    # </editor-fold>
+
+    # <editor-fold desc="Hotspots">
+    def _hotspots_protein_regions(self) -> None:
+        self._external_controller = hotspots_protein_regions_view_controller.OpenProjectViewController(self._interface_manager)
+        self._interface_manager.get_hotspots_protein_regions_view().show()
+        self._pymol_session_manager.show_sequence_view()
+
+    def post_hotspots_protein_regions(self) -> None:
+        self._pymol_session_manager.hide_sequence_view()
+        cmd.select(name="", selection="none")
 
     # </editor-fold>
 

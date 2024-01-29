@@ -46,7 +46,7 @@ class OpenProjectViewController(QtCore.QObject):
         self._view.ui.btn_sticks_hide.clicked.connect(self.hide_resi_sticks)
         self._view.ui.btn_sticks_show.clicked.connect(self.show_resi_sticks)
         self._view.ui.btn_position_zoom.clicked.connect(self.zoom_resi_position)
-        self._view.ui.cb_disulfide_bonds.clicked.connect(self.show_hide_disulfide_bonds)
+        self._view.ui.cb_disulfide_bonds.currentIndexChanged.connect(self.show_hide_disulfide_bonds)
         # self._view.ui.btn_info.clicked.connect()
 
     def hide_resi_sticks(self) -> None:

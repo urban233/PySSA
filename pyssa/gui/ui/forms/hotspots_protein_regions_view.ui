@@ -137,7 +137,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="btn_info">
+      <widget class="QPushButton" name="btn_help">
        <property name="text">
         <string>Info</string>
        </property>

@@ -66,3 +66,9 @@ class PymolSessionManager:
             return True
         else:
             return False
+
+    def show_sequence_view(self) -> None:
+        cmd.set("seq_view", 1)
+
+    def hide_sequence_view(self) -> None:
+        cmd.set("seq_view", 0)
