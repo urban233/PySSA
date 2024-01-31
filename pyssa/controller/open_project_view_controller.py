@@ -41,6 +41,10 @@ class OpenProjectViewController(QtCore.QObject):
         self._view = the_interface_manager.get_open_view()
         self._fill_projects_list_view()
         self._connect_all_ui_elements_to_slot_functions()
+        self.restore_default_view()
+
+    def restore_default_view(self) -> None:
+        self._view.ui.txt_open_selected_project.clear()
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
@@ -51,6 +55,7 @@ class OpenProjectViewController(QtCore.QObject):
         self._view.ui.projects_list_view.clicked.connect(self._select_project_from_open_list)
         self._view.ui.txt_open_selected_project.textChanged.connect(self._activate_open_button)
         self._view.ui.btn_open_project.clicked.connect(self._open_selected_project)
+        self._view.ui.projects_list_view.doubleClicked.connect(self._open_selected_project)
 
     def _validate_open_search(self) -> None:
         """Validates the input of the project name in real-time."""

@@ -86,6 +86,7 @@ class MainView(QtWidgets.QMainWindow):
         # Sequences tab
         self.ui.btn_save_sequence.setEnabled(False)
         self.ui.btn_delete_sequence.setEnabled(False)
+        self.ui.seqs_list_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Proteins tab
         self.ui.btn_save_protein.setEnabled(False)
@@ -93,12 +94,14 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_open_protein_session.setEnabled(False)
         self.ui.btn_create_protein_scene.setEnabled(False)
         self.ui.btn_update_protein_scene.setEnabled(False)
+        self.ui.proteins_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Protein Pairs tab
         self.ui.btn_delete_protein_pair.setEnabled(False)
         self.ui.btn_open_protein_pair_session.setEnabled(False)
         self.ui.btn_create_protein_pair_scene.setEnabled(False)
         self.ui.btn_update_protein_pair_scene.setEnabled(False)
+        self.ui.protein_pairs_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()

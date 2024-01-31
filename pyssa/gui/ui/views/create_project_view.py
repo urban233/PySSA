@@ -43,6 +43,7 @@ class CreateProjectView(QtWidgets.QDialog):
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
+        self.ui.list_create_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Create project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

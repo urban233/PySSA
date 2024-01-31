@@ -48,6 +48,7 @@ class OpenProjectView(QtWidgets.QDialog):
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
         self.ui.lbl_open_status_search.setText("")
+        self.ui.projects_list_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Open project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
