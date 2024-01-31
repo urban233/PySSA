@@ -152,7 +152,7 @@ class MainViewController:
 
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
-        self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
+        self._view.ui.proteins_tree_view.clicked.connect(self.__slot_show_protein_information)
         self._view.ui.btn_save_protein.clicked.connect(self._save_selected_protein_structure_as_pdb_file)
         self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
@@ -185,6 +185,7 @@ class MainViewController:
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
     def open_help(self):
+        os.startfile(r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html")
         # with open(
         #     r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html",
         #     "r",
@@ -194,7 +195,7 @@ class MainViewController:
         #     file.close()
         # tmp_dialog = dialog_help.DialogHelp(html_content)
         # tmp_dialog.exec_()
-        pass
+        # pass
 
     # </editor-fold>
 
@@ -1149,7 +1150,7 @@ class MainViewController:
 
         self.protein_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
-    def _show_protein_information(self) -> None:
+    def __slot_show_protein_information(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
 
         if tmp_type == "protein":

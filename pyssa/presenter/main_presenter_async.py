@@ -551,7 +551,7 @@ def load_results(a_project: "project.Project", a_results_name: str) -> tuple:
     )
 
 
-def color_protein_pair_by_rmsd_value(a_project: "project.Project", a_results_name: str) -> tuple:
+def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair", placeholder: int) -> tuple:
     """Colors a given protein pair by their rmsd value.
 
     Args:
@@ -561,9 +561,8 @@ def color_protein_pair_by_rmsd_value(a_project: "project.Project", a_results_nam
     Returns:
         a tuple with ("result", an_existing_protein_pair_object)
     """
-    tmp_protein_pair: "protein_pair.ProteinPair" = a_project.search_protein_pair(a_results_name)
-    graphic_operations.color_protein_pair_by_rmsd(tmp_protein_pair)
-    return ("result", tmp_protein_pair)
+    graphic_operations.color_protein_pair_by_rmsd(a_protein_pair)
+    return ("result", a_protein_pair)
 
 
 def open_protein_for_hotspots(
