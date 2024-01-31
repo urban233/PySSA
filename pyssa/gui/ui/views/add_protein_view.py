@@ -27,6 +27,7 @@ from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, tools, gui_utils
@@ -54,11 +55,14 @@ class AddProteinView(Qt.QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.ui.btn_add_protein.setEnabled(False)
         self.ui.btn_choose_protein.clicked.connect(self.load_model)
-        self.ui.btn_cancel.clicked.connect(self.close_dialog)
         self.ui.btn_add_protein.clicked.connect(self.add_model)
         self.ui.txt_add_protein.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
         self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
+        icon = self.style().standardIcon(pixmapi)
+        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setText("")
         self.setWindowTitle("Add an existing protein to the current project")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)

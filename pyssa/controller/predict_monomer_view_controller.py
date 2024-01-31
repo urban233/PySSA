@@ -112,7 +112,6 @@ class PredictMonomerViewController(QtCore.QObject):
                 self._view.ui.btn_pred_analysis_mono_add,
                 self._view.ui.lbl_pred_analysis_mono_overview,
                 self._view.ui.list_pred_analysis_mono_overview,
-                self._view.ui.lbl_pred_analysis_mono_images,
                 self._view.ui.cb_pred_analysis_mono_images,
                 self._view.ui.btn_pred_analysis_mono_start,
                 self._view.ui.btn_pred_analysis_mono_back_pred_setup,
@@ -163,7 +162,7 @@ class PredictMonomerViewController(QtCore.QObject):
                 self._view.ui.list_pred_analysis_mono_model_chains,
                 self._view.ui.btn_pred_analysis_mono_back_5,
                 self._view.ui.btn_pred_analysis_mono_next_4,
-                self._view.ui.lbl_pred_analysis_mono_images,
+
                 self._view.ui.cb_pred_analysis_mono_images,
                 self._view.ui.btn_pred_analysis_mono_start,
                 self._view.ui.btn_pred_analysis_mono_back_pred_setup,
@@ -263,7 +262,7 @@ class PredictMonomerViewController(QtCore.QObject):
                     self._view.ui.list_pred_analysis_mono_model_chains,
                     self._view.ui.btn_pred_analysis_mono_back_5,
                     self._view.ui.btn_pred_analysis_mono_next_4,
-                    self._view.ui.lbl_pred_analysis_mono_images,
+
                     self._view.ui.cb_pred_analysis_mono_images,
                     self._view.ui.btn_pred_analysis_mono_start,
                 ]
@@ -778,7 +777,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
             self._view.ui.cb_pred_analysis_mono_images,
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.btn_pred_analysis_mono_back_pred_setup,
@@ -821,7 +819,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
             self._view.ui.cb_pred_analysis_mono_images,
             self._view.ui.btn_pred_analysis_mono_start,
         ]
@@ -859,7 +856,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_next_2,
             self._view.ui.btn_pred_analysis_mono_back_4,
             self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.lbl_pred_analysis_mono_images,
             self._view.ui.cb_pred_analysis_mono_images,
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.btn_pred_analysis_mono_back_pred_setup,
@@ -920,7 +916,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
             self._view.ui.cb_pred_analysis_mono_images,
             self._view.ui.btn_pred_analysis_mono_start,
         ]
@@ -936,7 +931,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_add,
             self._view.ui.lbl_pred_analysis_mono_overview,
             self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.lbl_pred_analysis_mono_images,
             self._view.ui.cb_pred_analysis_mono_images,
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.btn_pred_analysis_mono_back_pred_setup,
@@ -998,7 +992,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_next_2,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
             self._view.ui.cb_pred_analysis_mono_images,
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.lbl_pred_analysis_mono_model_chains,
@@ -1060,7 +1053,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.lbl_pred_analysis_mono_images,
             self._view.ui.cb_pred_analysis_mono_images,
             self._view.ui.btn_pred_analysis_mono_start,
         ]
