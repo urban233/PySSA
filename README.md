@@ -91,6 +91,8 @@ Pandas, Matplotlib, Biopython and the open-source version of PyMOL.
   * License: BSD 3-Clause License
 * [PyMOL Open-Source](https://github.com/schrodinger/pymol-open-source)
   * License: [BSD-like license](https://github.com/schrodinger/pymol-open-source/blob/master/LICENSE)
+* SQLite3
+  * License: [Public Domain](https://www.sqlite.org/copyright.html)
 
 ## Citation
 
