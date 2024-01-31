@@ -378,65 +378,98 @@ class MainViewController:
             self._view,
             "Select a project file to import",
             "",
-            "XML Files (*.xml)",
+            "Project Database File (*.db)",
         )
         if file_path:
             file = QtCore.QFile(file_path)
             if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
                 print("Error: Cannot open file for reading")
                 return
-
-            tmp_project = project.Project()
-            handler = filesystem_io.ProjectParserHandler(tmp_project,
-                                                         self._interface_manager.get_application_settings())
-            parser = sax.make_parser()
-            parser.setContentHandler(handler)
-            parser.parse(file_path)
-            file.close()
-            tmp_project = handler.get_project()
-
-            tmp_project.set_workspace_path(self._workspace_path)
-            if len(tmp_project.proteins) <= 1:
-                if self._interface_manager.get_application_settings().wsl_install == 0:
-                    basic_boxes.ok(
-                        "Create new project",
-                        "Please install local colabfold to import this project!",
-                        QtWidgets.QMessageBox.Warning,
-                    )
-                    return
-                elif self._interface_manager.get_application_settings().local_colabfold == 0:  # noqa: RET505
-                    basic_boxes.ok(
-                        "Create new project",
-                        "Please install local colabfold to import this project!",
-                        QtWidgets.QMessageBox.Warning,
-                    )
-                    return
-            new_filepath = pathlib.Path(f"{self._workspace_path}/{tmp_project.get_project_name()}.xml")
-            tmp_project.serialize_project(new_filepath)
-            self._interface_manager.set_new_project(
-                self._interface_manager.get_current_project().deserialize_project(
-                    new_filepath, self._interface_manager.get_application_settings()
+            tmp_import_filepath = pathlib.Path(file_path)
+            tmp_project_name_input_dialog = QtWidgets.QInputDialog()
+            tmp_new_project_name = tmp_project_name_input_dialog.getText(
+                self._view,
+                "Project Name",
+                "Enter A Project Name:",
+                text=tmp_import_filepath.name.replace(".db", "")
+            )[0]
+            # Copy db file into new workspace
+            tmp_project_database_filepath = str(
+                pathlib.Path(
+                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_new_project_name}.db"
                 )
             )
-            constants.PYSSA_LOGGER.info(
-                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}."
+            shutil.copyfile(file_path, tmp_project_database_filepath)
+            # Open db and create project
+            self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
+            self._database_thread.start()
+            self._database_manager.set_database_filepath(tmp_project_database_filepath)
+            self._database_manager.open_project_database()
+            self._database_manager.update_project_name(tmp_new_project_name)
+            tmp_project = self._database_manager.get_project_as_object(
+                tmp_new_project_name,
+                self._interface_manager.get_application_settings().workspace_path,
+                self._interface_manager.get_application_settings()
             )
-            self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
+            self._interface_manager.set_new_project(tmp_project)
+
             self._interface_manager.refresh_main_view()
-            basic_boxes.ok(
-                "Import Project",
-                "The project was successfully imported.",
-                QtWidgets.QMessageBox.Information,
-            )
+            self._pymol_session_manager.reinitialize_session()
+            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.update_status_bar("Importing project finished.")
+
+            # tmp_project = project.Project()
+            # handler = filesystem_io.ProjectParserHandler(tmp_project,
+            #                                              self._interface_manager.get_application_settings())
+            # parser = sax.make_parser()
+            # parser.setContentHandler(handler)
+            # parser.parse(file_path)
+            # file.close()
+            # tmp_project = handler.get_project()
+            #
+            # tmp_project.set_workspace_path(self._workspace_path)
+            # if len(tmp_project.proteins) <= 1:
+            #     if self._interface_manager.get_application_settings().wsl_install == 0:
+            #         basic_boxes.ok(
+            #             "Create new project",
+            #             "Please install local colabfold to import this project!",
+            #             QtWidgets.QMessageBox.Warning,
+            #         )
+            #         return
+            #     elif self._interface_manager.get_application_settings().local_colabfold == 0:  # noqa: RET505
+            #         basic_boxes.ok(
+            #             "Create new project",
+            #             "Please install local colabfold to import this project!",
+            #             QtWidgets.QMessageBox.Warning,
+            #         )
+            #         return
+            # new_filepath = pathlib.Path(f"{self._workspace_path}/{tmp_project.get_project_name()}.xml")
+            # tmp_project.serialize_project(new_filepath)
+            # self._interface_manager.set_new_project(
+            #     self._interface_manager.get_current_project().deserialize_project(
+            #         new_filepath, self._interface_manager.get_application_settings()
+            #     )
+            # )
+            # constants.PYSSA_LOGGER.info(
+            #     f"Opening the project {self._interface_manager.get_current_project().get_project_name()}."
+            # )
+            # self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
+            # self._interface_manager.refresh_main_view()
+            # basic_boxes.ok(
+            #     "Import Project",
+            #     "The project was successfully imported.",
+            #     QtWidgets.QMessageBox.Information,
+            # )
 
     def export_current_project(self) -> None:
         """Exports the current project to an importable format."""
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getSaveFileName(self._view, "Save current project", "", "XML Files (*.xml)")
+        file_path, _ = file_dialog.getSaveFileName(self._view, "Export current project", "", "Project Database File (*.db)")
         if file_path:
-            self._interface_manager.get_current_project().serialize_project(pathlib.Path(file_path))
+            shutil.copyfile(self._interface_manager.get_current_project().get_database_filepath(),
+                            file_path)
             basic_boxes.ok(
                 "Export Project",
                 "The project was successfully exported.",
