@@ -24,16 +24,12 @@ import pathlib
 
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
-from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyqtspinner import spinner
-from pyssa.gui.ui.custom_widgets import custom_tree_view, custom_line_edit
+from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
-from pyssa.internal.data_structures import project
 from pyssa.util import constants, gui_utils
-from pyssa.model import application_model
-from pyssa.util import enums
 
 
 class MainView(QtWidgets.QMainWindow):

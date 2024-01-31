@@ -7687,7 +7687,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     styles.set_stylesheet(app)
     interfaceManager = interface_manager.InterfaceManager()
-    pymolSessionManager = pymol_session_manager.PymolSessionManager()
+    pymolSessionManager = pymol_session_manager.PymolSessionManager(interfaceManager)
     main_window = interfaceManager.get_main_view()
     main_controller = main_view_controller.MainViewController(interfaceManager, pymolSessionManager)
     styles.set_stylesheet(main_window)

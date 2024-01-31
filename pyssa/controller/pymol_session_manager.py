@@ -1,5 +1,7 @@
 from pymol import cmd
 
+from pyssa.controller import interface_manager
+from pyssa.gui.ui.views import main_view
 from pyssa.internal.data_structures import protein, protein_pair
 
 
@@ -9,10 +11,11 @@ class PymolSessionManager:
     session_object_type: str
     session_objects: list
 
-    def __init__(self) -> None:
+    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
         self.session_name = ""
         self.session_object_type = ""
         self.session_objects = []
+        self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
 
     def reinitialize_session(self) -> None:
         """Reinitialize the pymol session and class attributes."""
@@ -54,6 +57,20 @@ class PymolSessionManager:
     def is_the_current_session_empty(self) -> bool:
         """Checks if the manager is in an empty session state."""
         if self.session_name == "" and self.session_object_type == "" and self.session_objects == []:
+            return True
+        else:
+            return False
+
+    def is_the_current_protein_in_session(self) -> bool:
+        """Checks if the current protein is in the session."""
+        if self._interface_manager.get_current_protein_tree_index_type() == "protein":
+            tmp_protein_name: str = self._interface_manager.get_current_protein_tree_index_object().get_molecule_object()
+        elif self._interface_manager.get_current_protein_tree_index_type() == "chain":
+            tmp_protein_name: str = self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
+        else:
+            raise ValueError("Unknown type!")
+
+        if self.session_object_type == "protein" and self.session_name == tmp_protein_name:
             return True
         else:
             return False

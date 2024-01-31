@@ -85,7 +85,7 @@ def run_plugin_gui() -> None:
 
     if mainWindow is None:
         interfaceManager = interface_manager.InterfaceManager()
-        pymolSessionManager = pymol_session_manager.PymolSessionManager()
+        pymolSessionManager = pymol_session_manager.PymolSessionManager(interfaceManager)
         mainWindow = interfaceManager.get_main_view()
         mainViewController = main_view_controller.MainViewController(interfaceManager, pymolSessionManager)
         # # Open the qss styles file and read in the css-alike styling code

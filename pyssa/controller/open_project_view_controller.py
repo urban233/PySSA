@@ -26,7 +26,7 @@ import os
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
-from pyssa.controller import interface_manager
+from pyssa.controller import interface_manager, pymol_session_manager
 from pyssa.gui.ui.styles import styles
 from pyssa.util import input_validator, constants
 

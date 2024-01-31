@@ -3,8 +3,6 @@ import os
 import pathlib
 import shutil
 import subprocess
-import platform
-
 import pymol
 
 from pymol import cmd
@@ -20,19 +18,16 @@ from pyssa.controller import results_view_controller, rename_protein_view_contro
     pymol_session_manager, hotspots_protein_regions_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
-from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
-    dialog_rename_protein, dialog_help
+from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
-from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
-from pyssa.internal.portal import graphic_operations, pymol_io
+from pyssa.internal.data_structures.data_classes import database_operation
+from pyssa.internal.portal import graphic_operations
 from pyssa.internal.thread import tasks, task_workers, database_thread
-from pyssa.io_pyssa import safeguard, filesystem_io, path_util
+from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers
 from pyssa.presenter import main_presenter_async
-from pyssa.util import constants, enums, exception, main_window_util, exit_codes, prediction_util, gui_utils, tools
+from pyssa.util import constants, enums, exit_codes, gui_utils, tools
 from pyssa.gui.ui.views import main_view
-from pyssa.gui.ui.views import open_project_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
     delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
@@ -113,7 +108,6 @@ class MainViewController:
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
         self._setup_statusbar()
-        self._alter_pymol_behaviour()
         self._connect_all_ui_elements_with_slot_functions()
 
     def _connect_all_ui_elements_with_slot_functions(self):
@@ -1185,12 +1179,14 @@ class MainViewController:
                 tmp_protein.get_molecule_object()
             ),
         )
-        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
+        if self._pymol_session_manager.is_the_current_protein_in_session():
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
+            self._view.ui.action_protein_regions.setEnabled(True)
         else:
             self._view.cb_chain_color.setEnabled(False)
             self._view.cb_chain_representation.setEnabled(False)
+            self._view.ui.action_protein_regions.setEnabled(False)
 
     def _open_protein_pymol_session(self):
         if not self._pymol_session_manager.is_the_current_session_empty():
