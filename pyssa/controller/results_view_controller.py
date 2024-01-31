@@ -35,8 +35,9 @@ class ResultsViewController(QtCore.QObject):
     def _connect_all_ui_elements_to_slot_functions(self):
         self._view.ui.btn_view_plots.clicked.connect(self._open_plot_view)
         self.cb_protein_pair_color.currentIndexChanged.connect(self.__slot_color_protein_pair)
-        #self._view.ui.btn_save_data.clicked.connect()
+        self._view.ui.btn_save_data.clicked.connect(self.__slot_export_data)
 
+    # <editor-fold desc="Util methods">
     def _build_table_widget(self):
         self.cb_protein_pair_color.currentIndexChanged.disconnect(self.__slot_color_protein_pair)
         self._view.ui.table_widget_results.clear()
@@ -75,12 +76,15 @@ class ResultsViewController(QtCore.QObject):
         self._view.ui.table_widget_results.resizeColumnToContents(0)
         self._view.ui.table_widget_results.resizeColumnToContents(1)
 
+    # </editor-fold>
+
     def _open_plot_view(self) -> None:
         tmp_dialog = plot_view.PlotView(self._protein_pair,
                                         self._interface_manager.get_current_project(),
                                         self._protein_pair)
         tmp_dialog.exec_()
 
+    # <editor-fold desc="Methods for coloring protein pair">
     def __slot_color_protein_pair(self) -> None:
         if self.cb_protein_pair_color.currentText().find("By RMSD") != -1:
             self._color_protein_pair_by_rmsd()
@@ -148,3 +152,18 @@ class ResultsViewController(QtCore.QObject):
             self._protein_pair.protein_2.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             self._protein_pair.protein_2.pymol_selection.color_selection(tmp_protein_2_colors[i])
             i += 1
+
+    # </editor-fold>
+
+    def __slot_export_data(self):
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(
+            self._view,
+            "Save distance data",
+            "",
+            "Tab-Separated Values (*.tsv)",
+        )
+        if file_path:
+            self._protein_pair.distance_analysis.analysis_results.export_distance_data_as_tsv(file_path)
