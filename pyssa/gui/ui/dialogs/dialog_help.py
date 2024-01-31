@@ -36,7 +36,7 @@ class DialogHelp(QtWidgets.QDialog):
     """This class opens a help dialog."""
 
     """This variable is for controlling whether the dialog opens or not"""
-    ERROR = False
+    _FINAL_ERROR = False
 
     def __init__(self, html_content: str, parent=None) -> None:  # noqa: ANN001
         """Constructor.

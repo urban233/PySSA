@@ -3,6 +3,8 @@ import os
 import pathlib
 import shutil
 import subprocess
+import platform
+
 import pymol
 
 from pymol import cmd
@@ -18,6 +20,12 @@ from pyssa.controller import results_view_controller, rename_protein_view_contro
     pymol_session_manager, hotspots_protein_regions_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
+from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
+from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
+    dialog_rename_protein, dialog_help
+from pyssa.internal.data_structures import project, settings, protein, protein_pair, chain
+from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
+from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import database_operation
@@ -150,7 +158,7 @@ class MainViewController:
 
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
-        self._view.ui.proteins_tree_view.clicked.connect(self._show_protein_information)
+        self._view.ui.proteins_tree_view.clicked.connect(self.__slot_show_protein_information)
         self._view.ui.btn_save_protein.clicked.connect(self._save_selected_protein_structure_as_pdb_file)
         self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
@@ -183,6 +191,7 @@ class MainViewController:
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
     def open_help(self):
+        os.startfile(r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html")
         # with open(
         #     r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html",
         #     "r",
@@ -192,7 +201,7 @@ class MainViewController:
         #     file.close()
         # tmp_dialog = dialog_help.DialogHelp(html_content)
         # tmp_dialog.exec_()
-        pass
+        # pass
 
     # </editor-fold>
 
@@ -375,65 +384,98 @@ class MainViewController:
             self._view,
             "Select a project file to import",
             "",
-            "XML Files (*.xml)",
+            "Project Database File (*.db)",
         )
         if file_path:
             file = QtCore.QFile(file_path)
             if not file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text):
                 print("Error: Cannot open file for reading")
                 return
-
-            tmp_project = project.Project()
-            handler = filesystem_io.ProjectParserHandler(tmp_project,
-                                                         self._interface_manager.get_application_settings())
-            parser = sax.make_parser()
-            parser.setContentHandler(handler)
-            parser.parse(file_path)
-            file.close()
-            tmp_project = handler.get_project()
-
-            tmp_project.set_workspace_path(self._workspace_path)
-            if len(tmp_project.proteins) <= 1:
-                if self._interface_manager.get_application_settings().wsl_install == 0:
-                    basic_boxes.ok(
-                        "Create new project",
-                        "Please install local colabfold to import this project!",
-                        QtWidgets.QMessageBox.Warning,
-                    )
-                    return
-                elif self._interface_manager.get_application_settings().local_colabfold == 0:  # noqa: RET505
-                    basic_boxes.ok(
-                        "Create new project",
-                        "Please install local colabfold to import this project!",
-                        QtWidgets.QMessageBox.Warning,
-                    )
-                    return
-            new_filepath = pathlib.Path(f"{self._workspace_path}/{tmp_project.get_project_name()}.xml")
-            tmp_project.serialize_project(new_filepath)
-            self._interface_manager.set_new_project(
-                self._interface_manager.get_current_project().deserialize_project(
-                    new_filepath, self._interface_manager.get_application_settings()
+            tmp_import_filepath = pathlib.Path(file_path)
+            tmp_project_name_input_dialog = QtWidgets.QInputDialog()
+            tmp_new_project_name = tmp_project_name_input_dialog.getText(
+                self._view,
+                "Project Name",
+                "Enter A Project Name:",
+                text=tmp_import_filepath.name.replace(".db", "")
+            )[0]
+            # Copy db file into new workspace
+            tmp_project_database_filepath = str(
+                pathlib.Path(
+                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_new_project_name}.db"
                 )
             )
-            constants.PYSSA_LOGGER.info(
-                f"Opening the project {self._interface_manager.get_current_project().get_project_name()}."
+            shutil.copyfile(file_path, tmp_project_database_filepath)
+            # Open db and create project
+            self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
+            self._database_thread.start()
+            self._database_manager.set_database_filepath(tmp_project_database_filepath)
+            self._database_manager.open_project_database()
+            self._database_manager.update_project_name(tmp_new_project_name)
+            tmp_project = self._database_manager.get_project_as_object(
+                tmp_new_project_name,
+                self._interface_manager.get_application_settings().workspace_path,
+                self._interface_manager.get_application_settings()
             )
-            self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
+            self._interface_manager.set_new_project(tmp_project)
+
             self._interface_manager.refresh_main_view()
-            basic_boxes.ok(
-                "Import Project",
-                "The project was successfully imported.",
-                QtWidgets.QMessageBox.Information,
-            )
+            self._pymol_session_manager.reinitialize_session()
+            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.update_status_bar("Importing project finished.")
+
+            # tmp_project = project.Project()
+            # handler = filesystem_io.ProjectParserHandler(tmp_project,
+            #                                              self._interface_manager.get_application_settings())
+            # parser = sax.make_parser()
+            # parser.setContentHandler(handler)
+            # parser.parse(file_path)
+            # file.close()
+            # tmp_project = handler.get_project()
+            #
+            # tmp_project.set_workspace_path(self._workspace_path)
+            # if len(tmp_project.proteins) <= 1:
+            #     if self._interface_manager.get_application_settings().wsl_install == 0:
+            #         basic_boxes.ok(
+            #             "Create new project",
+            #             "Please install local colabfold to import this project!",
+            #             QtWidgets.QMessageBox.Warning,
+            #         )
+            #         return
+            #     elif self._interface_manager.get_application_settings().local_colabfold == 0:  # noqa: RET505
+            #         basic_boxes.ok(
+            #             "Create new project",
+            #             "Please install local colabfold to import this project!",
+            #             QtWidgets.QMessageBox.Warning,
+            #         )
+            #         return
+            # new_filepath = pathlib.Path(f"{self._workspace_path}/{tmp_project.get_project_name()}.xml")
+            # tmp_project.serialize_project(new_filepath)
+            # self._interface_manager.set_new_project(
+            #     self._interface_manager.get_current_project().deserialize_project(
+            #         new_filepath, self._interface_manager.get_application_settings()
+            #     )
+            # )
+            # constants.PYSSA_LOGGER.info(
+            #     f"Opening the project {self._interface_manager.get_current_project().get_project_name()}."
+            # )
+            # self._view.ui.lbl_project_name.setText(self._interface_manager.get_current_project().get_project_name())
+            # self._interface_manager.refresh_main_view()
+            # basic_boxes.ok(
+            #     "Import Project",
+            #     "The project was successfully imported.",
+            #     QtWidgets.QMessageBox.Information,
+            # )
 
     def export_current_project(self) -> None:
         """Exports the current project to an importable format."""
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
-        file_path, _ = file_dialog.getSaveFileName(self._view, "Save current project", "", "XML Files (*.xml)")
+        file_path, _ = file_dialog.getSaveFileName(self._view, "Export current project", "", "Project Database File (*.db)")
         if file_path:
-            self._interface_manager.get_current_project().serialize_project(pathlib.Path(file_path))
+            shutil.copyfile(self._interface_manager.get_current_project().get_database_filepath(),
+                            file_path)
             basic_boxes.ok(
                 "Export Project",
                 "The project was successfully exported.",
@@ -1152,13 +1194,14 @@ class MainViewController:
             # </editor-fold>
 
         elif level == 1:
-            self.protein_context_menu.addAction(self._view.tr("Show sequence"))
+            tmp_show_sequence_action = self.protein_context_menu.addAction(self._view.tr("Show sequence"))
+            tmp_show_sequence_action.triggered.connect(self._show_protein_chain_sequence)
         elif level == 2:
             self.protein_context_menu.addAction(self._view.tr("Edit object"))
 
         self.protein_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
-    def _show_protein_information(self) -> None:
+    def __slot_show_protein_information(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
 
         if tmp_type == "protein":
@@ -1438,6 +1481,26 @@ class MainViewController:
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
         self._view.wait_spinner.stop()
+
+    def _show_protein_chain_sequence(self) -> None:
+        self.tmp_txt_browser = QtWidgets.QTextBrowser()
+        try:
+            tmp_chain: "chain.Chain" = self._interface_manager.get_current_protein_tree_index_object()
+            if tmp_chain.chain_sequence.sequence == "":
+                self.tmp_txt_browser.setText(
+                    "This chain is a non-protein chain."
+                )
+            else:
+                self.tmp_txt_browser.setText(
+                    tmp_chain.chain_sequence.sequence
+                )
+        except AttributeError:
+            return
+        else:
+            self.tmp_txt_browser.setWindowTitle("View Protein Sequence")
+            self.tmp_txt_browser.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+            self.tmp_txt_browser.resize(500, 150)
+            self.tmp_txt_browser.show()
 
     @staticmethod
     def update_scene() -> None:

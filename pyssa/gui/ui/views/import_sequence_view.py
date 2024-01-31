@@ -23,6 +23,7 @@
 import os
 import pymol
 from PyQt5.QtCore import pyqtSignal
+from PyQt5 import QtWidgets
 from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtCore
@@ -55,7 +56,6 @@ class ImportSequenceView(Qt.QtWidgets.QDialog):
         self.ui.btn_import_sequence.setEnabled(False)
         self.ui.txt_import_sequence.setEnabled(False)
         self.ui.btn_choose_fasta_file.clicked.connect(self.load_model)
-        self.ui.btn_cancel.clicked.connect(self.close_dialog)
         self.ui.btn_import_sequence.clicked.connect(self.import_sequence)
         #self.ui.txt_import_sequence.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
@@ -64,6 +64,10 @@ class ImportSequenceView(Qt.QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         styles.color_button_not_ready(self.ui.btn_import_sequence)
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
+        icon = self.style().standardIcon(pixmapi)
+        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setText("")
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         # # check internet connectivity

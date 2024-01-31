@@ -82,6 +82,7 @@ class MainView(QtWidgets.QMainWindow):
         # Sequences tab
         self.ui.btn_save_sequence.setEnabled(False)
         self.ui.btn_delete_sequence.setEnabled(False)
+        self.ui.seqs_list_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Proteins tab
         self.ui.btn_save_protein.setEnabled(False)
@@ -89,12 +90,14 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_open_protein_session.setEnabled(False)
         self.ui.btn_create_protein_scene.setEnabled(False)
         self.ui.btn_update_protein_scene.setEnabled(False)
+        self.ui.proteins_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Protein Pairs tab
         self.ui.btn_delete_protein_pair.setEnabled(False)
         self.ui.btn_open_protein_pair_session.setEnabled(False)
         self.ui.btn_create_protein_pair_scene.setEnabled(False)
         self.ui.btn_update_protein_pair_scene.setEnabled(False)
+        self.ui.protein_pairs_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
@@ -172,17 +175,17 @@ class MainView(QtWidgets.QMainWindow):
 
     def _create_all_tooltips(self) -> None:
         """Creates all tooltips for the gui elements."""
-        self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
+        # self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
         self.ui.seqs_table_widget.setToolTip("A table with additional information about the selected sequence")
         self.ui.btn_import_seq.setToolTip("Click to import an existing .fasta file")
         self.ui.btn_add_sequence.setToolTip("Click to add a sequence by pasting the sequence string")
         self.ui.btn_save_sequence.setToolTip("Click to save the selected sequence as .fasta file")
         self.ui.btn_delete_sequence.setToolTip("Click to delete the selected sequence from the project")
 
-        self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
-        self.ui.proteins_table_widget.setToolTip(
-            "A table with changeable PyMOL parameters for the currently active session"
-        )
+        # self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
+        # self.ui.proteins_table_widget.setToolTip(
+        #     "A table with changeable PyMOL parameters for the currently active session"
+        # )
         self.ui.btn_import_protein.setToolTip("Click to import an existing .pdb file")
         self.ui.btn_save_protein.setToolTip("Click to save the selected protein as .pdb file")
         self.ui.btn_delete_protein.setToolTip("Click to delete the selected protein from the project")
@@ -190,10 +193,10 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_create_protein_scene.setToolTip("Click to create a new PyMOL scene")
         self.ui.btn_update_protein_scene.setToolTip("Click to update the current scene in PyMOL")
 
-        self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
-        self.ui.protein_pairs_table_widget.setToolTip(
-            "A table with changeable PyMOL parameters for the currently active session"
-        )
+        # self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
+        # self.ui.protein_pairs_table_widget.setToolTip(
+        #     "A table with changeable PyMOL parameters for the currently active session"
+        # )
         self.ui.btn_delete_protein_pair.setToolTip("Click to delete the selected protein pair from the project")
         self.ui.btn_open_protein_pair_session.setToolTip("Click to open protein pair PyMOL session")
         self.ui.btn_create_protein_pair_scene.setToolTip("Click to create a new PyMOL scene")

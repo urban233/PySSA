@@ -1,100 +1,264 @@
-<!doctype html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PySSA - Homepage</title>
+
     <style>
-        html, body {
-          font-family: 'Calibri', sans-serif;
-          color: #3a3a3a;
-            font-size: large;
-        }
-
-        h1 {
-            font-weight: bold;
-        }
-
         body {
+            font-family: 'Helvetica Neue', Helvetica, Segoe UI, sans-serif;
+            margin: 0;
+            padding: 0;
             background-color: #ffffff;
+            padding-top: 125px; /* Adjust this value to match the height of your header */
+        }
+
+        header {
+            background-color: #ffffff;
+            color: #4B91F7;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000; /* Ensure the header is on top of other elements */
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #4B91F7;
+            margin: 0 15px;
+            cursor: pointer;
+        }
+
+        section {
+            max-width: 1000px;
+            margin: 0 auto 30px; /* Adjust the bottom margin */
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            color: #444444;
+        }
+
+        section .note-title {
+            font-size: 26px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        section .note-content {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 20px;
+            font-family: "Helvetica Neue", sans-serif;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 26px;
+            font-family: "Helvetica Neue", sans-serif;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #4B91F7;
+            color: #fff;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            /*position: fixed;*/
+            width: 100%;
+        }
+
+        footer p {
+            font-size: 14px;
         }
 
         a {
-            font-family: 'Calibri', sans-serif;
-            color: hotpink;
-            font-weight: bold;
+            color: #037aff;
+            text-decoration: none;
         }
 
-        /* mouse over link */
-        a:hover {
-            color: #3a3a3a;
+        /* My own css style */
+        .list-image-block {
+            position: relative;
+            display: flex;
+            align-items: center;
+            margin-bottom: 10em;
+        }
+        .list-image {
+            width: 70%;
+        }
+        .list-image-gif-background {
+            padding: 2em;
+          background-color: white;
+          display: inline-block;
+          border-radius: 1em;
+          margin-left: 3em;
+          box-shadow: 0px 13px 34px 0px rgba(0,0,0,0.12);
+        }
+        .list {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        h1 {
+            font-size: 34px;
+        }
+        ul {
+            font-size: 21px;
         }
     </style>
+
+    <style>
+    /* Container for the video preview */
+    .video-container {
+      position: relative;
+      width: 250px; /* Set the width of the preview window */
+    }
+
+    /* Style the video */
+    video {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Play button overlay */
+    .play-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1.7);
+      font-size: 24px;
+      cursor: pointer;
+      color: #404040;
+    }
+  </style>
+
 </head>
-
 <body>
-<div id="content" class="content">
-<h1 class="title">PySSA-ColabFold Communication Scheme</h1>
-<div id="table-of-contents" role="doc-toc">
-<h2>Table of Contents</h2>
-<div id="text-table-of-contents" role="doc-toc">
-<ul>
-<li><a href="#orga7ad776">1. ZeroMQ</a>
-<ul>
-<li><a href="#orgf427086">1.1. Request-Response Scheme</a></li>
-</ul>
-</li>
-<li><a href="#org8dd7447">2. PySSA Request</a>
-<ul>
-<li><a href="#org4f7ec3e">2.1. Content</a></li>
-</ul>
-</li>
-<li><a href="#org4ba1ddb">3. Colabfold Response</a>
-<ul>
-<li><a href="#org80ab481">3.1. Content</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
 
-<div id="outline-container-orga7ad776" class="outline-2">
-<h2 id="orga7ad776"><span class="section-number-2">1.</span> ZeroMQ</h2>
-<div class="outline-text-2" id="text-1">
-</div>
-<div id="outline-container-orgf427086" class="outline-3">
-<h3 id="orgf427086"><span class="section-number-3">1.1.</span> Request-Response Scheme</h3>
-</div>
-</div>
+    <header>
+        <h1>PySSA - Help</h1>
+        <nav>
+            <a href="create_new_project.html">Project Management</a>
+            <a href="#bugfixes">Bug fixes</a>
+            <a href="#known_issues">Known issues</a>
+            <a href="#support">Support</a>
+        </nav>
+    </header>
 
-<div id="outline-container-org8dd7447" class="outline-2">
-<h2 id="org8dd7447"><span class="section-number-2">2.</span> PySSA Request</h2>
-<div class="outline-text-2" id="text-2">
-</div>
-<div id="outline-container-org4f7ec3e" class="outline-3">
-<h3 id="org4f7ec3e"><span class="section-number-3">2.1.</span> Content</h3>
-<div class="outline-text-3" id="text-2-1">
-<ul class="org-ul">
-<li>FASTA files</li>
-</ul>
-</div>
-</div>
-</div>
+    <section>
+        <h1>Overview Sequences Tab</h1>
+        <p>
+            The <i>Sequences</i> tab stores all sequences of the project.
+            Here you can import sequences from existing FASTA files or adding new sequences by
+            copying and pasting the new sequence in the text box.
+            For every sequence the name and the actual sequence can be displayed. The name of the
+            sequence can also be changed.
+            It is also possible to delete an existing sequence or save it as .fasta file.
+        </p>
+    </section>
 
-<div id="outline-container-org4ba1ddb" class="outline-2">
-<h2 id="org4ba1ddb"><span class="section-number-2">3.</span> Colabfold Response</h2>
-<div class="outline-text-2" id="text-3">
-</div>
-<div id="outline-container-org80ab481" class="outline-3">
-<h3 id="org80ab481"><span class="section-number-3">3.1.</span> Content</h3>
-<div class="outline-text-3" id="text-3-1">
-<ul class="org-ul">
-<li>PDB files</li>
-</ul>
-</div>
-</div>
-</div>
-</div>
-<div id="postamble" class="status">
-<p class="date">Created: 2024-01-27 Sa 16:02</p>
-<p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
-</div>
+    <section>
+        <div id="features">
+            <h1>How To ...</h1>
+            <div class="list">
+                <ul>
+                    <li>
+                        <a href="#bugfixes"> ... display additional information about a sequence.</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="bugfixes">
+        <div class="note-title">
+            <h1>How to display additional information about a sequence.</h1>
+            <p>
+                To display additional information about a sequence, select a sequence from the list.
+                After clicking on the sequence the information will pop up in the table on the right side.
+            </p>
+
+            <div class="video-container" onclick="openVideoInNewTab('show_seq_info.mp4')">
+              <!-- Video element -->
+              <video controls>
+                <source src="show_seq_info.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+
+              <!-- Play button overlay -->
+              <div class="play-button">&#9654;</div>
+            </div>
+
+            <script>
+              function openVideoInNewTab(videoUrl) {
+                // Open the video in a new tab
+                window.open(videoUrl, '_blank');
+              }
+            </script>
+        </div>
+    </section>
+
+    <section id="known_issues">
+        <div class="note-title">
+            <h1>Known issues</h1>
+            <p class="note-date" style="color: #4B91F7; font-size: 24px">What's new in <b>v0.9.71</b></p>
+            <ul>
+                <li>Structure prediction does not work on every computer</li>
+                <li>The first structure prediction fails after updating the ColabFold <b>---Workaround---></b> Run the first prediction until it fails,
+                and then you should be able to run your prediction like before the update.</li>
+            </ul>
+        </div>
+        <div class="list-image">
+            <div class="list-image-gif-background">
+                <img src="show_seq_info.gif" alt="gif which shows rename animation" width="100%">
+            </div>
+        </div>
+    </section>
+
+
+    <section id="support">
+        <div class="note-title">
+            <h1>Support</h1>
+            <p>
+                If you run into any issues using PySSA, write an email or open an issue on GitHub. Be aware that we can only deliver support if a log file is available.
+                The log files can be accessed through the "Settings" menu.
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2024 PySSA - Help - Hannah Kullik & Martin Urban
+    </footer>
+
 </body>
 </html>

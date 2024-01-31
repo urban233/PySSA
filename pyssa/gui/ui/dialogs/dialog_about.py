@@ -63,13 +63,13 @@ class DialogAbout(QtWidgets.QDialog):
         tmp_table_model.setHorizontalHeaderLabels(["Name", "Version", "License"])
         # Sample data
         data = [
-            ["Biopython", "1.78", "Open Source"],
-            ["Matplotlib", "3.8.0", "Open Source"],
-            ["Numpy", "1.26.2", "Open Source"],
-            ["Pandas", "2.1.1", "Open Source"],
-            ["PyQt5", "5.15.10", "Open Source"],
-            ["SQLite", "3.41.2", "Open Source"],
-            ["PyMOL Open-Source", "2.5.0", "Open Source"]
+            ["Biopython", "1.78", "BSD 3-Clause License"],
+            ["Matplotlib", "3.8.0", "Python Software Foundation License (PSF)"],
+            ["Numpy", "1.26.2", "BSD 3-Clause 'New' or 'Revised' License"],
+            ["Pandas", "2.1.1", "BSD 3-Clause 'New' or 'Revised' License"],
+            ["PyQt5", "5.15.10", "GNU General Public License (GPL)"],
+            ["SQLite", "3.41.2", "Public Domain"],
+            ["PyMOL Open-Source", "2.5.0", "BSD-like license"]
         ]
 
         # Populate the model with data

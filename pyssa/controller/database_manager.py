@@ -1001,3 +1001,12 @@ class DatabaseManager:
         """
         self._cursor.execute(sql, (the_new_seq_name, the_old_seq_name, the_sequence))
         self._connection.commit()
+
+    def update_project_name(self, the_new_project_name: str):
+        sql = """
+            UPDATE Project 
+            SET name = ?
+            WHERE id = ?
+        """
+        self._cursor.execute(sql, (the_new_project_name, 1))
+        self._connection.commit()

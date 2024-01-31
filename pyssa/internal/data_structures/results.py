@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the results class."""
+import csv
 import pathlib
 from xml.etree import ElementTree
 import logging
@@ -105,6 +106,34 @@ class DistanceAnalysisResults:
                 ),
                 tmp_interesting_reg[1],
             )
+
+    def export_distance_data_as_tsv(self, a_filepath):
+        tmp_data_to_write = np.transpose([
+            self.distance_data["index"],
+            self.distance_data["ref_chain"],
+            self.distance_data["ref_pos"],
+            self.distance_data["ref_resi"],
+            self.distance_data["model_chain"],
+            self.distance_data["model_pos"],
+            self.distance_data["model_resi"],
+            self.distance_data["distance"],
+        ])
+        # Writing to the TSV file
+        with open(a_filepath, mode='w', newline='', encoding='utf-8') as tsv_file:
+            tsv_writer = csv.writer(tsv_file, delimiter='\t')
+            # Write the header
+            tsv_writer.writerow([
+                    "Residue_Pair_No",
+                    "Protein_1_Chain",
+                    "Protein_1_Position",
+                    "Protein_1_Residue",
+                    "Protein_2_Chain",
+                    "Protein_2_Position",
+                    "Protein_2_Residue",
+                    "Distance"
+            ])
+            # Write the data to the TSV file
+            tsv_writer.writerows(tmp_data_to_write)
 
     def serialize_distance_analysis_results(self, tmp_distance_analysis) -> None:  # noqa: ANN001
         """Serializes the distance analysis results object."""
