@@ -313,7 +313,7 @@ class InterfaceManager:
             self._main_view.ui.action_preview_image.setEnabled(True)
             self._main_view.ui.action_ray_tracing_image.setEnabled(True)
             self._main_view.ui.action_simple_image.setEnabled(True)
-            self._main_view.ui.action_protein_regions.setEnabled(True)
+            self._main_view.ui.action_protein_regions.setEnabled(False)
             self._main_view.ui.project_tab_widget.setCurrentIndex(0)
         else:
             # No project is open

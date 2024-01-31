@@ -65,6 +65,7 @@ class MainViewController:
     """
     _interface_manager: "interface_manager.InterfaceManager"
 
+    """A manager for the pymol session."""
     _pymol_session_manager: "pymol_session_manager.PymolSessionManager"
 
     """
@@ -1196,6 +1197,7 @@ class MainViewController:
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
         try:
             self._pymol_session_manager.load_protein_session(tmp_protein)
+            self._view.ui.action_protein_regions.setEnabled(False)
         except RuntimeError:
             logger.error("The protein name could not be found in the object list in PyMOL!")
             self._view.cb_chain_color.setEnabled(False)
@@ -1203,6 +1205,7 @@ class MainViewController:
         else:
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
+            self._view.ui.action_protein_regions.setEnabled(True)
             logger.info("Successfully opened protein session.")
 
     def _change_chain_color_proteins(self) -> None:
