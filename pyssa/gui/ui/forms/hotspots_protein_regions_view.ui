@@ -75,17 +75,17 @@
       </spacer>
      </item>
      <item>
-      <widget class="QComboBox" name="cb_disulfide_bonds">
-       <item>
-        <property name="text">
-         <string>Hide</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Show</string>
-        </property>
-       </item>
+      <widget class="QPushButton" name="btn_disulfide_bonds_show">
+       <property name="text">
+        <string>Show</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btn_disulfide_bonds_hide">
+       <property name="text">
+        <string>Hide</string>
+       </property>
       </widget>
      </item>
     </layout>
@@ -139,7 +139,7 @@
      <item>
       <widget class="QPushButton" name="btn_help">
        <property name="text">
-        <string>Info</string>
+        <string>Help</string>
        </property>
       </widget>
      </item>

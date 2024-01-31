@@ -48,8 +48,6 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_help.setIcon(icon)
         self.ui.btn_help.setText("")
-        self.ui.cb_disulfide_bonds.setMinimumWidth(80)
-        self.ui.cb_disulfide_bonds.setMaximumWidth(80)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Protein Regions")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

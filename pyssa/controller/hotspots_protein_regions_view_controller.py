@@ -21,15 +21,11 @@
 #
 """Module for the Hotspots Dialog."""
 
-import glob
-import os
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
 from pymol import cmd
 
 from pyssa.controller import interface_manager
-from pyssa.gui.ui.styles import styles
-from pyssa.util import input_validator, constants, session_util
+from pyssa.util import session_util
 
 
 class OpenProjectViewController(QtCore.QObject):
@@ -41,18 +37,15 @@ class OpenProjectViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_hotspots_protein_regions_view()
         self._connect_all_ui_elements_to_slot_functions()
+        self._the_protein_name: str = the_interface_manager.get_current_protein_tree_index_object().get_molecule_object()
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
-        self._view.ui.btn_sticks_hide.clicked.connect(self.hide_resi_sticks)
         self._view.ui.btn_sticks_show.clicked.connect(self.show_resi_sticks)
+        self._view.ui.btn_sticks_hide.clicked.connect(self.hide_resi_sticks)
+        self._view.ui.btn_disulfide_bonds_show.clicked.connect(self.show_disulfide_bonds)
+        self._view.ui.btn_disulfide_bonds_hide.clicked.connect(self.hide_disulfide_bonds)
         self._view.ui.btn_position_zoom.clicked.connect(self.zoom_resi_position)
-        self._view.ui.cb_disulfide_bonds.currentIndexChanged.connect(self.show_hide_disulfide_bonds)
-        # self._view.ui.btn_info.clicked.connect()
-
-    def hide_resi_sticks(self) -> None:
-        """Hides the balls and sticks representation of the pymol selection."""
-        session_util.check_if_sele_is_empty()
-        cmd.hide(representation="sticks", selection="sele")
+        # self._view.ui.btn_help.clicked.connect()
 
     def show_resi_sticks(self) -> None:
         """Shows the pymol selection as sticks."""
@@ -62,27 +55,31 @@ class OpenProjectViewController(QtCore.QObject):
         cmd.color(color="atomic", selection="sele and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
 
-    def show_hide_disulfide_bonds(self) -> None:
-        """Shows and hide all disulfid bonds within the pymol session."""
-        # hide disulfid bonds
-        if self._view.ui.cb_disulfide_bonds.currentText("hide"):
-            tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
-            cmd.select(
-                name="disulfides",
-                selection=f"{self._view.ui.box_manage_choose_protein.currentText()} & {tmp_pymol_selection_option}",
-            )
-            cmd.hide("sticks", "disulfides")
-        else:
-            # show disulfid bonds
-            tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
-            cmd.select(
-                name="disulfides",
-                selection=f"{self._view.ui.box_manage_choose_protein.currentText()} & {tmp_pymol_selection_option}",
-            )
-            cmd.color(color="atomic", selection="disulfides and not elem C")
-            cmd.set("valence", 0)  # this needs to be better implemented
-            cmd.show("sticks", "disulfides")
-            cmd.hide("sticks", "elem H")
+    def hide_resi_sticks(self) -> None:
+        """Hides the balls and sticks representation of the pymol selection."""
+        session_util.check_if_sele_is_empty()
+        cmd.hide(representation="sticks", selection="sele")
+
+    def show_disulfide_bonds(self) -> None:
+        """Shows all disulfid bonds within the pymol session."""
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+        cmd.select(
+            name="disulfides",
+            selection=f"{self._the_protein_name} & {tmp_pymol_selection_option}",
+        )
+        cmd.color(color="atomic", selection="disulfides and not elem C")
+        cmd.set("valence", 0)  # this needs to be better implemented
+        cmd.show("sticks", "disulfides")
+        cmd.hide("sticks", "elem H")
+
+    def hide_disulfide_bonds(self) -> None:
+        """Hides all disulfid bonds within the pymol session."""
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+        cmd.select(
+            name="disulfides",
+            selection=f"{self._the_protein_name} & {tmp_pymol_selection_option}",
+        )
+        cmd.hide("sticks", "disulfides")
 
     def zoom_resi_position(self) -> None:
         """Zooms to the pymol selection."""
