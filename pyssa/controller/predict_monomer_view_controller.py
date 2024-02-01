@@ -188,7 +188,7 @@ class PredictMonomerViewController(QtCore.QObject):
                         self._view.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
                     )
             if self._view.ui.list_pred_analysis_mono_ref_chains.count() == 0:
-                tmp_protein = self._current_project.search_protein(
+                tmp_protein = self._interface_manager.get_current_project().search_protein(
                     self._view.ui.box_pred_analysis_mono_prot_struct_1.currentText(),
                 )
                 for tmp_chain in tmp_protein.chains:
@@ -875,7 +875,7 @@ class PredictMonomerViewController(QtCore.QObject):
                     self._view.ui.table_pred_analysis_mono_prot_to_predict.item(i, 0).text(),
                 )
         if self._view.ui.list_pred_analysis_mono_model_chains.count() == 0:
-            tmp_protein = self._current_project.search_protein(
+            tmp_protein = self._interface_manager.get_current_project().search_protein(
                 self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText(),
             )
             for tmp_chain in tmp_protein.chains:
@@ -1002,7 +1002,7 @@ class PredictMonomerViewController(QtCore.QObject):
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         self._view.ui.list_pred_analysis_mono_ref_chains.setEnabled(True)
 
-        # tmp_protein = self._current_project.search_protein(self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText())
+        # tmp_protein = self._interface_manager.get_current_project().search_protein(self._view.ui.box_pred_analysis_mono_prot_struct_2.currentText())
         # for tmp_chain in tmp_protein.chains:
         #     if tmp_chain.chain_type == "protein_chain":
         #         self._view.ui.list_pred_analysis_mono_ref_chains.addItem(tmp_chain.chain_letter)
