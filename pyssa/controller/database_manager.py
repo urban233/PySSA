@@ -396,7 +396,7 @@ class DatabaseManager:
     # </editor-fold>
 
     # <editor-fold desc="Protein pair object inserts">
-    def insert_new_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair"):
+    def insert_new_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair") -> int:
         """Inserts a new protein pair in the project database.
 
         Note:
@@ -440,6 +440,7 @@ class DatabaseManager:
         )
         self._insert_distance_data_records(tmp_distance_analysis_results_id,
                                            a_protein_pair.distance_analysis.analysis_results.distance_data)
+        return tmp_protein_pair_id
 
     def _insert_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair") -> int:
         sql = """   INSERT INTO ProteinPair(protein_1_id, protein_2_id, pymol_session, project_id, name)

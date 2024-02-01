@@ -505,7 +505,6 @@ class MainViewController:
                 self._interface_manager.get_current_project(),
                 self._interface_manager.get_application_settings(),
                 tmp_checkbox_state,
-                self._database_thread
             ),
             post_func=self.post_analysis_process,
         )
@@ -638,7 +637,6 @@ class MainViewController:
                     self._interface_manager.get_current_project(),
                     self._interface_manager.get_application_settings(),
                     self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
-                    self._database_thread
                 ),
                 post_func=self.post_analysis_process,
             )

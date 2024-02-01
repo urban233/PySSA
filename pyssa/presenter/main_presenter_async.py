@@ -448,7 +448,6 @@ def run_distance_analysis(
     a_project: "project.Project",
     the_settings: "settings.Settings",
     an_make_images_flag: bool,
-    the_database_thread: "database_thread.DatabaseThread",
 ) -> tuple:
     """Runs the distance analysis for all protein pairs in the given job.
 
@@ -472,19 +471,17 @@ def run_distance_analysis(
         )
         logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
         analysis_runs.run_analysis("distance", an_make_images_flag)
-        # tmp_database_manager = database_manager.DatabaseManager(str(a_project.get_database_filepath()))
-        # tmp_database_manager.set_application_settings(the_settings)
-        # tmp_database_manager.open_project_database()
         logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
         for tmp_protein_pair in analysis_runs.analysis_list:
             tmp_protein_pair.db_project_id = a_project.get_id()
             copy_tmp_protein_pair = copy.deepcopy(tmp_protein_pair)
-            the_database_thread.put_database_operation_into_queue(
-                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN_PAIR,
-                                                     (0, copy_tmp_protein_pair))
-            )
-            #tmp_database_manager.insert_new_protein_pair(tmp_protein_pair)
-        #tmp_database_manager.close_project_database()
+            with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
+                db_manager.open_project_database()
+                copy_tmp_protein_pair.set_id(db_manager.insert_new_protein_pair(copy_tmp_protein_pair))
+                db_manager.close_project_database()
+            # Protein pair gets added to "a_project" argument of this function
+            a_project.add_protein_pair(copy_tmp_protein_pair)
+
     except exception.UnableToSetupAnalysisError:
         logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
         return (

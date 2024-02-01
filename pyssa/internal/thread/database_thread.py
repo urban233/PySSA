@@ -83,7 +83,7 @@ class DatabaseThread(threading.Thread):
     @staticmethod
     def __wrapper_insert_new_protein_pair(the_db_manager, the_buffered_data: tuple):
         _, tmp_protein_pair = the_buffered_data
-        the_db_manager.insert_new_protein_pair(tmp_protein_pair)
+        the_db_manager.insert_new_protein_pair(the_buffered_data[1])
 
     @staticmethod
     def __wrapper_delete_existing_protein_pair(the_db_manager, the_buffered_data: tuple):
