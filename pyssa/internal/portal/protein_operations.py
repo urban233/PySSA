@@ -154,6 +154,11 @@ def get_protein_sequences_from_protein(molecule_object: str, chains: list[chain.
     return protein_sequences
 
 
+def get_chain_letter_of_first_protein_sequence(chains: list[chain.Chain]):
+    tmp_protein_chains = protein_util.filter_chains_for_protein_chains(chains)
+    return tmp_protein_chains[0].chain_letter
+
+
 def get_protein_sequence_length_from_protein(a_protein: "protein.Protein") -> int:
     """Gets the length of the protein sequence.
 

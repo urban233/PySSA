@@ -191,7 +191,11 @@ class MainViewController:
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
     def open_help(self):
-        os.startfile(r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html")
+        tmp_filepath_exe: str = f"{constants.PLUGIN_EXTRA_TOOLS_PATH}\\main.exe"
+        tmp_filepath_index_html = str(pathlib.Path(f"{constants.PLUGIN_DOCS_PATH}/index.html"))
+        subprocess.Popen([tmp_filepath_exe, tmp_filepath_index_html])
+
+        #os.startfile(r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\sequences_tab.html")
         # with open(
         #     r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html",
         #     "r",

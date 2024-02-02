@@ -39,7 +39,7 @@ from pyssa.internal.data_structures.data_classes import (
     prediction_configuration,
     current_session, database_operation,
 )
-from pyssa.internal.portal import pymol_io, graphic_operations
+from pyssa.internal.portal import pymol_io, graphic_operations, protein_operations
 from pyssa.internal.thread import database_thread
 from pyssa.io_pyssa import path_util, filesystem_io, bio_data
 from pyssa.logging_pyssa import log_handlers
@@ -611,16 +611,21 @@ def check_chains_for_analysis(the_protein_1_name: str, the_protein_2_name: str, 
     """
     # TODO: checks needed
     # TODO: tests needed
-    # fixme: The function does not check if the only chain is really a protein chain, this should be done better!
     tmp_is_only_one_chain: bool = False
     tmp_analysis_run_name: str = ""
     tmp_protein_1 = a_project.search_protein(the_protein_1_name)
     tmp_protein_2 = a_project.search_protein(the_protein_2_name)
-    if len(tmp_protein_1.chains) == 1 and len(tmp_protein_2.chains):
+    if len(tmp_protein_1.get_protein_sequences()) == 1: # or len(tmp_protein_2.get_protein_sequences()) == 1:
         tmp_is_only_one_chain = True
+        tmp_protein_1_first_protein_chain_letter = protein_operations.get_chain_letter_of_first_protein_sequence(
+            tmp_protein_1.chains
+        )
+        tmp_protein_2_first_protein_chain_letter = protein_operations.get_chain_letter_of_first_protein_sequence(
+            tmp_protein_2.chains
+        )
         tmp_analysis_run_name = (
-            f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1.chains[0].chain_letter}"
-            f"_vs_{tmp_protein_2.get_molecule_object()};{tmp_protein_2.chains[0].chain_letter}"
+            f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1_first_protein_chain_letter}"
+            f"_vs_{tmp_protein_2.get_molecule_object()};{tmp_protein_2_first_protein_chain_letter}"
         )
     return ("result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2)
 

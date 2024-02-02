@@ -30,6 +30,8 @@ from pyssa.util import globals
 PLUGIN_NAME = "PySSA"
 PLUGIN_PATH = globals.g_plugin_path
 PLUGIN_ROOT_PATH = globals.g_plugin_root_path
+PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/extra_tools/"))
+PLUGIN_DOCS_PATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/docs/pyssa-documentation/site"))
 PLUGIN_LOGO_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))
 PLUGIN_LOGO_WITH_FONT_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/graphical_abstract_pyssa.png"))
 VERSION_NUMBER = "v0.9.76"

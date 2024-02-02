@@ -1,36 +1,24 @@
-from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QHBoxLayout, QWidget
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-import sys
+from selenium import webdriver
 
+def open_webpage(url, driver=None):
+    if not driver:
+        driver = webdriver.Chrome()  # You can use other browsers by specifying the appropriate webdriver
 
-class HelpDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.initUI()
-
-    def initUI(self):
-        self.setGeometry(100, 100, 700, 800)
-        self.setWindowTitle('My PyQt Help System')
-        central_layout = QVBoxLayout(self)
-        self.browser = QWebEngineView()
-        central_layout.addWidget(self.browser)
-
-    def loadHelpContent(self, content_path):
-        with open(content_path, 'r', encoding='utf-8') as file:
-            html_content = file.read()
-
-        self.browser.setHtml(html_content)
+    driver.get(url)
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    helpDialog = HelpDialog()
-    helpDialog.loadHelpContent(r'C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html')
+    # Example usage:
+    url1 = "https://example.com/page1"
+    url2 = "https://example.com/page2"
 
-    # You can show the dialog using exec_() or show()
-    # helpDialog.exec_()  # If you want a modal dialog
-    helpDialog.show()
+    driver = None
 
-    sys.exit(app.exec_())
+    open_webpage(url1, driver)
+    # Do something with the first tab
 
+    open_webpage(url2, driver)
+    # Continue working with the same tab, now on a different subpage
+
+    # Close the browser when done
+    driver.quit()
 
