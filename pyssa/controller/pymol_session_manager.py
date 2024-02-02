@@ -75,6 +75,20 @@ class PymolSessionManager:
         else:
             return False
 
+    def is_the_current_protein_pair_in_session(self) -> bool:
+        """Checks if the current protein pair is in the session."""
+        if self._interface_manager.get_current_protein_pair_tree_index_object() == "protein":
+            tmp_protein_pair_name: str = self._interface_manager.get_current_protein_pair_tree_index().get_molecule_object()
+        elif self._interface_manager.get_current_protein_pair_tree_index_type() == "chain":
+            tmp_protein_pair_name: str = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index().get_molecule_object()
+        else:
+            raise ValueError("Unknown type!")
+
+        if self.session_object_type == "protein" and self.session_name == tmp_protein_pair_name:
+            return True
+        else:
+            return False
+
     @staticmethod
     def _check_session_integrity(a_protein_name) -> bool:
         """Checks if the current session is consistent with the manager."""
