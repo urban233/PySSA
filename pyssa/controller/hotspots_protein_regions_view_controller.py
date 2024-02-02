@@ -28,7 +28,7 @@ from pyssa.controller import interface_manager
 from pyssa.util import session_util
 
 
-class OpenProjectViewController(QtCore.QObject):
+class HotspotsProteinRegionsViewController(QtCore.QObject):
     """Class for the Hotspots Protein Regions View Controller."""
     return_value = QtCore.pyqtSignal(str)
 
@@ -37,7 +37,14 @@ class OpenProjectViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_hotspots_protein_regions_view()
         self._connect_all_ui_elements_to_slot_functions()
-        self._the_protein_name: str = the_interface_manager.get_current_protein_tree_index_object().get_molecule_object()
+        self._protein_name: str = self._get_protein_name_from_tree_view()
+
+    def _get_protein_name_from_tree_view(self):
+        """Checks if the object is a protein or a chain."""
+        if self._interface_manager.get_current_protein_tree_index_type() == "protein":
+            return self._interface_manager.get_current_protein_tree_index_object().get_molecule_object()
+        else:
+            return self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.btn_sticks_show.clicked.connect(self.show_resi_sticks)
@@ -65,7 +72,7 @@ class OpenProjectViewController(QtCore.QObject):
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         cmd.select(
             name="disulfides",
-            selection=f"{self._the_protein_name} & {tmp_pymol_selection_option}",
+            selection=f"{self._protein_name} & {tmp_pymol_selection_option}",
         )
         cmd.color(color="atomic", selection="disulfides and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
@@ -77,7 +84,7 @@ class OpenProjectViewController(QtCore.QObject):
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         cmd.select(
             name="disulfides",
-            selection=f"{self._the_protein_name} & {tmp_pymol_selection_option}",
+            selection=f"{self._protein_name} & {tmp_pymol_selection_option}",
         )
         cmd.hide("sticks", "disulfides")
 

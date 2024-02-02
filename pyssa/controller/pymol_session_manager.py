@@ -66,6 +66,7 @@ class PymolSessionManager:
         if self._interface_manager.get_current_protein_tree_index_type() == "protein":
             tmp_protein_name: str = self._interface_manager.get_current_protein_tree_index_object().get_molecule_object()
         elif self._interface_manager.get_current_protein_tree_index_type() == "chain":
+            # Fixme: problems exists by get_molecule_object()
             tmp_protein_name: str = self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
         else:
             raise ValueError("Unknown type!")

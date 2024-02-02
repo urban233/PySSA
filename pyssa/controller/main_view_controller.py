@@ -73,7 +73,9 @@ class MainViewController:
     """
     _interface_manager: "interface_manager.InterfaceManager"
 
-    """A manager for the pymol session."""
+    """
+    A manager for the pymol session.
+    """
     _pymol_session_manager: "pymol_session_manager.PymolSessionManager"
 
     """
@@ -798,7 +800,7 @@ class MainViewController:
 
     # <editor-fold desc="Hotspots">
     def _hotspots_protein_regions(self) -> None:
-        self._external_controller = hotspots_protein_regions_view_controller.OpenProjectViewController(self._interface_manager)
+        self._external_controller = hotspots_protein_regions_view_controller.HotspotsProteinRegionsViewController(self._interface_manager)
         self._interface_manager.get_hotspots_protein_regions_view().show()
         self._pymol_session_manager.show_sequence_view()
 
@@ -1223,6 +1225,7 @@ class MainViewController:
                 tmp_protein.get_molecule_object()
             ),
         )
+        # protein in session
         if self._pymol_session_manager.is_the_current_protein_in_session():
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
@@ -1548,6 +1551,17 @@ class MainViewController:
                 self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole
         )
         self._view.status_bar.showMessage(f"Active PyMOL Object: {tmp_current_active_obj}")
+
+        # protein pair in session
+        # TODO: This must be tested, when a project have a protein pair!
+        if self._pymol_session_manager.is_the_current_protein_pair_in_session():
+            self._view.cb_chain_color.setEnabled(True)
+            self._view.cb_chain_representation.setEnabled(True)
+            self._view.ui.action_protein_regions.setEnabled(True)
+        else:
+            self._view.cb_chain_color.setEnabled(False)
+            self._view.cb_chain_representation.setEnabled(False)
+            self._view.ui.action_protein_regions.setEnabled(False)
 
     def _open_protein_pair_pymol_session(self):
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
