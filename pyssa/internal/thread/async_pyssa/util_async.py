@@ -26,7 +26,7 @@ def open_documentation_on_certain_page(
         try:
             os.chdir(constants.PLUGIN_DOCS_PATH)
             subprocess.Popen(['C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Scripts\mkdocs.exe', 'serve'])
-            subprocess.Popen([f"{constants.PLUGIN_EXTRA_TOOLS_PATH}\\browser.exe"])
+            subprocess.Popen([r"C:\ProgramData\pyssa\extra_tools\browser.exe"])
         except subprocess.CalledProcessError as e:
             print(f"Error starting mkdocs serve: {e}")
 
