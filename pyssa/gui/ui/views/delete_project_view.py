@@ -39,9 +39,11 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.ui = auto_delete_project_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
+        self.resize(450, 600)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
+        self.ui.lbl_delete_status_search.setText("")
         self.ui.list_delete_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)

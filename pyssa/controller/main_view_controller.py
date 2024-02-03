@@ -4,9 +4,9 @@ import pathlib
 import shutil
 import subprocess
 import platform
-
+import zmq
 import pymol
-
+import pygetwindow as gw
 from pymol import cmd
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
@@ -16,6 +16,7 @@ from Bio import SeqRecord
 from Bio import SeqIO
 from xml import sax
 
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
@@ -118,6 +119,7 @@ class MainViewController:
 
         self._setup_statusbar()
         self._connect_all_ui_elements_with_slot_functions()
+        self._init_context_menus()
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_new_project.triggered.connect(self._create_project)
@@ -141,7 +143,7 @@ class MainViewController:
         self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
         self._view.ui.action_show_log_in_explorer.triggered.connect(self.open_logs)
         self._view.ui.action_clear_logs.triggered.connect(self.clear_all_log_files)
-        self._view.ui.action_documentation.triggered.connect(self.open_documentation)
+        self._view.ui.action_documentation.triggered.connect(self._open_help_center)
         self._view.ui.action_tutorials.triggered.connect(self.open_tutorial)
         self._view.ui.action_about.triggered.connect(self.open_about)
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
@@ -154,7 +156,7 @@ class MainViewController:
         self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
-        self._view.ui.btn_help.clicked.connect(self.open_help)
+        self._view.ui.btn_help.clicked.connect(self._open_sequences_tab_help)
 
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
@@ -190,22 +192,65 @@ class MainViewController:
         """Sets up the status bar and fills it with the current workspace."""
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
-    def open_help(self):
-        tmp_filepath_exe: str = f"{constants.PLUGIN_EXTRA_TOOLS_PATH}\\main.exe"
-        tmp_filepath_index_html = str(pathlib.Path(f"{constants.PLUGIN_DOCS_PATH}/index.html"))
-        subprocess.Popen([tmp_filepath_exe, tmp_filepath_index_html])
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
 
-        #os.startfile(r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\sequences_tab.html")
-        # with open(
-        #     r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html",
-        #     "r",
-        #     encoding="utf-8",
-        # ) as file:
-        #     html_content = file.read()
-        #     file.close()
-        # tmp_dialog = dialog_help.DialogHelp(html_content)
-        # tmp_dialog.exec_()
-        # pass
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.start_wait_spinner()
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _init_context_menus(self):
+        # <editor-fold desc="General context menu setup">
+        self.context_menu = QtWidgets.QMenu()
+        self.help_context_action = self.context_menu.addAction(self._view.tr("Get Help"))
+        self.help_context_action.triggered.connect(self._open_sequences_tab_help)
+
+        # </editor-fold>
+
+        # Set the context menu for the buttons
+        self._view.ui.seqs_list_view.setContextMenuPolicy(3)
+        self._view.ui.seqs_list_view.customContextMenuRequested.connect(self._show_context_menu_for_seq_list)
+        self._view.ui.seqs_table_widget.setContextMenuPolicy(3)
+        self._view.ui.seqs_table_widget.customContextMenuRequested.connect(self._show_context_menu_for_seq_table)
+        self._view.ui.btn_import_seq.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
+        self._view.ui.btn_import_seq.customContextMenuRequested.connect(self._show_context_menu_for_seq_import)
+        # add more buttons here ...
+
+    def _open_help_center(self):
+        self.open_help("help/")
+
+    def _open_sequences_tab_help(self):
+        self.open_help("help/sequences/sequences_tab/")
+
+    def _open_sequence_import_help(self):
+        self.open_help("help/sequences/sequence_import/")
+
+    def _show_context_menu_for_seq_list(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_sequences_tab_help)
+        self.context_menu.exec_(self._view.ui.seqs_list_view.mapToGlobal(a_point))
+
+    def _show_context_menu_for_seq_table(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_help_center)
+        self.context_menu.exec_(self._view.ui.seqs_table_widget.mapToGlobal(a_point))
+
+    def _show_context_menu_for_seq_import(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_sequence_import_help)
+        self.context_menu.exec_(self._view.ui.btn_import_seq.mapToGlobal(a_point))
 
     # </editor-fold>
 

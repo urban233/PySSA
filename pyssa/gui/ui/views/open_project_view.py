@@ -44,6 +44,7 @@ class OpenProjectView(QtWidgets.QDialog):
         self.ui = auto_open_project_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
+        self.resize(450, 600)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""

@@ -28,6 +28,8 @@ from PyQt5.QtCore import Qt
 
 from pyssa.controller import interface_manager, pymol_session_manager
 from pyssa.gui.ui.styles import styles
+from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, constants
 
 
@@ -43,6 +45,26 @@ class OpenProjectViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
         self.restore_default_view()
 
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/project/open_project/")
+
     def restore_default_view(self) -> None:
         self._view.ui.txt_open_selected_project.clear()
 
@@ -56,6 +78,7 @@ class OpenProjectViewController(QtCore.QObject):
         self._view.ui.txt_open_selected_project.textChanged.connect(self._activate_open_button)
         self._view.ui.btn_open_project.clicked.connect(self._open_selected_project)
         self._view.ui.projects_list_view.doubleClicked.connect(self._open_selected_project)
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
     def _validate_open_search(self) -> None:
         """Validates the input of the project name in real-time."""
