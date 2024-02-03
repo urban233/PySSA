@@ -48,6 +48,7 @@ class UseProjectView(QtWidgets.QDialog):
         """Initialize the UI elements."""
         self.ui.lbl_use_status_search.setText("")
         self.ui.list_use_existing_projects.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Use Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

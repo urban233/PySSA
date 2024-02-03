@@ -25,6 +25,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated import auto_create_project_view
+from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
@@ -50,9 +51,11 @@ class CreateProjectView(QtWidgets.QDialog):
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_help.setIcon(icon)
         self.ui.btn_help.setText("")
+        styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Create project")
+        self.setWindowTitle("Create Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
 
     def closeEvent(self, event):
         # Emit the custom signal when the window is closed

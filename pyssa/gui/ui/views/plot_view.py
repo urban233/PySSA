@@ -226,6 +226,7 @@ class PlotView(QtWidgets.QDialog):
         #self.plot_distance_data()
         #self.toolbar.show()
         # styles
+        styles.set_stylesheet(self)
         stylesheet = """
         QDialog {background-color: #F6F4F8;}
         QTableWidget {background-color: white;}
@@ -246,7 +247,7 @@ class PlotView(QtWidgets.QDialog):
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Distance data visualization")
+        self.setWindowTitle("Distance Data Visualization")
 
     def _connect_all_signals(self):
         self.action_table.triggered.connect(self.hide_distance_table)

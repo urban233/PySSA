@@ -73,6 +73,7 @@ class ResultsView(QtWidgets.QDialog):
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_help.setIcon(icon)
         self.ui.btn_help.setText("")
+        styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Results Summary")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
