@@ -18,7 +18,7 @@ from xml import sax
 
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
-    pymol_session_manager, hotspots_protein_regions_view_controller
+    pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -147,6 +147,7 @@ class MainViewController:
         self._view.ui.action_tutorials.triggered.connect(self.open_tutorial)
         self._view.ui.action_about.triggered.connect(self.open_about)
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
+        self._view.ui.action_predict_multimer.triggered.connect(self._predict_multimer)
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
         self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
@@ -865,6 +866,168 @@ class MainViewController:
                 QtWidgets.QMessageBox.Critical,
             )
         self._view.wait_spinner.stop()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Multimer">
+    def _predict_multimer(self):
+        self._external_controller = predict_multimer_view_controller.PredictMultimerViewController(
+            self._interface_manager
+        )
+        self._external_controller.job_input.connect(self._post_predict_monomer)
+        self._interface_manager.get_predict_multimer_view().show()
+
+    def _post_predict_multimer(self, result: tuple):
+        self._view.wait_spinner.start()
+
+        # <editor-fold desc="Check if WSL2 and ColabFold are installed">
+        if globals.g_os == "win32":
+            constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
+            if not dialog_settings_global.is_wsl2_installed():
+                constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
+                self._interface_manager.get_application_settings().wsl_install = 0
+                basic_boxes.ok(
+                    "Prediction",
+                    "Prediction failed because the WSL2 environment is not installed!",
+                    QtWidgets.QMessageBox.Critical,
+                )
+                return
+            constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
+            if not dialog_settings_global.is_local_colabfold_installed():
+                constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
+                self._interface_manager.get_application_settings().local_colabfold = 0
+                basic_boxes.ok(
+                    "Prediction",
+                    "Prediction failed because the ColabFold is not installed!",
+                    QtWidgets.QMessageBox.Critical,
+                )
+                return
+
+        # </editor-fold>
+
+        self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
+        constants.PYSSA_LOGGER.info("Begin prediction process.")
+        self._interface_manager.update_status_bar("Begin prediction process ...")
+        if result[3] is True:
+            constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
+            # Analysis should be run after the prediction
+            self._active_task = tasks.Task(
+                target=main_presenter_async.predict_protein_with_colabfold,
+                args=(
+                    result[1],
+                    result[2],
+                    self._interface_manager.get_current_project(),
+                ),
+                post_func=self.__await_multimer_prediction_for_subsequent_analysis,
+            )
+            self._active_task.start()
+        else:
+            constants.PYSSA_LOGGER.info("Running only a prediction.")
+            # No analysis after prediction
+            self._active_task = tasks.Task(
+                target=main_presenter_async.predict_protein_with_colabfold,
+                args=(
+                    result[1],
+                    result[2],
+                    self._interface_manager.get_current_project(),
+                ),
+                post_func=self.__await_predict_protein_with_colabfold,
+            )
+            self._active_task.start()
+
+        self._view.status_bar.showMessage("A prediction is currently running ...")
+        self.block_box_prediction = QtWidgets.QMessageBox()
+        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
+        self.block_box_prediction.exec_()
+        if self.block_box_prediction.clickedButton() == btn_abort:
+            self.abort_prediction()
+            self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+        else:
+            self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+
+    def __await_multimer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
+        tmp_exit_code = result[0]
+        tmp_exit_code_description = [1]
+        if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            self.block_box_prediction.destroy(True)
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            self.update_status("All structure predictions are done.")
+            constants.PYSSA_LOGGER.info("Begin analysis process.")
+            self.update_status("Begin analysis process ...")
+            tmp_raw_analysis_run_names: list = []
+            for row_no in range(self._view.ui.list_pred_analysis_multi_overview.count()):
+                tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_multi_overview.item(row_no).text())
+
+            self._active_task = tasks.Task(
+                target=main_presenter_async.run_distance_analysis,
+                args=(
+                    tmp_raw_analysis_run_names,
+                    self._interface_manager.get_current_project(),
+                    self._interface_manager.get_application_settings(),
+                    self._interface_manager.get_predict_multimer_view().cb_pred_analysis_multi_images.isChecked(),
+                ),
+                post_func=self.post_analysis_process,
+            )
+            self._active_task.start()
+
+            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+
+        elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because there was an error writing the fasta file(s)!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because the fasta file(s) could not be found!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because a subprocess failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+
 
     # </editor-fold>
 

@@ -344,7 +344,6 @@ def add_existing_protein_to_project(the_protein_information: tuple, a_project: "
         tmp_protein_name: str = pdb_filepath.get_filename().replace(" ", "_")
         tmp_protein = protein.Protein(
             molecule_object=tmp_protein_name,
-            pdb_filepath=pdb_filepath,
         )
     a_project.add_existing_protein(tmp_protein)
     return ("result", a_project)
