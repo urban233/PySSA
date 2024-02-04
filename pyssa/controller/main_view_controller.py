@@ -995,7 +995,7 @@ class MainViewController:
 
         self._active_task = tasks.Task(
             target=main_presenter_async.create_ray_traced_image,
-            args=(full_file_name[0], 0),
+            args=(full_file_name[0], self._interface_manager.get_application_settings()),
             post_func=self.__await_create_ray_traced_image,
         )
         self._active_task.start()
@@ -1020,7 +1020,7 @@ class MainViewController:
 
         self._active_task = tasks.Task(
             target=main_presenter_async.create_drawn_image,
-            args=(full_file_name[0], 0),
+            args=(full_file_name[0], self._interface_manager.get_application_settings()),
             post_func=self.__await_create_drawn_image,
         )
         self._active_task.start()
