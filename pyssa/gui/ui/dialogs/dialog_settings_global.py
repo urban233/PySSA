@@ -71,17 +71,12 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         # <editor-fold desc="Info button changes">
-        pixmapi = QtWidgets.QStyle.SP_MessageBoxInformation
+        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
-        self.ui.btn_info.setIcon(icon)
-        self.ui.btn_info.setText("")
-        self.ui.btn_info.setFixedWidth(50)
+        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setText("")
 
         # </editor-fold>
-
-        # self.ui.label.hide()
-        self.ui.lbl_color_vision_mode.hide()
-        self.ui.cb_color_vision_mode.hide()
 
         # <editor-fold desc="Class attributes">
         self.tmp_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -93,27 +88,71 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
 
         # </editor-fold>
 
-        # <editor-fold desc="Check WSL status">
-        if globals.g_os == "win32":
-            if is_wsl2_installed():
-                self.settings.wsl_install = 1
-            else:
-                self.settings.wsl_install = 0
-        else:
-            self.settings.wsl_install = 1
-        # </editor-fold>
-
-        # <editor-fold desc="Check local colabfold status">
-        if is_local_colabfold_installed():
-            self.settings.local_colabfold = 1
-        else:
-            self.settings.local_colabfold = 0
-
-        # </editor-fold>
+        # # <editor-fold desc="Check WSL status">
+        # if globals.g_os == "win32":
+        #     if is_wsl2_installed():
+        #         self.settings.wsl_install = 1
+        #     else:
+        #         self.settings.wsl_install = 0
+        # else:
+        #     self.settings.wsl_install = 1
+        # # </editor-fold>
+        #
+        # # <editor-fold desc="Check local colabfold status">
+        # if is_local_colabfold_installed():
+        #     self.settings.local_colabfold = 1
+        # else:
+        #     self.settings.local_colabfold = 0
+        #
+        # # </editor-fold>
 
         self._connect_all_gui_elements()
 
-        # <editor-fold desc="Set up defaults">
+        self._initialize_ui()
+        self.setMinimumWidth(450)
+        self.resize(450, 450)
+        styles.set_stylesheet(self)
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+        self.setWindowTitle("Global Settings")
+        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+    def _initialize_ui(self):
+        # combo box BgColor
+        item_list_bg_color = [
+            "black",
+            "white",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_bg_color, item_list_bg_color)
+        # combo box Renderer
+        item_list_renderer = [
+            "default renderer",
+            "PyMOL internal renderer",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_renderer, item_list_renderer)
+        # combo box RayTraceMode
+        item_list_ray_trace_mode = [
+            "normal color",
+            "normal color + black outline",
+            "black outline only",
+            "quantized color + black outline",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_ray_trace_mode, item_list_ray_trace_mode)
+        # combo box Ray Texture
+        item_list_ray_texture = [
+            "None",
+            "Matte 1",
+            "Matte 2",
+            "Swirl 1",
+            "Fiber",
+        ]
+        gui_utils.fill_combo_box(self.ui.box_ray_texture, item_list_ray_texture)
+        item_list = [
+            "normal",
+            "Red-green (green weak, deuteranopia)",
+            "Red-green (red weak, protanopia)",
+            "Blue-yellow (tritanopia)",
+        ]
+        gui_utils.fill_combo_box(self.ui.cb_color_vision_mode, item_list)
         self.ui.txt_workspace_dir.setEnabled(False)
         self.ui.txt_workspace_dir.setText(str(self.settings.get_workspace_path()))
         self.ui.spb_cycles.setValue(int(self.settings.get_cycles()))
@@ -125,28 +164,22 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.ui.dspb_cutoff.setMinimum(0.00)
         self.ui.dspb_cutoff.setMaximum(20.00)
         self.ui.dspb_cutoff.setSingleStep(0.1)
-        item_list = [
-            "normal",
-            "Red-green (green weak, deuteranopia)",
-            "Red-green (red weak, protanopia)",
-            "Blue-yellow (tritanopia)",
-        ]
-        gui_utils.fill_combo_box(self.ui.cb_color_vision_mode, item_list)
+        self.ui.lbl_color_vision_mode.hide()
+        self.ui.cb_color_vision_mode.hide()
 
-        # </editor-fold>
-        if self.settings.color_vision_mode == constants.CVM_NORMAL:
-            self.ui.cb_color_vision_mode.setCurrentIndex(0)
-        elif self.settings.color_vision_mode == constants.CVM_DEUTERANOPIA:
-            self.ui.cb_color_vision_mode.setCurrentIndex(1)
-        elif self.settings.color_vision_mode == constants.CVM_PROTANOPIA:
-            self.ui.cb_color_vision_mode.setCurrentIndex(2)
-        elif self.settings.color_vision_mode == constants.CVM_TRITANOPIA:
-            self.ui.cb_color_vision_mode.setCurrentIndex(3)
+        self.ui.cb_color_vision_mode.setCurrentIndex(
+            self.ui.cb_color_vision_mode.findText(self.settings.color_vision_mode)
+        )
+        self.ui.box_bg_color.setCurrentIndex(
+            self.ui.box_bg_color.findText(self.settings.image_background_color)
+        )
+        if self.settings.image_renderer == "0":
+            self.ui.box_renderer.setCurrentIndex(0)
+        else:
+            self.ui.box_renderer.setCurrentIndex(1)
 
-        styles.set_stylesheet(self)
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Global Settings")
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self.ui.box_ray_trace_mode.setCurrentIndex(self.settings.image_ray_trace_mode)
+        self.ui.box_ray_texture.setCurrentIndex(self.settings.image_ray_texture)
 
     # @SLOT()
     def choose_workspace_dir(self) -> None:
@@ -161,9 +194,8 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         """Connects all dialog gui elements."""
         #self.ui.cb_color_vision_mode.currentIndexChanged.connect(self.set_color_vision_mode)
         self.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
-        self.ui.btn_cancel.clicked.connect(self.cancel_dialog)
         self.ui.btn_ok.clicked.connect(self.ok_dialog)
-        self.ui.btn_info.clicked.connect(self.open_page_information)
+        self.ui.btn_help.clicked.connect(self.open_page_information)
 
     def cancel_dialog(self) -> None:
         """Closes the dialog."""
@@ -172,13 +204,17 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
     def ok_dialog(self) -> None:
         """Sets all settings from the gui elements into the settings object and closes the dialog window."""
         self.settings.set_workspace_path(self.ui.txt_workspace_dir.text())
-        self.settings.set_cycles(str(self.ui.spb_cycles.value()))
-        self.settings.set_cutoff(str(self.ui.dspb_cutoff.value()))
+        self.settings.set_cycles(self.ui.spb_cycles.value())
+        self.settings.set_cutoff(self.ui.dspb_cutoff.value())
         self.settings.color_vision_mode = self.ui.cb_color_vision_mode.currentText()
-        if self.ui.cb_ask_to_save_pymol_session.isChecked():
-            self.settings.ask_save_pymol_session = 1
+        self.settings.image_background_color = self.ui.box_bg_color.currentText()
+        if self.ui.box_renderer.currentText() == "default renderer":
+            self.settings.image_renderer = "0"
         else:
-            self.settings.ask_save_pymol_session = 0
+            self.settings.image_renderer = "-1"
+        self.settings.image_ray_trace_mode = self.ui.box_ray_trace_mode.currentIndex()
+        self.settings.image_ray_texture = self.ui.box_ray_texture.currentIndex()
+
         self.settings.serialize_settings()
         logging.info("Settings were successfully saved.")
         self.close()

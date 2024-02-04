@@ -822,10 +822,6 @@ class ObjectDeserializer:
             tmp_settings.workspace_path = self.object_dict.get("workspace_path")
         else:
             raise ValueError
-        if safeguard.Safeguard.check_filepath(self.object_dict.get("prediction_path")):
-            tmp_settings.prediction_path = self.object_dict.get("prediction_path")
-        else:
-            raise ValueError
         if safeguard.Safeguard.check_if_number_is_positive(int(self.object_dict.get("cycles"))):
             tmp_settings.cycles = self.object_dict.get("cycles")
         else:
@@ -850,7 +846,6 @@ class ObjectDeserializer:
             tmp_settings.local_colabfold = int(self.object_dict.get("local_colabfold"))
         else:
             raise ValueError
-        tmp_settings.wsl_username = self.object_dict.get("wsl_username")
         return tmp_settings
 
     def deserialize_sequence(self) -> "sequence.Sequence":

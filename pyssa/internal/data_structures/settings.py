@@ -59,17 +59,19 @@ class Settings:
             os.mkdir(constants.DEFAULT_WORKSPACE_PATH)
 
         self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
-        self.prediction_path = pathlib.Path(f"{os.path.expanduser('~')}/Downloads")
         self.cycles: int = 0
         self.cutoff: float = 1.0
         self.app_launch = 1
         self.dir_settings: str = dir_settings
         self.filename: str = filename
         self.local_colabfold: int = 1
-        self.wsl_username: str = "no_user_name"
         self.wsl_install: int = 1
         self.color_vision_mode: str = "normal"
         self.ask_save_pymol_session: int = 0
+        self.image_background_color: str = "black"
+        self.image_renderer: str = "0"  # or "-1"
+        self.image_ray_trace_mode: int = 0  # ranges from 0 to 3
+        self.image_ray_texture: int = 0  # ranges from 0 to 5
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object."""
@@ -78,7 +80,6 @@ class Settings:
         settings_dict = self.__dict__
         update = {
             "workspace_path": str(self.workspace_path),
-            "prediction_path": str(self.prediction_path),
             "dir_settings": str(self.dir_settings),
         }
         settings_dict.update(update)
@@ -102,49 +103,133 @@ class Settings:
             # TODO: log message is needed
             return  # noqa: RET502 #TODO: needs to be fixed
         settings_dict = json.load(settings_obj_file)
-        tmp_settings: Settings = Settings(settings_dict.get("dir_settings"), settings_dict.get("filename"))
-        if safeguard.Safeguard.check_filepath(settings_dict.get("workspace_path")):
-            tmp_settings.workspace_path = settings_dict.get("workspace_path")
-        else:
-            raise ValueError
-        if safeguard.Safeguard.check_filepath(settings_dict.get("prediction_path")):
-            tmp_settings.prediction_path = settings_dict.get("prediction_path")
-        else:
-            raise ValueError
-        if safeguard.Safeguard.check_if_number_is_positive(int(settings_dict.get("cycles"))):
-            tmp_settings.cycles = settings_dict.get("cycles")
-        else:
-            raise ValueError
-        if safeguard.Safeguard.check_if_number_is_positive(float(settings_dict.get("cutoff"))):
-            tmp_settings.cutoff = settings_dict.get("cutoff")
-        else:
-            raise ValueError
-        if int(settings_dict.get("app_launch")) == 0 or int(settings_dict.get("app_launch")) == 1:
-            tmp_settings.app_launch = settings_dict.get("app_launch")
-        else:
-            raise ValueError
-        if not safeguard.Safeguard.check_filepath(settings_dict.get("dir_settings")):
-            raise ValueError
-        if not settings_dict.get("filename") == "settings.json":
-            raise ValueError
-        if int(settings_dict.get("wsl_install")) == 0 or int(settings_dict.get("wsl_install")) == 1:
-            tmp_settings.wsl_install = int(settings_dict.get("wsl_install"))
-        else:
-            raise ValueError
-        if int(settings_dict.get("local_colabfold")) == 0 or int(settings_dict.get("local_colabfold")) == 1:
-            tmp_settings.local_colabfold = int(settings_dict.get("local_colabfold"))
-        else:
-            raise ValueError
-        tmp_settings.wsl_username = settings_dict.get("wsl_username")
-        if settings_dict.get("color_vision_mode") != "":
-            tmp_settings.color_vision_mode = settings_dict.get("color_vision_mode")
-        else:
-            raise ValueError
-        if settings_dict.get("ask_save_pymol_session") == 0 or settings_dict.get("ask_save_pymol_session") == 1:
-            tmp_settings.ask_save_pymol_session = settings_dict.get("ask_save_pymol_session")
-        else:
-            raise ValueError
+
+        try:
+            tmp_settings: Settings = Settings(settings_dict.get("dir_settings"), settings_dict.get("filename"))
+
+            tmp_settings.workspace_path = Settings._check_integrity_of_workspace_path(
+                settings_dict.get("workspace_path")
+            )
+            tmp_settings.cycles = Settings._check_integrity_of_cycles(int(settings_dict.get("cycles")))
+            tmp_settings.cutoff = Settings._check_integrity_of_cutoff(float(settings_dict.get("cutoff")))
+            tmp_settings.app_launch = Settings._check_integrity_of_app_start_value(settings_dict.get("app_launch"))
+            tmp_settings.wsl_install = Settings._check_integrity_of_wsl_install_flag(
+                int(settings_dict.get("wsl_install"))
+            )
+            tmp_settings.local_colabfold = Settings._check_integrity_of_colabfold_install_flag(
+                int(settings_dict.get("local_colabfold"))
+            )
+            tmp_settings.color_vision_mode = Settings._check_integrity_of_color_blindness_value(
+                settings_dict.get("color_vision_mode")
+            )
+            tmp_settings.ask_save_pymol_session = Settings._check_integrity_of_save_pymol_session_flag(
+                int(settings_dict.get("ask_save_pymol_session"))
+            )
+            tmp_settings.image_background_color = Settings._check_integrity_of_bg_color_value(
+                settings_dict.get("image_background_color")
+            )
+            tmp_settings.image_renderer = Settings._check_integrity_of_renderer_value(
+                settings_dict.get("image_renderer")
+            )
+            tmp_settings.image_ray_trace_mode = Settings._check_integrity_of_ray_trace_mode_value(
+                settings_dict.get("image_ray_trace_mode")
+            )
+            tmp_settings.image_ray_texture = Settings._check_integrity_of_ray_texture_value(
+                settings_dict.get("image_ray_texture")
+            )
+
+        except ValueError as e:
+            raise AttributeError(f"An error occurred during the deserialization of the settings: {e}")
         return tmp_settings
+
+    # <editor-fold desc="Integrity checks">
+    @staticmethod
+    def _check_integrity_of_workspace_path(a_workspace_path: str) -> str:
+        if safeguard.Safeguard.check_filepath(pathlib.Path(a_workspace_path)):
+            return a_workspace_path
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_cycles(a_cycles_value: int) -> int:
+        if safeguard.Safeguard.check_if_number_is_positive(a_cycles_value):
+            return a_cycles_value
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_cutoff(a_cutoff_value: float) -> float:
+        if safeguard.Safeguard.check_if_number_is_positive(a_cutoff_value):
+            return a_cutoff_value
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_app_start_value(a_app_start_value: int) -> int:
+        if a_app_start_value == 0 or a_app_start_value == 1:
+            return a_app_start_value
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_wsl_install_flag(a_wsl_install_flag: int) -> int:
+        if a_wsl_install_flag == 0 or a_wsl_install_flag == 1:
+            return a_wsl_install_flag
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_colabfold_install_flag(a_colabfold_install_flag: int) -> int:
+        if a_colabfold_install_flag == 0 or a_colabfold_install_flag == 1:
+            return a_colabfold_install_flag
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_color_blindness_value(a_color_blindness_value: str) -> str:
+        if a_color_blindness_value != "":
+            return a_color_blindness_value
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_save_pymol_session_flag(save_pymol_session_flag: int) -> int:
+        if save_pymol_session_flag == 0 or save_pymol_session_flag == 1:
+            return save_pymol_session_flag
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_bg_color_value(a_bg_color_value: str) -> str:
+        if a_bg_color_value == "white" or a_bg_color_value == "black":
+            return a_bg_color_value
+        else:
+            raise ValueError(f"Invalid background color! The value is not black or white: {a_bg_color_value}")
+
+    @staticmethod
+    def _check_integrity_of_renderer_value(a_renderer_value: str) -> str:
+        if a_renderer_value == "0" or a_renderer_value == "-1":
+            return a_renderer_value
+        else:
+            raise ValueError(f"Invalid renderer! The value is not 0 or -1: {a_renderer_value}")
+
+    @staticmethod
+    def _check_integrity_of_ray_trace_mode_value(a_ray_trace_mode_value: int) -> int:
+        tmp_possible_values: list = list(range(3))
+        if a_ray_trace_mode_value in tmp_possible_values:
+            return a_ray_trace_mode_value
+        else:
+            raise ValueError(f"Invalid ray trace mode! The value is not between 0 and 3: {a_ray_trace_mode_value}")
+
+    @staticmethod
+    def _check_integrity_of_ray_texture_value(a_ray_texture_value: int) -> int:
+        tmp_possible_values: list = list(range(5))
+        if a_ray_texture_value in tmp_possible_values:
+            return a_ray_texture_value
+        else:
+            raise ValueError(f"Invalid ray texture! The value is not between 0 and 5: {a_ray_texture_value}")
+
+    # </editor-fold>
 
     def get_workspace_path(self) -> pathlib.Path:
         """This function gets the value of the workspace_path variable.
@@ -165,10 +250,6 @@ class Settings:
             prediction_path
         """
         return self.prediction_path
-
-    def set_prediction_path(self, value: pathlib.Path) -> None:
-        """This function gets the value of the prediction_path variable."""
-        self.prediction_path = value
 
     def get_cycles(self) -> int:
         """This function gets the value of the cycles variable.
@@ -209,7 +290,6 @@ class Settings:
     def restore_settings(self, dir_settings: str, filename: str) -> None:
         """Resets the settings to the default values."""
         self.workspace_path = constants.DEFAULT_WORKSPACE_PATH
-        self.prediction_path = pathlib.Path(f"{os.path.expanduser('~')}/Downloads")
         self.cycles: int = 0
         self.cutoff: float = 1.0
         self.app_launch = 1
@@ -217,4 +297,10 @@ class Settings:
         self.filename: str = filename
         self.wsl_install: int = 0
         self.local_colabfold: int = 0
+        self.ask_save_pymol_session: int = 0
+        self.image_background_color: str = "black"
+        self.image_renderer: str = "0"  # or "-1"
+        self.image_ray_trace_mode: int = 0  # ranges from 0 to 3
+        self.image_ray_texture: int = 0  # ranges from 0 to 5
+
         self.serialize_settings()

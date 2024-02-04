@@ -96,7 +96,7 @@ def setup_app_settings(the_app_settings: "settings.Settings") -> "settings.Setti
     """Sets up application settings."""
     try:
         tmp_settings: "settings.Settings" = the_app_settings.deserialize_settings()
-    except ValueError:
+    except AttributeError:
         constants.PYSSA_LOGGER.warning("The settings file is damaged or outdated.")
         gui_utils.error_dialog_settings(
             "The settings file is damaged or outdated. You have to restore the settings to use PySSA!",
