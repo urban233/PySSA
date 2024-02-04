@@ -33,7 +33,11 @@ from matplotlib.backends.backend_qt import NavigationToolbar2QT
 from pymol import cmd
 import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
+
+from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import protein_pair
+from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import pyssa_keys
 from pyssa.util import constants
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QScrollArea
@@ -69,78 +73,24 @@ class PlotView(QtWidgets.QDialog):
             parent: the parent.
         """
         QtWidgets.QDialog.__init__(self, parent)
-        # build gui
-        self.scroll_area = QScrollArea()
-        self.plot_widget = PlotWidget()
         self._protein_pair = the_protein_pair
-        # Create a menu bar
-        self.menubar = QtWidgets.QMenuBar(self)
-
-        # Create a menu and add it to the menu bar
-        plots_menu = QtWidgets.QMenu('Plots', self)
-        self.menubar.addMenu(plots_menu)
-        # Create actions and add them to the menu
-        self.action_plot = QtWidgets.QAction('Plot', self)
-        self.action_plot.setCheckable(True)
-        self.action_plot.setChecked(True)
-        self.action_histogram = QtWidgets.QAction('Histogram', self)
-        self.action_histogram.setCheckable(True)
-        self.action_histogram.setChecked(True)
-        self.action_table = QtWidgets.QAction('Table', self)
-        self.action_table.setCheckable(True)
-        self.action_table.setChecked(True)
-        self.action_show_all = QtWidgets.QAction('Show all', self)
-
-        plots_menu.addAction(self.action_plot)
-        plots_menu.addAction(self.action_histogram)
-        plots_menu.addAction(self.action_table)
-        plots_menu.addAction(self.action_show_all)
-
-        #self.toolbar = NavigationToolbar2QT(self.plot_widget.canvas, self)
-        # Find the action you want to remove
-        # items_to_remove = ["Home", "Back", "Forward", "Pan", "Zoom", "Subplots"]
-        # for tmp_item in items_to_remove:
-        #     for action in self.toolbar.actions():
-        #         print(action.text())
-        #         if action.text() == tmp_item:
-        #             self.toolbar.removeAction(action)
-
-        self.lbl_status = QtWidgets.QLabel()
-        self.lbl_status.setText("Status: ")
-        self.main_Layout = QtWidgets.QVBoxLayout()
-        #self.main_Layout.addWidget(self.toolbar)
-        self.main_Layout.addWidget(self.scroll_area)
-        self.main_Layout.addWidget(self.lbl_status)
-        # self.ax = self.plot_widget.figure.add_subplot(111)
-        self._ax_plot, self._ax_hist = self.plot_widget.figure.subplots(2)
         self._current_project = a_project
-        self.scroll_area_layout = QtWidgets.QHBoxLayout()
-        self.scroll_area_layout.addWidget(self.plot_widget)
-        self.table_view = QtWidgets.QTableView()
-        self.table_view.setMinimumWidth(450)
-        self.scroll_area_layout.addWidget(self.table_view)
-        self.scroll_area.setLayout(self.scroll_area_layout)
-
-        self.main_Layout.setMenuBar(self.menubar)
-        self.setLayout(self.main_Layout)
-
+        self.clicked_point_scatter = None
 
         # self.resizeEvent = self.handle_resize
         # Create a timer for delayed updates
         self.resize_timer = QtCore.QTimer(self)
         #self.resize_timer.timeout.connect(self.handle_resize_timeout)
-
-        # self.graph_widget = pg.PlotWidget()
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
-        custom_pyssa_styles.set_stylesheet(self)
-        self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        #custom_pyssa_styles.set_stylesheet(self)
 
+        self._initialize_ui()
 
         # --BEGIN
 
         # <editor-fold desc="Distance table logic">
-        csv_model = QtGui.QStandardItemModel()
-        csv_model.setColumnCount(7)
+        self.csv_model = QtGui.QStandardItemModel()
+        self.csv_model.setColumnCount(7)
         labels = [
             "Residue pair no.",
             "Protein 1 Chain",
@@ -151,8 +101,8 @@ class PlotView(QtWidgets.QDialog):
             "Protein 2 Residue",
             "Distance in Å",
         ]
-        csv_model.setHorizontalHeaderLabels(labels)
-        self.table_view.setModel(csv_model)
+        self.csv_model.setHorizontalHeaderLabels(labels)
+        self.table_view.setModel(self.csv_model)
 
         csv_filepath = pathlib.Path(f"{constants.CACHE_CSV_DIR}/{self._protein_pair.name}.csv")
         if not os.path.exists(constants.CACHE_CSV_DIR):
@@ -208,10 +158,10 @@ class PlotView(QtWidgets.QDialog):
                 standard_item_list.append(model_pos_item)
                 standard_item_list.append(model_resi_item)
                 standard_item_list.append(distance_item)
-                csv_model.insertRow(i, standard_item_list)
+                self.csv_model.insertRow(i, standard_item_list)
             i += 1
         csv_file.close()
-        csv_model.removeRow(0)
+        self.csv_model.removeRow(0)
         self.table_view.setAlternatingRowColors(True)
         self.table_view.resizeColumnsToContents()
         self.table_view.verticalHeader().setVisible(False)
@@ -222,38 +172,177 @@ class PlotView(QtWidgets.QDialog):
 
         # --END
 
-        # self.scroll_area.setWidget(self.plot_widget)
-        #self.plot_distance_data()
-        #self.toolbar.show()
-        # styles
-        styles.set_stylesheet(self)
-        stylesheet = """
-        QDialog {background-color: #F6F4F8;}
-        QTableWidget {background-color: white;}
-        """
-        self.setStyleSheet(stylesheet)
-
-        #self.btn_distance_plot_save.hide()
-        #self.btn_distance_plot_update.clicked.connect(self.update_plot)
-        # self.btn_distance_plot_save.clicked.connect(self.save_plot_to_file)
-        #self.btn_distance_plot_reset.clicked.connect(self.reset_distance_plot)
-        #self.cb_turn_on_grid.stateChanged.connect(self.turn_gird_on_off)
-
-        # Connect the mouse click event
-        #self.plot_widget.canvas.mpl_connect('button_press_event', self.on_canvas_click)
-        self.resize(1400, 800)
         self.create_all_graphics()
         self._connect_all_signals()
+
+    def _initialize_ui(self):
+        # <editor-fold desc="Define basic ui elements">
+        self.scroll_area = QScrollArea()
+        self.plot_widget = PlotWidget()
+        self.menubar = QtWidgets.QMenuBar(self)
+        self.lbl_status = QtWidgets.QLabel()
+        self.lbl_status.setText("Status: ")
+
+        # </editor-fold>
+
+        # <editor-fold desc="Create a menu and add it to the menu bar">
+        plots_menu = QtWidgets.QMenu('Plots', self)
+        help_menu = QtWidgets.QMenu('Help', self)
+        self.menubar.addMenu(plots_menu)
+        self.menubar.addMenu(help_menu)
+
+        # </editor-fold>
+
+        # <editor-fold desc="Create actions and add them to the menu">
+        self.action_plot = QtWidgets.QAction('Plot', self)
+        self.action_plot.setCheckable(True)
+        self.action_plot.setChecked(True)
+        self.action_histogram = QtWidgets.QAction('Histogram', self)
+        self.action_histogram.setCheckable(True)
+        self.action_histogram.setChecked(True)
+        self.action_table = QtWidgets.QAction('Table', self)
+        self.action_table.setCheckable(True)
+        self.action_table.setChecked(True)
+        self.action_show_all = QtWidgets.QAction('Show all', self)
+
+        plots_menu.addAction(self.action_plot)
+        plots_menu.addAction(self.action_histogram)
+        plots_menu.addAction(self.action_table)
+        plots_menu.addAction(self.action_show_all)
+
+        self.action_docs = QtWidgets.QAction('PySSA Documentation', self)
+        self.action_docs.triggered.connect(self._open_help_center)
+        self.action_help = QtWidgets.QAction('Get Help', self)
+        self.action_help.triggered.connect(self._open_distance_data_visualizer_help)
+
+        help_menu.addAction(self.action_docs)
+        help_menu.addAction(self.action_help)
+
+        # </editor-fold>
+
+        # self.toolbar = NavigationToolbar2QT(self.plot_widget.canvas, self)
+        # Find the action you want to remove
+        # items_to_remove = ["Home", "Back", "Forward", "Pan", "Zoom", "Subplots"]
+        # for tmp_item in items_to_remove:
+        #     for action in self.toolbar.actions():
+        #         print(action.text())
+        #         if action.text() == tmp_item:
+        #             self.toolbar.removeAction(action)
+
+        # <editor-fold desc="Set layouts">
+        # self.main_Layout = QtWidgets.QVBoxLayout()
+        # self.main_Layout.addWidget(self.scroll_area)
+        # self.main_Layout.addWidget(self.lbl_status)
+        # self.scroll_area_layout = QtWidgets.QHBoxLayout()
+        # self.scroll_area_layout.addWidget(self.plot_widget)
+        # self.table_view = QtWidgets.QTableView()
+        # self.table_view.setMinimumWidth(450)
+        # self.scroll_area_layout.addWidget(self.table_view)
+        # self.scroll_area.setLayout(self.scroll_area_layout)
+        # self.main_Layout.setMenuBar(self.menubar)
+        # self.setLayout(self.main_Layout)
+
+        # Create labels
+        self.lbl_status1 = QtWidgets.QLabel(f"Protein 1: {self.protein_pair_for_analysis.protein_1.get_molecule_object()}")
+        self.lbl_status2 = QtWidgets.QLabel(f"Protein 2: {self.protein_pair_for_analysis.protein_2.get_molecule_object()}")
+
+        # Create a QTableView
+        self.table_view = QtWidgets.QTableView()
+        self.table_view.setMinimumWidth(450)
+
+        # Create a QWidget to hold labels and QTableView
+        container_widget = QtWidgets.QWidget()
+        container_layout = QtWidgets.QVBoxLayout(container_widget)
+        container_layout.addWidget(self.lbl_status1)
+        container_layout.addWidget(self.lbl_status2)
+        container_layout.addWidget(self.table_view)
+
+        stylesheet = """
+                    QLabel {
+                        background-color: white;
+                        font-size: 12px;
+                        padding: 5px;
+                        border-style: solid;
+                        border-width: 2px;
+                        border-radius: 6px;
+                        border-color: #DCDBE3;
+                    }
+                    """
+        container_widget.setStyleSheet(stylesheet)
+        # Create a QHBoxLayout for the scroll area
+        self.scroll_area_layout = QtWidgets.QHBoxLayout()
+
+        # Assuming self.plot_widget and self.scroll_area are already defined
+        self.scroll_area_layout.addWidget(self.plot_widget)
+        self.scroll_area_layout.addWidget(container_widget)
+
+        # Set up scroll area
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_area.setLayout(self.scroll_area_layout)
+
+        # Create main layout
+        self.main_Layout = QtWidgets.QVBoxLayout()
+        self.main_Layout.addWidget(self.scroll_area)
+        self.main_Layout.addWidget(self.lbl_status)
+        self.main_Layout.setMenuBar(self.menubar)
+        self.setLayout(self.main_Layout)
+
+        # </editor-fold>
+
+        # <editor-fold desc="Setup subplots">
+        self._ax_plot = self.plot_widget.figure.add_subplot(211)
+        self._ax_hist = self.plot_widget.figure.add_subplot(212)
+
+        # </editor-fold>
+
+        # <editor-fold desc="Set window styles">
+        styles.set_stylesheet(self)
+        stylesheet = """
+                QDialog {background-color: #F6F4F8;}
+                QTableWidget {background-color: white;}
+                """
+        self.setStyleSheet(stylesheet)
+
+        self.resize(1400, 800)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
+        #self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Distance Data Visualization")
+        self.setWindowTitle("Distance Data Visualizer")
+
+        # </editor-fold>
+
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    @staticmethod
+    def __await_open_help():
+        constants.PYSSA_LOGGER.info("Opening help center finished.")
+
+    def _open_help_center(self):
+        self.open_help("help/")
+
+    def _open_distance_data_visualizer_help(self):
+        self.open_help("help/results/distance_data_visualizer")
 
     def _connect_all_signals(self):
         self.action_table.triggered.connect(self.hide_distance_table)
+        self.table_view.clicked.connect(self.highlight_table_selection_in_plot)
         self.action_plot.triggered.connect(self.toggle_graphics_visablity)
         self.action_histogram.triggered.connect(self.toggle_graphics_visablity)
         self.action_show_all.triggered.connect(self.show_all)
+
+        self.plot_widget.canvas.mpl_connect('button_press_event', self.on_canvas_click)
 
     def hide_distance_table(self):
         if self.action_table.isChecked():
@@ -327,105 +416,14 @@ class PlotView(QtWidgets.QDialog):
         self._ax_hist.set_xlabel("Frequency of C-α distances")
         self._ax_hist.set_ylabel("Distance in Å")
 
-    def plot_all_graphics(self):
-        # Clear any existing plot
-        self.plot_widget.figure.clear()
-        # Create an axis and plot some data
-        ax1, ax2 = self.plot_widget.figure.subplots(2)
-        # data for actual distance plot line
-        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
-        distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
-        # data for cutoff line
-        cutoff_line = []
-        for i in range(len(distance_list)):
-            cutoff_line.append(self.protein_pair_for_analysis.distance_analysis.cutoff)
-        ax1.plot(distance_list)
-        # Set axis labels
-        ax1.set_xlabel("Residue pair no.")
-        ax1.set_ylabel("Distance in Å")
-        ax1.set_title("Distance plot")
-        # Adjust subplot parameters to reduce white space
-        self.plot_widget.figure.tight_layout()
-        # Set the x-axis limits with minimum value set to 0
-        ax1.set_xlim(0)
-        # Set the number of ticks for the x and y axes
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(5))
-
-        distance_data: dict[
-            str,
-            np.ndarray,
-        ] = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
-        distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
-        distance_list.sort()
-        length = len(distance_list)
-        max_distance = distance_list[length - 1]
-
-        # Create an axis and plot a histogram
-        # ax = self.plot_widget.figure.add_subplot(111)
-        n, bins, patches = ax2.hist(
-            distance_list,
-            bins=np.arange(0, max_distance + 0.25, 0.25),
-            orientation="horizontal",
-            rwidth=0.7,
-            color="#4B91F7",
-        )
-
-        # Add labels to the non-zero frequency histogram bars
-        for bin_value, patch in zip(n, patches):
-            x = patch.get_x() + patch.get_width() + 0.1
-            y = patch.get_y() + patch.get_height() / 2
-            ax2.annotate(
-                f"{bin_value}",
-                xy=(x, y),
-                xycoords="data",
-                xytext=(3, 0),
-                textcoords="offset points",
-                ha="left",
-                va="center",
-            )
-
-        # <editor-fold desc="Histogram logic">
-        # Move the entire x-axis to the top
-        ax2.xaxis.tick_top()
-        ax2.xaxis.set_label_position("top")
-        ax2.set_title("Distance histogram")
-        # Calculate the midpoints between bin edges
-        bin_midpoints = (bins[:-1] + bins[1:]) / 2
-        # Set y-ticks at the bin midpoints
-        ax2.set_yticks(bin_midpoints)
-        # Set custom tick labels
-        custom_labels = [f"{bin_start} - {bin_end}" for bin_start, bin_end in zip(bins[:-1], bins[1:])]
-        ax2.set_yticklabels(custom_labels)
-        # Set axis labels
-        ax2.set_xlabel("Count")
-        ax2.set_ylabel("Bins")
-        # Invert the y-axis
-        ax2.invert_yaxis()
-        # Remove the spines where no ax is are present
-        ax2.spines["right"].set_visible(False)
-        ax2.spines["bottom"].set_visible(False)
-
-        # Remove the spines where no axis are present
-        ax2.spines["right"].set_visible(False)
-        ax2.spines["bottom"].set_visible(False)
-
-        # Set axis labels
-        ax2.set_xlabel("Frequency of C-α distances")
-        ax2.set_ylabel("Distance in Å")
-        # </editor-fold>
-
-        self.plot_widget.figure.tight_layout()
-        # Refresh the canvas
-        self.plot_widget.canvas.draw()
-
     def create_distance_plot(self):
         # data for actual distance plot line
         distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
         distance_list = distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
         # data for cutoff line
-        cutoff_line = []
-        for i in range(len(distance_list)):
-            cutoff_line.append(self.protein_pair_for_analysis.distance_analysis.cutoff)
+        # cutoff_line = []
+        # for i in range(len(distance_list)):
+        #     cutoff_line.append(self.protein_pair_for_analysis.distance_analysis.cutoff)
         self._ax_plot.plot(distance_list)
 
     def create_distance_histogram(self):
@@ -438,8 +436,6 @@ class PlotView(QtWidgets.QDialog):
         length = len(distance_list)
         max_distance = distance_list[length - 1]
 
-        # Create an axis and plot a histogram
-        # ax = self.plot_widget.figure.add_subplot(111)
         n, bins, patches = self._ax_hist.hist(
             distance_list,
             bins=np.arange(0, max_distance + 0.25, 0.25),
@@ -469,3 +465,114 @@ class PlotView(QtWidgets.QDialog):
             # Set custom tick labels
             custom_labels = [f"{bin_start} - {bin_end}" for bin_start, bin_end in zip(bins[:-1], bins[1:])]
             self._ax_hist.set_yticklabels(custom_labels)
+
+    def on_canvas_click(self, event):
+        x_clicked, y_clicked = event.xdata, event.ydata
+        # Clear the previous clicked point
+        if self.clicked_point_scatter is not None:
+            try:
+                self.clicked_point_scatter.remove()
+            except Exception as e:
+                constants.PYSSA_LOGGER.warning(f"Something went wrong: {e}")
+
+        # Find the nearest point on the line
+        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
+        x_line = range(len(distance_data))
+        y_line = distance_data
+        distances = np.sqrt((x_line - x_clicked) ** 2 + (y_line - y_clicked) ** 2)
+        index_nearest = np.argmin(distances)
+        x_nearest, y_nearest = x_line[index_nearest], y_line[index_nearest]
+        self.clicked_point_scatter = self._ax_plot.scatter(x_nearest, y_nearest, color='red', marker='o', label='Clicked Point')
+        self.plot_widget.canvas.draw()
+        tmp_row_information = self.search_point_by_id(x_nearest)
+        if tmp_row_information is not None:
+            tmp_prot_1_name = self.protein_pair_for_analysis.protein_1.get_molecule_object()
+            tmp_prot_2_name = self.protein_pair_for_analysis.protein_2.get_molecule_object()
+            msg: str = (f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest} Between {tmp_prot_1_name} "
+                        f"Chain {tmp_row_information[1]} Position {tmp_row_information[2]} Residue {tmp_row_information[3]} and "
+                        f"{tmp_prot_2_name} Chain {tmp_row_information[4]} Position {tmp_row_information[5]} Residue {tmp_row_information[6]}")
+            self.lbl_status.setText(msg)
+        else:
+            self.lbl_status.setText(f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest}")
+        # Change the selection color
+        self.change_selection_color(QtGui.QColor(75, 145, 247, 200))
+
+    def change_selection_color(self, color):
+        palette = self.table_view.palette()
+        palette.setColor(QtGui.QPalette.Highlight, color)
+        self.table_view.setPalette(palette)
+
+    def search_point_by_id(self, target_id):
+        for row in range(self.csv_model.rowCount()):
+            id_item = self.csv_model.item(row, 0)  # Assuming running id is in the first column
+            if id_item and id_item.text() == str(target_id):
+                # Select the entire row in the QTableView
+                self.table_view.selectRow(row)
+                tmp_row_information = (
+                    self.table_view.model().index(row, 0).data(Qt.DisplayRole),
+                    self.table_view.model().index(row, 1).data(Qt.DisplayRole),
+                    self.table_view.model().index(row, 2).data(Qt.DisplayRole),
+                    self.table_view.model().index(row, 3).data(Qt.DisplayRole),
+                    self.table_view.model().index(row, 4).data(Qt.DisplayRole),
+                    self.table_view.model().index(row, 5).data(Qt.DisplayRole),
+                    self.table_view.model().index(row, 6).data(Qt.DisplayRole),
+                )
+                return tmp_row_information  # Return True if the id is found
+        return None
+
+    def highlight_table_selection_in_plot(self):
+        tmp_x_value = self.table_view.model().index(
+            self.table_view.currentIndex().row(), 0
+        ).data(Qt.DisplayRole)
+        tmp_y_value = self.table_view.model().index(
+            self.table_view.currentIndex().row(), 7
+        ).data(Qt.DisplayRole)
+
+        # Clear the previous clicked point
+        if self.clicked_point_scatter is not None:
+            try:
+                self.clicked_point_scatter.remove()
+            except Exception as e:
+                constants.PYSSA_LOGGER.warning(f"Something went wrong: {e}")
+        self.clicked_point_scatter = self._ax_plot.scatter(tmp_x_value, tmp_y_value, color='red', marker='o',
+                                                           label='Clicked Point')
+        self.plot_widget.canvas.draw()
+
+        tmp_row = self.table_view.currentIndex().row()
+        self.table_view.selectRow(tmp_row)
+        tmp_row_information = (
+            self.table_view.model().index(tmp_row, 0).data(Qt.DisplayRole),
+            self.table_view.model().index(tmp_row, 1).data(Qt.DisplayRole),
+            self.table_view.model().index(tmp_row, 2).data(Qt.DisplayRole),
+            self.table_view.model().index(tmp_row, 3).data(Qt.DisplayRole),
+            self.table_view.model().index(tmp_row, 4).data(Qt.DisplayRole),
+            self.table_view.model().index(tmp_row, 5).data(Qt.DisplayRole),
+            self.table_view.model().index(tmp_row, 6).data(Qt.DisplayRole),
+        )
+        if tmp_row_information is not None:
+            tmp_prot_1_name = self.protein_pair_for_analysis.protein_1.get_molecule_object()
+            tmp_prot_2_name = self.protein_pair_for_analysis.protein_2.get_molecule_object()
+            msg: str = (f"Status: Residue pair no. = {tmp_x_value}, Distance (Å) = {tmp_y_value} Between {tmp_prot_1_name} "
+                        f"Chain {tmp_row_information[1]} Position {tmp_row_information[2]} Residue {tmp_row_information[3]} and "
+                        f"{tmp_prot_2_name} Chain {tmp_row_information[4]} Position {tmp_row_information[5]} Residue {tmp_row_information[6]}")
+            self.lbl_status.setText(msg)
+        else:
+            self.lbl_status.setText(f"Status: Residue pair no. = {tmp_x_value}, Distance (Å) = {tmp_y_value}")
+
+    # <editor-fold desc="Experimental!">
+    # def resizeEvent(self, event) -> None:  # noqa: N802, ANN001
+    #     """The actual resize event overwritten from PyQt5."""
+    #     # Let the base class handle the event
+    #     super().resizeEvent(event)
+    #
+    #     # Start or restart the timer when resizing
+    #     self.resize_timer.start(200)  # Adjust the timeout as needed
+
+    def handle_resize_timeout(self) -> None:
+        """Handles the resize process."""
+        # Handle the resize event after the timeout
+        size = self.scroll_area.size()
+        self.plot_widget.setFixedSize(size.width() - 10, size.height() - 10)
+        self.plot_widget.figure.tight_layout()
+        self.plot_widget.canvas.draw()
+    # </editor-fold>

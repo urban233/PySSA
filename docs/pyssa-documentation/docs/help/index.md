@@ -38,7 +38,7 @@
 
     PySSA can analyze two protein structures. The analysis makes a structure alignment and calculates the distances of C-alpha atoms.
 
--   [__Results__]()
+-   [__Results__](results/index.md)
 
     ---
 

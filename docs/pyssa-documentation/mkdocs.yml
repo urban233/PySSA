@@ -17,6 +17,10 @@ nav:
             - Add: help/sequences/sequence_add.md
             - Save: help/sequences/sequence_save.md
             - Delete: help/sequences/sequence_delete.md
+        - Results:
+              - Overview: help/results/index.md
+              - Summary: help/results/summary.md
+              - DD Visualizer: help/results/distance_data_visualizer.md
         - Guides:
               - Import FASTA File: help/sequences/guides/how_to_import_fasta_file.md
     - Screenshots:
