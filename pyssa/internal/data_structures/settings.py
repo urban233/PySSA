@@ -69,8 +69,8 @@ class Settings:
         self.color_vision_mode: str = "normal"
         self.ask_save_pymol_session: int = 0
         self.image_background_color: str = "black"
-        self.image_renderer: str = "0"  # or "-1"
-        self.image_ray_trace_mode: int = 0  # ranges from 0 to 3
+        self.image_renderer: str = "-1"  # or "0"
+        self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
         self.image_ray_texture: int = 0  # ranges from 0 to 5
 
     def serialize_settings(self) -> None:
@@ -299,8 +299,8 @@ class Settings:
         self.local_colabfold: int = 0
         self.ask_save_pymol_session: int = 0
         self.image_background_color: str = "black"
-        self.image_renderer: str = "0"  # or "-1"
-        self.image_ray_trace_mode: int = 0  # ranges from 0 to 3
+        self.image_renderer: str = "-1"  # or "0"
+        self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
         self.image_ray_texture: int = 0  # ranges from 0 to 5
 
         self.serialize_settings()
