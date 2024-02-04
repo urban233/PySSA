@@ -149,6 +149,7 @@ class MainViewController:
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
+        self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
         # seqs tab
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
@@ -167,7 +168,10 @@ class MainViewController:
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
         self._view.cb_chain_color.currentIndexChanged.connect(self._change_chain_color_proteins)
         self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
+
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
+        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
+
         self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
         # Context menu
         self._interface_manager.get_rename_protein_view().dialogClosed.connect(
@@ -188,10 +192,14 @@ class MainViewController:
         """Updates the status bar of the main view with a custom message."""
         self._view.status_bar.showMessage(message)
 
+    def _update_tab(self):
+        self._interface_manager.current_tab_index = self._view.ui.project_tab_widget.currentIndex()
+
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
+    # <editor-fold desc="Help related methods">
     def open_help(self, a_page_name: str):
         """Opens the pyssa documentation window if it's not already open.
 
@@ -251,6 +259,8 @@ class MainViewController:
         self.help_context_action.triggered.disconnect()
         self.help_context_action.triggered.connect(self._open_sequence_import_help)
         self.context_menu.exec_(self._view.ui.btn_import_seq.mapToGlobal(a_point))
+
+    # </editor-fold>
 
     # </editor-fold>
 
@@ -407,12 +417,29 @@ class MainViewController:
         self._interface_manager.get_use_project_view().show()
 
     def _post_use_project(self, user_input: tuple) -> None:
-        # TODO: needs actual implementation of project creation process!
-        #self._interface_manager.set_new_project(tmp_project)
+        tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
+        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+            db_manager.build_new_database()
+            db_manager.close_project_database()
+
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_use_project,
+            args=(
+                user_input[0],
+                self._interface_manager.get_application_settings().get_workspace_path(),
+                user_input[1]
+            ),
+            post_func=self.__await_use_project,
+        )
+        self._active_task.start()
+
+    def __await_use_project(self, return_value: tuple):
+        _, tmp_project = return_value
+        self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
         self._interface_manager.stop_wait_spinner()
-        self._interface_manager.update_status_bar("Opening existing project finished.")
+        self._interface_manager.update_status_bar("Use process finished.")
 
     # def __await_open_project(self, a_result: tuple) -> None:
     #     self._interface_manager.set_new_project(a_result[1])
@@ -1371,7 +1398,7 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def _import_protein_structure(self):
-        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
+        self._interface_manager.get_add_protein_view().restore_ui_defaults()
         self._interface_manager.get_add_protein_view().show()
 
     def _post_import_protein_structure(self, return_value: tuple):
@@ -1413,8 +1440,6 @@ class MainViewController:
 
     def _delete_protein(self):
         tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-        tmp_database_filepath = self._database_manager.get_database_filepath()
-        self._database_manager.close_project_database()
         tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
                                                                       (0, tmp_protein.get_id()))
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)

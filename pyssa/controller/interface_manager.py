@@ -43,6 +43,7 @@ class InterfaceManager:
     _current_project: "project.Project"
     _current_pymol_session: "current_session.CurrentPymolSession"
     _application_settings: "settings.Settings"
+    current_tab_index: int = 0
 
     _workspace_model: QtGui.QStandardItemModel
     _sequence_model: QtGui.QStandardItemModel
@@ -314,7 +315,7 @@ class InterfaceManager:
             self._main_view.ui.action_ray_tracing_image.setEnabled(True)
             self._main_view.ui.action_simple_image.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(False)
-            self._main_view.ui.project_tab_widget.setCurrentIndex(0)
+            self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
         else:
             # No project is open
             self._main_view.ui.lbl_project_name.hide()

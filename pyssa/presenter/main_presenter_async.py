@@ -173,6 +173,38 @@ def create_new_project(
     # )
 
 
+def create_use_project(
+    the_project_name: str,
+    the_workspace_path: pathlib.Path,
+    the_proteins_to_add: list,
+) -> tuple:
+    """Creates a new project object.
+
+    Args:
+        the_project_name: the project name to use for the new project.
+        the_workspace_path: the current workspace path.
+        the_proteins_to_add: a list of protein objects for the new project.
+
+    Returns:
+        a tuple with ("results", a_new_project_obj)
+    """
+    # TODO: checks are needed
+    tmp_project = project.Project(the_project_name, the_workspace_path)
+
+    tmp_database_filepath = str(pathlib.Path(f"{the_workspace_path}/{the_project_name}.db"))
+    with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
+
+        for tmp_protein in the_proteins_to_add:
+            tmp_protein.db_project_id = tmp_project.get_id()
+            tmp_project.add_existing_protein(tmp_protein)
+            tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
+
+        db_manager.close_project_database()
+    constants.PYSSA_LOGGER.info("Use project finished.")
+    return ("result", tmp_project)
+
 
 def save_project(a_project: "project.Project", placeholder: int) -> tuple:
     """Saves the project through serialization.

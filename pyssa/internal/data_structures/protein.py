@@ -216,7 +216,6 @@ class Protein:
         self.check_states_and_reduce_to_one_state_if_necessary()
         try:
             os.remove(str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb")))
-            os.remove(str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb")))
         except Exception as e:
             logger.error(f"Could not delete pdb file! Ran into error: {e}")
 
