@@ -389,8 +389,16 @@ def rename_selected_protein_structure(
         a tuple with ("result", an_existing_protein_object)
     """
     tmp_old_protein_name = a_protein.get_molecule_object()
+
     # Update in memory
     a_protein.set_molecule_object(the_new_protein_name)
+
+    # Update in pymol
+    try:
+        cmd.set_name(tmp_old_protein_name, a_protein.get_molecule_object())
+    except pymol.CmdException:
+        logger.error(f"Renaming the protein in PyMOL failed.")
+        raise RuntimeError("Renaming the protein in PyMOL failed. Maybe it is not opened in a session?")
     # Update in database
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
         db_manager.open_project_database()

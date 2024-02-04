@@ -27,7 +27,7 @@ import uuid
 import pymol
 from Bio import PDB
 from PyQt5 import QtCore
-
+from pymol import cmd
 from pyssa.controller import database_manager
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io

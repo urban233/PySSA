@@ -1550,6 +1550,17 @@ class MainViewController:
         self._view.ui.proteins_tree_view.model().setData(
             self._interface_manager.get_current_protein_tree_index(), result[1], enums.ModelEnum.OBJECT_ROLE
         )
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
+            (
+                0,
+                self._view.ui.proteins_tree_view.model().data(
+                    self._interface_manager.get_current_protein_tree_index(),
+                    enums.ModelEnum.OBJECT_ROLE
+                )
+            )
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
         self._view.wait_spinner.stop()
