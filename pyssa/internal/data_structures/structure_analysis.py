@@ -76,6 +76,9 @@ class Analysis:
                 tmp_protein_pair.protein_2.set_pdb_data(pdb_atom_dict_2)
             db_manager.close_project_database()
 
+    def _get_last_id_of_protein_pairs(self) -> int:
+        return max(self.app_project.protein_pairs, key=lambda obj: obj.get_id()).get_id()
+
     def run_distance_analysis(self, the_image_creation_option: bool) -> None:
         """Runs the distance analysis for all protein pairs of the analysis job.
 
@@ -96,6 +99,7 @@ class Analysis:
             f"The function argument of the value for the image_creation_option is: {the_image_creation_option}",
         )
         self._fetch_pdb_atoms_for_all_proteins()
+        tmp_latest_protein_pair_id = self._get_last_id_of_protein_pairs()
         # create scratch dirs
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_ANALYSIS)
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)
@@ -180,7 +184,6 @@ class Analysis:
             )
             # save pymol session of distance analysis
             tmp_protein_pair.save_session_of_protein_pair()
-            self.app_project.add_protein_pair(tmp_protein_pair)
 
     def run_analysis(self, the_analysis_type: str, the_image_option: bool) -> None:
         """This function is used to run the analysis.

@@ -4,9 +4,9 @@ import pathlib
 import shutil
 import subprocess
 import platform
-
+import zmq
 import pymol
-
+import pygetwindow as gw
 from pymol import cmd
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
@@ -16,8 +16,9 @@ from Bio import SeqRecord
 from Bio import SeqIO
 from xml import sax
 
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
-    pymol_session_manager, hotspots_protein_regions_view_controller
+    pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -120,6 +121,7 @@ class MainViewController:
 
         self._setup_statusbar()
         self._connect_all_ui_elements_with_slot_functions()
+        self._init_context_menus()
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.ui.action_new_project.triggered.connect(self._create_project)
@@ -143,12 +145,14 @@ class MainViewController:
         self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
         self._view.ui.action_show_log_in_explorer.triggered.connect(self.open_logs)
         self._view.ui.action_clear_logs.triggered.connect(self.clear_all_log_files)
-        self._view.ui.action_documentation.triggered.connect(self.open_documentation)
+        self._view.ui.action_documentation.triggered.connect(self._open_help_center)
         self._view.ui.action_tutorials.triggered.connect(self.open_tutorial)
         self._view.ui.action_about.triggered.connect(self.open_about)
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
+        self._view.ui.action_predict_multimer.triggered.connect(self._predict_multimer)
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
+        self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
         # seqs tab
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
@@ -156,7 +160,7 @@ class MainViewController:
         self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
-        self._view.ui.btn_help.clicked.connect(self.open_help)
+        self._view.ui.btn_help.clicked.connect(self._open_sequences_tab_help)
 
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
@@ -167,7 +171,10 @@ class MainViewController:
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
         self._view.cb_chain_color.currentIndexChanged.connect(self._change_chain_color_proteins)
         self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
+
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
+        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
+
         self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
         # Context menu
         self._interface_manager.get_rename_protein_view().dialogClosed.connect(
@@ -188,22 +195,75 @@ class MainViewController:
         """Updates the status bar of the main view with a custom message."""
         self._view.status_bar.showMessage(message)
 
+    def _update_tab(self):
+        self._interface_manager.current_tab_index = self._view.ui.project_tab_widget.currentIndex()
+
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
-    def open_help(self):
-        os.startfile(r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html")
-        # with open(
-        #     r"C:\Users\martin\github_repos\PySSA\docs\internal_help\html\home.html",
-        #     "r",
-        #     encoding="utf-8",
-        # ) as file:
-        #     html_content = file.read()
-        #     file.close()
-        # tmp_dialog = dialog_help.DialogHelp(html_content)
-        # tmp_dialog.exec_()
-        # pass
+    # <editor-fold desc="Help related methods">
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.start_wait_spinner()
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _init_context_menus(self):
+        # <editor-fold desc="General context menu setup">
+        self.context_menu = QtWidgets.QMenu()
+        self.help_context_action = self.context_menu.addAction(self._view.tr("Get Help"))
+        self.help_context_action.triggered.connect(self._open_sequences_tab_help)
+
+        # </editor-fold>
+
+        # Set the context menu for the buttons
+        self._view.ui.seqs_list_view.setContextMenuPolicy(3)
+        self._view.ui.seqs_list_view.customContextMenuRequested.connect(self._show_context_menu_for_seq_list)
+        self._view.ui.seqs_table_widget.setContextMenuPolicy(3)
+        self._view.ui.seqs_table_widget.customContextMenuRequested.connect(self._show_context_menu_for_seq_table)
+        self._view.ui.btn_import_seq.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
+        self._view.ui.btn_import_seq.customContextMenuRequested.connect(self._show_context_menu_for_seq_import)
+        # add more buttons here ...
+
+    def _open_help_center(self):
+        self.open_help("help/")
+
+    def _open_sequences_tab_help(self):
+        self.open_help("help/sequences/sequences_tab/")
+
+    def _open_sequence_import_help(self):
+        self.open_help("help/sequences/sequence_import/")
+
+    def _show_context_menu_for_seq_list(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_sequences_tab_help)
+        self.context_menu.exec_(self._view.ui.seqs_list_view.mapToGlobal(a_point))
+
+    def _show_context_menu_for_seq_table(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_help_center)
+        self.context_menu.exec_(self._view.ui.seqs_table_widget.mapToGlobal(a_point))
+
+    def _show_context_menu_for_seq_import(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_sequence_import_help)
+        self.context_menu.exec_(self._view.ui.btn_import_seq.mapToGlobal(a_point))
+
+    # </editor-fold>
 
     # </editor-fold>
 
@@ -360,12 +420,29 @@ class MainViewController:
         self._interface_manager.get_use_project_view().show()
 
     def _post_use_project(self, user_input: tuple) -> None:
-        # TODO: needs actual implementation of project creation process!
-        #self._interface_manager.set_new_project(tmp_project)
+        tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
+        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+            db_manager.build_new_database()
+            db_manager.close_project_database()
+
+        self._active_task = tasks.Task(
+            target=main_presenter_async.create_use_project,
+            args=(
+                user_input[0],
+                self._interface_manager.get_application_settings().get_workspace_path(),
+                user_input[1]
+            ),
+            post_func=self.__await_use_project,
+        )
+        self._active_task.start()
+
+    def __await_use_project(self, return_value: tuple):
+        _, tmp_project = return_value
+        self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
         self._interface_manager.stop_wait_spinner()
-        self._interface_manager.update_status_bar("Opening existing project finished.")
+        self._interface_manager.update_status_bar("Use process finished.")
 
     # def __await_open_project(self, a_result: tuple) -> None:
     #     self._interface_manager.set_new_project(a_result[1])
@@ -507,7 +584,6 @@ class MainViewController:
                 self._interface_manager.get_current_project(),
                 self._interface_manager.get_application_settings(),
                 tmp_checkbox_state,
-                self._database_thread
             ),
             post_func=self.post_analysis_process,
         )
@@ -640,7 +716,6 @@ class MainViewController:
                     self._interface_manager.get_current_project(),
                     self._interface_manager.get_application_settings(),
                     self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
-                    self._database_thread
                 ),
                 post_func=self.post_analysis_process,
             )
@@ -796,6 +871,168 @@ class MainViewController:
 
     # </editor-fold>
 
+    # <editor-fold desc="Multimer">
+    def _predict_multimer(self):
+        self._external_controller = predict_multimer_view_controller.PredictMultimerViewController(
+            self._interface_manager
+        )
+        self._external_controller.job_input.connect(self._post_predict_monomer)
+        self._interface_manager.get_predict_multimer_view().show()
+
+    def _post_predict_multimer(self, result: tuple):
+        self._view.wait_spinner.start()
+
+        # <editor-fold desc="Check if WSL2 and ColabFold are installed">
+        if globals.g_os == "win32":
+            constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
+            if not dialog_settings_global.is_wsl2_installed():
+                constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
+                self._interface_manager.get_application_settings().wsl_install = 0
+                basic_boxes.ok(
+                    "Prediction",
+                    "Prediction failed because the WSL2 environment is not installed!",
+                    QtWidgets.QMessageBox.Critical,
+                )
+                return
+            constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
+            if not dialog_settings_global.is_local_colabfold_installed():
+                constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
+                self._interface_manager.get_application_settings().local_colabfold = 0
+                basic_boxes.ok(
+                    "Prediction",
+                    "Prediction failed because the ColabFold is not installed!",
+                    QtWidgets.QMessageBox.Critical,
+                )
+                return
+
+        # </editor-fold>
+
+        self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
+        constants.PYSSA_LOGGER.info("Begin prediction process.")
+        self._interface_manager.update_status_bar("Begin prediction process ...")
+        if result[3] is True:
+            constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
+            # Analysis should be run after the prediction
+            self._active_task = tasks.Task(
+                target=main_presenter_async.predict_protein_with_colabfold,
+                args=(
+                    result[1],
+                    result[2],
+                    self._interface_manager.get_current_project(),
+                ),
+                post_func=self.__await_multimer_prediction_for_subsequent_analysis,
+            )
+            self._active_task.start()
+        else:
+            constants.PYSSA_LOGGER.info("Running only a prediction.")
+            # No analysis after prediction
+            self._active_task = tasks.Task(
+                target=main_presenter_async.predict_protein_with_colabfold,
+                args=(
+                    result[1],
+                    result[2],
+                    self._interface_manager.get_current_project(),
+                ),
+                post_func=self.__await_predict_protein_with_colabfold,
+            )
+            self._active_task.start()
+
+        self._view.status_bar.showMessage("A prediction is currently running ...")
+        self.block_box_prediction = QtWidgets.QMessageBox()
+        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+        styles.set_stylesheet(self.block_box_prediction)
+        self.block_box_prediction.setWindowTitle("Structure Prediction")
+        self.block_box_prediction.setText("A prediction is currently running.")
+        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
+        self.block_box_prediction.exec_()
+        if self.block_box_prediction.clickedButton() == btn_abort:
+            self.abort_prediction()
+            self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+        else:
+            self.block_box_prediction.close()
+            self._view.wait_spinner.stop()
+
+    def __await_multimer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
+        tmp_exit_code = result[0]
+        tmp_exit_code_description = [1]
+        if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            # Prediction was successful
+            self.block_box_prediction.destroy(True)
+            constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            self.update_status("All structure predictions are done.")
+            constants.PYSSA_LOGGER.info("Begin analysis process.")
+            self.update_status("Begin analysis process ...")
+            tmp_raw_analysis_run_names: list = []
+            for row_no in range(self._view.ui.list_pred_analysis_multi_overview.count()):
+                tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_multi_overview.item(row_no).text())
+
+            self._active_task = tasks.Task(
+                target=main_presenter_async.run_distance_analysis,
+                args=(
+                    tmp_raw_analysis_run_names,
+                    self._interface_manager.get_current_project(),
+                    self._interface_manager.get_application_settings(),
+                    self._interface_manager.get_predict_multimer_view().cb_pred_analysis_multi_images.isChecked(),
+                ),
+                post_func=self.post_analysis_process,
+            )
+            self._active_task.start()
+
+            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+
+        elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because there was an error writing the fasta file(s)!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            self.display_view_page()
+            self._project_watcher.show_valid_options(self._view.ui)
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because the fasta file(s) could not be found!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because a subprocess failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+        elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            self.block_box_prediction.destroy(True)
+            basic_boxes.ok(
+                "Prediction",
+                "Prediction failed because of an unknown error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+            constants.PYSSA_LOGGER.error(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
+            )
+            self._view.wait_spinner.stop()
+
+
+    # </editor-fold>
+
     # </editor-fold>
 
     # <editor-fold desc="Hotspots">
@@ -822,7 +1059,7 @@ class MainViewController:
         """Restores the settings.xml file to the default values."""
         out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?")
         if out:
-            tools.restore_default_settings(self._application_settings)
+            tools.restore_default_settings(self._interface_manager.get_application_settings())
             self._view.status_bar.showMessage("Settings were successfully restored.")
             logging.info("Settings were successfully restored.")
         else:
@@ -950,7 +1187,7 @@ class MainViewController:
 
         self._active_task = tasks.Task(
             target=main_presenter_async.create_ray_traced_image,
-            args=(full_file_name[0], 0),
+            args=(full_file_name[0], self._interface_manager.get_application_settings()),
             post_func=self.__await_create_ray_traced_image,
         )
         self._active_task.start()
@@ -975,7 +1212,7 @@ class MainViewController:
 
         self._active_task = tasks.Task(
             target=main_presenter_async.create_drawn_image,
-            args=(full_file_name[0], 0),
+            args=(full_file_name[0], self._interface_manager.get_application_settings()),
             post_func=self.__await_create_drawn_image,
         )
         self._active_task.start()
@@ -1327,7 +1564,7 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def _import_protein_structure(self):
-        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
+        self._interface_manager.get_add_protein_view().restore_ui_defaults()
         self._interface_manager.get_add_protein_view().show()
 
     def _post_import_protein_structure(self, return_value: tuple):
@@ -1369,8 +1606,6 @@ class MainViewController:
 
     def _delete_protein(self):
         tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-        tmp_database_filepath = self._database_manager.get_database_filepath()
-        self._database_manager.close_project_database()
         tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
                                                                       (0, tmp_protein.get_id()))
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
@@ -1481,6 +1716,17 @@ class MainViewController:
         self._view.ui.proteins_tree_view.model().setData(
             self._interface_manager.get_current_protein_tree_index(), result[1], enums.ModelEnum.OBJECT_ROLE
         )
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
+            (
+                0,
+                self._view.ui.proteins_tree_view.model().data(
+                    self._interface_manager.get_current_protein_tree_index(),
+                    enums.ModelEnum.OBJECT_ROLE
+                )
+            )
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
         self._view.wait_spinner.stop()

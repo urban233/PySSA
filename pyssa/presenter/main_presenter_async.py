@@ -39,7 +39,7 @@ from pyssa.internal.data_structures.data_classes import (
     prediction_configuration,
     current_session, database_operation,
 )
-from pyssa.internal.portal import pymol_io, graphic_operations
+from pyssa.internal.portal import pymol_io, graphic_operations, protein_operations
 from pyssa.internal.thread import database_thread
 from pyssa.io_pyssa import path_util, filesystem_io, bio_data
 from pyssa.logging_pyssa import log_handlers
@@ -172,6 +172,38 @@ def create_new_project(
     #     pathlib.Path(f"{the_workspace_path}/{tmp_project.get_project_name()}.xml"),
     # )
 
+
+def create_use_project(
+    the_project_name: str,
+    the_workspace_path: pathlib.Path,
+    the_proteins_to_add: list,
+) -> tuple:
+    """Creates a new project object.
+
+    Args:
+        the_project_name: the project name to use for the new project.
+        the_workspace_path: the current workspace path.
+        the_proteins_to_add: a list of protein objects for the new project.
+
+    Returns:
+        a tuple with ("results", a_new_project_obj)
+    """
+    # TODO: checks are needed
+    tmp_project = project.Project(the_project_name, the_workspace_path)
+
+    tmp_database_filepath = str(pathlib.Path(f"{the_workspace_path}/{the_project_name}.db"))
+    with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
+
+        for tmp_protein in the_proteins_to_add:
+            tmp_protein.db_project_id = tmp_project.get_id()
+            tmp_project.add_existing_protein(tmp_protein)
+            tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
+
+        db_manager.close_project_database()
+    constants.PYSSA_LOGGER.info("Use project finished.")
+    return ("result", tmp_project)
 
 
 def save_project(a_project: "project.Project", placeholder: int) -> tuple:
@@ -312,7 +344,6 @@ def add_existing_protein_to_project(the_protein_information: tuple, a_project: "
         tmp_protein_name: str = pdb_filepath.get_filename().replace(" ", "_")
         tmp_protein = protein.Protein(
             molecule_object=tmp_protein_name,
-            pdb_filepath=pdb_filepath,
         )
     a_project.add_existing_protein(tmp_protein)
     return ("result", a_project)
@@ -357,8 +388,16 @@ def rename_selected_protein_structure(
         a tuple with ("result", an_existing_protein_object)
     """
     tmp_old_protein_name = a_protein.get_molecule_object()
+
     # Update in memory
     a_protein.set_molecule_object(the_new_protein_name)
+
+    # Update in pymol
+    try:
+        cmd.set_name(tmp_old_protein_name, a_protein.get_molecule_object())
+    except pymol.CmdException:
+        logger.error(f"Renaming the protein in PyMOL failed.")
+        raise RuntimeError("Renaming the protein in PyMOL failed. Maybe it is not opened in a session?")
     # Update in database
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
         db_manager.open_project_database()
@@ -448,7 +487,6 @@ def run_distance_analysis(
     a_project: "project.Project",
     the_settings: "settings.Settings",
     an_make_images_flag: bool,
-    the_database_thread: "database_thread.DatabaseThread",
 ) -> tuple:
     """Runs the distance analysis for all protein pairs in the given job.
 
@@ -472,19 +510,17 @@ def run_distance_analysis(
         )
         logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
         analysis_runs.run_analysis("distance", an_make_images_flag)
-        # tmp_database_manager = database_manager.DatabaseManager(str(a_project.get_database_filepath()))
-        # tmp_database_manager.set_application_settings(the_settings)
-        # tmp_database_manager.open_project_database()
         logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
         for tmp_protein_pair in analysis_runs.analysis_list:
             tmp_protein_pair.db_project_id = a_project.get_id()
             copy_tmp_protein_pair = copy.deepcopy(tmp_protein_pair)
-            the_database_thread.put_database_operation_into_queue(
-                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN_PAIR,
-                                                     (0, copy_tmp_protein_pair))
-            )
-            #tmp_database_manager.insert_new_protein_pair(tmp_protein_pair)
-        #tmp_database_manager.close_project_database()
+            with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
+                db_manager.open_project_database()
+                copy_tmp_protein_pair.set_id(db_manager.insert_new_protein_pair(copy_tmp_protein_pair))
+                db_manager.close_project_database()
+            # Protein pair gets added to "a_project" argument of this function
+            a_project.add_protein_pair(copy_tmp_protein_pair)
+
     except exception.UnableToSetupAnalysisError:
         logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
         return (
@@ -614,16 +650,21 @@ def check_chains_for_analysis(the_protein_1_name: str, the_protein_2_name: str, 
     """
     # TODO: checks needed
     # TODO: tests needed
-    # fixme: The function does not check if the only chain is really a protein chain, this should be done better!
     tmp_is_only_one_chain: bool = False
     tmp_analysis_run_name: str = ""
     tmp_protein_1 = a_project.search_protein(the_protein_1_name)
     tmp_protein_2 = a_project.search_protein(the_protein_2_name)
-    if len(tmp_protein_1.chains) == 1 and len(tmp_protein_2.chains):
+    if len(tmp_protein_1.get_protein_sequences()) == 1: # or len(tmp_protein_2.get_protein_sequences()) == 1:
         tmp_is_only_one_chain = True
+        tmp_protein_1_first_protein_chain_letter = protein_operations.get_chain_letter_of_first_protein_sequence(
+            tmp_protein_1.chains
+        )
+        tmp_protein_2_first_protein_chain_letter = protein_operations.get_chain_letter_of_first_protein_sequence(
+            tmp_protein_2.chains
+        )
         tmp_analysis_run_name = (
-            f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1.chains[0].chain_letter}"
-            f"_vs_{tmp_protein_2.get_molecule_object()};{tmp_protein_2.chains[0].chain_letter}"
+            f"{tmp_protein_1.get_molecule_object()};{tmp_protein_1_first_protein_chain_letter}"
+            f"_vs_{tmp_protein_2.get_molecule_object()};{tmp_protein_2_first_protein_chain_letter}"
         )
     return ("result", tmp_is_only_one_chain, tmp_analysis_run_name, tmp_protein_1, tmp_protein_2)
 
@@ -730,20 +771,23 @@ def preview_image(a_placeholder_1: int, a_placeholder_2: int) -> tuple:
     return 0, ""
 
 
-def create_ray_traced_image(an_image_filepath: str, a_placeholder_1: int) -> tuple:
-    # TODO: the renderer should be changeable
+def create_ray_traced_image(an_image_filepath: str, the_app_settings: "settings.Settings") -> tuple:
+    cmd.set("ray_trace_mode", the_app_settings.image_ray_trace_mode)
+    cmd.set("ray_texture", the_app_settings.image_ray_texture)
     try:
-        cmd.ray(2400, 2400, renderer=int(0))
+        cmd.ray(2400, 2400, renderer=int(the_app_settings.image_renderer))
         cmd.png(an_image_filepath, dpi=300)
     except pymol.CmdException:
         logger.warning("Unexpected exception.")
     return 0, ""
 
 
-def create_drawn_image(an_image_filepath: str, a_placeholder_1: int) -> tuple:
+def create_drawn_image(an_image_filepath: str, the_app_settings: "settings.Settings") -> tuple:
+    cmd.bg_color(the_app_settings.image_background_color)
     try:
         cmd.draw(2400, 2400)
         cmd.png(an_image_filepath, dpi=300)
     except pymol.CmdException:
         logger.warning("Unexpected exception.")
+    cmd.bg_color("black")
     return 0, ""

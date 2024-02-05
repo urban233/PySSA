@@ -25,6 +25,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from pyssa.gui.ui.forms.auto_generated import auto_delete_project_view
+from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
@@ -39,14 +40,17 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.ui = auto_delete_project_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
+        self.resize(450, 600)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
+        self.ui.lbl_delete_status_search.setText("")
         self.ui.list_delete_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_help.setIcon(icon)
         self.ui.btn_help.setText("")
+        styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Delete project")
+        self.setWindowTitle("Delete Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

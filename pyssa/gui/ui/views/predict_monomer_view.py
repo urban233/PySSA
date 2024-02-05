@@ -78,6 +78,7 @@ class PredictMonomerView(QtWidgets.QDialog):
         self.ui.btn_help.setText("")
         self.ui.btn_help_2.setIcon(icon)
         self.ui.btn_help_2.setText("")
+        styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Prediction Monomer")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

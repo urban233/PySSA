@@ -80,6 +80,9 @@ class AddProteinView(Qt.QtWidgets.QDialog):
             self.ui.txt_add_protein.setEnabled(False)
             self.ui.lbl_status.setText("You cannot enter a PDB ID (no internet).")
 
+    def restore_ui_defaults(self):
+        self.ui.txt_add_protein.clear()
+
     # @SLOT
     def validate_reference_in_project(self) -> None:
         """Checks if the entered reference protein is valid or not."""

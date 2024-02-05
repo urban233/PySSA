@@ -44,6 +44,7 @@ class OpenProjectView(QtWidgets.QDialog):
         self.ui = auto_open_project_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
+        self.resize(450, 600)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
@@ -53,8 +54,9 @@ class OpenProjectView(QtWidgets.QDialog):
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_help.setIcon(icon)
         self.ui.btn_help.setText("")
+        styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        self.setWindowTitle("Open project")
+        self.setWindowTitle("Open Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
 
     def closeEvent(self, event):

@@ -151,7 +151,7 @@ def error_dialog_settings(message: str, message_detail: str, settings_obj: "sett
     msg.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
     msg.setWindowTitle("Error")
 
-    restore_settings_button = msg.addButton("Restore Settings", QMessageBox.ActionRole)
+    restore_settings_button = msg.addButton("Restore", QMessageBox.ActionRole)
     msg.exec_()
 
     # button logic

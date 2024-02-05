@@ -83,7 +83,7 @@ class DatabaseThread(threading.Thread):
     @staticmethod
     def __wrapper_insert_new_protein_pair(the_db_manager, the_buffered_data: tuple):
         _, tmp_protein_pair = the_buffered_data
-        the_db_manager.insert_new_protein_pair(tmp_protein_pair)
+        the_db_manager.insert_new_protein_pair(the_buffered_data[1])
 
     @staticmethod
     def __wrapper_delete_existing_protein_pair(the_db_manager, the_buffered_data: tuple):
@@ -92,7 +92,7 @@ class DatabaseThread(threading.Thread):
 
     @staticmethod
     def __wrapper_update_pymol_session_of_protein(the_db_manager, the_buffered_data: tuple):
-        _, tmp_new_pymol_session, tmp_protein = the_buffered_data
+        _, tmp_protein = the_buffered_data
         tmp_protein.save_pymol_session_as_base64_string()
         the_db_manager.update_pymol_session_of_protein(tmp_protein.get_id(), tmp_protein.pymol_session)
 

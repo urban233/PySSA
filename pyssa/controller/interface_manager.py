@@ -11,7 +11,8 @@ from pyssa.controller import database_manager
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
-    create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view
+    create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
+    predict_multimer_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -43,6 +44,7 @@ class InterfaceManager:
     _current_project: "project.Project"
     _current_pymol_session: "current_session.CurrentPymolSession"
     _application_settings: "settings.Settings"
+    current_tab_index: int = 0
 
     _workspace_model: QtGui.QStandardItemModel
     _sequence_model: QtGui.QStandardItemModel
@@ -53,6 +55,7 @@ class InterfaceManager:
         # View definitions
         self._main_view = main_view.MainView()
         self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
+        self._predict_multimer_view = predict_multimer_view.PredictMultimerView()
         self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView()
         self._create_project_view = create_project_view.CreateProjectView()
         self._open_project_view = open_project_view.OpenProjectView()
@@ -147,6 +150,9 @@ class InterfaceManager:
 
     def get_predict_monomer_view(self) -> "predict_monomer_view.PredictMonomerView":
         return self._predict_monomer_view
+
+    def get_predict_multimer_view(self) -> "predict_multimer_view.PredictMultimerView":
+        return self._predict_multimer_view
 
     def get_distance_analysis_view(self) -> "distance_analysis_view.DistanceAnalysisView":
         return self._distance_analysis_view
@@ -309,12 +315,13 @@ class InterfaceManager:
             self._main_view.ui.action_export_project.setEnabled(True)
             self._main_view.ui.action_close_project.setEnabled(True)
             self._main_view.ui.action_predict_monomer.setEnabled(True)
+            self._main_view.ui.action_predict_multimer.setEnabled(True)
             self._main_view.ui.action_distance_analysis.setEnabled(True)
             self._main_view.ui.action_preview_image.setEnabled(True)
             self._main_view.ui.action_ray_tracing_image.setEnabled(True)
             self._main_view.ui.action_simple_image.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(False)
-            self._main_view.ui.project_tab_widget.setCurrentIndex(0)
+            self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
         else:
             # No project is open
             self._main_view.ui.lbl_project_name.hide()

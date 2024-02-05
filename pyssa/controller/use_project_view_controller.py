@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Open Dialog."""
+import copy
 import glob
 import os
 import pathlib
@@ -89,20 +90,20 @@ class UseProjectViewController(QtCore.QObject):
             self.add_protein_structure_to_new_project,
         )
         self._view.ui.cb_choose_project.currentIndexChanged.connect(self._list_all_proteins_of_selected_project)
-        self._view.ui.list_use_available_protein_structures.doubleClicked.connect(
-            self.add_protein_structure_to_new_project,
-        )
+        # self._view.ui.list_use_available_protein_structures.doubleClicked.connect(
+        #     self.add_protein_structure_to_new_project,
+        # )
         self._view.ui.list_use_available_protein_structures.itemClicked.connect(self.use_enable_add)
         self._view.ui.btn_use_remove_selected_protein_structures.clicked.connect(
             self.remove_protein_structure_to_new_project,
         )
-        self._view.ui.list_use_selected_protein_structures.doubleClicked.connect(
-            self.remove_protein_structure_to_new_project,
-        )
+        # self._view.ui.list_use_selected_protein_structures.doubleClicked.connect(
+        #     self.remove_protein_structure_to_new_project,
+        # )
         self._view.ui.list_use_selected_protein_structures.itemClicked.connect(self.use_enable_remove)
         self._view.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
         # self._view.ui.txt_use_search.textChanged.connect(self.validate_use_search)
-        #self._view.ui.btn_use_create_new_project.clicked.connect(self.pre_create_use_project)
+        self._view.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
 
     def validate_use_project_name(self) -> None:
         """Validates the input of the project name in real-time."""
@@ -132,7 +133,11 @@ class UseProjectViewController(QtCore.QObject):
 
     def add_protein_structure_to_new_project(self) -> None:
         """Adds the selected protein to the list which is used to create the new project."""
-        prot_to_add = self._view.ui.list_use_available_protein_structures.currentItem().text()
+        prot_to_add = QtWidgets.QListWidgetItem(self._view.ui.list_use_available_protein_structures.currentItem().text())
+        prot_to_add.setData(
+            enums.ModelEnum.OBJECT_ROLE,
+            self._view.ui.list_use_available_protein_structures.currentItem().data(enums.ModelEnum.OBJECT_ROLE)
+        )
         self._view.ui.list_use_selected_protein_structures.addItem(prot_to_add)
         self._view.ui.list_use_available_protein_structures.takeItem(
             self._view.ui.list_use_available_protein_structures.currentRow(),
@@ -143,10 +148,8 @@ class UseProjectViewController(QtCore.QObject):
                 self._view.ui.list_use_available_protein_structures.currentItem().setSelected(False)
             except AttributeError:
                 constants.PYSSA_LOGGER.debug("No selection in use available proteins list on Use page.")
-        if self._are_duplicate_proteins_in_selected_protein_list():
-            self._view.ui.btn_use_create_new_project.setEnabled(False)
-        else:
-            self._view.ui.btn_use_create_new_project.setEnabled(True)
+
+        self._view.ui.btn_use_create_new_project.setEnabled(True)
 
     def remove_protein_structure_to_new_project(self) -> None:
         """Removes the selected protein from the list which is used to create the new project."""
@@ -162,22 +165,22 @@ class UseProjectViewController(QtCore.QObject):
             except AttributeError:
                 constants.PYSSA_LOGGER.debug("No selection in use selected proteins list on Use page.")
 
-        if self._are_duplicate_proteins_in_selected_protein_list():
+        if self._view.ui.list_use_selected_protein_structures.count() == 0:
             self._view.ui.btn_use_create_new_project.setEnabled(False)
         else:
             self._view.ui.btn_use_create_new_project.setEnabled(True)
 
     def _are_duplicate_proteins_in_selected_protein_list(self) -> bool:
-        # TODO: method does not work as expected, reports multiple entries in selected protein table but that is wrong
         try:
             target_string = self._view.ui.list_use_available_protein_structures.currentItem().text()
         except AttributeError:
             return False
-        occurrences = sum(
-            1 for row in range(self._view.ui.list_use_selected_protein_structures.count()) if self._view.ui.list_use_selected_protein_structures.item(row).text() == target_string
-        )
-        print(occurrences)
-        if occurrences > 0:
+
+        tmp_occurrences = 0
+        for tmp_row in range(self._view.ui.list_use_selected_protein_structures.count()):
+            if self._view.ui.list_use_selected_protein_structures.item(tmp_row).text() == target_string:
+                tmp_occurrences += 1
+        if tmp_occurrences > 0:
             return True
         return False
 
@@ -291,3 +294,10 @@ class UseProjectViewController(QtCore.QObject):
     def use_enable_remove(self) -> None:
         """Enables the remove button."""
         self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
+
+    def create_use_project(self):
+        tmp_proteins: list = []
+        for tmp_row in range(self._view.ui.list_use_selected_protein_structures.count()):
+            tmp_proteins.append(self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(enums.ModelEnum.OBJECT_ROLE))
+        self._view.close()
+        self.user_input.emit((self._view.ui.txt_use_project_name.text(), tmp_proteins))
