@@ -1553,7 +1553,6 @@ class MainViewController:
         self._view.status_bar.showMessage(f"Active PyMOL Object: {tmp_current_active_obj}")
 
         # protein pair in session
-        # TODO: This must be tested, when a project have a protein pair!
         if self._pymol_session_manager.is_the_current_protein_pair_in_session():
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
@@ -1568,6 +1567,18 @@ class MainViewController:
         self._pymol_session_manager.load_protein_pair_session(tmp_protein_pair)
         # self._interface_manager.set_new_session_information(tmp_protein_pair.name, "protein_pair")
         # tmp_protein_pair.load_pymol_session()
+        try:
+            self._pymol_session_manager.load_protein_pair_session(tmp_protein_pair)
+            self._view.ui.action_protein_regions.setEnabled(False)
+        except RuntimeError:
+            logger.error("The protein pair name could not be found in the object list in PyMOL!")
+            self._view.cb_chain_color.setEnabled(False)
+            self._view.cb_chain_representation.setEnabled(False)
+        else:
+            self._view.cb_chain_color.setEnabled(True)
+            self._view.cb_chain_representation.setEnabled(True)
+            self._view.ui.action_protein_regions.setEnabled(True)
+            logger.info("Successfully opened protein pair session.")
 
     def _change_chain_color_protein_pairs(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()

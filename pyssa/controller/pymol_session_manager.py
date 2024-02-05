@@ -3,6 +3,7 @@ from pymol import cmd
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.views import main_view
 from pyssa.internal.data_structures import protein, protein_pair
+from pyssa.util import enums
 
 
 class PymolSessionManager:
@@ -66,7 +67,6 @@ class PymolSessionManager:
         if self._interface_manager.get_current_protein_tree_index_type() == "protein":
             tmp_protein_name: str = self._interface_manager.get_current_protein_tree_index_object().get_molecule_object()
         elif self._interface_manager.get_current_protein_tree_index_type() == "chain":
-            # Fixme: problems exists by get_molecule_object()
             tmp_protein_name: str = self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
         else:
             raise ValueError("Unknown type!")
@@ -78,14 +78,16 @@ class PymolSessionManager:
 
     def is_the_current_protein_pair_in_session(self) -> bool:
         """Checks if the current protein pair is in the session."""
-        if self._interface_manager.get_current_protein_pair_tree_index_object() == "protein":
-            tmp_protein_pair_name: str = self._interface_manager.get_current_protein_pair_tree_index().get_molecule_object()
+        if self._interface_manager.get_current_protein_pair_tree_index_type() == "protein":
+            tmp_protein_pair_name: str = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index().data(enums.ModelEnum.OBJECT_ROLE).name
         elif self._interface_manager.get_current_protein_pair_tree_index_type() == "chain":
-            tmp_protein_pair_name: str = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index().get_molecule_object()
+            tmp_protein_pair_name: str = self._interface_manager.get_grand_parent_index_object_of_current_protein_pair_tree_index().data(enums.ModelEnum.OBJECT_ROLE).name
+        elif self._interface_manager.get_current_protein_pair_tree_index_type() == "protein_pair":
+            tmp_protein_pair_name: str = self._interface_manager.get_current_protein_pair_tree_index_object().name
         else:
             raise ValueError("Unknown type!")
 
-        if self.session_object_type == "protein" and self.session_name == tmp_protein_pair_name:
+        if self.session_object_type == "protein_pair" and self.session_name == tmp_protein_pair_name:
             return True
         else:
             return False

@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Hotspots Dialog."""
+import typing
 
 from PyQt5 import QtCore
 from pymol import cmd
@@ -37,12 +38,22 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_hotspots_protein_regions_view()
         self._connect_all_ui_elements_to_slot_functions()
-        self._protein_name: str = self._get_protein_name_from_tree_view()
+        self._protein_names: tuple[str, typing.Union[str, int]] = self._get_protein_names_from_tree_view()
 
-    def _get_protein_name_from_tree_view(self):
+    # TODO: Write a function, to intercept the protein from the protein pair, when a protein pair gets loading in the PyMOL session.
+    def _get_protein_from_protein_pair(self):
+        """Get the protein from the protein pair."""
+        if self._interface_manager.get_current_protein_tree_index_type() == "protein_pair":
+            return self._interface_manager.get_current_protein_tree_index_object()
+        else:
+            return self._interface_manager.get_current_protein_tree_index_object()
+
+    def _get_protein_names_from_tree_view(self):
         """Checks if the object is a protein or a chain."""
         if self._interface_manager.get_current_protein_tree_index_type() == "protein":
             return self._interface_manager.get_current_protein_tree_index_object().get_molecule_object()
+        elif:
+
         else:
             return self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
 
@@ -72,7 +83,7 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         cmd.select(
             name="disulfides",
-            selection=f"{self._protein_name} & {tmp_pymol_selection_option}",
+            selection=f"{self._protein_names} & {tmp_pymol_selection_option}",
         )
         cmd.color(color="atomic", selection="disulfides and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
@@ -84,7 +95,7 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         cmd.select(
             name="disulfides",
-            selection=f"{self._protein_name} & {tmp_pymol_selection_option}",
+            selection=f"{self._protein_names} & {tmp_pymol_selection_option}",
         )
         cmd.hide("sticks", "disulfides")
 
