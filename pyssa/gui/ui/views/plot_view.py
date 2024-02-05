@@ -76,6 +76,7 @@ class PlotView(QtWidgets.QDialog):
         self._protein_pair = the_protein_pair
         self._current_project = a_project
         self.clicked_point_scatter = None
+        self.highlighted_bin_index = None
 
         # self.resizeEvent = self.handle_resize
         # Create a timer for delayed updates
@@ -436,7 +437,7 @@ class PlotView(QtWidgets.QDialog):
         length = len(distance_list)
         max_distance = distance_list[length - 1]
 
-        n, bins, patches = self._ax_hist.hist(
+        n, self.bins, self.patches = self._ax_hist.hist(
             distance_list,
             bins=np.arange(0, max_distance + 0.25, 0.25),
             orientation="horizontal",
@@ -445,7 +446,7 @@ class PlotView(QtWidgets.QDialog):
         )
 
         # Add labels to the non-zero frequency histogram bars
-        for bin_value, patch in zip(n, patches):
+        for bin_value, patch in zip(n, self.patches):
             x = patch.get_x() + patch.get_width() + 0.1
             y = patch.get_y() + patch.get_height() / 2
             self._ax_hist.annotate(
@@ -459,11 +460,11 @@ class PlotView(QtWidgets.QDialog):
             )
 
             # Calculate the midpoints between bin edges
-            bin_midpoints = (bins[:-1] + bins[1:]) / 2
+            bin_midpoints = (self.bins[:-1] + self.bins[1:]) / 2
             # Set y-ticks at the bin midpoints
             self._ax_hist.set_yticks(bin_midpoints)
             # Set custom tick labels
-            custom_labels = [f"{bin_start} - {bin_end}" for bin_start, bin_end in zip(bins[:-1], bins[1:])]
+            custom_labels = [f"{bin_start} - {bin_end}" for bin_start, bin_end in zip(self.bins[:-1], self.bins[1:])]
             self._ax_hist.set_yticklabels(custom_labels)
 
     def on_canvas_click(self, event):
@@ -496,6 +497,7 @@ class PlotView(QtWidgets.QDialog):
             self.lbl_status.setText(f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest}")
         # Change the selection color
         self.change_selection_color(QtGui.QColor(75, 145, 247, 200))
+        self.highlight_histogram_bar(y_nearest)
 
     def change_selection_color(self, color):
         palette = self.table_view.palette()
@@ -558,6 +560,20 @@ class PlotView(QtWidgets.QDialog):
             self.lbl_status.setText(msg)
         else:
             self.lbl_status.setText(f"Status: Residue pair no. = {tmp_x_value}, Distance (Å) = {tmp_y_value}")
+        self.highlight_histogram_bar(tmp_y_value)
+
+    def highlight_histogram_bar(self, point_to_highlight):
+        # Highlight a specific data point (example: point_to_highlight)
+        if self.highlighted_bin_index is not None:
+            self.patches[self.highlighted_bin_index].set_facecolor('#4B91F7')
+
+        self.highlighted_bin_index = np.searchsorted(self.bins, point_to_highlight, side='right') - 1
+        if 0 <= self.highlighted_bin_index < len(self.patches):
+            patch = self.patches[self.highlighted_bin_index]
+            patch.set_facecolor("#2D5794")
+
+        # Update the plot
+        self.plot_widget.canvas.draw()
 
     # <editor-fold desc="Experimental!">
     # def resizeEvent(self, event) -> None:  # noqa: N802, ANN001
