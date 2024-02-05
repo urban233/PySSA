@@ -174,6 +174,7 @@ class PlotView(QtWidgets.QDialog):
         # --END
 
         self.create_all_graphics()
+        self.setup_context_menu()
         self._connect_all_signals()
 
     def _initialize_ui(self):
@@ -591,4 +592,24 @@ class PlotView(QtWidgets.QDialog):
         self.plot_widget.setFixedSize(size.width() - 10, size.height() - 10)
         self.plot_widget.figure.tight_layout()
         self.plot_widget.canvas.draw()
+
+    def setup_context_menu(self) -> None:
+        self.context_menu = QtWidgets.QMenu()
+        self.hide_action = self.context_menu.addAction(self.tr("Hide Column"))
+        self.hide_residue_pair_no_action = QtWidgets.QAction(self.tr("Hide Residue Pair No."))
+        self.context_menu.insertAction(self.hide_action, self.hide_residue_pair_no_action)
+        self.hide_residue_pair_no_action.triggered.connect(self._hide_residue_pair_no_column)
+
+        # Set the context menu for the buttons
+        self.table_view.setContextMenuPolicy(3)
+        self.table_view.customContextMenuRequested.connect(self._show_context_menu_for_seq_list)
+    
+    def _show_context_menu_for_seq_list(self, a_point):
+        self.hide_residue_pair_no_action.triggered.disconnect()
+        self.hide_residue_pair_no_action.triggered.connect(self._hide_residue_pair_no_column)
+        self.context_menu.exec_(self.table_view.mapToGlobal(a_point))
+
+    def _hide_residue_pair_no_column(self):
+        print("Worked.")
+
     # </editor-fold>
