@@ -18,7 +18,8 @@ from xml import sax
 
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
-    pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller
+    pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
+    add_sequence_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -1382,14 +1383,25 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
 
     def _add_sequence(self):
-        pass
+        self._interface_manager.start_wait_spinner()
+        self._external_controller = add_sequence_view_controller.AddSequenceViewController(self._interface_manager)
+        self._external_controller.return_value.connect(self._post_add_sequence)
+        self._interface_manager.get_add_sequence_view().show()
 
     def _post_add_sequence(self, return_value: tuple):
+        logger.info(f"Adding new sequence {return_value[0]} with {return_value[1]} to the current project.")
         tmp_seq_name = return_value[0]
         tmp_sequence = return_value[1]
         tmp_seq_record = SeqRecord.SeqRecord(tmp_sequence, name=tmp_seq_name)
         self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
-        self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.INSERT_NEW_SEQUENCE,
+            (0, tmp_seq_record)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        self._interface_manager.refresh_sequence_model()
+        self._interface_manager.refresh_main_view()
+        self._interface_manager.stop_wait_spinner()
 
     # </editor-fold>
 

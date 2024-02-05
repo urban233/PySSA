@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>540</height>
+    <height>512</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -92,10 +92,30 @@
         <item>
          <widget class="QTextEdit" name="le_protein_seq"/>
         </item>
+        <item>
+         <widget class="QLabel" name="lbl_status_seq">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>40</height>
+      </size>
+     </property>
+    </spacer>
    </item>
    <item>
     <widget class="QFrame" name="frame_bottom">

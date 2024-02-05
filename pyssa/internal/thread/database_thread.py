@@ -29,6 +29,7 @@ class DatabaseThread(threading.Thread):
             enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR: self.__wrapper_delete_existing_protein_pair,
             enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN: self.__wrapper_update_pymol_session_of_protein,
             enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR: self.__wrapper_update_pymol_session_of_protein_pair,
+            enums.SQLQueryType.INSERT_NEW_SEQUENCE: self.__wrapper_insert_new_sequence,
             enums.SQLQueryType.UPDATE_SEQUENCE_NAME: self.__wrapper_update_sequence_name,
         }
 
@@ -101,6 +102,11 @@ class DatabaseThread(threading.Thread):
         _, tmp_new_pymol_session, tmp_protein_pair = the_buffered_data
         tmp_protein_pair.save_session_of_protein_pair()
         the_db_manager.update_pymol_session_of_protein_pair(tmp_protein_pair.get_id(), tmp_protein_pair.pymol_session)
+
+    @staticmethod
+    def __wrapper_insert_new_sequence(the_db_manager: "database_manager.DatabaseManager", the_buffered_data: tuple):
+        _, tmp_seq_record_obj = the_buffered_data
+        the_db_manager.insert_new_sequence(tmp_seq_record_obj)
 
     @staticmethod
     def __wrapper_update_sequence_name(the_db_manager, the_buffered_data: tuple):

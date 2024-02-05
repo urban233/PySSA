@@ -222,6 +222,7 @@ def validate_protein_name(
         btn_next: a push button which is used for the next step
     """
     # set color for lineEdit
+    lbl_for_status_protein_name.setStyleSheet("""color: #FC5457; font-size: 10px;""")
     txt_for_protein_name.setStyleSheet("color: #f44336;" "background-color: white;")
     if len(txt_for_protein_name.text()) == 0:
         lbl_for_status_protein_name.setText("")
@@ -263,6 +264,7 @@ def validate_protein_sequence(
         btn_next: a button which is used to get to the next step
     """
     # set color for lineEdit
+    lbl_status_protein_sequence.setStyleSheet("""color: #FC5457; font-size: 10px;""")
     txt_protein_sequence.setStyleSheet("color: #f44336;" "background-color: white;")
     if len(txt_protein_sequence.toPlainText()) == 0:
         lbl_status_protein_sequence.setText("")
