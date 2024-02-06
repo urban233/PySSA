@@ -2093,7 +2093,6 @@ class MainPresenter:
             item = QtWidgets.QListWidgetItem(tmp_analysis_name)
             self._view.ui.list_pred_analysis_mono_overview.addItem(item)
             self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
         else:
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_mono_overview,
@@ -2341,7 +2340,6 @@ class MainPresenter:
             item = QtWidgets.QListWidgetItem(tmp_analysis_name)
             self._view.ui.list_pred_analysis_multi_overview.addItem(item)
             self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
         else:
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_multi_overview,
@@ -2522,7 +2520,6 @@ class MainPresenter:
             item = QtWidgets.QListWidgetItem(tmp_analysis_run_name)
             self._view.ui.list_analysis_batch_overview.addItem(item)
             self._view.ui.btn_analysis_batch_remove.setEnabled(False)
-            styles.color_button_ready(self._view.ui.btn_analysis_batch_start)
         else:
             gui_elements_to_show = [
                 self._view.ui.lbl_analysis_batch_overview,
@@ -4028,7 +4025,6 @@ class MainPresenter:
             self._view.ui.btn_new_choose_reference.hide()
             self._view.ui.lbl_new_status_choose_reference.setText("")
             self._view.ui.btn_new_create_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_new_create_project)
 
     def load_reference_in_project(self) -> None:
         """Loads a reference in a new project."""
@@ -4047,7 +4043,6 @@ class MainPresenter:
             self._view.ui.txt_new_choose_reference.setEnabled(False)
             self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
             self._view.ui.btn_new_create_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_new_create_project)
         except ValueError:
             print("No file has been selected.")
 
@@ -4073,17 +4068,14 @@ class MainPresenter:
                 cmd.reinitialize()
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
                 self._view.ui.btn_new_create_project.setEnabled(True)
-                styles.color_button_ready(self._view.ui.btn_new_create_project)
             # if the id does not exist an exception gets raised
             except pymol.CmdException:
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
                 return
             except FileNotFoundError:
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self._view.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
                 self._view.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
                 return
         else:
             if self._view.ui.txt_new_choose_reference.text().find("/") == -1:
@@ -4132,10 +4124,8 @@ class MainPresenter:
         """Activates the open button."""
         if self._view.ui.txt_open_selected_project.text() == "":
             self._view.ui.btn_open_open_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_open_open_project)
         else:
             self._view.ui.btn_open_open_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_open_open_project)
 
     # </editor-fold>
 
@@ -4151,10 +4141,8 @@ class MainPresenter:
         """Activates the delete button."""
         if self._view.ui.txt_delete_selected_projects.text() == "":
             self._view.ui.btn_delete_delete_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_delete_delete_project)
         else:
             self._view.ui.btn_delete_delete_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_delete_delete_project)
 
     def validate_delete_search(self) -> None:
         """Validates the input of the project name in real-time."""
@@ -4573,7 +4561,6 @@ class MainPresenter:
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         self._view.ui.btn_esm_predict.setEnabled(True)
         self._view.ui.btn_esm_seq_to_predict_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_esm_predict)
         self.setup_defaults_esm_monomer_prediction()
 
     def cloud_esm_remove(self) -> None:
@@ -4636,7 +4623,6 @@ class MainPresenter:
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
         else:
-            styles.color_button_ready(self._view.ui.btn_esm_predict)
             self._view.ui.btn_esm_predict.setEnabled(True)
 
     # </editor-fold>
@@ -4908,7 +4894,6 @@ class MainPresenter:
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         self._view.ui.btn_pred_mono_predict.setEnabled(True)
         self._view.ui.btn_pred_mono_seq_to_predict_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_mono_predict)
         self.setup_defaults_monomer_prediction()
 
     def local_pred_mono_remove(self) -> None:
@@ -4977,7 +4962,6 @@ class MainPresenter:
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
         else:
-            styles.color_button_ready(self._view.ui.btn_pred_mono_predict)
             self._view.ui.btn_pred_mono_predict.setEnabled(True)
 
     # </editor-fold>
@@ -5100,7 +5084,6 @@ class MainPresenter:
             gui_utils.hide_gui_elements(gui_elements_to_hide)
             self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
         else:
-            styles.color_button_ready(self._view.ui.btn_pred_multi_predict)
             self._view.ui.btn_pred_multi_predict.setEnabled(True)
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_multi_prot_to_predict,
@@ -5151,10 +5134,8 @@ class MainPresenter:
     def local_pred_multi_check_if_list_is_empty(self) -> None:
         """Checks if the list of sequences of the protein is empty."""
         if self._view.ui.list_pred_multi_prot_seq_overview.count() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
             self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(False)
         else:
-            styles.color_button_ready(self._view.ui.btn_pred_multi_prot_to_predict_add_2)
             self._view.ui.btn_pred_multi_prot_to_predict_add_2.setEnabled(True)
 
     def local_pred_multi_add(self) -> None:
@@ -5588,7 +5569,6 @@ class MainPresenter:
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
             self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
 
     def setup_defaults_monomer_prediction_analysis(self) -> None:
@@ -5799,7 +5779,6 @@ class MainPresenter:
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
         self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
         self.setup_defaults_monomer_prediction()
 
     def mono_pred_analysis_prediction_overview_item_clicked(self) -> None:
@@ -5922,7 +5901,6 @@ class MainPresenter:
             self._view.ui.btn_pred_analysis_mono_start.show()
             self._view.ui.lbl_pred_analysis_mono_images.show()
             self._view.ui.cb_pred_analysis_mono_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
 
     def mono_pred_analysis_structure_analysis_next_3(self) -> None:
         """Shows the gui elements to select the chains of protein 2."""
@@ -6063,7 +6041,6 @@ class MainPresenter:
         item = QtWidgets.QListWidgetItem(analysis_name)
         self._view.ui.list_pred_analysis_mono_overview.addItem(item)
         self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
 
     def mono_pred_analysis_structure_analysis_back_5(self) -> None:
         """Hides the gui elements to select the chains in protein 2."""
@@ -6160,7 +6137,6 @@ class MainPresenter:
             self._view.ui.btn_pred_analysis_mono_start.show()
             self._view.ui.lbl_pred_analysis_mono_images.show()
             self._view.ui.cb_pred_analysis_mono_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
         # if self._view.ui.list_pred_analysis_mono_overview.count() == 0:
         #
         #     self._view.ui.btn_pred_analysis_mono_back_pred_setup.show()
@@ -6169,9 +6145,7 @@ class MainPresenter:
     def check_mono_pred_analysis_if_same_no_of_chains_selected(self) -> None:
         """Checks if the same number of chains were selected."""
         self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next_4)
         if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_mono_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_next_4)
             self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(True)
 
         prot_1_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()
@@ -6258,7 +6232,6 @@ class MainPresenter:
                 self._view.ui.btn_pred_analysis_mono_start.show()
                 self._view.ui.lbl_pred_analysis_mono_images.show()
                 self._view.ui.cb_pred_analysis_mono_images.show()
-                styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
         else:
             # goes from analysis to prediction
             if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
@@ -6438,10 +6411,8 @@ class MainPresenter:
     def multi_pred_analysis_check_if_list_is_empty(self) -> None:
         """Checks if the list of sequences of the protein is empty."""
         if self._view.ui.list_pred_analysis_multi_prot_seq_overview.count() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
             self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
         else:
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
             self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(True)
 
     def multi_pred_analysis_add_sequence_to_list(self) -> None:
@@ -6496,7 +6467,6 @@ class MainPresenter:
             self._view.ui.btn_pred_multi_predict.setEnabled(False)
             self._view.ui.btn_pred_multi_prot_to_predict_remove.setEnabled(False)
         else:
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_go_analysis_setup)
             self._view.ui.btn_pred_multi_predict.setEnabled(True)
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
@@ -6805,7 +6775,6 @@ class MainPresenter:
                 self._view.ui.btn_pred_analysis_multi_start.show()
                 self._view.ui.lbl_pred_analysis_multi_images.show()
                 self._view.ui.cb_pred_analysis_multi_images.show()
-                styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
         else:
             # goes from analysis to prediction
             self._view.ui.tabWidget_2.setCurrentIndex(0)
@@ -6954,7 +6923,6 @@ class MainPresenter:
             self._view.ui.btn_pred_analysis_multi_start.show()
             self._view.ui.lbl_pred_analysis_multi_images.show()
             self._view.ui.cb_pred_analysis_multi_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
 
     def multi_pred_analysis_structure_analysis_next_3(self) -> None:
         """Shows the gui elements to select the chains in protein 2."""
@@ -7095,7 +7063,6 @@ class MainPresenter:
         item = QtWidgets.QListWidgetItem(analysis_name)
         self._view.ui.list_pred_analysis_multi_overview.addItem(item)
         self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
 
     def multi_pred_analysis_structure_analysis_back_5(self) -> None:
         """Hides the gui elements to select the chains in protein 2."""
@@ -7193,7 +7160,6 @@ class MainPresenter:
             self._view.ui.btn_pred_analysis_multi_start.show()
             self._view.ui.lbl_pred_analysis_multi_images.show()
             self._view.ui.cb_pred_analysis_multi_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
         # if self._view.ui.list_pred_analysis_multi_overview.count() == 0:
         #
         #     self._view.ui.btn_pred_analysis_multi_back_pred_setup.show()
@@ -7202,9 +7168,7 @@ class MainPresenter:
     def check_multi_pred_analysis_if_same_no_of_chains_selected(self) -> None:
         """Checks if the same number of chains were selected."""
         self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next_4)
         if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_multi_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_next_4)
             self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
 
         prot_1_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()
@@ -7327,7 +7291,6 @@ class MainPresenter:
             self._view.ui.btn_analysis_batch_start.show()
             self._view.ui.lbl_analysis_batch_images.show()
             self._view.ui.cb_analysis_batch_images.show()
-            styles.color_button_ready(self._view.ui.btn_analysis_batch_start)
 
     def structure_analysis_next_2(self) -> None:
         """Shows the gui elements to select the chains in protein 2."""
@@ -7454,7 +7417,6 @@ class MainPresenter:
         item = QtWidgets.QListWidgetItem(analysis_name)
         self._view.ui.list_analysis_batch_overview.addItem(item)
         self._view.ui.btn_analysis_batch_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_analysis_batch_start)
 
     def structure_analysis_back_3(self) -> None:
         """Hides the gui elements to select the chains in protein 2."""
@@ -7554,10 +7516,7 @@ class MainPresenter:
     def check_if_same_no_of_chains_selected_batch(self) -> None:
         """Checks if the same number of proteins were selected."""
         self._view.ui.btn_analysis_batch_next_3.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_analysis_batch_next_3)
-
         if self.no_of_selected_chains == len(self._view.ui.list_analysis_batch_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_analysis_batch_next_3)
             self._view.ui.btn_analysis_batch_next_3.setEnabled(True)
 
         prot_1_name = self._view.ui.lbl_analysis_batch_prot_struct_1.text()
@@ -7650,10 +7609,8 @@ class MainPresenter:
         """Checks if the list of protein pairs which get images are empty."""
         if self._view.ui.list_analysis_images_creation_struct_analysis.count() > 0:
             self._view.ui.btn_start_automatic_image_creation.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_start_automatic_image_creation)
         else:
             self._view.ui.btn_start_automatic_image_creation.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_start_automatic_image_creation)
 
     # </editor-fold>
 

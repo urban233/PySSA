@@ -259,7 +259,7 @@ class GuiPageManagement:
         Args:
             button: the button to activate.
         """
-        styles.color_button_ready(button)
+        styles.color_bottom_frame_button(button)
         button.setEnabled(True)
 
     @staticmethod
@@ -269,5 +269,4 @@ class GuiPageManagement:
         Args:
             button: the button to deactivate.
         """
-        styles.color_button_not_ready(button)
         button.setEnabled(False)

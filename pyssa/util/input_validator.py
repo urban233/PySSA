@@ -129,12 +129,10 @@ class InputValidator:
                 cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
 
             btn_for_next_step.setEnabled(False)
-            styles.color_button_not_ready(btn_for_next_step)
 
         elif len(txt_for_project_name.text()) > 20:
             lbl_for_status_project_name.setText("Project name is too long (max. 20 characters).")
             btn_for_next_step.setEnabled(False)
-            styles.color_button_not_ready(btn_for_next_step)
 
         else:
             regex = QtCore.QRegularExpression()
@@ -152,7 +150,6 @@ class InputValidator:
                         cb_for_add_reference.setStyleSheet("color: black;")
 
                     btn_for_next_step.setEnabled(True)
-                    styles.color_button_ready(btn_for_next_step)
 
                 else:
                     txt_for_project_name.setStyleSheet("color: #f44336")
@@ -163,7 +160,6 @@ class InputValidator:
                         cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
 
                     btn_for_next_step.setEnabled(False)
-                    styles.color_button_not_ready(btn_for_next_step)
                     return
 
             item = list_of_projects.match(
@@ -182,7 +178,6 @@ class InputValidator:
                     cb_for_add_reference.setStyleSheet("color: #E1E1E1;")
 
                 btn_for_next_step.setEnabled(False)
-                styles.color_button_not_ready(btn_for_next_step)
 
     @staticmethod
     def validate_search_input(
@@ -263,7 +258,6 @@ class InputValidator:
             lbl_for_status_protein_name.setText("")
             if btn_next is not None:
                 btn_next.setEnabled(False)
-                styles.color_button_not_ready(btn_next)
         else:
             regex = Qt.QtCore.QRegularExpression()
             regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
@@ -275,13 +269,11 @@ class InputValidator:
                     lbl_for_status_protein_name.setText("")
                     if btn_next is not None:
                         btn_next.setEnabled(True)
-                        styles.color_button_ready(btn_next)
                 else:
                     txt_for_protein_name.setStyleSheet("color: #f44336")
                     lbl_for_status_protein_name.setText("Invalid character.")
                     if btn_next is not None:
                         btn_next.setEnabled(False)
-                        styles.color_button_not_ready(btn_next)
                     return
 
     @staticmethod
@@ -305,7 +297,6 @@ class InputValidator:
         if len(txt_protein_sequence.toPlainText()) == 0:
             lbl_status_protein_sequence.setText("")
             btn_next.setEnabled(False)
-            styles.color_button_not_ready(btn_next)
         else:
             regex = Qt.QtCore.QRegularExpression()
             regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
@@ -316,10 +307,8 @@ class InputValidator:
                     txt_protein_sequence.setStyleSheet("color: #000000")
                     lbl_status_protein_sequence.setText("")
                     btn_next.setEnabled(True)
-                    styles.color_button_ready(btn_next)
                 else:
                     txt_protein_sequence.setStyleSheet("color: #f44336")
                     lbl_status_protein_sequence.setText("Invalid character.")
                     btn_next.setEnabled(False)
-                    styles.color_button_not_ready(btn_next)
                     return

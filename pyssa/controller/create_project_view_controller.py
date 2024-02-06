@@ -81,10 +81,8 @@ class CreateProjectViewController(QtCore.QObject):
             self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
             self._view.ui.lbl_new_status_choose_reference.setText("")
             self._view.ui.btn_new_create_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
         elif len(self._view.ui.txt_new_choose_reference.text()) < 4:
             self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
             self._view.ui.btn_new_create_project.setEnabled(False)
             self._view.ui.lbl_new_status_choose_reference.setText("")
         # checks if a pdb id was entered
@@ -97,28 +95,24 @@ class CreateProjectViewController(QtCore.QObject):
                 cmd.reinitialize()
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
                 self._view.ui.btn_new_create_project.setEnabled(True)
-                styles.color_button_ready(self._view.ui.btn_new_create_project)
+
             # if the id does not exist an exception gets raised
             except pymol.CmdException:
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
                 return
             except FileNotFoundError:
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self._view.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
                 self._view.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
                 return
         else:
             if self._view.ui.txt_new_choose_reference.text().find("/") == -1:
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self._view.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
 
             elif self._view.ui.txt_new_choose_reference.text().find("\\") == -1:
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self._view.ui.btn_new_create_project.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_new_create_project)
 
     def show_add_protein_options(self) -> None:
         if self._view.ui.cb_new_add_reference.isChecked():
@@ -137,7 +131,6 @@ class CreateProjectViewController(QtCore.QObject):
             self._view.ui.txt_new_choose_reference.show()
             self._view.ui.btn_new_choose_reference.show()
             self._view.ui.btn_new_create_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_new_create_project)
             # check internet connectivity
             if not tools.check_internet_connectivity():
                 gui_utils.no_internet_dialog()
@@ -152,7 +145,6 @@ class CreateProjectViewController(QtCore.QObject):
             self._view.ui.btn_new_choose_reference.hide()
             self._view.ui.lbl_new_status_choose_reference.setText("")
             self._view.ui.btn_new_create_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_new_create_project)
 
     def load_reference_in_project(self) -> None:
         """Loads a reference in a new project."""
@@ -171,6 +163,5 @@ class CreateProjectViewController(QtCore.QObject):
             self._view.ui.txt_new_choose_reference.setEnabled(False)
             self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
             self._view.ui.btn_new_create_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_new_create_project)
         except ValueError:
             print("No file has been selected.")

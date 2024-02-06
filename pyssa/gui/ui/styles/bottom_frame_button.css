@@ -1,0 +1,48 @@
+/*<editor-fold desc="Bottom frame QPushButton style">*/
+QPushButton {
+    background-color: #367AF6;
+    color: #fff;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    font: bold;
+    border: none;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDCDC;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
+}
+
+QPushButton:disabled {
+    background-color: #fff;
+    color: #B0B0B0;
+    font-family: "Segoe UI Semibold";
+    font-size: 12px;
+    font: bold;
+    border: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #fff;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
+}
+
+QPushButton::pressed {
+    background-color: #204993;
+    color: #fff;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    border: none;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDCDC;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
+}
+/*</editor-fold>*/

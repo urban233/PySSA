@@ -77,10 +77,8 @@ class DeleteProjectViewController(QtCore.QObject):
         """Activates the delete button."""
         if self._view.ui.txt_delete_selected_projects.text() == "":
             self._view.ui.btn_delete_delete_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_delete_delete_project)
         else:
             self._view.ui.btn_delete_delete_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_delete_delete_project)
 
     def delete_project(self) -> None:
         """Deletes an existing project."""

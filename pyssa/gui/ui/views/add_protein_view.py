@@ -66,7 +66,6 @@ class AddProteinView(Qt.QtWidgets.QDialog):
         self.setWindowTitle("Add an existing protein to the current project")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
-        styles.color_button_not_ready(self.ui.btn_add_protein)
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         # check internet connectivity
@@ -90,10 +89,8 @@ class AddProteinView(Qt.QtWidgets.QDialog):
             self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
             self.ui.lbl_status.setText("")
             self.ui.btn_add_protein.setEnabled(False)
-            styles.color_button_not_ready(self.ui.btn_add_protein)
         elif len(self.ui.txt_add_protein.text()) < 4:
             self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-            styles.color_button_not_ready(self.ui.btn_add_protein)
             self.ui.btn_add_protein.setEnabled(False)
             self.ui.lbl_status.setText("")
         # checks if a pdb id was entered
@@ -106,33 +103,26 @@ class AddProteinView(Qt.QtWidgets.QDialog):
                 cmd.reinitialize()
                 self.ui.txt_add_protein.setStyleSheet("color: #000000")
                 self.ui.btn_add_protein.setEnabled(True)
-                styles.color_button_ready(self.ui.btn_add_protein)
             # if the id does not exist an exception gets raised
             except pymol.CmdException:
                 self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-                styles.color_button_not_ready(self.ui.btn_add_protein)
                 return
             except FileNotFoundError:
                 self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
                 self.ui.lbl_status.setText("Invalid PDB ID.")
                 self.ui.btn_add_protein.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_add_protein)
                 return
         else:
             if self.ui.txt_add_protein.text().find("/") == -1:
                 self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
                 self.ui.btn_add_protein.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_add_protein)
-
             elif self.ui.txt_add_protein.text().find("\\") == -1:
                 self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
                 self.ui.btn_add_protein.setEnabled(False)
-                styles.color_button_not_ready(self.ui.btn_add_protein)
             else:
                 # TODO: displays a correct filepath in red, needs to be fixed!
                 self.ui.txt_add_protein.setStyleSheet("color: #000000")
                 self.ui.btn_add_protein.setEnabled(True)
-                styles.color_button_ready(self.ui.btn_add_protein)
 
     def close_dialog(self) -> None:
         """Closes the dialog."""

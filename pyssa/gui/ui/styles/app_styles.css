@@ -105,9 +105,12 @@ QPushButton {
     /*border-color: #f7f7f7;*/
     /*min-width: 6em;*/
     padding: 2px;
-    min-width: 75px;
-    max-width: 75px;
-    min-height: 15px;
+    /*min-width: 75px;*/
+    /*max-width: 75px;*/
+    /*min-height: 15px;*/
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
 }
 
 QPushButton#btn_help {

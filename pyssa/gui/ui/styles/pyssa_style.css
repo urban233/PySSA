@@ -1,0 +1,565 @@
+QWidget {
+    font-family: "Segoe UI";
+    font-size: 12px;
+}
+
+QFrame#frame_bottom {
+    background-color: #f7f8fa;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    border-top-color: #ebecf0;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+QFrame#frame_bottom_2 {
+    background-color: #f7f8fa;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    border-top-color: #ebecf0;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+QFrame#frame_bottom_3 {
+    background-color: #f7f8fa;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 6px;
+    border-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);;
+    border-top-color: #ebecf0;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+QLabel#lbl_project_name {
+    background: #367AF6;
+    color: #ffffff;
+    font-size: 16px;
+    font-family: "Segoe UI";
+    font: bold;
+    padding: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QListView {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QTableView {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QTreeView {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QMainWindow {
+    background-color: #fcfcfc;
+}
+
+QDialog {
+    background-color: #fcfcfc;
+}
+
+QLineEdit {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    min-width: 6em;
+    padding: 1px;
+}
+
+QTextEdit {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    min-width: 6em;
+    padding: 1px;
+}
+
+/*<editor-fold desc="QTabWidget style">*/
+QTabWidget::pane { /* The tab widget frame */
+    border: 2px solid #DCDBE3;
+    border-radius: 4px;
+}
+
+QTabWidget::tab-bar {
+    left: 5px; /* move to the right by 5px */
+}
+
+QTabBar::tab {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #E1E1E1, stop: 0.4 #DDDDDD,
+                                stop: 0.5 #D8D8D8, stop: 1.0 #D3D3D3);
+    border: 2px solid #DCDBE3;
+    border-bottom-color: #DCDBE3; /* same as the pane color */
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom: #fcfcfc;
+    min-width: 8ex;
+    padding: 3px;
+}
+
+QTabBar::tab:selected, QTabBar::tab:hover {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #fafafa, stop: 0.4 #f4f4f4,
+                                stop: 0.5 #e7e7e7, stop: 1.0 #fafafa);
+}
+
+QTabBar::tab:selected {
+    border-color: #367AF6;
+    border-bottom-color: #DCDBE3; /* same as pane color */
+}
+
+QTabBar::tab:!selected {
+    margin-top: 2px; /* make non-selected tabs look smaller */
+}
+/*</editor-fold>*/
+
+/*<editor-fold desc="QMenu style">*/
+QMenuBar {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f9f9f9, stop:1 #f0f0f0);
+    color: black;
+}
+
+QMenuBar::item:selected {
+    background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #E8E8E8, stop:1 #DBDBDB);;
+}
+
+QMenu {
+    background-color: white;
+    margin: 2px; /* some spacing around the menu */
+}
+
+QMenu::item {
+    padding: 2px 25px 2px 20px;
+}
+
+QMenu::item:selected {
+    background: #D6E4FD;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #E2E2E2;
+    margin-left: 10px;
+    margin-right: 5px;
+}
+/*</editor-fold>*/
+
+QPushButton#btn_import_seq {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_import_seq {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_add_sequence {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_add_sequence {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_save_sequence {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_save_sequence {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_delete_sequence {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_delete_sequence {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_import_protein {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_import_protein {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_save_protein {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_save_protein {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_delete_protein {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_delete_protein {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_open_protein_session {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_open_protein_session {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_create_protein_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_create_protein_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_update_protein_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_update_protein_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_delete_protein_pair {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_delete_protein_pair {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_open_protein_pair_session {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_open_protein_pair_session {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_create_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_create_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_update_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_update_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+/*<editor-fold desc="Normal QPushButton style">*/
+QPushButton {
+    background-color: #fff;
+    color: black;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    border: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: #DCDCDC;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
+}
+
+QPushButton:disabled {
+    background-color: #fff;
+    color: #B0B0B0;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    border: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: #DCDCDC;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
+}
+
+QPushButton::pressed {
+    background-color: #DCDCDC;
+    color: black;
+    font-family: "Segoe UI";
+    font-size: 12px;
+    border: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: #DCDCDC;
+    padding: 2px;
+    min-width: 65px;
+    max-width: 65px;
+    min-height: 15px;
+}
+/*</editor-fold>*/
+
+QToolButton {
+    background-color: #DCDBE3;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    min-width: 1.5em;
+    padding: 1px;
+}
+
+QToolButton::hover {
+    /*background: qlineargradient(x1:0, y1: 0, x2: 0, y2: 1,*/
+    /*stop: 0 #4B91F7, stop: 0.4 #367AF6, stop: 0.5 #367AF6, stop: 1.0 #4B91F7);*/
+    color: #4B91F7;
+    border-color: #4B91F7;
+    border-style: solid;
+}
+
+/*<editor-fold desc="Help button styles">*/
+QPushButton#btn_help {
+    background-color: white;
+    /*border-style: outset;*/
+    border: none;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 2px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px
+}
+
+QPushButton#btn_help_2 {
+    background-color: white;
+    /*border-style: outset;*/
+    border: none;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 2px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px
+}
+
+QPushButton#btn_help_3 {
+    background-color: white;
+    /*border-style: outset;*/
+    border: none;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 2px;
+    min-width: 20px;
+    max-width: 20px;
+    min-height: 20px;
+    max-height: 20px
+}
+
+QPushButton::hover#btn_help {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
+    color: white;
+    color: #4B91F7;
+    border: 2px solid #DCDBE3;
+}
+
+QPushButton::hover#btn_help_2 {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
+    color: white;
+    color: #4B91F7;
+    border: 2px solid #DCDBE3;
+}
+
+QPushButton::hover#btn_help_3 {
+    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 #4B91F7, stop: 0.4 #367AF6,
+                                stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
+    background: white;
+    color: white;
+    color: #4B91F7;
+    border: 2px solid #DCDBE3;
+}
+/*</editor-fold>*/
+
+QToolTip {
+    font: bold;
+    font-size: 12px;
+}

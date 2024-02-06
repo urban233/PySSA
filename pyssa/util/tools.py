@@ -227,11 +227,9 @@ def validate_protein_name(
     if len(txt_for_protein_name.text()) == 0:
         lbl_for_status_protein_name.setText("")
         btn_next.setEnabled(False)
-        styles.color_button_not_ready(btn_next)
     elif len(txt_for_protein_name.text()) > 20:
         lbl_for_status_protein_name.setText("Project name is too long (max. 20 characters).")
         btn_next.setEnabled(False)
-        styles.color_button_not_ready(btn_next)
     else:
         regex = QtCore.QRegularExpression()
         regex.setPattern("(([a-z])|([A-Z])|([0-9])|(-)|(_)){0,20}")
@@ -242,12 +240,10 @@ def validate_protein_name(
                 txt_for_protein_name.setStyleSheet("color: #000000;" "background-color: white;")
                 lbl_for_status_protein_name.setText("")
                 btn_next.setEnabled(True)
-                styles.color_button_ready(btn_next)
             else:
                 txt_for_protein_name.setStyleSheet("color: #f44336;" "background-color: white;")
                 lbl_for_status_protein_name.setText("Invalid character.")
                 btn_next.setEnabled(False)
-                styles.color_button_not_ready(btn_next)
                 return
 
 
@@ -269,7 +265,6 @@ def validate_protein_sequence(
     if len(txt_protein_sequence.toPlainText()) == 0:
         lbl_status_protein_sequence.setText("")
         btn_next.setEnabled(False)
-        styles.color_button_not_ready(btn_next)
     else:
         regex = QtCore.QRegularExpression()
         regex.setPattern("(([A])|([C-I])|([K-N])|([P-T])|([V-W])|([Y]))+")
@@ -280,12 +275,10 @@ def validate_protein_sequence(
                 txt_protein_sequence.setStyleSheet("color: #000000;" "background-color: white;")
                 lbl_status_protein_sequence.setText("")
                 btn_next.setEnabled(True)
-                styles.color_button_ready(btn_next)
             else:
                 txt_protein_sequence.setStyleSheet("color: #f44336;" "background-color: white;")
                 lbl_status_protein_sequence.setText("Invalid character.")
                 btn_next.setEnabled(False)
-                styles.color_button_not_ready(btn_next)
                 return
 
 

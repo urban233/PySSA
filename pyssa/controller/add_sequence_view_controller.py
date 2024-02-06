@@ -94,7 +94,6 @@ class AddSequenceViewController(QtCore.QObject):
         )
 
     def _switch_ui_to_sequence_input(self):
-        styles.color_button_not_ready(self._view.ui.btn_next)
         self._view.ui.le_seq_name.setEnabled(False)
         self._view.ui.btn_next.setEnabled(False)
         self._view.ui.lbl_protein_seq.show()
@@ -111,17 +110,13 @@ class AddSequenceViewController(QtCore.QObject):
         self._view.ui.lbl_status_seq.hide()
         self._view.ui.btn_back.hide()
         self._view.ui.btn_add.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_next)
-        styles.color_button_not_ready(self._view.ui.btn_add)
 
     def _activate_add_button(self) -> None:
         """Activates the open button."""
         if self._view.ui.le_protein_seq.toPlainText() == "":
             self._view.ui.btn_add.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_add)
         else:
             self._view.ui.btn_add.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_add)
 
     def _add_sequence(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""

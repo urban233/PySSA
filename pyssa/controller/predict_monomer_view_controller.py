@@ -138,7 +138,6 @@ class PredictMonomerViewController(QtCore.QObject):
             item = QtWidgets.QListWidgetItem(tmp_analysis_name)
             self._view.ui.list_pred_analysis_mono_overview.addItem(item)
             self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
         else:
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_mono_overview,
@@ -274,7 +273,6 @@ class PredictMonomerViewController(QtCore.QObject):
                     self._view.ui.btn_pred_analysis_mono_start.show()
                     self._view.ui.lbl_pred_analysis_mono_images.show()
                     self._view.ui.cb_pred_analysis_mono_images.show()
-                    styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
             else:
                 # goes from analysis to prediction
                 if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
@@ -425,7 +423,6 @@ class PredictMonomerViewController(QtCore.QObject):
         ):
             self._view.ui.lbl_pred_analysis_mono_prot_name_status.setText("Protein name already used.")
             self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next)
         else:
             self._view.ui.btn_pred_analysis_mono_next.setEnabled(True)
             tools.validate_protein_name(
@@ -445,7 +442,6 @@ class PredictMonomerViewController(QtCore.QObject):
     def mono_pred_analysis_check_if_table_is_empty(self) -> None:
         """Checks if the table proteins to predict is empty."""
         if self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
             self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(False)
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_mono_prot_to_predict,
@@ -497,7 +493,6 @@ class PredictMonomerViewController(QtCore.QObject):
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
             self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
 
     def setup_defaults_monomer_prediction_analysis(self) -> None:
@@ -547,7 +542,6 @@ class PredictMonomerViewController(QtCore.QObject):
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         self._view.ui.btn_pred_analysis_mono_next.setEnabled(False)
         self._view.ui.txt_pred_analysis_mono_prot_name.clear()
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next)
         if self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount() > 0:
             try:
                 self._view.ui.table_pred_analysis_mono_prot_to_predict.currentItem().setSelected(False)
@@ -709,7 +703,6 @@ class PredictMonomerViewController(QtCore.QObject):
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         self._view.ui.btn_pred_analysis_mono_go_analysis_setup.setEnabled(True)
         self._view.ui.btn_pred_analysis_mono_seq_to_predict_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_go_analysis_setup)
         self.setup_defaults_monomer_prediction_analysis()
 
     def mono_pred_analysis_prediction_overview_item_clicked(self) -> None:
@@ -830,7 +823,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_start.show()
             self._view.ui.lbl_pred_analysis_mono_images.show()
             self._view.ui.cb_pred_analysis_mono_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
 
     def mono_pred_analysis_structure_analysis_next_3(self) -> None:
         """Shows the gui elements to select the chains of protein 2."""
@@ -968,7 +960,6 @@ class PredictMonomerViewController(QtCore.QObject):
         item = QtWidgets.QListWidgetItem(analysis_name)
         self._view.ui.list_pred_analysis_mono_overview.addItem(item)
         self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
 
     def mono_pred_analysis_structure_analysis_back_5(self) -> None:
         """Hides the gui elements to select the chains in protein 2."""
@@ -1064,7 +1055,6 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_start.show()
             self._view.ui.lbl_pred_analysis_mono_images.show()
             self._view.ui.cb_pred_analysis_mono_images.show()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_start)
         # if self._view.ui.list_pred_analysis_mono_overview.count() == 0:
         #
         #     self._view.ui.btn_pred_analysis_mono_back_pred_setup.show()
@@ -1073,9 +1063,7 @@ class PredictMonomerViewController(QtCore.QObject):
     def check_mono_pred_analysis_if_same_no_of_chains_selected(self) -> None:
         """Checks if the same number of chains were selected."""
         self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next_4)
         if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_mono_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_mono_next_4)
             self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(True)
 
         prot_1_name = self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()
@@ -1092,7 +1080,6 @@ class PredictMonomerViewController(QtCore.QObject):
         for tmp_row in range(self._view.ui.list_pred_analysis_mono_overview.count()):
             if analysis_name == self._view.ui.list_pred_analysis_mono_overview.item(tmp_row).text():
                 self._view.ui.btn_pred_analysis_mono_next_4.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_pred_analysis_mono_next_4)
                 return
 
     def check_mono_pred_analysis_if_prot_structs_are_filled(self) -> None:

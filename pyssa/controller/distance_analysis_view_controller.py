@@ -144,7 +144,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
             item = QtWidgets.QListWidgetItem(tmp_analysis_run_name)
             self._view.ui.list_distance_analysis_overview.addItem(item)
             self._view.ui.btn_distance_analysis_remove.setEnabled(False)
-            styles.color_button_ready(self._view.ui.btn_distance_analysis_start)
         else:
             gui_elements_to_show = [
                 self._view.ui.lbl_distance_analysis_overview,
@@ -279,7 +278,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.btn_distance_analysis_start.show()
             self._view.ui.lbl_distance_analysis_ray_trace_images.show()
             self._view.ui.cb_distance_analysis_ray_trace_images.show()
-            styles.color_button_ready(self._view.ui.btn_distance_analysis_start)
 
     def structure_analysis_next_2(self) -> None:
         """Shows the gui elements to select the chains in protein 2."""
@@ -407,7 +405,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
         item = QtWidgets.QListWidgetItem(analysis_name)
         self._view.ui.list_distance_analysis_overview.addItem(item)
         self._view.ui.btn_distance_analysis_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_distance_analysis_start)
 
     def structure_analysis_back_3(self) -> None:
         """Hides the gui elements to select the chains in protein 2."""
@@ -507,10 +504,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
     def check_if_same_no_of_chains_selected_batch(self) -> None:
         """Checks if the same number of proteins were selected."""
         self._view.ui.btn_distance_analysis_next_3.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_distance_analysis_next_3)
 
         if self.no_of_selected_chains == len(self._view.ui.list_distance_analysis_prot_2_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_distance_analysis_next_3)
             self._view.ui.btn_distance_analysis_next_3.setEnabled(True)
 
         prot_1_name = self._view.ui.lbl_distance_analysis_prot_struct_1.text()
@@ -527,7 +522,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
         for tmp_row in range(self._view.ui.list_distance_analysis_overview.count()):
             if analysis_name == self._view.ui.list_distance_analysis_overview.item(tmp_row).text():
                 self._view.ui.btn_distance_analysis_next_3.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_distance_analysis_next_3)
                 return
 
     def check_if_prot_structs_are_filled_batch(self) -> None:

@@ -67,6 +67,7 @@ class OpenProjectViewController(QtCore.QObject):
 
     def restore_default_view(self) -> None:
         self._view.ui.txt_open_selected_project.clear()
+        self._view.ui.btn_open_project.setEnabled(False)
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
@@ -109,10 +110,10 @@ class OpenProjectViewController(QtCore.QObject):
         """Activates the open button."""
         if self._view.ui.txt_open_selected_project.text() == "":
             self._view.ui.btn_open_project.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_open_project)
+            # styles.color_button_not_ready(self._view.ui.btn_open_project)
         else:
             self._view.ui.btn_open_project.setEnabled(True)
-            styles.color_button_ready(self._view.ui.btn_open_project)
+            # styles.color_button_ready(self._view.ui.btn_open_project)
 
     def _open_selected_project(self):
         self._view.close()

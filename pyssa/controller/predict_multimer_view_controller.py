@@ -152,7 +152,6 @@ class PredictMultimerViewController(QtCore.QObject):
             item = QtWidgets.QListWidgetItem(tmp_analysis_name)
             self._view.ui.list_pred_analysis_multi_overview.addItem(item)
             self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
         else:
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_multi_overview,
@@ -327,7 +326,6 @@ class PredictMultimerViewController(QtCore.QObject):
         ):
             self._view.ui.lbl_pred_analysis_multi_prot_name_status.setText("Protein name already used.")
             self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next)
         else:
             self._view.ui.btn_pred_analysis_multi_next.setEnabled(True)
             tools.validate_protein_name(
@@ -347,10 +345,8 @@ class PredictMultimerViewController(QtCore.QObject):
     def multi_pred_analysis_check_if_list_is_empty(self) -> None:
         """Checks if the list of sequences of the protein is empty."""
         if self._view.ui.list_pred_analysis_multi_prot_seq_overview.count() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
             self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
         else:
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
             self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(True)
 
     def multi_pred_analysis_add_sequence_to_list(self) -> None:
@@ -371,7 +367,6 @@ class PredictMultimerViewController(QtCore.QObject):
     def multi_pred_analysis_check_if_table_is_empty(self) -> None:
         """Checks if the list of proteins to predict is empty."""
         if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() == 0:
-            styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_go_analysis_setup)
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
                 self._view.ui.table_pred_analysis_multi_prot_to_predict,
@@ -406,7 +401,6 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_multi_go_analysis_setup.setEnabled(False)
             self._view.ui.btn_pred_analysis_multi_prot_to_predict_remove.setEnabled(False)
         else:
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_go_analysis_setup)
             self._view.ui.btn_pred_analysis_multi_start.setEnabled(True)
             gui_elements_to_show = [
                 self._view.ui.lbl_pred_analysis_multi_prot_to_predict,
@@ -537,7 +531,6 @@ class PredictMultimerViewController(QtCore.QObject):
         )
         self._view.ui.btn_pred_analysis_multi_next.setEnabled(False)
         self._view.ui.txt_pred_analysis_multi_prot_name.clear()
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next)
         if self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount() > 0:
             try:
                 self._view.ui.table_pred_analysis_multi_prot_to_predict.currentItem().setSelected(False)
@@ -622,7 +615,6 @@ class PredictMultimerViewController(QtCore.QObject):
         self._view.ui.list_pred_analysis_multi_prot_seq_overview.clear()
         self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2.setEnabled(False)
         self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2)
 
     def multi_pred_analysis_back_2(self) -> None:
         """Hides the gui elements for the protein sequence."""
@@ -723,7 +715,6 @@ class PredictMultimerViewController(QtCore.QObject):
                     self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
                     self._view.ui.btn_pred_analysis_multi_start.show()
                     self._view.ui.cb_pred_analysis_multi_images.hide()
-                    styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
             else:
                 # goes from analysis to prediction
                 self._view.ui.tabWidget_2.setCurrentIndex(0)
@@ -869,7 +860,6 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
             self._view.ui.btn_pred_analysis_multi_start.show()
             self._view.ui.cb_pred_analysis_multi_images.hide()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
 
     def multi_pred_analysis_structure_analysis_next_3(self) -> None:
         """Shows the gui elements to select the chains in protein 2."""
@@ -1007,7 +997,6 @@ class PredictMultimerViewController(QtCore.QObject):
         item = QtWidgets.QListWidgetItem(analysis_name)
         self._view.ui.list_pred_analysis_multi_overview.addItem(item)
         self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
-        styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
 
     def multi_pred_analysis_structure_analysis_back_5(self) -> None:
         """Hides the gui elements to select the chains in protein 2."""
@@ -1104,7 +1093,6 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_multi_remove.setEnabled(False)
             self._view.ui.btn_pred_analysis_multi_start.show()
             self._view.ui.cb_pred_analysis_multi_images.hide()
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_start)
         # if self._view.ui.list_pred_analysis_multi_overview.count() == 0:
         #
         #     self._view.ui.btn_pred_analysis_multi_back_pred_setup.show()
@@ -1113,9 +1101,7 @@ class PredictMultimerViewController(QtCore.QObject):
     def check_multi_pred_analysis_if_same_no_of_chains_selected(self) -> None:
         """Checks if the same number of chains were selected."""
         self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-        styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next_4)
         if self.no_of_selected_chains == len(self._view.ui.list_pred_analysis_multi_model_chains.selectedItems()):
-            styles.color_button_ready(self._view.ui.btn_pred_analysis_multi_next_4)
             self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(True)
 
         prot_1_name = self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()
@@ -1132,7 +1118,6 @@ class PredictMultimerViewController(QtCore.QObject):
         for tmp_row in range(self._view.ui.list_pred_analysis_multi_overview.count()):
             if analysis_name == self._view.ui.list_pred_analysis_multi_overview.item(tmp_row).text():
                 self._view.ui.btn_pred_analysis_multi_next_4.setEnabled(False)
-                styles.color_button_not_ready(self._view.ui.btn_pred_analysis_multi_next_4)
                 return
 
     def check_multi_pred_analysis_if_prot_structs_are_filled(self) -> None:

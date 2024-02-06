@@ -55,6 +55,7 @@ class OpenProjectView(QtWidgets.QDialog):
         self.ui.btn_help.setIcon(icon)
         self.ui.btn_help.setText("")
         styles.set_stylesheet(self)
+        styles.color_bottom_frame_button(self.ui.btn_open_project)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Open Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

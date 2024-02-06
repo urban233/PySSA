@@ -69,7 +69,6 @@ class DialogRenameProtein(Qt.QtWidgets.QDialog):
         self.setWindowTitle("Add an existing protein to the current project")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
-        styles.color_button_not_ready(self.ui.btn_rename_protein)
         self.ui.list_workspace_proteins.setStyleSheet(
             "border-style: solid;"
             "border-width: 2px;"

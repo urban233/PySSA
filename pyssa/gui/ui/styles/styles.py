@@ -26,7 +26,7 @@ from PyQt5 import QtWidgets
 from pyssa.util import constants, global_variables
 
 
-def color_button_ready(button: QtWidgets.QPushButton) -> None:
+def color_bottom_frame_button(button: QtWidgets.QPushButton) -> None:
     """This functions colors a button blue to signal it is ready to be pressed.
 
     Args:
@@ -34,7 +34,7 @@ def color_button_ready(button: QtWidgets.QPushButton) -> None:
             button ui element
     """
     with open(
-        os.path.join(global_variables.global_var_root_dir, "gui", "ui", "styles", "styles_start_button_ready.css"),
+        os.path.join(global_variables.global_var_root_dir, "gui", "ui", "styles", "bottom_frame_button.css"),
         "r",
     ) as style_sheet_file:
         button_style = style_sheet_file.read()
@@ -65,7 +65,7 @@ def set_stylesheet(self) -> None:  # noqa: ANN001
         self: a QMainWindow or QDialog
     """
     with open(
-        pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/app_styles.css"),
+        pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/pyssa_style.css"),
         "r",
         encoding="utf-8",
     ) as file:
