@@ -77,7 +77,10 @@ class Analysis:
             db_manager.close_project_database()
 
     def _get_last_id_of_protein_pairs(self) -> int:
-        return max(self.app_project.protein_pairs, key=lambda obj: obj.get_id()).get_id()
+        if len(self.app_project.protein_pairs) == 0:
+            return 1
+        else:
+            return max(self.app_project.protein_pairs, key=lambda obj: obj.get_id()).get_id()
 
     def run_distance_analysis(self, the_image_creation_option: bool) -> None:
         """Runs the distance analysis for all protein pairs of the analysis job.

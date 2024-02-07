@@ -1,0 +1,14 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource>
+        <file>icons/add_circle_w200.svg</file>
+        <file>icons/add_w200.svg</file>
+        <file>icons/change_circle_w200.svg</file>
+        <file>icons/file_save_w200.svg</file>
+        <file>icons/help_w200.svg</file>
+        <file>icons/note_add_w200.svg</file>
+        <file>icons/open_in_new_w200.svg</file>
+        <file>icons/scan_deletew200.svg</file>
+        <file>icons/upload_file_w200.svg</file>
+    </qresource>
+</RCC>

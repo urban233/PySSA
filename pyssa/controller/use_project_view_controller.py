@@ -60,7 +60,7 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.list_use_selected_protein_structures,
             self._view.ui.btn_use_back,
             self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_new_project,
+            self._view.ui.lbl_use_project_name,
         ]
         gui_utils.hide_gui_elements(gui_elements)
         self._view.ui.txt_use_project_name.clear()
@@ -200,7 +200,7 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.list_use_selected_protein_structures,
             self._view.ui.btn_use_back,
             self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_new_project,
+            self._view.ui.lbl_use_project_name,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         self._view.ui.txt_use_project_name.setEnabled(False)
@@ -246,7 +246,7 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.list_use_selected_protein_structures,
             self._view.ui.btn_use_back,
             self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_new_project,
+            self._view.ui.lbl_use_project_name,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)

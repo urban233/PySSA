@@ -125,6 +125,7 @@ class MainViewController:
         self._init_context_menus()
 
     def _connect_all_ui_elements_with_slot_functions(self):
+        # menu
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
@@ -154,6 +155,7 @@ class MainViewController:
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
 
         self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
+
         # seqs tab
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
@@ -710,6 +712,7 @@ class MainViewController:
                     self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.item(row_no).text())
 
             self._database_manager.close_project_database()
+            self._interface_manager.refresh_protein_model()
             self._active_task = tasks.Task(
                 target=main_presenter_async.run_distance_analysis,
                 args=(
@@ -852,8 +855,8 @@ class MainViewController:
             )
         elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
-            self._interface_manager.get_current_project().serialize_project(self._interface_manager.get_current_project().get_project_xml_path())
-            constants.PYSSA_LOGGER.info("Project has been saved to XML file.")
+            self._interface_manager.refresh_protein_model()
+            self._interface_manager.refresh_main_view()
             self.block_box_prediction.destroy(True)
             basic_boxes.ok(
                 "Structure prediction",
@@ -868,7 +871,7 @@ class MainViewController:
                 "Prediction failed because of an unknown case!",
                 QtWidgets.QMessageBox.Critical,
             )
-        self._view.wait_spinner.stop()
+        self._interface_manager.stop_wait_spinner()
 
     # </editor-fold>
 
@@ -1476,10 +1479,14 @@ class MainViewController:
         )
         # protein in session
         if self._pymol_session_manager.is_the_current_protein_in_session():
+            self._view.ui.btn_create_protein_scene.setEnabled(True)
+            self._view.ui.btn_update_protein_scene.setEnabled(True)
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
             self._view.ui.action_protein_regions.setEnabled(True)
         else:
+            self._view.ui.btn_create_protein_scene.setEnabled(False)
+            self._view.ui.btn_update_protein_scene.setEnabled(False)
             self._view.cb_chain_color.setEnabled(False)
             self._view.cb_chain_representation.setEnabled(False)
             self._view.ui.action_protein_regions.setEnabled(False)
@@ -1501,6 +1508,7 @@ class MainViewController:
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
             self._view.ui.action_protein_regions.setEnabled(True)
+            self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             logger.info("Successfully opened protein session.")
 
     def _change_chain_color_proteins(self) -> None:
@@ -1812,10 +1820,14 @@ class MainViewController:
 
         # protein pair in session
         if self._pymol_session_manager.is_the_current_protein_pair_in_session():
+            self._view.ui.btn_create_protein_pair_scene.setEnabled(True)
+            self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
             self._view.ui.action_protein_regions.setEnabled(True)
         else:
+            self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
+            self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
             self._view.cb_chain_color.setEnabled(False)
             self._view.cb_chain_representation.setEnabled(False)
             self._view.ui.action_protein_regions.setEnabled(False)
@@ -1836,6 +1848,7 @@ class MainViewController:
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
             self._view.ui.action_protein_regions.setEnabled(True)
+            self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             logger.info("Successfully opened protein pair session.")
 
     def _change_chain_color_protein_pairs(self) -> None:
@@ -1974,7 +1987,8 @@ class MainViewController:
         tmp_protein_pair = self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(),
                                                                               enums.ModelEnum.OBJECT_ROLE)
         self._external_controller = results_view_controller.ResultsViewController(self._interface_manager,
-                                                                                  tmp_protein_pair)
+                                                                                  tmp_protein_pair,
+                                                                                  self._pymol_session_manager)
         self._interface_manager.get_results_view().show()
 
     # </editor-fold>

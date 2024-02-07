@@ -39,10 +39,23 @@ QFrame#frame_bottom_3 {
 QLabel#lbl_project_name {
     background: #367AF6;
     color: #ffffff;
-    font-size: 16px;
+    font-size: 15px;
     font-family: "Segoe UI";
     font: bold;
-    padding: 5px;
+    padding: 3px;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QLabel#lbl_session_name {
+    background: #367AF6;
+    color: #ffffff;
+    font-size: 15px;
+    font-family: "Segoe UI";
+    font: bold;
+    padding: 3px;
     border-style: solid;
     border-width: 2px;
     border-radius: 4px;
@@ -171,6 +184,7 @@ QMenu::separator {
 }
 /*</editor-fold>*/
 
+/*<editor-fold desc="Icon buttons">*/
 QPushButton#btn_import_seq {
     background-color: rgba(220, 219, 227, 0.01);
     border: none;
@@ -422,6 +436,7 @@ QPushButton::hover#btn_update_protein_pair_scene {
     min-height: 40px;
     max-height: 40px;
 }
+/*</editor-fold>*/
 
 /*<editor-fold desc="Normal QPushButton style">*/
 QPushButton {
@@ -563,3 +578,11 @@ QToolTip {
     font: bold;
     font-size: 12px;
 }
+
+/*QStatusBar {*/
+/*    font-size: 14px;*/
+/*    border: 2px solid #DCDBE3;*/
+/*    border-radius: 4px;*/
+/*    padding: 20px;*/
+/*    margin: 5px;*/
+/*}*/

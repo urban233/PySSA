@@ -30,6 +30,7 @@ from pyqtspinner import spinner
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
+from pyssa.gui.ui import icon_resources
 from pyssa.util import constants, gui_utils
 
 
@@ -67,6 +68,7 @@ class MainView(QtWidgets.QMainWindow):
     def initialize_ui(self) -> None:
         """Initialize the UI elements."""
         self.ui.lbl_project_name.hide()
+        self.ui.lbl_session_name.hide()
         self.ui.project_tab_widget.hide()
         self.ui.action_use_project.setEnabled(False)
         self.ui.action_export_project.setEnabled(False)
@@ -116,92 +118,91 @@ class MainView(QtWidgets.QMainWindow):
 
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
-        self.ui.btn_help.setIcon(QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
-        self.ui.btn_help_2.setIcon(QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\help_w200.svg"))
+        self.ui.btn_help_2.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help_2.setIconSize(self.ui.btn_help_2.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help_2.setText("")
-        self.ui.btn_help_3.setIcon(QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\help_w200.svg"))
+        self.ui.btn_help_3.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help_3.setIconSize(self.ui.btn_help_3.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help_3.setText("")
 
         self.ui.btn_add_sequence.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\note_add_w200.svg")
+            QtGui.QIcon(":/icons/note_add_w200.svg")
         )
         self.ui.btn_add_sequence.setText("")
         self.ui.btn_add_sequence.setIconSize(self.ui.btn_add_sequence.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_import_seq.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\upload_file_w200.svg")
+            QtGui.QIcon(":/icons/upload_file_w200.svg")
         )
         self.ui.btn_import_seq.setText("")
         self.ui.btn_import_seq.setIconSize(self.ui.btn_import_seq.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_save_sequence.setIcon(QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\file_save_w200.svg"))
+        self.ui.btn_save_sequence.setIcon(QtGui.QIcon(":/icons/file_save_w200.svg"))
         self.ui.btn_save_sequence.setText("")
         self.ui.btn_save_sequence.setIconSize(self.ui.btn_save_sequence.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_delete_sequence.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\scan_deletew200.svg"))
+            QtGui.QIcon(":/icons/scan_deletew200.svg"))
         self.ui.btn_delete_sequence.setText("")
         self.ui.btn_delete_sequence.setIconSize(self.ui.btn_delete_sequence.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_import_protein.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\upload_file_w200.svg")
+            QtGui.QIcon(":/icons/upload_file_w200.svg")
         )
         self.ui.btn_import_protein.setText("")
         self.ui.btn_import_protein.setIconSize(self.ui.btn_import_protein.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_save_protein.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\file_save_w200.svg")
+            QtGui.QIcon(":/icons/file_save_w200.svg")
         )
         self.ui.btn_save_protein.setText("")
         self.ui.btn_save_protein.setIconSize(self.ui.btn_save_protein.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_delete_protein.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\scan_deletew200.svg"))
+            QtGui.QIcon(":/icons/scan_deletew200.svg"))
         self.ui.btn_delete_protein.setText("")
         self.ui.btn_delete_protein.setIconSize(
             self.ui.btn_delete_protein.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_open_protein_session.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\open_in_new_w200.svg"))
+            QtGui.QIcon(":/icons/open_in_new_w200.svg"))
         self.ui.btn_open_protein_session.setText("")
         self.ui.btn_open_protein_session.setIconSize(
             self.ui.btn_open_protein_session.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_create_protein_scene.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\add_circle_w200.svg"))
+        self.ui.btn_create_protein_scene.setIcon(QtGui.QIcon(":/icons/add_circle_w200.svg"))
         self.ui.btn_create_protein_scene.setText("")
         self.ui.btn_create_protein_scene.setIconSize(
             self.ui.btn_create_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_update_protein_scene.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\change_circle_w200.svg"))
+            QtGui.QIcon(":/icons/change_circle_w200.svg"))
         self.ui.btn_update_protein_scene.setText("")
         self.ui.btn_update_protein_scene.setIconSize(
             self.ui.btn_update_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_delete_protein_pair.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\scan_deletew200.svg"))
+            QtGui.QIcon(":/icons/scan_deletew200.svg"))
         self.ui.btn_delete_protein_pair.setText("")
         self.ui.btn_delete_protein_pair.setIconSize(self.ui.btn_delete_protein_pair.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_open_protein_pair_session.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\open_in_new_w200.svg"))
+            QtGui.QIcon(":/icons/open_in_new_w200.svg"))
         self.ui.btn_open_protein_pair_session.setText("")
         self.ui.btn_open_protein_pair_session.setIconSize(
             self.ui.btn_open_protein_pair_session.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_create_protein_pair_scene.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\add_circle_w200.svg"))
+            QtGui.QIcon(":/icons/add_circle_w200.svg"))
         self.ui.btn_create_protein_pair_scene.setText("")
         self.ui.btn_create_protein_pair_scene.setIconSize(
             self.ui.btn_create_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
         self.ui.btn_update_protein_pair_scene.setIcon(
-            QtGui.QIcon(r"C:\Users\martin\github_repos\PySSA\assets\icons\change_circle_w200.svg"))
+            QtGui.QIcon(":/icons/change_circle_w200.svg"))
         self.ui.btn_update_protein_pair_scene.setText("")
         self.ui.btn_update_protein_pair_scene.setIconSize(
             self.ui.btn_update_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))

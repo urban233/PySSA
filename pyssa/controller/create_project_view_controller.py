@@ -72,7 +72,7 @@ class CreateProjectViewController(QtCore.QObject):
             self._view.ui.list_create_projects_view.model(),
             self._view.ui.txt_new_project_name,
             self._view.ui.lbl_new_status_project_name,
-            self._view.ui.txt_new_choose_reference
+            self._view.ui.btn_new_create_project
         )
 
     def validate_reference_in_project(self) -> None:

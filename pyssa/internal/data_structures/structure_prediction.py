@@ -25,6 +25,7 @@ import pathlib
 import shutil
 import logging
 
+from pyssa.controller import database_manager
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
@@ -176,8 +177,18 @@ class StructurePrediction:
             dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
             os.rename(src.get_filepath(), dest)
             logger.debug(tmp_prediction[0].name)
+
+            tmp_protein = protein.Protein(tmp_prediction[0].name)
+            tmp_protein.add_protein_structure_data_from_local_pdb_file(dest)
+            with database_manager.DatabaseManager(str(self.project.get_database_filepath())) as db_manager:
+                logger.info(f"Inserting {tmp_protein.get_molecule_object()} into current project, from prediction thread.")
+                db_manager.open_project_database()
+                tmp_protein.db_project_id = self.project.get_id()
+                tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
+                db_manager.close_project_database()
+
             self.project.add_existing_protein(
-                protein.Protein(tmp_prediction[0].name, pdb_filepath=path_util.FilePath(dest)),
+                tmp_protein
             )
             logger.debug(self.project.proteins)
         try:

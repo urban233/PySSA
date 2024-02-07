@@ -310,7 +310,8 @@ class InterfaceManager:
         if self._current_project.get_project_name() != "":
             # A project is open
             self._main_view.ui.lbl_project_name.show()
-            self._main_view.ui.lbl_project_name.setText(f"Name: {self._current_project.get_project_name()}")
+            self._main_view.ui.lbl_project_name.setText(f"Project Name: {self._current_project.get_project_name()}")
+            self._main_view.ui.lbl_session_name.show()
             self._main_view.ui.project_tab_widget.show()
             self._main_view.ui.action_new_project.setEnabled(False)
             self._main_view.ui.action_open_project.setEnabled(False)
