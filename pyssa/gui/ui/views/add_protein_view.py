@@ -28,6 +28,7 @@ from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, tools, gui_utils
@@ -59,9 +60,8 @@ class AddProteinView(Qt.QtWidgets.QDialog):
         self.ui.txt_add_protein.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
         self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
-        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
-        icon = self.style().standardIcon(pixmapi)
-        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         self.setWindowTitle("Add an existing protein to the current project")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))

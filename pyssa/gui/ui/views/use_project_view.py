@@ -27,6 +27,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
+from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.forms.auto_generated import auto_use_project_view
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, input_validator
@@ -48,9 +49,8 @@ class UseProjectView(QtWidgets.QDialog):
         """Initialize the UI elements."""
         self.ui.lbl_use_status_search.setText("")
         self.ui.list_use_existing_projects.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
-        icon = self.style().standardIcon(pixmapi)
-        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
         styles.set_stylesheet(self)

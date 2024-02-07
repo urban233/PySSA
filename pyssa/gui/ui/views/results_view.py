@@ -29,7 +29,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyqtspinner import spinner
-
+from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.forms.auto_generated import auto_results_view
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, input_validator
@@ -69,9 +69,8 @@ class ResultsView(QtWidgets.QDialog):
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
-        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
-        icon = self.style().standardIcon(pixmapi)
-        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))

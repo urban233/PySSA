@@ -30,7 +30,7 @@ from pyqtspinner import spinner
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
-from pyssa.gui.ui import icon_resources
+from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.util import constants, gui_utils
 
 
