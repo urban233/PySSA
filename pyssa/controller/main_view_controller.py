@@ -1403,11 +1403,12 @@ class MainViewController:
         self._interface_manager.get_import_sequence_view().show()
 
     def _post_import_sequence(self, return_value: tuple):
-        # TODO: add the possibility to import a fasta file with multiple records
         tmp_fasta_filepath, _ = return_value
-        tmp_record = SeqIO.read(tmp_fasta_filepath, "fasta")
-        self._interface_manager.get_current_project().sequences.append(tmp_record)
-        self._database_manager.insert_new_sequence(tmp_record)
+        with open(tmp_fasta_filepath, "r") as handle:
+            for tmp_record in SeqIO.parse(handle, "fasta"):
+                # Append each SeqRecord object to the list
+                self._interface_manager.get_current_project().sequences.append(tmp_record)
+                self._database_manager.insert_new_sequence(tmp_record)
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
 
@@ -1486,17 +1487,18 @@ class MainViewController:
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
 
-    # TODO: add method for deleting a sequence from the project
     def _delete_selected_sequence(self):
         response: bool = gui_utils.warning_message_sequence_gets_deleted()
         if response:
             tmp_seq_record: "SeqRecord.SeqRecord" = self._interface_manager.get_current_sequence_list_index_object()
-            tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
-                                                                          (0, tmp_seq_record.name))
+            tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_SEQUENCE,
+                                                                          (0, tmp_seq_record))
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             self._interface_manager.get_current_project().delete_specific_sequence(tmp_seq_record.name)
             self._interface_manager.refresh_sequence_model()
             self._interface_manager.refresh_main_view()
+            self._view.ui.seqs_table_widget.setRowCount(0)
+            self._view.build_sequence_table()
 
     # </editor-fold>
 

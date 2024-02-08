@@ -449,8 +449,6 @@ class InterfaceManager:
         self._main_view.status_bar.showMessage(message)
 
     def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
-        self._main_view.build_sequence_table()
-
         self._main_view.setup_sequences_table(2)
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
         # Table label items
