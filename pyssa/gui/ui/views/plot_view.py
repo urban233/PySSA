@@ -78,6 +78,7 @@ class PlotView(QtWidgets.QDialog):
         self.clicked_point_scatter = None
         self.highlighted_bin_index = None
         self.active_row_information = None
+        self._sync_with_pymol_flag = False
 
         # self.resizeEvent = self.handle_resize
         # Create a timer for delayed updates
