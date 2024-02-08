@@ -26,6 +26,7 @@ import pathlib
 
 from pymol import Qt
 from PyQt5.QtGui import QIcon
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
@@ -106,7 +107,7 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
 def no_internet_dialog() -> None:
     """Displays a message box which informs the user that there is no internet connection."""
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Critical)
     msg.setText("You do not have a working internet connection but it is necessary for this operation!")
@@ -122,7 +123,7 @@ def no_internet_dialog_with_custom_msg(message: str) -> None:
         message: a custom message for the dialog.
     """
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Critical)
     msg.setText(message)
@@ -143,7 +144,7 @@ def error_dialog_settings(message: str, message_detail: str, settings_obj: "sett
             settings object of the MainWindow class
     """
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Critical)
     msg.setText(message)
@@ -171,7 +172,7 @@ def warning_dialog_restore_settings(message: str) -> bool:
         returns a bool value whether to restore the settings or not
     """
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
     msg.setText(message)
@@ -190,7 +191,7 @@ def warning_dialog_restore_settings(message: str) -> bool:
 def warning_message_project_gets_deleted() -> bool:
     """This function creates a warning message, which can be customized."""
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Are you sure you want to delete this project?")
@@ -209,7 +210,7 @@ def warning_message_project_gets_deleted() -> bool:
 def warning_message_protein_gets_deleted() -> bool:
     """This function creates a warning message, which can be customized."""
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Are you sure you want to delete this protein?")
@@ -233,7 +234,7 @@ def warning_prediction_is_finished(dialog_obj) -> None:  # noqa: ANN001
     """
     # closes the previous message box
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Information)
     msg.setText("Finish")
@@ -250,7 +251,7 @@ def warning_prediction_is_finished(dialog_obj) -> None:  # noqa: ANN001
 def error_prediction_progress_lost() -> bool:
     """Creates an error message if the project data is invalid."""
     msg = QMessageBox()
-    msg.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Critical)
     msg.setText("Error")
@@ -368,7 +369,7 @@ def setup_standard_block_box(block_box: QMessageBox, window_title: str, msg_text
     """
     block_box.setStandardButtons(QMessageBox.NoButton)
     block_box.setIcon(QMessageBox.Information)
-    block_box.setWindowIcon(QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
+    block_box.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
     styles.set_stylesheet(block_box)
     block_box.setWindowTitle(window_title)
     block_box.setText(msg_text)

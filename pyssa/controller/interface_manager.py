@@ -245,11 +245,11 @@ class InterfaceManager:
 
     def _build_workspace_model(self) -> None:
         tmp_workspace = self._current_workspace
-        xml_pattern = os.path.join(tmp_workspace, '*.xml')
+        db_pattern = os.path.join(tmp_workspace, '*.db')
         tmp_root_item = self._workspace_model.invisibleRootItem()
-        for tmp_filename in [os.path.basename(file).replace(".xml", "") for file in glob.glob(xml_pattern)]:
+        for tmp_filename in [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]:
             tmp_project_item = QtGui.QStandardItem(tmp_filename)
-            tmp_filepath = pathlib.Path(f"{tmp_workspace}/{tmp_filename}.xml")
+            tmp_filepath = pathlib.Path(f"{tmp_workspace}/{tmp_filename}.db")
             tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
             tmp_root_item.appendRow(tmp_project_item)
 

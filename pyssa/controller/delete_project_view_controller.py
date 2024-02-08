@@ -43,7 +43,7 @@ class DeleteProjectViewController(QtCore.QObject):
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
-        self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_projects())
+        self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_model())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
@@ -53,9 +53,6 @@ class DeleteProjectViewController(QtCore.QObject):
 
     def validate_delete_search(self) -> None:
         """Validates the input of the project name in real-time."""
-        # if self._view.ui.list_delete_projects_view.currentIndex().isValid():
-        #     self._view.ui.list_delete_projects_view.model().itemFromIndex(self._view.ui.list_delete_projects_view.currentIndex()).setSelected(False)
-        # set color for lineEdit
         input_validator.InputValidator.validate_project_name(
             self._view.ui.list_delete_projects_view.model(),
             self._view.ui.txt_delete_search,
