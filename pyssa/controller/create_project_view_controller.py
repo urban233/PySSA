@@ -40,6 +40,8 @@ class CreateProjectViewController(QtCore.QObject):
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_create_view()
+        self._view.ui.lbl_new_status_choose_reference.setText("")
+        self._view.ui.lbl_new_status_choose_reference.setStyleSheet("color: #FC5457")
         self._fill_projects_list_view()
         self._connect_all_ui_elements_to_slot_functions()
         self.hide_add_protein_options()
@@ -53,7 +55,7 @@ class CreateProjectViewController(QtCore.QObject):
         self._view.ui.cb_new_add_reference.clicked.connect(self.show_add_protein_options)
         self._view.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
         self._view.ui.btn_new_create_project.clicked.connect(self._create_new_project)
-        # self._view.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
+        self._view.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
         # self._view.ui.btn_cancel(self._close)
 
     def _create_new_project(self) -> None:
@@ -117,8 +119,14 @@ class CreateProjectViewController(QtCore.QObject):
     def show_add_protein_options(self) -> None:
         if self._view.ui.cb_new_add_reference.isChecked():
             self._view.ui.lbl_new_choose_reference.show()
+            self._view.ui.lbl_new_status_choose_reference.show()
             self._view.ui.txt_new_choose_reference.show()
             self._view.ui.btn_new_choose_reference.show()
+        else:
+            self._view.ui.lbl_new_choose_reference.hide()
+            self._view.ui.lbl_new_status_choose_reference.hide()
+            self._view.ui.txt_new_choose_reference.hide()
+            self._view.ui.btn_new_choose_reference.hide()
 
     def show_add_reference(self) -> None:
         """Shows the reference input section."""
