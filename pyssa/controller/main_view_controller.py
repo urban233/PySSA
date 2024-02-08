@@ -783,6 +783,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
+            self._interface_manager.update_status_bar(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             basic_boxes.ok(
                 "Distance analysis",
@@ -792,6 +794,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
+            self._interface_manager.update_status_bar(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
             # self._interface_manager.get_current_project().serialize_project(
             #     self._interface_manager.get_current_project().get_project_xml_path()
@@ -803,6 +807,7 @@ class MainViewController:
                 QtWidgets.QMessageBox.Information,
             )
             constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+            self._interface_manager.update_status_bar("All structure analysis' are done.")
         self._database_manager.open_project_database()
         self._interface_manager.refresh_protein_pair_model()
         self._interface_manager.refresh_main_view()
@@ -823,6 +828,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             self.block_box_prediction.destroy(True)
             basic_boxes.ok(
@@ -833,6 +840,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             self.block_box_prediction.destroy(True)
             basic_boxes.ok(
@@ -843,6 +852,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             self.block_box_prediction.destroy(True)
             basic_boxes.ok(
@@ -853,6 +864,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
             self._interface_manager.refresh_protein_model()
@@ -864,6 +876,7 @@ class MainViewController:
                 QtWidgets.QMessageBox.Information,
             )
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
+            self._interface_manager.update_status_bar("All structure predictions are done.")
         else:
             self.block_box_prediction.destroy(True)
             basic_boxes.ok(
@@ -871,6 +884,7 @@ class MainViewController:
                 "Prediction failed because of an unknown case!",
                 QtWidgets.QMessageBox.Critical,
             )
+            self._interface_manager.update_status_bar("Prediction failed because of an unknown case!")
         self._interface_manager.stop_wait_spinner()
 
     # </editor-fold>
@@ -994,11 +1008,11 @@ class MainViewController:
                 "Prediction failed because there was an error writing the fasta file(s)!",
                 QtWidgets.QMessageBox.Critical,
             )
-            self.display_view_page()
-            self._project_watcher.show_valid_options(self._view.ui)
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             self.block_box_prediction.destroy(True)
@@ -1010,6 +1024,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             self.block_box_prediction.destroy(True)
@@ -1021,6 +1037,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             self.block_box_prediction.destroy(True)
@@ -1032,6 +1050,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.update_status_bar(
+                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
 
 
@@ -1579,7 +1599,7 @@ class MainViewController:
     def _save_protein_pymol_session(self, a_protein: "protein.Protein"):
         tmp_database_operation = database_operation.DatabaseOperation(
             enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
-            (0, a_protein.get_id(), a_protein)
+            (0, a_protein)
         )
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 

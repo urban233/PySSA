@@ -180,10 +180,13 @@ class StructurePrediction:
 
             tmp_protein = protein.Protein(tmp_prediction[0].name)
             tmp_protein.add_protein_structure_data_from_local_pdb_file(dest)
+            tmp_protein.create_new_pymol_session()
+            tmp_protein.save_pymol_session_as_base64_string()
             with database_manager.DatabaseManager(str(self.project.get_database_filepath())) as db_manager:
                 logger.info(f"Inserting {tmp_protein.get_molecule_object()} into current project, from prediction thread.")
                 db_manager.open_project_database()
                 tmp_protein.db_project_id = self.project.get_id()
+                tmp_protein.add_id_to_all_chains(db_manager.get_latest_id_of_a_specific_table("Chain"))
                 tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
                 db_manager.close_project_database()
 

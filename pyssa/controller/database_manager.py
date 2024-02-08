@@ -49,7 +49,6 @@ class DatabaseManager:
         # Assuming your_table_name has an auto-incrementing primary key column named 'id'
         self._cursor.execute(f"SELECT MAX(id) FROM {a_table_name}")
         latest_id_before_insert = self._cursor.fetchone()[0]
-        self.close_project_database()
         return latest_id_before_insert if latest_id_before_insert is not None else 0
 
     # </editor-fold>
