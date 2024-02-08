@@ -30,6 +30,7 @@ import platform
 from typing import TYPE_CHECKING
 
 import pymol
+from Bio import SeqRecord, SeqIO
 from pymol import cmd
 
 from pyssa.controller import database_manager
@@ -197,9 +198,10 @@ def create_use_project(
         tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
 
         for tmp_protein in the_proteins_to_add:
-            tmp_protein.db_project_id = tmp_project.get_id()
-            tmp_project.add_existing_protein(tmp_protein)
-            tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
+            tmp_protein_copy = copy.deepcopy(tmp_protein)
+            tmp_protein_copy.db_project_id = tmp_project.get_id()
+            tmp_project.add_existing_protein(tmp_protein_copy)
+            tmp_protein_copy.set_id(db_manager.insert_new_protein(tmp_protein_copy))
 
         db_manager.close_project_database()
     constants.PYSSA_LOGGER.info("Use project finished.")
@@ -320,6 +322,29 @@ def check_for_cleaning(a_protein_name: str, a_project: "project.Project") -> tup
         is_in_protein_pair = True
     return ("result", is_cleanable, is_in_protein_pair)
 
+def save_selected_protein_sequence_as_fasta_file(
+    a_seq_record: "SeqRecord.SeqRecord",
+    a_filepath: str,
+    the_database_filepath: str,
+) -> tuple:
+    """Saves a given protein sequence to a fasta file."""
+    # with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+    #     db_manager.open_project_database()
+    #     tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
+    #     tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
+    #     a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
+    #     db_manager.close_project_database()
+    try:
+        print(a_seq_record.id)
+        if a_seq_record.id == "<unknown id>":
+            a_seq_record.id = a_seq_record.name
+        with open(a_filepath, "w") as file_handler:
+            SeqIO.write(a_seq_record, file_handler, "fasta")
+    except Exception as e:
+        logger.error(f"Saving sequence to fasta file ended with error: {e}")
+        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+    else:
+        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
 
 def add_existing_protein_to_project(the_protein_information: tuple, a_project: "project.Project") -> tuple:
     """Adds a protein based on the filepath/ PDB id to a project.

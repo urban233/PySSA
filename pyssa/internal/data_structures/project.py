@@ -347,6 +347,25 @@ class Project:
                 return tmp_protein_pair
         print(f"No matching protein with the name {a_protein_pair_name} found.")  # noqa: RET503
 
+    def search_sequence(self, a_seq_name):
+        """Searches the project for a specific seq name.
+
+        Args:
+            a_seq_name (str): the name of the protein to search
+
+        Raises:
+            IllegalArgumentError: If the argument is None.
+        """
+        # <editor-fold desc="Checks">
+        safeguard.Safeguard.check_if_value_is_not_none(a_seq_name, logger)
+
+        # </editor-fold>
+
+        for tmp_seq_record in self.sequences:
+            if tmp_seq_record.name == a_seq_name:
+                return tmp_seq_record
+        print(f"No matching sequence with the name {a_seq_name} found.")  # noqa: RET503
+
     def save_pymol_session(self, a_current_session: "current_session.CurrentSession") -> None:
         """Saves the pymol session.
 
@@ -383,12 +402,23 @@ class Project:
         # </editor-fold>
 
         protein_obj = self.search_protein(a_protein_name)
+        tmp_selected_protein_id = protein_obj.get_id()
+
         for tmp_protein_pair in self.protein_pairs:
-            if protein_obj == tmp_protein_pair.protein_1 or tmp_protein_pair.protein_2:
+            tmp_protein_1_id = tmp_protein_pair.protein_1.get_id()
+            tmp_protein_2_id = tmp_protein_pair.protein_2.get_id()
+            if tmp_selected_protein_id == tmp_protein_1_id or tmp_selected_protein_id == tmp_protein_2_id:
                 return True
-            if protein_obj.get_molecule_object() == tmp_protein_pair.protein_1.get_molecule_object().replace("_1", ""):
-                return True
+            # if protein_obj.get_molecule_object() == tmp_protein_pair.protein_1.get_molecule_object().replace("_1", ""):
+            #     return True
         return False
+
+    def delete_specific_sequence(self, a_seq_name):
+        tmp_seq_record = self.search_sequence(a_seq_name)
+        if tmp_seq_record in self.sequences:
+            self.sequences.remove(tmp_seq_record)
+        else:
+            raise ValueError("An argument is not in the list.")
 
     def delete_specific_protein(self, a_protein_name: str) -> None:
         """Deletes a certain protein from the project based on the protein name.

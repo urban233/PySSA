@@ -9,7 +9,7 @@ from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import results_view, plot_view
-from pyssa.internal.data_structures import protein_pair
+from pyssa.internal.data_structures import protein_pair, selection
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks
 from pyssa.io_pyssa import safeguard
@@ -29,6 +29,7 @@ class ResultsViewController(QtCore.QObject):
         self._protein_pair = the_protein_pair
         self._color_configuration_protein_pair: tuple[list, list] = ([], [])
         self._view: "results_view.ResultsView" = the_interface_manager.get_results_view()
+        self._distance_data_visualizer = None
         self.cb_protein_pair_color = QtWidgets.QComboBox()
 
         if not self._pymol_session_manager.is_the_current_protein_pair_in_session():
@@ -43,12 +44,13 @@ class ResultsViewController(QtCore.QObject):
         self._view.ui.btn_view_plots.clicked.connect(self._open_plot_view)
         self.cb_protein_pair_color.currentIndexChanged.connect(self.__slot_color_protein_pair)
         self._view.ui.btn_save_data.clicked.connect(self.__slot_export_data)
+        self._view.ui.table_widget_results.clicked.connect(self.__slot_highlight_protein)
 
     # <editor-fold desc="Util methods">
     def _build_table_widget(self):
         self.cb_protein_pair_color.currentIndexChanged.disconnect(self.__slot_color_protein_pair)
         self._view.ui.table_widget_results.clear()
-        self._view.ui.table_widget_results.setRowCount(3)
+        self._view.ui.table_widget_results.setRowCount(5)
         self._view.ui.table_widget_results.setColumnCount(2)
         self._view.ui.table_widget_results.verticalHeader().setVisible(False)
         self._view.ui.table_widget_results.setHorizontalHeaderLabels(["Name", "Value"])
@@ -57,6 +59,7 @@ class ResultsViewController(QtCore.QObject):
         self.cb_protein_pair_color.currentIndexChanged.connect(self.__slot_color_protein_pair)
 
     def _fill_table_widget(self):
+        self._get_color_configuration_of_protein_pair()
         # RMSD value item for table widget
         tmp_rmsd_label_item = QtWidgets.QTableWidgetItem("RMSD (Å)")
         tmp_result_rmsd_item = QtWidgets.QTableWidgetItem(
@@ -69,11 +72,26 @@ class ResultsViewController(QtCore.QObject):
             str(self._protein_pair.distance_analysis.analysis_results.aligned_aa))
         self._view.ui.table_widget_results.setItem(1, 0, tmp_aligned_aa_label_item)
         self._view.ui.table_widget_results.setItem(1, 1, tmp_result_aligned_aa_item)
+        # Color information about protein 1 & 2
+        tmp_color_description_protein_1_item = QtWidgets.QTableWidgetItem(
+            f"Color {self._protein_pair.protein_1.get_molecule_object()}")
+        self._view.ui.table_widget_results.setItem(2, 0, tmp_color_description_protein_1_item)
+        tmp_color_protein_1_item = QtWidgets.QTableWidgetItem("green (default)")
+        self._view.ui.table_widget_results.setItem(2, 1, tmp_color_protein_1_item)
+        tmp_color_description_protein_2_item = QtWidgets.QTableWidgetItem(
+            f"Color {self._protein_pair.protein_2.get_molecule_object()}")
+        self._view.ui.table_widget_results.setItem(3, 0, tmp_color_description_protein_2_item)
+        tmp_color_protein_2_item = QtWidgets.QTableWidgetItem("blue (default)")
+        self._view.ui.table_widget_results.setItem(3, 1, tmp_color_protein_2_item)
         # Color protein pair value item for table widget
         tmp_color_protein_pair_label_item = QtWidgets.QTableWidgetItem("Color Protein Pair")
-        self._view.ui.table_widget_results.setItem(2, 0, tmp_color_protein_pair_label_item)
-        self._view.ui.table_widget_results.setCellWidget(2, 1, self.cb_protein_pair_color)
+        self._view.ui.table_widget_results.setItem(4, 0, tmp_color_protein_pair_label_item)
+        self._view.ui.table_widget_results.setCellWidget(4, 1, self.cb_protein_pair_color)
         # Set editing flags
+        tmp_color_description_protein_1_item.setFlags(tmp_color_description_protein_1_item.flags() & ~Qt.ItemIsEditable)
+        tmp_color_protein_1_item.setFlags(tmp_color_protein_1_item.flags() & ~Qt.ItemIsEditable)
+        tmp_color_description_protein_2_item.setFlags(tmp_color_description_protein_2_item.flags() & ~Qt.ItemIsEditable)
+        tmp_color_protein_2_item.setFlags(tmp_color_protein_2_item.flags() & ~Qt.ItemIsEditable)
         tmp_result_rmsd_item.setFlags(tmp_result_rmsd_item.flags() & ~Qt.ItemIsEditable)
         tmp_rmsd_label_item.setFlags(tmp_rmsd_label_item.flags() & ~Qt.ItemIsEditable)
         tmp_aligned_aa_label_item.setFlags(tmp_aligned_aa_label_item.flags() & ~Qt.ItemIsEditable)
@@ -85,11 +103,25 @@ class ResultsViewController(QtCore.QObject):
 
     # </editor-fold>
 
+    def __slot_highlight_protein(self):
+        # fixme: This could be important if its needed
+        # if self._view.ui.table_widget_results.currentItem().text().find("green (default)") != -1:
+        #     tmp_pymol_selection = selection.Selection(self._protein_pair.protein_1.get_molecule_object())
+        #     tmp_pymol_selection.selection_string = f"/{tmp_pymol_selection.molecule_object}"
+        #     cmd.col(tmp_pymol_selection.selection_string)
+        # elif self._view.ui.table_widget_results.currentItem().text().find("blue (default)") != -1:
+        #     tmp_pymol_selection = selection.Selection(self._protein_pair.protein_2.get_molecule_object())
+        #     tmp_pymol_selection.selection_string = f"/{tmp_pymol_selection.molecule_object}"
+        #     cmd.select(tmp_pymol_selection.selection_string)
+        # else:
+        #     cmd.select(name="", selection="none")
+        pass
+
     def _open_plot_view(self) -> None:
-        tmp_dialog = plot_view.PlotView(self._protein_pair,
+        self._distance_data_visualizer = plot_view.PlotView(self._protein_pair,
                                         self._interface_manager.get_current_project(),
                                         self._protein_pair)
-        tmp_dialog.exec_()
+        self._distance_data_visualizer.show()
 
     # <editor-fold desc="Methods for coloring protein pair">
     def __slot_color_protein_pair(self) -> None:

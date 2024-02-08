@@ -345,16 +345,32 @@ class InterfaceManager:
             self._main_view.ui.action_simple_image.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
+        if len(self._current_project.sequences) > 0:
+            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        if len(self._current_project.sequences) == 0 or self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
+            self._main_view.ui.btn_save_sequence.setEnabled(False)
+            self._main_view.ui.btn_delete_sequence.setEnabled(False)
+
         if len(self._current_project.proteins) > 0:
             self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
             self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
+        if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+            self._main_view.ui.btn_save_protein.setEnabled(False)
+            self._main_view.ui.btn_delete_protein.setEnabled(False)
+            self._main_view.ui.btn_open_protein_session.setEnabled(False)
+            self._main_view.ui.btn_create_protein_scene.setEnabled(False)
+            self._main_view.ui.btn_update_protein_scene.setEnabled(False)
+            self._main_view.ui.proteins_table_widget.setRowCount(0)
 
         if len(self._current_project.protein_pairs) > 0:
             self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
             self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
-
-        if len(self._current_project.sequences) > 0:
-            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+            self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
+            self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
+            self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
+            self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
+            self._main_view.ui.protein_pairs_table_widget.setRowCount(0)
 
     def restore_default_main_view(self):
         # Restore sequences table
@@ -370,6 +386,8 @@ class InterfaceManager:
         self._main_view.initialize_ui()
 
     def show_chain_pymol_parameters(self, a_chain_item: QtGui.QStandardItem):
+        self._main_view.build_proteins_table()
+
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
         self._main_view.setup_proteins_table(len(tmp_chain.pymol_parameters))
         i = 0
@@ -393,6 +411,8 @@ class InterfaceManager:
                                                      a_chain_item,
                                                      a_protein_pair_id: int,
                                                      a_protein_id: int):
+        self._main_view.build_protein_pairs_table()
+
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
         self._main_view.setup_protein_pairs_table(len(tmp_chain.pymol_parameters))
         with database_manager.DatabaseManager(str(self._current_project.get_database_filepath())) as db_manager:
@@ -429,6 +449,8 @@ class InterfaceManager:
         self._main_view.status_bar.showMessage(message)
 
     def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
+        self._main_view.build_sequence_table()
+
         self._main_view.setup_sequences_table(2)
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
         # Table label items
@@ -485,6 +507,16 @@ class InterfaceManager:
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
             self._main_view.ui.btn_create_protein_pair_scene.setEnabled(True)
             self._main_view.ui.btn_update_protein_pair_scene.setEnabled(True)
+
+    # <editor-fold desc="Getter methods for sequence tab in main view">
+    def get_current_sequence_list_index(self):
+        return self._main_view.ui.seqs_list_view.currentIndex()
+
+    def get_current_sequence_list_index_object(self):
+        """Returns the selected seq record object from the list view."""
+        return self.get_current_sequence_list_index().data(enums.ModelEnum.OBJECT_ROLE)
+
+    # </editor-fold>
 
     # <editor-fold desc="Getter methods for protein tab in main view">
     def get_current_protein_tree_index(self):

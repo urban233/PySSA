@@ -7,6 +7,7 @@ import platform
 import zmq
 import pymol
 import pygetwindow as gw
+from Bio.Seq import Seq
 from pymol import cmd
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
@@ -160,6 +161,8 @@ class MainViewController:
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
         self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
+        self._view.ui.btn_save_sequence.clicked.connect(self._save_selected_sequence_as_fasta_file)
+        self._view.ui.btn_delete_sequence.clicked.connect(self._delete_selected_sequence)
         self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
@@ -1392,12 +1395,15 @@ class MainViewController:
             self._view.ui.seqs_list_view.currentIndex()
         )
         self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
+        self._view.ui.btn_save_sequence.setEnabled(True)
+        self._view.ui.btn_delete_sequence.setEnabled(True)
 
     def _import_sequence(self) -> None:
         self._interface_manager.get_import_sequence_view().return_value.connect(self._post_import_sequence)
         self._interface_manager.get_import_sequence_view().show()
 
     def _post_import_sequence(self, return_value: tuple):
+        # TODO: add the possibility to import a fasta file with multiple records
         tmp_fasta_filepath, _ = return_value
         tmp_record = SeqIO.read(tmp_fasta_filepath, "fasta")
         self._interface_manager.get_current_project().sequences.append(tmp_record)
@@ -1425,6 +1431,72 @@ class MainViewController:
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
+
+    def _save_selected_sequence_as_fasta_file(self):
+        self._view.wait_spinner.start()
+        file_dialog = QtWidgets.QFileDialog()
+        desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
+        file_dialog.setDirectory(desktop_path)
+        file_path, _ = file_dialog.getSaveFileName(
+            self._view,
+            "Save Protein Sequence",
+            "",
+            "FASTA File (*.fasta)",
+        )
+        if file_path:
+            tmp_seq_record = self._interface_manager.get_current_sequence_list_index_object()
+            # pre-process seq record object for the SeqIO module
+            if tmp_seq_record.id == "<unknown id>":
+                tmp_seq_record.id = tmp_seq_record.name
+            tmp_seq_record.seq = Seq(tmp_seq_record.seq)
+            # defines the task to save the sequence as .fasta file
+            self._active_task = tasks.Task(
+                target=main_presenter_async.save_selected_protein_sequence_as_fasta_file,
+                args=(
+                    tmp_seq_record,
+                    file_path,
+                    self._interface_manager.get_current_project().get_database_filepath()
+                ),
+                post_func=self.__await_save_selected_sequence_as_fasta_file,
+            )
+            self._active_task.start()
+        else:
+            self._view.wait_spinner.stop()
+
+    def __await_save_selected_sequence_as_fasta_file(self, result: tuple):
+        self._view.wait_spinner.stop()
+        if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            basic_boxes.ok(
+                "Save Protein Sequence",
+                "Saving the sequence as .fasta file failed!",
+                QtWidgets.QMessageBox.Critical,
+            )
+        elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
+            basic_boxes.ok(
+                "Save Protein Sequence",
+                "The sequence was successfully saved as .fasta file.",
+                QtWidgets.QMessageBox.Information,
+            )
+        else:
+            basic_boxes.ok(
+                "Save Protein Sequence",
+                "Saving the sequence as .fasta file failed with an unexpected error!",
+                QtWidgets.QMessageBox.Critical,
+            )
+        self._interface_manager.refresh_sequence_model()
+        self._interface_manager.refresh_main_view()
+
+    # TODO: add method for deleting a sequence from the project
+    def _delete_selected_sequence(self):
+        response: bool = gui_utils.warning_message_sequence_gets_deleted()
+        if response:
+            tmp_seq_record: "SeqRecord.SeqRecord" = self._interface_manager.get_current_sequence_list_index_object()
+            tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
+                                                                          (0, tmp_seq_record.name))
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+            self._interface_manager.get_current_project().delete_specific_sequence(tmp_seq_record.name)
+            self._interface_manager.refresh_sequence_model()
+            self._interface_manager.refresh_main_view()
 
     # </editor-fold>
 
@@ -1645,13 +1717,15 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
 
     def _delete_protein(self):
-        tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-        tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
-                                                                      (0, tmp_protein.get_id()))
-        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-        self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
-        self._interface_manager.refresh_protein_model()
-        self._interface_manager.refresh_main_view()
+        response: bool = gui_utils.warning_message_protein_gets_deleted()
+        if response:
+            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
+                                                                          (0, tmp_protein.get_id()))
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+            self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
+            self._interface_manager.refresh_protein_model()
+            self._interface_manager.refresh_main_view()
 
     def _save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
@@ -1661,7 +1735,7 @@ class MainViewController:
         file_dialog.setDirectory(desktop_path)
         file_path, _ = file_dialog.getSaveFileName(
             self._view,
-            "Save protein structure",
+            "Save Protein Structure",
             "",
             "Protein Data Bank File (*.pdb)",
         )
@@ -1686,7 +1760,7 @@ class MainViewController:
             basic_boxes.ok(
                 "Save protein structure",
                 "Saving the protein as .pdb file failed!",
-                QtWidgets.QMessageBox.Error,
+                QtWidgets.QMessageBox.Critical,
             )
         elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
             basic_boxes.ok(
@@ -1698,7 +1772,7 @@ class MainViewController:
             basic_boxes.ok(
                 "Save protein structure",
                 "Saving the protein as .pdb file failed with an unexpected error!",
-                QtWidgets.QMessageBox.Error,
+                QtWidgets.QMessageBox.Critical,
             )
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
@@ -1988,14 +2062,16 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def _delete_protein_pair_from_project(self):
-        tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
-        tmp_database_operation = database_operation.DatabaseOperation(
-            enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id())
-        )
-        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-        self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
-        self._interface_manager.refresh_protein_pair_model()
-        self._interface_manager.refresh_main_view()
+        response: bool = gui_utils.warning_message_protein_pair_gets_deleted()
+        if response:
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
+            tmp_database_operation = database_operation.DatabaseOperation(
+                enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id())
+            )
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+            self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
+            self._interface_manager.refresh_protein_pair_model()
+            self._interface_manager.refresh_main_view()
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:

@@ -116,6 +116,7 @@ class MainView(QtWidgets.QMainWindow):
         self.setMinimumWidth(700)
         self.setMinimumHeight(700)
 
+        # <editor-fold desc="Set icons">
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
@@ -206,6 +207,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_pair_scene.setText("")
         self.ui.btn_update_protein_pair_scene.setIconSize(
             self.ui.btn_update_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
+        # </editor-fold>
 
         self._create_all_tooltips()
         pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
@@ -221,11 +223,16 @@ class MainView(QtWidgets.QMainWindow):
         constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
     def build_sequence_table(self):
+        self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
+
         self.ui.seqs_table_widget.verticalHeader().setVisible(False)
         self.ui.seqs_table_widget.setColumnCount(2)
         self.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
 
     def build_proteins_table(self):
+        self.cb_chain_color = QtWidgets.QComboBox()
+        self.cb_chain_representation = QtWidgets.QComboBox()
+
         self.ui.proteins_table_widget.verticalHeader().setVisible(False)
         self.ui.proteins_table_widget.setColumnCount(2)
         self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
@@ -235,6 +242,9 @@ class MainView(QtWidgets.QMainWindow):
         self.cb_chain_representation.adjustSize()
 
     def build_protein_pairs_table(self):
+        self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
+        self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
+
         self.ui.protein_pairs_table_widget.setColumnCount(2)
         self.ui.protein_pairs_table_widget.verticalHeader().setVisible(False)
         self.ui.protein_pairs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])

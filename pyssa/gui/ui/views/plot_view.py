@@ -35,7 +35,7 @@ import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
 
 from pyssa.gui.ui.styles import styles
-from pyssa.internal.data_structures import protein_pair
+from pyssa.internal.data_structures import protein_pair, selection
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import pyssa_keys
@@ -77,6 +77,7 @@ class PlotView(QtWidgets.QDialog):
         self._current_project = a_project
         self.clicked_point_scatter = None
         self.highlighted_bin_index = None
+        self.active_row_information = None
 
         # self.resizeEvent = self.handle_resize
         # Create a timer for delayed updates
@@ -87,6 +88,7 @@ class PlotView(QtWidgets.QDialog):
 
         self._initialize_ui()
 
+        self.setModal(False)
         # --BEGIN
 
         # <editor-fold desc="Distance table logic">
@@ -205,12 +207,14 @@ class PlotView(QtWidgets.QDialog):
         self.action_table = QtWidgets.QAction('Table', self)
         self.action_table.setCheckable(True)
         self.action_table.setChecked(True)
-        self.action_show_all = QtWidgets.QAction('Show all', self)
-
+        self.action_sync_with_pymol = QtWidgets.QAction('Sync With PyMOL', self)
+        self.action_sync_with_pymol.setCheckable(True)
+        self.action_sync_with_pymol.setChecked(False)
+        
         plots_menu.addAction(self.action_plot)
         plots_menu.addAction(self.action_histogram)
         plots_menu.addAction(self.action_table)
-        plots_menu.addAction(self.action_show_all)
+        plots_menu.addAction(self.action_sync_with_pymol)
 
         self.action_docs = QtWidgets.QAction('PySSA Documentation', self)
         self.action_docs.triggered.connect(self._open_help_center)
@@ -342,15 +346,19 @@ class PlotView(QtWidgets.QDialog):
         self.table_view.clicked.connect(self.highlight_table_selection_in_plot)
         self.action_plot.triggered.connect(self.toggle_graphics_visablity)
         self.action_histogram.triggered.connect(self.toggle_graphics_visablity)
-        self.action_show_all.triggered.connect(self.show_all)
+        self.action_sync_with_pymol.triggered.connect(self.__slot_sync_with_pymol)
 
         self.plot_widget.canvas.mpl_connect('button_press_event', self.on_canvas_click)
 
     def hide_distance_table(self):
         if self.action_table.isChecked():
             self.table_view.show()
+            self.lbl_status1.show()
+            self.lbl_status2.show()
         else:
             self.table_view.hide()
+            self.lbl_status1.hide()
+            self.lbl_status2.hide()
 
     def toggle_graphics_visablity(self):
         self.plot_widget.figure.clear()
@@ -374,11 +382,11 @@ class PlotView(QtWidgets.QDialog):
         self.plot_widget.figure.tight_layout()
         self.plot_widget.canvas.draw()
 
-    def show_all(self):
-        self.plot_widget.figure.clear()
-        self.plot_widget.show()
-        self.table_view.show()
-        self.create_all_graphics()
+    def __slot_sync_with_pymol(self):
+        if self.action_sync_with_pymol.isChecked():
+            self._sync_with_pymol_flag = True
+        else:
+            self._sync_with_pymol_flag = False
 
     def create_all_graphics(self):
         self.create_distance_plot()
@@ -486,14 +494,16 @@ class PlotView(QtWidgets.QDialog):
         x_nearest, y_nearest = x_line[index_nearest], y_line[index_nearest]
         self.clicked_point_scatter = self._ax_plot.scatter(x_nearest, y_nearest, color='red', marker='o', label='Clicked Point')
         self.plot_widget.canvas.draw()
-        tmp_row_information = self.search_point_by_id(x_nearest)
-        if tmp_row_information is not None:
+        self.active_row_information = self.search_point_by_id(x_nearest)
+        if self.active_row_information is not None:
             tmp_prot_1_name = self.protein_pair_for_analysis.protein_1.get_molecule_object()
             tmp_prot_2_name = self.protein_pair_for_analysis.protein_2.get_molecule_object()
             msg: str = (f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest} Between {tmp_prot_1_name} "
-                        f"Chain {tmp_row_information[1]} Position {tmp_row_information[2]} Residue {tmp_row_information[3]} and "
-                        f"{tmp_prot_2_name} Chain {tmp_row_information[4]} Position {tmp_row_information[5]} Residue {tmp_row_information[6]}")
+                        f"Chain {self.active_row_information[1]} Position {self.active_row_information[2]} Residue {self.active_row_information[3]} and "
+                        f"{tmp_prot_2_name} Chain {self.active_row_information[4]} Position {self.active_row_information[5]} Residue {self.active_row_information[6]}")
             self.lbl_status.setText(msg)
+            if self._sync_with_pymol_flag:
+                self.highlight_residue_in_pymol(x_nearest, tmp_prot_1_name)
         else:
             self.lbl_status.setText(f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest}")
         # Change the selection color
@@ -511,7 +521,7 @@ class PlotView(QtWidgets.QDialog):
             if id_item and id_item.text() == str(target_id):
                 # Select the entire row in the QTableView
                 self.table_view.selectRow(row)
-                tmp_row_information = (
+                self.active_row_information = (
                     self.table_view.model().index(row, 0).data(Qt.DisplayRole),
                     self.table_view.model().index(row, 1).data(Qt.DisplayRole),
                     self.table_view.model().index(row, 2).data(Qt.DisplayRole),
@@ -520,7 +530,7 @@ class PlotView(QtWidgets.QDialog):
                     self.table_view.model().index(row, 5).data(Qt.DisplayRole),
                     self.table_view.model().index(row, 6).data(Qt.DisplayRole),
                 )
-                return tmp_row_information  # Return True if the id is found
+                return self.active_row_information  # Return True if the id is found
         return None
 
     def highlight_table_selection_in_plot(self):
@@ -543,7 +553,7 @@ class PlotView(QtWidgets.QDialog):
 
         tmp_row = self.table_view.currentIndex().row()
         self.table_view.selectRow(tmp_row)
-        tmp_row_information = (
+        self.active_row_information = (
             self.table_view.model().index(tmp_row, 0).data(Qt.DisplayRole),
             self.table_view.model().index(tmp_row, 1).data(Qt.DisplayRole),
             self.table_view.model().index(tmp_row, 2).data(Qt.DisplayRole),
@@ -552,12 +562,12 @@ class PlotView(QtWidgets.QDialog):
             self.table_view.model().index(tmp_row, 5).data(Qt.DisplayRole),
             self.table_view.model().index(tmp_row, 6).data(Qt.DisplayRole),
         )
-        if tmp_row_information is not None:
+        if self.active_row_information is not None:
             tmp_prot_1_name = self.protein_pair_for_analysis.protein_1.get_molecule_object()
             tmp_prot_2_name = self.protein_pair_for_analysis.protein_2.get_molecule_object()
             msg: str = (f"Status: Residue pair no. = {tmp_x_value}, Distance (Å) = {tmp_y_value} Between {tmp_prot_1_name} "
-                        f"Chain {tmp_row_information[1]} Position {tmp_row_information[2]} Residue {tmp_row_information[3]} and "
-                        f"{tmp_prot_2_name} Chain {tmp_row_information[4]} Position {tmp_row_information[5]} Residue {tmp_row_information[6]}")
+                        f"Chain {self.active_row_information[1]} Position {self.active_row_information[2]} Residue {self.active_row_information[3]} and "
+                        f"{tmp_prot_2_name} Chain {self.active_row_information[4]} Position {self.active_row_information[5]} Residue {self.active_row_information[6]}")
             self.lbl_status.setText(msg)
         else:
             self.lbl_status.setText(f"Status: Residue pair no. = {tmp_x_value}, Distance (Å) = {tmp_y_value}")
@@ -575,6 +585,14 @@ class PlotView(QtWidgets.QDialog):
 
         # Update the plot
         self.plot_widget.canvas.draw()
+
+    def highlight_residue_in_pymol(self, the_current_id, tmp_prot_1_name):
+        self.table_view.currentIndex()
+        tmp_id, tmp_chain_1, tmp_pos_1, tmp_residue_1, _, _, _ = self.search_point_by_id(the_current_id)
+        tmp_pymol_selection = selection.Selection(tmp_prot_1_name)
+        tmp_pymol_selection.set_single_selection("", tmp_chain_1, tmp_residue_1, "")
+        cmd.zoom(tmp_pymol_selection.selection_string)
+        cmd.show("sticks", tmp_pymol_selection.selection_string)
 
     # <editor-fold desc="Experimental!">
     # def resizeEvent(self, event) -> None:  # noqa: N802, ANN001

@@ -196,8 +196,8 @@ def warning_message_project_gets_deleted() -> bool:
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Are you sure you want to delete this project?")
     msg.setWindowTitle("Warning")
-    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
     msg.exec_()
     # button logic
     if msg.clickedButton() == cancel_button:
@@ -214,6 +214,44 @@ def warning_message_protein_gets_deleted() -> bool:
     styles.set_stylesheet(msg)
     msg.setIcon(QMessageBox.Warning)
     msg.setText("Are you sure you want to delete this protein?")
+    msg.setWindowTitle("Warning")
+    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
+    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == cancel_button:
+        return False
+    if msg.clickedButton() == ok_button:
+        return True
+    return False
+
+
+def warning_message_sequence_gets_deleted() -> bool:
+    """This function creates a warning message, which can be customized."""
+    msg = QMessageBox()
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(msg)
+    msg.setIcon(QMessageBox.Warning)
+    msg.setText("Are you sure you want to delete this sequence?")
+    msg.setWindowTitle("Warning")
+    ok_button = msg.addButton("OK", QMessageBox.ActionRole)
+    cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
+    msg.exec_()
+    # button logic
+    if msg.clickedButton() == cancel_button:
+        return False
+    if msg.clickedButton() == ok_button:
+        return True
+    return False
+
+
+def warning_message_protein_pair_gets_deleted() -> bool:
+    """This function creates a warning message, which can be customized."""
+    msg = QMessageBox()
+    msg.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+    styles.set_stylesheet(msg)
+    msg.setIcon(QMessageBox.Warning)
+    msg.setText("Are you sure you want to delete this protein pair?")
     msg.setWindowTitle("Warning")
     cancel_button = msg.addButton("Cancel", QMessageBox.ActionRole)
     ok_button = msg.addButton("OK", QMessageBox.ActionRole)

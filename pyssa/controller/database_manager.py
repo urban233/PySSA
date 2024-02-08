@@ -256,6 +256,17 @@ class DatabaseManager:
         return self.get_last_id()
     # </editor-fold>
 
+    # <editor-fold desc="Delete statements for SeqRecord object">
+    def delete_existing_sequence(self, a_seq_record_name):
+        sql = """   
+            DELETE FROM SeqRecord
+            WHERE name = ?
+        """
+        self._cursor.execute(sql, (a_seq_record_name,))
+        self._connection.commit()
+
+    # </editor-fold>
+
     # <editor-fold desc="Protein object inserts">
     def insert_new_protein(self, a_protein: "protein.Protein") -> int:
         """Writes a new protein to the database."""
