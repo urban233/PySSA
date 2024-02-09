@@ -243,17 +243,38 @@ class MainViewController:
         self._view.ui.seqs_table_widget.customContextMenuRequested.connect(self._show_context_menu_for_seq_table)
         self._view.ui.btn_import_seq.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
         self._view.ui.btn_import_seq.customContextMenuRequested.connect(self._show_context_menu_for_seq_import)
+        self._view.ui.btn_add_sequence.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
+        self._view.ui.btn_add_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_add)
+        self._view.ui.btn_save_sequence.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
+        self._view.ui.btn_save_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_save)
+        self._view.ui.btn_delete_sequence.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
+        self._view.ui.btn_delete_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_delete)
         # add more buttons here ...
 
+    # <editor-fold desc="Help pages">
     def _open_help_center(self):
         self.open_help("help/")
 
     def _open_sequences_tab_help(self):
         self.open_help("help/sequences/sequences_tab/")
 
+    def _open_additional_information_table_help(self):
+        self.open_help("help/sequences/additional_sequence_information/")
+
     def _open_sequence_import_help(self):
         self.open_help("help/sequences/sequence_import/")
 
+    def _open_sequence_add_help(self):
+        self.open_help("help/sequences/sequence_add/")
+
+    def _open_sequence_save_help(self):
+        self.open_help("help/sequences/sequence_save/")
+
+    def _open_sequence_delete_help(self):
+        self.open_help("help/sequences/sequence_delete/")
+    # </editor-fold>
+
+    # <editor-fold desc="Context menu connections">
     def _show_context_menu_for_seq_list(self, a_point):
         self.help_context_action.triggered.disconnect()
         self.help_context_action.triggered.connect(self._open_sequences_tab_help)
@@ -261,13 +282,30 @@ class MainViewController:
 
     def _show_context_menu_for_seq_table(self, a_point):
         self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_help_center)
+        self.help_context_action.triggered.connect(self._open_additional_information_table_help)
         self.context_menu.exec_(self._view.ui.seqs_table_widget.mapToGlobal(a_point))
 
     def _show_context_menu_for_seq_import(self, a_point):
         self.help_context_action.triggered.disconnect()
         self.help_context_action.triggered.connect(self._open_sequence_import_help)
         self.context_menu.exec_(self._view.ui.btn_import_seq.mapToGlobal(a_point))
+
+    def _show_context_menu_for_seq_add(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_sequence_add_help)
+        self.context_menu.exec_(self._view.ui.btn_add_sequence.mapToGlobal(a_point))
+
+    def _show_context_menu_for_seq_save(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_sequence_save_help)
+        self.context_menu.exec_(self._view.ui.btn_save_sequence.mapToGlobal(a_point))
+
+    def _show_context_menu_for_seq_delete(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_sequence_delete_help)
+        self.context_menu.exec_(self._view.ui.btn_delete_sequence.mapToGlobal(a_point))
+
+    # </editor-fold>
 
     # </editor-fold>
 
@@ -1413,9 +1451,9 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
 
     def _add_sequence(self):
-        self._interface_manager.start_wait_spinner()
         self._external_controller = add_sequence_view_controller.AddSequenceViewController(self._interface_manager)
         self._external_controller.return_value.connect(self._post_add_sequence)
+        self._external_controller.restore_default_view()
         self._interface_manager.get_add_sequence_view().show()
 
     def _post_add_sequence(self, return_value: tuple):
@@ -1431,7 +1469,6 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
-        self._interface_manager.stop_wait_spinner()
 
     def _save_selected_sequence_as_fasta_file(self):
         self._view.wait_spinner.start()

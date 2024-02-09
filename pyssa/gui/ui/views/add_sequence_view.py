@@ -64,6 +64,7 @@ class AddSequenceView(Qt.QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self.setModal(True)
 
     def _initalize_ui(self):
         self.ui.btn_next.setEnabled(False)

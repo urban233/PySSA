@@ -68,6 +68,9 @@ class AddSequenceViewController(QtCore.QObject):
     def restore_default_view(self) -> None:
         self._view.ui.le_seq_name.clear()
         self._view.ui.le_protein_seq.clear()
+        self._switch_ui_to_sequence_name_input()
+        self._view.ui.btn_next.setEnabled(False)
+        self._view.ui.btn_add.setEnabled(False)
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.le_seq_name.textChanged.connect(self._validate_protein_name)
