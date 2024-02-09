@@ -1497,6 +1497,7 @@ class MainViewController:
             self._interface_manager.get_current_project().delete_specific_sequence(tmp_seq_record.name)
             self._interface_manager.refresh_sequence_model()
             self._interface_manager.refresh_main_view()
+            # extra ui changes
             self._view.ui.seqs_table_widget.setRowCount(0)
             self._view.build_sequence_table()
 
@@ -1728,6 +1729,9 @@ class MainViewController:
             self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
             self._interface_manager.refresh_protein_model()
             self._interface_manager.refresh_main_view()
+            # extra ui changes
+            self._view.ui.proteins_table_widget.setRowCount(0)
+            self._view.build_proteins_table()
 
     def _save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
@@ -2056,13 +2060,6 @@ class MainViewController:
         # tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
         # tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
 
-    def _save_protein_pair_pymol_session(self, a_protein_pair):
-        tmp_database_operation = database_operation.DatabaseOperation(
-            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
-            (0, a_protein_pair.get_id(), a_protein_pair)
-        )
-        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-
     def _delete_protein_pair_from_project(self):
         response: bool = gui_utils.warning_message_protein_pair_gets_deleted()
         if response:
@@ -2074,6 +2071,9 @@ class MainViewController:
             self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
             self._interface_manager.refresh_protein_pair_model()
             self._interface_manager.refresh_main_view()
+            # extra ui changes
+            self._view.ui.protein_pairs_table_widget.setRowCount(0)
+            self._view.build_protein_pairs_table()
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
@@ -2090,3 +2090,10 @@ class MainViewController:
         self._interface_manager.get_results_view().show()
 
     # </editor-fold>
+
+    def _save_protein_pair_pymol_session(self, a_protein_pair):
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
+            (0, a_protein_pair.get_id(), a_protein_pair)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)

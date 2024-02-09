@@ -86,7 +86,7 @@ class InterfaceManager:
             self._application_settings.app_launch = 1
             self._application_settings.workspace_path = pathlib.Path(dialog_startup.global_var_startup_workspace)
 
-            constants.PYSSA_LOGGER.info("Demo projects are getting downloaded and extracted ...")
+            constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")
             import zipfile
 
             with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), "r") as zip_ref:
@@ -386,8 +386,6 @@ class InterfaceManager:
         self._main_view.initialize_ui()
 
     def show_chain_pymol_parameters(self, a_chain_item: QtGui.QStandardItem):
-        self._main_view.build_proteins_table()
-
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
         self._main_view.setup_proteins_table(len(tmp_chain.pymol_parameters))
         i = 0
@@ -411,8 +409,6 @@ class InterfaceManager:
                                                      a_chain_item,
                                                      a_protein_pair_id: int,
                                                      a_protein_id: int):
-        self._main_view.build_protein_pairs_table()
-
         tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
         self._main_view.setup_protein_pairs_table(len(tmp_chain.pymol_parameters))
         with database_manager.DatabaseManager(str(self._current_project.get_database_filepath())) as db_manager:
