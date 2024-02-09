@@ -24,7 +24,6 @@ import os
 import pymol
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
-from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -36,7 +35,7 @@ from pyssa.util import constants, tools, gui_utils
 global_var_add_model = ("", False)
 
 
-class ImportSequenceView(Qt.QtWidgets.QDialog):
+class ImportSequenceView(QtWidgets.QDialog):
     """Class for a dialog to add proteins to a project."""
 
     """
@@ -50,7 +49,7 @@ class ImportSequenceView(Qt.QtWidgets.QDialog):
         Args:
             parent: The parent.
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = auto_import_sequence_view.Ui_Dialog()
         self.ui.setupUi(self)
@@ -131,10 +130,10 @@ class ImportSequenceView(Qt.QtWidgets.QDialog):
         """Loads a protein from the filesystem into the textbox."""
         try:
             # open file dialog
-            file_name = Qt.QtWidgets.QFileDialog.getOpenFileName(
+            file_name = QtWidgets.QFileDialog.getOpenFileName(
                 self,
                 "Import existing sequence",
-                Qt.QtCore.QDir.homePath(),
+                QtCore.QDir.homePath(),
                 "FASTA Files (*.fasta)",
             )
             if file_name == ("", ""):

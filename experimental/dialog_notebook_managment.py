@@ -19,8 +19,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pymol import Qt
 from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 from datetime import datetime
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_notebook_managment import Ui_Dialog
 from pyssa.util import gui_utils
@@ -29,7 +29,7 @@ global_var_startup_workspace = ""
 global_var_terminate_app = 0
 
 
-class DialogNotebookManagment(Qt.QtWidgets.QDialog):
+class DialogNotebookManagment(QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor.
 
@@ -37,7 +37,7 @@ class DialogNotebookManagment(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)

@@ -24,7 +24,6 @@ import typing
 import os
 import pathlib
 
-from pymol import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QMessageBox
@@ -83,11 +82,11 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
     """
     current_file_path = pathlib.Path(txt_box_dir.text())
     new_file_path = pathlib.Path(
-        Qt.QtWidgets.QFileDialog.getExistingDirectory(
+        QtWidgets.QFileDialog.getExistingDirectory(
             self,
             "Open Directory",
             str(current_file_path),
-            options=Qt.QtWidgets.QFileDialog.ShowDirsOnly,
+            options=QtWidgets.QFileDialog.ShowDirsOnly,
         ),
     )
     rvoid(os.access(new_file_path, os.W_OK))

@@ -1,6 +1,6 @@
 import datetime
-from pymol import Qt
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QPushButton, QLabel
+from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import QUrl
 from pyssa.util import constants, gui_utils
@@ -12,7 +12,7 @@ except ImportError:
     print("QtWebEngineWidgets could not be imported correctly!")
 
 
-class WebInterface(Qt.QtWidgets.QDialog):
+class WebInterface(QtWidgets.QDialog):
     google_login_page = "https://accounts.google.com/v3/signin/identifier?dsh=S487182181%3A1668865110328278&continue=https%3A%2F%2Fcolab.research.google.com%2Fgithub%2Fsokrypton%2FColabFold%2Fblob%2Fmain%2FAlphaFold2.ipynb&ec=GAZAqQM&passive=true&flowName=GlifWebSignIn&flowEntry=ServiceLogin&ifkv=ARgdvAu0jNh8qAP4PLZtLHO1saEbt8gL7tdnPxJNzq-nQ8HD1od95scPNdlXBiSB5aGTVZWwLQ-f-A"
     colab_login_page = "https://accounts.google.com/ServiceLogin?passive=true&continue=https%3A%2F%2Fcolab.research.google.com%2Fgithub%2Fsokrypton%2FColabFold%2Fblob%2Fmain%2FAlphaFold2.ipynb&ec=GAZAqQM"
     login_page = "https://accounts.google.com/v3/signin/identifier?dsh=S-301988812%3A1672417305836195&continue=https%3A%2F%2Fwww.google.com%2F&ec=GAZAmgQ&hl=de&passive=true&flowName=GlifWebSignIn&flowEntry=ServiceLogin&ifkv=AeAAQh6nGazOofUFZXEEKfU4PB58c6ZxzdbUX2maYjsI4mCm7wqSvzZ3SCIux6lnC0hiRjVaT4p97w"
@@ -48,7 +48,7 @@ class WebInterface(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         self.dialog: dialog_notebook_managment.DialogNotebookManagment
         self.status = ""
         self.current_time = ""

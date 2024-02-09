@@ -1,0 +1,37 @@
+site_name: Technical Documentation - PySSA
+
+nav:
+    - Home: index.md
+
+theme:
+    name: material
+    logo: assets/images/pyssa_logo.png
+    palette:
+        primary: custom
+    features:
+        - navigation.tabs
+        - navigation.instant
+            - navigation.instant.progress
+extra_css:
+    - stylesheets/extra.css
+
+plugins:
+  - mkdocstrings
+
+
+markdown_extensions:
+    - attr_list
+    - pymdownx.emoji:
+        emoji_index: !!python/name:material.extensions.emoji.twemoji
+        emoji_generator: !!python/name:material.extensions.emoji.to_svg
+        options:
+          custom_icons:
+            - overrides/.icons
+    - md_in_html
+    - admonition
+    - pymdownx.details
+    - pymdownx.superfences
+
+
+copyright:
+    Copyright © 2024 PySSA - Martin Urban & Hannah Kullik

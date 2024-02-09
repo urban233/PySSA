@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pymol import Qt
 from PyQt5.QtWidgets import QHBoxLayout
 from PyQt5 import QtCore
 
@@ -31,7 +30,7 @@ import PyQt5
 from PyQt5 import QtGui
 
 
-class SequenceViewer(Qt.QtWidgets.QDialog):
+class SequenceViewer(QtWidgets.QDialog):
     """This class opens a settings customization dialog."""
 
     def __init__(self, sequence, filename, parent=None):
@@ -41,7 +40,7 @@ class SequenceViewer(Qt.QtWidgets.QDialog):
             args
             kwargs
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)

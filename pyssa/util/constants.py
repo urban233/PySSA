@@ -34,7 +34,7 @@ PLUGIN_EXTRA_TOOLS_PATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/extra_tools/"))
 PLUGIN_DOCS_PATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/docs/pyssa-documentation"))
 PLUGIN_LOGO_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/pyssa_logo.png"))
 PLUGIN_LOGO_WITH_FONT_FILEPATH = str(pathlib.Path(f"{PLUGIN_ROOT_PATH}/assets/images/logo_type_2.tiff"))
-VERSION_NUMBER = "v0.9.76"
+VERSION_NUMBER = "v0.10.5"
 PLUGIN_PATH_WSL_NOTATION = (
     "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
 )

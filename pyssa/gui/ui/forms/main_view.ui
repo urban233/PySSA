@@ -623,6 +623,8 @@
     </property>
     <addaction name="action_documentation"/>
     <addaction name="action_tutorials"/>
+    <addaction name="action_get_demo_projects"/>
+    <addaction name="separator"/>
     <addaction name="action_show_log_in_explorer"/>
     <addaction name="action_clear_logs"/>
     <addaction name="separator"/>
@@ -765,6 +767,11 @@
   <action name="action_use_project">
    <property name="text">
     <string>Use</string>
+   </property>
+  </action>
+  <action name="action_get_demo_projects">
+   <property name="text">
+    <string>Get Demo Projects</string>
    </property>
   </action>
  </widget>

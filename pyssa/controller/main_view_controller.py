@@ -4,6 +4,9 @@ import pathlib
 import shutil
 import subprocess
 import platform
+from io import BytesIO
+
+import requests
 import zmq
 import pymol
 import pygetwindow as gw
@@ -150,6 +153,7 @@ class MainViewController:
         self._view.ui.action_clear_logs.triggered.connect(self.clear_all_log_files)
         self._view.ui.action_documentation.triggered.connect(self._open_help_center)
         self._view.ui.action_tutorials.triggered.connect(self.open_tutorial)
+        self._view.ui.action_get_demo_projects.triggered.connect(self.get_demo_projects)
         self._view.ui.action_about.triggered.connect(self.open_about)
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
         self._view.ui.action_predict_multimer.triggered.connect(self._predict_multimer)
@@ -1182,6 +1186,78 @@ class MainViewController:
         dialog = dialog_about.DialogAbout()
         dialog.exec_()
 
+    def get_demo_projects(self):
+        self._interface_manager.update_status_bar("Getting demo projects ...")
+        import zipfile
+        download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
+        if not os.path.exists(download_dest):
+            # download demo projects
+            url = f'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
+            tmp_error_flag = False
+            try:
+                response = requests.get(url)
+                response.raise_for_status()  # Check for errors
+                zipfile = zipfile.ZipFile(BytesIO(response.content))
+                zipfile.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
+            except requests.exceptions.HTTPError as errh:
+                constants.PYSSA_LOGGER.error(f"HTTP Error: {errh}")
+                tmp_error_flag = True
+            except requests.exceptions.ConnectionError as errc:
+                constants.PYSSA_LOGGER.error(f"Error Connecting: {errc}")
+                tmp_error_flag = True
+            except requests.exceptions.Timeout as errt:
+                constants.PYSSA_LOGGER.error(f"Timeout Error: {errt}")
+                tmp_error_flag = True
+            except requests.exceptions.RequestException as err:
+                constants.PYSSA_LOGGER.error(f"Error: {err}")
+                tmp_error_flag = True
+            else:
+                constants.PYSSA_LOGGER.info(f"Demo projects downloaded and extracted successfully.")
+
+            if tmp_error_flag:
+                basic_boxes.ok("Get Demo Projects", "The download of the demo projects failed. Please try again later.",
+                               QtWidgets.QMessageBox.Critical)
+                self._interface_manager.update_status_bar("The download of the demo projects failed.")
+                return
+        else:
+            constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")
+            try:
+                with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), "r") as zip_ref:
+                    zip_ref.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
+                constants.PYSSA_LOGGER.info(
+                    "Demo projects are downloaded and extracted.\n Import of demo projects started ...",
+                )
+            except Exception as e:
+                constants.PYSSA_LOGGER.error(f"Extraction process of demo projects finished with the error: {e}.")
+                basic_boxes.ok("Get Demo Projects",
+                               "Extraction process of demo projects finished with an error. Check the logs to get more information.",
+                               QtWidgets.QMessageBox.Critical)
+                self._interface_manager.update_status_bar("Extraction process of demo projects finished with an error.")
+                return
+        try:
+            path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
+            for tmp_filename in os.listdir(path_of_demo_projects):
+                # Copy db file into new workspace
+                tmp_project_database_filepath = str(
+                    pathlib.Path(
+                        f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_filename}"
+                    )
+                )
+                tmp_src_filepath = str(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"))
+                shutil.copyfile(tmp_src_filepath, tmp_project_database_filepath)
+            constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
+        except Exception as e:
+            constants.PYSSA_LOGGER.error(f"Import process of demo projects finished with the error: {e}.")
+            basic_boxes.ok("Get Demo Projects", "Import process of demo projects finished with an error. Check the logs to get more information.",
+                           QtWidgets.QMessageBox.Critical)
+            self._interface_manager.update_status_bar("Import process of demo projects finished with an error.")
+        else:
+            self._interface_manager.refresh_workspace_model()
+            self._interface_manager.refresh_main_view()
+            basic_boxes.ok("Get Demo Projects", "Getting demo projects finished without errors.",
+                       QtWidgets.QMessageBox.Information)
+            self._interface_manager.update_status_bar("Getting demo projects finished successfully.")
+
     # </editor-fold>
 
     # <editor-fold desc="Image menu methods">
@@ -1636,10 +1712,14 @@ class MainViewController:
             logger.error("The protein name could not be found in the object list in PyMOL!")
             self._view.cb_chain_color.setEnabled(False)
             self._view.cb_chain_representation.setEnabled(False)
+            self._view.ui.btn_create_protein_scene.setEnabled(False)
+            self._view.ui.btn_update_protein_scene.setEnabled(False)
         else:
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
             self._view.ui.action_protein_regions.setEnabled(True)
+            self._view.ui.btn_create_protein_scene.setEnabled(True)
+            self._view.ui.btn_update_protein_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             logger.info("Successfully opened protein session.")
 
@@ -1981,10 +2061,14 @@ class MainViewController:
             logger.error("The protein pair name could not be found in the object list in PyMOL!")
             self._view.cb_chain_color.setEnabled(False)
             self._view.cb_chain_representation.setEnabled(False)
+            self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
+            self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
         else:
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
             self._view.ui.action_protein_regions.setEnabled(True)
+            self._view.ui.btn_create_protein_pair_scene.setEnabled(True)
+            self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             logger.info("Successfully opened protein pair session.")
 

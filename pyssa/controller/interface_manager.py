@@ -1,6 +1,7 @@
 import glob
 import os
 import pathlib
+import shutil
 import sys
 
 from PyQt5 import QtGui, QtCore
@@ -96,25 +97,16 @@ class InterfaceManager:
             )
 
             path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
-            tmp_project = project.Project("", dialog_startup.global_var_startup_workspace)
             for tmp_filename in os.listdir(path_of_demo_projects):
-                try:
-                    tmp_project = tmp_project.deserialize_project(
-                        pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"),
-                        self._application_settings,
+                # Copy db file into new workspace
+                tmp_project_database_filepath = str(
+                    pathlib.Path(
+                        f"{self.get_application_settings().workspace_path}/{tmp_filename}"
                     )
-                except exception.IllegalArgumentError:
-                    constants.PYSSA_LOGGER.warning(
-                        "The workspace path does not exist on this system, " "but this is due to the demo projects.",
-                    )
-                tmp_project.set_workspace_path(dialog_startup.global_var_startup_workspace)
-                new_filepath = pathlib.Path(f"{dialog_startup.global_var_startup_workspace}/{tmp_filename}")
-                tmp_project.serialize_project(new_filepath)
+                )
+                tmp_src_filepath = str(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"))
+                shutil.copyfile(tmp_src_filepath, tmp_project_database_filepath)
             constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
-            try:
-                os.remove(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"))
-            except FileNotFoundError:
-                constants.PYSSA_LOGGER.warning("Zip archive of demo projects could not be found!")
             constants.PYSSA_LOGGER.info("Serialize settings ...")
             self._application_settings.serialize_settings()
             constants.PYSSA_LOGGER.info("Serialize settings finished.")
@@ -243,6 +235,10 @@ class InterfaceManager:
         self._sequence_model.clear()
         self._build_sequences_model()
 
+    def refresh_workspace_model(self):
+        self._workspace_model.clear()
+        self._build_workspace_model()
+
     def _build_workspace_model(self) -> None:
         tmp_workspace = self._current_workspace
         db_pattern = os.path.join(tmp_workspace, '*.db')
@@ -327,6 +323,7 @@ class InterfaceManager:
             self._main_view.ui.action_ray_tracing_image.setEnabled(True)
             self._main_view.ui.action_simple_image.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(False)
+            self._main_view.ui.action_get_demo_projects.setEnabled(False)
             self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
         else:
             # No project is open
@@ -344,6 +341,7 @@ class InterfaceManager:
             self._main_view.ui.action_ray_tracing_image.setEnabled(False)
             self._main_view.ui.action_simple_image.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
+            self._main_view.ui.action_get_demo_projects.setEnabled(True)
 
         if len(self._current_project.sequences) > 0:
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)

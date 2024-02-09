@@ -22,7 +22,6 @@
 """Module for the renaming protein dialog."""
 import pathlib
 
-from pymol import Qt
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
@@ -36,7 +35,7 @@ from pyssa.util import constants, workspace_util, input_validator
 global_var_rename_protein = ("", False)
 
 
-class DialogRenameProtein(Qt.QtWidgets.QDialog):
+class DialogRenameProtein(QtWidgets.QDialog):
     """Class for renaming protein dialog."""
 
     """
@@ -51,7 +50,7 @@ class DialogRenameProtein(Qt.QtWidgets.QDialog):
             the_workspace_path: the path to the workspace.
             parent: the parent.
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = auto_dialog_rename_protein.Ui_Dialog()
         self.ui.setupUi(self)

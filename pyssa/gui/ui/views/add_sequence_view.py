@@ -23,7 +23,6 @@
 import os
 import pymol
 from PyQt5.QtCore import pyqtSignal
-from pymol import Qt
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -36,7 +35,7 @@ from pyssa.util import constants, tools, gui_utils
 global_var_add_model = ("", False)
 
 
-class AddSequenceView(Qt.QtWidgets.QDialog):
+class AddSequenceView(QtWidgets.QDialog):
     """Class for a dialog to add proteins to a project."""
 
     """
@@ -50,7 +49,7 @@ class AddSequenceView(Qt.QtWidgets.QDialog):
         Args:
             parent: The parent.
         """
-        Qt.QtWidgets.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
         # build ui object
         self.ui = auto_add_sequence_view.Ui_Dialog()
         self.ui.setupUi(self)
