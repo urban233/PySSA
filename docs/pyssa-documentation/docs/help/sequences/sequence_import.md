@@ -2,7 +2,7 @@
 
     **Import** button on the _Sequences_ tab of the main window.
 
-# Import Sequence
+# :google_material-upload_file_w200: Import Sequence
 <div class="grid cards" markdown>
 
 -   __Description__
@@ -13,7 +13,7 @@
 
 ## Getting Started
 ### Import a protein sequence from an existing .fasta file
-1. Click on the button, to open a new dialog window.
+1. Click on :google_material-upload_file_w200:, to open a new dialog window.
 2. In the file dialog choose an existing .fasta file from your computer.
 3. Click on _Open_.
 

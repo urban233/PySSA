@@ -2,7 +2,7 @@
 
     **Delete** button on the _Sequences_ tab of the main window.
 
-# Delete Sequence
+# :google_material-scan_deletew200: Delete Sequence
 <div class="grid cards" markdown>
 
 -   __Description__
@@ -14,7 +14,7 @@
 ## Getting Started
 ### Delete a selected sequence
 1. Select a sequence from the list.
-2. Click on the button, to delete the sequence from the project.
+2. Click on :google_material-scan_deletew200:, to delete the sequence from the project.
 
 ---
 

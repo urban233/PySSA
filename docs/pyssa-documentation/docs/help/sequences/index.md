@@ -14,3 +14,7 @@ PySSA can be used to store protein sequences. It is the first central object typ
 [Save Sequence :material-chevron-double-right: ](sequence_save.md)
 
 [Delete Sequence :material-chevron-double-right: ](sequence_delete.md)
+
+
+## Notes
+- You can only save or delete a selected sequence!

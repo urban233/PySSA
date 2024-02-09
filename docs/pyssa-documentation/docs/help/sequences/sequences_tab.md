@@ -35,7 +35,7 @@ To get additional information to a sequence from the list, click on a sequence a
 ##
 
 ##### See Also
-[Import Sequence](sequence_import.md) :octicons-square-fill-16: [Add Sequence](sequence_add.md) :octicons-square-fill-16: [Delete Sequence](sequence_delete.md) :octicons-square-fill-16: [Save Sequence](sequence_save.md)
+[Import Sequence](sequence_import.md) :octicons-square-fill-16: [Add Sequence](sequence_add.md) :octicons-square-fill-16: [Delete Sequence](sequence_delete.md) :octicons-square-fill-16: [Save Sequence](sequence_save.md) :octicons-square-fill-16: [Additional Information Table](additional_sequence_information.md)
 
 ---
 

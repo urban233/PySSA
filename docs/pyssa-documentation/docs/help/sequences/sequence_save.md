@@ -2,7 +2,7 @@
 
     **Save** button on the _Sequences_ tab of the main window.
 
-# Save Sequence
+# :google_material-file_save_w200: Save Sequence
 <div class="grid cards" markdown>
 
 -   __Description__
@@ -13,7 +13,7 @@
 
 ## Getting Started
 ### Save a selected sequence as .fasta file
-1. Click on the button, to open a file dialog window.
+1. Click on :google_material-file_save_w200:, to open a file dialog window.
 2. Enter a name for the .fasta file.
 3. Click on _Save_.
 
