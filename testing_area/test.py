@@ -1,70 +1,113 @@
+# import sys
+# from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QSplitter, QTableWidget, QTableWidgetItem, QTextEdit, QFrame
+#
+#
+# class ResizableDialog(QDialog):
+#     def __init__(self):
+#         super().__init__()
+#
+#         self.setWindowTitle("Resizable Dialog")
+#         self.resize(800, 600)  # Set initial size
+#
+#         main_layout = QVBoxLayout()
+#         self.setLayout(main_layout)
+#
+#         # First splitter to divide the dialog into two sections
+#         first_splitter = QSplitter()
+#         main_layout.addWidget(first_splitter)
+#
+#         # Left side (plot area)
+#         plot_area = QFrame()
+#         first_splitter.addWidget(plot_area)
+#
+#         # Right side (table)
+#         table_widget = QTableWidget(10, 3)
+#         first_splitter.addWidget(table_widget)
+#
+#         # Second splitter within the plot area to split it horizontally
+#         second_splitter = QSplitter()
+#         plot_area_layout = QVBoxLayout()
+#         plot_area.setLayout(plot_area_layout)
+#         plot_area_layout.addWidget(second_splitter)
+#
+#         # Left part of the plot area
+#         plot_left = QTextEdit()
+#         second_splitter.addWidget(plot_left)
+#
+#         # Right part of the plot area
+#         plot_right = QTextEdit()
+#         second_splitter.addWidget(plot_right)
+#         second_splitter.setOrientation(0)  # Set orientation to horizontal
+#
+#
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     dialog = ResizableDialog()
+#     dialog.show()
+#     sys.exit(app.exec_())
+
 import sys
-import numpy as np
-import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QWidget
+from PyQt5.QtCore import QTimer, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
+import threading
+
+class PlotThread(threading.Thread):
+    def __init__(self, parent, width, height):
+        super().__init__()
+        self.parent = parent
+        self.width = width
+        self.height = height
+
+    def run(self):
+        aspect_ratio = self.parent.ax.get_aspect()
+        aspect_ratio = float(aspect_ratio)  # Convert to float
+        if self.width / self.height > aspect_ratio:
+            new_width = self.height * aspect_ratio
+            new_height = self.height
+        else:
+            new_width = self.width
+            new_height = self.width / aspect_ratio
+        self.parent.figure.set_size_inches(new_width / self.parent.figure.dpi,
+                                           new_height / self.parent.figure.dpi)
+        self.parent.canvas.draw()
 
 class MyMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Horizontal Bar Chart in PyQt5")
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.layout = QVBoxLayout(self.central_widget)
 
-        # Create a QWidget to hold the Matplotlib plot
-        widget = QWidget()
-        self.setCentralWidget(widget)
-        layout = QVBoxLayout()
-        widget.setLayout(layout)
-
-        # Create a Matplotlib figure and canvas
-        self.figure = plt.Figure()
+        self.figure, self.ax = plt.subplots()
         self.canvas = FigureCanvas(self.figure)
-        layout.addWidget(self.canvas)
+        self.layout.addWidget(self.canvas)
 
-        # Generate sample data
-        data = np.random.uniform(0, 10, 1000)  # Generate 1000 random distances
+        self.aspect_ratio = self.ax.get_aspect()
+        self.aspect_ratio = float(self.aspect_ratio)  # Convert to float
 
-        # Define the bins and calculate the frequencies
-        bins = np.arange(0, 5, 1)
-        frequencies, _ = np.histogram(data, bins=bins)
+        self.resize_timer = QTimer(self)
+        self.resize_timer.setInterval(500)  # Delay in milliseconds
+        self.resize_timer.setSingleShot(True)
+        self.resize_timer.timeout.connect(self.delayed_resize)
 
-        # Create the horizontal bar chart with dedicated space between bars
-        ax = self.figure.add_subplot(111)
-        bar_height = 0.2  # Adjust as needed
-        space_height = 0.1  # Adjust as needed
-        bars = []
-        for i, freq in enumerate(frequencies):
-            y = bins[i] + space_height * i  # Adjusted y-position
-            bar = ax.barh(y, freq, height=bar_height, align='center')
-            bars.append(bar)
+    def delayed_resize(self):
+        width = self.centralWidget().width()
+        height = self.centralWidget().height()
+        plot_thread = PlotThread(self, width, height)
+        plot_thread.start()
 
-        # Add labels for each bar with their respective frequency
-        for i, bar in enumerate(bars):
-            for rect in bar:
-                width = rect.get_width()
-                ax.text(width, rect.get_y() + rect.get_height()/2, f'{int(width)}',
-                        va='center', ha='left')
+    def resizeEvent(self, event):
+        self.resize_timer.start()
+        super().resizeEvent(event)
 
-        # Customize the plot
-        ax.set_xlabel('Frequency')
-        ax.set_ylabel('Distance Intervals')
-
-        # Set y-tick labels to indicate intervals
-        ax.set_yticks(bins[:-1] + space_height * np.arange(len(frequencies)))
-        ax.set_yticklabels([f'{bins[i]} - {bins[i+1]}' for i in range(len(bins)-1)])
-
-        # Adjust layout
-        self.figure.tight_layout()
-
-        # Show the plot
-        self.canvas.draw()
-
-def main():
-    app = QApplication(sys.argv)
-    window = MyMainWindow()
-    window.show()
-    sys.exit(app.exec_())
 
 if __name__ == '__main__':
-    main()
+    app = QApplication(sys.argv)
+    mainWindow = MyMainWindow()
+    mainWindow.setGeometry(100, 100, 800, 600)
+    mainWindow.show()
+    sys.exit(app.exec_())
 

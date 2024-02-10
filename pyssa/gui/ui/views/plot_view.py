@@ -56,7 +56,7 @@ class PlotWidget(QWidget):
             parent: the parent
         """
         super(PlotWidget, self).__init__(parent)
-        self.figure = Figure(figsize=(18, 7.25))
+        self.figure = Figure(figsize=(9, 5.25))
         self.canvas = FigureCanvas(self.figure)
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
@@ -79,11 +79,14 @@ class PlotView(QtWidgets.QDialog):
         self.highlighted_bin_index = None
         self.active_row_information = None
         self._sync_with_pymol_flag = False
+        self.bars = None
 
         # self.resizeEvent = self.handle_resize
         # Create a timer for delayed updates
         self.resize_timer = QtCore.QTimer(self)
-        #self.resize_timer.timeout.connect(self.handle_resize_timeout)
+        self.resize_timer.setInterval(250)  # Set the interval in milliseconds
+        self.resize_timer.setSingleShot(True)
+
         self.protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_from_project
         #custom_pyssa_styles.set_stylesheet(self)
 
@@ -183,7 +186,8 @@ class PlotView(QtWidgets.QDialog):
     def _initialize_ui(self):
         # <editor-fold desc="Define basic ui elements">
         self.scroll_area = QScrollArea()
-        self.plot_widget = PlotWidget()
+        self.plot_widget_dplot = PlotWidget()
+        self.plot_widget_dhistogram = PlotWidget()
         self.menubar = QtWidgets.QMenuBar(self)
         self.lbl_status = QtWidgets.QLabel()
         self.lbl_status.setText("Status: ")
@@ -191,7 +195,7 @@ class PlotView(QtWidgets.QDialog):
         # </editor-fold>
 
         # <editor-fold desc="Create a menu and add it to the menu bar">
-        plots_menu = QtWidgets.QMenu('Plots', self)
+        plots_menu = QtWidgets.QMenu('Views', self)
         help_menu = QtWidgets.QMenu('Help', self)
         self.menubar.addMenu(plots_menu)
         self.menubar.addMenu(help_menu)
@@ -258,8 +262,8 @@ class PlotView(QtWidgets.QDialog):
         self.table_view.setMinimumWidth(450)
 
         # Create a QWidget to hold labels and QTableView
-        container_widget = QtWidgets.QWidget()
-        container_layout = QtWidgets.QVBoxLayout(container_widget)
+        self.container_widget = QtWidgets.QWidget()
+        container_layout = QtWidgets.QVBoxLayout(self.container_widget)
         container_layout.addWidget(self.lbl_status1)
         container_layout.addWidget(self.lbl_status2)
         container_layout.addWidget(self.table_view)
@@ -275,30 +279,56 @@ class PlotView(QtWidgets.QDialog):
                         border-color: #DCDBE3;
                     }
                     """
-        container_widget.setStyleSheet(stylesheet)
-        # Create a QHBoxLayout for the scroll area
-        self.scroll_area_layout = QtWidgets.QHBoxLayout()
+        self.container_widget.setStyleSheet(stylesheet)
+        # # Create a QHBoxLayout for the scroll area
+        # self.scroll_area_layout = QtWidgets.QHBoxLayout()
+        #
+        # # Assuming self.plot_widget and self.scroll_area are already defined
+        # self.scroll_area_layout.addWidget(self.plot_widget)
+        # self.scroll_area_layout.addWidget(self.container_widget)
+        #
+        # # Set up scroll area
+        # self.scroll_area = QtWidgets.QScrollArea()
+        # self.scroll_area.setLayout(self.scroll_area_layout)
+        #
+        # # Create main layout
+        # self.main_Layout = QtWidgets.QVBoxLayout()
+        # self.main_Layout.addWidget(self.scroll_area)
+        # self.main_Layout.addWidget(self.lbl_status)
+        # self.main_Layout.setMenuBar(self.menubar)
+        # self.setLayout(self.main_Layout)
 
-        # Assuming self.plot_widget and self.scroll_area are already defined
-        self.scroll_area_layout.addWidget(self.plot_widget)
-        self.scroll_area_layout.addWidget(container_widget)
+        # Create the first splitter to divide the dialog into two sections
+        self.vertical_splitter = QtWidgets.QSplitter()
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout.addWidget(self.vertical_splitter)
 
-        # Set up scroll area
-        self.scroll_area = QtWidgets.QScrollArea()
-        self.scroll_area.setLayout(self.scroll_area_layout)
+        # Left side (plot area)
+        plot_area = QtWidgets.QFrame()
+        self.vertical_splitter.addWidget(plot_area)
+        # Right side (table)
+        self.vertical_splitter.addWidget(self.container_widget)
+        # Second splitter within the plot area to split it horizontally
+        self.horizontal_splitter = QtWidgets.QSplitter()
+        plot_area_layout = QVBoxLayout()
+        plot_area.setLayout(plot_area_layout)
+        plot_area_layout.addWidget(self.horizontal_splitter)
+        # Left part of the plot area
+        self.horizontal_splitter.addWidget(self.plot_widget_dplot)
+        # Right part of the plot area
+        self.horizontal_splitter.addWidget(self.plot_widget_dhistogram)
+        self.horizontal_splitter.setOrientation(0)  # Set orientation to horizontal
 
-        # Create main layout
-        self.main_Layout = QtWidgets.QVBoxLayout()
-        self.main_Layout.addWidget(self.scroll_area)
-        self.main_Layout.addWidget(self.lbl_status)
-        self.main_Layout.setMenuBar(self.menubar)
-        self.setLayout(self.main_Layout)
-
+        self.vertical_splitter.setCollapsible(0, False)
+        self.plot_widget_dplot.setMinimumWidth(200)
+        self.main_layout.setMenuBar(self.menubar)
+        self.main_layout.addWidget(self.lbl_status)
+        self.setLayout(self.main_layout)
         # </editor-fold>
 
         # <editor-fold desc="Setup subplots">
-        self._ax_plot = self.plot_widget.figure.add_subplot(211)
-        self._ax_hist = self.plot_widget.figure.add_subplot(212)
+        self._ax_plot = self.plot_widget_dplot.figure.add_subplot()
+        self._ax_hist = self.plot_widget_dhistogram.figure.add_subplot()
 
         # </editor-fold>
 
@@ -319,6 +349,7 @@ class PlotView(QtWidgets.QDialog):
 
         # </editor-fold>
 
+    # <editor-fold desc="Help related methods">
     def open_help(self, a_page_name: str):
         """Opens the pyssa documentation window if it's not already open.
 
@@ -341,47 +372,138 @@ class PlotView(QtWidgets.QDialog):
 
     def _open_distance_data_visualizer_help(self):
         self.open_help("help/results/distance_data_visualizer")
+    # </editor-fold>
 
     def _connect_all_signals(self):
         self.action_table.triggered.connect(self.hide_distance_table)
         self.table_view.clicked.connect(self.highlight_table_selection_in_plot)
-        self.action_plot.triggered.connect(self.toggle_graphics_visablity)
-        self.action_histogram.triggered.connect(self.toggle_graphics_visablity)
+        self.action_plot.triggered.connect(self.move_horizontal_splitter)
+        self.action_histogram.triggered.connect(self.move_horizontal_splitter)
         self.action_sync_with_pymol.triggered.connect(self.__slot_sync_with_pymol)
 
-        self.plot_widget.canvas.mpl_connect('button_press_event', self.on_canvas_click)
+        self.resize_timer.timeout.connect(self.actual_resize)
+        self.vertical_splitter.splitterMoved.connect(self.delayed_resize)
+        self.horizontal_splitter.splitterMoved.connect(self.delayed_resize)
 
+        #self.plot_widget.canvas.mpl_connect('button_press_event', self.on_canvas_click)
+
+    # <editor-fold desc="QSplitter related methods">
     def hide_distance_table(self):
         if self.action_table.isChecked():
-            self.table_view.show()
-            self.lbl_status1.show()
-            self.lbl_status2.show()
+            tmp_index = self.vertical_splitter.indexOf(self.container_widget)
+            tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
+            self.vertical_splitter.moveSplitter(tmp_highest - 450, tmp_index)
         else:
-            self.table_view.hide()
-            self.lbl_status1.hide()
-            self.lbl_status2.hide()
+            tmp_index = self.vertical_splitter.indexOf(self.container_widget)
+            tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
+            self.vertical_splitter.moveSplitter(tmp_highest, tmp_index)
 
-    def toggle_graphics_visablity(self):
-        self.plot_widget.figure.clear()
-        self.plot_widget.show()
+    def move_horizontal_splitter(self):
         if self.action_plot.isChecked() and self.action_histogram.isChecked():
-            self._ax_plot, self._ax_hist = self.plot_widget.figure.subplots(2)
-            self.create_distance_plot()
-            self.setup_plot_defaults()
-            self.create_distance_histogram()
-            self.setup_histogram_defaults()
+            # Both should be displayed
+            tmp_index = self.horizontal_splitter.indexOf(self.plot_widget_dhistogram)
+            tmp_lowest, tmp_highest = self.horizontal_splitter.getRange(tmp_index)
+            self.horizontal_splitter.moveSplitter(tmp_lowest + 400, tmp_index)
         elif self.action_plot.isChecked() and not self.action_histogram.isChecked():
-            self._ax_plot = self.plot_widget.figure.subplots(1)
+            # Only the plot should be displayed
+            tmp_index = self.horizontal_splitter.indexOf(self.plot_widget_dhistogram)
+            tmp_lowest, tmp_highest = self.horizontal_splitter.getRange(tmp_index)
+            self.horizontal_splitter.moveSplitter(tmp_highest, tmp_index)
+        elif not self.action_plot.isChecked() and self.action_histogram.isChecked():
+            # Only the histogram should be displayed
+            tmp_index = self.horizontal_splitter.indexOf(self.plot_widget_dhistogram)
+            tmp_lowest, tmp_highest = self.horizontal_splitter.getRange(tmp_index)
+            self.horizontal_splitter.moveSplitter(tmp_lowest, tmp_index)
+        elif not self.action_plot.isChecked() and not self.action_histogram.isChecked() and self.action_table.isChecked():
+            # No plots should be displayed
+            tmp_index = self.vertical_splitter.indexOf(self.container_widget)
+            tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
+            self.vertical_splitter.moveSplitter(tmp_lowest, tmp_index)
+        elif not self.action_plot.isChecked() and not self.action_histogram.isChecked() and not self.action_table.isChecked():
+            tmp_index = self.vertical_splitter.indexOf(self.container_widget)
+            tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
+            self.vertical_splitter.moveSplitter(tmp_highest, tmp_index)
+
+    def delayed_resize(self):
+        # Start or restart the timer when the splitter is moved
+        self.plot_widget_dplot.figure.clear()
+        self.plot_widget_dhistogram.figure.clear()
+        self.resize_timer.start()
+
+    def actual_resize(self):
+        """Perform the actual resizing operation. This method will be called after the timer interval has elapsed"""
+        print("Resizing starts now ...")
+        if self.container_widget.size().width() == 0:
+            self.action_table.setChecked(False)
+        else:
+            self.action_table.setChecked(True)
+
+        if self.plot_widget_dplot.size().height() == 0:
+            self.action_plot.setChecked(False)
+        else:
+            self.action_plot.setChecked(True)
+
+        if self.plot_widget_dhistogram.size().height() == 0:
+            self.action_histogram.setChecked(False)
+        elif self.plot_widget_dhistogram.size().width() == 0:
+            self.action_plot.setChecked(False)
+            self.action_histogram.setChecked(False)
+        else:
+            self.action_histogram.setChecked(True)
+
+        self.toggle_graphics_visibility()
+
+    def toggle_graphics_visibility(self):
+        self.plot_widget_dplot.figure.clear()
+        self.plot_widget_dhistogram.figure.clear()
+        if self.action_plot.isChecked() and self.action_histogram.isChecked():
+            self.plot_widget_dplot.show()
+            self.plot_widget_dhistogram.show()
+
+            self._ax_plot = self.plot_widget_dplot.figure.subplots()
+            self._ax_hist = self.plot_widget_dhistogram.figure.subplots()
             self.create_distance_plot()
             self.setup_plot_defaults()
-        elif not self.action_plot.isChecked() and self.action_histogram.isChecked():
-            self._ax_hist = self.plot_widget.figure.subplots(1)
             self.create_distance_histogram()
             self.setup_histogram_defaults()
+
+            self.plot_widget_dplot.figure.tight_layout()
+            self.plot_widget_dplot.canvas.draw()
+            try:  # TODO: this is not an ideal way, but I didn't find anything better
+                self.plot_widget_dhistogram.figure.tight_layout()
+                self.plot_widget_dhistogram.canvas.draw()
+            except np.linalg.LinAlgError:
+                print("A layout cannot be applied to the histogram.")
+
+        elif self.action_plot.isChecked() and not self.action_histogram.isChecked():
+            self.plot_widget_dplot.show()
+
+            self._ax_plot = self.plot_widget_dplot.figure.subplots()
+            self.create_distance_plot()
+            self.setup_plot_defaults()
+
+            self.plot_widget_dplot.figure.tight_layout()
+            self.plot_widget_dplot.canvas.draw()
+
+        elif not self.action_plot.isChecked() and self.action_histogram.isChecked():
+            self.plot_widget_dhistogram.show()
+            self._ax_hist = self.plot_widget_dhistogram.figure.subplots()
+            self.create_distance_histogram()
+            self.setup_histogram_defaults()
+
+            try:  # TODO: this is not an ideal way, but I didn't find anything better
+                self.plot_widget_dhistogram.figure.tight_layout()
+                self.plot_widget_dhistogram.canvas.draw()
+            except np.linalg.LinAlgError:
+                print("A layout cannot be applied to the histogram.")
         else:
-            self.plot_widget.hide()
-        self.plot_widget.figure.tight_layout()
-        self.plot_widget.canvas.draw()
+            tmp_index = self.vertical_splitter.indexOf(self.container_widget)
+            tmp_lowest, tmp_highest = self.vertical_splitter.getRange(tmp_index)
+            self.vertical_splitter.moveSplitter(tmp_lowest, tmp_index)
+            self.plot_widget_dplot.hide()
+            self.plot_widget_dhistogram.hide()
+
+    # </editor-fold>
 
     def __slot_sync_with_pymol(self):
         if self.action_sync_with_pymol.isChecked():
@@ -389,13 +511,38 @@ class PlotView(QtWidgets.QDialog):
         else:
             self._sync_with_pymol_flag = False
 
+    # <editor-fold desc="Plotting related methods">
     def create_all_graphics(self):
+        self.plot_widget_dplot.show()
+        self.plot_widget_dhistogram.show()
+        #num_subplots = 2  # Adjust this number based on your requirements
+        #self.plot_widget_dplot.figure.clear()  # Clear existing figure
+        #self.plot_widget_dhistogram.figure.clear()
+
+        # # Adjust figure layout based on the number of subplots
+        # self.plot_widget.figure.subplots(num_subplots, 1)
+        #
+        # # Create and set up the subplots
+        # self._ax_plot = self.plot_widget.figure.axes[0]  # First subplot
+        # self.create_distance_plot()
+        # self.setup_plot_defaults()
+        #
+        # self._ax_hist = self.plot_widget.figure.axes[1]  # Second subplot
+        # self.create_distance_histogram()
+        # self.setup_histogram_defaults()
+        #
+        # # Adjust layout
+        # self.plot_widget.figure.tight_layout()
+        # self.plot_widget.canvas.draw()
+
         self.create_distance_plot()
         self.setup_plot_defaults()
         self.create_distance_histogram()
         self.setup_histogram_defaults()
-        self.plot_widget.figure.tight_layout()
-        self.plot_widget.canvas.draw()
+        self.plot_widget_dplot.figure.tight_layout()
+        self.plot_widget_dhistogram.figure.tight_layout()
+        self.plot_widget_dplot.canvas.draw()
+        self.plot_widget_dhistogram.canvas.draw()
 
     def setup_plot_defaults(self):
         # Set axis labels
@@ -446,6 +593,32 @@ class PlotView(QtWidgets.QDialog):
         distance_list.sort()
         length = len(distance_list)
         max_distance = distance_list[length - 1]
+        self.bins = np.arange(0, max_distance + 1, 1)
+        hist, bin_edges = np.histogram(distance_list, bins=self.bins)
+        
+        frequencies = hist.tolist()
+        self.freqs_without_zeros = []
+        self.bins_without_zeros_label = []
+        self.bins_without_zeros = []
+        for i, freq in enumerate(frequencies):
+            if freq != 0:
+                self.freqs_without_zeros.append(freq)
+                tmp_str_bin = str(bin_edges[i])
+                tmp_str_bin_2 = str(bin_edges[i]+1)
+                self.bins_without_zeros.append(bin_edges[i])
+                self.bins_without_zeros_label.append(f"[{tmp_str_bin},{tmp_str_bin_2}]")
+
+        self.bars = self._ax_hist.barh(self.bins_without_zeros_label, self.freqs_without_zeros, color="#367AF6")
+
+    def create_distance_histogram_old(self):
+        distance_data: dict[
+            str,
+            np.ndarray,
+        ] = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data
+        distance_list = copy.deepcopy(distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES])
+        distance_list.sort()
+        length = len(distance_list)
+        max_distance = distance_list[length - 1]
 
         n, self.bins, self.patches = self._ax_hist.hist(
             distance_list,
@@ -476,6 +649,8 @@ class PlotView(QtWidgets.QDialog):
             # Set custom tick labels
             custom_labels = [f"{bin_start} - {bin_end}" for bin_start, bin_end in zip(self.bins[:-1], self.bins[1:])]
             self._ax_hist.set_yticklabels(custom_labels)
+
+    # </editor-fold>
 
     def on_canvas_click(self, event):
         x_clicked, y_clicked = event.xdata, event.ydata
@@ -550,7 +725,7 @@ class PlotView(QtWidgets.QDialog):
                 constants.PYSSA_LOGGER.warning(f"Something went wrong: {e}")
         self.clicked_point_scatter = self._ax_plot.scatter(tmp_x_value, tmp_y_value, color='red', marker='o',
                                                            label='Clicked Point')
-        self.plot_widget.canvas.draw()
+        self.plot_widget_dplot.canvas.draw()
 
         tmp_row = self.table_view.currentIndex().row()
         self.table_view.selectRow(tmp_row)
@@ -577,15 +752,21 @@ class PlotView(QtWidgets.QDialog):
     def highlight_histogram_bar(self, point_to_highlight):
         # Highlight a specific data point (example: point_to_highlight)
         if self.highlighted_bin_index is not None:
-            self.patches[self.highlighted_bin_index].set_facecolor('#4B91F7')
+            self.bars[self.highlighted_bin_index].set_facecolor('#367AF6')
 
-        self.highlighted_bin_index = np.searchsorted(self.bins, point_to_highlight, side='right') - 1
-        if 0 <= self.highlighted_bin_index < len(self.patches):
-            patch = self.patches[self.highlighted_bin_index]
-            patch.set_facecolor("#2D5794")
+        for tmp_bin in self.bins:
+            tmp_lower_bin = tmp_bin - 1
+            tmp_upper_bin = tmp_bin
+            if point_to_highlight >= tmp_lower_bin and point_to_highlight <= tmp_upper_bin:
+                self.highlighted_bin_index = int(tmp_lower_bin)
+                break
+        self.highlighted_bin_index = self.bins_without_zeros.index(self.highlighted_bin_index)  # TODO: Could be cleaner
+        if 0 <= self.highlighted_bin_index < len(self.bars):
+            bar = self.bars[self.highlighted_bin_index]
+            bar.set_facecolor("#2D5794")
 
         # Update the plot
-        self.plot_widget.canvas.draw()
+        self.plot_widget_dhistogram.canvas.draw()
 
     def highlight_residue_in_pymol(self, the_current_id, tmp_prot_1_name):
         self.table_view.currentIndex()
@@ -596,22 +777,6 @@ class PlotView(QtWidgets.QDialog):
         cmd.show("sticks", tmp_pymol_selection.selection_string)
 
     # <editor-fold desc="Experimental!">
-    # def resizeEvent(self, event) -> None:  # noqa: N802, ANN001
-    #     """The actual resize event overwritten from PyQt5."""
-    #     # Let the base class handle the event
-    #     super().resizeEvent(event)
-    #
-    #     # Start or restart the timer when resizing
-    #     self.resize_timer.start(200)  # Adjust the timeout as needed
-
-    def handle_resize_timeout(self) -> None:
-        """Handles the resize process."""
-        # Handle the resize event after the timeout
-        size = self.scroll_area.size()
-        self.plot_widget.setFixedSize(size.width() - 10, size.height() - 10)
-        self.plot_widget.figure.tight_layout()
-        self.plot_widget.canvas.draw()
-
     def setup_context_menu(self) -> None:
         self.context_menu = QtWidgets.QMenu()
         self.hide_action = self.context_menu.addAction(self.tr("Hide Column"))

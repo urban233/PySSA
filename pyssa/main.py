@@ -7685,6 +7685,8 @@ if TYPE_CHECKING:
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+    splash = QtWidgets.QSplashScreen(QtGui.QPixmap(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
+    splash.show()
     styles.set_stylesheet(app)
     interfaceManager = interface_manager.InterfaceManager()
     pymolSessionManager = pymol_session_manager.PymolSessionManager(interfaceManager)
@@ -7692,4 +7694,5 @@ if __name__ == "__main__":
     main_controller = main_view_controller.MainViewController(interfaceManager, pymolSessionManager)
     styles.set_stylesheet(main_window)
     main_window.show()
+    splash.close()
     sys.exit(app.exec_())

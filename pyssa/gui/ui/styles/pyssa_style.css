@@ -579,10 +579,10 @@ QToolTip {
     font-size: 12px;
 }
 
-/*QStatusBar {*/
-/*    font-size: 14px;*/
-/*    border: 2px solid #DCDBE3;*/
-/*    border-radius: 4px;*/
-/*    padding: 20px;*/
-/*    margin: 5px;*/
-/*}*/
+QSplitter::handle {
+    background: #DCDBE3;
+    border: 1px solid #DCDBE3;
+    width: 15px;
+    margin: 1px;
+    border-radius: 4px;
+}
