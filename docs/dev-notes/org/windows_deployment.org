@@ -1,0 +1,62 @@
+#+TITLE: Windows Deployment
+#+AUTHOR: MU
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
+
+* Useful Documents
+- [[file:central_station.org][Central Station]]
+
+* Summary
+This document describes the Windows deployment and all related tasks.
+
+* Build Instructions
+
+** PySSA-Installer
+1. Change version number in source code, under Constants.cs!
+2. Publish WPF application through Visual Studio 2022 in a directory (there is a publishing profile).
+3. Copy the build files (.exe and .pdb) to inno setup src directory (there is a batch script).
+4. Open Inno Script Studio and the installer.iss file.
+5. Change the version number in the script file.
+6. Build the inno setup .exe file.
+7. Move the setup .exe to sciebo under the \sciebo\pyssa\installer directory
+8. Change version number in \sciebo\pyssa\installer directory\latest_version.txt file.
+9. Build and distribution of PySSA-Installer process is finished.
+
+** ColabFold/AlamaLinux
+Build image using alama linux DOCKERFILE:
+#+BEGIN_SRC shell
+podman build -f path/to/dockerfile -t almacolabfold9:1.5.1.2
+#+END_SRC
+
+Create rootfs for wsl:
+#+BEGIN_SRC shell
+podman run --name almacolabfold9 almacolabfold:1.5.1.2
+#+END_SRC
+#+BEGIN_SRC shell
+podman export -o alama-colabfold-9-rootfs.tar almacolabfold9
+#+END_SRC
+
+Import image into wsl:
+#+BEGIN_SRC shell
+wsl --import almaColabfold9 path/to/wsl/storage path/to/tarfile
+#+END_SRC
+#+BEGIN_SRC shell
+wsl --import almaColabfold9 C:\Users\martin\user_space\inno_setup\local_colabfold\src\tmp_storage C:\Users\martin\user_space\inno_setup\local_colabfold\src\alma-colabfold-9-rootfs.tar
+#+END_SRC
+
+Run install script of localcolabfold:
+#+BEGIN_SRC shell
+/home/rhel_user/localcolabfold/colabfold-conda/bin/colabfold_batch /mnt/c/Users/student/.pyssa/scratch/local_prediction/fasta /mnt/c/Users/student/.pyssa/scratch/local_prediction/pdb
+#+END_SRC
+
+*** Resources
+- [[https://hub.docker.com/_/almalinux]]
+- [[https://dev.to/bowmanjd/install-fedora-on-windows-subsystem-for-linux-wsl-4b26]]
+- [[https://github.com/containers/podman/blob/main/pkg/machine/wsl/machine.go#L818]]
+- [[https://github.com/containers/podman/blob/main/pkg/machine/wsl/wutil/wutil.go]]
+
+** PySSA-Plug-in
+1. Change version number in constants.py
+2. Build pyssa with the batch script into a windows_package.zip
+3. Upload windows_package.zip to sciebo
+4. Change version number in versions.txt in sciebo!
+

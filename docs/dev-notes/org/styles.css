@@ -1,0 +1,39 @@
+/*
+ * CSS for org-mode document. Save with name style.css and include with
+ * #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="style.css" />
+ * It should be placed on the same directory as the HTML that is exported.
+ *
+ * Print options
+ */
+
+@page {
+    margin: 2.54cm;
+    size: A4;
+    /* Page numbers, does not really work on most browsers. */
+    @bottom-right {
+        padding-right: 20px;
+        content: "Page " counter(page);
+    }
+}
+
+html, body {
+  font-family: 'Segoe UI', sans-serif;
+  color: #24292e;
+}
+
+h1, h2 {
+	font-weight: bold;
+}
+
+body {
+	background-color: #ffffff;
+}
+
+a {
+	color: #0366d6;
+}
+
+/* mouse over link */
+a:hover {
+	color: #24292e;
+}

@@ -1,0 +1,11 @@
+#+TITLE: Central Station
+#+AUTHOR: MU
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
+
+* Summary
+This document is used as a navigation hub where all documents are linked.
+
+* Stations
+** [[file:readme.org][README]]
+** [[file:color_scheme.org][Color Scheme]]
+** [[file:windows_deployment.org][Windows Deployment]]

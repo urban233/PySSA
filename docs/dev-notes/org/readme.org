@@ -1,0 +1,33 @@
+#+TITLE: README
+#+AUTHOR: MU
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
+
+* Useful Documents
+- [[file:central_station.org][Central Station]]
+
+* Summary
+This document is a short introduction for the dev-notes directory.
+The dev-notes are a complement to the api-reference and describes information that
+are more detailed than the api-reference.
+Org files are used for this kind of documentation. This enables a quick export
+to HTML if done in Emacs. This increases the readability of this documentation.
+
+* Guides
+Here are Step-by-Step guides for certain operations.
+
+** Setup the documentation project
+To be able to "publish" (export to HTML) you have to run the publish.el file.
+This can be done with the following *load-file* command.
+
+#+BEGIN_SRC
+load-file path/to/the/publish.el
+#+END_SRC
+
+** Export project to HTML
+To export the changes in the org files to HTML documents you have to open
+an org file of the project in a buffer and press:
+*C-c C-e* then *P* and *p*.
+
+** Markup Language
+Here is a link to a short introduction into [[https://devhints.io/org-mode][Org Markup Language]].
+Furthermore, here is a link for how to embed [[https://orgmode.org/guide/Hyperlinks.html][hyperlinks]] into documents.
