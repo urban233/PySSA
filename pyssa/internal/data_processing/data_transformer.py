@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """This module contains helper functions for specific data transformations."""
+import copy
 import logging
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import sequence
@@ -176,27 +177,31 @@ class DistanceAnalysisDataTransformer:
         Raises:
             ProteinNotFoundInCurrentProjectError: If a protein is not found in the current project.
         """
-        protein_1: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_1())
+        protein_1: "protein.Protein" = self.current_project.search_protein(self.analysis_run.get_protein_name_1())
         if protein_1 is None:
             logger.error(
                 "No protein with the given protein name: "
                 f"{self.analysis_run.get_protein_name_1()} found in the current project.",
             )
             raise exception.ProteinNotFoundInCurrentProjectError("")
+        else:
+            logger.debug("Protein 1 object successfully created.")
 
         if self.analysis_run.are_protein_names_identical():
-            protein_2: protein.Protein = protein_1.duplicate_protein()
-            protein_1: protein.Protein = protein_2.duplicate_protein()
+            protein_2: "protein.Protein" = copy.deepcopy(protein_1)
+            protein_1: "protein.Protein" = copy.deepcopy(protein_2)
             protein_1.set_molecule_object(f"{protein_1.get_molecule_object()}_1")
             protein_2.set_molecule_object(f"{protein_2.get_molecule_object()}_2")
         else:
-            protein_2: protein.Protein = self.current_project.search_protein(self.analysis_run.get_protein_name_2())
+            protein_2: "protein.Protein" = self.current_project.search_protein(self.analysis_run.get_protein_name_2())
             if protein_2 is None:
                 logger.error(
                     "No protein with the given protein name: "
                     f"{self.analysis_run.get_protein_name_2()} found in the current project.",
                 )
                 raise exception.ProteinNotFoundInCurrentProjectError("")
+            else:
+                logger.debug("Protein 2 object successfully created.")
         self.proteins = (protein_1, protein_2)
 
     def _create_analysis_name(self) -> str:
