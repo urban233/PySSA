@@ -25,7 +25,7 @@ import os
 import datetime
 import pathlib
 from pathlib import Path
-from pyssa.util import globals
+from pyssa.util import globals, enums
 
 PLUGIN_NAME = "PySSA"
 PLUGIN_PATH = globals.g_plugin_path
@@ -216,6 +216,11 @@ PAGE_HELP_PATHS_DICT = {
     PAGE_STRUCTURE_ANALYSIS: HELP_STRUCTURE_ANALYSIS_HTML_PATH,
     PAGE_USE_EXISTING_PROJECT: HELP_USE_EXISTING_PROJECT_HTML_PATH,
     PAGE_RESULTS: HELP_RESULTS_HTML_PATH,
+}
+
+DEFAULT_HISTOGRAM_PROPERTIES = {
+    enums.HistogramPropertiesEnum.X_AXIS_UNITS: 10,
+    enums.HistogramPropertiesEnum.DISTANCE_INTERVAL: 1.0,
 }
 
 # pymol parameters

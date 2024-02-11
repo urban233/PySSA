@@ -470,14 +470,14 @@ QPushButton:disabled {
 }
 
 QPushButton::pressed {
-    background-color: #DCDCDC;
+    background-color: #fff;
     color: black;
     font-family: "Segoe UI";
     font-size: 12px;
     border: solid;
-    border-width: 1px;
+    border-width: 2px;
     border-radius: 4px;
-    border-color: #DCDCDC;
+    border-color: #367AF6;
     padding: 2px;
     min-width: 65px;
     max-width: 65px;
@@ -585,4 +585,35 @@ QSplitter::handle {
     width: 15px;
     margin: 1px;
     border-radius: 4px;
+}
+
+QFrame#frame_x_axis {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    padding: 1px;
+}
+
+QFrame#frame_y_axis {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    padding: 1px;
+}
+
+QFrame#line_x_axis {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+
+QFrame#line_y_axis {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
 }

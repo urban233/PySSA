@@ -61,7 +61,6 @@ def __init_plugin__(app=None):  # noqa: ANN202, ANN001, N807
 
 # global reference to avoid garbage collection of our dialog
 mainWindow = None
-mainPresenter = None
 
 
 def run_plugin_gui() -> None:
@@ -97,5 +96,4 @@ def run_plugin_gui() -> None:
         #         style = file.read()
         # Set the stylesheet of the application
         styles.set_stylesheet(mainWindow)
-
     mainWindow.show()

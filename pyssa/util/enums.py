@@ -64,3 +64,9 @@ class SQLQueryType(enum.Enum):
     INSERT_NEW_SEQUENCE = 'insert_new_sequence'
     DELETE_EXISTING_SEQUENCE = 'delete_existing_sequence'
     UPDATE_SEQUENCE_NAME = 'update_sequence_name'
+
+
+class HistogramPropertiesEnum(enum.Enum):
+    """An enum for all possible histogram properties."""
+    X_AXIS_UNITS = 'x_axis_units'
+    DISTANCE_INTERVAL = 'distance_interval'

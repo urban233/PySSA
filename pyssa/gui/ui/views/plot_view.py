@@ -35,13 +35,15 @@ import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
 
 from pyssa.gui.ui.styles import styles
+from pyssa.gui.ui.views import histogram_properties_view
 from pyssa.internal.data_structures import protein_pair, selection
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
-from pyssa.util import pyssa_keys
+from pyssa.util import pyssa_keys, enums
 from pyssa.util import constants
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QScrollArea
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backend_bases import MouseButton
 from matplotlib.figure import Figure
 from matplotlib import ticker
 
@@ -80,6 +82,10 @@ class PlotView(QtWidgets.QDialog):
         self.active_row_information = None
         self._sync_with_pymol_flag = False
         self.bars = None
+        self._histogram_properties = {
+            enums.HistogramPropertiesEnum.X_AXIS_UNITS: 10,
+            enums.HistogramPropertiesEnum.DISTANCE_INTERVAL: 1.0,
+        }
 
         # self.resizeEvent = self.handle_resize
         # Create a timer for delayed updates
@@ -180,6 +186,7 @@ class PlotView(QtWidgets.QDialog):
         # --END
 
         self.create_all_graphics()
+        self.delayed_resize()
         self.setup_context_menu()
         self._connect_all_signals()
 
@@ -196,8 +203,14 @@ class PlotView(QtWidgets.QDialog):
 
         # <editor-fold desc="Create a menu and add it to the menu bar">
         plots_menu = QtWidgets.QMenu('Views', self)
+        table_menu = QtWidgets.QMenu('Table', self)
+        hide_column_menu = QtWidgets.QMenu('Hide Column', self)
+        show_column_menu = QtWidgets.QMenu('Show Column', self)
         help_menu = QtWidgets.QMenu('Help', self)
         self.menubar.addMenu(plots_menu)
+        self.menubar.addMenu(table_menu)
+        table_menu.addMenu(hide_column_menu)
+        table_menu.addMenu(show_column_menu)
         self.menubar.addMenu(help_menu)
 
         # </editor-fold>
@@ -209,9 +222,11 @@ class PlotView(QtWidgets.QDialog):
         self.action_histogram = QtWidgets.QAction('Histogram', self)
         self.action_histogram.setCheckable(True)
         self.action_histogram.setChecked(True)
+
         self.action_table = QtWidgets.QAction('Table', self)
         self.action_table.setCheckable(True)
         self.action_table.setChecked(True)
+
         self.action_sync_with_pymol = QtWidgets.QAction('Sync With PyMOL', self)
         self.action_sync_with_pymol.setCheckable(True)
         self.action_sync_with_pymol.setChecked(False)
@@ -220,6 +235,44 @@ class PlotView(QtWidgets.QDialog):
         plots_menu.addAction(self.action_histogram)
         plots_menu.addAction(self.action_table)
         plots_menu.addAction(self.action_sync_with_pymol)
+
+        self.action_hide_residue_pair_no = QtWidgets.QAction("Residue Pair No.")
+        self.action_hide_protein_1_chain = QtWidgets.QAction("Protein 1 Chain")
+        self.action_hide_protein_1_position = QtWidgets.QAction("Protein 1 Position")
+        self.action_hide_protein_1_residue = QtWidgets.QAction("Protein 1 Residue")
+        self.action_hide_protein_2_chain = QtWidgets.QAction("Protein 2 Chain")
+        self.action_hide_protein_2_position = QtWidgets.QAction("Protein 2 Position")
+        self.action_hide_protein_2_residue = QtWidgets.QAction("Protein 2 Residue")
+        self.action_hide_distance = QtWidgets.QAction("Distance")
+
+        hide_column_menu.addAction(self.action_hide_residue_pair_no)
+        hide_column_menu.addAction(self.action_hide_protein_1_chain)
+        hide_column_menu.addAction(self.action_hide_protein_1_position)
+        hide_column_menu.addAction(self.action_hide_protein_1_residue)
+        hide_column_menu.addAction(self.action_hide_protein_2_chain)
+        hide_column_menu.addAction(self.action_hide_protein_2_position)
+        hide_column_menu.addAction(self.action_hide_protein_2_residue)
+        hide_column_menu.addAction(self.action_hide_distance)
+
+        self.action_show_residue_pair_no = QtWidgets.QAction("Residue Pair No.")
+        self.action_show_protein_1_chain = QtWidgets.QAction("Protein 1 Chain")
+        self.action_show_protein_1_position = QtWidgets.QAction("Protein 1 Position")
+        self.action_show_protein_1_residue = QtWidgets.QAction("Protein 1 Residue")
+        self.action_show_protein_2_chain = QtWidgets.QAction("Protein 2 Chain")
+        self.action_show_protein_2_position = QtWidgets.QAction("Protein 2 Position")
+        self.action_show_protein_2_residue = QtWidgets.QAction("Protein 2 Residue")
+        self.action_show_distance = QtWidgets.QAction("Distance")
+        self.action_show_all_columns = QtWidgets.QAction("All Columns")
+
+        show_column_menu.addAction(self.action_show_residue_pair_no)
+        show_column_menu.addAction(self.action_show_protein_1_chain)
+        show_column_menu.addAction(self.action_show_protein_1_position)
+        show_column_menu.addAction(self.action_show_protein_1_residue)
+        show_column_menu.addAction(self.action_show_protein_2_chain)
+        show_column_menu.addAction(self.action_show_protein_2_position)
+        show_column_menu.addAction(self.action_show_protein_2_residue)
+        show_column_menu.addAction(self.action_show_distance)
+        show_column_menu.addAction(self.action_show_all_columns)
 
         self.action_docs = QtWidgets.QAction('PySSA Documentation', self)
         self.action_docs.triggered.connect(self._open_help_center)
@@ -324,6 +377,7 @@ class PlotView(QtWidgets.QDialog):
         self.main_layout.setMenuBar(self.menubar)
         self.main_layout.addWidget(self.lbl_status)
         self.setLayout(self.main_layout)
+
         # </editor-fold>
 
         # <editor-fold desc="Setup subplots">
@@ -339,7 +393,6 @@ class PlotView(QtWidgets.QDialog):
                 QTableWidget {background-color: white;}
                 """
         self.setStyleSheet(stylesheet)
-
         self.resize(1400, 800)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, True)
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
@@ -376,6 +429,26 @@ class PlotView(QtWidgets.QDialog):
 
     def _connect_all_signals(self):
         self.action_table.triggered.connect(self.hide_distance_table)
+
+        self.action_hide_residue_pair_no.triggered.connect(self.__action_hide_residue_pair_no)
+        self.action_hide_protein_1_chain.triggered.connect(self.__action_hide_protein_1_chain)
+        self.action_hide_protein_1_position.triggered.connect(self.__action_hide_protein_1_position)
+        self.action_hide_protein_1_residue.triggered.connect(self.__action_hide_protein_1_residue)
+        self.action_hide_protein_2_chain.triggered.connect(self.__action_hide_protein_2_chain)
+        self.action_hide_protein_2_position.triggered.connect(self.__action_hide_protein_2_position)
+        self.action_hide_protein_2_residue.triggered.connect(self.__action_hide_protein_2_residue)
+        self.action_hide_distance.triggered.connect(self.__action_hide_distances)
+
+        self.action_show_residue_pair_no.triggered.connect(self.__action_show_residue_pair_no)
+        self.action_show_protein_1_chain.triggered.connect(self.__action_show_protein_1_chain)
+        self.action_show_protein_1_position.triggered.connect(self.__action_show_protein_1_position)
+        self.action_show_protein_1_residue.triggered.connect(self.__action_show_protein_1_residue)
+        self.action_show_protein_2_chain.triggered.connect(self.__action_show_protein_2_chain)
+        self.action_show_protein_2_position.triggered.connect(self.__action_show_protein_2_position)
+        self.action_show_protein_2_residue.triggered.connect(self.__action_show_protein_2_residue)
+        self.action_show_distance.triggered.connect(self.__action_show_distances)
+        self.action_show_all_columns.triggered.connect(self.__action_show_all_columns)
+
         self.table_view.clicked.connect(self.highlight_table_selection_in_plot)
         self.action_plot.triggered.connect(self.move_horizontal_splitter)
         self.action_histogram.triggered.connect(self.move_horizontal_splitter)
@@ -385,7 +458,9 @@ class PlotView(QtWidgets.QDialog):
         self.vertical_splitter.splitterMoved.connect(self.delayed_resize)
         self.horizontal_splitter.splitterMoved.connect(self.delayed_resize)
 
-        #self.plot_widget.canvas.mpl_connect('button_press_event', self.on_canvas_click)
+        self.plot_widget_dplot.canvas.mpl_connect('button_press_event', self.on_canvas_click)
+        #self.plot_widget_dhistogram.canvas.mpl_connect('button_press_event', self.__slot_open_context_menu_for_histogram)
+        #self.plot_widget_dplot.canvas.mpl_connect('motion_notify_event', self._on_move)
 
     # <editor-fold desc="QSplitter related methods">
     def hide_distance_table(self):
@@ -546,19 +621,19 @@ class PlotView(QtWidgets.QDialog):
 
     def setup_plot_defaults(self):
         # Set axis labels
-        self._ax_plot.set_xlabel("Residue pair no.")
-        self._ax_plot.set_ylabel("Distance in Å")
-        self._ax_plot.set_title("Distance plot")
+        self._ax_plot.set_xlabel("Residue Pair No.")
+        self._ax_plot.set_ylabel("Distance In Å")
+        self._ax_plot.set_title("Distance Plot")
         # Set the x-axis limits with minimum value set to 0
         self._ax_plot.set_xlim(0)
         # Set the number of ticks for the x and y axes
-        self._ax_plot.xaxis.set_major_locator(ticker.MultipleLocator(5))
+        self._ax_plot.xaxis.set_major_locator(ticker.MultipleLocator(10))
 
     def setup_histogram_defaults(self):
         # Move the entire x-axis to the top
         self._ax_hist.xaxis.tick_top()
         self._ax_hist.xaxis.set_label_position("top")
-        self._ax_hist.set_title("Distance histogram")
+        self._ax_hist.set_title("Distance Histogram")
         # Set axis labels
         self._ax_hist.set_xlabel("Count")
         self._ax_hist.set_ylabel("Bins")
@@ -571,8 +646,9 @@ class PlotView(QtWidgets.QDialog):
         self._ax_hist.spines["right"].set_visible(False)
         self._ax_hist.spines["bottom"].set_visible(False)
         # Set axis labels
-        self._ax_hist.set_xlabel("Frequency of C-α distances")
-        self._ax_hist.set_ylabel("Distance in Å")
+        self._ax_hist.set_xlabel("Frequency Of C-α Distances")
+        self._ax_hist.set_ylabel("Distance Interval In Å")
+        self._ax_hist.xaxis.set_major_locator(ticker.MultipleLocator(self._histogram_properties[enums.HistogramPropertiesEnum.X_AXIS_UNITS]))
 
     def create_distance_plot(self):
         # data for actual distance plot line
@@ -582,7 +658,7 @@ class PlotView(QtWidgets.QDialog):
         # cutoff_line = []
         # for i in range(len(distance_list)):
         #     cutoff_line.append(self.protein_pair_for_analysis.distance_analysis.cutoff)
-        self._ax_plot.plot(distance_list)
+        self._ax_plot.plot(distance_list, color="#367AF6")
 
     def create_distance_histogram(self):
         distance_data: dict[
@@ -593,7 +669,7 @@ class PlotView(QtWidgets.QDialog):
         distance_list.sort()
         length = len(distance_list)
         max_distance = distance_list[length - 1]
-        self.bins = np.arange(0, max_distance + 1, 1)
+        self.bins = np.arange(0, max_distance + 1, self._histogram_properties[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL])
         hist, bin_edges = np.histogram(distance_list, bins=self.bins)
         
         frequencies = hist.tolist()
@@ -603,12 +679,13 @@ class PlotView(QtWidgets.QDialog):
         for i, freq in enumerate(frequencies):
             if freq != 0:
                 self.freqs_without_zeros.append(freq)
-                tmp_str_bin = str(bin_edges[i])
-                tmp_str_bin_2 = str(bin_edges[i]+1)
+                tmp_str_bin = str(float(bin_edges[i]))
+                tmp_str_bin_2 = str(float(bin_edges[i]) + self._histogram_properties[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL])
                 self.bins_without_zeros.append(bin_edges[i])
                 self.bins_without_zeros_label.append(f"[{tmp_str_bin},{tmp_str_bin_2}]")
 
         self.bars = self._ax_hist.barh(self.bins_without_zeros_label, self.freqs_without_zeros, color="#367AF6")
+        self._ax_hist.bar_label(self.bars, padding=4)
 
     def create_distance_histogram_old(self):
         distance_data: dict[
@@ -651,40 +728,47 @@ class PlotView(QtWidgets.QDialog):
             self._ax_hist.set_yticklabels(custom_labels)
 
     # </editor-fold>
+    # def _on_move(self, event):
+    #     if event.inaxes:
+    #         print(f'data coords {event.xdata} {event.ydata},',
+    #               f'pixel coords {event.x} {event.y}')
 
     def on_canvas_click(self, event):
-        x_clicked, y_clicked = event.xdata, event.ydata
-        # Clear the previous clicked point
-        if self.clicked_point_scatter is not None:
-            try:
-                self.clicked_point_scatter.remove()
-            except Exception as e:
-                constants.PYSSA_LOGGER.warning(f"Something went wrong: {e}")
+        if event.button is MouseButton.LEFT:
+            x_clicked, y_clicked = event.xdata, event.ydata
+            # Clear the previous clicked point
+            if self.clicked_point_scatter is not None:
+                try:
+                    self.clicked_point_scatter.remove()
+                except Exception as e:
+                    constants.PYSSA_LOGGER.warning(f"Something went wrong: {e}")
 
-        # Find the nearest point on the line
-        distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
-        x_line = range(len(distance_data))
-        y_line = distance_data
-        distances = np.sqrt((x_line - x_clicked) ** 2 + (y_line - y_clicked) ** 2)
-        index_nearest = np.argmin(distances)
-        x_nearest, y_nearest = x_line[index_nearest], y_line[index_nearest]
-        self.clicked_point_scatter = self._ax_plot.scatter(x_nearest, y_nearest, color='red', marker='o', label='Clicked Point')
-        self.plot_widget.canvas.draw()
-        self.active_row_information = self.search_point_by_id(x_nearest)
-        if self.active_row_information is not None:
-            tmp_prot_1_name = self.protein_pair_for_analysis.protein_1.get_molecule_object()
-            tmp_prot_2_name = self.protein_pair_for_analysis.protein_2.get_molecule_object()
-            msg: str = (f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest} Between {tmp_prot_1_name} "
-                        f"Chain {self.active_row_information[1]} Position {self.active_row_information[2]} Residue {self.active_row_information[3]} and "
-                        f"{tmp_prot_2_name} Chain {self.active_row_information[4]} Position {self.active_row_information[5]} Residue {self.active_row_information[6]}")
-            self.lbl_status.setText(msg)
-            if self._sync_with_pymol_flag:
-                self.highlight_residue_in_pymol(x_nearest, tmp_prot_1_name)
-        else:
-            self.lbl_status.setText(f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest}")
-        # Change the selection color
-        self.change_selection_color(QtGui.QColor(75, 145, 247, 200))
-        self.highlight_histogram_bar(y_nearest)
+            # Find the nearest point on the line
+            distance_data = self.protein_pair_for_analysis.distance_analysis.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]
+            x_line = range(len(distance_data))
+            y_line = distance_data
+            distances = np.sqrt((x_line - x_clicked) ** 2 + (y_line - y_clicked) ** 2)
+            index_nearest = np.argmin(distances)
+            x_nearest, y_nearest = x_line[index_nearest], y_line[index_nearest]
+            self.clicked_point_scatter = self._ax_plot.scatter(x_nearest, y_nearest, color='red', marker='o', label='Clicked Point')
+            self.plot_widget_dplot.canvas.draw()
+            self.active_row_information = self.search_point_by_id(x_nearest)
+            if self.active_row_information is not None:
+                tmp_prot_1_name = self.protein_pair_for_analysis.protein_1.get_molecule_object()
+                tmp_prot_2_name = self.protein_pair_for_analysis.protein_2.get_molecule_object()
+                msg: str = (f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest} Between {tmp_prot_1_name} "
+                            f"Chain {self.active_row_information[1]} Position {self.active_row_information[2]} Residue {self.active_row_information[3]} and "
+                            f"{tmp_prot_2_name} Chain {self.active_row_information[4]} Position {self.active_row_information[5]} Residue {self.active_row_information[6]}")
+                self.lbl_status.setText(msg)
+                if self._sync_with_pymol_flag:
+                    self.highlight_residue_in_pymol(x_nearest, tmp_prot_1_name)
+            else:
+                self.lbl_status.setText(f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest}")
+            # Change the selection color
+            #self.change_selection_color(QtGui.QColor(75, 145, 247, 200))
+            self.highlight_histogram_bar(y_nearest)
+        elif event.button is MouseButton.RIGHT:
+            print("Open Context Menu ...")
 
     def change_selection_color(self, color):
         palette = self.table_view.palette()
@@ -776,24 +860,130 @@ class PlotView(QtWidgets.QDialog):
         cmd.zoom(tmp_pymol_selection.selection_string)
         cmd.show("sticks", tmp_pymol_selection.selection_string)
 
-    # <editor-fold desc="Experimental!">
+    # <editor-fold desc="Distance table related methods for show and hide colums">
+    def __action_hide_residue_pair_no(self):
+        self.table_view.hideColumn(0)
+
+    def __action_hide_protein_1_chain(self):
+        self.table_view.hideColumn(1)
+
+    def __action_hide_protein_1_position(self):
+        self.table_view.hideColumn(2)
+
+    def __action_hide_protein_1_residue(self):
+        self.table_view.hideColumn(3)
+
+    def __action_hide_protein_2_chain(self):
+        self.table_view.hideColumn(4)
+
+    def __action_hide_protein_2_position(self):
+        self.table_view.hideColumn(5)
+
+    def __action_hide_protein_2_residue(self):
+        self.table_view.hideColumn(6)
+
+    def __action_hide_distances(self):
+        self.table_view.hideColumn(7)
+
+    def __action_show_residue_pair_no(self):
+        self.table_view.showColumn(0)
+
+    def __action_show_protein_1_chain(self):
+        self.table_view.showColumn(1)
+
+    def __action_show_protein_1_position(self):
+        self.table_view.showColumn(2)
+
+    def __action_show_protein_1_residue(self):
+        self.table_view.showColumn(3)
+
+    def __action_show_protein_2_chain(self):
+        self.table_view.showColumn(4)
+
+    def __action_show_protein_2_position(self):
+        self.table_view.showColumn(5)
+
+    def __action_show_protein_2_residue(self):
+        self.table_view.showColumn(6)
+
+    def __action_show_distances(self):
+        self.table_view.showColumn(7)
+
+    def __action_show_all_columns(self):
+        self.table_view.showColumn(0)
+        self.table_view.showColumn(1)
+        self.table_view.showColumn(2)
+        self.table_view.showColumn(3)
+        self.table_view.showColumn(4)
+        self.table_view.showColumn(5)
+        self.table_view.showColumn(6)
+        self.table_view.showColumn(7)
+    # </editor-fold>
+
+    def __slot_open_context_menu_for_histogram(self):
+        pass
+
     def setup_context_menu(self) -> None:
         self.context_menu = QtWidgets.QMenu()
-        self.hide_action = self.context_menu.addAction(self.tr("Hide Column"))
-        self.hide_residue_pair_no_action = QtWidgets.QAction(self.tr("Hide Residue Pair No."))
-        self.context_menu.insertAction(self.hide_action, self.hide_residue_pair_no_action)
-        self.hide_residue_pair_no_action.triggered.connect(self._hide_residue_pair_no_column)
+        self.hide_selected_column = QtWidgets.QAction(self.tr("Hide Column"))
+        self.context_menu.addAction(self.hide_selected_column)
+        self.hide_selected_column.triggered.connect(self._hide_selected_column)
 
         # Set the context menu for the buttons
         self.table_view.setContextMenuPolicy(3)
         self.table_view.customContextMenuRequested.connect(self._show_context_menu_for_seq_list)
-    
+
+        # <editor-fold desc="Context menu setup for histogram">
+        # for matplotlib histogram
+        self.context_menu_hist = QtWidgets.QMenu()
+        self.properties_hist = QtWidgets.QAction(self.tr("Properties"))
+        self.context_menu_hist.addAction(self.properties_hist)
+        self.properties_hist.triggered.connect(self._open_properties_view)
+
+        self.properties_hist_restore = QtWidgets.QAction(self.tr("Restore Defaults"))
+        self.context_menu_hist.addAction(self.properties_hist_restore)
+        self.properties_hist_restore.triggered.connect(self._restore_default_histogram_properties)
+
+        # Set the context menu for the buttons
+        self.plot_widget_dhistogram.setContextMenuPolicy(3)
+        self.plot_widget_dhistogram.customContextMenuRequested.connect(self._show_context_menu_for_histogram)
+        # </editor-fold>
+
     def _show_context_menu_for_seq_list(self, a_point):
-        self.hide_residue_pair_no_action.triggered.disconnect()
-        self.hide_residue_pair_no_action.triggered.connect(self._hide_residue_pair_no_column)
+        self.hide_selected_column.triggered.disconnect()
+        self.hide_selected_column.triggered.connect(self._hide_selected_column)
         self.context_menu.exec_(self.table_view.mapToGlobal(a_point))
 
-    def _hide_residue_pair_no_column(self):
-        print("Worked.")
+    def _show_context_menu_for_histogram(self, a_point):
+        self.properties_hist.triggered.disconnect()
+        self.properties_hist.triggered.connect(self._open_properties_view)
+        self.properties_hist_restore.triggered.disconnect()
+        self.properties_hist_restore.triggered.connect(self._restore_default_histogram_properties)
+        # add here more action connections
+        self.context_menu_hist.exec_(self.plot_widget_dhistogram.mapToGlobal(a_point))
 
-    # </editor-fold>
+    def _open_properties_view(self):
+        # self.properties_view =
+        self._histogram_properties_view = histogram_properties_view.HistogramPropertiesView(self._histogram_properties)
+        self._histogram_properties_view.new_properties.connect(self.post_open_properties_view)
+        self._histogram_properties_view.show()
+
+    def post_open_properties_view(self, new_properties: tuple):
+        tmp_current_x_axis_units = self._histogram_properties[enums.HistogramPropertiesEnum.X_AXIS_UNITS]
+        tmp_current_distance_interval = self._histogram_properties[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL]
+        tmp_x_axis_units = int(new_properties[0])
+        tmp_distance_interval = float(new_properties[1])
+        if tmp_current_x_axis_units != tmp_x_axis_units or tmp_current_distance_interval != tmp_distance_interval:
+            # at least one property changed
+            self._histogram_properties[enums.HistogramPropertiesEnum.X_AXIS_UNITS] = tmp_x_axis_units
+            self._histogram_properties[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL] = tmp_distance_interval
+
+            self.actual_resize()
+
+    def _restore_default_histogram_properties(self):
+        self._histogram_properties[enums.HistogramPropertiesEnum.X_AXIS_UNITS] = constants.DEFAULT_HISTOGRAM_PROPERTIES[enums.HistogramPropertiesEnum.X_AXIS_UNITS]
+        self._histogram_properties[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL] = constants.DEFAULT_HISTOGRAM_PROPERTIES[enums.HistogramPropertiesEnum.DISTANCE_INTERVAL]
+        self.actual_resize()
+
+    def _hide_selected_column(self):
+        self.table_view.hideColumn(self.table_view.currentIndex().column())
