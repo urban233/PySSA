@@ -82,6 +82,9 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.action_simple_image.setEnabled(False)
         self.ui.action_protein_regions.setEnabled(False)
 
+        # fixme: the tutorial action of the menubar IS HIDDEN!!!
+        self.ui.action_tutorials.setVisible(False)
+
         # Sequences tab
         self.ui.btn_save_sequence.setEnabled(False)
         self.ui.btn_delete_sequence.setEnabled(False)
