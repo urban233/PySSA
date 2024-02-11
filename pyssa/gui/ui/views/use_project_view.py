@@ -44,6 +44,7 @@ class UseProjectView(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self._initialize_ui()
         self.resize(450, 600)
+        self.setModal(True)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
@@ -58,4 +59,3 @@ class UseProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Use Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setModal(True)

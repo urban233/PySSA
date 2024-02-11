@@ -64,6 +64,7 @@ class RenameProteinView(QtWidgets.QDialog):
         styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("Rename selected protein structure")
+        self.setModal(True)
 
     def closeEvent(self, event):
         # Emit the custom signal when the window is closed

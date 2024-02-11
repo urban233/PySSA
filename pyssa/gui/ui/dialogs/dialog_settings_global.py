@@ -112,6 +112,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.setMinimumWidth(450)
         self.resize(450, 450)
         styles.set_stylesheet(self)
+        styles.color_bottom_frame_button(self.ui.btn_ok)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Global Settings")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)

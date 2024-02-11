@@ -816,3 +816,41 @@ def create_drawn_image(an_image_filepath: str, the_app_settings: "settings.Setti
         logger.warning("Unexpected exception.")
     cmd.bg_color("black")
     return 0, ""
+
+
+def load_protein_pymol_session(a_protein, the_pymol_session_manager, needs_to_be_reinitialized_flag: bool = False) -> tuple:
+    if needs_to_be_reinitialized_flag:
+        logger.info("The current session is not empty. Reinitialize session now ...")
+        the_pymol_session_manager.reinitialize_session()
+        logger.info("Reinitializing session finished.")
+    try:
+        logger.info(f"Loading session of {a_protein.get_molecule_object()}")
+        the_pymol_session_manager.load_protein_session(a_protein)
+    except RuntimeError:
+        logger.error("Loading the session failed due to a RuntimeError!")
+        return 0, False
+    except Exception as e:
+        logger.error(f"Loading the session failed because this error was raised: {e}")
+        return 0, False
+    else:
+        logger.info("Loading the session finished without errors.")
+        return 0, True
+
+
+def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, needs_to_be_reinitialized_flag: bool = False) -> tuple:
+    if needs_to_be_reinitialized_flag:
+        logger.info("The current session is not empty. Reinitialize session now ...")
+        the_pymol_session_manager.reinitialize_session()
+        logger.info("Reinitializing session finished.")
+    try:
+        logger.info(f"Loading session of {a_protein_pair.name}")
+        the_pymol_session_manager.load_protein_pair_session(a_protein_pair)
+    except RuntimeError:
+        logger.error("Loading the session failed due to a RuntimeError!")
+        return 0, False
+    except Exception as e:
+        logger.error(f"Loading the session failed because this error was raised: {e}")
+        return 0, False
+    else:
+        logger.info("Loading the session finished without errors.")
+        return 0, True

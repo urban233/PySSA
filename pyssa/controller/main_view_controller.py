@@ -343,12 +343,12 @@ class MainViewController:
         self._view.wait_spinner.stop()
 
     def _create_project(self) -> None:
-        self._interface_manager.start_wait_spinner()
         self._external_controller = create_project_view_controller.CreateProjectViewController(self._interface_manager)
         self._external_controller.user_input.connect(self._post_create_project)
         self._interface_manager.get_create_view().show()
 
     def _post_create_project(self, user_input: tuple) -> None:
+        self._interface_manager.start_wait_spinner()
         tmp_project_name, tmp_protein_name = user_input
         tmp_project_database_filepath = str(
             pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
@@ -418,7 +418,6 @@ class MainViewController:
         self._interface_manager.stop_wait_spinner()
 
     def _open_project(self) -> None:
-        self._interface_manager.start_wait_spinner()
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
         self._external_controller.return_value.connect(self._post_open_project)
         self._interface_manager.get_open_view().show()
@@ -447,7 +446,6 @@ class MainViewController:
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
-        self._interface_manager.stop_wait_spinner()
         self._interface_manager.update_status_bar("Opening existing project finished.")
         # tmp_filepath = pathlib.Path(f"{return_value}.xml")
         #
@@ -468,6 +466,7 @@ class MainViewController:
         self._interface_manager.get_use_project_view().show()
 
     def _post_use_project(self, user_input: tuple) -> None:
+        self._interface_manager.start_wait_spinner()
         tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
         with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
             db_manager.build_new_database()
@@ -1700,21 +1699,31 @@ class MainViewController:
             self._view.ui.action_protein_regions.setEnabled(False)
 
     def _open_protein_pymol_session(self):
-        if not self._pymol_session_manager.is_the_current_session_empty():
-            logger.info("The current session is not empty. Reinitialize session now ...")
-            self._pymol_session_manager.reinitialize_session()
-            logger.info("Reinitializing session finished.")
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
-        try:
-            self._pymol_session_manager.load_protein_session(tmp_protein)
-            self._view.ui.action_protein_regions.setEnabled(False)
-        except RuntimeError:
-            logger.error("The protein name could not be found in the object list in PyMOL!")
-            self._view.cb_chain_color.setEnabled(False)
-            self._view.cb_chain_representation.setEnabled(False)
-            self._view.ui.btn_create_protein_scene.setEnabled(False)
-            self._view.ui.btn_update_protein_scene.setEnabled(False)
-        else:
+        # fixme: I am no sure if the code below is needed
+        # if not self._pymol_session_manager.is_the_current_session_empty():
+        #     tmp_flag = True  # Session is NOT empty and needs reinitialization
+        # else:
+        #     tmp_flag = False  # Session is empty
+
+        tmp_flag = False
+        self._active_task = tasks.Task(
+            target=main_presenter_async.load_protein_pymol_session,
+            args=(
+                tmp_protein,
+                self._pymol_session_manager,
+                tmp_flag
+            ),
+            post_func=self.__await_open_protein_pymol_session,
+        )
+        self._active_task.start()
+        self._interface_manager.start_wait_spinner()
+        self._interface_manager.update_status_bar(f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...")
+
+    def __await_open_protein_pymol_session(self, return_value: tuple):
+        _, exit_boolean = return_value
+        self._view.ui.action_protein_regions.setEnabled(False)
+        if exit_boolean:
             self._view.cb_chain_color.setEnabled(True)
             self._view.cb_chain_representation.setEnabled(True)
             self._view.ui.action_protein_regions.setEnabled(True)
@@ -1722,6 +1731,15 @@ class MainViewController:
             self._view.ui.btn_update_protein_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             logger.info("Successfully opened protein session.")
+            self._interface_manager.update_status_bar("Loading the PyMOL session was successful.")
+        else:
+            logger.error("The protein name could not be found in the object list in PyMOL!")
+            self._view.cb_chain_color.setEnabled(False)
+            self._view.cb_chain_representation.setEnabled(False)
+            self._view.ui.btn_create_protein_scene.setEnabled(False)
+            self._view.ui.btn_update_protein_scene.setEnabled(False)
+            self._interface_manager.update_status_bar("Loading the PyMOL session failed! Check out the log file to get more information.")
+        self._interface_manager.stop_wait_spinner()
 
     def _change_chain_color_proteins(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -1796,6 +1814,7 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def _import_protein_structure(self):
+        self._interface_manager.start_wait_spinner()
         self._interface_manager.get_add_protein_view().restore_ui_defaults()
         self._interface_manager.get_add_protein_view().show()
 
@@ -1835,6 +1854,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
+        self._interface_manager.stop_wait_spinner()
 
     def _delete_protein(self):
         response: bool = gui_utils.warning_message_protein_gets_deleted()
@@ -1852,7 +1872,6 @@ class MainViewController:
 
     def _save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
-        self._view.wait_spinner.start()
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -1874,11 +1893,11 @@ class MainViewController:
                 post_func=self.__await_save_selected_protein_structure_as_pdb_file,
             )
             self._active_task.start()
+            self._interface_manager.start_wait_spinner()
         else:
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
 
     def __await_save_selected_protein_structure_as_pdb_file(self, result: tuple) -> None:
-        self._view.wait_spinner.stop()
         if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             basic_boxes.ok(
                 "Save protein structure",
@@ -1899,10 +1918,10 @@ class MainViewController:
             )
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
+        self._interface_manager.stop_wait_spinner()
 
     def clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
-        self._view.wait_spinner.start()
         if basic_boxes.yes_or_no(
             "Clean protein",
             "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!",
@@ -1918,17 +1937,17 @@ class MainViewController:
                 post_func=self.__await_clean_protein_update,
             )
             self._active_task.start()
+            self._interface_manager.start_wait_spinner()
             self.update_status("Cleaning protein ...")
         else:
             constants.PYSSA_LOGGER.info("No protein has been cleaned.")
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
 
     def __await_clean_protein_update(self) -> None:
-        self._view.wait_spinner.stop()
+        self._interface_manager.stop_wait_spinner()
 
     def rename_selected_protein_structure(self) -> None:
         """Opens a new view to rename the selected protein."""
-        self._view.wait_spinner.start()
         self._external_controller = rename_protein_view_controller.RenameProteinViewController(self._interface_manager)
         self._external_controller.user_input.connect(self.post_rename_selected_protein_structure)
         self._interface_manager.get_rename_protein_view().show()
@@ -1946,8 +1965,9 @@ class MainViewController:
                 post_func=self.__await_post_rename_selected_protein_structure,
             )
             self._active_task.start()
+            self._interface_manager.start_wait_spinner()
         else:
-            self._view.wait_spinner.stop()
+            self._interface_manager.start_wait_spinner()
 
     def __await_post_rename_selected_protein_structure(self, result: tuple) -> None:
         self._view.ui.proteins_tree_view.model().setData(
@@ -1966,7 +1986,7 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
-        self._view.wait_spinner.stop()
+        self._interface_manager.start_wait_spinner()
 
     def _show_protein_chain_sequence(self) -> None:
         self.tmp_txt_browser = QtWidgets.QTextBrowser()
@@ -2051,26 +2071,43 @@ class MainViewController:
 
     def _open_protein_pair_pymol_session(self):
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
-        self._pymol_session_manager.load_protein_pair_session(tmp_protein_pair)
-        # self._interface_manager.set_new_session_information(tmp_protein_pair.name, "protein_pair")
-        # tmp_protein_pair.load_pymol_session()
-        try:
-            self._pymol_session_manager.load_protein_pair_session(tmp_protein_pair)
-            self._view.ui.action_protein_regions.setEnabled(False)
-        except RuntimeError:
-            logger.error("The protein pair name could not be found in the object list in PyMOL!")
-            self._view.cb_chain_color.setEnabled(False)
-            self._view.cb_chain_representation.setEnabled(False)
-            self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
-            self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
-        else:
-            self._view.cb_chain_color.setEnabled(True)
-            self._view.cb_chain_representation.setEnabled(True)
+        # fixme: I am no sure if the code below is needed
+        # if not self._pymol_session_manager.is_the_current_session_empty():
+        #     tmp_flag = True  # Session is NOT empty and needs reinitialization
+        # else:
+        #     tmp_flag = False  # Session is empty
+
+        tmp_flag = False
+        self._active_task = tasks.Task(
+            target=main_presenter_async.load_protein_pair_pymol_session,
+            args=(
+                tmp_protein_pair,
+                self._pymol_session_manager,
+                tmp_flag
+            ),
+            post_func=self.__await_open_protein_pair_pymol_session,
+        )
+        self._active_task.start()
+        self._interface_manager.start_wait_spinner()
+        self._interface_manager.update_status_bar(f"Loading PyMOL session of {tmp_protein_pair.name} ...")
+
+    def __await_open_protein_pair_pymol_session(self, return_value: tuple):
+        _, exit_boolean = return_value
+        self._view.ui.action_protein_regions.setEnabled(False)
+        if exit_boolean:
             self._view.ui.action_protein_regions.setEnabled(True)
             self._view.ui.btn_create_protein_pair_scene.setEnabled(True)
             self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             logger.info("Successfully opened protein pair session.")
+            self._interface_manager.update_status_bar("Loading the PyMOL session was successful.")
+        else:
+            logger.error("The protein name could not be found in the object list in PyMOL!")
+            self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
+            self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
+            self._interface_manager.update_status_bar(
+                "Loading the PyMOL session failed! Check out the log file to get more information.")
+        self._interface_manager.stop_wait_spinner()
 
     def _change_chain_color_protein_pairs(self) -> None:
         tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()

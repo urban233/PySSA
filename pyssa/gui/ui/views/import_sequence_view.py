@@ -61,7 +61,7 @@ class ImportSequenceView(QtWidgets.QDialog):
         #self.ui.txt_import_sequence.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
         self.ui.btn_choose_fasta_file.setToolTip("Click to add a .pdb file")
-        self.setWindowTitle("Add an existing protein to the current project")
+        self.setWindowTitle("Import Protein Sequence")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
@@ -69,6 +69,7 @@ class ImportSequenceView(QtWidgets.QDialog):
         self.ui.btn_help.setText("")
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self.setModal(True)
         # # check internet connectivity
         # if not tools.check_internet_connectivity():
         #     gui_utils.no_internet_dialog_with_custom_msg(

@@ -69,6 +69,7 @@ class PredictMultimerView(QtWidgets.QDialog):
         )
         self.ui.tabWidget_2.setTabEnabled(1, False)
         self._initialize_ui()
+        self.setModal(True)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""

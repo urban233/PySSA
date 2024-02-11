@@ -69,6 +69,7 @@ class PredictMonomerView(QtWidgets.QDialog):
         )
         self.ui.tabWidget.setTabEnabled(1, False)
         self._initialize_ui()
+        self.setModal(True)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
