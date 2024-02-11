@@ -55,6 +55,7 @@ class ImportSequenceView(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.ui.btn_import_sequence.setEnabled(False)
         self.ui.txt_import_sequence.setEnabled(False)
+        styles.color_bottom_frame_button(self.ui.btn_import_sequence)
         self.ui.btn_choose_fasta_file.clicked.connect(self.load_model)
         self.ui.btn_import_sequence.clicked.connect(self.import_sequence)
         #self.ui.txt_import_sequence.textChanged.connect(self.validate_reference_in_project)

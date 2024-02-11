@@ -72,6 +72,7 @@ class DistanceAnalysisView(QtWidgets.QDialog):
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
+        styles.color_bottom_frame_button(self.ui.btn_distance_analysis_start)
         styles.set_stylesheet(self)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Distance Analysis")

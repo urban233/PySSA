@@ -72,3 +72,4 @@ class AddSequenceView(QtWidgets.QDialog):
         self.ui.le_protein_seq.hide()
         self.ui.btn_back.hide()
         self.ui.btn_add.setEnabled(False)
+        styles.color_bottom_frame_button(self.ui.btn_add)

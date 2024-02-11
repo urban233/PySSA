@@ -48,6 +48,7 @@ class UseProjectView(QtWidgets.QDialog):
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
         self.ui.lbl_use_status_search.setText("")
+        styles.color_bottom_frame_button(self.ui.btn_use_create_new_project)
         self.ui.list_use_existing_projects.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))

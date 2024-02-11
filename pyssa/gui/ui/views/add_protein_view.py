@@ -58,6 +58,7 @@ class AddProteinView(QtWidgets.QDialog):
         self.ui.btn_add_protein.clicked.connect(self.add_model)
         self.ui.txt_add_protein.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
+        styles.color_bottom_frame_button(self.ui.btn_add_protein)
         self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
