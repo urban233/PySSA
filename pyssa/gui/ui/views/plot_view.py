@@ -64,6 +64,9 @@ class PlotWidget(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
+    def set_figure_size(self, width: float, height: float):
+        self.figure.set_size_inches(width, height)
+
 
 class PlotView(QtWidgets.QDialog):
     def __init__(self, protein_pair_from_project: "protein_pair.ProteinPair", a_project, the_protein_pair,
@@ -294,17 +297,7 @@ class PlotView(QtWidgets.QDialog):
         #             self.toolbar.removeAction(action)
 
         # <editor-fold desc="Set layouts">
-        # self.main_Layout = QtWidgets.QVBoxLayout()
-        # self.main_Layout.addWidget(self.scroll_area)
-        # self.main_Layout.addWidget(self.lbl_status)
-        # self.scroll_area_layout = QtWidgets.QHBoxLayout()
-        # self.scroll_area_layout.addWidget(self.plot_widget)
-        # self.table_view = QtWidgets.QTableView()
-        # self.table_view.setMinimumWidth(450)
-        # self.scroll_area_layout.addWidget(self.table_view)
-        # self.scroll_area.setLayout(self.scroll_area_layout)
-        # self.main_Layout.setMenuBar(self.menubar)
-        # self.setLayout(self.main_Layout)
+        self.scroll_area.setWidget(self.plot_widget_dhistogram)
 
         # Create labels
         self.lbl_status1 = QtWidgets.QLabel(f"Protein 1: {self.protein_pair_for_analysis.protein_1.get_molecule_object()}")
@@ -369,11 +362,10 @@ class PlotView(QtWidgets.QDialog):
         # Left part of the plot area
         self.horizontal_splitter.addWidget(self.plot_widget_dplot)
         # Right part of the plot area
-        self.horizontal_splitter.addWidget(self.plot_widget_dhistogram)
+        self.horizontal_splitter.addWidget(self.scroll_area)
         self.horizontal_splitter.setOrientation(0)  # Set orientation to horizontal
 
         self.vertical_splitter.setCollapsible(0, False)
-        self.plot_widget_dplot.setMinimumWidth(200)
         self.main_layout.setMenuBar(self.menubar)
         self.main_layout.addWidget(self.lbl_status)
         self.setLayout(self.main_layout)
@@ -532,6 +524,13 @@ class PlotView(QtWidgets.QDialog):
         self.plot_widget_dplot.figure.clear()
         self.plot_widget_dhistogram.figure.clear()
         if self.action_plot.isChecked() and self.action_histogram.isChecked():
+            print(self.scroll_area.size())
+            print(self.scroll_area.width() / 100)
+            tmp_histogram_width = self.scroll_area.width() - 20
+            tmp_histogram_height = ((5/6) * len(self.bars)) * 100
+            self.plot_widget_dhistogram.resize(tmp_histogram_width, tmp_histogram_height)
+            self.plot_widget_dhistogram.set_figure_size(tmp_histogram_width / 100, tmp_histogram_height/ 100)
+
             self.plot_widget_dplot.show()
             self.plot_widget_dhistogram.show()
 
@@ -684,8 +683,28 @@ class PlotView(QtWidgets.QDialog):
                 self.bins_without_zeros.append(bin_edges[i])
                 self.bins_without_zeros_label.append(f"[{tmp_str_bin},{tmp_str_bin_2}]")
 
-        self.bars = self._ax_hist.barh(self.bins_without_zeros_label, self.freqs_without_zeros, color="#367AF6")
+        self.bars = self._ax_hist.barh(self.bins_without_zeros_label,
+                                       self.freqs_without_zeros,
+                                       color="#367AF6",
+                                       height=0.6)
         self._ax_hist.bar_label(self.bars, padding=4)
+
+        # bar_width = 1.0 / (num_bars + 1)  # Adjusting bar width based on number of bars
+        #
+        # fig_width = max(10, 2 * num_bars)  # Minimum figure width to ensure bars are visible
+        # fig_height = 6  # Adjust this as needed
+        #
+        # fig, ax = plt.subplots(figsize=(fig_width, fig_height))  # Adjust figure size
+        #
+        # # Calculate x positions for bars
+        # x_positions = [i * (1 + bar_width) for i in range(num_bars)]
+        #
+        # # Plot bars
+        # ax.bar(x_positions, data, width=bar_width)
+        #
+        # ax.set_xticks([i + 0.5 * bar_width for i in x_positions])  # Adjusting x ticks position
+        #
+        # plt.show()
 
     def create_distance_histogram_old(self):
         distance_data: dict[

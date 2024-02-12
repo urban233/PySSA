@@ -46,68 +46,30 @@
 #     dialog.show()
 #     sys.exit(app.exec_())
 
-import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QVBoxLayout, QWidget
-from PyQt5.QtCore import QTimer, Qt
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-import threading
-
-class PlotThread(threading.Thread):
-    def __init__(self, parent, width, height):
-        super().__init__()
-        self.parent = parent
-        self.width = width
-        self.height = height
-
-    def run(self):
-        aspect_ratio = self.parent.ax.get_aspect()
-        aspect_ratio = float(aspect_ratio)  # Convert to float
-        if self.width / self.height > aspect_ratio:
-            new_width = self.height * aspect_ratio
-            new_height = self.height
-        else:
-            new_width = self.width
-            new_height = self.width / aspect_ratio
-        self.parent.figure.set_size_inches(new_width / self.parent.figure.dpi,
-                                           new_height / self.parent.figure.dpi)
-        self.parent.canvas.draw()
-
-class MyMainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-
-        self.central_widget = QWidget()
-        self.setCentralWidget(self.central_widget)
-        self.layout = QVBoxLayout(self.central_widget)
-
-        self.figure, self.ax = plt.subplots()
-        self.canvas = FigureCanvas(self.figure)
-        self.layout.addWidget(self.canvas)
-
-        self.aspect_ratio = self.ax.get_aspect()
-        self.aspect_ratio = float(self.aspect_ratio)  # Convert to float
-
-        self.resize_timer = QTimer(self)
-        self.resize_timer.setInterval(500)  # Delay in milliseconds
-        self.resize_timer.setSingleShot(True)
-        self.resize_timer.timeout.connect(self.delayed_resize)
-
-    def delayed_resize(self):
-        width = self.centralWidget().width()
-        height = self.centralWidget().height()
-        plot_thread = PlotThread(self, width, height)
-        plot_thread.start()
-
-    def resizeEvent(self, event):
-        self.resize_timer.start()
-        super().resizeEvent(event)
+import numpy as np
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    mainWindow = MyMainWindow()
-    mainWindow.setGeometry(100, 100, 800, 600)
-    mainWindow.show()
-    sys.exit(app.exec_())
+def decreased_space_bar_chart(data):
+    num_bars = len(data)
+    bar_width = 2 / (num_bars + 1)  # Adjusting bar width to decrease space between bars
 
+    fig, ax = plt.subplots()
+
+    # Calculate x positions for bars
+    x_positions = [i * (1 + bar_width) for i in range(num_bars)]
+
+    # Plot bars
+    ax.bar(x_positions, data, width=bar_width)
+
+    ax.set_xticks([i + 0.1 * bar_width for i in x_positions])  # Adjusting x ticks position
+
+    plt.show()
+
+
+if __name__ == "__main__":
+    # Example data
+    data = np.random.randint(1, 10, size=5)
+
+    # Generate bar chart with decreased space between bars
+    decreased_space_bar_chart(data)

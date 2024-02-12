@@ -215,7 +215,7 @@ class MainView(QtWidgets.QMainWindow):
         self._create_all_tooltips()
         pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
         # Resize the pixmap
-        pixmap = QtGui.QPixmap(r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\images\splash_screen_logo_002.png")
+        pixmap = QtGui.QPixmap(r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\images\logo_type_2.tiff")
         scaled_pixmap = pixmap.scaled(700, 700, aspectRatioMode=Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
         # Set the scaled pixmap to the QLabel
         self.ui.lbl_logo.setPixmap(scaled_pixmap)
