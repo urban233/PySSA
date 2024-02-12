@@ -160,6 +160,10 @@ QMenuBar::item:selected {
     background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #E8E8E8, stop:1 #DBDBDB);;
 }
 
+QMenuBar::item:!enabled {
+    color: #9e9c9a;
+}
+
 QMenu {
     background-color: white;
     margin: 2px; /* some spacing around the menu */

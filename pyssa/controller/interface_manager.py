@@ -309,6 +309,7 @@ class InterfaceManager:
             self._main_view.ui.lbl_project_name.setText(f"Project Name: {self._current_project.get_project_name()}")
             self._main_view.ui.lbl_session_name.show()
             self._main_view.ui.project_tab_widget.show()
+            # project
             self._main_view.ui.action_new_project.setEnabled(False)
             self._main_view.ui.action_open_project.setEnabled(False)
             self._main_view.ui.action_use_project.setEnabled(True)
@@ -316,20 +317,40 @@ class InterfaceManager:
             self._main_view.ui.action_import_project.setEnabled(False)
             self._main_view.ui.action_export_project.setEnabled(True)
             self._main_view.ui.action_close_project.setEnabled(True)
+            # prediction
+            self._main_view.ui.menuPrediction.setEnabled(True)
             self._main_view.ui.action_predict_monomer.setEnabled(True)
             self._main_view.ui.action_predict_multimer.setEnabled(True)
+            # analysis
+            self._main_view.ui.menuAnalysis.setEnabled(True)
             self._main_view.ui.action_distance_analysis.setEnabled(True)
+            # results
+            self._main_view.ui.menuResults.setEnabled(True)
+            # image
+            self._main_view.ui.menuImage.setEnabled(True)
             self._main_view.ui.action_preview_image.setEnabled(True)
             self._main_view.ui.action_ray_tracing_image.setEnabled(True)
             self._main_view.ui.action_simple_image.setEnabled(True)
+            # hotspots
+            self._main_view.ui.menuHotspots.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(False)
-            self._main_view.ui.action_get_demo_projects.setEnabled(False)
+            # settings
+            self._main_view.ui.action_edit_settings.setEnabled(True)
+            self._main_view.ui.action_restore_settings.setEnabled(True)
+            # help
+            self._main_view.ui.action_documentation.setEnabled(True)
+            self._main_view.ui.action_get_demo_projects.setEnabled(True)
+            self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
+            self._main_view.ui.action_clear_logs.setEnabled(True)
+            self._main_view.ui.action_about.setEnabled(True)
+
             self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
         else:
             # No project is open
             self._main_view.ui.lbl_project_name.hide()
             self._main_view.ui.project_tab_widget.hide()
             self._main_view.ui.lbl_logo.show()
+            # project
             self._main_view.ui.action_new_project.setEnabled(True)
             self._main_view.ui.action_open_project.setEnabled(True)
             self._main_view.ui.action_use_project.setEnabled(False)
@@ -337,11 +358,33 @@ class InterfaceManager:
             self._main_view.ui.action_import_project.setEnabled(True)
             self._main_view.ui.action_export_project.setEnabled(False)
             self._main_view.ui.action_close_project.setEnabled(False)
+            # prediction
+            self._main_view.ui.menuPrediction.setEnabled(False)
+            self._main_view.ui.action_predict_monomer.setEnabled(False)
+            self._main_view.ui.action_predict_multimer.setEnabled(False)
+            # analysis
+            self._main_view.ui.menuAnalysis.setEnabled(False)
+            self._main_view.ui.action_distance_analysis.setEnabled(False)
+            # results
+            self._main_view.ui.menuResults.setEnabled(False)
+            self._main_view.ui.action_results_summary.setEnabled(False)
+            # image
+            self._main_view.ui.menuImage.setEnabled(False)
             self._main_view.ui.action_preview_image.setEnabled(False)
             self._main_view.ui.action_ray_tracing_image.setEnabled(False)
             self._main_view.ui.action_simple_image.setEnabled(False)
+            # hotspots
+            self._main_view.ui.menuHotspots.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
+            # settings
+            self._main_view.ui.action_edit_settings.setEnabled(True)
+            self._main_view.ui.action_restore_settings.setEnabled(True)
+            # help
+            self._main_view.ui.action_documentation.setEnabled(True)
             self._main_view.ui.action_get_demo_projects.setEnabled(True)
+            self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
+            self._main_view.ui.action_clear_logs.setEnabled(True)
+            self._main_view.ui.action_about.setEnabled(True)
 
         if len(self._current_project.sequences) > 0:
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)

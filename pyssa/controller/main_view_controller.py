@@ -127,6 +127,7 @@ class MainViewController:
         self._setup_statusbar()
         self._connect_all_ui_elements_with_slot_functions()
         self._init_context_menus()
+        self._interface_manager.refresh_main_view()
 
     def _connect_all_ui_elements_with_slot_functions(self):
         # menu
