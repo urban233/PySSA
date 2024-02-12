@@ -276,30 +276,30 @@ class MainView(QtWidgets.QMainWindow):
         """Creates all tooltips for the gui elements."""
         # self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
         self.ui.seqs_table_widget.setToolTip("A table with additional information about the selected sequence")
-        self.ui.btn_import_seq.setToolTip("Click to import an existing .fasta file")
-        self.ui.btn_add_sequence.setToolTip("Click to add a sequence by pasting the sequence string")
-        self.ui.btn_save_sequence.setToolTip("Click to save the selected sequence as .fasta file")
-        self.ui.btn_delete_sequence.setToolTip("Click to delete the selected sequence from the project")
+        self.ui.btn_import_seq.setToolTip("Import an existing .fasta file")
+        self.ui.btn_add_sequence.setToolTip("Add a sequence by pasting the sequence string")
+        self.ui.btn_save_sequence.setToolTip("Save the selected sequence as .fasta file")
+        self.ui.btn_delete_sequence.setToolTip("Delete the selected sequence from the project")
 
         # self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
         # self.ui.proteins_table_widget.setToolTip(
         #     "A table with changeable PyMOL parameters for the currently active session"
         # )
-        self.ui.btn_import_protein.setToolTip("Click to import an existing .pdb file")
-        self.ui.btn_save_protein.setToolTip("Click to save the selected protein as .pdb file")
-        self.ui.btn_delete_protein.setToolTip("Click to delete the selected protein from the project")
-        self.ui.btn_open_protein_session.setToolTip("Click to open protein PyMOL session")
-        self.ui.btn_create_protein_scene.setToolTip("Click to create a new PyMOL scene")
-        self.ui.btn_update_protein_scene.setToolTip("Click to update the current scene in PyMOL")
+        self.ui.btn_import_protein.setToolTip("Import an existing .pdb file")
+        self.ui.btn_save_protein.setToolTip("Save the selected protein as .pdb file")
+        self.ui.btn_delete_protein.setToolTip("Delete the selected protein from the project")
+        self.ui.btn_open_protein_session.setToolTip("Open protein PyMOL session")
+        self.ui.btn_create_protein_scene.setToolTip("Create a new PyMOL scene")
+        self.ui.btn_update_protein_scene.setToolTip("Update the current scene in PyMOL")
 
         # self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
         # self.ui.protein_pairs_table_widget.setToolTip(
         #     "A table with changeable PyMOL parameters for the currently active session"
         # )
-        self.ui.btn_delete_protein_pair.setToolTip("Click to delete the selected protein pair from the project")
-        self.ui.btn_open_protein_pair_session.setToolTip("Click to open protein pair PyMOL session")
-        self.ui.btn_create_protein_pair_scene.setToolTip("Click to create a new PyMOL scene")
-        self.ui.btn_update_protein_pair_scene.setToolTip("Click to update the current scene in PyMOL")
+        self.ui.btn_delete_protein_pair.setToolTip("Delete the selected protein pair from the project")
+        self.ui.btn_open_protein_pair_session.setToolTip("Open protein pair PyMOL session")
+        self.ui.btn_create_protein_pair_scene.setToolTip("Create a new PyMOL scene")
+        self.ui.btn_update_protein_pair_scene.setToolTip("Update the current scene in PyMOL")
 
     #     self.status_bar.setToolTip("Status information: Current process")
     #     # new project page
