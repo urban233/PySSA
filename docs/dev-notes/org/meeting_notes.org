@@ -1,24 +1,21 @@
 #+TITLE: Color Scheme
-#+AUTHOR: HK
+#+AUTHOR: HK & MU
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
 
 * Meeting
-** Hompage
-- disable/hide options without usage
-
 ** Hompage -> finished
   - disable/ hide options without usage
 
 ** Results -> M (+ -> completed)
-  - more visible color for bar chars to change the size
-  - scroll bar for histogram
+  + more visible color for bar chars to change the size
+  + scroll bar for histogram
   + table: hide/show all columns "abheben" from selection
-  - set minimum -> histogram
-  - Color Protein Pair -> directly way (but keep in results too)
-    - extra context menu?
+  - make histogram that is always pretty at DDV startup
+  + Color Protein Pair -> directly way (but keep in results too)
+    + extra context menu?
     
-** Documentation -> M
-  - when PySSA gets run -> open documentation in other thread
+** Documentation -> M (+ -> completed)
+  + when PySSA gets run -> open documentation in other thread
     
 ** Tooltip -> finished
   - without click, e.g. import seq

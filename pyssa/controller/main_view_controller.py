@@ -196,6 +196,7 @@ class MainViewController:
             self.post_rename_selected_protein_structure)
 
         # protein pairs tab
+        self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_protein_pairs)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._show_protein_information_of_protein_pair)
         self._view.ui.btn_delete_protein_pair.clicked.connect(self._delete_protein_pair_from_project)
         self._view.ui.btn_open_protein_pair_session.clicked.connect(self._open_protein_pair_pymol_session)
@@ -2046,6 +2047,81 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs tab methods">
+    def open_context_menu_for_protein_pairs(self, position):
+        indexes = self._view.ui.protein_pairs_tree_view.selectedIndexes()
+        if len(indexes) > 0:
+            level = 0
+            index = indexes[0]
+            while index.parent().isValid():
+                index = index.parent()
+                level += 1
+        else:
+            return
+
+        # elif tmp_type == "chain":
+        #     tmp_protein = self._interface_manager.get_parent_index_object_of_current_protein_tree_index()
+        # else:
+        #     logger.warning("Unknown object type occurred in Protein tab.")
+        #     return
+        # tmp_is_protein_in_any_pair: bool = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
+        #     tmp_protein.get_molecule_object()
+        # )
+
+        self.protein_pair_context_menu = QtWidgets.QMenu()
+        if level == 0:
+            # protein pair level
+            self.protein_pair_context_open_results_summary_action = self.protein_pair_context_menu.addAction(self._view.tr("Open Results Summary"))
+            self.protein_pair_context_open_results_summary_action.triggered.connect(self._results_summary)
+            self.protein_pair_context_color_based_on_rmsd_action = self.protein_pair_context_menu.addAction(self._view.tr("Color By RMSD"))
+            self.protein_pair_context_color_based_on_rmsd_action.triggered.connect(self._color_protein_pair_by_rmsd)
+
+            # if self._interface_manager.get_current_protein_pair_tree_index_type() == "protein_pair":
+            #     tmp_protein_pair = self._interface_manager.get_current_protein_pair_tree_index_object()
+
+            if not self._pymol_session_manager.is_the_current_protein_pair_in_session():
+                self.protein_pair_context_color_based_on_rmsd_action.setEnabled(False)
+            else:
+                self.protein_pair_context_color_based_on_rmsd_action.setEnabled(True)
+
+            #
+            # self.proteins_context_menu_clean_action = self.protein_context_menu.addAction(self._view.tr("Clean selected protein"))
+            # self.proteins_context_menu_clean_action.triggered.connect(self.clean_protein_update)
+            # self.proteins_context_menu_rename_action = self.protein_context_menu.addAction(self._view.tr("Rename selected protein"))
+            # self.proteins_context_menu_rename_action.triggered.connect(self.rename_selected_protein_structure)
+            #
+            # # <editor-fold desc="Check if protein is in any protein pair">
+            # if tmp_is_protein_in_any_pair:
+            #     self.proteins_context_menu_rename_action.setEnabled(False)
+            # else:
+            #     self.proteins_context_menu_rename_action.setEnabled(True)
+
+            # </editor-fold>
+
+        elif level == 1:
+            # protein level
+            pass
+        elif level == 2:
+            # chain level
+            pass
+
+        self.protein_pair_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
+
+    def _color_protein_pair_by_rmsd(self) -> None:
+        """Colors the residues in 5 colors depending on their distance to the reference."""
+        self._active_task = tasks.Task(
+            target=main_presenter_async.color_protein_pair_by_rmsd_value,
+            args=(
+                self._interface_manager.get_current_protein_pair_tree_index_object(),
+                0
+            ),
+            post_func=self.__await_color_protein_pair_by_rmsd,
+        )
+        self._active_task.start()
+        self._interface_manager.start_wait_spinner()
+
+    def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
+        self._interface_manager.stop_wait_spinner()
+
     def _get_protein_information_of_protein_pair(self):
         tmp_type = self._view.ui.protein_pairs_tree_view.model().data(
             self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE

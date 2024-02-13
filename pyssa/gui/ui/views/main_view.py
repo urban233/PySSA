@@ -121,6 +121,7 @@ class MainView(QtWidgets.QMainWindow):
         self.build_protein_pairs_table()
 
         self.ui.proteins_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.protein_pairs_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setMinimumWidth(700)
         self.setMinimumHeight(700)
 
