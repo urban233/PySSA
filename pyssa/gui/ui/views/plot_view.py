@@ -257,6 +257,7 @@ class PlotView(QtWidgets.QDialog):
         hide_column_menu.addAction(self.action_hide_protein_2_residue)
         hide_column_menu.addAction(self.action_hide_distance)
 
+        self.action_show_all_columns = QtWidgets.QAction("All Columns")
         self.action_show_residue_pair_no = QtWidgets.QAction("Residue Pair No.")
         self.action_show_protein_1_chain = QtWidgets.QAction("Protein 1 Chain")
         self.action_show_protein_1_position = QtWidgets.QAction("Protein 1 Position")
@@ -265,8 +266,9 @@ class PlotView(QtWidgets.QDialog):
         self.action_show_protein_2_position = QtWidgets.QAction("Protein 2 Position")
         self.action_show_protein_2_residue = QtWidgets.QAction("Protein 2 Residue")
         self.action_show_distance = QtWidgets.QAction("Distance")
-        self.action_show_all_columns = QtWidgets.QAction("All Columns")
 
+        show_column_menu.addAction(self.action_show_all_columns)
+        show_column_menu.addSeparator()
         show_column_menu.addAction(self.action_show_residue_pair_no)
         show_column_menu.addAction(self.action_show_protein_1_chain)
         show_column_menu.addAction(self.action_show_protein_1_position)
@@ -275,7 +277,6 @@ class PlotView(QtWidgets.QDialog):
         show_column_menu.addAction(self.action_show_protein_2_position)
         show_column_menu.addAction(self.action_show_protein_2_residue)
         show_column_menu.addAction(self.action_show_distance)
-        show_column_menu.addAction(self.action_show_all_columns)
 
         self.action_docs = QtWidgets.QAction('PySSA Documentation', self)
         self.action_docs.triggered.connect(self._open_help_center)

@@ -36,7 +36,7 @@ from pyssa.util import constants, gui_utils
 
 class MainView(QtWidgets.QMainWindow):
     """Class representing the main view of PySSA."""
-
+    dialogClosed = QtCore.pyqtSignal(tuple)
     """
     The spinner that shows up if something runs as Task
     """
@@ -64,6 +64,11 @@ class MainView(QtWidgets.QMainWindow):
             color=QtGui.QColor(75, 145, 247),
         )
         self.initialize_ui()
+
+    def closeEvent(self, event):
+        # Emit the custom signal when the window is closed
+        self.dialogClosed.emit(("", False))
+        event.accept()
 
     def initialize_ui(self) -> None:
         """Initialize the UI elements."""

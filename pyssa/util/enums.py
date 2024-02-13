@@ -70,3 +70,10 @@ class HistogramPropertiesEnum(enum.Enum):
     """An enum for all possible histogram properties."""
     X_AXIS_UNITS = 'x_axis_units'
     DISTANCE_INTERVAL = 'distance_interval'
+
+
+class DocsServerStatus(enum.IntEnum):
+    """An enum for all possible docs server status"""
+    INACTIVE = 0
+    ACTIVE = 1
+    PENDING = 2

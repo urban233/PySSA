@@ -6,6 +6,7 @@ import subprocess
 import platform
 from io import BytesIO
 
+import pygetwindow
 import requests
 import zmq
 import pymol
@@ -128,8 +129,11 @@ class MainViewController:
         self._connect_all_ui_elements_with_slot_functions()
         self._init_context_menus()
         self._interface_manager.refresh_main_view()
+        if self._interface_manager.get_application_settings().start_help_at_startup == 1:
+            self._start_documentation_server()
 
     def _connect_all_ui_elements_with_slot_functions(self):
+        self._view.dialogClosed.connect(self._close_main_window)
         # menu
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
@@ -201,6 +205,13 @@ class MainViewController:
         self._view.cb_chain_color_protein_pair.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
         self._view.cb_chain_representation_protein_pair.currentIndexChanged.connect(self._change_chain_representation_protein_pairs)
 
+    @staticmethod
+    def _close_main_window():
+        """Cleans after the main window closes."""
+        # Closes the documentation browser if it is still open
+        if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
+            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
+
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
         """Updates the status bar of the main view with a custom message."""
@@ -214,6 +225,17 @@ class MainViewController:
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
 
     # <editor-fold desc="Help related methods">
+    def _start_documentation_server(self):
+        self._active_task = tasks.Task(
+            target=util_async.start_documentation_server,
+            args=(0, 0),
+            post_func=self.__await_start_documentation_server,
+        )
+        self._active_task.start()
+
+    def __await_start_documentation_server(self):
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
     def open_help(self, a_page_name: str):
         """Opens the pyssa documentation window if it's not already open.
 

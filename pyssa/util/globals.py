@@ -23,6 +23,7 @@
 import os
 import pathlib
 
+from pyssa.util import enums
 
 g_settings = None
 
@@ -31,3 +32,5 @@ g_plugin_path = pathlib.Path(
 )
 g_plugin_root_path = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 g_os = ""
+
+g_server_status = enums.DocsServerStatus.INACTIVE

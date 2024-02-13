@@ -174,6 +174,10 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.ui.box_bg_color.setCurrentIndex(
             self.ui.box_bg_color.findText(self.settings.image_background_color)
         )
+        if self.settings.start_help_at_startup == 1:
+            self.ui.check_box_start_help.setChecked(True)
+        else:
+            self.ui.check_box_start_help.setChecked(False)
         if self.settings.image_renderer == "0":
             self.ui.box_renderer.setCurrentIndex(0)
         else:
@@ -209,6 +213,10 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.settings.set_cutoff(self.ui.dspb_cutoff.value())
         self.settings.color_vision_mode = self.ui.cb_color_vision_mode.currentText()
         self.settings.image_background_color = self.ui.box_bg_color.currentText()
+        if self.ui.check_box_start_help.isChecked():
+            self.settings.start_help_at_startup = 1
+        else:
+            self.settings.start_help_at_startup = 0
         if self.ui.box_renderer.currentText() == "default renderer":
             self.settings.image_renderer = "0"
         else:

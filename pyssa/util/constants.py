@@ -149,6 +149,8 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 DOCS_PDF = ""
 DOCS_HTML = pathlib.Path(f"{PLUGIN_PATH}/docs/html/index.html")
 
+WINDOW_TITLE_OF_HELP_CENTER = "PySSA - Documentation Center"
+
 # Paths of help html files
 HELP_HOME_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/home.html")
 HELP_ANALYSIS_IMAGES_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/analysis_images.html")
