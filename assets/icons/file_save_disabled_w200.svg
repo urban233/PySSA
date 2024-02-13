@@ -5,7 +5,7 @@
    width="24"
    version="1.1"
    id="svg1"
-   sodipodi:docname="file_save_w200.svg"
+   sodipodi:docname="file_save_disabled_w200.svg"
    inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -24,16 +24,34 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:zoom="47.375"
      inkscape:cx="12"
-     inkscape:cy="12.23219"
+     inkscape:cy="12.253298"
      inkscape:window-width="2560"
      inkscape:window-height="1351"
      inkscape:window-x="-9"
      inkscape:window-y="-9"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg1"
-     showgrid="false" />
+     showgrid="false"
+     showguides="true">
+    <inkscape:grid
+       id="grid1"
+       units="px"
+       originx="0"
+       originy="0"
+       spacingx="40"
+       spacingy="40"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       dotted="false"
+       gridanglex="30"
+       gridanglez="30"
+       visible="false" />
+  </sodipodi:namedview>
   <path
      d="M720-148.461 851.539-280 824-307.539l-84 84V-419h-40v195.461l-84-84L588.461-280 720-148.461ZM580-20v-40h280v40H580ZM244.615-180q-26.077 0-45.346-19.269Q180-218.538 180-244.615v-550.77q0-26.077 19.269-45.346Q218.538-860 244.615-860H520l220 220v125.615h-40V-620H500v-200H244.615q-9.23 0-16.923 7.692Q220-804.615 220-795.385v550.77q0 9.23 7.692 16.923Q235.385-220 244.615-220h240v40h-240ZM220-220v-600 600Z"
      id="path1"
-     style="fill:#000000;fill-opacity:1" />
+     style="fill:#9e9c9a;fill-opacity:0.49610895" />
 </svg>

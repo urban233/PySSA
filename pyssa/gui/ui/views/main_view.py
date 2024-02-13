@@ -121,6 +121,7 @@ class MainView(QtWidgets.QMainWindow):
 
         # <editor-fold desc="Set icons">
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
+        # <editor-fold desc="Help">
         icon = self.style().standardIcon(pixmapi)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
@@ -131,92 +132,200 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_help_3.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help_3.setIconSize(self.ui.btn_help_3.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help_3.setText("")
+        # </editor-fold>
 
-        self.ui.btn_add_sequence.setIcon(
-            QtGui.QIcon(":/icons/note_add_w200.svg")
-        )
+        # <editor-fold desc="Sequence">
+        # add
+        add_sequence_icon = QtGui.QIcon(QtGui.QPixmap(":icons/note_add_w200.svg"))
+        add_sequence_icon.addPixmap(QtGui.QPixmap(":icons/note_add_disabled_w200.svg"),
+                                    mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_add_sequence.setIcon(add_sequence_icon)
         self.ui.btn_add_sequence.setText("")
-        self.ui.btn_add_sequence.setIconSize(self.ui.btn_add_sequence.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_add_sequence.setIconSize(add_sequence_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_add_sequence.setIcon(
+        #     QtGui.QIcon(":/icons/note_add_w200.svg")
+        # )
+        # self.ui.btn_add_sequence.setText("")
+        # self.ui.btn_add_sequence.setIconSize(self.ui.btn_add_sequence.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_import_seq.setIcon(
-            QtGui.QIcon(":/icons/upload_file_w200.svg")
-        )
+        # import
+        import_sequence_icon = QtGui.QIcon(QtGui.QPixmap(":icons/upload_file_w200.svg"))
+        import_sequence_icon.addPixmap(QtGui.QPixmap(":icons/upload_file_disabled_w200.svg"),
+                                       mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_import_seq.setIcon(import_sequence_icon)
         self.ui.btn_import_seq.setText("")
-        self.ui.btn_import_seq.setIconSize(self.ui.btn_import_seq.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_import_seq.setIconSize(import_sequence_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_import_seq.setIcon(
+        #     QtGui.QIcon(":/icons/upload_file_w200.svg")
+        # )
+        # self.ui.btn_import_seq.setText("")
+        # self.ui.btn_import_seq.setIconSize(self.ui.btn_import_seq.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_save_sequence.setIcon(QtGui.QIcon(":/icons/file_save_w200.svg"))
+        # save
+        save_seq_icon = QtGui.QIcon(QtGui.QPixmap(":icons/file_save_w200.svg"))
+        save_seq_icon.addPixmap(QtGui.QPixmap(":icons/file_save_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_save_sequence.setIcon(save_seq_icon)
         self.ui.btn_save_sequence.setText("")
-        self.ui.btn_save_sequence.setIconSize(self.ui.btn_save_sequence.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_save_sequence.setIconSize(save_seq_icon.actualSize(QtCore.QSize(30, 30)))
+        # save_icon = QtGui.QIcon(":/icons/file_save_w200.svg")
+        # save_icon.addPixmap(QtGui.QPixmap(":icons/file_save_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        # self.ui.btn_save_sequence.setIcon(save_icon)
+        # self.ui.btn_save_sequence.setText("")
+        # self.ui.btn_save_sequence.setIconSize(self.ui.btn_save_sequence.icon().actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_save_sequence.setIcon(QtGui.QIcon(":/icons/file_save_w200.svg"))
 
-        self.ui.btn_delete_sequence.setIcon(
-            QtGui.QIcon(":/icons/scan_deletew200.svg"))
+        # delete
+        delete_seq_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.svg"))
+        delete_seq_icon.addPixmap(QtGui.QPixmap(":icons/scan_delete_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_delete_sequence.setIcon(delete_seq_icon)
         self.ui.btn_delete_sequence.setText("")
-        self.ui.btn_delete_sequence.setIconSize(self.ui.btn_delete_sequence.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_delete_sequence.setIconSize(delete_seq_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_delete_sequence.setIcon(
+        #     QtGui.QIcon(":/icons/scan_deletew200.svg"))
+        # self.ui.btn_delete_sequence.setText("")
+        # self.ui.btn_delete_sequence.setIconSize(self.ui.btn_delete_sequence.icon().actualSize(QtCore.QSize(30, 30)))
+        # </editor-fold>
 
-        self.ui.btn_import_protein.setIcon(
-            QtGui.QIcon(":/icons/upload_file_w200.svg")
-        )
+        # <editor-fold desc="Protein">
+        # import
+        import_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/upload_file_w200.svg"))
+        import_protein_icon.addPixmap(QtGui.QPixmap(":icons/upload_file_disabled_w200.svg"),
+                                      mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_import_protein.setIcon(import_protein_icon)
         self.ui.btn_import_protein.setText("")
-        self.ui.btn_import_protein.setIconSize(self.ui.btn_import_protein.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_import_protein.setIconSize(import_protein_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_import_protein.setIcon(
+        #     QtGui.QIcon(":/icons/upload_file_w200.svg")
+        # )
+        # self.ui.btn_import_protein.setText("")
+        # self.ui.btn_import_protein.setIconSize(self.ui.btn_import_protein.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_save_protein.setIcon(
-            QtGui.QIcon(":/icons/file_save_w200.svg")
-        )
+        # save
+        save_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/file_save_w200.svg"))
+        save_protein_icon.addPixmap(QtGui.QPixmap(":icons/file_save_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_save_protein.setIcon(save_protein_icon)
         self.ui.btn_save_protein.setText("")
-        self.ui.btn_save_protein.setIconSize(self.ui.btn_save_protein.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_save_protein.setIconSize(save_protein_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_save_protein.setIcon(
+        #     QtGui.QIcon(":/icons/file_save_w200.svg")
+        # )
+        # self.ui.btn_save_protein.setText("")
+        # self.ui.btn_save_protein.setIconSize(self.ui.btn_save_protein.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_delete_protein.setIcon(
-            QtGui.QIcon(":/icons/scan_deletew200.svg"))
+        # delete
+        delete_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.svg"))
+        delete_seq_icon.addPixmap(QtGui.QPixmap(":icons/scan_delete_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_delete_protein.setIcon(delete_protein_icon)
         self.ui.btn_delete_protein.setText("")
-        self.ui.btn_delete_protein.setIconSize(
-            self.ui.btn_delete_protein.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_delete_protein.setIconSize(delete_protein_icon.actualSize(QtCore.QSize(40, 40)))
+        # self.ui.btn_delete_protein.setIcon(
+        #     QtGui.QIcon(":/icons/scan_delete_w200.svg"))
+        # self.ui.btn_delete_protein.setText("")
+        # self.ui.btn_delete_protein.setIconSize(
+        #     self.ui.btn_delete_protein.icon().actualSize(QtCore.QSize(30, 30)))
+        # </editor-fold>
 
-        self.ui.btn_open_protein_session.setIcon(
-            QtGui.QIcon(":/icons/open_in_new_w200.svg"))
+        # <editor-fold desc="Protein Session">
+        # open
+        open_protein_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/open_in_new_w200.svg"))
+        open_protein_session_icon.addPixmap(QtGui.QPixmap(":/icons/open_in_new_disabled_w200.svg"),
+                                            mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_open_protein_session.setIcon(open_protein_session_icon)
         self.ui.btn_open_protein_session.setText("")
-        self.ui.btn_open_protein_session.setIconSize(
-            self.ui.btn_open_protein_session.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_open_protein_session.setIconSize(open_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_open_protein_session.setIcon(
+        #     QtGui.QIcon(":/icons/open_in_new_w200.svg"))
+        # self.ui.btn_open_protein_session.setText("")
+        # self.ui.btn_open_protein_session.setIconSize(
+        #     self.ui.btn_open_protein_session.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_create_protein_scene.setIcon(QtGui.QIcon(":/icons/add_circle_w200.svg"))
+        # create
+        create_protein_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/add_circle_w200.svg"))
+        create_protein_session_icon.addPixmap(QtGui.QPixmap(":/icons/add_circle_disabled_w200.svg"),
+                                            mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_create_protein_scene.setIcon(create_protein_session_icon)
         self.ui.btn_create_protein_scene.setText("")
-        self.ui.btn_create_protein_scene.setIconSize(
-            self.ui.btn_create_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_create_protein_scene.setIconSize(create_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_create_protein_scene.setIcon(QtGui.QIcon(":/icons/add_circle_w200.svg"))
+        # self.ui.btn_create_protein_scene.setText("")
+        # self.ui.btn_create_protein_scene.setIconSize(
+        #     self.ui.btn_create_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_update_protein_scene.setIcon(
-            QtGui.QIcon(":/icons/change_circle_w200.svg"))
+        # update
+        update_protein_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/change_circle_w200.svg"))
+        update_protein_session_icon.addPixmap(QtGui.QPixmap(":/icons/change_circle_disabled_w200.svg"),
+                                              mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_update_protein_scene.setIcon(update_protein_session_icon)
         self.ui.btn_update_protein_scene.setText("")
-        self.ui.btn_update_protein_scene.setIconSize(
-            self.ui.btn_update_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_update_protein_scene.setIconSize(update_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_update_protein_scene.setIcon(
+        #     QtGui.QIcon(":/icons/change_circle_w200.svg"))
+        # self.ui.btn_update_protein_scene.setText("")
+        # self.ui.btn_update_protein_scene.setIconSize(
+        #     self.ui.btn_update_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
+        # </editor-fold>
 
-        self.ui.btn_delete_protein_pair.setIcon(
-            QtGui.QIcon(":/icons/scan_deletew200.svg"))
-        self.ui.btn_delete_protein_pair.setText("")
-        self.ui.btn_delete_protein_pair.setIconSize(self.ui.btn_delete_protein_pair.icon().actualSize(QtCore.QSize(30, 30)))
-
-        self.ui.btn_open_protein_pair_session.setIcon(
-            QtGui.QIcon(":/icons/open_in_new_w200.svg"))
+        # <editor-fold desc="Protein Pair Session">
+        # open
+        open_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/open_in_new_w200.svg"))
+        open_protein_pair_session_icon.addPixmap(QtGui.QPixmap(":/icons/open_in_new_disabled_w200.svg"),
+                                            mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_open_protein_pair_session.setIcon(open_protein_pair_session_icon)
         self.ui.btn_open_protein_pair_session.setText("")
-        self.ui.btn_open_protein_pair_session.setIconSize(
-            self.ui.btn_open_protein_pair_session.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_open_protein_pair_session.setIconSize(open_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_open_protein_pair_session.setIcon(
+        #     QtGui.QIcon(":/icons/open_in_new_w200.svg"))
+        # self.ui.btn_open_protein_pair_session.setText("")
+        # self.ui.btn_open_protein_pair_session.setIconSize(
+        #     self.ui.btn_open_protein_pair_session.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_create_protein_pair_scene.setIcon(
-            QtGui.QIcon(":/icons/add_circle_w200.svg"))
+        # create
+        create_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/add_circle_w200.svg"))
+        create_protein_pair_session_icon.addPixmap(QtGui.QPixmap(":/icons/add_circle_disabled_w200.svg"),
+                                              mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_create_protein_pair_scene.setIcon(create_protein_pair_session_icon)
         self.ui.btn_create_protein_pair_scene.setText("")
-        self.ui.btn_create_protein_pair_scene.setIconSize(
-            self.ui.btn_create_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_create_protein_pair_scene.setIconSize(create_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_create_protein_pair_scene.setIcon(
+        #     QtGui.QIcon(":/icons/add_circle_w200.svg"))
+        # self.ui.btn_create_protein_pair_scene.setText("")
+        # self.ui.btn_create_protein_pair_scene.setIconSize(
+        #     self.ui.btn_create_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
-        self.ui.btn_update_protein_pair_scene.setIcon(
-            QtGui.QIcon(":/icons/change_circle_w200.svg"))
+        # update
+        update_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/change_circle_w200.svg"))
+        update_protein_pair_session_icon.addPixmap(QtGui.QPixmap(":/icons/change_circle_disabled_w200.svg"),
+                                              mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_update_protein_pair_scene.setIcon(update_protein_pair_session_icon)
         self.ui.btn_update_protein_pair_scene.setText("")
-        self.ui.btn_update_protein_pair_scene.setIconSize(
-            self.ui.btn_update_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
+        self.ui.btn_update_protein_pair_scene.setIconSize(update_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30)))
+        # self.ui.btn_update_protein_pair_scene.setIcon(
+        #     QtGui.QIcon(":/icons/change_circle_w200.svg"))
+        # self.ui.btn_update_protein_pair_scene.setText("")
+        # self.ui.btn_update_protein_pair_scene.setIconSize(
+        #     self.ui.btn_update_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
+
+        # delete
+        delete_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.svg"))
+        delete_protein_pair_icon.addPixmap(QtGui.QPixmap(":icons/scan_delete_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_delete_protein_pair.setIcon(delete_protein_pair_icon)
+        self.ui.btn_delete_protein_pair.setText("")
+        self.ui.btn_delete_protein_pair.setIconSize(delete_protein_pair_icon.actualSize(QtCore.QSize(40, 40)))
+        # self.ui.btn_delete_protein_pair.setIcon(
+        #     QtGui.QIcon(":/icons/scan_deletew200.svg"))
+        # self.ui.btn_delete_protein_pair.setText("")
+        # self.ui.btn_delete_protein_pair.setIconSize(
+        #     self.ui.btn_delete_protein_pair.icon().actualSize(QtCore.QSize(30, 30)))
+        # </editor-fold>
         # </editor-fold>
 
         self._create_all_tooltips()
         pixmap = QtGui.QPixmap(str(constants.PLUGIN_LOGO_WITH_FONT_FILEPATH))
         # Resize the pixmap
-        pixmap = QtGui.QPixmap(r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\images\splash_screen_logo_002.png")
-        scaled_pixmap = pixmap.scaled(700, 700, aspectRatioMode=Qt.KeepAspectRatio, transformMode=Qt.SmoothTransformation)
+        pixmap = QtGui.QPixmap(
+            r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\images\splash_screen_logo_002.png")
+        scaled_pixmap = pixmap.scaled(700, 700, aspectRatioMode=Qt.KeepAspectRatio,
+                                      transformMode=Qt.SmoothTransformation)
         # Set the scaled pixmap to the QLabel
         self.ui.lbl_logo.setPixmap(scaled_pixmap)
         self.ui.lbl_logo.setAlignment(Qt.AlignCenter)

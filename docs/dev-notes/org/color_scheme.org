@@ -19,6 +19,7 @@ Here are all colors listed that are used in PySSA, related graphics and presenta
 - hover color: #D6E4FD
 - pressed color: #204993
 - custom disabled color: #9e9c9a
+- custom disabled RGBA: rgba(158, 156, 154, 50)
 
 ** Used In Graphics
 
