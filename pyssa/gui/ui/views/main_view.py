@@ -102,6 +102,21 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_create_protein_scene.setEnabled(False)
         self.ui.btn_update_protein_scene.setEnabled(False)
         self.ui.proteins_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        # fixme: hides all ui elements for the scene modifications
+        self.ui.lbl_protein_color.hide()
+        self.ui.lbl_protein_cartoon.hide()
+        self.ui.lbl_protein_sticks.hide()
+        self.ui.lbl_protein_ribbon.hide()
+
+        self.ui.box_protein_color.hide()
+        self.ui.btn_protein_show_cartoon.hide()
+        self.ui.btn_protein_hide_cartoon.hide()
+        self.ui.btn_protein_show_sticks.hide()
+        self.ui.btn_protein_hide_sticks.hide()
+        self.ui.btn_protein_show_ribbon.hide()
+        self.ui.btn_protein_hide_ribbon.hide()
+
+        gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
 
         # Protein Pairs tab
         self.ui.btn_delete_protein_pair.setEnabled(False)
@@ -110,6 +125,21 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_pair_scene.setEnabled(False)
         self.ui.protein_pairs_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
+        self.ui.lbl_protein_pair_color.hide()
+        self.ui.lbl_protein_pair_cartoon.hide()
+        self.ui.lbl_protein_pair_sticks.hide()
+        self.ui.lbl_protein_pair_ribbon.hide()
+
+        self.ui.box_protein_pair_color.hide()
+        self.ui.btn_protein_pair_show_cartoon.hide()
+        self.ui.btn_protein_pair_hide_cartoon.hide()
+        self.ui.btn_protein_pair_show_sticks.hide()
+        self.ui.btn_protein_pair_hide_sticks.hide()
+        self.ui.btn_protein_pair_show_ribbon.hide()
+        self.ui.btn_protein_pair_hide_ribbon.hide()
+
+        gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
+
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
         self.cb_chain_representation = QtWidgets.QComboBox()
@@ -117,8 +147,8 @@ class MainView(QtWidgets.QMainWindow):
         self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
         self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
         self.build_sequence_table()
-        self.build_proteins_table()
-        self.build_protein_pairs_table()
+        #self.build_proteins_table()
+        #self.build_protein_pairs_table()
 
         self.ui.proteins_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.protein_pairs_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -239,29 +269,29 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.seqs_table_widget.setColumnCount(2)
         self.ui.seqs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
 
-    def build_proteins_table(self):
-        self.cb_chain_color = QtWidgets.QComboBox()
-        self.cb_chain_representation = QtWidgets.QComboBox()
-
-        self.ui.proteins_table_widget.verticalHeader().setVisible(False)
-        self.ui.proteins_table_widget.setColumnCount(2)
-        self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
-        gui_utils.fill_combo_box(self.cb_chain_color, constants.PYMOL_COLORS)
-        self.cb_chain_color.adjustSize()
-        gui_utils.fill_combo_box(self.cb_chain_representation, constants.PYMOL_REPRESENTATIONS)
-        self.cb_chain_representation.adjustSize()
-
-    def build_protein_pairs_table(self):
-        self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
-        self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
-
-        self.ui.protein_pairs_table_widget.setColumnCount(2)
-        self.ui.protein_pairs_table_widget.verticalHeader().setVisible(False)
-        self.ui.protein_pairs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
-        gui_utils.fill_combo_box(self.cb_chain_color_protein_pair, constants.PYMOL_COLORS)
-        self.cb_chain_color_protein_pair.adjustSize()
-        gui_utils.fill_combo_box(self.cb_chain_representation_protein_pair, constants.PYMOL_REPRESENTATIONS)
-        self.cb_chain_representation_protein_pair.adjustSize()
+    # def build_proteins_table(self):
+    #     self.cb_chain_color = QtWidgets.QComboBox()
+    #     self.cb_chain_representation = QtWidgets.QComboBox()
+    #
+    #     self.ui.proteins_table_widget.verticalHeader().setVisible(False)
+    #     self.ui.proteins_table_widget.setColumnCount(2)
+    #     self.ui.proteins_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+    #     gui_utils.fill_combo_box(self.cb_chain_color, constants.PYMOL_COLORS)
+    #     self.cb_chain_color.adjustSize()
+    #     gui_utils.fill_combo_box(self.cb_chain_representation, constants.PYMOL_REPRESENTATIONS)
+    #     self.cb_chain_representation.adjustSize()
+    #
+    # def build_protein_pairs_table(self):
+    #     self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
+    #     self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
+    #
+    #     self.ui.protein_pairs_table_widget.setColumnCount(2)
+    #     self.ui.protein_pairs_table_widget.verticalHeader().setVisible(False)
+    #     self.ui.protein_pairs_table_widget.setHorizontalHeaderLabels(["Name", "Value"])
+    #     gui_utils.fill_combo_box(self.cb_chain_color_protein_pair, constants.PYMOL_COLORS)
+    #     self.cb_chain_color_protein_pair.adjustSize()
+    #     gui_utils.fill_combo_box(self.cb_chain_representation_protein_pair, constants.PYMOL_REPRESENTATIONS)
+    #     self.cb_chain_representation_protein_pair.adjustSize()
 
     def setup_sequences_table(self, row_count):
         self.line_edit_seq_name.setStyleSheet("QLineEdit { background-color: white; border-radius: 0; }")

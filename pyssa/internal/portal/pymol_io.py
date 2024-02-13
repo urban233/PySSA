@@ -146,3 +146,9 @@ def convert_pymol_session_to_base64_string(pymol_molecule_object: str) -> str:
     base64_string = binary_data.create_base64_string_from_file(path_util.FilePath(session_filepath))
     os.remove(session_filepath)
     return base64_string
+
+
+def get_all_scenes_from_pymol_session() -> list[str]:
+    return cmd.get_scene_list()
+
+

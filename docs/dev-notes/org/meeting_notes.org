@@ -3,8 +3,8 @@
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
 
 * Meeting
-** Hompage -> finished
-  - disable/ hide options without usage
+** Hompage -> H
+  + disable/ hide options without usage
 
 ** Results -> M (+ -> completed)
   + more visible color for bar chars to change the size
@@ -17,23 +17,20 @@
 ** Documentation -> M (+ -> completed)
   + when PySSA gets run -> open documentation in other thread
     
-** Tooltip -> finished
-  - without click, e.g. import seq
+** Tooltip -> H
+  + without click, e.g. import seq
 
-** Icon -> H&M
+** Icon -> H
   - icons with no usage MUST a big contrast effect to usable icons
 
-** Sesssion 
+** Session -> H&M
   - session name under project name
-  - session name don't stands empty
-  - check and fix that protein color and representation is always updatable
+  + session name don't stands empty
+  (+) check and fix that protein color and representation is always updatable
 
 ** Achim -> H
-  - write a mail because of WinBatch
+  + write a mail because of WinBatch
 
-** Movies
-  - use-cases  
-    
-    
-    
-  
+
+(** Movies
+  - use-cases)

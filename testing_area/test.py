@@ -46,30 +46,39 @@
 #     dialog.show()
 #     sys.exit(app.exec_())
 
-import matplotlib.pyplot as plt
-import numpy as np
+import pymol
+from pymol import cmd
 
 
-def decreased_space_bar_chart(data):
-    num_bars = len(data)
-    bar_width = 2 / (num_bars + 1)  # Adjusting bar width to decrease space between bars
-
-    fig, ax = plt.subplots()
-
-    # Calculate x positions for bars
-    x_positions = [i * (1 + bar_width) for i in range(num_bars)]
-
-    # Plot bars
-    ax.bar(x_positions, data, width=bar_width)
-
-    ax.set_xticks([i + 0.1 * bar_width for i in x_positions])  # Adjusting x ticks position
-
-    plt.show()
+def get_residue_colors( sele ):
+    pymol.stored.colors = []
+    cmd.iterate(sele, "stored.colors.append((chain, resi, name, color))")
+    res_colors = {}
+    for chain, resi, name, color in pymol.stored.colors:
+        if name == 'CA':  # c-alpha atom
+            res_colors[(chain, resi, name)] = color
+    return res_colors
 
 
 if __name__ == "__main__":
-    # Example data
-    data = np.random.randint(1, 10, size=5)
-
-    # Generate bar chart with decreased space between bars
-    decreased_space_bar_chart(data)
+    PYMOL_COLORS = [
+        "red",
+        "green",
+        "limegreen",
+        "blue",
+        "skyblue",
+        "yellow",
+        "limon",
+        "magenta",
+        "hotpink",
+        "violet",
+        "cyan",
+        "greencyan",
+        "orange",
+        "lightorange",
+        "white",
+    ]
+    cmd.fetch("3bmp")
+    for tmp_color in PYMOL_COLORS:
+        cmd.color(tmp_color)
+        print(get_residue_colors("3bmp"))

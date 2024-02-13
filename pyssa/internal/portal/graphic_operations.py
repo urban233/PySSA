@@ -28,6 +28,27 @@ from pyssa.internal.portal import pymol_safeguard
 from pyssa.util import constants, protein_pair_util
 
 
+def get_residue_colors(a_selection_string: str):
+    pymol.stored.colors = []
+    cmd.iterate(a_selection_string, "stored.colors.append((chain, resi, name, color))")
+    res_colors = {}
+    for chain, resi, name, color_index in pymol.stored.colors:
+        if name == 'CA':  # c-alpha atom
+            res_colors[(chain, resi, name)] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
+    return res_colors
+
+
+def get_chain_color(a_selection_string: str, chain_letter: str):
+    pymol.stored.colors = []
+    cmd.iterate(a_selection_string, "stored.colors.append((chain, resi, name, color))")
+    tmp_chain_colors = []
+    for chain, resi, name, color_index in pymol.stored.colors:
+        if chain == chain_letter:  # c-alpha atom
+            tmp_chain_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
+    tmp_chain_color = list(set(tmp_chain_colors))[0]
+    return tmp_chain_color
+
+
 def show_protein_selection_as_balls_and_sticks(selection: str) -> None:
     """Shows the protein as balls and sticks in representation mode.
 
@@ -221,6 +242,7 @@ def color_protein_pair_by_rmsd(a_protein_pair: "protein_pair.ProteinPair") -> No
 def setup_default_session_graphic_settings() -> None:
     """This functions modifies the pymol session to look fancy."""
     cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+    cmd.set("scene_buttons", 0)
     cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
     cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
     cmd.set("ambient", constants.PYMOL_DEFAULT_AMBIENT)

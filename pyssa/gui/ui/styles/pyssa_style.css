@@ -643,3 +643,18 @@ QFrame#frame_settings_image_parameters {
     border-color: #DCDBE3;
 }
 
+QFrame#frame_protein_pymol_scene {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_protein_pair_pymol_scene {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}

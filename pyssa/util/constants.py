@@ -244,6 +244,24 @@ PYMOL_COLORS = [
     "white",
 ]
 
+PYMOL_COLORS_WITH_INDICES = {
+    4: "red",
+    3: "green",
+    15: "limegreen",
+    2: "blue",
+    5277: "skyblue",
+    6: "yellow",
+    5276: "limon",
+    8: "magenta",
+    12: "hotpink",
+    53: "violet",
+    5: "cyan",
+    5275: "greencyan",
+    13: "orange",
+    5264: "lightorange",
+    0: "white",
+}
+
 PYMOL_REPRESENTATIONS = [
     "cartoon",
     "ribbon",

@@ -527,10 +527,6 @@ class PlotView(QtWidgets.QDialog):
         if self.action_plot.isChecked() and self.action_histogram.isChecked():
             print(self.scroll_area.size())
             print(self.scroll_area.width() / 100)
-            tmp_histogram_width = self.scroll_area.width() - 20
-            tmp_histogram_height = ((5/6) * len(self.bars)) * 100
-            self.plot_widget_dhistogram.resize(tmp_histogram_width, tmp_histogram_height)
-            self.plot_widget_dhistogram.set_figure_size(tmp_histogram_width / 100, tmp_histogram_height/ 100)
 
             self.plot_widget_dplot.show()
             self.plot_widget_dhistogram.show()
@@ -545,6 +541,10 @@ class PlotView(QtWidgets.QDialog):
             self.plot_widget_dplot.figure.tight_layout()
             self.plot_widget_dplot.canvas.draw()
             try:  # TODO: this is not an ideal way, but I didn't find anything better
+                tmp_histogram_width = self.scroll_area.width() - 20
+                tmp_histogram_height = ((5/6) * len(self.bars)) * 100
+                self.plot_widget_dhistogram.resize(tmp_histogram_width, tmp_histogram_height)
+                self.plot_widget_dhistogram.set_figure_size(tmp_histogram_width / 100, tmp_histogram_height / 100)
                 self.plot_widget_dhistogram.figure.tight_layout()
                 self.plot_widget_dhistogram.canvas.draw()
             except np.linalg.LinAlgError:
@@ -687,25 +687,8 @@ class PlotView(QtWidgets.QDialog):
         self.bars = self._ax_hist.barh(self.bins_without_zeros_label,
                                        self.freqs_without_zeros,
                                        color="#367AF6",
-                                       height=0.6)
+                                       height=0.6)  # 0.6 default
         self._ax_hist.bar_label(self.bars, padding=4)
-
-        # bar_width = 1.0 / (num_bars + 1)  # Adjusting bar width based on number of bars
-        #
-        # fig_width = max(10, 2 * num_bars)  # Minimum figure width to ensure bars are visible
-        # fig_height = 6  # Adjust this as needed
-        #
-        # fig, ax = plt.subplots(figsize=(fig_width, fig_height))  # Adjust figure size
-        #
-        # # Calculate x positions for bars
-        # x_positions = [i * (1 + bar_width) for i in range(num_bars)]
-        #
-        # # Plot bars
-        # ax.bar(x_positions, data, width=bar_width)
-        #
-        # ax.set_xticks([i + 0.5 * bar_width for i in x_positions])  # Adjusting x ticks position
-        #
-        # plt.show()
 
     def create_distance_histogram_old(self):
         distance_data: dict[

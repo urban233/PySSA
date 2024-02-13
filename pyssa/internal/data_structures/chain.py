@@ -22,6 +22,8 @@
 """This module contains the chain class."""
 import logging
 from PyQt5 import QtCore
+
+from pyssa.internal.portal import graphic_operations
 from pyssa.util import enums
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import sequence
@@ -82,6 +84,10 @@ class Chain:
 
     def set_id(self, value):
         self._id = value
+
+    def get_color(self, a_selection_string):
+        self.pymol_parameters[enums.PymolParameterEnum.COLOR.value] = graphic_operations.get_chain_color(a_selection_string, self.chain_letter)
+        return self.pymol_parameters[enums.PymolParameterEnum.COLOR.value]
 
     def serialize(self, an_xml_writer: QtCore.QXmlStreamWriter):
         an_xml_writer.writeStartElement('chain')

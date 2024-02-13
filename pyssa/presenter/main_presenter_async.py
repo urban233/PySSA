@@ -33,7 +33,7 @@ import pymol
 from Bio import SeqRecord, SeqIO
 from pymol import cmd
 
-from pyssa.controller import database_manager
+from pyssa.controller import database_manager, interface_manager, pymol_session_manager
 from pyssa.internal.data_structures import project, protein, structure_analysis, structure_prediction
 from pyssa.internal.data_structures.data_classes import (
     prediction_protein_info,
@@ -53,44 +53,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
-
-def open_project(
-    the_workspace_path: pathlib.Path,
-    the_project_name: "project.Project",
-    the_application_settings: "settings.Settings",
-) -> tuple:
-    """Opens a project and creates a new project object.
-
-    Args:
-        the_workspace_path: the current workspace path.
-        the_project_name: the name of the project to open.
-        the_application_settings: the settings of the application.
-
-    Returns:
-        a tuple with ("result", a_new_project_obj)
-    """
-    # TODO: needs checks
-    # TODO: needs tests!
-    cmd.reinitialize()
-    tmp_project_path = pathlib.Path(f"{str(the_workspace_path)}/{the_project_name}")
-    return ("result", project.Project.deserialize_project(tmp_project_path, the_application_settings))
-
-def delete_project() -> None:
-    """Deletes a project.
-
-        Args:
-            the_workspace_path: the current workspace path.
-            the_project_name: the name of the project to open.
-            the_application_settings: the settings of the application.
-
-        Returns:
-
-        """
-    # TODO: needs checks
-    # TODO: needs tests!
-    cmd.reinitialize()
-    tmp_project_path = pathlib.Path(f"{str(the_workspace_path)}/{the_project_name}")
-    return ("result", project.Project.deserialize_project(tmp_project_path, the_application_settings))
 
 def create_new_project(
     the_project_name: str,
@@ -854,3 +816,49 @@ def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, n
     else:
         logger.info("Loading the session finished without errors.")
         return 0, True
+
+
+def save_protein_pair_pymol_session_to_database(
+        the_interface_manager: "interface_manager.InterfaceManager",
+        placeholder: int) -> tuple:
+    try:
+        with database_manager.DatabaseManager(
+                str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            tmp_protein_pair = the_interface_manager.get_current_active_protein_pair_object()
+            tmp_protein_pair.save_session_of_protein_pair()
+            db_manager.update_pymol_session_of_protein_pair(
+                tmp_protein_pair.get_id(),
+                tmp_protein_pair.pymol_session
+            )
+            db_manager.close_project_database()
+        the_interface_manager.refresh_protein_pair_model()
+    except Exception as e:
+        logger.error(f"Unexpected error occured. Exception: {e}")
+        return 0, False
+    else:
+        return 0, True
+
+
+def open_project(
+        tmp_project_name: str,
+        tmp_project_database_filepath: str,
+        the_interface_manager: "interface_manager.InterfaceManager",
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple:
+    try:
+        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+            db_manager.open_project_database()
+            tmp_project = db_manager.get_project_as_object(
+                tmp_project_name,
+                the_interface_manager.get_application_settings().workspace_path,
+                the_interface_manager.get_application_settings()
+            )
+            db_manager.close_project_database()
+        the_pymol_session_manager.reinitialize_session()
+        the_interface_manager.set_new_project(tmp_project)
+    except Exception as e:
+        logger.error(f"Unexpected error occured. Exception: {e}")
+        return 1, 0, 0
+    else:
+        return 0, tmp_project, the_interface_manager
