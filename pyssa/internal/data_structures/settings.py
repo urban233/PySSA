@@ -72,6 +72,7 @@ class Settings:
         self.image_renderer: str = "-1"  # or "0"
         self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
         self.image_ray_texture: int = 0  # ranges from 0 to 5
+        self.start_help_at_startup: int = 1
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object."""
@@ -136,6 +137,9 @@ class Settings:
             )
             tmp_settings.image_ray_texture = Settings._check_integrity_of_ray_texture_value(
                 settings_dict.get("image_ray_texture")
+            )
+            tmp_settings.start_help_at_startup = Settings._check_integrity_of_start_help_at_startup_flag(
+                int(settings_dict.get("start_help_at_startup"))
             )
 
         except ValueError as e:
@@ -223,11 +227,18 @@ class Settings:
 
     @staticmethod
     def _check_integrity_of_ray_texture_value(a_ray_texture_value: int) -> int:
-        tmp_possible_values: list = list(range(5))
+        tmp_possible_values: list = list(range(6))
         if a_ray_texture_value in tmp_possible_values:
             return a_ray_texture_value
         else:
-            raise ValueError(f"Invalid ray texture! The value is not between 0 and 5: {a_ray_texture_value}")
+            raise ValueError(f"Invalid ray trace mode! The value is not between 0 and 3: {a_ray_texture_value}")
+
+    @staticmethod
+    def _check_integrity_of_start_help_at_startup_flag(start_help_at_startup_flag: int) -> int:
+        if start_help_at_startup_flag == 0 or start_help_at_startup_flag == 1:
+            return start_help_at_startup_flag
+        else:
+            raise ValueError
 
     # </editor-fold>
 
@@ -302,5 +313,6 @@ class Settings:
         self.image_renderer: str = "-1"  # or "0"
         self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
         self.image_ray_texture: int = 0  # ranges from 0 to 5
+        self.start_help_at_startup: bool = True
 
         self.serialize_settings()

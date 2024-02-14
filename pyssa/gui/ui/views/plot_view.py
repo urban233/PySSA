@@ -64,6 +64,9 @@ class PlotWidget(QWidget):
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
+    def set_figure_size(self, width: float, height: float):
+        self.figure.set_size_inches(width, height)
+
 
 class PlotView(QtWidgets.QDialog):
     def __init__(self, protein_pair_from_project: "protein_pair.ProteinPair", a_project, the_protein_pair,
@@ -254,6 +257,7 @@ class PlotView(QtWidgets.QDialog):
         hide_column_menu.addAction(self.action_hide_protein_2_residue)
         hide_column_menu.addAction(self.action_hide_distance)
 
+        self.action_show_all_columns = QtWidgets.QAction("All Columns")
         self.action_show_residue_pair_no = QtWidgets.QAction("Residue Pair No.")
         self.action_show_protein_1_chain = QtWidgets.QAction("Protein 1 Chain")
         self.action_show_protein_1_position = QtWidgets.QAction("Protein 1 Position")
@@ -262,8 +266,9 @@ class PlotView(QtWidgets.QDialog):
         self.action_show_protein_2_position = QtWidgets.QAction("Protein 2 Position")
         self.action_show_protein_2_residue = QtWidgets.QAction("Protein 2 Residue")
         self.action_show_distance = QtWidgets.QAction("Distance")
-        self.action_show_all_columns = QtWidgets.QAction("All Columns")
 
+        show_column_menu.addAction(self.action_show_all_columns)
+        show_column_menu.addSeparator()
         show_column_menu.addAction(self.action_show_residue_pair_no)
         show_column_menu.addAction(self.action_show_protein_1_chain)
         show_column_menu.addAction(self.action_show_protein_1_position)
@@ -272,7 +277,6 @@ class PlotView(QtWidgets.QDialog):
         show_column_menu.addAction(self.action_show_protein_2_position)
         show_column_menu.addAction(self.action_show_protein_2_residue)
         show_column_menu.addAction(self.action_show_distance)
-        show_column_menu.addAction(self.action_show_all_columns)
 
         self.action_docs = QtWidgets.QAction('PySSA Documentation', self)
         self.action_docs.triggered.connect(self._open_help_center)
@@ -294,17 +298,7 @@ class PlotView(QtWidgets.QDialog):
         #             self.toolbar.removeAction(action)
 
         # <editor-fold desc="Set layouts">
-        # self.main_Layout = QtWidgets.QVBoxLayout()
-        # self.main_Layout.addWidget(self.scroll_area)
-        # self.main_Layout.addWidget(self.lbl_status)
-        # self.scroll_area_layout = QtWidgets.QHBoxLayout()
-        # self.scroll_area_layout.addWidget(self.plot_widget)
-        # self.table_view = QtWidgets.QTableView()
-        # self.table_view.setMinimumWidth(450)
-        # self.scroll_area_layout.addWidget(self.table_view)
-        # self.scroll_area.setLayout(self.scroll_area_layout)
-        # self.main_Layout.setMenuBar(self.menubar)
-        # self.setLayout(self.main_Layout)
+        self.scroll_area.setWidget(self.plot_widget_dhistogram)
 
         # Create labels
         self.lbl_status1 = QtWidgets.QLabel(f"Protein 1: {self.protein_pair_for_analysis.protein_1.get_molecule_object()}")
@@ -369,11 +363,10 @@ class PlotView(QtWidgets.QDialog):
         # Left part of the plot area
         self.horizontal_splitter.addWidget(self.plot_widget_dplot)
         # Right part of the plot area
-        self.horizontal_splitter.addWidget(self.plot_widget_dhistogram)
+        self.horizontal_splitter.addWidget(self.scroll_area)
         self.horizontal_splitter.setOrientation(0)  # Set orientation to horizontal
 
         self.vertical_splitter.setCollapsible(0, False)
-        self.plot_widget_dplot.setMinimumWidth(200)
         self.main_layout.setMenuBar(self.menubar)
         self.main_layout.addWidget(self.lbl_status)
         self.setLayout(self.main_layout)
@@ -532,6 +525,9 @@ class PlotView(QtWidgets.QDialog):
         self.plot_widget_dplot.figure.clear()
         self.plot_widget_dhistogram.figure.clear()
         if self.action_plot.isChecked() and self.action_histogram.isChecked():
+            print(self.scroll_area.size())
+            print(self.scroll_area.width() / 100)
+
             self.plot_widget_dplot.show()
             self.plot_widget_dhistogram.show()
 
@@ -545,6 +541,10 @@ class PlotView(QtWidgets.QDialog):
             self.plot_widget_dplot.figure.tight_layout()
             self.plot_widget_dplot.canvas.draw()
             try:  # TODO: this is not an ideal way, but I didn't find anything better
+                tmp_histogram_width = self.scroll_area.width() - 20
+                tmp_histogram_height = ((5/6) * len(self.bars)) * 100
+                self.plot_widget_dhistogram.resize(tmp_histogram_width, tmp_histogram_height)
+                self.plot_widget_dhistogram.set_figure_size(tmp_histogram_width / 100, tmp_histogram_height / 100)
                 self.plot_widget_dhistogram.figure.tight_layout()
                 self.plot_widget_dhistogram.canvas.draw()
             except np.linalg.LinAlgError:
@@ -684,7 +684,10 @@ class PlotView(QtWidgets.QDialog):
                 self.bins_without_zeros.append(bin_edges[i])
                 self.bins_without_zeros_label.append(f"[{tmp_str_bin},{tmp_str_bin_2}]")
 
-        self.bars = self._ax_hist.barh(self.bins_without_zeros_label, self.freqs_without_zeros, color="#367AF6")
+        self.bars = self._ax_hist.barh(self.bins_without_zeros_label,
+                                       self.freqs_without_zeros,
+                                       color="#367AF6",
+                                       height=0.6)  # 0.6 default
         self._ax_hist.bar_label(self.bars, padding=4)
 
     def create_distance_histogram_old(self):

@@ -149,6 +149,8 @@ ANALYSIS_WORKER_LOGGER = logging.getLogger("AnalysisWorker")
 DOCS_PDF = ""
 DOCS_HTML = pathlib.Path(f"{PLUGIN_PATH}/docs/html/index.html")
 
+WINDOW_TITLE_OF_HELP_CENTER = "PySSA - Documentation Center"
+
 # Paths of help html files
 HELP_HOME_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/home.html")
 HELP_ANALYSIS_IMAGES_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/analysis_images.html")
@@ -241,6 +243,24 @@ PYMOL_COLORS = [
     "lightorange",
     "white",
 ]
+
+PYMOL_COLORS_WITH_INDICES = {
+    4: "red",
+    3: "green",
+    15: "limegreen",
+    2: "blue",
+    5277: "skyblue",
+    6: "yellow",
+    5276: "limon",
+    8: "magenta",
+    12: "hotpink",
+    53: "violet",
+    5: "cyan",
+    5275: "greencyan",
+    13: "orange",
+    5264: "lightorange",
+    0: "white",
+}
 
 PYMOL_REPRESENTATIONS = [
     "cartoon",

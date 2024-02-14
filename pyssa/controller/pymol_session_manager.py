@@ -11,11 +11,15 @@ class PymolSessionManager:
     session_name: str
     session_object_type: str
     session_objects: list
+    current_scene_name: str
+    all_scenes: list[str]
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
         self.session_name = ""
         self.session_object_type = ""
         self.session_objects = []
+        self.current_scene_name: str = ""
+        self.all_scenes: list[str] = []
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
 
     def reinitialize_session(self) -> None:
@@ -55,6 +59,9 @@ class PymolSessionManager:
 
         # </editor-fold>
 
+    def load_scene(self, a_scene_name):
+        cmd.scene(a_scene_name, "recall")
+
     def is_the_current_session_empty(self) -> bool:
         """Checks if the manager is in an empty session state."""
         if self.session_name == "" and self.session_object_type == "" and self.session_objects == []:
@@ -64,33 +71,37 @@ class PymolSessionManager:
 
     def is_the_current_protein_in_session(self) -> bool:
         """Checks if the current protein is in the session."""
-        if self._interface_manager.get_current_protein_tree_index_type() == "protein":
-            tmp_protein_name: str = self._interface_manager.get_current_protein_tree_index_object().get_molecule_object()
-        elif self._interface_manager.get_current_protein_tree_index_type() == "chain":
-            tmp_protein_name: str = self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
-        else:
-            raise ValueError("Unknown type!")
+        # if self._interface_manager.get_current_protein_tree_index_type() == "protein":
+        #     tmp_protein_name: str = self._interface_manager.get_current_active_protein_object().get_molecule_object()
+        # elif self._interface_manager.get_current_protein_tree_index_type() == "chain":
+        #     tmp_protein_name: str = self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
+        # else:
+        #     raise ValueError("Unknown type!")
 
-        if self.session_object_type == "protein" and self.session_name == tmp_protein_name:
+        if self.session_object_type == "protein" and self.session_name == self._interface_manager.get_current_active_protein_object().get_molecule_object():
             return True
         else:
             return False
 
     def is_the_current_protein_pair_in_session(self) -> bool:
         """Checks if the current protein pair is in the session."""
-        if self._interface_manager.get_current_protein_pair_tree_index_type() == "protein":
-            tmp_protein_pair_name: str = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index().name
-        elif self._interface_manager.get_current_protein_pair_tree_index_type() == "chain":
-            tmp_protein_pair_name: str = self._interface_manager.get_grand_parent_index_object_of_current_protein_pair_tree_index().name
-        elif self._interface_manager.get_current_protein_pair_tree_index_type() == "protein_pair":
-            tmp_protein_pair_name: str = self._interface_manager.get_current_protein_pair_tree_index_object().name
-        else:
-            raise ValueError("Unknown type!")
+        # if self._interface_manager.get_current_protein_pair_tree_index_type() == "protein":
+        #     tmp_protein_pair_name: str = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index().name
+        # elif self._interface_manager.get_current_protein_pair_tree_index_type() == "chain":
+        #     tmp_protein_pair_name: str = self._interface_manager.get_grand_parent_index_object_of_current_protein_pair_tree_index().name
+        # elif self._interface_manager.get_current_protein_pair_tree_index_type() == "protein_pair":
+        #     tmp_protein_pair_name: str = self._interface_manager.get_current_protein_pair_tree_index_object().name
+        # else:
+        #     raise ValueError("Unknown type!")
 
-        if self.session_object_type == "protein_pair" and self.session_name == tmp_protein_pair_name:
+        if self.session_object_type == "protein_pair" and self.session_name == self._interface_manager.get_current_active_protein_pair_object().name:
             return True
         else:
             return False
+
+    def get_all_scenes_in_current_session(self):
+        self.all_scenes.clear()
+        self.all_scenes = cmd.get_scene_list()
 
     @staticmethod
     def _check_session_integrity(a_protein_name) -> bool:

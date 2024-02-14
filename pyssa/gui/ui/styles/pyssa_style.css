@@ -584,8 +584,8 @@ QToolTip {
 }
 
 QSplitter::handle {
-    background: #DCDBE3;
-    border: 1px solid #DCDBE3;
+    background: #e0e0e0;
+    border: 2px solid #e0e0e0;
     width: 15px;
     margin: 1px;
     border-radius: 4px;
@@ -618,6 +618,43 @@ QFrame#line_x_axis {
 QFrame#line_y_axis {
     border-style: solid;
     border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_settings_general {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_settings_distance_parameters {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_settings_image_parameters {
+    border-style: solid;
+    border-width: 1.5px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_protein_pymol_scene {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_protein_pair_pymol_scene {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
     border-radius: 4px;
     border-color: #DCDBE3;
 }
