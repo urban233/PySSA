@@ -9,7 +9,6 @@
 This document is about the color scheme of PySSA. The material design system from google is adapted to
 a certain degree.
 
-
 * Colors
 Here are all colors listed that are used in PySSA, related graphics and presentations.
 ** Used In PySSA

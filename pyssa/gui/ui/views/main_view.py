@@ -214,10 +214,10 @@ class MainView(QtWidgets.QMainWindow):
 
         # delete
         delete_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.svg"))
-        delete_seq_icon.addPixmap(QtGui.QPixmap(":icons/scan_delete_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        delete_protein_icon.addPixmap(QtGui.QPixmap(":icons/scan_delete_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
         self.ui.btn_delete_protein.setIcon(delete_protein_icon)
         self.ui.btn_delete_protein.setText("")
-        self.ui.btn_delete_protein.setIconSize(delete_protein_icon.actualSize(QtCore.QSize(40, 40)))
+        self.ui.btn_delete_protein.setIconSize(delete_protein_icon.actualSize(QtCore.QSize(30, 30)))
         # self.ui.btn_delete_protein.setIcon(
         #     QtGui.QIcon(":/icons/scan_delete_w200.svg"))
         # self.ui.btn_delete_protein.setText("")
