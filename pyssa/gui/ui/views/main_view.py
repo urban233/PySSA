@@ -263,6 +263,13 @@ class MainView(QtWidgets.QMainWindow):
         # self.ui.btn_update_protein_scene.setText("")
         # self.ui.btn_update_protein_scene.setIconSize(
         #     self.ui.btn_update_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
+        # delete session #Fixme: btn
+        delete_protein_session_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.svg"))
+        delete_protein_session_icon.addPixmap(QtGui.QPixmap(":icons/scan_delete_disabled_w200.svg"),
+                                      mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_delete_protein.setIcon(delete_protein_session_icon)
+        self.ui.btn_delete_protein.setText("")
+        self.ui.btn_delete_protein.setIconSize(delete_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
         # </editor-fold>
 
         # <editor-fold desc="Protein Pair Session">
@@ -316,6 +323,13 @@ class MainView(QtWidgets.QMainWindow):
         # self.ui.btn_delete_protein_pair.setText("")
         # self.ui.btn_delete_protein_pair.setIconSize(
         #     self.ui.btn_delete_protein_pair.icon().actualSize(QtCore.QSize(30, 30)))
+        # delete session #Fixme btn
+        delete_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.svg"))
+        delete_protein_pair_session_icon.addPixmap(QtGui.QPixmap(":icons/scan_delete_disabled_w200.svg"),
+                                      mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_delete_protein.setIcon(delete_protein_pair_session_icon)
+        self.ui.btn_delete_protein.setText("")
+        self.ui.btn_delete_protein.setIconSize(delete_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30)))
         # </editor-fold>
         # </editor-fold>
 
