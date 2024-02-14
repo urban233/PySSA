@@ -315,6 +315,24 @@ QPushButton::hover#btn_delete_protein {
     max-height: 40px;
 }
 
+QPushButton#btn_delete_protein_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_delete_protein_scene {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
 QPushButton#btn_open_protein_session {
     background-color: rgba(220, 219, 227, 0.01);
     border: none;
@@ -379,6 +397,24 @@ QPushButton#btn_delete_protein_pair {
     max-height: 36px;
 }
 QPushButton::hover#btn_delete_protein_pair {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    min-width: 40px;
+    max-width: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+QPushButton#btn_delete_protein_pair_scene {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 36px;
+    max-width: 36px;
+    min-height: 36px;
+    max-height: 36px;
+}
+QPushButton::hover#btn_delete_protein_pair_scene {
     background-color: rgba(220, 219, 227, 0.5);
     border: none;
     min-width: 40px;
