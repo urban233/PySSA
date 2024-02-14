@@ -21,10 +21,10 @@
   + without click, e.g. import seq
 
 ** Icon -> H
-  - icons with no usage MUST a big contrast effect to usable icons
+  + icons with no usage MUST a big contrast effect to usable icons
 
 ** Session -> H&M
-  - session name under project name
+  + session name under project name
   + session name don't stands empty
   (+) check and fix that protein color and representation is always updatable
 
