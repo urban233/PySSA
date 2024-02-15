@@ -71,9 +71,8 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self.ui.setupUi(self)
 
         # <editor-fold desc="Info button changes">
-        pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion
-        icon = self.style().standardIcon(pixmapi)
-        self.ui.btn_help.setIcon(icon)
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
 
         # </editor-fold>

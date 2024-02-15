@@ -590,10 +590,14 @@ class InterfaceManager:
         if the_pymol_session_manager.is_the_current_protein_in_session():
             self._main_view.ui.btn_create_protein_scene.setEnabled(True)
             self._main_view.ui.btn_update_protein_scene.setEnabled(True)
+            self._main_view.ui.btn_delete_protein_scene.setEnabled(True)
+            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(True)
         else:
             self._main_view.ui.btn_create_protein_scene.setEnabled(False)
             self._main_view.ui.btn_update_protein_scene.setEnabled(False)
+            self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
+            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
     def hide_protein_chain_apprearence_modifier(self):
