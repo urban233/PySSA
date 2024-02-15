@@ -184,6 +184,7 @@ class MainViewController:
         self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
+        self._view.ui.btn_delete_protein_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.box_protein_color.currentIndexChanged.connect(self._change_chain_color_proteins)
         #self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
 
@@ -2054,6 +2055,47 @@ class MainViewController:
         else:
             self._interface_manager.update_status_bar("Adding new scene to protein pair failed!")
         self._interface_manager.stop_wait_spinner()
+
+    def delete_current_scene(self):
+        response = basic_boxes.yes_or_no(
+            "Delete Scene",
+            f"Are you sure you want to delete the scene: {self._pymol_session_manager.current_scene_name}",
+            QtWidgets.QMessageBox.Information
+        )
+        if response:
+            cmd.scene(key=self._pymol_session_manager.current_scene_name, action="clear")  # TODO: Does not work as expected!
+
+            if self._interface_manager.current_tab_index == 1:
+                self._save_protein_pymol_session()
+                self._interface_manager.refresh_protein_model()
+                self._interface_manager.refresh_main_view()
+            elif self._interface_manager.current_tab_index == 2:
+                # The database thread cannot be used here because the session gets loaded again
+                # before the new data is in the db
+                self._active_task = tasks.Task(
+                    target=main_presenter_async.save_protein_pair_pymol_session_to_database,
+                    args=(
+                        self._interface_manager,
+                        0
+                    ),
+                    post_func=self.__await_delete_current_scene,
+                )
+                self._active_task.start()
+                self._interface_manager.update_status_bar("Deleting selected scene ...")
+                self._interface_manager.start_wait_spinner()
+            else:
+                logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
+                return
+
+    def __await_delete_current_scene(self, return_value: tuple):
+        _, exit_flag = return_value
+        if exit_flag:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.update_status_bar("Deleted the scene successfully.")
+        else:
+            self._interface_manager.update_status_bar("Deleting the scene failed!")
+        self._interface_manager.stop_wait_spinner()
+
 
     def _save_protein_pymol_session(self):
         """Saves the session as base64 string and updates the database"""

@@ -50,8 +50,10 @@ QLabel#lbl_project_name {
 }
 
 QLabel#lbl_session_name {
-    background: #367AF6;
-    color: #ffffff;
+    /*background: #367AF6;*/
+    background: #EFEFEF;
+    color: #367AF6;
+    /*color: #ffffff;*/
     font-size: 15px;
     font-family: "Segoe UI";
     font: bold;

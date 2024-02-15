@@ -541,10 +541,6 @@ class PlotView(QtWidgets.QDialog):
             self.plot_widget_dplot.figure.tight_layout()
             self.plot_widget_dplot.canvas.draw()
             try:  # TODO: this is not an ideal way, but I didn't find anything better
-                tmp_histogram_width = self.scroll_area.width() - 20
-                tmp_histogram_height = ((5/6) * len(self.bars)) * 100
-                self.plot_widget_dhistogram.resize(tmp_histogram_width, tmp_histogram_height)
-                self.plot_widget_dhistogram.set_figure_size(tmp_histogram_width / 100, tmp_histogram_height / 100)
                 self.plot_widget_dhistogram.figure.tight_layout()
                 self.plot_widget_dhistogram.canvas.draw()
             except np.linalg.LinAlgError:
@@ -689,6 +685,11 @@ class PlotView(QtWidgets.QDialog):
                                        color="#367AF6",
                                        height=0.6)  # 0.6 default
         self._ax_hist.bar_label(self.bars, padding=4)
+        # Extra canvas and figure settings
+        tmp_histogram_width = self.scroll_area.width() - 20
+        tmp_histogram_height = ((5 / 6) * len(self.bars)) * 100
+        self.plot_widget_dhistogram.resize(tmp_histogram_width, tmp_histogram_height)
+        self.plot_widget_dhistogram.set_figure_size(tmp_histogram_width / 100, tmp_histogram_height / 100)
 
     def create_distance_histogram_old(self):
         distance_data: dict[

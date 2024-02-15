@@ -10,7 +10,7 @@
   + more visible color for bar chars to change the size
   + scroll bar for histogram
   + table: hide/show all columns "abheben" from selection
-  - make histogram that is always pretty at DDV startup
+  (+) make histogram that is always pretty at DDV startup
   + Color Protein Pair -> directly way (but keep in results too)
     + extra context menu?
     

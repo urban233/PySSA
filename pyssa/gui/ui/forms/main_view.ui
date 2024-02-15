@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>680</width>
-    <height>802</height>
+    <height>846</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,13 +17,13 @@
    <bool>true</bool>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_9">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_16">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QLabel" name="lbl_project_name">
         <property name="text">
-         <string>Project Name:</string>
+         <string>Project Name: No Project Opened</string>
         </property>
        </widget>
       </item>
