@@ -1750,6 +1750,7 @@ class MainViewController:
             self._view.ui.btn_update_protein_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             self._view.ui.lbl_pymol_protein_scene.setText(f"PyMOL Scene: base")
+            self._view.ui.lbl_info.setText("Please select a chain.")
             self._pymol_session_manager.get_all_scenes_in_current_session()
             logger.info("Successfully opened protein session.")
             self._interface_manager.update_status_bar("Loading the PyMOL session was successful.")
@@ -1760,6 +1761,7 @@ class MainViewController:
             self._view.ui.btn_create_protein_scene.setEnabled(False)
             self._view.ui.btn_update_protein_scene.setEnabled(False)
             self._interface_manager.update_status_bar("Loading the PyMOL session failed! Check out the log file to get more information.")
+            self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
         self._interface_manager.stop_wait_spinner()
 
     def _change_chain_color_proteins(self) -> None:
@@ -2287,12 +2289,14 @@ class MainViewController:
             self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_protein_pair.name}")
             logger.info("Successfully opened protein pair session.")
             self._interface_manager.update_status_bar("Loading the PyMOL session was successful.")
+            self._view.ui.lbl_info_protein_pair.setText("Please select a chain.")
         else:
             logger.error("The protein name could not be found in the object list in PyMOL!")
             self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
             self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
             self._interface_manager.update_status_bar(
                 "Loading the PyMOL session failed! Check out the log file to get more information.")
+            self._view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the selected protein.")
         self._interface_manager.stop_wait_spinner()
 
     def _change_chain_color_protein_pairs(self) -> None:

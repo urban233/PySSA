@@ -540,7 +540,7 @@ class PlotView(QtWidgets.QDialog):
 
             self.plot_widget_dplot.figure.tight_layout()
             self.plot_widget_dplot.canvas.draw()
-            try:  # TODO: this is not an ideal way, but I didn't find anything better
+            try:  # TODO: this is not an ideal way, but I couldn't find anything better
                 self.plot_widget_dhistogram.figure.tight_layout()
                 self.plot_widget_dhistogram.canvas.draw()
             except np.linalg.LinAlgError:
@@ -562,7 +562,7 @@ class PlotView(QtWidgets.QDialog):
             self.create_distance_histogram()
             self.setup_histogram_defaults()
 
-            try:  # TODO: this is not an ideal way, but I didn't find anything better
+            try:  # TODO: this is not an ideal way, but I couldn't find anything better
                 self.plot_widget_dhistogram.figure.tight_layout()
                 self.plot_widget_dhistogram.canvas.draw()
             except np.linalg.LinAlgError:

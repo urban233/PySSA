@@ -119,6 +119,9 @@ class MainView(QtWidgets.QMainWindow):
 
         gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
 
+        self.ui.lbl_info.setText("Please select a protein.")
+        self.ui.lbl_info_2.hide()
+
         # Protein Pairs tab
         self.ui.btn_delete_protein_pair.setEnabled(False)
         self.ui.btn_open_protein_pair_session.setEnabled(False)
@@ -141,6 +144,9 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_hide_ribbon.hide()
 
         gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
+
+        self.ui.lbl_info_protein_pair.setText("Please select a protein pair.")
+        self.ui.lbl_info_protein_pair_2.hide()
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
