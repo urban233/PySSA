@@ -2024,13 +2024,25 @@ class MainViewController:
     def save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
         # returns tuple with (name, bool)
-        scene_name = QtWidgets.QInputDialog.getText(self._view, "Save Scene", "Enter scene name:")
+        scene_name = QtWidgets.QInputDialog.getText(self._view, "Save Scene", "Enter new scene name:")
         if scene_name[1]:
             cmd.scene(key=scene_name[0], action="append")
             if self._interface_manager.current_tab_index == 1:
-                self._save_protein_pymol_session()
-                self._interface_manager.refresh_protein_model()
-                self._interface_manager.refresh_main_view()
+                self._active_task = tasks.Task(
+                    target=main_presenter_async.save_protein_pymol_session_to_database,
+                    args=(
+                        self._interface_manager,
+                        0
+                    ),
+                    post_func=self.__await_save_scene_protein,
+                )
+                self._active_task.start()
+                self._interface_manager.update_status_bar("Adding new scene to protein ...")
+                self._interface_manager.start_wait_spinner()
+
+                # self._save_protein_pymol_session()
+                # self._interface_manager.refresh_protein_model()
+                # self._interface_manager.refresh_main_view()
             elif self._interface_manager.current_tab_index == 2:
                 # The database thread cannot be used here because the session gets loaded again
                 # before the new data is in the db
@@ -2040,7 +2052,7 @@ class MainViewController:
                         self._interface_manager,
                         0
                     ),
-                    post_func=self.__await_save_scene,
+                    post_func=self.__await_save_scene_protein_pair,
                 )
                 self._active_task.start()
                 self._interface_manager.update_status_bar("Adding new scene to protein pair ...")
@@ -2049,7 +2061,16 @@ class MainViewController:
                 logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
                 return
 
-    def __await_save_scene(self, return_value: tuple):
+    def __await_save_scene_protein(self, return_value: tuple):
+        _, exit_flag = return_value
+        if exit_flag:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.update_status_bar("Adding new scene to protein finished.")
+        else:
+            self._interface_manager.update_status_bar("Adding new scene to protein failed!")
+        self._interface_manager.stop_wait_spinner()
+
+    def __await_save_scene_protein_pair(self, return_value: tuple):
         _, exit_flag = return_value
         if exit_flag:
             self._interface_manager.refresh_main_view()

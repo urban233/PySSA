@@ -818,6 +818,28 @@ def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, n
         return 0, True
 
 
+def save_protein_pymol_session_to_database(
+        the_interface_manager: "interface_manager.InterfaceManager",
+        placeholder: int) -> tuple:
+    try:
+        with database_manager.DatabaseManager(
+                str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
+            db_manager.open_project_database()
+            tmp_protein = the_interface_manager.get_current_active_protein_object()
+            tmp_protein.save_pymol_session_as_base64_string()
+            db_manager.update_pymol_session_of_protein(
+                tmp_protein.get_id(),
+                tmp_protein.pymol_session
+            )
+            db_manager.close_project_database()
+        the_interface_manager.refresh_protein_model()
+    except Exception as e:
+        logger.error(f"Unexpected error occured. Exception: {e}")
+        return 0, False
+    else:
+        return 0, True
+
+
 def save_protein_pair_pymol_session_to_database(
         the_interface_manager: "interface_manager.InterfaceManager",
         placeholder: int) -> tuple:
