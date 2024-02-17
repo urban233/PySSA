@@ -1689,7 +1689,6 @@ class MainViewController:
 
     def __slot_show_protein_information(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
-
         if tmp_type == "protein":
             tmp_protein = self._interface_manager.get_current_active_protein_object()
         elif tmp_type == "scene":

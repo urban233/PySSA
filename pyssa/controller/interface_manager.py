@@ -19,7 +19,7 @@ from pyssa.gui.ui.views import create_project_view, open_project_view, delete_pr
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.gui.ui.views import hotspots_protein_regions_view
 from pyssa.gui.ui.styles import styles
-from pyssa.internal.data_structures import project, settings, chain, protein
+from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import pymol_io
 from pyssa.util import enums, constants, exception, main_window_util
@@ -741,19 +741,44 @@ class InterfaceManager:
         Returns:
             a protein object
         """
+        # tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
+        # if tmp_type == "protein":
+        #     return self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+        # elif tmp_type == "header":
+        #     return self._main_view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
+        # elif tmp_type == "scene":
+        #     return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
+        #         enums.ModelEnum.OBJECT_ROLE
+        #     )
+        # elif tmp_type == "chain":
+        #     return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
+        #         enums.ModelEnum.OBJECT_ROLE
+        #     )
+        # else:
+        #     raise ValueError("Unknown type!")
         tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
             return self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
         elif tmp_type == "header":
+            raise ValueError(f"Cannot get a protein object if the type is: {tmp_type}!")
+        elif tmp_type == "scene":
+            raise ValueError(f"Cannot get a protein object if the type is: {tmp_type}!")
+        elif tmp_type == "chain":
+            raise ValueError(f"Cannot get a protein object if the type is: {tmp_type}!")
+        else:
+            raise ValueError("Unknown type!")
+
+    def get_current_header_name(self) -> str:
+        """Returns the name of the current header."""
+        tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
+        if tmp_type == "protein":
+            raise ValueError(f"Cannot get a header object if the type is: {tmp_type}!")
+        elif tmp_type == "header":
             return self._main_view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
         elif tmp_type == "scene":
-            return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
-            )
+            raise ValueError(f"Cannot get a header object if the type is: {tmp_type}!")
         elif tmp_type == "chain":
-            return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
-            )
+            raise ValueError(f"Cannot get a header object if the type is: {tmp_type}!")
         else:
             raise ValueError("Unknown type!")
 
