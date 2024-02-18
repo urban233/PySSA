@@ -832,7 +832,7 @@ def save_protein_pymol_session_to_database(
                 tmp_protein.pymol_session
             )
             db_manager.close_project_database()
-        the_interface_manager.refresh_protein_model()
+        #the_interface_manager.refresh_protein_model()
     except Exception as e:
         logger.error(f"Unexpected error occured. Exception: {e}")
         return 0, False

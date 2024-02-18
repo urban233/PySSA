@@ -22,6 +22,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import pymol_io
+from pyssa.model import proteins_model
 from pyssa.util import enums, constants, exception, main_window_util
 
 
@@ -124,7 +125,7 @@ class InterfaceManager:
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
         self._sequence_model = QtGui.QStandardItemModel()
-        self._protein_model = QtGui.QStandardItemModel()
+        self._protein_model: "proteins_model.ProteinsModel" = proteins_model.ProteinsModel()
         self._protein_pair_model = QtGui.QStandardItemModel()
         self._build_workspace_model()
 
@@ -252,28 +253,43 @@ class InterfaceManager:
 
     def _build_proteins_model(self) -> None:
         if len(self._current_project.proteins) > 0:
-            tmp_root_item = self._protein_model.invisibleRootItem()
-            for tmp_protein in self._current_project.proteins:
-                tmp_protein_item = QtGui.QStandardItem(tmp_protein.get_molecule_object())
-                tmp_protein_item.setData(tmp_protein, enums.ModelEnum.OBJECT_ROLE)
-                tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
-                tmp_root_item.appendRow(tmp_protein_item)
-                tmp_scenes_item = QtGui.QStandardItem("Scenes")
-                tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
-                tmp_protein_item.appendRow(tmp_scenes_item)
-                tmp_protein.load_protein_pymol_session()
-                for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
-                    tmp_scene_item = QtGui.QStandardItem(tmp_scene)
-                    tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
-                    tmp_scenes_item.appendRow(tmp_scene_item)
-                tmp_chains_item = QtGui.QStandardItem("Chains")
-                tmp_chains_item.setData("header", enums.ModelEnum.TYPE_ROLE)
-                tmp_protein_item.appendRow(tmp_chains_item)
-                for tmp_chain in tmp_protein.chains:
-                    tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
-                    tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
-                    tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
-                    tmp_chains_item.appendRow(tmp_chain_item)
+            self._protein_model.build_model_from_scratch(self._current_project.proteins)
+            # tmp_root_item = self._protein_model.invisibleRootItem()
+            # for tmp_protein in self._current_project.proteins:
+            #     tmp_protein_item = QtGui.QStandardItem(tmp_protein.get_molecule_object())
+            #     tmp_protein_item.setData(tmp_protein, enums.ModelEnum.OBJECT_ROLE)
+            #     tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_root_item.appendRow(tmp_protein_item)
+            #     tmp_scenes_item = QtGui.QStandardItem("Scenes")
+            #     tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_protein_item.appendRow(tmp_scenes_item)
+            #     tmp_protein.load_protein_pymol_session()
+            #     for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+            #         tmp_scene_item = QtGui.QStandardItem(tmp_scene)
+            #         tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
+            #         tmp_scenes_item.appendRow(tmp_scene_item)
+            #     tmp_chains_item = QtGui.QStandardItem("Chains")
+            #     tmp_chains_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_protein_item.appendRow(tmp_chains_item)
+            #     for tmp_chain in tmp_protein.chains:
+            #         tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+            #         tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+            #         tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+            #         tmp_chains_item.appendRow(tmp_chain_item)
+
+    def add_scene_to_proteins_model(
+            self,
+            a_scene_name
+    ):
+        tmp_scene_item = QtGui.QStandardItem(a_scene_name)
+        tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
+        self._protein_model.add_scene(
+            self.get_current_protein_tree_index(),
+            tmp_scene_item
+        )
+
+    def remove_scene_from_proteins_model(self, the_model_index_of_the_scene: QtCore.QModelIndex):
+        self._protein_model.remove_scene(the_model_index_of_the_scene)
 
     def _build_protein_pairs_model(self) -> None:
         if len(self._current_project.protein_pairs) > 0:
@@ -452,7 +468,11 @@ class InterfaceManager:
         # Initialize UI
         self._main_view.initialize_ui()
 
-    def show_chain_pymol_parameters(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
+    def set_index_of_protein_color_combo_box(
+            self,
+            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+    ) -> None:
+        """Checks which color the protein chain has and sets the index of the comobo box accordingly."""
         tmp_protein = self.get_current_active_protein_object()
         tmp_chain = self.get_current_active_chain_object()
         if the_pymol_session_manager.is_the_current_protein_in_session():
@@ -461,24 +481,6 @@ class InterfaceManager:
         self._main_view.ui.box_protein_color.setCurrentIndex(
             self._main_view.ui.box_protein_color.findText(tmp_chain.pymol_parameters["chain_color"])
         )
-        #
-        # tmp_chain: "chain.Chain" = a_chain_item.data(enums.ModelEnum.OBJECT_ROLE)
-        #
-        # self._main_view.setup_proteins_table(len(tmp_chain.pymol_parameters))
-        # i = 0
-        # for tmp_key in tmp_chain.pymol_parameters.keys():
-        #     tmp_value_item = QtWidgets.QTableWidgetItem(tmp_chain.pymol_parameters[tmp_key])
-        #     tmp_key_item = QtWidgets.QTableWidgetItem(str(tmp_key).replace("_", " "))
-        #     tmp_key_item.setFlags(tmp_key_item.flags() & ~Qt.ItemIsEditable)
-        #     self._main_view.ui.proteins_table_widget.setItem(i, 0, tmp_key_item)
-        #     self._main_view.ui.proteins_table_widget.setItem(i, 1, tmp_value_item)
-        #     i += 1
-        #
-        #
-        # self._main_view.cb_chain_representation.setCurrentIndex(
-        #     self._main_view.cb_chain_representation.findText(tmp_chain.pymol_parameters["chain_representation"])
-        # )
-        # self._main_view.ui.proteins_table_widget.resizeColumnsToContents()
 
     def show_chain_pymol_parameter_for_protein_pairs(
             self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
@@ -552,45 +554,64 @@ class InterfaceManager:
         self._main_view.line_edit_seq_name.setText(tmp_seq_name_item.data(Qt.DisplayRole))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
 
-    def manage_buttons_for_proteins_tab(self,
-                                        an_object_type: str,
-                                        is_protein_in_pair: bool,
-                                        the_pymol_session_manager: pymol_session_manager.PymolSessionManager):
+    def manage_ui_of_protein_tab(
+            self,
+            an_object_type: str,
+            is_protein_in_pair: bool,
+            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+    ) -> None:
         self._main_view.ui.lbl_info_2.hide()
+
+        tmp_is_protein_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_in_session()
+        tmp_current_scene_name: str = the_pymol_session_manager.current_scene_name
+
         if an_object_type == "protein":
             self._main_view.ui.btn_save_protein.setEnabled(True)
             self._main_view.ui.btn_open_protein_session.setEnabled(True)
-            if the_pymol_session_manager.is_the_current_protein_in_session() and the_pymol_session_manager.current_scene_name == "":
+            self.hide_protein_chain_apprearence_modifier()
+
+            if tmp_is_protein_in_session_flag and tmp_current_scene_name == "":
                 self._main_view.ui.lbl_info.setText("Please select a scene.")
-            elif the_pymol_session_manager.is_the_current_protein_in_session() and the_pymol_session_manager.current_scene_name != "":
+            elif tmp_is_protein_in_session_flag and tmp_current_scene_name != "":
                 self._main_view.ui.lbl_info.setText("Please select a chain.")
             else:
                 self._main_view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
+
         elif an_object_type == "scene":
             self._main_view.ui.btn_save_protein.setEnabled(False)
             self._main_view.ui.btn_open_protein_session.setEnabled(False)
             self.hide_protein_chain_apprearence_modifier()
-            if the_pymol_session_manager.is_the_current_protein_in_session():
+
+            if tmp_is_protein_in_session_flag and the_pymol_session_manager.current_scene_name == "base":
+                self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
+                self._main_view.ui.lbl_info.setText("Please select a chain.")
+            elif tmp_is_protein_in_session_flag and the_pymol_session_manager.current_scene_name != "base":
+                self._main_view.ui.btn_delete_protein_scene.setEnabled(True)
                 self._main_view.ui.lbl_info.setText("Please select a chain.")
             else:
                 self._main_view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
+
         elif an_object_type == "chain":
             self._main_view.ui.btn_save_protein.setEnabled(False)
             self._main_view.ui.btn_open_protein_session.setEnabled(False)
-            if the_pymol_session_manager.is_the_current_protein_in_session():
+
+            if tmp_is_protein_in_session_flag:
                 self.show_protein_chain_apprearence_modifier()
             else:
                 self.hide_protein_chain_apprearence_modifier()
+
         elif an_object_type == "header":
             self._main_view.ui.btn_save_protein.setEnabled(False)
             self._main_view.ui.btn_open_protein_session.setEnabled(False)
             self.hide_protein_chain_apprearence_modifier()
-            if the_pymol_session_manager.is_the_current_protein_in_session() and the_pymol_session_manager.current_scene_name == "":
+
+            if tmp_is_protein_in_session_flag and tmp_current_scene_name == "":
                 self._main_view.ui.lbl_info.setText("Please select a scene.")
-            elif the_pymol_session_manager.is_the_current_protein_in_session() and the_pymol_session_manager.current_scene_name != "":
+            elif tmp_is_protein_in_session_flag and tmp_current_scene_name != "":
                 self._main_view.ui.lbl_info.setText("Please select a chain.")
             else:
                 self._main_view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
+
         else:
             constants.PYSSA_LOGGER.warning("Unknown object type on proteins tab selected.")
 
@@ -599,17 +620,13 @@ class InterfaceManager:
         else:
             self._main_view.ui.btn_delete_protein.setEnabled(True)
 
-        if the_pymol_session_manager.is_the_current_protein_in_session():
+        if tmp_is_protein_in_session_flag:
             self._main_view.ui.btn_create_protein_scene.setEnabled(True)
             self._main_view.ui.btn_update_protein_scene.setEnabled(True)
-            self._main_view.ui.btn_delete_protein_scene.setEnabled(True)
-            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(True)
         else:
             self._main_view.ui.btn_create_protein_scene.setEnabled(False)
             self._main_view.ui.btn_update_protein_scene.setEnabled(False)
-            self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
-            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
     def hide_protein_chain_apprearence_modifier(self):
@@ -694,10 +711,12 @@ class InterfaceManager:
         if the_pymol_session_manager.is_the_current_protein_pair_in_session():
             self._main_view.ui.btn_create_protein_pair_scene.setEnabled(True)
             self._main_view.ui.btn_update_protein_pair_scene.setEnabled(True)
+            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(True)
         else:
             self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
             self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
+            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
     def hide_protein_pair_chain_apprearence_modifier(self):
@@ -769,30 +788,19 @@ class InterfaceManager:
         Returns:
             a protein object
         """
-        # tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
-        # if tmp_type == "protein":
-        #     return self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-        # elif tmp_type == "header":
-        #     return self._main_view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
-        # elif tmp_type == "scene":
-        #     return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
-        #         enums.ModelEnum.OBJECT_ROLE
-        #     )
-        # elif tmp_type == "chain":
-        #     return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
-        #         enums.ModelEnum.OBJECT_ROLE
-        #     )
-        # else:
-        #     raise ValueError("Unknown type!")
         tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
             return self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
         elif tmp_type == "header":
-            raise ValueError(f"Cannot get a protein object if the type is: {tmp_type}!")
+            return self._main_view.ui.proteins_tree_view.currentIndex().parent().data(enums.ModelEnum.OBJECT_ROLE)
         elif tmp_type == "scene":
-            raise ValueError(f"Cannot get a protein object if the type is: {tmp_type}!")
+            return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
         elif tmp_type == "chain":
-            raise ValueError(f"Cannot get a protein object if the type is: {tmp_type}!")
+            return self._main_view.ui.proteins_tree_view.currentIndex().parent().parent().data(
+                enums.ModelEnum.OBJECT_ROLE
+            )
         else:
             raise ValueError("Unknown type!")
 

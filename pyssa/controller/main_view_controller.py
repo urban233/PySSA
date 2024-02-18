@@ -179,7 +179,7 @@ class MainViewController:
 
         # proteins tab
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
-        self._view.ui.proteins_tree_view.clicked.connect(self.__slot_show_protein_information)
+        self._view.ui.proteins_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_branch)
         self._view.ui.btn_save_protein.clicked.connect(self._save_selected_protein_structure_as_pdb_file)
         self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
@@ -1687,30 +1687,33 @@ class MainViewController:
 
         self.protein_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
-    def __slot_show_protein_information(self) -> None:
+    def __slot_get_information_about_selected_object_in_protein_branch(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
+
         if tmp_type == "protein":
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
+            pass
         elif tmp_type == "scene":
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
             if self._pymol_session_manager.is_the_current_protein_in_session():
                 tmp_scene_name = self._interface_manager.get_current_active_scene_name()
                 self._pymol_session_manager.current_scene_name = tmp_scene_name
                 self._view.ui.lbl_pymol_protein_scene.setText(f"PyMOL Scene: {tmp_scene_name}")
                 self._pymol_session_manager.load_scene(tmp_scene_name)
+
         elif tmp_type == "chain":
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
             if self._pymol_session_manager.current_scene_name != "":
-                self._interface_manager.show_chain_pymol_parameters(self._pymol_session_manager)
+                self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
+
         elif tmp_type == "header":
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
+            pass
+
         else:
             logger.warning("Unknown object type occurred in Protein tab.")
             return
-        self._interface_manager.manage_buttons_for_proteins_tab(
+
+        self._interface_manager.manage_ui_of_protein_tab(
             tmp_type,
             self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
-                tmp_protein.get_molecule_object()
+                self._interface_manager.get_current_active_protein_object().get_molecule_object()
             ),
             self._pymol_session_manager
         )
@@ -1767,6 +1770,7 @@ class MainViewController:
         tmp_protein = self._interface_manager.get_current_active_protein_object()
         tmp_chain = self._interface_manager.get_current_active_chain_object()
         tmp_color = self._view.ui.box_protein_color.currentText()
+
         if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             # Update pymol parameter in PyMOL
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
@@ -1873,9 +1877,6 @@ class MainViewController:
             self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
             self._interface_manager.refresh_protein_model()
             self._interface_manager.refresh_main_view()
-            # extra ui changes
-            #self._view.ui.proteins_table_widget.setRowCount(0)
-            #self._view.build_proteins_table()
 
     def _save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
@@ -2038,10 +2039,7 @@ class MainViewController:
                 self._active_task.start()
                 self._interface_manager.update_status_bar("Adding new scene to protein ...")
                 self._interface_manager.start_wait_spinner()
-
-                # self._save_protein_pymol_session()
-                # self._interface_manager.refresh_protein_model()
-                # self._interface_manager.refresh_main_view()
+                self._interface_manager.add_scene_to_proteins_model(scene_name[0])
             elif self._interface_manager.current_tab_index == 2:
                 # The database thread cannot be used here because the session gets loaded again
                 # before the new data is in the db
@@ -2089,7 +2087,7 @@ class MainViewController:
 
             if self._interface_manager.current_tab_index == 1:
                 self._save_protein_pymol_session()
-                self._interface_manager.refresh_protein_model()
+                self._interface_manager.remove_scene_from_proteins_model(self._interface_manager.get_current_protein_tree_index())
                 self._interface_manager.refresh_main_view()
             elif self._interface_manager.current_tab_index == 2:
                 # The database thread cannot be used here because the session gets loaded again
@@ -2117,7 +2115,6 @@ class MainViewController:
         else:
             self._interface_manager.update_status_bar("Deleting the scene failed!")
         self._interface_manager.stop_wait_spinner()
-
 
     def _save_protein_pymol_session(self):
         """Saves the session as base64 string and updates the database"""
@@ -2332,18 +2329,6 @@ class MainViewController:
             except pymol.CmdException:
                 logger.warning("No protein in session found. This can lead to more serious problems.")
             else:
-                # Update pymol parameter in database
-                # with database_manager.DatabaseManager(
-                #         str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                #     db_manager.open_project_database()
-                #     db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                #         tmp_protein_pair.get_id(),
-                #         tmp_protein.get_id(),
-                #         tmp_chain.chain_letter,
-                #         enums.PymolParameterEnum.COLOR.value,
-                #         tmp_color,
-                #     )
-                #     db_manager.close_project_database()
                 self.update_scene()
                 self._save_protein_pair_pymol_session()
         else:
@@ -2434,9 +2419,6 @@ class MainViewController:
             self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
             self._interface_manager.refresh_protein_pair_model()
             self._interface_manager.refresh_main_view()
-            # extra ui changes
-            #self._view.ui.protein_pairs_table_widget.setRowCount(0)
-            #self._view.build_protein_pairs_table()
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
@@ -2452,8 +2434,6 @@ class MainViewController:
                                                                                   self._pymol_session_manager)
         self._interface_manager.get_results_view().show()
 
-    # </editor-fold>
-
     def _save_protein_pair_pymol_session(self):
         tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
         tmp_database_operation = database_operation.DatabaseOperation(
@@ -2461,3 +2441,7 @@ class MainViewController:
             (0, tmp_protein_pair.get_id(), tmp_protein_pair)
         )
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+
+    # </editor-fold>
+
+

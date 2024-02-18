@@ -28,7 +28,7 @@ import pymol
 from PyQt5 import QtCore
 from xml.etree import ElementTree
 from typing import TYPE_CHECKING, Union
-
+from pymol import cmd
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_pair_operations
@@ -125,6 +125,7 @@ class ProteinPair:
         except exception.UnableToLoadProteinPairError:
             logger.error("Protein pair could not be loaded in PyMOL!")
             raise exception.UnableToLoadProteinPairError("")
+        cmd.scene("base", action="append")
 
     def load_pymol_session(self) -> None:
         """This function loads the existing pymol session of the pair."""

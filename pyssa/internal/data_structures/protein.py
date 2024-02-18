@@ -427,6 +427,8 @@ class Protein:
             logger.error("Protein can not be loaded in PyMOL!")
             raise exception.UnableToLoadProteinError
 
+        cmd.scene("base", action="append")
+
     def load_protein_pymol_session(self) -> None:
         """Loads the protein in the pymol session based on the base64 data."""
         tmp_session_path = pathlib.Path(
