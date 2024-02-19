@@ -696,3 +696,31 @@ QFrame#frame_protein_pair_pymol_scene {
     border-radius: 4px;
     border-color: #DCDBE3;
 }
+
+QStatusBar {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+QStatusBar QLabel {
+    color: red;
+    font-weight: bold;
+}
+
+QProgressBar {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: #efefef;
+    max-height: 17px;
+    max-width: 250px;
+    text-align: center;
+    color: black;
+}
+QProgressBar::chunk {
+    background-color: #367af6;
+    width: 20px;
+}

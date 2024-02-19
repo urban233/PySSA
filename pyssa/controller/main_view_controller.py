@@ -452,6 +452,7 @@ class MainViewController:
             return
 
         self._interface_manager.update_status_bar("Opening existing project ...")
+        #self._interface_manager.update_progress_bar(10, "Opening existing project ...")
         self._interface_manager.start_wait_spinner()
         tmp_project_name = return_value
         tmp_project_database_filepath = str(
@@ -461,6 +462,7 @@ class MainViewController:
         )
         self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
         self._database_thread.start()
+        self._interface_manager.update_progress_of_progress_bar(20)
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._active_task = tasks.Task(
             target=main_presenter_async.open_project,
@@ -473,12 +475,15 @@ class MainViewController:
             post_func=self.__await_open_project,
         )
         self._active_task.start()
+        self._interface_manager.update_progress_of_progress_bar(50)
 
     def __await_open_project(self, return_value: tuple):
+        self._interface_manager.update_progress_of_progress_bar(60)
         exit_code, tmp_project, tmp_interface_manager = return_value
         if exit_code == 0:
             self._interface_manager = tmp_interface_manager
             self._interface_manager.refresh_main_view()
+            self._interface_manager.hide_progress_bar()
             self._interface_manager.update_status_bar("Opening existing project finished.")
         else:
             self._interface_manager.update_status_bar("Opening existing project failed!")
@@ -1863,7 +1868,11 @@ class MainViewController:
                                                      (0, tmp_ref_protein)))
             # tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+        else:
+            logger.warning("No protein object was created.")
+            return
         self._interface_manager.refresh_protein_model()
+        self._interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
         self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
 
@@ -1875,7 +1884,7 @@ class MainViewController:
                                                                           (0, tmp_protein.get_id()))
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
-            self._interface_manager.refresh_protein_model()
+            self._interface_manager.remove_protein_from_proteins_model()
             self._interface_manager.refresh_main_view()
 
     def _save_selected_protein_structure_as_pdb_file(self) -> None:

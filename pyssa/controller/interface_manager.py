@@ -291,6 +291,12 @@ class InterfaceManager:
     def remove_scene_from_proteins_model(self, the_model_index_of_the_scene: QtCore.QModelIndex):
         self._protein_model.remove_scene(the_model_index_of_the_scene)
 
+    def add_protein_to_proteins_model(self, a_protein):
+        self._protein_model.add_protein(a_protein)
+
+    def remove_protein_from_proteins_model(self):
+        self._protein_model.remove_protein(self.get_current_protein_tree_index())
+
     def _build_protein_pairs_model(self) -> None:
         if len(self._current_project.protein_pairs) > 0:
             tmp_root_item = self._protein_pair_model.invisibleRootItem()
@@ -529,6 +535,21 @@ class InterfaceManager:
         """Sets a custom message into the status bar."""
         self._main_view.status_bar.showMessage(message)
 
+    def update_progress_bar(self, value: int, message: str):
+        if value < 0 or value > 100:
+            raise ValueError("Value for progress bar must be between 0 and 100!")
+        self._main_view.progress_bar.show()
+        self._main_view.progress_bar.setFormat(message)
+        self._main_view.progress_bar.setValue(value)
+
+    def update_progress_of_progress_bar(self, value):
+        if value < 0 or value > 100:
+            raise ValueError("Value for progress bar must be between 0 and 100!")
+        self._main_view.progress_bar.setValue(value)
+
+    def hide_progress_bar(self):
+        self._main_view.progress_bar.hide()
+
     def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
         self._main_view.setup_sequences_table(2)
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
@@ -565,7 +586,11 @@ class InterfaceManager:
         tmp_is_protein_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_in_session()
         tmp_current_scene_name: str = the_pymol_session_manager.current_scene_name
 
+        self._main_view.ui.btn_delete_protein.setEnabled(False)
+
         if an_object_type == "protein":
+            if not is_protein_in_pair:
+                self._main_view.ui.btn_delete_protein.setEnabled(True)
             self._main_view.ui.btn_save_protein.setEnabled(True)
             self._main_view.ui.btn_open_protein_session.setEnabled(True)
             self.hide_protein_chain_apprearence_modifier()
@@ -614,11 +639,6 @@ class InterfaceManager:
 
         else:
             constants.PYSSA_LOGGER.warning("Unknown object type on proteins tab selected.")
-
-        if is_protein_in_pair:
-            self._main_view.ui.btn_delete_protein.setEnabled(False)
-        else:
-            self._main_view.ui.btn_delete_protein.setEnabled(True)
 
         if tmp_is_protein_in_session_flag:
             self._main_view.ui.btn_create_protein_scene.setEnabled(True)

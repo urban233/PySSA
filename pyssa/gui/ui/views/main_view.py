@@ -49,6 +49,9 @@ class MainView(QtWidgets.QMainWindow):
         self.ui = auto_main_view.Ui_MainWindow()
         self.ui.setupUi(self)
         self.status_bar = QtWidgets.QStatusBar()
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.status_bar.addWidget(self.progress_bar)
+        self.progress_bar.hide()
         self.wait_spinner = spinner.WaitingSpinner(
             parent=self,
             center_on_parent=True,
