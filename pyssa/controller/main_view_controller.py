@@ -203,6 +203,7 @@ class MainViewController:
         self._view.ui.btn_open_protein_pair_session.clicked.connect(self._open_protein_pair_pymol_session)
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
         self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.update_scene)
+        self._view.ui.btn_delete_protein_pair_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
         self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
         #self._view.cb_chain_representation_protein_pair.currentIndexChanged.connect(self._change_chain_representation_protein_pairs)
@@ -2063,6 +2064,7 @@ class MainViewController:
                 self._active_task.start()
                 self._interface_manager.update_status_bar("Adding new scene to protein pair ...")
                 self._interface_manager.start_wait_spinner()
+                self._interface_manager.add_scene_to_protein_pairs_model(scene_name[0])
             else:
                 logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
                 return
@@ -2112,6 +2114,9 @@ class MainViewController:
                 self._active_task.start()
                 self._interface_manager.update_status_bar("Deleting selected scene ...")
                 self._interface_manager.start_wait_spinner()
+                self._interface_manager.remove_scene_from_protein_pairs_model(
+                    self._interface_manager.get_current_protein_pair_tree_index()
+                )
             else:
                 logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
                 return
@@ -2426,7 +2431,7 @@ class MainViewController:
             )
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
-            self._interface_manager.refresh_protein_pair_model()
+            self._interface_manager.remove_protein_pair_from_protein_pairs_model()
             self._interface_manager.refresh_main_view()
 
     def _check_for_results(self) -> None:
@@ -2452,5 +2457,3 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     # </editor-fold>
-
-

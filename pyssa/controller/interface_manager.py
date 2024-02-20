@@ -22,7 +22,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import pymol_io
-from pyssa.model import proteins_model
+from pyssa.model import proteins_model, protein_pairs_model
 from pyssa.util import enums, constants, exception, main_window_util
 
 
@@ -126,7 +126,7 @@ class InterfaceManager:
         self._workspace_model = QtGui.QStandardItemModel()
         self._sequence_model = QtGui.QStandardItemModel()
         self._protein_model: "proteins_model.ProteinsModel" = proteins_model.ProteinsModel()
-        self._protein_pair_model = QtGui.QStandardItemModel()
+        self._protein_pair_model: "protein_pairs_model.ProteinPairsModel" = protein_pairs_model.ProteinPairsModel()
         self._build_workspace_model()
 
     def get_main_view(self) -> "main_view.MainView":
@@ -299,46 +299,64 @@ class InterfaceManager:
 
     def _build_protein_pairs_model(self) -> None:
         if len(self._current_project.protein_pairs) > 0:
-            tmp_root_item = self._protein_pair_model.invisibleRootItem()
-            for tmp_protein_pair in self._current_project.protein_pairs:
-                tmp_protein_pair_item = QtGui.QStandardItem(tmp_protein_pair.name)
-                tmp_protein_pair_item.setData(tmp_protein_pair, enums.ModelEnum.OBJECT_ROLE)
-                tmp_protein_pair_item.setData("protein_pair", enums.ModelEnum.TYPE_ROLE)
-                tmp_scenes_item = QtGui.QStandardItem("Scenes")
-                tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
-                tmp_protein_pair_item.appendRow(tmp_scenes_item)
-                tmp_protein_pair.load_pymol_session()
-                for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
-                    tmp_scene_item = QtGui.QStandardItem(tmp_scene)
-                    tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
-                    tmp_scenes_item.appendRow(tmp_scene_item)
-                # Create protein 1 item
-                tmp_protein_item_1 = QtGui.QStandardItem(tmp_protein_pair.protein_1.get_molecule_object())
-                tmp_protein_item_1.setData(tmp_protein_pair.protein_1, enums.ModelEnum.OBJECT_ROLE)
-                tmp_protein_item_1.setData("protein", enums.ModelEnum.TYPE_ROLE)
-                tmp_chains_item_1 = QtGui.QStandardItem("Chains")
-                tmp_chains_item_1.setData("header", enums.ModelEnum.TYPE_ROLE)
-                tmp_protein_item_1.appendRow(tmp_chains_item_1)
-                for tmp_chain in tmp_protein_pair.protein_1.chains:
-                    tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
-                    tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
-                    tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
-                    tmp_chains_item_1.appendRow(tmp_chain_item)
-                # Create protein 2 item
-                tmp_protein_item_2 = QtGui.QStandardItem(tmp_protein_pair.protein_2.get_molecule_object())
-                tmp_protein_item_2.setData(tmp_protein_pair.protein_2, enums.ModelEnum.OBJECT_ROLE)
-                tmp_protein_item_2.setData("protein", enums.ModelEnum.TYPE_ROLE)
-                tmp_chains_item_2 = QtGui.QStandardItem("Chains")
-                tmp_chains_item_2.setData("header", enums.ModelEnum.TYPE_ROLE)
-                tmp_protein_item_2.appendRow(tmp_chains_item_2)
-                for tmp_chain in tmp_protein_pair.protein_2.chains:
-                    tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
-                    tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
-                    tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
-                    tmp_chains_item_2.appendRow(tmp_chain_item)
-                tmp_protein_pair_item.appendRow(tmp_protein_item_1)
-                tmp_protein_pair_item.appendRow(tmp_protein_item_2)
-                tmp_root_item.appendRow(tmp_protein_pair_item)
+            self._protein_pair_model.build_model_from_scratch(self._current_project.protein_pairs)
+            # tmp_root_item = self._protein_pair_model.invisibleRootItem()
+            # for tmp_protein_pair in self._current_project.protein_pairs:
+            #     tmp_protein_pair_item = QtGui.QStandardItem(tmp_protein_pair.name)
+            #     tmp_protein_pair_item.setData(tmp_protein_pair, enums.ModelEnum.OBJECT_ROLE)
+            #     tmp_protein_pair_item.setData("protein_pair", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_scenes_item = QtGui.QStandardItem("Scenes")
+            #     tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_protein_pair_item.appendRow(tmp_scenes_item)
+            #     tmp_protein_pair.load_pymol_session()
+            #     for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+            #         tmp_scene_item = QtGui.QStandardItem(tmp_scene)
+            #         tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
+            #         tmp_scenes_item.appendRow(tmp_scene_item)
+            #     # Create protein 1 item
+            #     tmp_protein_item_1 = QtGui.QStandardItem(tmp_protein_pair.protein_1.get_molecule_object())
+            #     tmp_protein_item_1.setData(tmp_protein_pair.protein_1, enums.ModelEnum.OBJECT_ROLE)
+            #     tmp_protein_item_1.setData("protein", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_chains_item_1 = QtGui.QStandardItem("Chains")
+            #     tmp_chains_item_1.setData("header", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_protein_item_1.appendRow(tmp_chains_item_1)
+            #     for tmp_chain in tmp_protein_pair.protein_1.chains:
+            #         tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+            #         tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+            #         tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+            #         tmp_chains_item_1.appendRow(tmp_chain_item)
+            #     # Create protein 2 item
+            #     tmp_protein_item_2 = QtGui.QStandardItem(tmp_protein_pair.protein_2.get_molecule_object())
+            #     tmp_protein_item_2.setData(tmp_protein_pair.protein_2, enums.ModelEnum.OBJECT_ROLE)
+            #     tmp_protein_item_2.setData("protein", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_chains_item_2 = QtGui.QStandardItem("Chains")
+            #     tmp_chains_item_2.setData("header", enums.ModelEnum.TYPE_ROLE)
+            #     tmp_protein_item_2.appendRow(tmp_chains_item_2)
+            #     for tmp_chain in tmp_protein_pair.protein_2.chains:
+            #         tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+            #         tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+            #         tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+            #         tmp_chains_item_2.appendRow(tmp_chain_item)
+            #     tmp_protein_pair_item.appendRow(tmp_protein_item_1)
+            #     tmp_protein_pair_item.appendRow(tmp_protein_item_2)
+            #     tmp_root_item.appendRow(tmp_protein_pair_item)
+
+    def add_scene_to_protein_pairs_model(
+            self,
+            a_scene_name
+    ):
+        tmp_scene_item = QtGui.QStandardItem(a_scene_name)
+        tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
+        self._protein_pair_model.add_scene(
+            self.get_current_protein_pair_tree_index(),
+            tmp_scene_item
+        )
+
+    def remove_scene_from_protein_pairs_model(self, the_model_index_of_the_scene: QtCore.QModelIndex):
+        self._protein_pair_model.remove_scene(the_model_index_of_the_scene)
+
+    def remove_protein_pair_from_protein_pairs_model(self):
+        self._protein_pair_model.remove_protein_pair(self.get_current_protein_pair_tree_index())
 
     def _build_sequences_model(self):
         if len(self._current_project.sequences) > 0:
