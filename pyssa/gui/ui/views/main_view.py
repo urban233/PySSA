@@ -64,6 +64,8 @@ class MainView(QtWidgets.QMainWindow):
             color=QtGui.QColor(75, 145, 247),
         )
         self.initialize_ui()
+        gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
+        gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
 
     def closeEvent(self, event):
         # Emit the custom signal when the window is closed
@@ -104,20 +106,18 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein_scene.setEnabled(False)
         self.ui.proteins_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         # fixme: hides all ui elements for the scene modifications
-        self.ui.lbl_protein_color.hide()
-        self.ui.lbl_protein_cartoon.hide()
-        self.ui.lbl_protein_sticks.hide()
-        self.ui.lbl_protein_ribbon.hide()
+        self.ui.lbl_protein_color.show()
+        self.ui.lbl_protein_cartoon.show()
+        self.ui.lbl_protein_sticks.show()
+        self.ui.lbl_protein_ribbon.show()
 
-        self.ui.box_protein_color.hide()
-        self.ui.btn_protein_show_cartoon.hide()
-        self.ui.btn_protein_hide_cartoon.hide()
-        self.ui.btn_protein_show_sticks.hide()
-        self.ui.btn_protein_hide_sticks.hide()
-        self.ui.btn_protein_show_ribbon.hide()
-        self.ui.btn_protein_hide_ribbon.hide()
-
-        gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
+        self.ui.box_protein_color.setEnabled(False)
+        self.ui.btn_protein_show_cartoon.setEnabled(False)
+        self.ui.btn_protein_hide_cartoon.setEnabled(False)
+        self.ui.btn_protein_show_sticks.setEnabled(False)
+        self.ui.btn_protein_hide_sticks.setEnabled(False)
+        self.ui.btn_protein_show_ribbon.setEnabled(False)
+        self.ui.btn_protein_hide_ribbon.setEnabled(False)
 
         # Protein Pairs tab
         self.ui.btn_delete_protein_pair.setEnabled(False)
@@ -139,8 +139,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_hide_sticks.hide()
         self.ui.btn_protein_pair_show_ribbon.hide()
         self.ui.btn_protein_pair_hide_ribbon.hide()
-
-        gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
