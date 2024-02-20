@@ -746,6 +746,7 @@ def close_project(the_database_thread, the_pymol_session_manager) -> tuple:
         logger.error(f"Unknown error occurred while waiting for the database thread to finish: {e}.")
         return False, "Waiting for database thread queue failed!"
     else:
+        logger.info("Waiting for database thread queue finished.")
         return True, "Waiting for database thread queue finished."
 
 

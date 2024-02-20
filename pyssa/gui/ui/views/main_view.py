@@ -67,6 +67,8 @@ class MainView(QtWidgets.QMainWindow):
             color=QtGui.QColor(75, 145, 247),
         )
         self.initialize_ui()
+        gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
+        gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
 
     def closeEvent(self, event):
         # Emit the custom signal when the window is closed
@@ -120,8 +122,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_show_ribbon.hide()
         self.ui.btn_protein_hide_ribbon.hide()
 
-        gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
-
         self.ui.lbl_info.setText("Please select a protein.")
         self.ui.lbl_info_2.hide()
 
@@ -145,8 +145,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_hide_sticks.hide()
         self.ui.btn_protein_pair_show_ribbon.hide()
         self.ui.btn_protein_pair_hide_ribbon.hide()
-
-        gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
 
         self.ui.lbl_info_protein_pair.setText("Please select a protein pair.")
         self.ui.lbl_info_protein_pair_2.hide()

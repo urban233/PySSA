@@ -9,6 +9,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.controller import database_manager, pymol_session_manager
+from pyssa.controller.database_manager import logger
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
@@ -481,14 +482,23 @@ class InterfaceManager:
 
     def restore_default_main_view(self):
         # Restore sequences table
+        logger.info("Restoring default main view at seq table")
         self._main_view.ui.seqs_table_widget.clear()
+        logger.info("seq table cleared")
         self._main_view.ui.seqs_table_widget.setRowCount(0)
+        logger.info("seq table set row count to 0")
         # # Restore proteins table
+        # logger.info("Restoring default main view at protein table")
         # self._main_view.ui.proteins_table_widget.clear()
+        # logger.info("protein table cleared")
         # self._main_view.ui.proteins_table_widget.setRowCount(0)
+        # logger.info("protein table set row count to 0")
         # # Restore protein pairs table
+        # logger.info("Restoring default main view at protein pair table")
         # self._main_view.ui.protein_pairs_table_widget.clear()
+        # logger.info("protein pair table cleared")
         # self._main_view.ui.protein_pairs_table_widget.setRowCount(0)
+        # logger.info("protein pair table set row count to 0")
         # Initialize UI
         self._main_view.initialize_ui()
 

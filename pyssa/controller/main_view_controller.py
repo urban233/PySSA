@@ -186,7 +186,7 @@ class MainViewController:
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
         self._view.ui.btn_delete_protein_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.box_protein_color.currentIndexChanged.connect(self._change_chain_color_proteins)
-        #self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
+        # self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
 
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
         self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
@@ -352,10 +352,10 @@ class MainViewController:
             post_func=self.__await_close_project,
         )
         self._active_task.start()
-        self.msg_box = basic_boxes.no_buttons("Saving Project",
-                                              "Please wait the program is saving your project.",
-                                              QtWidgets.QMessageBox.Information)
-        #self.msg_box.show()
+        # self.msg_box = basic_boxes.no_buttons("Saving Project",
+        #                                       "Please wait the program is saving your project.",
+        #                                       QtWidgets.QMessageBox.Information)
+        # # self.msg_box.show()
         self._interface_manager.restore_default_main_view()
         self.update_status("Saving current project ...")
         self._view.wait_spinner.start()
@@ -364,7 +364,7 @@ class MainViewController:
         """Await the async closing process."""
         self._interface_manager.set_new_project(project.Project())
         self._interface_manager.refresh_main_view()
-        #self.msg_box.hide()
+        # self.msg_box.hide()
         self.update_status("Closing project finished.")
         self._view.wait_spinner.stop()
 
