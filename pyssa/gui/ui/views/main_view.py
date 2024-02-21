@@ -95,6 +95,10 @@ class MainView(QtWidgets.QMainWindow):
         # fixme: the tutorial action of the menubar IS HIDDEN!!!
         self.ui.action_tutorials.setVisible(False)
 
+        # Project and Session name
+        self.ui.lbl_project_name.setText("Project Name: No Project Opened")
+        self.ui.lbl_session_name.setText("Session Name: No Session Loaded")
+
         # Sequences tab
         self.ui.btn_save_sequence.setEnabled(False)
         self.ui.btn_delete_sequence.setEnabled(False)
@@ -108,6 +112,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_scene.setEnabled(False)
         self.ui.btn_delete_protein_scene.setEnabled(False)
         self.ui.proteins_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Loaded")
         # fixme: hides all ui elements for the scene modifications
         self.ui.lbl_protein_color.hide()
         self.ui.lbl_protein_cartoon.hide()
@@ -132,7 +137,8 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_pair_scene.setEnabled(False)
         self.ui.btn_delete_protein_pair_scene.setEnabled(False)
         self.ui.protein_pairs_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
+        self.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Loaded")
+        # fixme: hides all ui elements for the scene modifications
         self.ui.lbl_protein_pair_color.hide()
         self.ui.lbl_protein_pair_cartoon.hide()
         self.ui.lbl_protein_pair_sticks.hide()
