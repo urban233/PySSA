@@ -2036,7 +2036,14 @@ class MainViewController:
     def save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
         # returns tuple with (name, bool)
-        scene_name = QtWidgets.QInputDialog.getText(self._view, "Save Scene", "Enter new scene name:")
+        # tmp_save_scene_input_dialog = QtWidgets.QInputDialog()
+        # tmp_save_scene_input_dialog.setWindowFlags(
+        #     tmp_save_scene_input_dialog.windowFlags() ^ Qt.WindowContextHelpButtonHint
+        # )
+        scene_name = QtWidgets.QInputDialog().getText(
+            self._view,
+            "Save Scene",
+            "Enter new scene name:", flags=Qt.WindowCloseButtonHint)
         if scene_name[1]:
             cmd.scene(key=scene_name[0], action="append")
             if self._interface_manager.current_tab_index == 1:
