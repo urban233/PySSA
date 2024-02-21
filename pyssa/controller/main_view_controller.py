@@ -1797,6 +1797,8 @@ class MainViewController:
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
+
+
     # def _change_chain_representation_proteins(self) -> None:
     #     tmp_type = self._interface_manager.get_current_protein_tree_index_type()
     #     tmp_representation = self._view.cb_chain_representation.currentText()
