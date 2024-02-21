@@ -515,7 +515,8 @@ class InterfaceManager:
         tmp_protein = self.get_current_active_protein_object()
         tmp_chain = self.get_current_active_chain_object()
         if the_pymol_session_manager.is_the_current_protein_in_session():
-            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            # fixme: This can easily be bypassed by a power user if the first residue color is changed
+            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
             tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)
         self._main_view.ui.box_protein_color.setCurrentIndex(
             self._main_view.ui.box_protein_color.findText(tmp_chain.pymol_parameters["chain_color"])
@@ -527,7 +528,8 @@ class InterfaceManager:
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
         if the_pymol_session_manager.is_the_current_protein_pair_in_session():
-            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            # fixme: This can easily be bypassed by a power user if the first residue color is changed
+            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
             tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)
         self._main_view.ui.box_protein_pair_color.setCurrentIndex(
             self._main_view.ui.box_protein_pair_color.findText(tmp_chain.pymol_parameters["chain_color"])
