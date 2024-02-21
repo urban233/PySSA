@@ -14,7 +14,7 @@ from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
-    predict_multimer_view, add_sequence_view
+    predict_multimer_view, add_sequence_view, add_scene_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -44,6 +44,7 @@ class InterfaceManager:
     _rename_protein_view: "rename_protein_view.RenameProteinView"
     _use_project_view: "use_project_view.UseProjectView"
     _hotspots_protein_regions_view: "hotspots_protein_regions_view.HotspotsProteinRegionsView"
+    _add_scene_view: "add_scene_view.AddSceneView"
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
@@ -72,6 +73,7 @@ class InterfaceManager:
         self._add_sequence_view = add_sequence_view.AddSequenceView()
         self._rename_protein_view = rename_protein_view.RenameProteinView()
         self._use_project_view = use_project_view.UseProjectView()
+        self._add_scene_view = add_scene_view.AddSceneView()
 
         # <editor-fold desc="Setup App Settings">
         self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -171,6 +173,9 @@ class InterfaceManager:
 
     def get_use_project_view(self):
         return self._use_project_view
+
+    def get_add_scene_view(self):
+        return self._add_scene_view
 
     def get_application_settings(self) -> "settings.Settings":
         return self._application_settings

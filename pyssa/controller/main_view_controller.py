@@ -24,7 +24,7 @@ from xml import sax
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
-    add_sequence_view_controller
+    add_sequence_view_controller, add_scene_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -2035,48 +2035,45 @@ class MainViewController:
 
     def save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
-        # returns tuple with (name, bool)
-        # tmp_save_scene_input_dialog = QtWidgets.QInputDialog()
-        # tmp_save_scene_input_dialog.setWindowFlags(
-        #     tmp_save_scene_input_dialog.windowFlags() ^ Qt.WindowContextHelpButtonHint
-        # )
-        scene_name = QtWidgets.QInputDialog().getText(
-            self._view,
-            "Save Scene",
-            "Enter new scene name:", flags=Qt.WindowCloseButtonHint)
-        if scene_name[1]:
-            cmd.scene(key=scene_name[0], action="append")
-            if self._interface_manager.current_tab_index == 1:
-                self._active_task = tasks.Task(
-                    target=main_presenter_async.save_protein_pymol_session_to_database,
-                    args=(
-                        self._interface_manager,
-                        0
-                    ),
-                    post_func=self.__await_save_scene_protein,
-                )
-                self._active_task.start()
-                self._interface_manager.update_status_bar("Adding new scene to protein ...")
-                self._interface_manager.start_wait_spinner()
-                self._interface_manager.add_scene_to_proteins_model(scene_name[0])
-            elif self._interface_manager.current_tab_index == 2:
-                # The database thread cannot be used here because the session gets loaded again
-                # before the new data is in the db
-                self._active_task = tasks.Task(
-                    target=main_presenter_async.save_protein_pair_pymol_session_to_database,
-                    args=(
-                        self._interface_manager,
-                        0
-                    ),
-                    post_func=self.__await_save_scene_protein_pair,
-                )
-                self._active_task.start()
-                self._interface_manager.update_status_bar("Adding new scene to protein pair ...")
-                self._interface_manager.start_wait_spinner()
-                self._interface_manager.add_scene_to_protein_pairs_model(scene_name[0])
-            else:
-                logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
-                return
+        self._external_controller = add_scene_view_controller.AddSceneViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self.post_save_scene)
+        self._interface_manager.get_add_scene_view().show()
+
+    def post_save_scene(self, return_value: tuple):
+        tmp_scene_name, _ = return_value
+        cmd.scene(key=tmp_scene_name, action="append")
+
+        if self._interface_manager.current_tab_index == 1:
+            self._active_task = tasks.Task(
+                target=main_presenter_async.save_protein_pymol_session_to_database,
+                args=(
+                    self._interface_manager,
+                    0
+                ),
+                post_func=self.__await_save_scene_protein,
+            )
+            self._active_task.start()
+            self._interface_manager.update_status_bar("Adding new scene to protein ...")
+            self._interface_manager.start_wait_spinner()
+            self._interface_manager.add_scene_to_proteins_model(tmp_scene_name)
+        elif self._interface_manager.current_tab_index == 2:
+            # The database thread cannot be used here because the session gets loaded again
+            # before the new data is in the db
+            self._active_task = tasks.Task(
+                target=main_presenter_async.save_protein_pair_pymol_session_to_database,
+                args=(
+                    self._interface_manager,
+                    0
+                ),
+                post_func=self.__await_save_scene_protein_pair,
+            )
+            self._active_task.start()
+            self._interface_manager.update_status_bar("Adding new scene to protein pair ...")
+            self._interface_manager.start_wait_spinner()
+            self._interface_manager.add_scene_to_protein_pairs_model(tmp_scene_name)
+        else:
+            logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
+            return
 
     def __await_save_scene_protein(self, return_value: tuple):
         _, exit_flag = return_value
