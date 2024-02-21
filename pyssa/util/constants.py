@@ -262,12 +262,6 @@ PYMOL_COLORS_WITH_INDICES = {
     0: "white",
 }
 
-PYMOL_REPRESENTATIONS = [
-    "cartoon",
-    "ribbon",
-    "sticks"
-]
-
 AMINO_ACID_CODE = {
     "CYS": "C",
     "ASP": "D",

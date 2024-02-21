@@ -73,7 +73,14 @@ class HistogramPropertiesEnum(enum.Enum):
 
 
 class DocsServerStatus(enum.IntEnum):
-    """An enum for all possible docs server status"""
+    """An enum for all possible docs server status."""
     INACTIVE = 0
     ACTIVE = 1
     PENDING = 2
+
+
+class PyMOLRepresentation(enum.Enum):
+    """An enum for possible representations."""
+    CARTOON = 'cartoon'
+    STICKS = 'sticks'
+    RIBBON = 'ribbon'

@@ -30,7 +30,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
     dialog_rename_protein, dialog_help
-from pyssa.internal.data_structures import project, settings, protein, protein_pair, chain
+from pyssa.internal.data_structures import project, settings, protein, protein_pair, chain, selection
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
@@ -186,7 +186,12 @@ class MainViewController:
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
         self._view.ui.btn_delete_protein_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.box_protein_color.currentIndexChanged.connect(self._change_chain_color_proteins)
-        # self._view.cb_chain_representation.currentIndexChanged.connect(self._change_chain_representation_proteins)
+        self._view.ui.btn_protein_show_cartoon.clicked.connect(self.__slot_show_protein_chain_as_cartoon)
+        self._view.ui.btn_protein_hide_cartoon.clicked.connect(self.__slot_hide_protein_chain_as_cartoon)
+        self._view.ui.btn_protein_show_sticks.clicked.connect(self.__slot_show_protein_chain_as_sticks)
+        self._view.ui.btn_protein_hide_sticks.clicked.connect(self.__slot_hide_protein_chain_as_sticks)
+        self._view.ui.btn_protein_show_ribbon.clicked.connect(self.__slot_show_protein_chain_as_ribbon)
+        self._view.ui.btn_protein_hide_ribbon.clicked.connect(self.__slot_hide_protein_chain_as_ribbon)
 
         self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
         self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
@@ -206,7 +211,12 @@ class MainViewController:
         self._view.ui.btn_delete_protein_pair_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
         self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
-        #self._view.cb_chain_representation_protein_pair.currentIndexChanged.connect(self._change_chain_representation_protein_pairs)
+        self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
+        self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
+        self._view.ui.btn_protein_pair_show_sticks.clicked.connect(self.__slot_show_protein_pair_chain_as_sticks)
+        self._view.ui.btn_protein_pair_hide_sticks.clicked.connect(self.__slot_hide_protein_pair_chain_as_sticks)
+        self._view.ui.btn_protein_pair_show_ribbon.clicked.connect(self.__slot_show_protein_pair_chain_as_ribbon)
+        self._view.ui.btn_protein_pair_hide_ribbon.clicked.connect(self.__slot_hide_protein_pair_chain_as_ribbon)
 
     @staticmethod
     def _close_main_window():
@@ -1797,7 +1807,46 @@ class MainViewController:
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
+    # <editor-fold desc="Representations">
+    # cartoon
+    def __slot_show_protein_chain_as_cartoon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
 
+    def __slot_hide_protein_chain_as_cartoon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
+
+    # sticks
+    def __slot_show_protein_chain_as_sticks(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+
+    def __slot_hide_protein_chain_as_sticks(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+
+    # ribbon
+    def __slot_show_protein_chain_as_ribbon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+
+    def __slot_hide_protein_chain_as_ribbon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+    # </editor-fold>
 
     # def _change_chain_representation_proteins(self) -> None:
     #     tmp_type = self._interface_manager.get_current_protein_tree_index_type()
@@ -2353,6 +2402,47 @@ class MainViewController:
                 self._save_protein_pair_pymol_session()
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
+
+    # <editor-fold desc="Representations">
+    # cartoon
+    def __slot_show_protein_pair_chain_as_cartoon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
+
+    def __slot_hide_protein_pair_chain_as_cartoon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
+
+    # sticks
+    def __slot_show_protein_pair_chain_as_sticks(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+
+    def __slot_hide_protein_pair_chain_as_sticks(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+
+    # ribbon
+    def __slot_show_protein_pair_chain_as_ribbon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+
+    def __slot_hide_protein_pair_chain_as_ribbon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+    # </editor-fold>
 
     # def _change_chain_representation_protein_pairs(self) -> None:
     #     tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()

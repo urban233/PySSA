@@ -134,3 +134,11 @@ class Selection:
         #         cmd.hide()
         cmd.hide("everything", self.selection_string)
         cmd.show(a_representation, self.selection_string)
+
+    def show_selection_in_a_specific_representation(self, a_representation: str):
+        """Sets a custom representation to the active selection."""
+        cmd.show(a_representation, self.selection_string)
+
+    def hide_selection_in_a_specific_representation(self, a_representation: str):
+        """Sets a custom representation to the active selection."""
+        cmd.hide(a_representation, self.selection_string)
