@@ -205,12 +205,12 @@ class PlotView(QtWidgets.QDialog):
         # </editor-fold>
 
         # <editor-fold desc="Create a menu and add it to the menu bar">
-        plots_menu = QtWidgets.QMenu('Views', self)
+        #plots_menu = QtWidgets.QMenu('Views', self)  # TODO: raises an memory access violation error
         table_menu = QtWidgets.QMenu('Table', self)
         hide_column_menu = QtWidgets.QMenu('Hide Column', self)
         show_column_menu = QtWidgets.QMenu('Show Column', self)
         help_menu = QtWidgets.QMenu('Help', self)
-        self.menubar.addMenu(plots_menu)
+        #self.menubar.addMenu(plots_menu)
         self.menubar.addMenu(table_menu)
         table_menu.addMenu(hide_column_menu)
         table_menu.addMenu(show_column_menu)
@@ -234,10 +234,10 @@ class PlotView(QtWidgets.QDialog):
         self.action_sync_with_pymol.setCheckable(True)
         self.action_sync_with_pymol.setChecked(False)
         
-        plots_menu.addAction(self.action_plot)
-        plots_menu.addAction(self.action_histogram)
-        plots_menu.addAction(self.action_table)
-        plots_menu.addAction(self.action_sync_with_pymol)
+        # plots_menu.addAction(self.action_plot)
+        # plots_menu.addAction(self.action_histogram)
+        # plots_menu.addAction(self.action_table)
+        # plots_menu.addAction(self.action_sync_with_pymol)
 
         self.action_hide_residue_pair_no = QtWidgets.QAction("Residue Pair No.")
         self.action_hide_protein_1_chain = QtWidgets.QAction("Protein 1 Chain")
