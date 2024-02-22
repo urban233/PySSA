@@ -14,7 +14,7 @@ from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
-    predict_multimer_view, add_sequence_view
+    predict_multimer_view, add_sequence_view, add_scene_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -44,6 +44,7 @@ class InterfaceManager:
     _rename_protein_view: "rename_protein_view.RenameProteinView"
     _use_project_view: "use_project_view.UseProjectView"
     _hotspots_protein_regions_view: "hotspots_protein_regions_view.HotspotsProteinRegionsView"
+    _add_scene_view: "add_scene_view.AddSceneView"
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
@@ -72,6 +73,7 @@ class InterfaceManager:
         self._add_sequence_view = add_sequence_view.AddSequenceView()
         self._rename_protein_view = rename_protein_view.RenameProteinView()
         self._use_project_view = use_project_view.UseProjectView()
+        self._add_scene_view = add_scene_view.AddSceneView()
 
         # <editor-fold desc="Setup App Settings">
         self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -171,6 +173,9 @@ class InterfaceManager:
 
     def get_use_project_view(self):
         return self._use_project_view
+
+    def get_add_scene_view(self):
+        return self._add_scene_view
 
     def get_application_settings(self) -> "settings.Settings":
         return self._application_settings
@@ -510,7 +515,8 @@ class InterfaceManager:
         tmp_protein = self.get_current_active_protein_object()
         tmp_chain = self.get_current_active_chain_object()
         if the_pymol_session_manager.is_the_current_protein_in_session():
-            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            # fixme: This can easily be bypassed by a power user if the first residue color is changed
+            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
             tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)
         self._main_view.ui.box_protein_color.setCurrentIndex(
             self._main_view.ui.box_protein_color.findText(tmp_chain.pymol_parameters["chain_color"])
@@ -522,7 +528,8 @@ class InterfaceManager:
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
         if the_pymol_session_manager.is_the_current_protein_pair_in_session():
-            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            # fixme: This can easily be bypassed by a power user if the first residue color is changed
+            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
             tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)
         self._main_view.ui.box_protein_pair_color.setCurrentIndex(
             self._main_view.ui.box_protein_pair_color.findText(tmp_chain.pymol_parameters["chain_color"])

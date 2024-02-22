@@ -20,29 +20,44 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Open Dialog."""
-import glob
-import os
+
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
 
 from pyssa.controller import interface_manager
-from pyssa.gui.ui.styles import styles
-from pyssa.util import input_validator, constants
+from pyssa.internal.portal import pymol_io
 
 
-class RenameProteinViewController(QtCore.QObject):
+class AddSceneViewController(QtCore.QObject):
     """Class for the RenameProteinViewController class"""
     user_input = QtCore.pyqtSignal(tuple)
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager"):
         super().__init__()
         self._interface_manager = the_interface_manager
-        self._view = the_interface_manager.get_rename_protein_view()
+        self._view = the_interface_manager.get_add_scene_view()
+        self._all_current_scenes = pymol_io.get_all_scenes_from_pymol_session()  # TODO: this can be optimized for more performance!
         self._connect_all_ui_elements_to_slot_functions()
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
-        self._view.btn_add_scene.clicked.connect(self._rename_protein)
+        self._view.line_edit_scene_name.textChanged.connect(self._validate_scene_name)
+        self._view.btn_add_scene.clicked.connect(self._add_scene)
 
-    def _rename_protein(self):
+    def _add_scene(self):
         self._view.close()
         self.user_input.emit((self._view.line_edit_scene_name.text(), True))
+    
+    def _validate_scene_name(self, text):
+        new_text = ''.join(char for char in text)
+        self._view.line_edit_scene_name.setText(new_text)
+        if new_text in self._all_current_scenes:
+            self._view.btn_add_scene.setEnabled(False)
+            self._view.line_edit_scene_name.setToolTip("This scene name already exists. Please enter another name.")
+            self._view.line_edit_scene_name.setStyleSheet(
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+        else:
+            self._view.btn_add_scene.setEnabled(True)
+            self._view.line_edit_scene_name.setToolTip("")
+            self._view.line_edit_scene_name.setStyleSheet(
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+            )

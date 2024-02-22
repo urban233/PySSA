@@ -30,7 +30,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
-class RenameProteinView(QtWidgets.QDialog):
+class AddSceneView(QtWidgets.QDialog):
     # Define a custom signal
     dialogClosed = QtCore.pyqtSignal(tuple)
 
@@ -38,17 +38,17 @@ class RenameProteinView(QtWidgets.QDialog):
         """Constructor."""
         QtWidgets.QDialog.__init__(self, parent)
 
-        self.lbl_description = QtWidgets.QLabel("New protein name")
-        self.line_edit_protein_name = custom_line_edit.CustomLineEdit()
-        self.btn_rename_protein = QtWidgets.QPushButton("Rename")
+        self.lbl_description = QtWidgets.QLabel("New PyMOL scene name")
+        self.line_edit_scene_name = custom_line_edit.CustomLineEdit()
+        self.btn_add_scene = QtWidgets.QPushButton("Add")
 
         self.layout_user_input = QtWidgets.QVBoxLayout()
         self.layout_user_input.addWidget(self.lbl_description)
-        self.layout_user_input.addWidget(self.line_edit_protein_name)
+        self.layout_user_input.addWidget(self.line_edit_scene_name)
 
         self.layout_confirmation = QtWidgets.QHBoxLayout()  # Use QHBoxLayout for the button
         self.layout_confirmation.addStretch(1)  # Add stretchable space before the button
-        self.layout_confirmation.addWidget(self.btn_rename_protein)
+        self.layout_confirmation.addWidget(self.btn_add_scene)
 
         self.layout_complete = QtWidgets.QVBoxLayout()
         self.layout_complete.addLayout(self.layout_user_input)
@@ -63,7 +63,7 @@ class RenameProteinView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Rename Selected Protein Structure")
+        self.setWindowTitle("Add New PyMOL Scene")
         self.setModal(True)
 
     def closeEvent(self, event):
