@@ -725,7 +725,7 @@ class InterfaceManager:
             elif the_pymol_session_manager.is_the_current_protein_pair_in_session() and the_pymol_session_manager.current_scene_name != "":
                 self._main_view.ui.lbl_info_protein_pair.setText("Please select a chain.")
             else:
-                self._main_view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the selected protein pair.")
+                self._main_view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the \nselected protein pair.")
         elif an_object_type == "protein":
             self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
@@ -734,7 +734,7 @@ class InterfaceManager:
             elif the_pymol_session_manager.is_the_current_protein_pair_in_session() and the_pymol_session_manager.current_scene_name != "":
                 self._main_view.ui.lbl_info_protein_pair.setText("Please select a chain.")
             else:
-                self._main_view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the selected protein pair.")
+                self._main_view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the \nselected protein pair.")
         elif an_object_type == "scene":
             self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
@@ -742,7 +742,7 @@ class InterfaceManager:
             if the_pymol_session_manager.is_the_current_protein_pair_in_session():
                 self._main_view.ui.lbl_info_protein_pair.setText("Please select a chain.")
             else:
-                self._main_view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the selected protein pair.")
+                self._main_view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the \nselected protein pair.")
         elif an_object_type == "chain":
             self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
@@ -759,7 +759,7 @@ class InterfaceManager:
             elif the_pymol_session_manager.is_the_current_protein_pair_in_session() and the_pymol_session_manager.current_scene_name != "":
                 self._main_view.ui.lbl_info_protein_pair.setText("Please select a chain.")
             else:
-                self._main_view.ui.lbl_info_protein_pair.setText("Please load the protein session of the selected protein pair.")
+                self._main_view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the \nselected protein pair.")
         else:
             constants.PYSSA_LOGGER.warning("Unknown object type on proteins tab selected.")
 

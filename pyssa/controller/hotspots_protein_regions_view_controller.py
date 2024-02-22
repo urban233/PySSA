@@ -51,14 +51,9 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
                 return self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object(), 0
         elif self._interface_manager.current_tab_index == 2:
             # protein pairs tab
-            if self._interface_manager.get_current_protein_pair_tree_index_type() == "protein_pair":
-                tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
-                return tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object()
-            elif self._interface_manager.get_current_protein_pair_tree_index_type() == "protein":
-                tmp_protein_pair: "protein_pair" = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index()
-                return tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object()
-            elif self._interface_manager.get_current_protein_pair_tree_index_type() == "chain":
-                tmp_protein_pair: "protein_pair" = self._interface_manager.get_grand_parent_index_object_of_current_protein_pair_tree_index()
+            tmp_type: str = self._interface_manager.get_current_protein_pair_tree_index_type()
+            if tmp_type == "protein_pair" or tmp_type == "protein" or tmp_type == "chain" or tmp_type == "scene" or tmp_type == "header":
+                tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
                 return tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object()
             else:
                 raise ValueError("Invalid tree view selection.")

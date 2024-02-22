@@ -1145,7 +1145,9 @@ class MainViewController:
 
     # <editor-fold desc="Hotspots">
     def _hotspots_protein_regions(self) -> None:
-        self._external_controller = hotspots_protein_regions_view_controller.HotspotsProteinRegionsViewController(self._interface_manager)
+        self._external_controller = hotspots_protein_regions_view_controller.HotspotsProteinRegionsViewController(
+            self._interface_manager
+        )
         self._interface_manager.get_hotspots_protein_regions_view().show()
         self._pymol_session_manager.show_sequence_view()
 
@@ -1669,10 +1671,10 @@ class MainViewController:
 
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
 
-        if tmp_type == "protein":
-            tmp_protein = self._interface_manager.get_current_protein_tree_index_object()
-        elif tmp_type == "chain":
-            tmp_protein = self._interface_manager.get_parent_index_object_of_current_protein_tree_index()
+        if tmp_type == "protein" or tmp_type == "chain":
+            tmp_protein = self._interface_manager.get_current_active_protein_object()
+        elif tmp_type == "header" or tmp_type == "scene":
+            return
         else:
             logger.warning("Unknown object type occurred in Protein tab.")
             return
@@ -2224,33 +2226,11 @@ class MainViewController:
             self.protein_pair_context_color_based_on_rmsd_action = self.protein_pair_context_menu.addAction(self._view.tr("Color By RMSD"))
             self.protein_pair_context_color_based_on_rmsd_action.triggered.connect(self._color_protein_pair_by_rmsd)
 
-            # if self._interface_manager.get_current_protein_pair_tree_index_type() == "protein_pair":
-            #     tmp_protein_pair = self._interface_manager.get_current_protein_pair_tree_index_object()
-
             if not self._pymol_session_manager.is_the_current_protein_pair_in_session():
                 self.protein_pair_context_color_based_on_rmsd_action.setEnabled(False)
             else:
                 self.protein_pair_context_color_based_on_rmsd_action.setEnabled(True)
-
-            #
-            # self.proteins_context_menu_clean_action = self.protein_context_menu.addAction(self._view.tr("Clean selected protein"))
-            # self.proteins_context_menu_clean_action.triggered.connect(self.clean_protein_update)
-            # self.proteins_context_menu_rename_action = self.protein_context_menu.addAction(self._view.tr("Rename selected protein"))
-            # self.proteins_context_menu_rename_action.triggered.connect(self.rename_selected_protein_structure)
-            #
-            # # <editor-fold desc="Check if protein is in any protein pair">
-            # if tmp_is_protein_in_any_pair:
-            #     self.proteins_context_menu_rename_action.setEnabled(False)
-            # else:
-            #     self.proteins_context_menu_rename_action.setEnabled(True)
-
-            # </editor-fold>
-
-        elif level == 1:
-            # protein level
-            pass
-        elif level == 2:
-            # chain level
+        else:
             pass
 
         self.protein_pair_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
