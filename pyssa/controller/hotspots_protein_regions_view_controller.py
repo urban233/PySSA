@@ -75,7 +75,8 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
 
     def show_resi_sticks(self) -> None:
         """Shows the pymol selection as sticks."""
-        session_util.check_if_sele_is_empty()
+        if session_util.check_if_sele_is_empty():
+            return
         cmd.show(representation="sticks", selection="sele and not hydrogens")
         cmd.select(name="sele", selection="sele and not hydrogens")
         cmd.color(color="atomic", selection="sele and not elem C")
@@ -83,7 +84,8 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
 
     def hide_resi_sticks(self) -> None:
         """Hides the balls and sticks representation of the pymol selection."""
-        session_util.check_if_sele_is_empty()
+        if session_util.check_if_sele_is_empty():
+            return
         cmd.hide(representation="sticks", selection="sele")
 
     def show_disulfide_bonds(self) -> None:

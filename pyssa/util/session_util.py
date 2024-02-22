@@ -26,7 +26,7 @@ from pymol import cmd
 from pyssa.gui.ui.messageboxes import basic_boxes
 
 
-def check_if_sele_is_empty() -> None:
+def check_if_sele_is_empty() -> bool:
     """Checks if a selection is empty."""
     try:
         tmp_selection = cmd.get_model("sele")
@@ -37,7 +37,7 @@ def check_if_sele_is_empty() -> None:
             "Please select at least one residue from the sequence view.",
             QMessageBox.Information,
         )
-        return
+        return True
     try:
         tmp_selection.atom[0].resi
     except IndexError:
@@ -47,3 +47,5 @@ def check_if_sele_is_empty() -> None:
             "Please select at least one residue from the sequence view.",
             QMessageBox.Information,
         )
+        return True
+    return False
