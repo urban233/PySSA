@@ -201,6 +201,8 @@ class MainViewController:
         self._interface_manager.get_rename_protein_view().dialogClosed.connect(
             self.post_rename_selected_protein_structure)
 
+        self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
+
         # protein pairs tab
         self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_protein_pairs)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_pair_branch)
@@ -217,6 +219,7 @@ class MainViewController:
         self._view.ui.btn_protein_pair_hide_sticks.clicked.connect(self.__slot_hide_protein_pair_chain_as_sticks)
         self._view.ui.btn_protein_pair_show_ribbon.clicked.connect(self.__slot_show_protein_pair_chain_as_ribbon)
         self._view.ui.btn_protein_pair_hide_ribbon.clicked.connect(self.__slot_hide_protein_pair_chain_as_ribbon)
+        self._view.ui.btn_help_3.clicked.connect(self._open_protein_pairs_tab_help)
 
     @staticmethod
     def _close_main_window():
@@ -289,7 +292,71 @@ class MainViewController:
         self._view.ui.btn_save_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_save)
         self._view.ui.btn_delete_sequence.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
         self._view.ui.btn_delete_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_delete)
+        self._view.ui.proteins_tree_view.setContextMenuPolicy(3)
+        self._view.ui.proteins_tree_view.customContextMenuRequested.connect(
+            self._show_context_menu_for_proteins_tree_view
+        )
+        self._view.ui.btn_import_protein.setContextMenuPolicy(3)
+        self._view.ui.btn_import_protein.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_import
+        )
+        self._view.ui.btn_save_protein.setContextMenuPolicy(3)
+        self._view.ui.btn_save_protein.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_save
+        )
+        self._view.ui.btn_delete_protein.setContextMenuPolicy(3)
+        self._view.ui.btn_delete_protein.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_delete
+        )
+        self._view.ui.btn_open_protein_session.setContextMenuPolicy(3)
+        self._view.ui.btn_open_protein_session.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_load_session
+        )
+        self._view.ui.btn_create_protein_scene.setContextMenuPolicy(3)
+        self._view.ui.btn_create_protein_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_add_scene
+        )
+        self._view.ui.btn_update_protein_scene.setContextMenuPolicy(3)
+        self._view.ui.btn_update_protein_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_update_scene
+        )
+        self._view.ui.btn_delete_protein_scene.setContextMenuPolicy(3)
+        self._view.ui.btn_delete_protein_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_delete_scene
+        )
+        self._view.ui.frame_protein_pymol_scene.setContextMenuPolicy(3)
+        self._view.ui.frame_protein_pymol_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pymol_scene_config
+        )
         # add more buttons here ...
+        self._view.ui.protein_pairs_tree_view.setContextMenuPolicy(3)
+        self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pairs_tree_view
+        )
+        self._view.ui.btn_delete_protein_pair.setContextMenuPolicy(3)
+        self._view.ui.btn_delete_protein_pair.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pair_delete
+        )
+        self._view.ui.btn_open_protein_pair_session.setContextMenuPolicy(3)
+        self._view.ui.btn_open_protein_pair_session.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pair_load_session
+        )
+        self._view.ui.btn_create_protein_pair_scene.setContextMenuPolicy(3)
+        self._view.ui.btn_create_protein_pair_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pair_add_scene
+        )
+        self._view.ui.btn_update_protein_pair_scene.setContextMenuPolicy(3)
+        self._view.ui.btn_update_protein_pair_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pair_update_scene
+        )
+        self._view.ui.btn_delete_protein_pair_scene.setContextMenuPolicy(3)
+        self._view.ui.btn_delete_protein_pair_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pair_delete_scene
+        )
+        self._view.ui.frame_protein_pair_pymol_scene.setContextMenuPolicy(3)
+        self._view.ui.frame_protein_pair_pymol_scene.customContextMenuRequested.connect(
+            self._show_context_menu_for_protein_pair_pymol_scene_config
+        )
 
     # <editor-fold desc="Help pages">
     def _open_help_center(self):
@@ -312,6 +379,55 @@ class MainViewController:
 
     def _open_sequence_delete_help(self):
         self.open_help("help/sequences/sequence_delete/")
+
+    def _open_proteins_tab_help(self):
+        self.open_help("help/proteins/proteins_tab/")
+
+    def _open_protein_import_help(self):
+        self.open_help("help/proteins/protein_import/")
+
+    def _open_protein_save_help(self):
+        self.open_help("help/proteins/protein_save/")
+
+    def _open_protein_delete_help(self):
+        self.open_help("help/proteins/protein_delete/")
+
+    def _open_protein_pymol_scene_config_help(self):
+        self.open_help("help/proteins/protein_pymol_scene_configuration/")
+
+    def _open_protein_load_session_help(self):
+        self.open_help("help/proteins/protein_load_session/")
+
+    def _open_protein_add_scene_help(self):
+        self.open_help("help/proteins/protein_add_scene/")
+
+    def _open_protein_update_scene_help(self):
+        self.open_help("help/proteins/protein_update_scene/")
+
+    def _open_protein_delete_scene_help(self):
+        self.open_help("help/proteins/protein_delete_scene/")
+
+    def _open_protein_pairs_tab_help(self):
+        self.open_help("help/protein_pairs/protein_pairs_tab/")
+
+    def _open_protein_pair_delete_help(self):
+        self.open_help("help/protein_pairs/protein_pair_delete/")
+
+    def _open_protein_pair_pymol_scene_config_help(self):
+        self.open_help("help/protein_pairs/protein_pair_pymol_scene_configuration/")
+
+    def _open_protein_pair_load_session_help(self):
+        self.open_help("help/protein_pairs/protein_pair_load_session/")
+
+    def _open_protein_pair_add_scene_help(self):
+        self.open_help("help/protein_pairs/protein_pair_add_scene/")
+
+    def _open_protein_pair_update_scene_help(self):
+        self.open_help("help/protein_pairs/protein_pair_update_scene/")
+
+    def _open_protein_pair_delete_scene_help(self):
+        self.open_help("help/protein_pairs/protein_pair_delete_scene/")
+
     # </editor-fold>
 
     # <editor-fold desc="Context menu connections">
@@ -344,6 +460,86 @@ class MainViewController:
         self.help_context_action.triggered.disconnect()
         self.help_context_action.triggered.connect(self._open_sequence_delete_help)
         self.context_menu.exec_(self._view.ui.btn_delete_sequence.mapToGlobal(a_point))
+
+    def _show_context_menu_for_proteins_tree_view(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_proteins_tab_help)
+        self.context_menu.exec_(self._view.ui.proteins_tree_view.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_import(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_import_help)
+        self.context_menu.exec_(self._view.ui.btn_import_protein.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_save(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_save_help)
+        self.context_menu.exec_(self._view.ui.btn_save_protein.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_delete(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_delete_help)
+        self.context_menu.exec_(self._view.ui.btn_delete_protein.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_load_session(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_load_session_help)
+        self.context_menu.exec_(self._view.ui.btn_open_protein_session.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_add_scene(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_add_scene_help)
+        self.context_menu.exec_(self._view.ui.btn_create_protein_scene.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_update_scene(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_update_scene_help)
+        self.context_menu.exec_(self._view.ui.btn_update_protein_scene.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_delete_scene(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_delete_scene_help)
+        self.context_menu.exec_(self._view.ui.btn_delete_protein_scene.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pymol_scene_config(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pymol_scene_config_help)
+        self.context_menu.exec_(self._view.ui.frame_protein_pymol_scene.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pairs_tree_view(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pairs_tab_help)
+        self.context_menu.exec_(self._view.ui.protein_pairs_tree_view.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pair_delete(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pair_delete_help)
+        self.context_menu.exec_(self._view.ui.btn_delete_protein_pair.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pair_load_session(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pair_load_session_help)
+        self.context_menu.exec_(self._view.ui.btn_open_protein_pair_session.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pair_add_scene(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pair_add_scene_help)
+        self.context_menu.exec_(self._view.ui.btn_create_protein_pair_scene.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pair_update_scene(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pair_update_scene_help)
+        self.context_menu.exec_(self._view.ui.btn_update_protein_pair_scene.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pair_delete_scene(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pair_delete_scene_help)
+        self.context_menu.exec_(self._view.ui.btn_delete_protein_pair_scene.mapToGlobal(a_point))
+
+    def _show_context_menu_for_protein_pair_pymol_scene_config(self, a_point):
+        self.help_context_action.triggered.disconnect()
+        self.help_context_action.triggered.connect(self._open_protein_pair_pymol_scene_config_help)
+        self.context_menu.exec_(self._view.ui.frame_protein_pair_pymol_scene.mapToGlobal(a_point))
 
     # </editor-fold>
 
@@ -1161,7 +1357,7 @@ class MainViewController:
     # <editor-fold desc="Settings menu methods">
     def open_settings_global(self) -> None:
         """Opens the dialog for the global settings."""
-        dialog = dialog_settings_global.DialogSettingsGlobal()
+        dialog = dialog_settings_global.DialogSettingsGlobal(self._interface_manager)
         dialog.exec_()
         self._interface_manager.update_settings()
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")

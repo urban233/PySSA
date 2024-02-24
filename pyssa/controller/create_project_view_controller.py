@@ -56,7 +56,6 @@ class CreateProjectViewController(QtCore.QObject):
         self._view.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
         self._view.ui.btn_new_create_project.clicked.connect(self._create_new_project)
         self._view.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
-        # self._view.ui.btn_cancel(self._close)
 
     def _create_new_project(self) -> None:
         self._view.close()

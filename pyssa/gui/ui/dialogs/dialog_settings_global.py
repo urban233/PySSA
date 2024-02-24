@@ -24,6 +24,8 @@ import logging
 import subprocess
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_settings_global import Ui_Dialog
 from pyssa.internal.data_structures import settings
+from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import constants, gui_utils
 from pyssa.gui.ui.styles import styles
 from pyssa.util import globals
@@ -59,7 +61,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
     """This variable is for controlling whether the dialog opens or not"""
     ERROR = False
 
-    def __init__(self, parent=None) -> None:  # noqa: ANN001
+    def __init__(self, the_interface_manager, parent=None) -> None:  # noqa: ANN001
         """Constructor.
 
         Args:
@@ -69,6 +71,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self._interface_manager = the_interface_manager
 
         # <editor-fold desc="Info button changes">
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
@@ -227,19 +230,23 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         logging.info("Settings were successfully saved.")
         self.close()
 
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
     def open_page_information(self) -> None:
         """Opens the message box, to display extra information based on the page."""
-        msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)
-        msg.setWindowIcon(QtGui.QIcon(f"{constants.PLUGIN_ROOT_PATH}\\assets\\pyssa_logo.png"))
-        styles.set_stylesheet(msg)
-        msg.setWindowTitle("Information")
-        msg.setStyleSheet("QLabel{font-size: 11pt;}")
-
-        msg.setText(
-            "Global Settings\n\nCycles: Maximum number of outlier rejection cycles\n\n"
-            "Cutoff: Outlier rejection cutoff for sequence alignment\n\n"
-            "Note: Cutoff value is neglected unless numbers of cycles are more than 0.",
-        )
-        msg.exec_()
-        return
+        self.open_help("help/settings/pyssa_settings/")
