@@ -10,7 +10,7 @@
   + more visible color for bar chars to change the size
   + scroll bar for histogram
   + table: hide/show all columns "abheben" from selection
-  (+) make histogram that is always pretty at DDV startup
+  + make histogram that is always pretty at DDV startup
   + Color Protein Pair -> directly way (but keep in results too)
     + extra context menu?
     
@@ -26,7 +26,7 @@
 ** Session -> H&M
   + session name under project name
   + session name don't stands empty
-  (+) check and fix that protein color and representation is always updatable
+  + check and fix that protein color and representation is always updatable
 
 ** Achim -> H
   + write a mail because of WinBatch

@@ -40,6 +40,11 @@ class DeleteProjectViewController(QtCore.QObject):
         self._view = the_interface_manager.get_delete_view()
         self._fill_projects_list_view()
         self._connect_all_ui_elements_to_slot_functions()
+        self.restore_default_view()
+
+    def restore_default_view(self):
+        self._view.ui.txt_delete_selected_projects.clear()
+        self._view.ui.btn_delete_delete_project.setEnabled(False)
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
@@ -83,8 +88,9 @@ class DeleteProjectViewController(QtCore.QObject):
         response: bool = gui_utils.warning_message_project_gets_deleted()
         tmp_index = self._view.ui.list_delete_projects_view.currentIndex()
         if response is True:
-            os.remove(self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE))
+            os.remove(self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE))  # TODO: throws permission error
             self._view.ui.list_delete_projects_view.model().removeRow(tmp_index.row())  # removes item from model
+            self.restore_default_view()
         else:
             constants.PYSSA_LOGGER.info("No project has been deleted. No changes were made.")
 

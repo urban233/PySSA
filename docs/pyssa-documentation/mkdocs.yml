@@ -18,10 +18,47 @@ nav:
             - Add Sequence: help/sequences/sequence_add.md
             - Save Sequence: help/sequences/sequence_save.md
             - Delete Sequence: help/sequences/sequence_delete.md
+        - Proteins:
+            - Overview: help/proteins/index.md
+            - Proteins Tab: help/proteins/proteins_tab.md
+            - Protein PyMOL Scene Configuration: help/proteins/protein_pymol_scene_configuration.md
+            - Import Protein: help/proteins/protein_import.md
+            - Save Protein: help/proteins/protein_save.md
+            - Delete Protein: help/proteins/protein_delete.md
+            - Load Protein PyMOL Session: help/proteins/protein_load_session.md
+            - Add Protein PyMOL Scene: help/proteins/protein_add_scene.md
+            - Update Protein PyMOL Scene: help/proteins/protein_update_scene.md
+            - Delete Protein PyMOL Scene: help/proteins/protein_delete_scene.md
+        - Protein Pairs:
+              - Overview: help/protein_pairs/index.md
+              - Protein Pairs Tab: help/protein_pairs/protein_pairs_tab.md
+              - Delete Protein Pair: help/protein_pairs/protein_pair_delete.md
+              - Load Protein Pair PyMOL Session: help/protein_pairs/protein_pair_load_session.md
+              - Add Protein Pair PyMOL Scene: help/protein_pairs/protein_pair_add_scene.md
+              - Update Protein Pair PyMOL Scene: help/protein_pairs/protein_pair_update_scene.md
+              - Delete Protein Pair PyMOL Scene: help/protein_pairs/protein_pair_delete_scene.md
+        - Protein Structure Prediction:
+              - Overview: help/protein_structure_prediction/index.md
+              - ColabFold Monomer Prediction: help/protein_structure_prediction/colabfold_monomer.md
+              - ColabFold Multimer Prediction: help/protein_structure_prediction/colabfold_multimer.md
+        - Protein Structure Analysis:
+            - Overview: help/protein_structure_analysis/index.md
+            - Distance Analysis: help/protein_structure_analysis/distance_analysis.md
         - Results:
               - Overview: help/results/index.md
               - Summary: help/results/summary.md
               - DD Visualizer: help/results/distance_data_visualizer.md
+        - Hotspots:
+            - Overview: help/hotspots/index.md
+            - Protein Regions: help/hotspots/protein_regions.md
+        - Images:
+            - Overview: help/images/index.md
+            - Preview Image: help/images/preview_image.md
+            - Ray-Traced Image: help/images/ray_traced_image.md
+            - Simple Image: help/images/simple_image.md
+        - Settings:
+            - Overview: help/settings/index.md
+            - PySSA Settings: help/settings/pyssa_settings.md
         - Guides:
               - Import FASTA File: help/sequences/guides/how_to_import_fasta_file.md
     - Screenshots:

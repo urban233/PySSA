@@ -449,6 +449,7 @@ class MainViewController:
 
         _, tmp_project = return_value
         self._interface_manager.set_new_project(tmp_project)
+        self._interface_manager.refresh_workspace_model()
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
         self._interface_manager.stop_wait_spinner()

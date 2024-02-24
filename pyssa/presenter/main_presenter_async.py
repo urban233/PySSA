@@ -876,8 +876,8 @@ def open_project(
                 the_interface_manager.get_application_settings()
             )
             db_manager.close_project_database()
-        the_pymol_session_manager.reinitialize_session()
         the_interface_manager.set_new_project(tmp_project)
+        the_pymol_session_manager.reinitialize_session()
     except Exception as e:
         logger.error(f"Unexpected error occured. Exception: {e}")
         return 1, 0, 0
