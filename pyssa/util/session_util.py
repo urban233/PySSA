@@ -23,6 +23,8 @@
 import pymol
 from PyQt5.QtWidgets import QMessageBox
 from pymol import cmd
+
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.messageboxes import basic_boxes
 
 
@@ -32,20 +34,22 @@ def check_if_sele_is_empty() -> bool:
         tmp_selection = cmd.get_model("sele")
     except pymol.CmdException:
         # gets thrown if no sele object exists in pymol
-        basic_boxes.ok(
-            "PyMOL session",
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
             "Please select at least one residue from the sequence view.",
-            QMessageBox.Information,
+            "PyMOL Selection",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
         )
+        tmp_dialog.exec_()
         return True
     try:
         tmp_selection.atom[0].resi
     except IndexError:
         # gets thrown if sele object is empty
-        basic_boxes.ok(
-            "PyMOL session",
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
             "Please select at least one residue from the sequence view.",
-            QMessageBox.Information,
+            "PyMOL Selection",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
         )
+        tmp_dialog.exec_()
         return True
     return False

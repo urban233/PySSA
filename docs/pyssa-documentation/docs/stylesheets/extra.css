@@ -1,7 +1,7 @@
 :root > * {
-  --md-primary-fg-color:        #4B91F7;
-  --md-primary-fg-color--light: #4B91F7;
-  --md-primary-fg-color--dark:  #4B91F7;
+  --md-primary-fg-color:        #367af6;
+  --md-primary-fg-color--light: #367af6;
+  --md-primary-fg-color--dark:  #367af6;
   --md-footer-fg-color:         #000;
   --md-footer-bg-color:         #f7f8fa;
   --md-footer-bg-color--dark:   #f7f8fa;
@@ -36,7 +36,7 @@
 
 .md-typeset .admonition.general-information,
 .md-typeset details.general-information {
-  border-color: #4b91f7;
+  border-color: #367af6;
 }
 .md-typeset .general-information > .admonition-title,
 .md-typeset .general-information > summary {
@@ -44,7 +44,7 @@
 }
 .md-typeset .general-information > .admonition-title::before,
 .md-typeset .general-information > summary::before {
-  background-color: #4b91f7;
+  background-color: #367af6;
   -webkit-mask-image: var(--md-admonition-icon--general-information);
           mask-image: var(--md-admonition-icon--general-information);
 }

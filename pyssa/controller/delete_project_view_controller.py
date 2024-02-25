@@ -27,6 +27,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from pyssa.controller import interface_manager
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.styles import styles
 from pyssa.util import input_validator, gui_utils, constants, enums
 
@@ -85,7 +86,13 @@ class DeleteProjectViewController(QtCore.QObject):
     def delete_project(self) -> None:
         """Deletes an existing project."""
         # popup message which warns the user that the selected project gets deleted
-        response: bool = gui_utils.warning_message_project_gets_deleted()
+        tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+            "Are you sure you want to delete this project?",
+            "Delete Project",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
+        )
+        tmp_dialog.exec_()
+        response: bool = tmp_dialog.response
         tmp_index = self._view.ui.list_delete_projects_view.currentIndex()
         if response is True:
             os.remove(self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE))  # TODO: throws permission error

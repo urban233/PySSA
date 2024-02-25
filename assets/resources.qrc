@@ -20,5 +20,9 @@
         <file>icons/scan_delete_disabled_w200.svg</file>
         <file>icons/cancel_w200.svg</file>
         <file>icons/cancel_disabled_w200.svg</file>
+        <file>icons/dangerous_w200.svg</file>
+        <file>icons/error_w200.svg</file>
+        <file>icons/info_w200.svg</file>
+        <file>icons/warning_w200.svg</file>
     </qresource>
 </RCC>

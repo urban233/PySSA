@@ -27,6 +27,8 @@ import requests
 from typing import TYPE_CHECKING
 
 from PyQt5 import QtWidgets
+
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.internal.portal import pymol_io, graphic_operations
@@ -69,24 +71,26 @@ def check_version_number() -> None:
 
         if response.status_code == 503:
             constants.PYSSA_LOGGER.warning(
-                "The connection to the update servers failed. If could not determine if a new version is avaliable.",
+                "The connection to the update servers failed. If could not determine if a new version is available.",
             )
-            basic_boxes.ok(
-                "No connection",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "The connection to the update servers failed. "
-                "If could not determine if a new version is avaliable. You can start the PySSA now.",
-                QtWidgets.QMessageBox.Information,
+                "It could not determine if a new version is available. You can start the PySSA now.",
+                "No Internet Connection",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
+            tmp_dialog.exec_()
         else:
             print(f"Latest version: {response.text}")
             if response.text != constants.VERSION_NUMBER[1:]:
                 constants.PYSSA_LOGGER.info("here is a new version of PySSA available.")
-                basic_boxes.ok(
-                    "New version",
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "There is a new version for your PySSA!\n"
-                    f"To install the latest version {response.text}, open the PySSA Installer and click on update.",
-                    QtWidgets.QMessageBox.Information,
+                    f"To install the latest version {response.text}, open the PySSA Installer and click on Update.",
+                    "New Version!",
+                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
                 )
+                tmp_dialog.exec_()
     except requests.exceptions.RequestException as e:
         constants.PYSSA_LOGGER.error(f"Downloading the version file of the remote failed! Error: {e}")
     constants.PYSSA_LOGGER.info("Checking version of localhost with remote finished.")

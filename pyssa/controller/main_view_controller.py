@@ -21,6 +21,7 @@ from Bio import SeqRecord
 from Bio import SeqIO
 from xml import sax
 
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
@@ -839,11 +840,11 @@ class MainViewController:
         if file_path:
             shutil.copyfile(self._interface_manager.get_current_project().get_database_filepath(),
                             file_path)
-            basic_boxes.ok(
-                "Export Project",
-                "The project was successfully exported.",
-                QtWidgets.QMessageBox.Information,
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "The project was successfully exported.", "Export Project",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
+            tmp_dialog.exec_()
 
     # </editor-fold>
 
@@ -899,21 +900,23 @@ class MainViewController:
             if not dialog_settings_global.is_wsl2_installed():
                 constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
                 self._interface_manager.get_application_settings().wsl_install = 0
-                basic_boxes.ok(
-                    "Prediction",
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "Prediction failed because the WSL2 environment is not installed!",
-                    QtWidgets.QMessageBox.Critical,
+                    "Structure Prediction",
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
                 )
+                tmp_dialog.exec_()
                 return
             constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
             if not dialog_settings_global.is_local_colabfold_installed():
                 constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
                 self._interface_manager.get_application_settings().local_colabfold = 0
-                basic_boxes.ok(
-                    "Prediction",
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "Prediction failed because the ColabFold is not installed!",
-                    QtWidgets.QMessageBox.Critical,
+                    "Structure Prediction",
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
                 )
+                tmp_dialog.exec_()
                 return
 
         # </editor-fold>
@@ -973,7 +976,12 @@ class MainViewController:
         constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
         filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
         constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
-        basic_boxes.ok("Abort prediction", "The structure prediction was aborted.", QtWidgets.QMessageBox.Information)
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            "The structure prediction was aborted.",
+            "Abort Structure Prediction",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        )
+        tmp_dialog.exec_()
         self._interface_manager.refresh_main_view()
 
     def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
@@ -1010,42 +1018,46 @@ class MainViewController:
 
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because there was an error writing the fasta file(s)!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because the fasta file(s) could not be found!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because a subprocess failed!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown error!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1056,37 +1068,37 @@ class MainViewController:
         """Post process after the analysis thread finished."""
         constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
         if an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
-            basic_boxes.ok(
-                "Distance analysis",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Distance analysis failed because there was an error during the analysis!",
-                QtWidgets.QMessageBox.Critical,
+                "Distance Analysis",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
             self._interface_manager.update_status_bar(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            basic_boxes.ok(
-                "Distance analysis",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Distance analysis failed because of an unknown error!",
-                QtWidgets.QMessageBox.Critical,
+                "Distance Analysis",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
             self._interface_manager.update_status_bar(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
-            # self._interface_manager.get_current_project().serialize_project(
-            #     self._interface_manager.get_current_project().get_project_xml_path()
-            # )
             constants.PYSSA_LOGGER.info("Project has been saved to project database.")
-            basic_boxes.ok(
-                "Structure analysis",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "All structure analysis' are done. Go to results to check the new results.",
-                QtWidgets.QMessageBox.Information,
+                "Distance Analysis",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.info("All structure analysis' are done.")
             self._interface_manager.update_status_bar("All structure analysis' are done.")
         self._database_manager.open_project_database()
@@ -1101,11 +1113,12 @@ class MainViewController:
         tmp_exit_code_description = result[1]
         if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because there was an error writing the fasta file(s)!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1113,11 +1126,12 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because the fasta file(s) could not be found!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1125,11 +1139,12 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because a subprocess failed!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1137,11 +1152,12 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown error!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1151,20 +1167,22 @@ class MainViewController:
             self._interface_manager.refresh_protein_model()
             self._interface_manager.refresh_main_view()
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Structure prediction",
-                "All structure predictions are done. Go to View to check the new proteins.",
-                QtWidgets.QMessageBox.Information,
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "All structure predictions are done. Go to View to the Proteins tab to see the new protein(s).",
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
             self._interface_manager.update_status_bar("All structure predictions are done.")
         else:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown case!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             self._interface_manager.update_status_bar("Prediction failed because of an unknown case!")
         self._interface_manager.stop_wait_spinner()
 
@@ -1187,21 +1205,23 @@ class MainViewController:
             if not dialog_settings_global.is_wsl2_installed():
                 constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
                 self._interface_manager.get_application_settings().wsl_install = 0
-                basic_boxes.ok(
-                    "Prediction",
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "Prediction failed because the WSL2 environment is not installed!",
-                    QtWidgets.QMessageBox.Critical,
+                    "Structure Prediction",
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
                 )
+                tmp_dialog.exec_()
                 return
             constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
             if not dialog_settings_global.is_local_colabfold_installed():
                 constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
                 self._interface_manager.get_application_settings().local_colabfold = 0
-                basic_boxes.ok(
-                    "Prediction",
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "Prediction failed because the ColabFold is not installed!",
-                    QtWidgets.QMessageBox.Critical,
+                    "Structure Prediction",
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
                 )
+                tmp_dialog.exec_()
                 return
 
         # </editor-fold>
@@ -1284,11 +1304,12 @@ class MainViewController:
 
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because there was an error writing the fasta file(s)!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1297,11 +1318,12 @@ class MainViewController:
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because the fasta file(s) could not be found!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1310,11 +1332,12 @@ class MainViewController:
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because a subprocess failed!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1323,11 +1346,12 @@ class MainViewController:
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             self.block_box_prediction.destroy(True)
-            basic_boxes.ok(
-                "Prediction",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown error!",
-                QtWidgets.QMessageBox.Critical,
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
@@ -1399,12 +1423,19 @@ class MainViewController:
             except PermissionError:
                 print("The active log file was not deleted.")
             if len(os.listdir(str(constants.LOG_PATH))) == 1:
-                basic_boxes.ok("Clear log files", "All log files could be deleted.",
-                               QtWidgets.QMessageBox.Information)
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "All log files could be deleted.", "Clear Log Files",
+                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                )
+                tmp_dialog.exec_()
                 constants.PYSSA_LOGGER.info("All log files were deleted.")
             else:
-                basic_boxes.ok("Clear log files", "Not all log files could be deleted.",
-                               QtWidgets.QMessageBox.Warning)
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "Not all log files could be deleted.",
+                    "Clear Log Files",
+                    custom_message_box.CustomMessageBoxIcons.WARNING.value
+                )
+                tmp_dialog.exec_()
                 constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
 
     @staticmethod
@@ -1453,8 +1484,12 @@ class MainViewController:
                 constants.PYSSA_LOGGER.info(f"Demo projects downloaded and extracted successfully.")
 
             if tmp_error_flag:
-                basic_boxes.ok("Get Demo Projects", "The download of the demo projects failed. Please try again later.",
-                               QtWidgets.QMessageBox.Critical)
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "The download of the demo projects failed. Please try again later.",
+                    "Get Demo Projects",
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                )
+                tmp_dialog.exec_()
                 self._interface_manager.update_status_bar("The download of the demo projects failed.")
                 return
         else:
@@ -1467,9 +1502,12 @@ class MainViewController:
                 )
             except Exception as e:
                 constants.PYSSA_LOGGER.error(f"Extraction process of demo projects finished with the error: {e}.")
-                basic_boxes.ok("Get Demo Projects",
-                               "Extraction process of demo projects finished with an error. Check the logs to get more information.",
-                               QtWidgets.QMessageBox.Critical)
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "Extraction process of demo projects finished with an error. Check the logs to get more information.",
+                    "Get Demo Projects",
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                )
+                tmp_dialog.exec_()
                 self._interface_manager.update_status_bar("Extraction process of demo projects finished with an error.")
                 return
         try:
@@ -1486,14 +1524,21 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
         except Exception as e:
             constants.PYSSA_LOGGER.error(f"Import process of demo projects finished with the error: {e}.")
-            basic_boxes.ok("Get Demo Projects", "Import process of demo projects finished with an error. Check the logs to get more information.",
-                           QtWidgets.QMessageBox.Critical)
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "Import process of demo projects finished with an error. Check the logs to get more information.",
+                "Get Demo Projects",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            )
+            tmp_dialog.exec_()
             self._interface_manager.update_status_bar("Import process of demo projects finished with an error.")
         else:
             self._interface_manager.refresh_workspace_model()
             self._interface_manager.refresh_main_view()
-            basic_boxes.ok("Get Demo Projects", "Getting demo projects finished without errors.",
-                       QtWidgets.QMessageBox.Information)
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "Getting demo projects finished successfully.", "Get Demo Projects",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            )
+            tmp_dialog.exec_()
             self._interface_manager.update_status_bar("Getting demo projects finished successfully.")
 
     # </editor-fold>
@@ -1609,7 +1654,11 @@ class MainViewController:
         self.block_box_uni.destroy(True)
         self._view.status_bar.showMessage("Finished image creation.")
         QtWidgets.QApplication.restoreOverrideCursor()
-        basic_boxes.ok("Finished image creation", "The image has been created.", QtWidgets.QMessageBox.Information)
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            "The image has been created.", "Image Creation",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        )
+        tmp_dialog.exec_()
 
     def save_image(self) -> None:
         """Saves the image as a png file."""
@@ -1682,11 +1731,11 @@ class MainViewController:
                 cmd.draw(2400, 2400)
                 cmd.png(full_file_name[0], dpi=300)
                 self._view.status_bar.showMessage("Finished image creation.")
-                basic_boxes.ok(
-                    "Finished image creation",
-                    "The image has been created.",
-                    QtWidgets.QMessageBox.Information,
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "The image has been created.", "Image Creation",
+                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
                 )
+                tmp_dialog.exec_()
             except FileExistsError:
                 tools.quick_log_and_display(
                     "error",
@@ -1818,23 +1867,26 @@ class MainViewController:
     def __await_save_selected_sequence_as_fasta_file(self, result: tuple):
         self._view.wait_spinner.stop()
         if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            basic_boxes.ok(
-                "Save Protein Sequence",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the sequence as .fasta file failed!",
-                QtWidgets.QMessageBox.Critical,
+                "Save Protein Sequence",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
         elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
-            basic_boxes.ok(
-                "Save Protein Sequence",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "The sequence was successfully saved as .fasta file.",
-                QtWidgets.QMessageBox.Information,
-            )
-        else:
-            basic_boxes.ok(
                 "Save Protein Sequence",
-                "Saving the sequence as .fasta file failed with an unexpected error!",
-                QtWidgets.QMessageBox.Critical,
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
+            tmp_dialog.exec_()
+        else:
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "Saving the sequence as .fasta file failed with an unexpected error!",
+                "Save Protein Sequence",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            )
+            tmp_dialog.exec_()
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
 
@@ -2081,7 +2133,6 @@ class MainViewController:
     #         logger.warning("The representation of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _import_protein_structure(self):
-        self._interface_manager.start_wait_spinner()
         self._interface_manager.get_add_protein_view().restore_ui_defaults()
         self._interface_manager.get_add_protein_view().show()
 
@@ -2099,8 +2150,6 @@ class MainViewController:
             self._database_thread.put_database_operation_into_queue(
                 database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
                                                      (0, tmp_ref_protein)))
-            # tmp_work = (enums.SQLQueryType.INSERT_NEW_PROTEIN, (0, tmp_ref_protein))
-            # self._database_thread.put_database_operation_into_queue(tmp_work)
             constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
         elif tmp_name_len > 0:
             # local pdb file as input
@@ -2117,7 +2166,6 @@ class MainViewController:
             self._database_thread.put_database_operation_into_queue(
                 database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
                                                      (0, tmp_ref_protein)))
-            # tmp_ref_protein.db_project_id = self._database_manager.insert_new_protein(tmp_ref_protein)
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
         else:
             logger.warning("No protein object was created.")
@@ -2125,10 +2173,14 @@ class MainViewController:
         self._interface_manager.refresh_protein_model()
         self._interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
         self._interface_manager.refresh_main_view()
-        self._interface_manager.stop_wait_spinner()
 
     def _delete_protein(self):
-        response: bool = gui_utils.warning_message_protein_gets_deleted()
+        tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+            "Are you sure you want to delete this protein?", "Delete Protein",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
+        )
+        tmp_dialog.exec_()
+        response: bool = tmp_dialog.response
         if response:
             tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
             tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
@@ -2167,23 +2219,26 @@ class MainViewController:
 
     def __await_save_selected_protein_structure_as_pdb_file(self, result: tuple) -> None:
         if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            basic_boxes.ok(
-                "Save protein structure",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the protein as .pdb file failed!",
-                QtWidgets.QMessageBox.Critical,
+                "Save Protein Structure",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
         elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
-            basic_boxes.ok(
-                "Save protein structure",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "The protein was successfully saved as .pdb file.",
-                QtWidgets.QMessageBox.Information,
+                "Save Protein Structure",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
+            tmp_dialog.exec_()
         else:
-            basic_boxes.ok(
-                "Save protein structure",
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the protein as .pdb file failed with an unexpected error!",
-                QtWidgets.QMessageBox.Critical,
+                "Save Protein Structure",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
+            tmp_dialog.exec_()
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
@@ -2342,11 +2397,12 @@ class MainViewController:
         self._interface_manager.stop_wait_spinner()
 
     def delete_current_scene(self):
-        response = basic_boxes.yes_or_no(
-            "Delete Scene",
-            f"Are you sure you want to delete the scene: {self._pymol_session_manager.current_scene_name}",
-            QtWidgets.QMessageBox.Information
+        tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+            "Are you sure you want to delete this scene?", "Delete PyMOL Scene",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
         )
+        tmp_dialog.exec_()
+        response: bool = tmp_dialog.response
         if response:
             cmd.scene(key=self._pymol_session_manager.current_scene_name, action="clear")  # TODO: Does not work as expected!
 
@@ -2696,7 +2752,12 @@ class MainViewController:
     #     # tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
 
     def _delete_protein_pair_from_project(self):
-        response: bool = gui_utils.warning_message_protein_pair_gets_deleted()
+        tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+            "Are you sure you want to delete this protein pair?","Delete Protein Pair",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
+        )
+        tmp_dialog.exec_()
+        response: bool = tmp_dialog.response
         if response:
             tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
             tmp_database_operation = database_operation.DatabaseOperation(

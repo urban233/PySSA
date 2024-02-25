@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.util import tools, constants
@@ -93,11 +94,12 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
     if new_file_path != pathlib.Path(".") and os.access(new_file_path, os.W_OK):
         txt_box_dir.setText(str(new_file_path))
     elif new_file_path != pathlib.Path(".") and not os.access(new_file_path, os.W_OK):
-        basic_boxes.ok(
-            "Permission error",
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
             "You do not have write permissions for this directroy. Please choose another one.",
-            QMessageBox.Warning,
+            "Permission Error",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
         )
+        tmp_dialog.exec_()
         txt_box_dir.setText(str(current_file_path))
     else:
         txt_box_dir.setText(str(current_file_path))
