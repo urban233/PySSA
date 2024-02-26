@@ -26,7 +26,7 @@ import os
 import pymol
 from PyQt5 import QtCore, QtWidgets
 from pymol import cmd
-
+from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.styles import styles
 from pyssa.util import input_validator, gui_utils, constants, tools
@@ -40,43 +40,73 @@ class CreateProjectViewController(QtCore.QObject):
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_create_view()
-        self._view.ui.lbl_new_status_choose_reference.setText("")
-        self._view.ui.lbl_new_status_choose_reference.setStyleSheet("color: #FC5457")
-        self._fill_projects_list_view()
+        self._restore_ui()
+        self._project_names: set = self._convert_model_into_set()
         self._connect_all_ui_elements_to_slot_functions()
-        self.hide_add_protein_options()
+        self._hide_add_protein_options()
+
+    # <editor-fold desc="Util methods">
+    def _restore_ui(self):
+        """Restores the ui."""
+        self._view.ui.list_create_projects_view.clearSelection()
+        self._fill_projects_list_view()
+        self._view.ui.txt_new_project_name.clear()
+        self._view.ui.txt_new_project_name.setStyleSheet(
+            """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+        )
+        self._view.ui.lbl_new_status_choose_reference.setText("")
+        self._view.ui.lbl_new_status_choose_reference.setStyleSheet("color: #ba1a1a; font-size: 10px;")
+        self._view.ui.lbl_new_status_project_name.setText("")
+        self._view.ui.lbl_new_status_project_name.setStyleSheet("color: #ba1a1a; font-size: 10px;")
+        self._view.ui.btn_new_create_project.setEnabled(False)
+        self._view.ui.cb_new_add_reference.setCheckState(False)
+        self._view.ui.txt_new_choose_reference.clear()
+        self._hide_add_protein_options()
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
         self._view.ui.list_create_projects_view.setModel(self._interface_manager.get_workspace_projects())
 
+    def _convert_model_into_set(self) -> set:
+        tmp_project_names = []
+        for tmp_row in range(self._view.ui.list_create_projects_view.model().rowCount()):
+            tmp_project_names.append(
+                self._view.ui.list_create_projects_view.model().index(tmp_row, 0).data(Qt.DisplayRole)
+            )
+        return set(tmp_project_names)
+
+    # </editor-fold>
+
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
-        self._view.ui.txt_new_project_name.textChanged.connect(self.validate_project_name)
-        self._view.ui.cb_new_add_reference.clicked.connect(self.show_add_protein_options)
-        self._view.ui.btn_new_choose_reference.clicked.connect(self.load_reference_in_project)
+        self._view.ui.txt_new_project_name.textChanged.connect(self._validate_project_name)
+        self._view.ui.cb_new_add_reference.clicked.connect(self._show_add_protein_options)
+        self._view.ui.btn_new_choose_reference.clicked.connect(self._load_reference_in_project)
         self._view.ui.btn_new_create_project.clicked.connect(self._create_new_project)
-        self._view.ui.txt_new_choose_reference.textChanged.connect(self.validate_reference_in_project)
+        self._view.ui.txt_new_choose_reference.textChanged.connect(self._validate_reference_in_project)
 
     def _create_new_project(self) -> None:
         self._view.close()
         self.user_input.emit((self._view.ui.txt_new_project_name.text(), self._view.ui.txt_new_choose_reference.text()))
 
-    def hide_add_protein_options(self) -> None:
+    def _hide_add_protein_options(self) -> None:
         self._view.ui.lbl_new_status_choose_reference.hide()
         self._view.ui.lbl_new_choose_reference.hide()
         self._view.ui.txt_new_choose_reference.hide()
         self._view.ui.btn_new_choose_reference.hide()
 
-    def validate_project_name(self) -> None:
+    def _validate_project_name(self, the_entered_text: str) -> None:
         """Validates the input of the project name in real-time."""
-        input_validator.InputValidator.validate_project_name(
-            self._view.ui.list_create_projects_view.model(),
-            self._view.ui.txt_new_project_name,
-            self._view.ui.lbl_new_status_project_name,
-            self._view.ui.btn_new_create_project
-        )
+        tmp_input_validator = input_validator.InputValidator(self._view.ui.txt_new_project_name)
+        tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_project_name(the_entered_text,
+                                                                                             self._project_names)
+        if tmp_validate_flag:
+            self._view.ui.lbl_new_status_project_name.setText("")
+            self._view.ui.btn_new_create_project.setEnabled(True)
+        else:
+            self._view.ui.lbl_new_status_project_name.setText(tmp_message)
+            self._view.ui.btn_new_create_project.setEnabled(False)
 
-    def validate_reference_in_project(self) -> None:
+    def _validate_reference_in_project(self) -> None:
         """Checks if the entered reference protein is valid or not."""
         if len(self._view.ui.txt_new_choose_reference.text()) == 0:
             self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
@@ -115,7 +145,7 @@ class CreateProjectViewController(QtCore.QObject):
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
                 self._view.ui.btn_new_create_project.setEnabled(False)
 
-    def show_add_protein_options(self) -> None:
+    def _show_add_protein_options(self) -> None:
         if self._view.ui.cb_new_add_reference.isChecked():
             self._view.ui.lbl_new_choose_reference.show()
             self._view.ui.lbl_new_status_choose_reference.show()
@@ -127,33 +157,7 @@ class CreateProjectViewController(QtCore.QObject):
             self._view.ui.txt_new_choose_reference.hide()
             self._view.ui.btn_new_choose_reference.hide()
 
-    def show_add_reference(self) -> None:
-        """Shows the reference input section."""
-        # checkbox is checked
-        self._view.ui.cb_new_add_reference.checkState()
-        if self._view.ui.cb_new_add_reference.checkState() == 2:
-            self._view.ui.txt_new_choose_reference.clear()
-            self._view.ui.txt_new_choose_reference.setStyleSheet("background-color: white")
-            self._view.ui.lbl_new_choose_reference.show()
-            self._view.ui.txt_new_choose_reference.show()
-            self._view.ui.btn_new_choose_reference.show()
-            self._view.ui.btn_new_create_project.setEnabled(False)
-            # check internet connectivity
-            if not tools.check_internet_connectivity():
-                gui_utils.no_internet_dialog()
-                self._view.ui.txt_new_choose_reference.setEnabled(False)
-                self._view.ui.lbl_new_status_choose_reference.setText("You cannot enter a PDB ID (no internet).")
-                return
-            self._view.ui.txt_new_choose_reference.setEnabled(True)
-            self._view.ui.lbl_new_status_choose_reference.setText("")
-        else:
-            self._view.ui.lbl_new_choose_reference.hide()
-            self._view.ui.txt_new_choose_reference.hide()
-            self._view.ui.btn_new_choose_reference.hide()
-            self._view.ui.lbl_new_status_choose_reference.setText("")
-            self._view.ui.btn_new_create_project.setEnabled(True)
-
-    def load_reference_in_project(self) -> None:
+    def _load_reference_in_project(self) -> None:
         """Loads a reference in a new project."""
         try:
             # open file dialog

@@ -30,9 +30,42 @@ from pyssa.gui.ui.styles import styles
 class InputValidator:
     """Class for validating any input from the user."""
 
-    def __init__(self) -> None:
+    line_edit: QtWidgets.QLineEdit
+
+    def __init__(self, a_line_edit: QtWidgets.QLineEdit) -> None:
         """Empty constructor."""
-        pass
+        self.line_edit = a_line_edit
+
+    def validate_input_for_project_name(self,
+                                        the_current_entered_text: str,
+                                        the_current_projects: set) -> tuple[bool, str]:
+        """Validates the input for a project name.
+
+        Returns:
+            True: if the input is valid, False if the input is invalid + a message
+        """
+        allowed_chars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', '_'}
+        for char in the_current_entered_text:
+            if char not in allowed_chars:
+                self.line_edit.setStyleSheet(
+                    """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                )
+                return False, "Invalid character."
+        if the_current_entered_text in the_current_projects:
+            self.line_edit.setStyleSheet(
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            return False, "Project name already exists!"
+        elif the_current_entered_text == "":
+            self.line_edit.setStyleSheet(
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            return False, "Please enter a project name."
+        else:
+            self.line_edit.setStyleSheet(
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+            )
+            return True, ""
 
     @staticmethod
     def validate_project_name(
