@@ -34,3 +34,16 @@
 
 (** Movies
   - use-cases)
+
+
+* Meeting 27.02.2024
+- Menu-Funktion für Arrangement für die Windows
+- Hide All
+- Coloring for elements
+- Summary disabled
+- View Plots message box for identical proteins
+- tsv zu csv
+- documentation window in focus
+- Methodenteil im Paper anpassen
+- Switch von Protein Pairs Tab zum Protein Tab fixen -> Chain modification on protein tab if protein pair session is loaded
+
