@@ -181,6 +181,9 @@ def build_pdb_file(records, a_filepath):
                                f" {record['chain_identifier']:1s}{record['residue_sequence_number']:4d}\n"
                 except KeyError:
                     pdb_line = ""
+                except ValueError:  # fixme: this could be the fix for the protein import problem
+                    logger.warning("PDB file has only the record type for TER.")
+                    pdb_line = f"{record_type:3s}\n"
             elif record_type == 'HETATM':
                 pdb_line = f"{record_type:6s}{record['atom_number']:5d}  {record['atom_name']:4s}" \
                            f"{record['residue_name']:3s} {record['chain_identifier']:1s}" \

@@ -2137,6 +2137,7 @@ class MainViewController:
         self._interface_manager.get_add_protein_view().show()
 
     def _post_import_protein_structure(self, return_value: tuple):
+        # TODO: this function needs an async/await part
         tmp_protein_name, tmp_name_len = return_value
         if tmp_name_len == 4:
             tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
@@ -2170,9 +2171,9 @@ class MainViewController:
         else:
             logger.warning("No protein object was created.")
             return
-        self._interface_manager.refresh_protein_model()
         self._interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
         self._interface_manager.refresh_main_view()
+        self._interface_manager.update_status_bar("Importing protein structure finished.")
 
     def _delete_protein(self):
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(

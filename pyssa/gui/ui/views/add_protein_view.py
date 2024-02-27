@@ -58,6 +58,7 @@ class AddProteinView(QtWidgets.QDialog):
         self.ui.btn_add_protein.clicked.connect(self.add_model)
         self.ui.txt_add_protein.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
+        self.ui.lbl_status.setStyleSheet("""color: #ba1a1a; font-size: 10px;""")
         styles.color_bottom_frame_button(self.ui.btn_add_protein)
         self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
@@ -78,7 +79,7 @@ class AddProteinView(QtWidgets.QDialog):
                 "your local filesystem.",
             )
             self.ui.txt_add_protein.setEnabled(False)
-            self.ui.lbl_status.setText("You cannot enter a PDB ID (no internet).")
+            self.ui.lbl_status.setText("You cannot enter a PDB ID (no working internet connection).")
 
     def restore_ui_defaults(self):
         self.ui.txt_add_protein.clear()
@@ -151,5 +152,5 @@ class AddProteinView(QtWidgets.QDialog):
 
     def add_model(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""
-        self.return_value.emit((self.ui.txt_add_protein.text(), len(self.ui.txt_add_protein.text())))
         self.close()
+        self.return_value.emit((self.ui.txt_add_protein.text(), len(self.ui.txt_add_protein.text())))
