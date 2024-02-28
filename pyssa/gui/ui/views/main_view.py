@@ -184,7 +184,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_help_3.setIconSize(self.ui.btn_help_3.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help_3.setText("")
         # </editor-fold>
-        # Fixme: The icon size is not adjustable!!!
+
         # <editor-fold desc="Sequence">
         # add
         add_sequence_icon = QtGui.QIcon(QtGui.QPixmap(":icons/note_add_w200.svg"))

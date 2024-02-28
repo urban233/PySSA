@@ -85,6 +85,18 @@ QTreeView {
     border-color: #DCDBE3;
 }
 
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings{
+    border-image: none;
+    image: url(C:/Users/hannah/github_repos/PySSA/assets/icons/keyboard_arrow_right_w400.svg)
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings{
+    border-image: none;
+    image: url(C:/Users/hannah/github_repos/PySSA/assets/icons/keyboard_arrow_down_w400.svg)
+}
+
 QMainWindow {
     background-color: #fcfcfc;
 }

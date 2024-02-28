@@ -24,5 +24,7 @@
         <file>icons/error_w200.svg</file>
         <file>icons/info_w200.svg</file>
         <file>icons/warning_w200.svg</file>
+        <file>icons/keyboard_arrow_right_w400.svg</file>
+        <file>icons/keyboard_arrow_down_w400.svg</file>
     </qresource>
 </RCC>

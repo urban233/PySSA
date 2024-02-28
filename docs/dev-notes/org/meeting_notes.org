@@ -2,7 +2,23 @@
 #+AUTHOR: HK & MU
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
 
-* Meeting
+* Meeting 27.02.2024
+- Menu-Funktion für Arrangement für die Windows
+- Hide All
+- Coloring for elements
+- Summary disabled
+- View Plots message box for identical proteins
+- tsv zu csv
+- documentation window in focus
+- Switch von Protein Pairs Tab zum Protein Tab fixen -> Chain modification on protein tab if protein pair session is loaded
+
+* Paper
+- Methodenteil anpassen
+
+(** Movies
+  - use-cases)
+
+* Old notes
 ** Hompage -> H
   + disable/ hide options without usage
 
@@ -13,10 +29,10 @@
   + make histogram that is always pretty at DDV startup
   + Color Protein Pair -> directly way (but keep in results too)
     + extra context menu?
-    
+
 ** Documentation -> M (+ -> completed)
   + when PySSA gets run -> open documentation in other thread
-    
+
 ** Tooltip -> H
   + without click, e.g. import seq
 
@@ -30,20 +46,3 @@
 
 ** Achim -> H
   + write a mail because of WinBatch
-
-
-(** Movies
-  - use-cases)
-
-
-* Meeting 27.02.2024
-- Menu-Funktion für Arrangement für die Windows
-- Hide All
-- Coloring for elements
-- Summary disabled
-- View Plots message box for identical proteins
-- tsv zu csv
-- documentation window in focus
-- Methodenteil im Paper anpassen
-- Switch von Protein Pairs Tab zum Protein Tab fixen -> Chain modification on protein tab if protein pair session is loaded
-
