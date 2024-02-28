@@ -113,19 +113,24 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein_scene.setEnabled(False)
         self.ui.proteins_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Loaded")
-        # fixme: hides all ui elements for the scene modifications
+        # Hides all ui elements for the scene modifications
         self.ui.lbl_protein_color.hide()
+        self.ui.lbl_protein_atoms.hide()
         self.ui.lbl_protein_cartoon.hide()
         self.ui.lbl_protein_sticks.hide()
         self.ui.lbl_protein_ribbon.hide()
+        self.ui.lbl_protein_all_representations.hide()
 
         self.ui.box_protein_color.hide()
+        self.ui.btn_protein_color_atoms.hide()
+        self.ui.btn_protein_reset_atoms.hide()
         self.ui.btn_protein_show_cartoon.hide()
         self.ui.btn_protein_hide_cartoon.hide()
         self.ui.btn_protein_show_sticks.hide()
         self.ui.btn_protein_hide_sticks.hide()
         self.ui.btn_protein_show_ribbon.hide()
         self.ui.btn_protein_hide_ribbon.hide()
+        self.ui.btn_protein_hide_all_representations.hide()
 
         self.ui.lbl_info.setText("Please select a protein.")
         self.ui.lbl_info_2.hide()
@@ -138,19 +143,24 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein_pair_scene.setEnabled(False)
         self.ui.protein_pairs_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Loaded")
-        # fixme: hides all ui elements for the scene modifications
+        # Hides all ui elements for the scene modifications
         self.ui.lbl_protein_pair_color.hide()
+        self.ui.lbl_protein_pair_atoms.hide()
         self.ui.lbl_protein_pair_cartoon.hide()
         self.ui.lbl_protein_pair_sticks.hide()
         self.ui.lbl_protein_pair_ribbon.hide()
+        self.ui.lbl_protein_pair_all_representations.hide()
 
         self.ui.box_protein_pair_color.hide()
+        self.ui.btn_protein_pair_color_atoms.hide()
+        self.ui.btn_protein_pair_reset_atoms.hide()
         self.ui.btn_protein_pair_show_cartoon.hide()
         self.ui.btn_protein_pair_hide_cartoon.hide()
         self.ui.btn_protein_pair_show_sticks.hide()
         self.ui.btn_protein_pair_hide_sticks.hide()
         self.ui.btn_protein_pair_show_ribbon.hide()
         self.ui.btn_protein_pair_hide_ribbon.hide()
+        self.ui.btn_protein_pair_hide_all_representations.hide()
 
         self.ui.lbl_info_protein_pair.setText("Please select a protein pair.")
         self.ui.lbl_info_protein_pair_2.hide()
