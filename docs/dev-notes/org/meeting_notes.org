@@ -1,27 +1,34 @@
-#+TITLE: Color Scheme
-#+AUTHOR: HK & MU
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
+# TITLE: Meeting Notes
+# AUTHOR: HK & MU
 
 ? -> Issue can't get reproduced
 
 * Meeting 27.02.2024
+** WinBatch
 - Menu-Funktion für Arrangement für die Windows -> M
-- Hide All
-- Coloring for elements
-? Summary disabled
+
+** Write functions
+- hide all representation modes
+- color and reset for atoms
+
+** Message box
 - View Plots message box for identical proteins
-+ tsv zu csv
-+ documentation window in focus
-- fix messagebox to custom massagebox -> Restore settings
+- fix message box to custom massagebox -> Restore settings
+
+** Others
 - Switch von Protein Pairs Tab zum Protein Tab fixen -> Chain modification on protein tab if protein pair session is loaded
 - fix create project -> disable creation button, when project name isn't available and protein is added
 - fix create project -> import protein by pdb id (switch PyMOL request and reply to PDB request and reply -> faster)
+? Summary disabled
++ tsv zu csv
++ documentation window in focus
 
 * Paper
 - Methodenteil anpassen
 
 (** Movies
   - use-cases)
+
 
 * Old notes
 ** Hompage -> H
