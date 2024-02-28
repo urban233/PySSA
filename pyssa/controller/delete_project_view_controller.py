@@ -23,12 +23,16 @@
 """Module for the Delete Dialog."""
 
 import os
+import subprocess
+
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.styles import styles
+from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, gui_utils, constants, enums
 
 
@@ -43,6 +47,27 @@ class DeleteProjectViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
         self.restore_default_view()
 
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/project/delete_project/")
+
     def restore_default_view(self):
         self._view.ui.txt_delete_selected_projects.clear()
         self._view.ui.btn_delete_delete_project.setEnabled(False)
@@ -52,6 +77,7 @@ class DeleteProjectViewController(QtCore.QObject):
         self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_model())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
         self._view.ui.list_delete_projects_view.clicked.connect(self.select_project_from_delete_list)
         self._view.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)

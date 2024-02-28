@@ -1,10 +1,13 @@
 import os
+import subprocess
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from pymol import cmd
 from pyssa.controller import interface_manager, database_manager, pymol_session_manager
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
@@ -12,6 +15,7 @@ from pyssa.gui.ui.views import results_view, plot_view
 from pyssa.internal.data_structures import protein_pair, selection
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
 from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums
@@ -39,6 +43,27 @@ class ResultsViewController(QtCore.QObject):
         self._build_table_widget()
         self._fill_table_widget()
         self._view.setWindowTitle(f"Results Summary Of {self._protein_pair.name}")
+
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/results/summary/")
 
     def _connect_all_ui_elements_to_slot_functions(self):
         self._view.ui.btn_view_plots.clicked.connect(self._open_plot_view)
@@ -202,7 +227,18 @@ class ResultsViewController(QtCore.QObject):
             self._view,
             "Save distance data",
             "",
-            "Tab-Separated Values (*.tsv)",
+            "Comma-Separated Values (*.csv)",
         )
         if file_path:
-            self._protein_pair.distance_analysis.analysis_results.export_distance_data_as_tsv(file_path)
+            self._protein_pair.distance_analysis.analysis_results.export_distance_data_as_csv(file_path)
+            if os.path.exists(file_path):
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "Export data as .csv file finished.", "Export Data",
+                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                )
+            else:
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "Export data as .csv file failed!", "Export Data",
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                )
+            tmp_dialog.exec_()

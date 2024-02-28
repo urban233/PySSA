@@ -24,12 +24,15 @@ import copy
 import glob
 import os
 import pathlib
+import subprocess
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager, database_manager
 from pyssa.gui.ui.styles import styles
+from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, constants, gui_utils, enums
 
 
@@ -44,6 +47,27 @@ class UseProjectViewController(QtCore.QObject):
         self._initialize_ui()
         self._connect_all_ui_elements_to_slot_functions()
         self._fill_projects_list_view()
+
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/project/use_project/")
 
     def _initialize_ui(self) -> None:
         gui_elements = [
@@ -84,6 +108,7 @@ class UseProjectViewController(QtCore.QObject):
         self._view.ui.list_use_existing_projects.setModel(self._interface_manager.get_workspace_projects())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.txt_use_project_name.textChanged.connect(self.validate_use_project_name)
         self._view.ui.btn_use_next.clicked.connect(self.show_protein_selection_for_use)
         self._view.ui.btn_use_add_available_protein_structures.clicked.connect(

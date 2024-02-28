@@ -11,7 +11,7 @@
 ? Summary disabled
 - View Plots message box for identical proteins
 + tsv zu csv
-- documentation window in focus -> M
++ documentation window in focus
 - fix messagebox to custom massagebox -> Restore settings
 - Switch von Protein Pairs Tab zum Protein Tab fixen -> Chain modification on protein tab if protein pair session is loaded
 - fix create project -> disable creation button, when project name isn't available and protein is added
