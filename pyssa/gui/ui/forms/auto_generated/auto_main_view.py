@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(680, 846)
+        MainWindow.resize(767, 846)
         MainWindow.setAutoFillBackground(True)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -409,7 +409,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.addWidget(self.project_tab_widget)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 680, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 767, 26))
         self.menubar.setObjectName("menubar")
         self.menuProject = QtWidgets.QMenu(self.menubar)
         self.menuProject.setObjectName("menuProject")
@@ -479,6 +479,8 @@ class Ui_MainWindow(object):
         self.action_use_project.setObjectName("action_use_project")
         self.action_get_demo_projects = QtWidgets.QAction(MainWindow)
         self.action_get_demo_projects.setObjectName("action_get_demo_projects")
+        self.action_arrange_windows = QtWidgets.QAction(MainWindow)
+        self.action_arrange_windows.setObjectName("action_arrange_windows")
         self.menuProject.addAction(self.action_new_project)
         self.menuProject.addAction(self.action_open_project)
         self.menuProject.addAction(self.action_use_project)
@@ -494,6 +496,7 @@ class Ui_MainWindow(object):
         self.menuSettings.addAction(self.action_edit_settings)
         self.menuSettings.addAction(self.action_restore_settings)
         self.menuAbout.addAction(self.action_documentation)
+        self.menuAbout.addAction(self.action_arrange_windows)
         self.menuAbout.addAction(self.action_tutorials)
         self.menuAbout.addAction(self.action_get_demo_projects)
         self.menuAbout.addSeparator()
@@ -515,7 +518,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.project_tab_widget.setCurrentIndex(0)
+        self.project_tab_widget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -608,3 +611,4 @@ class Ui_MainWindow(object):
         self.action_clear_logs.setText(_translate("MainWindow", "Clear Logs"))
         self.action_use_project.setText(_translate("MainWindow", "Use"))
         self.action_get_demo_projects.setText(_translate("MainWindow", "Get Demo Projects"))
+        self.action_arrange_windows.setText(_translate("MainWindow", "Arrange Windows"))

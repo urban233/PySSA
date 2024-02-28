@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>680</width>
+    <width>767</width>
     <height>846</height>
    </rect>
   </property>
@@ -73,7 +73,7 @@
     <item>
      <widget class="QTabWidget" name="project_tab_widget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="sequences">
        <attribute name="title">
@@ -949,8 +949,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>680</width>
-     <height>21</height>
+     <width>767</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">
@@ -997,6 +997,7 @@
      <string>Help</string>
     </property>
     <addaction name="action_documentation"/>
+    <addaction name="action_arrange_windows"/>
     <addaction name="action_tutorials"/>
     <addaction name="action_get_demo_projects"/>
     <addaction name="separator"/>
@@ -1147,6 +1148,11 @@
   <action name="action_get_demo_projects">
    <property name="text">
     <string>Get Demo Projects</string>
+   </property>
+  </action>
+  <action name="action_arrange_windows">
+   <property name="text">
+    <string>Arrange Windows</string>
    </property>
   </action>
  </widget>
