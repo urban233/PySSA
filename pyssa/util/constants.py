@@ -151,6 +151,7 @@ DOCS_HTML = pathlib.Path(f"{PLUGIN_PATH}/docs/html/index.html")
 
 WINDOW_TITLE_OF_HELP_CENTER = "PySSA - Documentation Center"
 HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH = f"{PLUGIN_PATH}\\winbatch\\bring_docs_to_front.exe"
+ARRANGE_WINDOWS_EXE_FILEPATH = f"{PLUGIN_PATH}\\winbatch\\arrange_windows.exe"
 
 # Paths of help html files
 HELP_HOME_HTML_PATH = pathlib.Path(f"{PLUGIN_PATH}/docs/internal_help/html/home.html")

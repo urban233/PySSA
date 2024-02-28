@@ -163,6 +163,7 @@ class MainViewController:
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
         self._view.ui.action_predict_multimer.triggered.connect(self._predict_multimer)
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
+        self._view.ui.action_arrange_windows.triggered.connect(self.arrange_windows)
 
         self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
 
@@ -271,7 +272,6 @@ class MainViewController:
         subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
         self._interface_manager.stop_wait_spinner()
         self._interface_manager.update_status_bar("Opening help center finished.")
-
 
     def _init_context_menus(self):
         # <editor-fold desc="General context menu setup">
@@ -1400,7 +1400,19 @@ class MainViewController:
 
     # </editor-fold>
 
-    # <editor-fold desc="About menu methods">
+    # <editor-fold desc="Help menu methods">
+    def arrange_windows(self):
+        if not os.path.exists(constants.ARRANGE_WINDOWS_EXE_FILEPATH):
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "The script for arranging the windows could not be found!", "Arrange Windows",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
+        else:
+            logger.debug("Started script to arrange window ...")
+            subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH])
+            logger.debug("Script to arrange windows finished.")
+
     def open_logs(self) -> None:
         """Opens a file explorer with all log files and can open a log file in the default application."""
         file_dialog = QtWidgets.QFileDialog()
