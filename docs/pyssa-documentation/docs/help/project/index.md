@@ -11,6 +11,8 @@ Every work done with PySSA is organized into a project.
 
 [Delete Project :material-chevron-double-right:](delete_project.md)
 
+[Use Project :material-chevron-double-right:](use_project.md)
+
 [Import Project :material-chevron-double-right:](import_project.md)
 
 [Export Project :material-chevron-double-right:](export_project.md)

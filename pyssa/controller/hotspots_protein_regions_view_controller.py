@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Hotspots Dialog."""
+import subprocess
 import typing
 
 from PyQt5 import QtCore
@@ -27,7 +28,9 @@ from pymol import cmd
 
 from pyssa.controller import interface_manager
 from pyssa.internal.data_structures import protein_pair
-from pyssa.util import session_util
+from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
+from pyssa.util import session_util, constants
 
 
 class HotspotsProteinRegionsViewController(QtCore.QObject):
@@ -40,6 +43,27 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
         self._view = the_interface_manager.get_hotspots_protein_regions_view()
         self._connect_all_ui_elements_to_slot_functions()
         self._protein_names: tuple[str, typing.Union[str, int]] = self._get_protein_names_from_tree_view()
+
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/hotspots/protein_regions/")
 
     def _get_protein_names_from_tree_view(self):
         """Checks if the object is a protein or a chain."""
@@ -61,12 +85,12 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
             raise ValueError("Invalid tab index for this operation.")  # TODO: Add logger message
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.btn_sticks_show.clicked.connect(self.show_resi_sticks)
         self._view.ui.btn_sticks_hide.clicked.connect(self.hide_resi_sticks)
         self._view.ui.btn_disulfide_bonds_show.clicked.connect(self.show_disulfide_bonds)
         self._view.ui.btn_disulfide_bonds_hide.clicked.connect(self.hide_disulfide_bonds)
         self._view.ui.btn_position_zoom.clicked.connect(self.zoom_resi_position)
-        # self._view.ui.btn_help.clicked.connect()
 
     def show_resi_sticks(self) -> None:
         """Shows the pymol selection as sticks."""

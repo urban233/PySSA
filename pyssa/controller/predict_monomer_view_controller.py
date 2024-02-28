@@ -1,4 +1,6 @@
 import os
+import subprocess
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
@@ -10,6 +12,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import distance_analysis_view, predict_monomer_view
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
 from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util
@@ -27,7 +30,30 @@ class PredictMonomerViewController(QtCore.QObject):
         self.display_monomer_pred_analysis()
         self._connect_all_ui_elements_to_slot_functions()
 
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/protein_structure_prediction/colabfold_monomer/")
+
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
+        self._view.ui.btn_help_2.clicked.connect(self._open_help_for_dialog)
         self._view.ui.checkbox_add_analysis.clicked.connect(self.check_if_prediction_and_analysis_should_be_done)
         # <editor-fold desc="Monomer Prediction + Analysis page">
         # <editor-fold desc="Prediction section">

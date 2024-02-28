@@ -1,4 +1,6 @@
 import os
+import subprocess
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -13,6 +15,7 @@ from pyssa.gui.ui.views import results_view, plot_view
 from pyssa.internal.data_structures import protein_pair, selection
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
 from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums
@@ -40,6 +43,27 @@ class ResultsViewController(QtCore.QObject):
         self._build_table_widget()
         self._fill_table_widget()
         self._view.setWindowTitle(f"Results Summary Of {self._protein_pair.name}")
+
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/results/summary/")
 
     def _connect_all_ui_elements_to_slot_functions(self):
         self._view.ui.btn_view_plots.clicked.connect(self._open_plot_view)

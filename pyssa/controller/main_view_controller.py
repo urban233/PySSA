@@ -268,6 +268,7 @@ class MainViewController:
         self._active_task.start()
 
     def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
         self._interface_manager.stop_wait_spinner()
         self._interface_manager.update_status_bar("Opening help center finished.")
 

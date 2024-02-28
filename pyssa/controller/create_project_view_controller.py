@@ -23,12 +23,16 @@
 
 import glob
 import os
+import subprocess
+
 import pymol
 from PyQt5 import QtCore, QtWidgets
 from pymol import cmd
 from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.styles import styles
+from pyssa.internal.thread import tasks
+from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, gui_utils, constants, tools
 
 
@@ -46,6 +50,27 @@ class CreateProjectViewController(QtCore.QObject):
         self._hide_add_protein_options()
 
     # <editor-fold desc="Util methods">
+    def open_help(self, a_page_name: str):
+        """Opens the pyssa documentation window if it's not already open.
+
+        Args:
+            a_page_name (str): a name of a documentation page to display
+        """
+        self._interface_manager.update_status_bar("Opening help center ...")
+        self._active_task = tasks.Task(
+            target=util_async.open_documentation_on_certain_page,
+            args=(a_page_name, 0),
+            post_func=self.__await_open_help,
+        )
+        self._active_task.start()
+
+    def __await_open_help(self):
+        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        self._interface_manager.update_status_bar("Opening help center finished.")
+
+    def _open_help_for_dialog(self):
+        self.open_help("help/project/new_project/")
+
     def _restore_ui(self):
         """Restores the ui."""
         self._view.ui.list_create_projects_view.clearSelection()
@@ -78,6 +103,7 @@ class CreateProjectViewController(QtCore.QObject):
     # </editor-fold>
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.txt_new_project_name.textChanged.connect(self._validate_project_name)
         self._view.ui.cb_new_add_reference.clicked.connect(self._show_add_protein_options)
         self._view.ui.btn_new_choose_reference.clicked.connect(self._load_reference_in_project)
