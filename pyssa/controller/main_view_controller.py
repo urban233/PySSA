@@ -2511,7 +2511,7 @@ class MainViewController:
         else:
             logger.warning("Unknown object type occurred in Protein Pairs tab.")
             return
-        self._interface_manager.manage_buttons_for_protein_pairs_tab(tmp_type, self._pymol_session_manager)
+        self._interface_manager.manage_ui_of_protein_pairs_tab(tmp_type, self._pymol_session_manager)
 
     def _color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""

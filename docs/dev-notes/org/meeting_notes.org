@@ -4,16 +4,12 @@
 ? -> Issue can't get reproduced
 
 * Meeting 27.02.2024
-** WinBatch
-- Menu-Funktion für Arrangement für die Windows -> M
-
 ** Write functions
 - hide all representation modes
 - color and reset for atoms
 
 ** Message box
-- View Plots message box for identical proteins
-- fix message box to custom massagebox -> Restore settings
+- fix message box to custom messagebox -> Restore settings
 
 ** Others
 - Switch von Protein Pairs Tab zum Protein Tab fixen -> Chain modification on protein tab if protein pair session is loaded
@@ -22,6 +18,8 @@
 ? Summary disabled
 + tsv zu csv
 + documentation window in focus
++ Menu-Funktion für Arrangement für die Windows
++ View Plots message box for identical proteins
 
 * Paper
 - Methodenteil anpassen
