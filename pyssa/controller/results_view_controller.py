@@ -42,6 +42,7 @@ class ResultsViewController(QtCore.QObject):
         self._connect_all_ui_elements_to_slot_functions()
         self._build_table_widget()
         self._fill_table_widget()
+        self._check_results()
         self._view.setWindowTitle(f"Results Summary Of {self._protein_pair.name}")
 
     def open_help(self, a_page_name: str):
@@ -125,6 +126,14 @@ class ResultsViewController(QtCore.QObject):
         # Resize
         self._view.ui.table_widget_results.resizeColumnToContents(0)
         self._view.ui.table_widget_results.resizeColumnToContents(1)
+
+    def _check_results(self):
+        if self._protein_pair.distance_analysis.analysis_results.rmsd == 0:
+            self._view.ui.btn_view_plots.setEnabled(False)
+            self._view.ui.btn_view_plots.setToolTip("The RMSD value is exact 0, therefore no plots can be displayed.")
+        else:
+            self._view.ui.btn_view_plots.setEnabled(True)
+            self._view.ui.btn_view_plots.setToolTip("")
 
     # </editor-fold>
 
