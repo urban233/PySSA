@@ -628,7 +628,7 @@ class InterfaceManager:
                 self._main_view.ui.btn_delete_protein.setEnabled(True)
             self._main_view.ui.btn_save_protein.setEnabled(True)
             self._main_view.ui.btn_open_protein_session.setEnabled(True)
-            self.hide_protein_chain_apprearence_modifier()
+            self.hide_protein_pymol_scene_configuration()
 
             if tmp_is_protein_in_session_flag and tmp_current_scene_name == "":
                 self._main_view.ui.lbl_info.setText("Please select a scene.")
@@ -640,7 +640,7 @@ class InterfaceManager:
         elif an_object_type == "scene":
             self._main_view.ui.btn_save_protein.setEnabled(False)
             self._main_view.ui.btn_open_protein_session.setEnabled(False)
-            self.hide_protein_chain_apprearence_modifier()
+            self.hide_protein_pymol_scene_configuration()
 
             if tmp_is_protein_in_session_flag and the_pymol_session_manager.current_scene_name == "base":
                 self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
@@ -656,14 +656,14 @@ class InterfaceManager:
             self._main_view.ui.btn_open_protein_session.setEnabled(False)
 
             if tmp_is_protein_in_session_flag:
-                self.show_protein_chain_apprearence_modifier()
+                self.show_protein_pymol_scene_configuration()
             else:
-                self.hide_protein_chain_apprearence_modifier()
+                self.hide_protein_pymol_scene_configuration()
 
         elif an_object_type == "header":
             self._main_view.ui.btn_save_protein.setEnabled(False)
             self._main_view.ui.btn_open_protein_session.setEnabled(False)
-            self.hide_protein_chain_apprearence_modifier()
+            self.hide_protein_pymol_scene_configuration()
 
             if tmp_is_protein_in_session_flag and tmp_current_scene_name == "":
                 self._main_view.ui.lbl_info.setText("Please select a scene.")
@@ -684,38 +684,48 @@ class InterfaceManager:
             self._main_view.ui.btn_update_protein_scene.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
-    def hide_protein_chain_apprearence_modifier(self):
+    def hide_protein_pymol_scene_configuration(self):
         self._main_view.ui.lbl_protein_color.hide()
+        self._main_view.ui.lbl_protein_atoms.hide()
         self._main_view.ui.lbl_protein_cartoon.hide()
         self._main_view.ui.lbl_protein_sticks.hide()
         self._main_view.ui.lbl_protein_ribbon.hide()
+        self._main_view.ui.lbl_protein_all_representations.hide()
         self._main_view.ui.box_protein_color.hide()
+        self._main_view.ui.btn_protein_color_atoms.hide()
+        self._main_view.ui.btn_protein_reset_atoms.hide()
         self._main_view.ui.btn_protein_show_cartoon.hide()
         self._main_view.ui.btn_protein_hide_cartoon.hide()
         self._main_view.ui.btn_protein_show_sticks.hide()
         self._main_view.ui.btn_protein_hide_sticks.hide()
         self._main_view.ui.btn_protein_show_ribbon.hide()
         self._main_view.ui.btn_protein_hide_ribbon.hide()
+        self._main_view.ui.btn_protein_hide_all_representations.hide()
         self._main_view.ui.lbl_info.show()
 
-    def show_protein_chain_apprearence_modifier(self):
+    def show_protein_pymol_scene_configuration(self):
         self._main_view.ui.lbl_protein_color.show()
+        self._main_view.ui.lbl_protein_atoms.show()
         self._main_view.ui.lbl_protein_cartoon.show()
         self._main_view.ui.lbl_protein_sticks.show()
         self._main_view.ui.lbl_protein_ribbon.show()
+        self._main_view.ui.lbl_protein_all_representations.show()
         self._main_view.ui.box_protein_color.show()
+        self._main_view.ui.btn_protein_color_atoms.show()
+        self._main_view.ui.btn_protein_reset_atoms.show()
         self._main_view.ui.btn_protein_show_cartoon.show()
         self._main_view.ui.btn_protein_hide_cartoon.show()
         self._main_view.ui.btn_protein_show_sticks.show()
         self._main_view.ui.btn_protein_hide_sticks.show()
         self._main_view.ui.btn_protein_show_ribbon.show()
         self._main_view.ui.btn_protein_hide_ribbon.show()
+        self._main_view.ui.btn_protein_hide_all_representations.show()
         self._main_view.ui.lbl_info.hide()
         self._main_view.ui.lbl_info_2.hide()
 
-    def manage_buttons_for_protein_pairs_tab(self,
-                                             an_object_type: str,
-                                             the_pymol_session_manager: pymol_session_manager.PymolSessionManager):
+    def manage_ui_of_protein_pairs_tab(self,
+                                       an_object_type: str,
+                                       the_pymol_session_manager: pymol_session_manager.PymolSessionManager):
         self._main_view.ui.lbl_info_protein_pair_2.hide()
         if an_object_type == "protein_pair":
             self._main_view.ui.btn_delete_protein_pair.setEnabled(True)
@@ -738,7 +748,7 @@ class InterfaceManager:
         elif an_object_type == "scene":
             self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
-            self.hide_protein_pair_chain_apprearence_modifier()
+            self.hide_protein_pair_pymol_scene_configuration()
             if the_pymol_session_manager.is_the_current_protein_pair_in_session():
                 self._main_view.ui.lbl_info_protein_pair.setText("Please select a chain.")
             else:
@@ -747,13 +757,13 @@ class InterfaceManager:
             self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
             if the_pymol_session_manager.is_the_current_protein_pair_in_session():
-                self.show_protein_pair_chain_apprearence_modifier()
+                self.show_protein_pair_pymol_scene_configuration()
             else:
-                self.hide_protein_pair_chain_apprearence_modifier()
+                self.hide_protein_pair_pymol_scene_configuration()
         elif an_object_type == "header":
             self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
-            self.hide_protein_pair_chain_apprearence_modifier()
+            self.hide_protein_pair_pymol_scene_configuration()
             if the_pymol_session_manager.is_the_current_protein_pair_in_session() and the_pymol_session_manager.current_scene_name == "":
                 self._main_view.ui.lbl_info_protein_pair.setText("Please select a scene.")
             elif the_pymol_session_manager.is_the_current_protein_pair_in_session() and the_pymol_session_manager.current_scene_name != "":
@@ -774,32 +784,42 @@ class InterfaceManager:
             self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
-    def hide_protein_pair_chain_apprearence_modifier(self):
+    def hide_protein_pair_pymol_scene_configuration(self):
         self._main_view.ui.lbl_protein_pair_color.hide()
+        self._main_view.ui.lbl_protein_pair_atoms.hide()
         self._main_view.ui.lbl_protein_pair_cartoon.hide()
         self._main_view.ui.lbl_protein_pair_sticks.hide()
         self._main_view.ui.lbl_protein_pair_ribbon.hide()
+        self._main_view.ui.lbl_protein_pair_all_representations.hide()
         self._main_view.ui.box_protein_pair_color.hide()
+        self._main_view.ui.btn_protein_pair_color_atoms.hide()
+        self._main_view.ui.btn_protein_pair_reset_atoms.hide()
         self._main_view.ui.btn_protein_pair_show_cartoon.hide()
         self._main_view.ui.btn_protein_pair_hide_cartoon.hide()
         self._main_view.ui.btn_protein_pair_show_sticks.hide()
         self._main_view.ui.btn_protein_pair_hide_sticks.hide()
         self._main_view.ui.btn_protein_pair_show_ribbon.hide()
         self._main_view.ui.btn_protein_pair_hide_ribbon.hide()
+        self._main_view.ui.btn_protein_pair_hide_all_representations.hide()
         self._main_view.ui.lbl_info_protein_pair.show()
 
-    def show_protein_pair_chain_apprearence_modifier(self):
+    def show_protein_pair_pymol_scene_configuration(self):
         self._main_view.ui.lbl_protein_pair_color.show()
+        self._main_view.ui.lbl_protein_pair_atoms.show()
         self._main_view.ui.lbl_protein_pair_cartoon.show()
         self._main_view.ui.lbl_protein_pair_sticks.show()
         self._main_view.ui.lbl_protein_pair_ribbon.show()
+        self._main_view.ui.lbl_protein_pair_all_representations.show()
         self._main_view.ui.box_protein_pair_color.show()
+        self._main_view.ui.btn_protein_pair_color_atoms.show()
+        self._main_view.ui.btn_protein_pair_reset_atoms.show()
         self._main_view.ui.btn_protein_pair_show_cartoon.show()
         self._main_view.ui.btn_protein_pair_hide_cartoon.show()
         self._main_view.ui.btn_protein_pair_show_sticks.show()
         self._main_view.ui.btn_protein_pair_hide_sticks.show()
         self._main_view.ui.btn_protein_pair_show_ribbon.show()
         self._main_view.ui.btn_protein_pair_hide_ribbon.show()
+        self._main_view.ui.btn_protein_pair_hide_all_representations.show()
         self._main_view.ui.lbl_info_protein_pair.hide()
         self._main_view.ui.lbl_info_protein_pair_2.hide()
 
