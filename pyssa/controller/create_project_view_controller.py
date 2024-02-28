@@ -121,6 +121,7 @@ class CreateProjectViewController(QtCore.QObject):
             pdb_id = self._view.ui.txt_new_choose_reference.text().upper()
             try:
                 # the pdb file gets saved in a scratch directory where it gets deleted immediately
+                # Fixme: Here is the PDB problem!!!
                 cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
                 os.remove(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
                 cmd.reinitialize()
