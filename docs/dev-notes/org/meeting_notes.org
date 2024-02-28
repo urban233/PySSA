@@ -8,7 +8,7 @@
 - Coloring for elements
 - Summary disabled
 - View Plots message box for identical proteins
-- tsv zu csv
++ tsv zu csv
 - documentation window in focus
 - Switch von Protein Pairs Tab zum Protein Tab fixen -> Chain modification on protein tab if protein pair session is loaded
 
