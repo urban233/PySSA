@@ -107,7 +107,7 @@ class DistanceAnalysisResults:
                 tmp_interesting_reg[1],
             )
 
-    def export_distance_data_as_tsv(self, a_filepath):
+    def export_distance_data_as_csv(self, a_filepath):
         tmp_data_to_write = np.transpose([
             self.distance_data["index"],
             self.distance_data["ref_chain"],
@@ -120,9 +120,9 @@ class DistanceAnalysisResults:
         ])
         # Writing to the TSV file
         with open(a_filepath, mode='w', newline='', encoding='utf-8') as tsv_file:
-            tsv_writer = csv.writer(tsv_file, delimiter='\t')
+            csv_writer = csv.writer(tsv_file, delimiter=',')
             # Write the header
-            tsv_writer.writerow([
+            csv_writer.writerow([
                     "Residue_Pair_No",
                     "Protein_1_Chain",
                     "Protein_1_Position",
@@ -133,7 +133,8 @@ class DistanceAnalysisResults:
                     "Distance"
             ])
             # Write the data to the TSV file
-            tsv_writer.writerows(tmp_data_to_write)
+            csv_writer.writerows(tmp_data_to_write)
+
 
     def serialize_distance_analysis_results(self, tmp_distance_analysis) -> None:  # noqa: ANN001
         """Serializes the distance analysis results object."""

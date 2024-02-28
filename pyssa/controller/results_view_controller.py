@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from pymol import cmd
 from pyssa.controller import interface_manager, database_manager, pymol_session_manager
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
@@ -202,7 +203,18 @@ class ResultsViewController(QtCore.QObject):
             self._view,
             "Save distance data",
             "",
-            "Tab-Separated Values (*.tsv)",
+            "Comma-Separated Values (*.csv)",
         )
         if file_path:
-            self._protein_pair.distance_analysis.analysis_results.export_distance_data_as_tsv(file_path)
+            self._protein_pair.distance_analysis.analysis_results.export_distance_data_as_csv(file_path)
+            if os.path.exists(file_path):
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "Export data as .csv file finished.", "Export Data",
+                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                )
+            else:
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "Export data as .csv file failed!", "Export Data",
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                )
+            tmp_dialog.exec_()
