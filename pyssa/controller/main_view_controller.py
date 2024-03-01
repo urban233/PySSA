@@ -247,6 +247,19 @@ class MainViewController:
 
     def _update_tab(self):
         self._interface_manager.current_tab_index = self._view.ui.project_tab_widget.currentIndex()
+        if self._pymol_session_manager.session_object_type == "protein" and self._interface_manager.current_tab_index == 2:
+            self._interface_manager.hide_protein_pair_pymol_scene_configuration()
+            self._view.ui.lbl_info_protein_pair.setText(
+                "Please load the PyMOL session of the \nselected protein pair.")
+        elif self._pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.current_tab_index == 1:
+            self._interface_manager.hide_protein_pymol_scene_configuration()
+            self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
+        elif self._pymol_session_manager.is_the_current_session_empty():
+            self._interface_manager.hide_protein_pymol_scene_configuration()
+            self._interface_manager.hide_protein_pair_pymol_scene_configuration()
+            self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
+            self._view.ui.lbl_info_protein_pair.setText(
+                "Please load the PyMOL session of the \nselected protein pair.")
 
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
