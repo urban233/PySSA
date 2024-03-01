@@ -2201,7 +2201,6 @@ class MainViewController:
         self._interface_manager.update_status_bar("Importing protein structure finished.")
         self._interface_manager.stop_wait_spinner()
 
-
     def _delete_protein(self):
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(
             "Are you sure you want to delete this protein?", "Delete Protein",
@@ -2273,12 +2272,12 @@ class MainViewController:
 
     def clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
-        if basic_boxes.yes_or_no(
-            "Clean protein",
-            "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!",
-            QtWidgets.QMessageBox.Information,
-        ):
-
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+            "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!", "Clean Protein",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
+        )
+        tmp_dialog.exec_()
+        if tmp_dialog.response:
             self._active_task = tasks.Task(
                 target=main_presenter_async.clean_protein_update,
                 args=(
@@ -2295,6 +2294,7 @@ class MainViewController:
             self._interface_manager.stop_wait_spinner()
 
     def __await_clean_protein_update(self) -> None:
+        self.update_status("Cleaning protein finished.")
         self._interface_manager.stop_wait_spinner()
 
     def rename_selected_protein_structure(self) -> None:
