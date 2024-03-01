@@ -134,7 +134,7 @@ class MainViewController:
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.dialogClosed.connect(self._close_main_window)
-        # menu
+        # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
         self._view.ui.action_open_project.triggered.connect(self._open_project)
@@ -166,8 +166,9 @@ class MainViewController:
         self._view.ui.action_arrange_windows.triggered.connect(self.arrange_windows)
 
         self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
+        # </editor-fold>
 
-        # seqs tab
+        # <editor-fold desc="Sequence Tab">
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
         self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
@@ -177,34 +178,40 @@ class MainViewController:
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
         self._view.ui.btn_help.clicked.connect(self._open_sequences_tab_help)
+        # </editor-fold>
 
-        # proteins tab
+        # <editor-fold desc="Proteins Tab">
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_branch)
         self._view.ui.btn_save_protein.clicked.connect(self._save_selected_protein_structure_as_pdb_file)
+        # import
+        self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
+        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
         self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
         self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
+        self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
         self._view.ui.btn_update_protein_scene.clicked.connect(self.update_scene)
         self._view.ui.btn_delete_protein_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.box_protein_color.currentIndexChanged.connect(self._change_chain_color_proteins)
+        self._view.ui.btn_protein_color_atoms.clicked.connect(self._change_chain_color_proteins_atoms)
+        self._view.ui.btn_protein_reset_atoms.clicked.connect(self._change_chain_reset_proteins_atoms)
         self._view.ui.btn_protein_show_cartoon.clicked.connect(self.__slot_show_protein_chain_as_cartoon)
         self._view.ui.btn_protein_hide_cartoon.clicked.connect(self.__slot_hide_protein_chain_as_cartoon)
         self._view.ui.btn_protein_show_sticks.clicked.connect(self.__slot_show_protein_chain_as_sticks)
         self._view.ui.btn_protein_hide_sticks.clicked.connect(self.__slot_hide_protein_chain_as_sticks)
         self._view.ui.btn_protein_show_ribbon.clicked.connect(self.__slot_show_protein_chain_as_ribbon)
         self._view.ui.btn_protein_hide_ribbon.clicked.connect(self.__slot_hide_protein_chain_as_ribbon)
+        self._view.ui.btn_protein_hide_all_representations.clicked.connect(self.__slot_hide_protein_chain_all)
+        # </editor-fold>
 
-        self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
-        self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
-
-        self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
-        # Context menu
+        # <editor-fold desc="Context Menu">
         self._interface_manager.get_rename_protein_view().dialogClosed.connect(
             self.post_rename_selected_protein_structure)
 
         self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
+        # </editor-fold>
 
-        # protein pairs tab
+        # <editor-fold desc="Proteins Pair Tab">
         self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_protein_pairs)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_pair_branch)
         self._view.ui.btn_delete_protein_pair.clicked.connect(self._delete_protein_pair_from_project)
@@ -214,13 +221,17 @@ class MainViewController:
         self._view.ui.btn_delete_protein_pair_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
         self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
+        self._view.ui.btn_protein_pair_color_atoms.clicked.connect(self._change_chain_color_proteins_pair_atoms)
+        self._view.ui.btn_protein_pair_reset_atoms.clicked.connect(self._change_chain_reset_proteins_pair_atoms)
         self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
         self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
         self._view.ui.btn_protein_pair_show_sticks.clicked.connect(self.__slot_show_protein_pair_chain_as_sticks)
         self._view.ui.btn_protein_pair_hide_sticks.clicked.connect(self.__slot_hide_protein_pair_chain_as_sticks)
         self._view.ui.btn_protein_pair_show_ribbon.clicked.connect(self.__slot_show_protein_pair_chain_as_ribbon)
         self._view.ui.btn_protein_pair_hide_ribbon.clicked.connect(self.__slot_hide_protein_pair_chain_as_ribbon)
+        self._view.ui.btn_protein_pair_hide_all_representations.clicked.connect(self.__slot_hide_protein_pair_chain_all)
         self._view.ui.btn_help_3.clicked.connect(self._open_protein_pairs_tab_help)
+        # </editor-fold>
 
     @staticmethod
     def _close_main_window():
@@ -1774,8 +1785,6 @@ class MainViewController:
 
     # </editor-fold>
 
-    # </editor-fold>
-
     # <editor-fold desc="Sequences tab methods">
     def _open_text_editor_for_seq(self):
         self.tmp_txt_browser = QtWidgets.QTextBrowser()
@@ -2077,6 +2086,18 @@ class MainViewController:
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
+    def _change_chain_color_proteins_atoms(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        cmd.color(color='atomic',selection=f"{tmp_selection.selection_string} and not elem C")
+
+    def _change_chain_reset_proteins_atoms(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
+        cmd.color(color=self._view.ui.box_protein_color.currentText(), selection=f"{tmp_selection.selection_string}")
+
     # <editor-fold desc="Representations">
     # cartoon
     def __slot_show_protein_chain_as_cartoon(self):
@@ -2116,6 +2137,13 @@ class MainViewController:
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
         tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+
+    # all
+    def __slot_hide_protein_chain_all(self):
+        self.__slot_hide_protein_chain_as_cartoon()
+        self.__slot_hide_protein_chain_as_sticks()
+        self.__slot_hide_protein_chain_as_ribbon()
+
     # </editor-fold>
 
     # def _change_chain_representation_proteins(self) -> None:
@@ -2664,6 +2692,18 @@ class MainViewController:
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
+    def _change_chain_color_proteins_pair_atoms(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        cmd.color(color='atomic',selection=f"{tmp_selection.selection_string} and not elem C")
+
+    def _change_chain_reset_proteins_pair_atoms(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        cmd.color(color=self._view.ui.box_protein_pair_color.currentText(), selection=f"{tmp_selection.selection_string}")
+
     # <editor-fold desc="Representations">
     # cartoon
     def __slot_show_protein_pair_chain_as_cartoon(self):
@@ -2703,6 +2743,13 @@ class MainViewController:
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
         tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+
+    # all
+    def __slot_hide_protein_pair_chain_all(self):
+        self.__slot_hide_protein_pair_chain_as_cartoon()
+        self.__slot_hide_protein_pair_chain_as_sticks()
+        self.__slot_hide_protein_pair_chain_as_ribbon()
+
     # </editor-fold>
 
     # def _change_chain_representation_protein_pairs(self) -> None:
