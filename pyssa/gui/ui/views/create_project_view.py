@@ -47,6 +47,10 @@ class CreateProjectView(QtWidgets.QDialog):
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
+        self.ui.lbl_new_choose_reference.hide()
+        self.ui.btn_new_choose_reference.hide()
+        self.ui.cb_new_add_reference.hide()
+        self.ui.txt_new_choose_reference.hide()
         self.ui.lbl_new_status_project_name.setText("")
         self.ui.list_create_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
