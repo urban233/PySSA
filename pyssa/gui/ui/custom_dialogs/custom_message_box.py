@@ -42,7 +42,7 @@ class CustomMessageBoxIcons(enum.Enum):
 
 class CustomMessageBox(QtWidgets.QDialog):
     # Define a custom signal
-    dialogClosed = QtCore.pyqtSignal(tuple)
+    dialogClosed = QtCore.pyqtSignal(bool)
 
     def __init__(self, parent=None) -> None:  # noqa: ANN001
         """Constructor."""
@@ -83,7 +83,7 @@ class CustomMessageBox(QtWidgets.QDialog):
 
     def closeEvent(self, event):
         # Emit the custom signal when the window is closed
-        self.dialogClosed.emit(("", False))
+        self.dialogClosed.emit(False)
         event.accept()
 
 
@@ -151,4 +151,35 @@ class CustomMessageBoxOk(CustomMessageBox):
     def __slot_left_button(self):
         """Method for the Delete button."""
         self.response = True
+        self.close()
+
+
+class CustomMessageBoxYesNo(CustomMessageBox):
+    response: bool
+
+    def __init__(self, a_message: str, a_window_title: str, an_icon_path: str) -> None:  # noqa: ANN001
+        """Constructor."""
+        super().__init__()
+
+        self.response = False
+
+        self.lbl_icon.setText("")
+        self.lbl_icon.setPixmap(QtGui.QIcon(an_icon_path).pixmap(40, 40))
+        self.lbl_description.setText(a_message)
+        self.btn_left.setText("Yes")
+        styles.color_bottom_frame_button(self.btn_left)
+        self.btn_right.setText("No")
+        self.setWindowTitle(a_window_title)
+
+        self.btn_left.clicked.connect(self.__slot_left_button)
+        self.btn_right.clicked.connect(self.__slot_right_button)
+
+    def __slot_left_button(self):
+        """Method for the Delete button."""
+        self.response = True
+        self.close()
+
+    def __slot_right_button(self):
+        """Method for the Cancel button."""
+        self.response = False
         self.close()

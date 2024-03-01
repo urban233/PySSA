@@ -1389,8 +1389,14 @@ class MainViewController:
 
     def restore_settings(self) -> None:
         """Restores the settings.xml file to the default values."""
-        out = gui_utils.warning_dialog_restore_settings("Are you sure you want to restore all settings?")
-        if out:
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+            "Are you sure you want to restore all settings?", "Restore Settings",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        )
+        tmp_dialog.exec_()
+        if tmp_dialog.dialogClosed is not None:
+            return
+        if tmp_dialog.response:
             tools.restore_default_settings(self._interface_manager.get_application_settings())
             self._view.status_bar.showMessage("Settings were successfully restored.")
             logging.info("Settings were successfully restored.")
