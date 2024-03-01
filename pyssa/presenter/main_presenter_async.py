@@ -883,3 +883,34 @@ def open_project(
         return 1, 0, 0
     else:
         return 0, tmp_project, the_interface_manager
+
+
+def add_protein_from_pdb_to_project(tmp_protein_name,
+                                    the_database_manager,
+                                    the_interface_manager) -> tuple:
+    tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+    tmp_ref_protein.set_id(the_database_manager.get_latest_id_of_protein_table())
+    tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
+    tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
+    tmp_ref_protein.add_id_to_all_chains(the_database_manager.get_latest_id_of_a_specific_table("Chain"))
+    tmp_ref_protein.create_new_pymol_session()
+    tmp_ref_protein.save_pymol_session_as_base64_string()
+    the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
+    return 0, tmp_ref_protein
+
+
+def add_protein_from_local_filesystem_to_project(tmp_protein_name,
+                                                 the_database_manager,
+                                                 the_interface_manager):
+    pdb_filepath = pathlib.Path(tmp_protein_name)
+    graphic_operations.setup_default_session_graphic_settings()
+    tmp_ref_protein = protein.Protein(
+        pdb_filepath.name.replace(".pdb", "")
+    )
+    tmp_ref_protein.set_id(the_database_manager.get_latest_id_of_protein_table())
+    tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
+    tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
+    tmp_ref_protein.create_new_pymol_session()
+    tmp_ref_protein.save_pymol_session_as_base64_string()
+    the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
+    return 0, tmp_ref_protein

@@ -23,10 +23,13 @@
 import os
 import pymol
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import Qt
 from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
+from pyqtspinner import spinner
+
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from pyssa.gui.ui.styles import styles
@@ -53,12 +56,23 @@ class AddProteinView(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+        self.wait_spinner = spinner.WaitingSpinner(
+            parent=self,
+            center_on_parent=True,
+            disable_parent_when_spinning=True,
+            modality=Qt.ApplicationModal,
+            roundness=100.0,
+            fade=45.0,
+            radius=14,
+            lines=8,
+            line_length=17,
+            line_width=10,
+            speed=1.25,
+            color=QtGui.QColor(75, 145, 247),
+        )
         self.ui.btn_add_protein.setEnabled(False)
-        self.ui.btn_choose_protein.clicked.connect(self.load_model)
-        self.ui.btn_add_protein.clicked.connect(self.add_model)
-        self.ui.txt_add_protein.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
-        self.ui.lbl_status.setStyleSheet("""color: #ba1a1a; font-size: 10px;""")
+        self.ui.lbl_status.setStyleSheet("""color: #ba1a1a; font-size: 11px;""")
         styles.color_bottom_frame_button(self.ui.btn_add_protein)
         self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
@@ -80,77 +94,3 @@ class AddProteinView(QtWidgets.QDialog):
             )
             self.ui.txt_add_protein.setEnabled(False)
             self.ui.lbl_status.setText("You cannot enter a PDB ID (no working internet connection).")
-
-    def restore_ui_defaults(self):
-        self.ui.txt_add_protein.clear()
-
-    # @SLOT
-    def validate_reference_in_project(self) -> None:
-        """Checks if the entered reference protein is valid or not."""
-        if len(self.ui.txt_add_protein.text()) == 0:
-            self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-            self.ui.lbl_status.setText("")
-            self.ui.btn_add_protein.setEnabled(False)
-        elif len(self.ui.txt_add_protein.text()) < 4:
-            self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-            self.ui.btn_add_protein.setEnabled(False)
-            self.ui.lbl_status.setText("")
-        # checks if a pdb id was entered
-        elif len(self.ui.txt_add_protein.text()) == 4:
-            pdb_id = self.ui.txt_add_protein.text().upper()
-            try:
-                # the pdb file gets saved in a scratch directory where it gets deleted immediately
-                cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
-                os.remove(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
-                cmd.reinitialize()
-                self.ui.txt_add_protein.setStyleSheet("color: #000000")
-                self.ui.btn_add_protein.setEnabled(True)
-            # if the id does not exist an exception gets raised
-            except pymol.CmdException:
-                self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-                return
-            except FileNotFoundError:
-                self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-                self.ui.lbl_status.setText("Invalid PDB ID.")
-                self.ui.btn_add_protein.setEnabled(False)
-                return
-        else:
-            if self.ui.txt_add_protein.text().find("/") == -1:
-                self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-                self.ui.btn_add_protein.setEnabled(False)
-            elif self.ui.txt_add_protein.text().find("\\") == -1:
-                self.ui.txt_add_protein.setStyleSheet("color: #FC5457")
-                self.ui.btn_add_protein.setEnabled(False)
-            else:
-                # TODO: displays a correct filepath in red, needs to be fixed!
-                self.ui.txt_add_protein.setStyleSheet("color: #000000")
-                self.ui.btn_add_protein.setEnabled(True)
-
-    def close_dialog(self) -> None:
-        """Closes the dialog."""
-        self.close()
-
-    def load_model(self) -> None:
-        """Loads a protein from the filesystem into the textbox."""
-        try:
-            # open file dialog
-            file_name = QtWidgets.QFileDialog.getOpenFileName(
-                self,
-                "Open existing protein",
-                QtCore.QDir.homePath(),
-                "PDB Files (*.pdb)",
-            )
-            if file_name == ("", ""):
-                self.ui.lbl_status.setText("No file has been selected.")
-            else:
-                # display path in text box
-                self.ui.txt_add_protein.setText(str(file_name[0]))
-                self.ui.btn_add_protein.setEnabled(True)
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the protein structure failed!")
-            self.ui.lbl_status.setText("Loading the protein structure failed!")
-
-    def add_model(self) -> None:
-        """Adds a protein to the global variable and closes the dialog."""
-        self.close()
-        self.return_value.emit((self.ui.txt_add_protein.text(), len(self.ui.txt_add_protein.text())))

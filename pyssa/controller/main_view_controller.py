@@ -24,7 +24,7 @@ from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
-    add_sequence_view_controller, add_scene_view_controller
+    add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -2152,47 +2152,55 @@ class MainViewController:
     #         logger.warning("The representation of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def _import_protein_structure(self):
-        self._interface_manager.get_add_protein_view().restore_ui_defaults()
+        self._external_controller = add_protein_view_controller.AddProteinViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self._post_import_protein_structure)
+        self._external_controller.restore_ui()
         self._interface_manager.get_add_protein_view().show()
 
     def _post_import_protein_structure(self, return_value: tuple):
         # TODO: this function needs an async/await part
         tmp_protein_name, tmp_name_len = return_value
         if tmp_name_len == 4:
-            tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
-            tmp_ref_protein.set_id(self._database_manager.get_latest_id_of_protein_table())
-            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
-            tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
-            tmp_ref_protein.add_id_to_all_chains(self._database_manager.get_latest_id_of_a_specific_table("Chain"))
-            tmp_ref_protein.create_new_pymol_session()
-            tmp_ref_protein.save_pymol_session_as_base64_string()
-            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            self._database_thread.put_database_operation_into_queue(
-                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
-                                                     (0, tmp_ref_protein)))
+            self._active_task = tasks.Task(
+                target=main_presenter_async.add_protein_from_pdb_to_project,
+                args=(
+                    tmp_protein_name,
+                    self._database_manager,
+                    self._interface_manager
+                ),
+                post_func=self.__await_post_import_protein_structure,
+            )
+            self._active_task.start()
             constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
         elif tmp_name_len > 0:
             # local pdb file as input
-            pdb_filepath = pathlib.Path(tmp_protein_name)
-            graphic_operations.setup_default_session_graphic_settings()
-            tmp_ref_protein = protein.Protein(
-                pdb_filepath.name.replace(".pdb","")
+            self._active_task = tasks.Task(
+                target=main_presenter_async.add_protein_from_local_filesystem_to_project,
+                args=(
+                    tmp_protein_name,
+                    self._database_manager,
+                    self._interface_manager
+                ),
+                post_func=self.__await_post_import_protein_structure,
             )
-            tmp_ref_protein.db_project_id = self._interface_manager.get_current_project().get_id()
-            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
-            tmp_ref_protein.create_new_pymol_session()
-            tmp_ref_protein.save_pymol_session_as_base64_string()
-            self._interface_manager.get_current_project().add_existing_protein(tmp_ref_protein)
-            self._database_thread.put_database_operation_into_queue(
-                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
-                                                     (0, tmp_ref_protein)))
+            self._active_task.start()
             constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
         else:
             logger.warning("No protein object was created.")
             return
-        self._interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
+        self._interface_manager.update_status_bar("Importing protein structure ...")
+        self._interface_manager.start_wait_spinner()
+
+    def __await_post_import_protein_structure(self, return_value: tuple):
+        tmp_protein: "protein.Protein" = return_value[1]
+        self._interface_manager.get_current_project().add_existing_protein(tmp_protein)
+        self._database_thread.put_database_operation_into_queue(
+            database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
+                                                 (0, tmp_protein)))
         self._interface_manager.refresh_main_view()
         self._interface_manager.update_status_bar("Importing protein structure finished.")
+        self._interface_manager.stop_wait_spinner()
+
 
     def _delete_protein(self):
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(

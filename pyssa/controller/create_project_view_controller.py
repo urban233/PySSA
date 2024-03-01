@@ -80,9 +80,9 @@ class CreateProjectViewController(QtCore.QObject):
             """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
         )
         self._view.ui.lbl_new_status_choose_reference.setText("")
-        self._view.ui.lbl_new_status_choose_reference.setStyleSheet("color: #ba1a1a; font-size: 10px;")
+        self._view.ui.lbl_new_status_choose_reference.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         self._view.ui.lbl_new_status_project_name.setText("")
-        self._view.ui.lbl_new_status_project_name.setStyleSheet("color: #ba1a1a; font-size: 10px;")
+        self._view.ui.lbl_new_status_project_name.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         self._view.ui.btn_new_create_project.setEnabled(False)
         self._view.ui.cb_new_add_reference.setCheckState(False)
         self._view.ui.txt_new_choose_reference.clear()
