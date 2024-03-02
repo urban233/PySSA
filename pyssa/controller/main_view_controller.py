@@ -2263,14 +2263,6 @@ class MainViewController:
 
     # all
     def __slot_hide_protein_chain_all(self):
-        self.__slot_hide_protein_chain_as_cartoon()
-        self.__slot_hide_protein_chain_as_sticks()
-        self.__slot_hide_protein_chain_as_ribbon()
-        self.__slot_protein_chain_as_lines()
-        self.__slot_protein_chain_as_spheres()
-        self.__slot_protein_chain_as_dots()
-        self.__slot_protein_chain_as_mesh()
-        self.__slot_protein_chain_as_surface()
         self._view.ui.cb_protein_cartoon.setChecked(False)
         self._view.ui.cb_protein_sticks.setChecked(False)
         self._view.ui.cb_protein_ribbon.setChecked(False)
@@ -2279,6 +2271,14 @@ class MainViewController:
         self._view.ui.cb_protein_dots.setChecked(False)
         self._view.ui.cb_protein_mesh.setChecked(False)
         self._view.ui.cb_protein_surface.setChecked(False)
+        self.__slot_hide_protein_chain_as_cartoon()
+        self.__slot_hide_protein_chain_as_sticks()
+        self.__slot_hide_protein_chain_as_ribbon()
+        self.__slot_protein_chain_as_lines()
+        self.__slot_protein_chain_as_spheres()
+        self.__slot_protein_chain_as_dots()
+        self.__slot_protein_chain_as_mesh()
+        self.__slot_protein_chain_as_surface()
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -2928,9 +2928,25 @@ class MainViewController:
 
     # all
     def __slot_hide_protein_pair_chain_all(self):
+        self._view.ui.cb_protein_pair_cartoon.setChecked(False)
+        self._view.ui.cb_protein_pair_sticks.setChecked(False)
+        self._view.ui.cb_protein_pair_ribbon.setChecked(False)
+        self._view.ui.cb_protein_pair_lines.setChecked(False)
+        self._view.ui.cb_protein_pair_spheres.setChecked(False)
+        self._view.ui.cb_protein_pair_dots.setChecked(False)
+        self._view.ui.cb_protein_pair_mesh.setChecked(False)
+        self._view.ui.cb_protein_pair_surface.setChecked(False)
         self.__slot_hide_protein_pair_chain_as_cartoon()
         self.__slot_hide_protein_pair_chain_as_sticks()
         self.__slot_hide_protein_pair_chain_as_ribbon()
+        self.__slot_protein_pair_chain_as_lines()
+        self.__slot_protein_pair_chain_as_spheres()
+        self.__slot_protein_pair_chain_as_dots()
+        self.__slot_protein_pair_chain_as_mesh()
+        self.__slot_protein_pair_chain_as_surface()
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
 
     # </editor-fold>
 
