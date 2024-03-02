@@ -130,6 +130,15 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_hide_sticks.hide()
         self.ui.btn_protein_show_ribbon.hide()
         self.ui.btn_protein_hide_ribbon.hide()
+        self.ui.cb_protein_cartoon.hide()
+        self.ui.cb_protein_sticks.hide()
+        self.ui.cb_protein_ribbon.hide()
+        self.ui.cb_protein_lines.hide()
+        self.ui.cb_protein_spheres.hide()
+        self.ui.cb_protein_dots.hide()
+        self.ui.cb_protein_mesh.hide()
+        self.ui.cb_protein_surface.hide()
+
         self.ui.btn_protein_hide_all_representations.hide()
 
         self.ui.lbl_info.setText("Please select a protein.")

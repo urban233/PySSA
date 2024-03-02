@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>767</width>
-    <height>1047</height>
+    <width>625</width>
+    <height>858</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -393,6 +393,13 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_18">
                   <item>
+                   <widget class="QCheckBox" name="cb_protein_cartoon">
+                    <property name="text">
+                     <string>Cartoon</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QLabel" name="lbl_protein_cartoon">
                     <property name="text">
                      <string>Cartoon</string>
@@ -430,6 +437,13 @@
                 </item>
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_19">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_sticks">
+                    <property name="text">
+                     <string>Sticks</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <widget class="QLabel" name="lbl_protein_sticks">
                     <property name="text">
@@ -469,6 +483,13 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayout_20">
                   <item>
+                   <widget class="QCheckBox" name="cb_protein_ribbon">
+                    <property name="text">
+                     <string>Ribbon</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QLabel" name="lbl_protein_ribbon">
                     <property name="text">
                      <string>Ribbon</string>
@@ -501,6 +522,126 @@
                      <string>Hide</string>
                     </property>
                    </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_32">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_lines">
+                    <property name="text">
+                     <string>Lines</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_25">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_28">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_spheres">
+                    <property name="text">
+                     <string>Spheres</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_21">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_29">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_dots">
+                    <property name="text">
+                     <string>Dots</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_22">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_30">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_mesh">
+                    <property name="text">
+                     <string>Mesh</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_23">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_31">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_surface">
+                    <property name="text">
+                     <string>Surface</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_24">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
                   </item>
                  </layout>
                 </item>
@@ -1087,8 +1228,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>767</width>
-     <height>26</height>
+     <width>625</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">

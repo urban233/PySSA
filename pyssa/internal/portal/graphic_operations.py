@@ -49,6 +49,21 @@ def get_chain_color(a_selection_string: str, chain_letter: str):
     return tmp_chain_color
 
 
+def get_chain_repr_state(a_selection_string: str, chain_letter: str) -> dict:
+    """Returns the index for the current representation state.
+
+    Note:
+        If no match occurs, then -1 is returned
+    """
+    pymol.stored.reps = []
+    cmd.iterate(a_selection_string, "stored.reps.append((chain, resi, name, reps))")
+    for chain, resi, name, reps_index in pymol.stored.reps:
+        if chain == chain_letter:  # c-alpha atom
+            constants.PYSSA_LOGGER.debug("Representation index: " + str(reps_index))
+            return constants.PYMOL_REPR_STATES_WITH_INDICES[reps_index]
+    return {-1: ""}
+
+
 def show_protein_selection_as_balls_and_sticks(selection: str) -> None:
     """Shows the protein as balls and sticks in representation mode.
 

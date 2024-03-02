@@ -84,3 +84,8 @@ class PyMOLRepresentation(enum.Enum):
     CARTOON = 'cartoon'
     STICKS = 'sticks'
     RIBBON = 'ribbon'
+    LINES = 'lines'
+    SPHERES = 'spheres'
+    DOTS = 'dots'
+    MESH = 'mesh'
+    SURFACE = 'surface'

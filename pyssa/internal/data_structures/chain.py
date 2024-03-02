@@ -85,9 +85,12 @@ class Chain:
     def set_id(self, value):
         self._id = value
 
-    def get_color(self, a_selection_string):
+    def get_color(self, a_selection_string) -> str:
         self.pymol_parameters[enums.PymolParameterEnum.COLOR.value] = graphic_operations.get_chain_color(a_selection_string, self.chain_letter)
         return self.pymol_parameters[enums.PymolParameterEnum.COLOR.value]
+
+    def get_representation_state(self, a_selection_string) -> dict:
+        return graphic_operations.get_chain_repr_state(a_selection_string, self.chain_letter)
 
     def serialize(self, an_xml_writer: QtCore.QXmlStreamWriter):
         an_xml_writer.writeStartElement('chain')
