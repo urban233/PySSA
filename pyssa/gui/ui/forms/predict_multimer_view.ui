@@ -691,17 +691,6 @@
             </item>
            </layout>
           </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_119">
-            <item>
-             <widget class="QCheckBox" name="cb_pred_analysis_multi_images">
-              <property name="text">
-               <string>Create ray-traced images (slow)</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
          </layout>
         </widget>
        </item>

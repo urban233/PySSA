@@ -171,7 +171,7 @@ class PredictMultimerViewController(QtCore.QObject):
                 self._view.ui.btn_pred_analysis_multi_next_3,
                 self._view.ui.btn_pred_analysis_multi_back_5,
                 self._view.ui.btn_pred_analysis_multi_next_4,
-                self._view.ui.cb_pred_analysis_multi_images,
+                
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -201,7 +201,7 @@ class PredictMultimerViewController(QtCore.QObject):
                 self._view.ui.list_pred_analysis_multi_model_chains,
                 self._view.ui.btn_pred_analysis_multi_back_5,
                 self._view.ui.btn_pred_analysis_multi_next_4,
-                self._view.ui.cb_pred_analysis_multi_images,
+                
                 self._view.ui.btn_pred_analysis_multi_start,
                 self._view.ui.btn_pred_analysis_multi_back_pred_setup,
             ]
@@ -729,7 +729,7 @@ class PredictMultimerViewController(QtCore.QObject):
                     self._view.ui.list_pred_analysis_multi_model_chains,
                     self._view.ui.btn_pred_analysis_multi_back_5,
                     self._view.ui.btn_pred_analysis_multi_next_4,
-                    self._view.ui.cb_pred_analysis_multi_images,
+                    
                     self._view.ui.btn_pred_analysis_multi_start,
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
@@ -834,7 +834,7 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_multi_model_chains,
             self._view.ui.btn_pred_analysis_multi_back_5,
             self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.cb_pred_analysis_multi_images,
+            
             self._view.ui.btn_pred_analysis_multi_start,
             self._view.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
@@ -876,7 +876,7 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_multi_model_chains,
             self._view.ui.btn_pred_analysis_multi_back_5,
             self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.cb_pred_analysis_multi_images,
+            
             self._view.ui.btn_pred_analysis_multi_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -911,7 +911,7 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_multi_next_2,
             self._view.ui.btn_pred_analysis_multi_back_4,
             self._view.ui.btn_pred_analysis_multi_next_3,
-            self._view.ui.cb_pred_analysis_multi_images,
+            
             self._view.ui.btn_pred_analysis_multi_start,
             self._view.ui.btn_pred_analysis_multi_back_pred_setup,
         ]
@@ -971,7 +971,7 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_multi_model_chains,
             self._view.ui.btn_pred_analysis_multi_back_5,
             self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.cb_pred_analysis_multi_images,
+            
             self._view.ui.btn_pred_analysis_multi_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -1005,7 +1005,7 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_multi_next_3,
             self._view.ui.btn_pred_analysis_multi_back_5,
             self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.cb_pred_analysis_multi_images,
+            
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         gui_utils.hide_gui_elements(gui_elements_to_hide)
@@ -1046,7 +1046,7 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_multi_next_2,
             self._view.ui.btn_pred_analysis_multi_back_5,
             self._view.ui.btn_pred_analysis_multi_next_4,
-            self._view.ui.cb_pred_analysis_multi_images,
+            
             self._view.ui.btn_pred_analysis_multi_start,
             self._view.ui.lbl_pred_analysis_multi_model_chains,
             self._view.ui.list_pred_analysis_multi_model_chains,
@@ -1109,7 +1109,7 @@ class PredictMultimerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_multi_back_5,
             self._view.ui.btn_pred_analysis_multi_next_4,
             
-            self._view.ui.cb_pred_analysis_multi_images,
+            
             self._view.ui.btn_pred_analysis_multi_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)

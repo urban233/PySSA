@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>463</width>
-    <height>822</height>
+    <height>785</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -289,24 +289,6 @@
          <widget class="QPushButton" name="btn_distance_analysis_next_3">
           <property name="text">
            <string>Next</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_18">
-        <item>
-         <widget class="QLabel" name="lbl_distance_analysis_ray_trace_images">
-          <property name="text">
-           <string>Create ray-traced images (slow)</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="cb_distance_analysis_ray_trace_images">
-          <property name="text">
-           <string/>
           </property>
          </widget>
         </item>

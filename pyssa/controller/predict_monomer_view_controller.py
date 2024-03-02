@@ -138,7 +138,7 @@ class PredictMonomerViewController(QtCore.QObject):
                 self._view.ui.btn_pred_analysis_mono_add,
                 self._view.ui.lbl_pred_analysis_mono_overview,
                 self._view.ui.list_pred_analysis_mono_overview,
-                self._view.ui.cb_pred_analysis_mono_images,
+                
                 self._view.ui.btn_pred_analysis_mono_start,
                 self._view.ui.btn_pred_analysis_mono_back_pred_setup,
             ]
@@ -188,7 +188,7 @@ class PredictMonomerViewController(QtCore.QObject):
                 self._view.ui.btn_pred_analysis_mono_back_5,
                 self._view.ui.btn_pred_analysis_mono_next_4,
 
-                self._view.ui.cb_pred_analysis_mono_images,
+                
                 self._view.ui.btn_pred_analysis_mono_start,
                 self._view.ui.btn_pred_analysis_mono_back_pred_setup,
             ]
@@ -288,7 +288,7 @@ class PredictMonomerViewController(QtCore.QObject):
                     self._view.ui.btn_pred_analysis_mono_back_5,
                     self._view.ui.btn_pred_analysis_mono_next_4,
 
-                    self._view.ui.cb_pred_analysis_mono_images,
+                    
                     self._view.ui.btn_pred_analysis_mono_start,
                 ]
                 gui_utils.show_gui_elements(gui_elements_to_show)
@@ -297,8 +297,8 @@ class PredictMonomerViewController(QtCore.QObject):
                     self._view.ui.btn_pred_analysis_mono_remove.show()
                     self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
                     self._view.ui.btn_pred_analysis_mono_start.show()
-                    self._view.ui.lbl_pred_analysis_mono_images.show()
-                    self._view.ui.cb_pred_analysis_mono_images.show()
+                    
+                    
             else:
                 # goes from analysis to prediction
                 if self._view.ui.list_pred_analysis_mono_overview.count() > 0:
@@ -796,7 +796,7 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.cb_pred_analysis_mono_images,
+            
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
@@ -838,7 +838,7 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.cb_pred_analysis_mono_images,
+            
             self._view.ui.btn_pred_analysis_mono_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -847,8 +847,8 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_remove.show()
             self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
             self._view.ui.btn_pred_analysis_mono_start.show()
-            self._view.ui.lbl_pred_analysis_mono_images.show()
-            self._view.ui.cb_pred_analysis_mono_images.show()
+            
+            
 
     def mono_pred_analysis_structure_analysis_next_3(self) -> None:
         """Shows the gui elements to select the chains of protein 2."""
@@ -874,7 +874,7 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_next_2,
             self._view.ui.btn_pred_analysis_mono_back_4,
             self._view.ui.btn_pred_analysis_mono_next_3,
-            self._view.ui.cb_pred_analysis_mono_images,
+            
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
@@ -934,7 +934,7 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.cb_pred_analysis_mono_images,
+            
             self._view.ui.btn_pred_analysis_mono_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -949,7 +949,7 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_add,
             self._view.ui.lbl_pred_analysis_mono_overview,
             self._view.ui.list_pred_analysis_mono_overview,
-            self._view.ui.cb_pred_analysis_mono_images,
+            
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.btn_pred_analysis_mono_back_pred_setup,
         ]
@@ -1009,7 +1009,7 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_next_2,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.cb_pred_analysis_mono_images,
+            
             self._view.ui.btn_pred_analysis_mono_start,
             self._view.ui.lbl_pred_analysis_mono_model_chains,
             self._view.ui.list_pred_analysis_mono_model_chains,
@@ -1070,7 +1070,7 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.list_pred_analysis_mono_model_chains,
             self._view.ui.btn_pred_analysis_mono_back_5,
             self._view.ui.btn_pred_analysis_mono_next_4,
-            self._view.ui.cb_pred_analysis_mono_images,
+            
             self._view.ui.btn_pred_analysis_mono_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -1079,8 +1079,8 @@ class PredictMonomerViewController(QtCore.QObject):
             self._view.ui.btn_pred_analysis_mono_remove.show()
             self._view.ui.btn_pred_analysis_mono_remove.setEnabled(False)
             self._view.ui.btn_pred_analysis_mono_start.show()
-            self._view.ui.lbl_pred_analysis_mono_images.show()
-            self._view.ui.cb_pred_analysis_mono_images.show()
+            
+            
         # if self._view.ui.list_pred_analysis_mono_overview.count() == 0:
         #
         #     self._view.ui.btn_pred_analysis_mono_back_pred_setup.show()

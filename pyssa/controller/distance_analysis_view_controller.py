@@ -103,8 +103,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.btn_distance_analysis_next_2,
             self._view.ui.btn_distance_analysis_back_3,
             self._view.ui.btn_distance_analysis_next_3,
-            self._view.ui.lbl_distance_analysis_ray_trace_images,
-            self._view.ui.cb_distance_analysis_ray_trace_images,
             self._view.ui.btn_distance_analysis_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -117,7 +115,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
         tmp_raw_analysis_run_names: list = []
         for row_no in range(self._view.ui.list_distance_analysis_overview.count()):
             tmp_raw_analysis_run_names.append(self._view.ui.list_distance_analysis_overview.item(row_no).text())
-        self.job_input.emit(("job_input", tmp_raw_analysis_run_names, self._view.ui.cb_distance_analysis_ray_trace_images.isChecked()))
+        self.job_input.emit(("job_input", tmp_raw_analysis_run_names, False))
         self._view.close()
 
     def structure_analysis_next(self) -> None:
@@ -143,8 +141,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
                 self._view.ui.btn_distance_analysis_add,
                 self._view.ui.lbl_distance_analysis_overview,
                 self._view.ui.list_distance_analysis_overview,
-                self._view.ui.lbl_distance_analysis_ray_trace_images,
-                self._view.ui.cb_distance_analysis_ray_trace_images,
+                
+                
                 self._view.ui.btn_distance_analysis_start,
             ]
             gui_elements_to_hide = [
@@ -192,8 +190,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
                 self._view.ui.list_distance_analysis_prot_2_chains,
                 self._view.ui.btn_distance_analysis_back_3,
                 self._view.ui.btn_distance_analysis_next_3,
-                self._view.ui.lbl_distance_analysis_ray_trace_images,
-                self._view.ui.cb_distance_analysis_ray_trace_images,
+                
+                
                 self._view.ui.btn_distance_analysis_start,
             ]
             gui_utils.show_gui_elements(gui_elements_to_show)
@@ -249,8 +247,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.list_distance_analysis_prot_2_chains,
             self._view.ui.btn_distance_analysis_back_3,
             self._view.ui.btn_distance_analysis_next_3,
-            self._view.ui.lbl_distance_analysis_ray_trace_images,
-            self._view.ui.cb_distance_analysis_ray_trace_images,
+            
+            
             self._view.ui.btn_distance_analysis_start,
         ]
 
@@ -291,8 +289,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.list_distance_analysis_prot_2_chains,
             self._view.ui.btn_distance_analysis_back_3,
             self._view.ui.btn_distance_analysis_next_3,
-            self._view.ui.lbl_distance_analysis_ray_trace_images,
-            self._view.ui.cb_distance_analysis_ray_trace_images,
+            
+            
             self._view.ui.btn_distance_analysis_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -328,8 +326,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.btn_distance_analysis_next,
             self._view.ui.btn_distance_analysis_back_2,
             self._view.ui.btn_distance_analysis_next_2,
-            self._view.ui.lbl_distance_analysis_ray_trace_images,
-            self._view.ui.cb_distance_analysis_ray_trace_images,
+            
+            
             self._view.ui.btn_distance_analysis_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -377,8 +375,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.list_distance_analysis_prot_2_chains,
             self._view.ui.btn_distance_analysis_back_3,
             self._view.ui.btn_distance_analysis_next_3,
-            self._view.ui.lbl_distance_analysis_ray_trace_images,
-            self._view.ui.cb_distance_analysis_ray_trace_images,
+            
+            
             self._view.ui.btn_distance_analysis_start,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
@@ -393,8 +391,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.btn_distance_analysis_add,
             self._view.ui.lbl_distance_analysis_overview,
             self._view.ui.list_distance_analysis_overview,
-            self._view.ui.lbl_distance_analysis_ray_trace_images,
-            self._view.ui.cb_distance_analysis_ray_trace_images,
+            
+            
             self._view.ui.btn_distance_analysis_start,
         ]
         gui_elements_to_hide = [
@@ -453,8 +451,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.btn_distance_analysis_next,
             self._view.ui.btn_distance_analysis_back_3,
             self._view.ui.btn_distance_analysis_next_3,
-            self._view.ui.lbl_distance_analysis_ray_trace_images,
-            self._view.ui.cb_distance_analysis_ray_trace_images,
+            
+            
             self._view.ui.btn_distance_analysis_start,
             self._view.ui.lbl_distance_analysis_prot_2_chains,
             self._view.ui.list_distance_analysis_prot_2_chains,
@@ -510,8 +508,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
                 self._view.ui.list_distance_analysis_prot_2_chains,
                 self._view.ui.btn_distance_analysis_back_3,
                 self._view.ui.btn_distance_analysis_next_3,
-                self._view.ui.lbl_distance_analysis_ray_trace_images,
-                self._view.ui.cb_distance_analysis_ray_trace_images,
+                
+                
                 self._view.ui.btn_distance_analysis_start,
             ]
 
