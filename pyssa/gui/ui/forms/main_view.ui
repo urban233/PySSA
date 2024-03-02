@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>625</width>
-    <height>858</height>
+    <height>878</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -73,7 +73,7 @@
     <item>
      <widget class="QTabWidget" name="project_tab_widget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="sequences">
        <attribute name="title">
@@ -951,7 +951,14 @@
                  </layout>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_22">
+                 <layout class="QHBoxLayout" name="horizontalLayout_37">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_cartoon">
+                    <property name="text">
+                     <string>Cartoon</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <widget class="QLabel" name="lbl_protein_pair_cartoon">
                     <property name="text">
@@ -960,7 +967,7 @@
                    </widget>
                   </item>
                   <item>
-                   <spacer name="horizontalSpacer_14">
+                   <spacer name="horizontalSpacer_30">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -989,7 +996,14 @@
                  </layout>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_23">
+                 <layout class="QHBoxLayout" name="horizontalLayout_36">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_sticks">
+                    <property name="text">
+                     <string>Sticks</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <widget class="QLabel" name="lbl_protein_pair_sticks">
                     <property name="text">
@@ -998,7 +1012,7 @@
                    </widget>
                   </item>
                   <item>
-                   <spacer name="horizontalSpacer_15">
+                   <spacer name="horizontalSpacer_29">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -1027,7 +1041,14 @@
                  </layout>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_24">
+                 <layout class="QHBoxLayout" name="horizontalLayout_35">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_ribbon">
+                    <property name="text">
+                     <string>Ribbon</string>
+                    </property>
+                   </widget>
+                  </item>
                   <item>
                    <widget class="QLabel" name="lbl_protein_pair_ribbon">
                     <property name="text">
@@ -1036,7 +1057,7 @@
                    </widget>
                   </item>
                   <item>
-                   <spacer name="horizontalSpacer_16">
+                   <spacer name="horizontalSpacer_28">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -1061,6 +1082,126 @@
                      <string>Hide</string>
                     </property>
                    </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_40">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_lines">
+                    <property name="text">
+                     <string>Lines</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_33">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_41">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_spheres">
+                    <property name="text">
+                     <string>Spheres</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_34">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_38">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_dots">
+                    <property name="text">
+                     <string>Dots</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_31">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_34">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_mesh">
+                    <property name="text">
+                     <string>Mesh</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_27">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_33">
+                  <item>
+                   <widget class="QCheckBox" name="cb_protein_pair_surface">
+                    <property name="text">
+                     <string>Surface</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <spacer name="horizontalSpacer_26">
+                    <property name="orientation">
+                     <enum>Qt::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
                   </item>
                  </layout>
                 </item>

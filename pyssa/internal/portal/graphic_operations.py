@@ -44,7 +44,10 @@ def get_chain_color(a_selection_string: str, chain_letter: str):
     tmp_chain_colors = []
     for chain, resi, name, color_index in pymol.stored.colors:
         if chain == chain_letter:  # c-alpha atom
-            tmp_chain_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
+            try:
+                tmp_chain_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
+            except KeyError:
+                tmp_chain_colors.append("By RMSD")
     tmp_chain_color = list(set(tmp_chain_colors))[0]
     return tmp_chain_color
 

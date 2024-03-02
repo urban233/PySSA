@@ -231,12 +231,20 @@ class MainViewController:
         self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
         self._view.ui.btn_protein_pair_color_atoms.clicked.connect(self._change_chain_color_proteins_pair_atoms)
         self._view.ui.btn_protein_pair_reset_atoms.clicked.connect(self._change_chain_reset_proteins_pair_atoms)
-        self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
-        self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
-        self._view.ui.btn_protein_pair_show_sticks.clicked.connect(self.__slot_show_protein_pair_chain_as_sticks)
-        self._view.ui.btn_protein_pair_hide_sticks.clicked.connect(self.__slot_hide_protein_pair_chain_as_sticks)
-        self._view.ui.btn_protein_pair_show_ribbon.clicked.connect(self.__slot_show_protein_pair_chain_as_ribbon)
-        self._view.ui.btn_protein_pair_hide_ribbon.clicked.connect(self.__slot_hide_protein_pair_chain_as_ribbon)
+        # self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
+        # self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
+        # self._view.ui.btn_protein_pair_show_sticks.clicked.connect(self.__slot_show_protein_pair_chain_as_sticks)
+        # self._view.ui.btn_protein_pair_hide_sticks.clicked.connect(self.__slot_hide_protein_pair_chain_as_sticks)
+        # self._view.ui.btn_protein_pair_show_ribbon.clicked.connect(self.__slot_show_protein_pair_chain_as_ribbon)
+        # self._view.ui.btn_protein_pair_hide_ribbon.clicked.connect(self.__slot_hide_protein_pair_chain_as_ribbon)
+        self._view.ui.cb_protein_pair_cartoon.stateChanged.connect(self.__slot_protein_pair_chain_as_cartoon)
+        self._view.ui.cb_protein_pair_sticks.stateChanged.connect(self.__slot_protein_pair_chain_as_sticks)
+        self._view.ui.cb_protein_pair_ribbon.stateChanged.connect(self.__slot_protein_pair_chain_as_ribbon)
+        self._view.ui.cb_protein_pair_lines.stateChanged.connect(self.__slot_protein_pair_chain_as_lines)
+        self._view.ui.cb_protein_pair_spheres.stateChanged.connect(self.__slot_protein_pair_chain_as_spheres)
+        self._view.ui.cb_protein_pair_dots.stateChanged.connect(self.__slot_protein_pair_chain_as_dots)
+        self._view.ui.cb_protein_pair_mesh.stateChanged.connect(self.__slot_protein_pair_chain_as_mesh)
+        self._view.ui.cb_protein_pair_surface.stateChanged.connect(self.__slot_protein_pair_chain_as_surface)
         self._view.ui.btn_protein_pair_hide_all_representations.clicked.connect(self.__slot_hide_protein_pair_chain_all)
         self._view.ui.btn_help_3.clicked.connect(self._open_protein_pairs_tab_help)
         # </editor-fold>
@@ -2018,7 +2026,7 @@ class MainViewController:
         elif tmp_type == "chain":
             if self._pymol_session_manager.current_scene_name != "":
                 self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
-                self._interface_manager.set_repr_state_in_ui(self._pymol_session_manager)
+                self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
         elif tmp_type == "header":
             pass
 
@@ -2691,6 +2699,7 @@ class MainViewController:
         elif tmp_type == "chain":
             if self._pymol_session_manager.current_scene_name != "":
                 self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._pymol_session_manager)
+                self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(self._pymol_session_manager)
         elif tmp_type == "header":
             pass
         else:
@@ -2713,52 +2722,6 @@ class MainViewController:
 
     def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
         self._interface_manager.stop_wait_spinner()
-
-    # def _get_protein_information_of_protein_pair(self):
-    #     tmp_type = self._view.ui.protein_pairs_tree_view.model().data(
-    #         self._view.ui.protein_pairs_tree_view.currentIndex(), enums.ModelEnum.TYPE_ROLE
-    #     )
-    #     if tmp_type == "protein":
-    #         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index()
-    #         tmp_protein = self._interface_manager.get_current_protein_pair_tree_index_object()
-    #         tmp_chain_index = self._interface_manager.get_child_index_of_get_current_protein_pair_tree_index()
-    #     elif tmp_type == "chain":
-    #         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_grand_parent_index_object_of_current_protein_pair_tree_index()
-    #         tmp_protein = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index()
-    #         tmp_chain_index = self._interface_manager.get_current_protein_pair_tree_index()
-    #     elif tmp_type == "protein_pair":
-    #         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
-    #         tmp_protein = self._interface_manager.get_current_protein_pair_tree_index().child(0, 0).data(enums.ModelEnum.OBJECT_ROLE)
-    #         tmp_chain_index = self._interface_manager.get_current_protein_pair_tree_index().child(0, 0).child(0, 0)
-    #     else:
-    #         return "", "", "", ""
-    #     return tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index
-    #
-    # def _show_protein_information_of_protein_pair(self) -> None:
-    #     tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
-    #     if tmp_type == "protein" or tmp_type == "chain":
-    #         self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(tmp_chain_index,
-    #                                                                              tmp_protein_pair.get_id(),
-    #                                                                              tmp_protein.get_id())
-    #     self._interface_manager.manage_buttons_for_protein_pairs_tab(tmp_type)
-    #     tmp_current_active_obj = self._view.ui.protein_pairs_tree_view.model().data(
-    #             self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole
-    #     )
-    #     self._view.status_bar.showMessage(f"Active PyMOL Object: {tmp_current_active_obj}")
-    #
-    #     # protein pair in session
-    #     if self._pymol_session_manager.is_the_current_protein_pair_in_session():
-    #         self._view.ui.btn_create_protein_pair_scene.setEnabled(True)
-    #         self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
-    #         self._view.cb_chain_color.setEnabled(True)
-    #         self._view.cb_chain_representation.setEnabled(True)
-    #         self._view.ui.action_protein_regions.setEnabled(True)
-    #     else:
-    #         self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
-    #         self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
-    #         self._view.cb_chain_color.setEnabled(False)
-    #         self._view.cb_chain_representation.setEnabled(False)
-    #         self._view.ui.action_protein_regions.setEnabled(False)
 
     def _open_protein_pair_pymol_session(self):
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
@@ -2837,6 +2800,15 @@ class MainViewController:
 
     # <editor-fold desc="Representations">
     # cartoon
+    def __slot_protein_pair_chain_as_cartoon(self):
+        if self._view.ui.cb_protein_pair_cartoon.isChecked():
+            self.__slot_show_protein_pair_chain_as_cartoon()
+        else:
+            self.__slot_hide_protein_pair_chain_as_cartoon()
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
     def __slot_show_protein_pair_chain_as_cartoon(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2850,6 +2822,15 @@ class MainViewController:
         tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
 
     # sticks
+    def __slot_protein_pair_chain_as_sticks(self):
+        if self._view.ui.cb_protein_pair_sticks.isChecked():
+            self.__slot_show_protein_pair_chain_as_sticks()
+        else:
+            self.__slot_hide_protein_pair_chain_as_sticks()
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
     def __slot_show_protein_pair_chain_as_sticks(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2863,6 +2844,15 @@ class MainViewController:
         tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
 
     # ribbon
+    def __slot_protein_pair_chain_as_ribbon(self):
+        if self._view.ui.cb_protein_pair_ribbon.isChecked():
+            self.__slot_show_protein_pair_chain_as_ribbon()
+        else:
+            self.__slot_hide_protein_pair_chain_as_ribbon()
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
     def __slot_show_protein_pair_chain_as_ribbon(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2875,6 +2865,67 @@ class MainViewController:
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
         tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
 
+    # others
+    def __slot_protein_pair_chain_as_lines(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_lines.isChecked():
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
+        else:
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
+    def __slot_protein_pair_chain_as_spheres(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_spheres.isChecked():
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
+        else:
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
+    def __slot_protein_pair_chain_as_dots(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_dots.isChecked():
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
+        else:
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
+    def __slot_protein_pair_chain_as_mesh(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_mesh.isChecked():
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
+        else:
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
+    def __slot_protein_pair_chain_as_surface(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_surface.isChecked():
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
+        else:
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
+        self._update_scene()
+        self._save_protein_pair_pymol_session()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+
     # all
     def __slot_hide_protein_pair_chain_all(self):
         self.__slot_hide_protein_pair_chain_as_cartoon()
@@ -2882,80 +2933,6 @@ class MainViewController:
         self.__slot_hide_protein_pair_chain_as_ribbon()
 
     # </editor-fold>
-
-    # def _change_chain_representation_protein_pairs(self) -> None:
-    #     tmp_type, tmp_protein_pair, tmp_protein, tmp_chain_index = self._get_protein_information_of_protein_pair()
-    #     tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
-    #     if tmp_type == "chain":
-    #         tmp_raw_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
-    #         tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
-    #     elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-    #         tmp_chain = tmp_chain_index.data(enums.ModelEnum.OBJECT_ROLE)
-    #     else:
-    #         return
-    #
-    #     if self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.session_name == tmp_protein_pair.name:
-    #         # Update pymol parameter in PyMOL
-    #         tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-    #         try:
-    #             tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
-    #         except pymol.CmdException:
-    #             # TODO: this try-except block is necessary for the logic, but this is bad practice and should be redone!
-    #             logger.warning("No protein in session found. This can lead to more serious problems.")
-    #         else:
-    #             # Update pymol parameter in database
-    #             with database_manager.DatabaseManager(
-    #                     str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-    #                 db_manager.open_project_database()
-    #                 db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-    #                     tmp_protein_pair.get_id(),
-    #                     tmp_protein.get_id(),
-    #                     tmp_chain.chain_letter,
-    #                     enums.PymolParameterEnum.REPRESENTATION.value,
-    #                     tmp_representation,
-    #                 )
-    #                 db_manager.close_project_database()
-    #             self._save_protein_pair_pymol_session(tmp_protein_pair)
-    #     else:
-    #         logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
-    #     # if self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "chain":
-    #     #     self._view.ui.btn_delete_protein.setEnabled(False)
-    #     #     tmp_protein: "protein.Protein" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
-    #     #         enums.ModelEnum.OBJECT_ROLE
-    #     #     )
-    #     #     tmp_protein_pair: "protein_pair.ProteinPair" = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-    #     #         enums.ModelEnum.OBJECT_ROLE
-    #     #     )
-    #     #     tmp_raw_chain = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-    #     #     tmp_chain = tmp_protein.get_chain_by_letter(tmp_raw_chain.chain_letter)
-    #     # elif self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE) == "protein":
-    #     #     self._view.ui.btn_delete_protein.setEnabled(True)
-    #     #     tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
-    #     #     tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().data(
-    #     #         enums.ModelEnum.OBJECT_ROLE
-    #     #     )
-    #     #     tmp_chain = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).data(
-    #     #         enums.ModelEnum.OBJECT_ROLE)
-    #     # else:
-    #     #     return
-    #     # # Update pymol parameter in database
-    #     # tmp_representation: str = self._view.cb_chain_representation_protein_pair.currentText()
-    #     # with database_manager.DatabaseManager(
-    #     #         str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-    #     #     db_manager.open_project_database()
-    #     #     db_manager.update_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-    #     #         tmp_protein_pair.get_id(),
-    #     #         tmp_protein.get_id(),
-    #     #         tmp_chain.chain_letter,
-    #     #         enums.PymolParameterEnum.REPRESENTATION.value,
-    #     #         tmp_representation,
-    #     #     )
-    #     #     db_manager.close_project_database()
-    #     #
-    #     #
-    #     # # Update pymol parameter in PyMOL
-    #     # tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-    #     # tmp_protein.pymol_selection.change_representaion_of_selection(tmp_representation)
 
     def _delete_protein_pair_from_project(self):
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(

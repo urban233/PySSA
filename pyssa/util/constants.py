@@ -244,6 +244,7 @@ PYMOL_COLORS = [
     "orange",
     "lightorange",
     "white",
+    "By RMSD",
 ]
 
 PYMOL_COLORS_WITH_INDICES = {
