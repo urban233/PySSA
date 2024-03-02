@@ -23,24 +23,9 @@
 
 2. Click on _Create_.
 
-### Create a new project and adding directly a protein structure in form of a PDB ID
-1. Enter a new project name (1) 
-    { .annotate }
-    1. The project name must have 20 characters or fewer. Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.
+## Details
+- You can add existing protein structures after you created the project.
 
-2. Tick the checkbox _Import Existing Protein_.
-3. Enter the PDB ID into the newly opened text box.
-4. Click on _Create_.
-
-### Create a new project and adding directly a protein structure in form of a .pdb file
-1. Enter a new project name (1) 
-    { .annotate }
-    1. The project name must have 20 characters or fewer. Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.
-
-2. Tick the checkbox _Import Existing Protein_.
-3. Click on the button besides the newly opened text box.
-4. From the file dialog choose an existing pdb file and click on _Open_
-5. Click on _Create_.
 
 ---
 ##
