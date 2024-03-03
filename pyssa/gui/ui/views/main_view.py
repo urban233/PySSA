@@ -27,7 +27,7 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyqtspinner import spinner
-from pyssa.gui.ui.custom_widgets import custom_line_edit
+from pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
@@ -66,6 +66,7 @@ class MainView(QtWidgets.QMainWindow):
             speed=1.25,
             color=QtGui.QColor(75, 145, 247),
         )
+        self.add_custom_widgets()
         self.initialize_ui()
         gui_utils.fill_combo_box(self.ui.box_protein_color, constants.PYMOL_COLORS)
         gui_utils.fill_combo_box(self.ui.box_protein_pair_color, constants.PYMOL_COLORS)
@@ -74,6 +75,29 @@ class MainView(QtWidgets.QMainWindow):
         # Emit the custom signal when the window is closed
         self.dialogClosed.emit(("", False))
         event.accept()
+
+    def add_custom_widgets(self):
+        self.tg_protein_color_atoms = toggle_button.ToggleWidget()
+        self.ui.protein_atoms_layout.addWidget(self.tg_protein_color_atoms)
+        self.tg_protein_cartoon = toggle_button.ToggleWidget()
+        self.ui.protein_cartoon_layout.addWidget(self.tg_protein_cartoon)
+        self.tg_protein_sticks = toggle_button.ToggleWidget()
+        self.ui.protein_sticks_layout.addWidget(self.tg_protein_sticks)
+        self.tg_protein_ribbon = toggle_button.ToggleWidget()
+        self.ui.protein_ribbon_layout.addWidget(self.tg_protein_ribbon)
+        self.tg_protein_lines = toggle_button.ToggleWidget()
+        self.ui.protein_lines_layout.addWidget(self.tg_protein_lines)
+        self.tg_protein_spheres = toggle_button.ToggleWidget()
+        self.ui.protein_spheres_layout.addWidget(self.tg_protein_spheres)
+        self.tg_protein_dots = toggle_button.ToggleWidget()
+        self.ui.protein_dots_layout.addWidget(self.tg_protein_dots)
+        self.tg_protein_mesh = toggle_button.ToggleWidget()
+        self.ui.protein_mesh_layout.addWidget(self.tg_protein_mesh)
+        self.tg_protein_surface = toggle_button.ToggleWidget()
+        self.ui.protein_surface_layout.addWidget(self.tg_protein_surface)
+
+        self.color_grid = color_grid.PyMOLColorGrid()
+        self.ui.verticalLayout_6.insertWidget(2, self.color_grid)
 
     def initialize_ui(self) -> None:
         """Initialize the UI elements."""
@@ -113,6 +137,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein_scene.setEnabled(False)
         self.ui.proteins_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Loaded")
+
         # Hides all ui elements for the scene modifications
         self.ui.lbl_protein_color.hide()
         self.ui.lbl_protein_atoms.hide()
@@ -121,7 +146,12 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.lbl_protein_ribbon.hide()
         self.ui.lbl_protein_all_representations.hide()
 
+        self.ui.frame_protein_color.hide()
+        self.ui.frame_protein_repr.hide()
         self.ui.box_protein_color.hide()
+        self.ui.lbl_protein_current_color.hide()
+        self.ui.lbl_protein_current_color.setText("")
+        # old
         self.ui.btn_protein_color_atoms.hide()
         self.ui.btn_protein_reset_atoms.hide()
         self.ui.btn_protein_show_cartoon.hide()
@@ -130,6 +160,8 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_hide_sticks.hide()
         self.ui.btn_protein_show_ribbon.hide()
         self.ui.btn_protein_hide_ribbon.hide()
+        # checkboxes
+        self.ui.cb_protein_atoms.hide()
         self.ui.cb_protein_cartoon.hide()
         self.ui.cb_protein_sticks.hide()
         self.ui.cb_protein_ribbon.hide()
@@ -138,6 +170,15 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.cb_protein_dots.hide()
         self.ui.cb_protein_mesh.hide()
         self.ui.cb_protein_surface.hide()
+        # toggle buttons
+        self.tg_protein_cartoon.hide()
+        self.tg_protein_sticks.hide()
+        self.tg_protein_ribbon.hide()
+        self.tg_protein_lines.hide()
+        self.tg_protein_spheres.hide()
+        self.tg_protein_dots.hide()
+        self.tg_protein_mesh.hide()
+        self.tg_protein_surface.hide()
 
         self.ui.btn_protein_hide_all_representations.hide()
 
@@ -187,7 +228,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.proteins_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.protein_pairs_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setMinimumWidth(700)
-        self.setMinimumHeight(700)
+        self.setMinimumHeight(900)
 
         # <editor-fold desc="Set icons">
         pixmapi = QtWidgets.QStyle.SP_MessageBoxQuestion

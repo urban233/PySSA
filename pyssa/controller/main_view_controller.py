@@ -24,7 +24,7 @@ from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
-    add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller
+    add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -193,14 +193,15 @@ class MainViewController:
         self._view.ui.btn_update_protein_scene.clicked.connect(self._update_scene)
         self._view.ui.btn_delete_protein_scene.clicked.connect(self.delete_current_scene)
         self._view.ui.box_protein_color.currentIndexChanged.connect(self._change_chain_color_proteins)
-        self._view.ui.btn_protein_color_atoms.clicked.connect(self._change_chain_color_proteins_atoms)
-        self._view.ui.btn_protein_reset_atoms.clicked.connect(self._change_chain_reset_proteins_atoms)
+        # self._view.ui.btn_protein_color_atoms.clicked.connect(self._change_chain_color_proteins_atoms)
+        # self._view.ui.btn_protein_reset_atoms.clicked.connect(self._change_chain_reset_proteins_atoms)
         # self._view.ui.btn_protein_show_cartoon.clicked.connect(self.__slot_show_protein_chain_as_cartoon)
         # self._view.ui.btn_protein_hide_cartoon.clicked.connect(self.__slot_hide_protein_chain_as_cartoon)
         # self._view.ui.btn_protein_show_sticks.clicked.connect(self.__slot_show_protein_chain_as_sticks)
         # self._view.ui.btn_protein_hide_sticks.clicked.connect(self.__slot_hide_protein_chain_as_sticks)
         # self._view.ui.btn_protein_show_ribbon.clicked.connect(self.__slot_show_protein_chain_as_ribbon)
         # self._view.ui.btn_protein_hide_ribbon.clicked.connect(self.__slot_hide_protein_chain_as_ribbon)
+        self._view.ui.cb_protein_atoms.stateChanged.connect(self.__slot_color_protein_chain_atoms_by_element)
         self._view.ui.cb_protein_cartoon.stateChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.ui.cb_protein_sticks.stateChanged.connect(self.__slot_protein_chain_as_sticks)
         self._view.ui.cb_protein_ribbon.stateChanged.connect(self.__slot_protein_chain_as_ribbon)
@@ -209,7 +210,60 @@ class MainViewController:
         self._view.ui.cb_protein_dots.stateChanged.connect(self.__slot_protein_chain_as_dots)
         self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
         self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
+        self._view.tg_protein_color_atoms.toggleChanged.connect(self.__slot_color_protein_chain_atoms_by_element)
+        self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
+        self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
+        self._view.tg_protein_ribbon.toggleChanged.connect(self.__slot_protein_chain_as_ribbon)
+        self._view.tg_protein_lines.toggleChanged.connect(self.__slot_protein_chain_as_lines)
+        self._view.tg_protein_spheres.toggleChanged.connect(self.__slot_protein_chain_as_spheres)
+        self._view.tg_protein_dots.toggleChanged.connect(self.__slot_protein_chain_as_dots)
+        self._view.tg_protein_mesh.toggleChanged.connect(self.__slot_protein_chain_as_mesh)
+        self._view.tg_protein_surface.toggleChanged.connect(self.__slot_protein_chain_as_surface)
+
         self._view.ui.btn_protein_hide_all_representations.clicked.connect(self.__slot_hide_protein_chain_all)
+
+        # <editor-fold desc="Color Grid">
+        self._view.color_grid.c_red.clicked.connect(self.set_color_name_in_label_red)
+        self._view.color_grid.c_tv_red.clicked.connect(self.set_color_name_in_label_tv_red)
+        self._view.color_grid.c_salomon.clicked.connect(self.set_color_name_in_label_salmon)
+        self._view.color_grid.c_raspberry.clicked.connect(self.set_color_name_in_label_raspberry)
+
+        self._view.color_grid.c_green.clicked.connect(self.set_color_name_in_label_green)
+        self._view.color_grid.c_tv_green.clicked.connect(self.set_color_name_in_label_tv_green)
+        self._view.color_grid.c_palegreen.clicked.connect(self.set_color_name_in_label_palegreen)
+        self._view.color_grid.c_forest.clicked.connect(self.set_color_name_in_label_forest)
+
+        self._view.color_grid.c_blue.clicked.connect(self.set_color_name_in_label_blue)
+        self._view.color_grid.c_tv_blue.clicked.connect(self.set_color_name_in_label_tv_blue)
+        self._view.color_grid.c_lightblue.clicked.connect(self.set_color_name_in_label_lightblue)
+        self._view.color_grid.c_skyblue.clicked.connect(self.set_color_name_in_label_skyblue)
+
+        self._view.color_grid.c_yellow.clicked.connect(self.set_color_name_in_label_yellow)
+        self._view.color_grid.c_tv_yellow.clicked.connect(self.set_color_name_in_label_tv_yellow)
+        self._view.color_grid.c_paleyellow.clicked.connect(self.set_color_name_in_label_paleyellow)
+        self._view.color_grid.c_sand.clicked.connect(self.set_color_name_in_label_sand)
+
+        self._view.color_grid.c_magenta.clicked.connect(self.set_color_name_in_label_magenta)
+        self._view.color_grid.c_purple.clicked.connect(self.set_color_name_in_label_purple)
+        self._view.color_grid.c_pink.clicked.connect(self.set_color_name_in_label_pink)
+        self._view.color_grid.c_hotpink.clicked.connect(self.set_color_name_in_label_hotpink)
+
+        self._view.color_grid.c_cyan.clicked.connect(self.set_color_name_in_label_cyan)
+        self._view.color_grid.c_aquamarine.clicked.connect(self.set_color_name_in_label_aquamarine)
+        self._view.color_grid.c_palecyan.clicked.connect(self.set_color_name_in_label_palecyan)
+        self._view.color_grid.c_teal.clicked.connect(self.set_color_name_in_label_teal)
+
+        self._view.color_grid.c_orange.clicked.connect(self.set_color_name_in_label_orange)
+        self._view.color_grid.c_tv_orange.clicked.connect(self.set_color_name_in_label_tv_orange)
+        self._view.color_grid.c_lightorange.clicked.connect(self.set_color_name_in_label_lightorange)
+        self._view.color_grid.c_olive.clicked.connect(self.set_color_name_in_label_olive)
+
+        self._view.color_grid.c_white.clicked.connect(self.set_color_name_in_label_white)
+        self._view.color_grid.c_grey_70.clicked.connect(self.set_color_name_in_label_grey_70)
+        self._view.color_grid.c_grey_30.clicked.connect(self.set_color_name_in_label_grey_30)
+        self._view.color_grid.c_black.clicked.connect(self.set_color_name_in_label_black)
+        # </editor-fold>
+
         # </editor-fold>
 
         # <editor-fold desc="Context Menu">
@@ -1422,10 +1476,34 @@ class MainViewController:
     # <editor-fold desc="Settings menu methods">
     def open_settings_global(self) -> None:
         """Opens the dialog for the global settings."""
-        dialog = dialog_settings_global.DialogSettingsGlobal(self._interface_manager)
-        dialog.exec_()
-        self._interface_manager.update_settings()
-        self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
+        self._external_controller = settings_view_controller.SettingsViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self.post_open_settings_global)
+        self._external_controller.restore_ui()
+        self._interface_manager.get_settings_view().show()
+        # dialog = dialog_settings_global.DialogSettingsGlobal(self._interface_manager)
+        # dialog.exec_()
+        # self._interface_manager.update_settings()
+        # self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
+
+    def post_open_settings_global(self, return_value):
+        try:
+            tmp_type = self._interface_manager.get_current_protein_tree_index_type()
+        except AttributeError:
+            return
+        if self._view.ui.cb_protein_atoms.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+            self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
+            self._view.ui.cb_protein_atoms.setChecked(False)
+        elif self._view.tg_protein_color_atoms.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+            self._view.ui.cb_protein_atoms.setChecked(True)
+        else:
+            self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+            self._view.ui.cb_protein_atoms.setChecked(False)
+
+        if tmp_type == "chain":
+            self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
+            self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
+            self._interface_manager.show_protein_pymol_scene_configuration()
 
     def restore_settings(self) -> None:
         """Restores the settings.xml file to the default values."""
@@ -2093,7 +2171,10 @@ class MainViewController:
     def _change_chain_color_proteins(self) -> None:
         tmp_protein = self._interface_manager.get_current_active_protein_object()
         tmp_chain = self._interface_manager.get_current_active_chain_object()
-        tmp_color = self._view.ui.box_protein_color.currentText()
+        if self._interface_manager._settings_manager.settings.proteins_tab_use_combobox_for_colors == 1:
+            tmp_color = self._view.ui.box_protein_color.currentText()
+        else:
+            tmp_color = self._view.ui.lbl_protein_current_color.text()
 
         if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             # Update pymol parameter in PyMOL
@@ -2119,18 +2200,164 @@ class MainViewController:
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        cmd.color(color='atomic',selection=f"{tmp_selection.selection_string} and not elem C")
+        cmd.color(color='atomic', selection=f"{tmp_selection.selection_string} and not elem C")
 
-    def _change_chain_reset_proteins_atoms(self):
+    def _change_chain_reset_proteins_atoms(self, a_color_name):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        cmd.color(color=self._view.ui.box_protein_color.currentText(), selection=f"{tmp_selection.selection_string}")
+        cmd.color(color=a_color_name, selection=f"{tmp_selection.selection_string}")
+
+    def __slot_color_protein_chain_atoms_by_element(self):
+        if self._view.ui.cb_protein_atoms.isChecked() or self._view.tg_protein_color_atoms.toggle_button.isChecked():
+            self._change_chain_color_proteins_atoms()
+        elif self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            tmp_color_name = self._view.ui.box_protein_color.currentText()
+            self._change_chain_reset_proteins_atoms(tmp_color_name)
+        elif self._interface_manager.get_protein_repr_toggle_flag() == 1:
+            tmp_color_name = self._view.ui.lbl_protein_current_color.text().strip()
+            self._change_chain_reset_proteins_atoms(tmp_color_name)
+        else:
+            return
+
+    # <editor-fold desc="Color Grid slot methods">
+    def set_color_name_in_label_red(self):
+        self._view.ui.lbl_protein_current_color.setText("red")
+        self._change_chain_color_proteins()
+        self._view.color_grid.c_red.setIcon(QtGui.QIcon(r"C:\Users\martin\Downloads\done_FILL0_wght200_GRAD200_opsz24.svg"))  # fixme: this needs to be done better
+        self._view.color_grid.c_red.setIconSize(self._view.color_grid.c_red.icon().actualSize(QtCore.QSize(17, 17)))
+
+    def set_color_name_in_label_tv_red(self):
+        self._view.ui.lbl_protein_current_color.setText("tv_red")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_salmon(self):
+        self._view.ui.lbl_protein_current_color.setText("salmon")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_raspberry(self):
+        self._view.ui.lbl_protein_current_color.setText("raspberry")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_green(self):
+        self._view.ui.lbl_protein_current_color.setText("green")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_tv_green(self):
+        self._view.ui.lbl_protein_current_color.setText("tv_green")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_palegreen(self):
+        self._view.ui.lbl_protein_current_color.setText("palegreen")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_forest(self):
+        self._view.ui.lbl_protein_current_color.setText("forest")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_blue(self):
+        self._view.ui.lbl_protein_current_color.setText("blue")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_tv_blue(self):
+        self._view.ui.lbl_protein_current_color.setText("tv_blue")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_lightblue(self):
+        self._view.ui.lbl_protein_current_color.setText("lightblue")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_skyblue(self):
+        self._view.ui.lbl_protein_current_color.setText("skyblue")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_yellow(self):
+        self._view.ui.lbl_protein_current_color.setText("yellow")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_tv_yellow(self):
+        self._view.ui.lbl_protein_current_color.setText("tv_yellow")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_paleyellow(self):
+        self._view.ui.lbl_protein_current_color.setText("paleyellow")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_sand(self):
+        self._view.ui.lbl_protein_current_color.setText("sand")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_magenta(self):
+        self._view.ui.lbl_protein_current_color.setText("magenta")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_purple(self):
+        self._view.ui.lbl_protein_current_color.setText("purple")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_pink(self):
+        self._view.ui.lbl_protein_current_color.setText("pink")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_hotpink(self):
+        self._view.ui.lbl_protein_current_color.setText("hotpink")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_cyan(self):
+        self._view.ui.lbl_protein_current_color.setText("cyan")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_aquamarine(self):
+        self._view.ui.lbl_protein_current_color.setText("aquamarine")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_palecyan(self):
+        self._view.ui.lbl_protein_current_color.setText("palecyan")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_teal(self):
+        self._view.ui.lbl_protein_current_color.setText("teal")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_orange(self):
+        self._view.ui.lbl_protein_current_color.setText("orange")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_tv_orange(self):
+        self._view.ui.lbl_protein_current_color.setText("tv_orange")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_lightorange(self):
+        self._view.ui.lbl_protein_current_color.setText("lightorange")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_olive(self):
+        self._view.ui.lbl_protein_current_color.setText("olive")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_white(self):
+        self._view.ui.lbl_protein_current_color.setText("white")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_grey_70(self):
+        self._view.ui.lbl_protein_current_color.setText("grey70")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_grey_30(self):
+        self._view.ui.lbl_protein_current_color.setText("grey30")
+        self._change_chain_color_proteins()
+
+    def set_color_name_in_label_black(self):
+        self._view.ui.lbl_protein_current_color.setText("black")
+        self._change_chain_color_proteins()
+    # </editor-fold>
 
     # <editor-fold desc="Representations">
     # cartoon
     def __slot_protein_chain_as_cartoon(self):
-        if self._view.ui.cb_protein_cartoon.isChecked():
+        if self._view.ui.cb_protein_cartoon.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            self.__slot_show_protein_chain_as_cartoon()
+        elif self._view.tg_protein_cartoon.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             self.__slot_show_protein_chain_as_cartoon()
         else:
             self.__slot_hide_protein_chain_as_cartoon()
@@ -2154,7 +2381,9 @@ class MainViewController:
 
     # sticks
     def __slot_protein_chain_as_sticks(self):
-        if self._view.ui.cb_protein_sticks.isChecked():
+        if self._view.ui.cb_protein_sticks.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            self.__slot_show_protein_chain_as_sticks()
+        elif self._view.tg_protein_sticks.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             self.__slot_show_protein_chain_as_sticks()
         else:
             self.__slot_hide_protein_chain_as_sticks()
@@ -2178,7 +2407,9 @@ class MainViewController:
 
     # ribbon
     def __slot_protein_chain_as_ribbon(self):
-        if self._view.ui.cb_protein_ribbon.isChecked():
+        if self._view.ui.cb_protein_ribbon.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            self.__slot_show_protein_chain_as_ribbon()
+        elif self._view.tg_protein_ribbon.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             self.__slot_show_protein_chain_as_ribbon()
         else:
             self.__slot_hide_protein_chain_as_ribbon()
@@ -2205,7 +2436,9 @@ class MainViewController:
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        if self._view.ui.cb_protein_lines.isChecked():
+        if self._view.ui.cb_protein_lines.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
+        elif self._view.tg_protein_lines.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
@@ -2217,7 +2450,9 @@ class MainViewController:
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        if self._view.ui.cb_protein_spheres.isChecked():
+        if self._view.ui.cb_protein_spheres.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
+        elif self._view.tg_protein_spheres.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
@@ -2229,7 +2464,9 @@ class MainViewController:
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        if self._view.ui.cb_protein_dots.isChecked():
+        if self._view.ui.cb_protein_dots.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
+        elif self._view.tg_protein_dots.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
@@ -2241,7 +2478,9 @@ class MainViewController:
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        if self._view.ui.cb_protein_mesh.isChecked():
+        if self._view.ui.cb_protein_mesh.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
+        elif self._view.tg_protein_mesh.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
@@ -2253,7 +2492,9 @@ class MainViewController:
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        if self._view.ui.cb_protein_surface.isChecked():
+        if self._view.ui.cb_protein_surface.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
+        elif self._view.tg_protein_surface.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
@@ -2271,6 +2512,14 @@ class MainViewController:
         self._view.ui.cb_protein_dots.setChecked(False)
         self._view.ui.cb_protein_mesh.setChecked(False)
         self._view.ui.cb_protein_surface.setChecked(False)
+        self._view.tg_protein_cartoon.toggle_button.setChecked(False)
+        self._view.tg_protein_sticks.toggle_button.setChecked(False)
+        self._view.tg_protein_ribbon.toggle_button.setChecked(False)
+        self._view.tg_protein_lines.toggle_button.setChecked(False)
+        self._view.tg_protein_spheres.toggle_button.setChecked(False)
+        self._view.tg_protein_dots.toggle_button.setChecked(False)
+        self._view.tg_protein_mesh.toggle_button.setChecked(False)
+        self._view.tg_protein_surface.toggle_button.setChecked(False)
         self.__slot_hide_protein_chain_as_cartoon()
         self.__slot_hide_protein_chain_as_sticks()
         self.__slot_hide_protein_chain_as_ribbon()

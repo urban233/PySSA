@@ -43,7 +43,8 @@ def get_chain_color(a_selection_string: str, chain_letter: str):
     cmd.iterate(a_selection_string, "stored.colors.append((chain, resi, name, color))")
     tmp_chain_colors = []
     for chain, resi, name, color_index in pymol.stored.colors:
-        if chain == chain_letter:  # c-alpha atom
+        if chain == chain_letter and name == 'CA':  # c-alpha atom
+            print(color_index)
             try:
                 tmp_chain_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
             except KeyError:
@@ -119,8 +120,10 @@ def color_protein(pymol_color: str, a_selection_string: str) -> None:
         a_selection_string: a PyMOL conform selection string
 
     """
+    if pymol_color == "":
+        return
     if pymol_color not in constants.PYMOL_COLORS:
-        raise ValueError("An illegal color argument.")
+        raise ValueError(f"An illegal color argument. {pymol_color}")
     if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
         raise pymol.CmdException("No protein is in pymol session.")
     try:

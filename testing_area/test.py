@@ -51,6 +51,17 @@ from pymol import cmd
 
 
 def get_residue_colors( sele ):
+    pymol.stored.colors = []
+    cmd.iterate(sele, "stored.colors.append((chain, resi, name, color))")
+    res_colors = {}
+    for chain, resi, name, color in pymol.stored.colors:
+        if name == 'CA':  # c-alpha atom
+            print(color)
+            break
+            # res_colors[(chain, resi, name)] = color
+    return res_colors
+
+def get_residue_repr( sele ):
     pymol.stored.reps = []
     cmd.iterate(sele, "stored.reps.append((chain, resi, name, reps))")
     res_colors = {}
@@ -85,86 +96,86 @@ def make_dict(keys: list, values: list) -> dict:
     my_dict = {k: v for k, v in zip(keys, values)}
     return my_dict
 
+
 if __name__ == "__main__":
     from pymol import preset
+
     PYMOL_COLORS = [
-        "red",
-        "green",
-        "limegreen",
-        "blue",
-        "skyblue",
-        "yellow",
-        "limon",
-        "magenta",
-        "hotpink",
-        "violet",
-        "cyan",
-        "greencyan",
-        "orange",
-        "lightorange",
-        "white",
+        "red", "tv_red", "salmon", "raspberry",
+        "green", "tv_green", "palegreen", "forest",
+        "blue", "tv_blue", "lightblue", "skyblue",
+        "yellow", "tv_yellow", "paleyellow", "sand",
+        "magenta", "purple", "pink", "hotpink",
+        "cyan", "aquamarine", "palecyan", "teal",
+        "orange", "tv_orange", "lightorange", "olive",
+        "white", "grey70", "grey30", "black"
     ]
-    PYMOL_REPS = {
-        1: 'sticks',
-        2: 'spheres',
-        3: 'ball and stick',  # Nothing is known on how to hide this repr
-        4: 'surface',
-        32: 'cartoon',
-        64: 'ribbon',
-        128: 'lines',
-        256: 'mesh',
-        512: 'dots',
-    }
     cmd.fetch("3bmp")
-    #cmd.hide("cartoon", "3bmp")
-    cmd.show("lines", "3bmp")
-    # preset.ball_and_stick("3bmp")
-    print(get_chain_repr_index("3bmp", "A"))
-
-    combis = get_all_combis_as_dict()
-    indices = range(512)
-    my_dict = {k: v for k, v in zip(indices, combis)}
-    print(my_dict)
-
-    # _---------------------------------------------------
-    from itertools import product
-
-    # List of elements
-    elements = ['sticks', 'spheres', 'surface', 'cartoon', 'ribbon', 'lines', 'mesh', 'dots']
-
-    # Generate all combinations of 0s and 1s for the given number of elements
-    binary_combinations = list(product([0, 1], repeat=len(elements)))
-
-    # Define the filename for the Python script
-    filename = "pymol_commands.py"
-
-    # Open the file for writing
-    with open(filename, "w") as file:
-        file.write("from test import get_chain_repr_index\n")
-        file.write("from test import get_all_combis_as_dict\n")
-        file.write("from test import make_dict\n")
-
-        file.write("combis_dict = get_all_combis_as_dict()\n")
-        file.write("indices_list = []\n")
-        # Loop through each combination
-        for index, combination in enumerate(binary_combinations):
-            # Generate PyMOL commands for each element based on the combination
-            cmd_list = []
-            for i, bit in enumerate(combination):
-                if bit:
-                    cmd_list.append(f'cmd.show("{elements[i]}")')
-                else:
-                    cmd_list.append(f'cmd.hide("{elements[i]}")')
-
-            # Write the code for this combination to the file
-            file.write(f"# Combination {index + 1}\n")
-            file.write("from pymol import cmd\n")
-            file.write("cmd.fetch('3bmp')\n")
-            file.write("\n")
-            for cmd in cmd_list:
-                file.write(f"{cmd}\n")
-            file.write("\n")
-            file.write("indices_list.append(get_chain_repr_index('3bmp', 'A'))\n")
-            file.write("cmd.reinitialize()\n\n")
-
-        file.write("print(make_dict(indices_list, combis_dict))")
+    for tmp_color in PYMOL_COLORS:
+        print(tmp_color)
+        cmd.color(tmp_color, "3bmp")
+        get_residue_colors("3bmp")
+    # PYMOL_REPS = {
+    #     1: 'sticks',
+    #     2: 'spheres',
+    #     3: 'ball and stick',  # Nothing is known on how to hide this repr
+    #     4: 'surface',
+    #     32: 'cartoon',
+    #     64: 'ribbon',
+    #     128: 'lines',
+    #     256: 'mesh',
+    #     512: 'dots',
+    # }
+    # cmd.fetch("3bmp")
+    # #cmd.hide("cartoon", "3bmp")
+    # cmd.show("lines", "3bmp")
+    # # preset.ball_and_stick("3bmp")
+    # print(get_chain_repr_index("3bmp", "A"))
+    #
+    # combis = get_all_combis_as_dict()
+    # indices = range(512)
+    # my_dict = {k: v for k, v in zip(indices, combis)}
+    # print(my_dict)
+    #
+    # # _---------------------------------------------------
+    # from itertools import product
+    #
+    # # List of elements
+    # elements = ['sticks', 'spheres', 'surface', 'cartoon', 'ribbon', 'lines', 'mesh', 'dots']
+    #
+    # # Generate all combinations of 0s and 1s for the given number of elements
+    # binary_combinations = list(product([0, 1], repeat=len(elements)))
+    #
+    # # Define the filename for the Python script
+    # filename = "pymol_commands.py"
+    #
+    # # Open the file for writing
+    # with open(filename, "w") as file:
+    #     file.write("from test import get_chain_repr_index\n")
+    #     file.write("from test import get_all_combis_as_dict\n")
+    #     file.write("from test import make_dict\n")
+    #
+    #     file.write("combis_dict = get_all_combis_as_dict()\n")
+    #     file.write("indices_list = []\n")
+    #     # Loop through each combination
+    #     for index, combination in enumerate(binary_combinations):
+    #         # Generate PyMOL commands for each element based on the combination
+    #         cmd_list = []
+    #         for i, bit in enumerate(combination):
+    #             if bit:
+    #                 cmd_list.append(f'cmd.show("{elements[i]}")')
+    #             else:
+    #                 cmd_list.append(f'cmd.hide("{elements[i]}")')
+    #
+    #         # Write the code for this combination to the file
+    #         file.write(f"# Combination {index + 1}\n")
+    #         file.write("from pymol import cmd\n")
+    #         file.write("cmd.fetch('3bmp')\n")
+    #         file.write("\n")
+    #         for cmd in cmd_list:
+    #             file.write(f"{cmd}\n")
+    #         file.write("\n")
+    #         file.write("indices_list.append(get_chain_repr_index('3bmp', 'A'))\n")
+    #         file.write("cmd.reinitialize()\n\n")
+    #
+    #     file.write("print(make_dict(indices_list, combis_dict))")

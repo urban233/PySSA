@@ -72,7 +72,9 @@ class Settings:
         self.image_renderer: str = "-1"  # or "0"
         self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
         self.image_ray_texture: int = 0  # ranges from 0 to 5
-        self.start_help_at_startup: int = 1
+        self.start_help_at_startup: int = 1  # or "0"
+        self.proteins_tab_use_toggle: int = 1  # or "0"
+        self.proteins_tab_use_combobox_for_colors: int = 0  # or "1"
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object."""
@@ -140,6 +142,12 @@ class Settings:
             )
             tmp_settings.start_help_at_startup = Settings._check_integrity_of_start_help_at_startup_flag(
                 int(settings_dict.get("start_help_at_startup"))
+            )
+            tmp_settings.proteins_tab_use_toggle = Settings._check_integrity_of_proteins_tab_use_toggle_flag(
+                int(settings_dict.get("proteins_tab_use_toggle"))
+            )
+            tmp_settings.proteins_tab_use_combobox_for_colors = Settings._check_integrity_of_proteins_tab_use_combobox_for_colors_flag(
+                int(settings_dict.get("proteins_tab_use_combobox_for_colors"))
             )
 
         except ValueError as e:
@@ -240,6 +248,20 @@ class Settings:
         else:
             raise ValueError
 
+    @staticmethod
+    def _check_integrity_of_proteins_tab_use_toggle_flag(proteins_tab_use_toggle_flag: int) -> int:
+        if proteins_tab_use_toggle_flag == 0 or proteins_tab_use_toggle_flag == 1:
+            return proteins_tab_use_toggle_flag
+        else:
+            raise ValueError
+
+    @staticmethod
+    def _check_integrity_of_proteins_tab_use_combobox_for_colors_flag(proteins_tab_use_combobox_for_colors_flag: int) -> int:
+        if proteins_tab_use_combobox_for_colors_flag == 0 or proteins_tab_use_combobox_for_colors_flag == 1:
+            return proteins_tab_use_combobox_for_colors_flag
+        else:
+            raise ValueError
+
     # </editor-fold>
 
     def get_workspace_path(self) -> pathlib.Path:
@@ -313,6 +335,8 @@ class Settings:
         self.image_renderer: str = "-1"  # or "0"
         self.image_ray_trace_mode: int = 1  # ranges from 0 to 3
         self.image_ray_texture: int = 0  # ranges from 0 to 5
-        self.start_help_at_startup: bool = True
+        self.start_help_at_startup: int = 1  # or "0"
+        self.proteins_tab_use_toggle: int = 1  # or "0"
+        self.proteins_tab_use_combobox_for_colors: int = 0  # or "1"
 
         self.serialize_settings()
