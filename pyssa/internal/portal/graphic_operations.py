@@ -263,6 +263,7 @@ def color_protein_pair_by_rmsd(a_protein_pair: "protein_pair.ProteinPair") -> No
 def setup_default_session_graphic_settings() -> None:
     """This functions modifies the pymol session to look fancy."""
     cmd.bg_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+    cmd.set("valence", 0)
     cmd.set("scene_buttons", 0)
     cmd.set("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
     cmd.set("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
