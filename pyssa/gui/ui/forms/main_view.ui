@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>628</width>
-    <height>1338</height>
+    <width>730</width>
+    <height>872</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -415,7 +415,7 @@
                      <item>
                       <widget class="QLabel" name="lbl_protein_atoms">
                        <property name="text">
-                        <string>Color Atoms by Element</string>
+                        <string>Atoms by Element</string>
                        </property>
                       </widget>
                      </item>
@@ -467,6 +467,9 @@
                    <enum>QFrame::Raised</enum>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_15">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
                    <item>
                     <layout class="QHBoxLayout" name="protein_cartoon_layout">
                      <item>
@@ -1508,7 +1511,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>628</width>
+     <width>730</width>
      <height>21</height>
     </rect>
    </property>

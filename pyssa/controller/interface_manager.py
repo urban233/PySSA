@@ -873,7 +873,7 @@ class InterfaceManager:
             self._main_view.ui.lbl_protein_dots.show()
             self._main_view.ui.lbl_protein_mesh.show()
             self._main_view.ui.lbl_protein_surface.show()
-            self._main_view.tg_protein_color_atoms.show()
+            # self._main_view.tg_protein_color_atoms.show()
             self._main_view.tg_protein_cartoon.show()
             self._main_view.tg_protein_sticks.show()
             self._main_view.tg_protein_ribbon.show()
@@ -893,7 +893,8 @@ class InterfaceManager:
             self._main_view.ui.cb_protein_mesh.hide()
             self._main_view.ui.cb_protein_surface.hide()
         else:
-            self._main_view.ui.cb_protein_atoms.show()
+            # self._main_view.ui.cb_protein_atoms.show()
+            self._main_view.ui.lbl_protein_atoms.show()
             self._main_view.ui.cb_protein_cartoon.show()
             self._main_view.ui.cb_protein_sticks.show()
             self._main_view.ui.cb_protein_ribbon.show()
@@ -903,7 +904,6 @@ class InterfaceManager:
             self._main_view.ui.cb_protein_mesh.show()
             self._main_view.ui.cb_protein_surface.show()
             # hide ui elements from toggle options
-            self._main_view.ui.lbl_protein_atoms.hide()
             self._main_view.ui.lbl_protein_cartoon.hide()
             self._main_view.ui.lbl_protein_sticks.hide()
             self._main_view.ui.lbl_protein_ribbon.hide()
@@ -926,8 +926,8 @@ class InterfaceManager:
         #self._main_view.ui.box_protein_color.hide()
         self._main_view.ui.lbl_protein_all_representations.show()
         self._main_view.ui.btn_protein_hide_all_representations.show()
-        self._main_view.ui.btn_protein_color_atoms.hide()
-        self._main_view.ui.btn_protein_reset_atoms.hide()
+        self._main_view.ui.btn_protein_color_atoms.show()
+        self._main_view.ui.btn_protein_reset_atoms.show()
         self._main_view.ui.lbl_info.hide()
         self._main_view.ui.lbl_info_2.hide()
 
@@ -984,9 +984,11 @@ class InterfaceManager:
                     or self._main_view.tg_protein_dots.toggle_button.isChecked()
                     or self._main_view.tg_protein_mesh.toggle_button.isChecked()
                     or self._main_view.tg_protein_surface.toggle_button.isChecked()):
-                self._main_view.tg_protein_color_atoms.setEnabled(True)
+                self._main_view.ui.btn_protein_color_atoms.setEnabled(True)
+                self._main_view.ui.btn_protein_reset_atoms.setEnabled(True)
             else:
-                self._main_view.tg_protein_color_atoms.setEnabled(False)
+                self._main_view.ui.btn_protein_color_atoms.setEnabled(False)
+                self._main_view.ui.btn_protein_reset_atoms.setEnabled(False)
         else:
             if (self._main_view.ui.cb_protein_sticks.isChecked()
                     or self._main_view.ui.cb_protein_lines.isChecked()
@@ -994,9 +996,11 @@ class InterfaceManager:
                     or self._main_view.ui.cb_protein_dots.isChecked()
                     or self._main_view.ui.cb_protein_mesh.isChecked()
                     or self._main_view.ui.cb_protein_surface.isChecked()):
-                self._main_view.ui.cb_protein_color_atoms.setEnabled(True)
+                self._main_view.ui.btn_protein_color_atoms.setEnabled(True)
+                self._main_view.ui.btn_protein_reset_atoms.setEnabled(True)
             else:
-                self._main_view.ui.cb_protein_color_atoms.setEnabled(False)
+                self._main_view.ui.btn_protein_color_atoms.setEnabled(False)
+                self._main_view.ui.btn_protein_reset_atoms.setEnabled(False)
 
     def manage_ui_of_protein_pairs_tab(self,
                                        an_object_type: str,
