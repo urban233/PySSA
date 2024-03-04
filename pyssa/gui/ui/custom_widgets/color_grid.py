@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt
 
 
@@ -155,20 +155,3 @@ class PyMOLColorGrid(QtWidgets.QWidget):
             }
         """ % (a_hex_color, a_hex_color)
         return stylesheet
-
-    # def activate_color(self, color_name):
-    # TODO: needs to be fixed
-    #     tmp_stylesheet = """
-    #     QPushButton {
-    #         background-color: %s;
-    #         border: solid;
-    #         border-radius: 4px;
-    #         border-color: black;
-    #         border-width: 2px;
-    #         min-width: 20px;
-    #         max-width: 20px;
-    #         min-height: 20px;
-    #         max-height: 20px;
-    #     } """ % (color_name)
-    #     if color_name == "red":
-    #         self.c_red.setStyleSheet(tmp_stylesheet)

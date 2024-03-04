@@ -26,5 +26,6 @@
         <file>icons/warning_w200.svg</file>
         <file>icons/keyboard_arrow_right_w400.svg</file>
         <file>icons/keyboard_arrow_down_w400.svg</file>
+        <file>icons/done_round_edges_w200_g200.svg</file>
     </qresource>
 </RCC>

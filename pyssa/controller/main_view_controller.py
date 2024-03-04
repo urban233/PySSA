@@ -2224,132 +2224,222 @@ class MainViewController:
     def set_color_name_in_label_red(self):
         self._view.ui.lbl_protein_current_color.setText("red")
         self._change_chain_color_proteins()
-        self._view.color_grid.c_red.setIcon(QtGui.QIcon(r"C:\Users\martin\Downloads\done_FILL0_wght200_GRAD200_opsz24.svg"))  # fixme: this needs to be done better
-        self._view.color_grid.c_red.setIconSize(self._view.color_grid.c_red.icon().actualSize(QtCore.QSize(17, 17)))
+        self._view.color_grid.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_red.setIconSize(self._view.color_grid.c_red.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_red(self):
         self._view.ui.lbl_protein_current_color.setText("tv_red")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_tv_red.setIconSize(self._view.color_grid.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_salmon(self):
         self._view.ui.lbl_protein_current_color.setText("salmon")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_salomon.setIconSize(self._view.color_grid.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_raspberry(self):
         self._view.ui.lbl_protein_current_color.setText("raspberry")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_raspberry.setIconSize(self._view.color_grid.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_green(self):
         self._view.ui.lbl_protein_current_color.setText("green")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_green.setIconSize(
+            self._view.color_grid.c_green.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_green(self):
         self._view.ui.lbl_protein_current_color.setText("tv_green")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_tv_green.setIconSize(
+            self._view.color_grid.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_palegreen(self):
         self._view.ui.lbl_protein_current_color.setText("palegreen")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_palegreen.setIconSize(
+            self._view.color_grid.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_forest(self):
         self._view.ui.lbl_protein_current_color.setText("forest")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_forest.setIconSize(
+            self._view.color_grid.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_blue(self):
         self._view.ui.lbl_protein_current_color.setText("blue")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_blue.setIcon(QtGui.QIcon(
+            ":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_blue.setIconSize(self._view.color_grid.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_blue(self):
         self._view.ui.lbl_protein_current_color.setText("tv_blue")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_tv_blue.setIconSize(
+            self._view.color_grid.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_lightblue(self):
         self._view.ui.lbl_protein_current_color.setText("lightblue")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_lightblue.setIconSize(
+            self._view.color_grid.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_skyblue(self):
         self._view.ui.lbl_protein_current_color.setText("skyblue")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_skyblue.setIconSize(
+            self._view.color_grid.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_yellow(self):
         self._view.ui.lbl_protein_current_color.setText("yellow")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_yellow.setIconSize(
+            self._view.color_grid.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_yellow(self):
         self._view.ui.lbl_protein_current_color.setText("tv_yellow")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_tv_yellow.setIconSize(
+            self._view.color_grid.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_paleyellow(self):
         self._view.ui.lbl_protein_current_color.setText("paleyellow")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_paleyellow.setIconSize(
+            self._view.color_grid.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_sand(self):
         self._view.ui.lbl_protein_current_color.setText("sand")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_sand.setIconSize(
+            self._view.color_grid.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_magenta(self):
         self._view.ui.lbl_protein_current_color.setText("magenta")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_magenta.setIconSize(
+            self._view.color_grid.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_purple(self):
         self._view.ui.lbl_protein_current_color.setText("purple")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_purple.setIconSize(
+            self._view.color_grid.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_pink(self):
         self._view.ui.lbl_protein_current_color.setText("pink")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_pink.setIconSize(
+            self._view.color_grid.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_hotpink(self):
         self._view.ui.lbl_protein_current_color.setText("hotpink")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_hotpink.setIconSize(
+            self._view.color_grid.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_cyan(self):
         self._view.ui.lbl_protein_current_color.setText("cyan")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_cyan.setIconSize(
+            self._view.color_grid.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_aquamarine(self):
         self._view.ui.lbl_protein_current_color.setText("aquamarine")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_aquamarine.setIconSize(
+            self._view.color_grid.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_palecyan(self):
         self._view.ui.lbl_protein_current_color.setText("palecyan")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_palecyan.setIconSize(
+            self._view.color_grid.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_teal(self):
         self._view.ui.lbl_protein_current_color.setText("teal")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_teal.setIconSize(
+            self._view.color_grid.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_orange(self):
         self._view.ui.lbl_protein_current_color.setText("orange")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_orange.setIconSize(
+            self._view.color_grid.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_orange(self):
         self._view.ui.lbl_protein_current_color.setText("tv_orange")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_tv_orange.setIconSize(
+            self._view.color_grid.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_lightorange(self):
         self._view.ui.lbl_protein_current_color.setText("lightorange")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_lightorange.setIconSize(
+            self._view.color_grid.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_olive(self):
         self._view.ui.lbl_protein_current_color.setText("olive")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_olive.setIconSize(
+            self._view.color_grid.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_white(self):
         self._view.ui.lbl_protein_current_color.setText("white")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_white.setIconSize(
+            self._view.color_grid.c_white.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_grey_70(self):
         self._view.ui.lbl_protein_current_color.setText("grey70")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_grey_70.setIconSize(
+            self._view.color_grid.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_grey_30(self):
         self._view.ui.lbl_protein_current_color.setText("grey30")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_grey_30.setIconSize(
+            self._view.color_grid.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_black(self):
         self._view.ui.lbl_protein_current_color.setText("black")
         self._change_chain_color_proteins()
+        self._view.color_grid.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid.c_black.setIconSize(
+            self._view.color_grid.c_black.icon().actualSize(QtCore.QSize(14, 14)))
     # </editor-fold>
 
     # <editor-fold desc="Representations">
