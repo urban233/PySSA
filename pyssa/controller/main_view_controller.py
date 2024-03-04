@@ -2202,23 +2202,15 @@ class MainViewController:
             self._interface_manager.get_current_active_chain_object().chain_letter)
         cmd.color(color='atomic', selection=f"{tmp_selection.selection_string} and not elem C")
 
-    def _change_chain_reset_proteins_atoms(self, a_color_name):
+    def _change_chain_reset_proteins_atoms(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
-        cmd.color(color=a_color_name, selection=f"{tmp_selection.selection_string}")
-
-    def __slot_color_protein_chain_atoms_by_element(self):
-        if self._view.ui.cb_protein_atoms.isChecked() or self._view.tg_protein_color_atoms.toggle_button.isChecked():
-            self._change_chain_color_proteins_atoms()
-        elif self._interface_manager.get_protein_repr_toggle_flag() == 0:
+        if self._interface_manager.get_settings_manager().settings.proteins_tab_use_combobox_for_colors == 1:
             tmp_color_name = self._view.ui.box_protein_color.currentText()
-            self._change_chain_reset_proteins_atoms(tmp_color_name)
-        elif self._interface_manager.get_protein_repr_toggle_flag() == 1:
-            tmp_color_name = self._view.ui.lbl_protein_current_color.text().strip()
-            self._change_chain_reset_proteins_atoms(tmp_color_name)
         else:
-            return
+            tmp_color_name = self._view.ui.lbl_protein_current_color.text().strip()
+        cmd.color(color=tmp_color_name, selection=f"{tmp_selection.selection_string}")
 
     # <editor-fold desc="Color Grid slot methods">
     def set_color_name_in_label_red(self):
