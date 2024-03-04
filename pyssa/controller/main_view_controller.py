@@ -144,6 +144,7 @@ class MainViewController:
         self._view.ui.action_import_project.triggered.connect(self.import_project)
         self._view.ui.action_export_project.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
+        self._view.ui.action_exit_application.triggered.connect(self._close_all)
 
         self._view.ui.action_results_summary.triggered.connect(self._results_summary)
         self._view.ui.action_preview_image.triggered.connect(self._preview_image)
@@ -310,6 +311,21 @@ class MainViewController:
         if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
 
+    def _close_all(self):
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+            "Are you sure you want to close PySSA?", "Close PySSA",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
+        )
+        tmp_dialog.exec_()
+        if tmp_dialog.response:
+            # PySSA should be closed
+            if not self._view.ui.lbl_logo.isVisible():
+                self._close_project()
+            if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
+                pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
+            if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)) == 1:
+                pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
+
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
         """Updates the status bar of the main view with a custom message."""
@@ -363,9 +379,17 @@ class MainViewController:
         self._active_task.start()
 
     def __await_open_help(self):
-        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+        if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "The script for bringing the documentation window in front could not be found!", "Documentation",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
+        else:
+            subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+            self._interface_manager.update_status_bar("Opening help center finished.")
         self._interface_manager.stop_wait_spinner()
-        self._interface_manager.update_status_bar("Opening help center finished.")
+
 
     def _init_context_menus(self):
         # <editor-fold desc="General context menu setup">

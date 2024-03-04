@@ -1527,6 +1527,8 @@
     <addaction name="action_export_project"/>
     <addaction name="separator"/>
     <addaction name="action_close_project"/>
+    <addaction name="separator"/>
+    <addaction name="action_exit_application"/>
    </widget>
    <widget class="QMenu" name="menuPrediction">
     <property name="title">
@@ -1715,6 +1717,16 @@
   <action name="action_arrange_windows">
    <property name="text">
     <string>Arrange Windows</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="action_exit_application">
+   <property name="text">
+    <string>Exit Application</string>
    </property>
   </action>
  </widget>
