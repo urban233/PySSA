@@ -141,6 +141,7 @@ class MainViewController:
         self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
         self._view.ui.action_use_project.triggered.connect(self._use_project)
         self._view.ui.action_delete_project.triggered.connect(self._delete_project)
+        self._interface_manager.get_delete_view().dialogClosed.connect(self._post_delete_project)
         self._view.ui.action_import_project.triggered.connect(self.import_project)
         self._view.ui.action_export_project.triggered.connect(self.export_current_project)
         self._view.ui.action_close_project.triggered.connect(self._close_project)
@@ -833,6 +834,9 @@ class MainViewController:
     def _delete_project(self) -> None:
         self._external_controller = delete_project_view_controller.DeleteProjectViewController(self._interface_manager)
         self._interface_manager.get_delete_view().show()
+
+    def _post_delete_project(self) -> None:
+        self._interface_manager.refresh_main_view()
 
     def import_project(self) -> None:
         """Imports a project.xml into the current workspace."""
@@ -2103,6 +2107,7 @@ class MainViewController:
 
         elif tmp_type == "chain":
             if self._pymol_session_manager.current_scene_name != "":
+                self.set_icon_for_current_color()
                 self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
                 self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
         elif tmp_type == "header":
@@ -2213,6 +2218,51 @@ class MainViewController:
         cmd.color(color=tmp_color_name, selection=f"{tmp_selection.selection_string}")
 
     # <editor-fold desc="Color Grid slot methods">
+    def set_icon_for_current_color(self):
+        color_index_functions = {
+            "red": self.set_color_name_in_label_red,
+            "tv_red": self.set_color_name_in_label_tv_red,
+            "salmon": self.set_color_name_in_label_salmon,
+            "raspberry": self.set_color_name_in_label_raspberry,
+            "green": self.set_color_name_in_label_green,
+            "tv_green": self.set_color_name_in_label_tv_green,
+            "palegreen": self.set_color_name_in_label_palegreen,
+            "forest": self.set_color_name_in_label_forest,
+            "blue": self.set_color_name_in_label_blue,
+            "tv_blue": self.set_color_name_in_label_tv_blue,
+            "lightblue": self.set_color_name_in_label_lightblue,
+            "skyblue": self.set_color_name_in_label_skyblue,
+            "yellow": self.set_color_name_in_label_yellow,
+            "tv_yellow": self.set_color_name_in_label_tv_yellow,
+            "paleyellow": self.set_color_name_in_label_paleyellow,
+            "sand": self.set_color_name_in_label_sand,
+            "magenta": self.set_color_name_in_label_magenta,
+            "purple": self.set_color_name_in_label_purple,
+            "pink": self.set_color_name_in_label_pink,
+            "hotpink": self.set_color_name_in_label_hotpink,
+            "cyan": self.set_color_name_in_label_cyan,
+            "aquamarine": self.set_color_name_in_label_aquamarine,
+            "palecyan": self.set_color_name_in_label_palecyan,
+            "teal": self.set_color_name_in_label_teal,
+            "orange": self.set_color_name_in_label_orange,
+            "tv_orange": self.set_color_name_in_label_tv_orange,
+            "lightorange": self.set_color_name_in_label_lightorange,
+            "olive": self.set_color_name_in_label_olive,
+            "white": self.set_color_name_in_label_white,
+            "grey70": self.set_color_name_in_label_grey_70,
+            "grey30": self.set_color_name_in_label_grey_30,
+            "black": self.set_color_name_in_label_black
+        }
+        tmp_protein = self._interface_manager.get_current_active_protein_object()
+        tmp_chain = self._interface_manager.get_current_active_chain_object()
+        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        color_index_functions[
+            tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)
+        ]()
+
+    # Fixme: write function for uncheck colorbutton
+    
+
     def set_color_name_in_label_red(self):
         self._view.ui.lbl_protein_current_color.setText("red")
         self._change_chain_color_proteins()
