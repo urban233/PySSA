@@ -130,6 +130,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_grey_30, 2, 7)
         grid.addWidget(self.c_black, 3, 7)
 
+        self.set_all_tooltips()
         self.setGeometry(100, 100, self.minimumWidth(), self.minimumHeight())
 
     def generate_color_stylesheet(self, a_hex_color: str) -> str:
@@ -155,3 +156,44 @@ class PyMOLColorGrid(QtWidgets.QWidget):
             }
         """ % (a_hex_color, a_hex_color)
         return stylesheet
+
+    def set_all_tooltips(self) -> None:
+        self.c_red.setToolTip("red")
+        self.c_tv_red.setToolTip("tv_red")
+        self.c_salomon.setToolTip("salmon")
+        self.c_raspberry.setToolTip("raspberry")
+
+        self.c_green.setToolTip("green")
+        self.c_tv_green.setToolTip("tv_green")
+        self.c_palegreen.setToolTip("palegreen")
+        self.c_forest.setToolTip("forest")
+
+        self.c_blue.setToolTip("blue")
+        self.c_tv_blue.setToolTip("tv_blue")
+        self.c_lightblue.setToolTip("lightblue")
+        self.c_skyblue.setToolTip("skyblue")
+
+        self.c_yellow.setToolTip("yellow")
+        self.c_tv_yellow.setToolTip("tv_yellow")
+        self.c_paleyellow.setToolTip("paleyellow")
+        self.c_sand.setToolTip("sand")
+
+        self.c_magenta.setToolTip("magenta")
+        self.c_purple.setToolTip("purple")
+        self.c_pink.setToolTip("pink")
+        self.c_hotpink.setToolTip("hotpink")
+
+        self.c_cyan.setToolTip("cyan")
+        self.c_aquamarine.setToolTip("aquamarine")
+        self.c_palecyan.setToolTip("palecyan")
+        self.c_teal.setToolTip("teal")
+
+        self.c_orange.setToolTip("orange")
+        self.c_tv_orange.setToolTip("tv_orange")
+        self.c_lightorange.setToolTip("lightorange")
+        self.c_olive.setToolTip("olive")
+
+        self.c_white.setToolTip("white")
+        self.c_grey_70.setToolTip("grey70")
+        self.c_grey_30.setToolTip("grey30")
+        self.c_black.setToolTip("black")

@@ -32,6 +32,7 @@ from pyssa.util import constants
 
 class DeleteProjectView(QtWidgets.QDialog):
     """Class representing a Delete dialog."""
+    dialogClosed = QtCore.pyqtSignal()
 
     def __init__(self) -> None:
         """Constructor.
@@ -57,3 +58,8 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Delete Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Closes the dialog."""
+        self.dialogClosed.emit()
+        event.accept()

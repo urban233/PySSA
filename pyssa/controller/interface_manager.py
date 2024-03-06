@@ -501,6 +501,14 @@ class InterfaceManager:
             self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
             #self._main_view.ui.protein_pairs_table_widget.setRowCount(0)
 
+        tmp_projects = self.get_workspace_projects_as_list()
+        if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
+            self._main_view.ui.action_open_project.setEnabled(True)
+            self._main_view.ui.action_delete_project.setEnabled(True)
+        else:
+            self._main_view.ui.action_open_project.setEnabled(False)
+            self._main_view.ui.action_delete_project.setEnabled(False)
+
     def restore_default_main_view(self):
         # Restore sequences table
         logger.info("Restoring default main view at seq table")
