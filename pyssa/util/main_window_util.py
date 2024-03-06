@@ -102,11 +102,11 @@ def setup_app_settings(the_app_settings: "settings.Settings") -> "settings.Setti
         tmp_settings: "settings.Settings" = the_app_settings.deserialize_settings()
     except Exception as e:
         constants.PYSSA_LOGGER.warning("The settings file is damaged or outdated.")
-        gui_utils.error_dialog_settings(
-            "The settings file is damaged or outdated. You have to restore the settings to use PySSA!",
-            "",
-            the_app_settings,
+        tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            "The settings file is damaged or outdated. You have to restore the settings to use PySSA!", "Restore Settings",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
         )
+        tmp_dialog.exec_()
         tmp_settings: "settings.Settings" = the_app_settings
     return tmp_settings
 
