@@ -69,7 +69,7 @@ class DatabaseThread(threading.Thread):
         operation_function(the_db_manager, a_database_operation.buffered_data)
 
     @staticmethod
-    def _default_operation():
+    def _default_operation(placeholder_1, placeholder_2):
         constants.PYSSA_LOGGER.warning("This operation does not exists!")
 
     @staticmethod

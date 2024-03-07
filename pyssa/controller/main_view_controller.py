@@ -3070,6 +3070,8 @@ class MainViewController:
             self._interface_manager.stop_wait_spinner()
 
     def __await_clean_protein_update(self) -> None:
+        self._update_scene()
+        self._save_protein_pymol_session()
         self.update_status("Cleaning protein finished.")
         self._interface_manager.stop_wait_spinner()
 

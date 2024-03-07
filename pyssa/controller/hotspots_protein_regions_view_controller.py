@@ -70,9 +70,9 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
         if self._interface_manager.current_tab_index == 1:
             # proteins tab
             if self._interface_manager.get_current_protein_tree_index_type() == "protein":
-                return self._interface_manager.get_current_protein_tree_index_object().get_molecule_object(), 0
+                return self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
             else:
-                return self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object(), 0
+                return self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
         elif self._interface_manager.current_tab_index == 2:
             # protein pairs tab
             tmp_type: str = self._interface_manager.get_current_protein_pair_tree_index_type()
