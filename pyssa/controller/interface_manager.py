@@ -474,32 +474,24 @@ class InterfaceManager:
             self._main_view.ui.action_clear_logs.setEnabled(True)
             self._main_view.ui.action_about.setEnabled(True)
 
+        # Sequence
         if len(self._current_project.sequences) > 0:
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+            self.show_menu_options_with_seq()
         if len(self._current_project.sequences) == 0 or self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
-            self._main_view.ui.btn_save_sequence.setEnabled(False)
-            self._main_view.ui.btn_delete_sequence.setEnabled(False)
+            self.show_menu_options_without_seq()
 
+        # Proteins Tab
         if len(self._current_project.proteins) > 0:
-            self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
-            self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
+            self.show_menu_options_with_protein()
         if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self._main_view.ui.btn_save_protein.setEnabled(False)
-            self._main_view.ui.btn_delete_protein.setEnabled(False)
-            self._main_view.ui.btn_open_protein_session.setEnabled(False)
-            self._main_view.ui.btn_create_protein_scene.setEnabled(False)
-            self._main_view.ui.btn_update_protein_scene.setEnabled(False)
-            #self._main_view.ui.proteins_table_widget.setRowCount(0)
+            self.show_menu_options_without_protein()
 
+        # Protein Pairs Tab
         if len(self._current_project.protein_pairs) > 0:
-            self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
-            self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+            self.show_menu_options_with_protein_pair()
         if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
-            self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
-            self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
-            self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
-            #self._main_view.ui.protein_pairs_table_widget.setRowCount(0)
+            self.show_menu_options_without_protein_pair()
 
         tmp_projects = self.get_workspace_projects_as_list()
         if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
@@ -704,6 +696,7 @@ class InterfaceManager:
 
     # </editor-fold>
 
+    # Sequences
     def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
         self._main_view.setup_sequences_table(2)
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
@@ -728,6 +721,39 @@ class InterfaceManager:
 
         self._main_view.line_edit_seq_name.setText(tmp_seq_name_item.data(Qt.DisplayRole))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
+
+    def show_menu_options_with_seq(self):
+        self._main_view.ui.menuAnalysis.setEnabled(False)
+        self._main_view.ui.menuResults.setEnabled(False)
+        self._main_view.ui.menuImage.setEnabled(False)
+        self._main_view.ui.menuHotspots.setEnabled(False)
+
+    def show_menu_options_without_seq(self):
+        self._main_view.ui.btn_save_sequence.setEnabled(False)
+        self._main_view.ui.btn_delete_sequence.setEnabled(False)
+
+    # Proteins
+    def show_menu_options_with_protein(self):
+        self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
+        self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
+
+    def show_menu_options_without_protein(self):
+        self._main_view.ui.btn_save_protein.setEnabled(False)
+        self._main_view.ui.btn_delete_protein.setEnabled(False)
+        self._main_view.ui.btn_open_protein_session.setEnabled(False)
+        self._main_view.ui.btn_create_protein_scene.setEnabled(False)
+        self._main_view.ui.btn_update_protein_scene.setEnabled(False)
+
+    # Protein Pairs
+    def show_menu_options_with_protein_pair(self):
+        self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
+        self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+
+    def show_menu_options_without_protein_pair(self):
+        self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
+        self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
+        self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
+        self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
 
     def manage_ui_of_protein_tab(
             self,

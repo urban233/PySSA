@@ -1991,6 +1991,7 @@ class MainViewController:
         )
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_sequence_model()
+        self._interface_manager.show_menu_options_with_seq()
         self._interface_manager.refresh_main_view()
 
     def _save_selected_sequence_as_fasta_file(self):
@@ -2071,6 +2072,9 @@ class MainViewController:
             # extra ui changes
             self._view.ui.seqs_table_widget.setRowCount(0)
             self._view.build_sequence_table()
+            # hide not available menu labels
+
+
         else:
             constants.PYSSA_LOGGER.info("No sequence has been deleted. No changes were made.")
 
