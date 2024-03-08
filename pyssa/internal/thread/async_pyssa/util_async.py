@@ -15,7 +15,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 def open_documentation_on_certain_page(
     a_page_name: str,
-    placeholder: int
+    the_docs_window
 ) -> tuple:
     """Opens the pyssa documentation on the given page name.
 
@@ -25,9 +25,16 @@ def open_documentation_on_certain_page(
     Returns:
         a tuple with ("result", response)
     """
-    if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)):
+    if the_docs_window is not None:
+        tmp_is_docs_open_flag = True
+    else:
+        tmp_is_docs_open_flag = False
+
+    tmp_docs_window = None
+    if tmp_is_docs_open_flag:
         # Docs window is already open
         logger.info("Update currently open documentation.")
+        tmp_docs_window = the_docs_window
     elif globals.g_server_status == enums.DocsServerStatus.PENDING:
         # Docs are getting build
         logger.warning("Docs need to be build. The build process was started from another process!")
@@ -37,6 +44,8 @@ def open_documentation_on_certain_page(
                     constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1 or globals.g_server_status == enums.DocsServerStatus.ACTIVE:
                 flag = True
                 globals.g_server_status = enums.DocsServerStatus.ACTIVE
+                tmp_docs_window = pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0]
+                tmp_docs_window.minimize()
     else:
         # Docs are need to be built in this process
         logger.info("Trying to run the mkdocs serve command ...")
@@ -46,6 +55,7 @@ def open_documentation_on_certain_page(
             subprocess.Popen([r"C:\ProgramData\pyssa\extra_tools\browser.exe"])
         except subprocess.CalledProcessError as e:
             logger.error(f"Error starting mkdocs serve: {e}")
+            tmp_docs_window = None
         else:
             logger.info("Running the mkdocs serve command finished without errors.")
             globals.g_server_status = enums.DocsServerStatus.PENDING
@@ -54,6 +64,8 @@ def open_documentation_on_certain_page(
                 if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
                     flag = True
                     globals.g_server_status = enums.DocsServerStatus.ACTIVE
+                    tmp_docs_window = pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0]
+                    tmp_docs_window.minimize()
 
     # After the docs window is ready, it can be accessed by ZeroMQ
     context = zmq.Context()
@@ -63,7 +75,7 @@ def open_documentation_on_certain_page(
     response = socket.recv_string()
     logger.debug(f"Response from server: {response}")
     socket.close()
-    return "result", response
+    return "result", response, tmp_docs_window
 
 
 def start_documentation_server(
@@ -95,7 +107,8 @@ def start_documentation_server(
         if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
             flag = True
             globals.g_server_status = enums.DocsServerStatus.ACTIVE
-    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].minimize()
+    tmp_docs_window = pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0]
+    tmp_docs_window.minimize()
 
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
@@ -105,4 +118,4 @@ def start_documentation_server(
     logger.debug(f"Response from server: {response}")
     socket.close()
 
-    return "result", ""
+    return "result", tmp_docs_window

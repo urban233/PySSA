@@ -79,6 +79,8 @@ class InterfaceManager:
 
         self._settings_manager = settings_manager.SettingsManager()
 
+        self.documentation_window = None
+
         # <editor-fold desc="Setup App Settings">
         # self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
         if not os.path.exists(constants.SETTINGS_FULL_FILEPATH):

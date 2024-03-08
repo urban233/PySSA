@@ -239,7 +239,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self._interface_manager.update_status_bar("Opening help center ...")
         self._active_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
-            args=(a_page_name, 0),
+            args=(a_page_name, self._interface_manager.documentation_window),
             post_func=self.__await_open_help,
         )
         self._active_task.start()

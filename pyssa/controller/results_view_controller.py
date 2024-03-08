@@ -54,14 +54,23 @@ class ResultsViewController(QtCore.QObject):
         self._interface_manager.update_status_bar("Opening help center ...")
         self._active_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
-            args=(a_page_name, 0),
+            args=(a_page_name, self._interface_manager.documentation_window),
             post_func=self.__await_open_help,
         )
         self._active_task.start()
 
-    def __await_open_help(self):
-        subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-        self._interface_manager.update_status_bar("Opening help center finished.")
+    def __await_open_help(self, return_value):
+        self._interface_manager.documentation_window = return_value[2]
+        if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "The script for bringing the documentation window in front could not be found!", "Documentation",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
+        else:
+            self._interface_manager.documentation_window.restore()
+            subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
+            self._interface_manager.update_status_bar("Opening help center finished.")
 
     def _open_help_for_dialog(self):
         self.open_help("help/results/summary/")
