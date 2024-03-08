@@ -388,6 +388,10 @@ class InterfaceManager:
             for tmp_sequence in self._current_project.sequences:
                 tmp_sequence_item = QtGui.QStandardItem(tmp_sequence.name)
                 tmp_sequence_item.setData(tmp_sequence, enums.ModelEnum.OBJECT_ROLE)
+                if "," in tmp_sequence.seq:
+                    tmp_sequence_item.setData(enums.ModelTypeEnum.MULTIMER_SEQ, enums.ModelEnum.TYPE_ROLE)
+                else:
+                    tmp_sequence_item.setData(enums.ModelTypeEnum.MONOMER_SEQ, enums.ModelEnum.TYPE_ROLE)
                 tmp_root_item.appendRow(tmp_sequence_item)
 
     def refresh_main_view(self):
@@ -476,32 +480,24 @@ class InterfaceManager:
             self._main_view.ui.action_clear_logs.setEnabled(True)
             self._main_view.ui.action_about.setEnabled(True)
 
+        # Sequence
         if len(self._current_project.sequences) > 0:
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+            self.show_menu_options_with_seq()
         if len(self._current_project.sequences) == 0 or self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
-            self._main_view.ui.btn_save_sequence.setEnabled(False)
-            self._main_view.ui.btn_delete_sequence.setEnabled(False)
+            self.show_menu_options_without_seq()
 
+        # Proteins Tab
         if len(self._current_project.proteins) > 0:
-            self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
-            self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
+            self.show_menu_options_with_protein()
         if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self._main_view.ui.btn_save_protein.setEnabled(False)
-            self._main_view.ui.btn_delete_protein.setEnabled(False)
-            self._main_view.ui.btn_open_protein_session.setEnabled(False)
-            self._main_view.ui.btn_create_protein_scene.setEnabled(False)
-            self._main_view.ui.btn_update_protein_scene.setEnabled(False)
-            #self._main_view.ui.proteins_table_widget.setRowCount(0)
+            self.show_menu_options_without_protein()
 
+        # Protein Pairs Tab
         if len(self._current_project.protein_pairs) > 0:
-            self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
-            self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+            self.show_menu_options_with_protein_pair()
         if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
-            self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
-            self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
-            self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
-            #self._main_view.ui.protein_pairs_table_widget.setRowCount(0)
+            self.show_menu_options_without_protein_pair()
 
         tmp_projects = self.get_workspace_projects_as_list()
         if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
@@ -706,6 +702,7 @@ class InterfaceManager:
 
     # </editor-fold>
 
+    # Sequences
     def show_sequence_parameters(self, a_sequence_item: QtGui.QStandardItem):
         self._main_view.setup_sequences_table(2)
         tmp_sequence = a_sequence_item.data(enums.ModelEnum.OBJECT_ROLE)
@@ -730,6 +727,80 @@ class InterfaceManager:
 
         self._main_view.line_edit_seq_name.setText(tmp_seq_name_item.data(Qt.DisplayRole))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
+
+    def show_menu_options_with_seq(self):
+        self._main_view.ui.menuAnalysis.setEnabled(False)
+        self._main_view.ui.menuResults.setEnabled(False)
+        self._main_view.ui.menuImage.setEnabled(False)
+        self._main_view.ui.menuHotspots.setEnabled(False)
+
+        # <editor-fold desc="Checks type(s) of sequences">
+        tmp_sequence_model_state = self._check_sequence_model_state()
+        if tmp_sequence_model_state == "monomer":
+            self._main_view.ui.action_predict_monomer.setEnabled(True)
+            self._main_view.ui.action_predict_multimer.setEnabled(False)
+        elif tmp_sequence_model_state == "multimer":
+            self._main_view.ui.action_predict_monomer.setEnabled(False)
+            self._main_view.ui.action_predict_multimer.setEnabled(True)
+        elif tmp_sequence_model_state == "both":
+            self._main_view.ui.action_predict_monomer.setEnabled(True)
+            self._main_view.ui.action_predict_multimer.setEnabled(True)
+        elif tmp_sequence_model_state == "nothing":
+            self._main_view.ui.action_predict_monomer.setEnabled(False)
+            self._main_view.ui.action_predict_multimer.setEnabled(False)
+
+        # </editor-fold>
+
+    def show_menu_options_without_seq(self):
+        self._main_view.ui.btn_save_sequence.setEnabled(False)
+        self._main_view.ui.btn_delete_sequence.setEnabled(False)
+
+    def _check_sequence_model_state(self) -> str:
+        """Checks what type(s) of sequences are in the sequence model.
+
+        Returns:
+            a string representing the values: "both", "monomer", "multimer", "nothing"
+        """
+        tmp_contains_monomer = False
+        tmp_contains_multimer = False
+        for tmp_row in range(self._sequence_model.rowCount()):
+            tmp_item = self._sequence_model.item(tmp_row, 0)
+            if tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ:
+                tmp_contains_monomer = True
+            elif tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ:
+                tmp_contains_multimer = True
+
+        if tmp_contains_monomer and tmp_contains_multimer:
+            return "both"
+        elif tmp_contains_monomer and not tmp_contains_multimer:
+            return "monomer"
+        elif not tmp_contains_monomer and tmp_contains_multimer:
+            return "multimer"
+        else:
+            return "nothing"
+
+    # Proteins
+    def show_menu_options_with_protein(self):
+        self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
+        self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
+
+    def show_menu_options_without_protein(self):
+        self._main_view.ui.btn_save_protein.setEnabled(False)
+        self._main_view.ui.btn_delete_protein.setEnabled(False)
+        self._main_view.ui.btn_open_protein_session.setEnabled(False)
+        self._main_view.ui.btn_create_protein_scene.setEnabled(False)
+        self._main_view.ui.btn_update_protein_scene.setEnabled(False)
+
+    # Protein Pairs
+    def show_menu_options_with_protein_pair(self):
+        self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
+        self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+
+    def show_menu_options_without_protein_pair(self):
+        self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
+        self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
+        self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
+        self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
 
     def manage_ui_of_protein_tab(
             self,

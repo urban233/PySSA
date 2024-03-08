@@ -13,6 +13,12 @@ class ModelEnum(enum.IntEnum):
     FILEPATH_ROLE = 1005
 
 
+class ModelTypeEnum(enum.Enum):
+    """An enum for all model types."""
+    MONOMER_SEQ = "monomer_seq"
+    MULTIMER_SEQ = "multimer_seq"
+
+
 class DatabaseEnum(enum.Enum):
     """An enum for all database fields."""
     PROJECT_NAME = "name"
