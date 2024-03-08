@@ -667,8 +667,6 @@ class MainViewController:
 
     # </editor-fold>
 
-    # <editor-fold desc="Menu bar methods">
-
     # <editor-fold desc="Project menu">
     def _close_project(self):
         """Closes the current project"""
@@ -2053,7 +2051,15 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
 
     def _delete_selected_sequence(self):
-        response: bool = gui_utils.warning_message_sequence_gets_deleted()
+        # popup message which warns the user that the selected sequence gets deleted
+        tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+            "Are you sure you want to delete this sequence?",
+            "Delete Sequence",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
+        )
+        tmp_dialog.exec_()
+        response: bool = tmp_dialog.response
+
         if response:
             tmp_seq_record: "SeqRecord.SeqRecord" = self._interface_manager.get_current_sequence_list_index_object()
             tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_SEQUENCE,
@@ -2065,6 +2071,8 @@ class MainViewController:
             # extra ui changes
             self._view.ui.seqs_table_widget.setRowCount(0)
             self._view.build_sequence_table()
+        else:
+            constants.PYSSA_LOGGER.info("No sequence has been deleted. No changes were made.")
 
     # </editor-fold>
 
