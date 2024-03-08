@@ -386,6 +386,10 @@ class InterfaceManager:
             for tmp_sequence in self._current_project.sequences:
                 tmp_sequence_item = QtGui.QStandardItem(tmp_sequence.name)
                 tmp_sequence_item.setData(tmp_sequence, enums.ModelEnum.OBJECT_ROLE)
+                if "," in tmp_sequence.seq:
+                    tmp_sequence_item.setData(enums.ModelTypeEnum.MULTIMER_SEQ, enums.ModelEnum.TYPE_ROLE)
+                else:
+                    tmp_sequence_item.setData(enums.ModelTypeEnum.MONOMER_SEQ, enums.ModelEnum.TYPE_ROLE)
                 tmp_root_item.appendRow(tmp_sequence_item)
 
     def refresh_main_view(self):
@@ -728,9 +732,50 @@ class InterfaceManager:
         self._main_view.ui.menuImage.setEnabled(False)
         self._main_view.ui.menuHotspots.setEnabled(False)
 
+        # <editor-fold desc="Checks type(s) of sequences">
+        tmp_sequence_model_state = self._check_sequence_model_state()
+        if tmp_sequence_model_state == "monomer":
+            self._main_view.ui.action_predict_monomer.setEnabled(True)
+            self._main_view.ui.action_predict_multimer.setEnabled(False)
+        elif tmp_sequence_model_state == "multimer":
+            self._main_view.ui.action_predict_monomer.setEnabled(False)
+            self._main_view.ui.action_predict_multimer.setEnabled(True)
+        elif tmp_sequence_model_state == "both":
+            self._main_view.ui.action_predict_monomer.setEnabled(True)
+            self._main_view.ui.action_predict_multimer.setEnabled(True)
+        elif tmp_sequence_model_state == "nothing":
+            self._main_view.ui.action_predict_monomer.setEnabled(False)
+            self._main_view.ui.action_predict_multimer.setEnabled(False)
+
+        # </editor-fold>
+
     def show_menu_options_without_seq(self):
         self._main_view.ui.btn_save_sequence.setEnabled(False)
         self._main_view.ui.btn_delete_sequence.setEnabled(False)
+
+    def _check_sequence_model_state(self) -> str:
+        """Checks what type(s) of sequences are in the sequence model.
+
+        Returns:
+            a string representing the values: "both", "monomer", "multimer", "nothing"
+        """
+        tmp_contains_monomer = False
+        tmp_contains_multimer = False
+        for tmp_row in range(self._sequence_model.rowCount()):
+            tmp_item = self._sequence_model.item(tmp_row, 0)
+            if tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ:
+                tmp_contains_monomer = True
+            elif tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ:
+                tmp_contains_multimer = True
+
+        if tmp_contains_monomer and tmp_contains_multimer:
+            return "both"
+        elif tmp_contains_monomer and not tmp_contains_multimer:
+            return "monomer"
+        elif not tmp_contains_monomer and tmp_contains_multimer:
+            return "multimer"
+        else:
+            return "nothing"
 
     # Proteins
     def show_menu_options_with_protein(self):
