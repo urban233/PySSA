@@ -307,6 +307,11 @@ class UseProjectViewController(QtCore.QObject):
                 self._interface_manager.get_application_settings().get_workspace_path(),
                 self._interface_manager.get_application_settings()
             )
+            for tmp_protein in tmp_project.proteins:
+                tmp_pdb_atom_db_data = db_manager.get_pdb_atoms_of_protein(tmp_protein.get_id())
+                pdb_atom_dict = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in
+                                   tmp_pdb_atom_db_data]
+                tmp_protein.set_pdb_data(pdb_atom_dict)
             db_manager.close_project_database()
         self._view.ui.list_use_available_protein_structures.clear()
         for tmp_protein in tmp_project.proteins:
