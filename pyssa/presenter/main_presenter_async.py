@@ -395,78 +395,78 @@ def rename_selected_protein_structure(
     return ("result", a_protein)
 
 
-def predict_protein_with_colabfold(
-    the_prediction_protein_infos: list["prediction_protein_info.PredictionProteinInfo"],
-    the_prediction_configuration: "prediction_configuration.PredictionConfiguration",
-    a_project: "project.Project",
-) -> tuple:
-    """Runs structure prediction for a monomeric protein.
-
-    Args:
-        the_prediction_protein_infos: a list with protein names and sequences to predict.
-        the_prediction_configuration: a prediction configuration for the monomeric protein prediction.
-        a_project: a project object that contains all the proteins.
-
-    Returns:
-        a tuple with the exit code and exit code description
-    """
-    # TODO: needs checks
-    # TODO: needs tests!
-    structure_prediction_obj = structure_prediction.StructurePrediction(
-        the_prediction_protein_infos,
-        the_prediction_configuration,
-        a_project,
-    )
-    structure_prediction_obj.create_tmp_directories()
-    logger.info("Tmp directories were created.")
-
-    # Create fasta files for prediction
-    try:
-        structure_prediction_obj.create_fasta_files_for_prediction()
-    except exception.FastaFilesNotCreatedError:
-        logger.error("Fasta files were not created.")
-        return (exit_codes.ERROR_WRITING_FASTA_FILES[0], exit_codes.ERROR_WRITING_FASTA_FILES[1])
-    except exception.FastaFilesNotFoundError:
-        logger.error("Fasta files were not found.")
-        return (exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
-    else:
-        logger.info("Fasta files were successfully created.")
-
-    # Run structure prediction
-    try:
-        structure_prediction_obj.run_prediction()
-    except exception.PredictionEndedWithError:
-        logger.error("Prediction ended with error.")
-        return (exit_codes.ERROR_PREDICTION_FAILED[0], exit_codes.ERROR_PREDICTION_FAILED[1])
-    else:
-        logger.info("Prediction process finished.")
-
-    try:
-        structure_prediction_obj.move_best_prediction_models()
-        logger.info("Saved predicted pdb file into XML file.")
-    except exception.UnableToFindColabfoldModelError:
-        logger.error("Could not move rank 1 model, because it does not exists.")
-        return (
-            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
-            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
-        )
-    except FileNotFoundError:
-        logger.error("Could not move rank 1 model, because it does not exists.")
-        return (
-            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
-            exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        logger.error("Could not move rank 1 model, because it does not exists.")
-        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
-    else:
-        subprocess.run(["wsl", "--shutdown"])
-        logger.info("WSL gets shutdown.")
-        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
+# def predict_protein_with_colabfold(
+#     the_prediction_protein_infos: list["prediction_protein_info.PredictionProteinInfo"],
+#     the_prediction_configuration: "prediction_configuration.PredictionConfiguration",
+#     a_project: "project.Project",
+# ) -> tuple:
+#     """Runs structure prediction for a monomeric protein.
+#
+#     Args:
+#         the_prediction_protein_infos: a list with protein names and sequences to predict.
+#         the_prediction_configuration: a prediction configuration for the monomeric protein prediction.
+#         a_project: a project object that contains all the proteins.
+#
+#     Returns:
+#         a tuple with the exit code and exit code description
+#     """
+#     # TODO: needs checks
+#     # TODO: needs tests!
+#     structure_prediction_obj = structure_prediction.StructurePrediction(
+#         the_prediction_protein_infos,
+#         the_prediction_configuration,
+#         a_project,
+#     )
+#     structure_prediction_obj.create_tmp_directories()
+#     logger.info("Tmp directories were created.")
+#
+#     # Create fasta files for prediction
+#     try:
+#         structure_prediction_obj.create_fasta_files_for_prediction()
+#     except exception.FastaFilesNotCreatedError:
+#         logger.error("Fasta files were not created.")
+#         return (exit_codes.ERROR_WRITING_FASTA_FILES[0], exit_codes.ERROR_WRITING_FASTA_FILES[1])
+#     except exception.FastaFilesNotFoundError:
+#         logger.error("Fasta files were not found.")
+#         return (exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
+#     except Exception as e:
+#         logger.error(f"Unexpected error: {e}")
+#         return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+#     else:
+#         logger.info("Fasta files were successfully created.")
+#
+#     # Run structure prediction
+#     try:
+#         structure_prediction_obj.run_prediction()
+#     except exception.PredictionEndedWithError:
+#         logger.error("Prediction ended with error.")
+#         return (exit_codes.ERROR_PREDICTION_FAILED[0], exit_codes.ERROR_PREDICTION_FAILED[1])
+#     else:
+#         logger.info("Prediction process finished.")
+#
+#     try:
+#         structure_prediction_obj.move_best_prediction_models()
+#         logger.info("Saved predicted pdb file into XML file.")
+#     except exception.UnableToFindColabfoldModelError:
+#         logger.error("Could not move rank 1 model, because it does not exists.")
+#         return (
+#             exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
+#             exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
+#         )
+#     except FileNotFoundError:
+#         logger.error("Could not move rank 1 model, because it does not exists.")
+#         return (
+#             exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
+#             exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
+#         )
+#     except Exception as e:
+#         logger.error(f"Unexpected error: {e}")
+#         logger.error("Could not move rank 1 model, because it does not exists.")
+#         return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+#     else:
+#         subprocess.run(["wsl", "--shutdown"])
+#         logger.info("WSL gets shutdown.")
+#         return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
 
 
 def run_distance_analysis(

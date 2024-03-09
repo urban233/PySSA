@@ -94,6 +94,6 @@ class Task:
 
     def is_finished(self) -> bool:
         """Checks if the action is finished."""
-        if self.action.finished:
+        if self.action.is_finished:
             return True
         return False

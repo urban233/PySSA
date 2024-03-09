@@ -73,7 +73,7 @@
     <item>
      <widget class="QTabWidget" name="project_tab_widget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="sequences">
        <attribute name="title">
@@ -1536,6 +1536,8 @@
     </property>
     <addaction name="action_predict_monomer"/>
     <addaction name="action_predict_multimer"/>
+    <addaction name="separator"/>
+    <addaction name="action_abort_prediction"/>
    </widget>
    <widget class="QMenu" name="menuAnalysis">
     <property name="title">
@@ -1727,6 +1729,11 @@
   <action name="action_exit_application">
    <property name="text">
     <string>Exit Application</string>
+   </property>
+  </action>
+  <action name="action_abort_prediction">
+   <property name="text">
+    <string>Abort</string>
    </property>
   </action>
  </widget>

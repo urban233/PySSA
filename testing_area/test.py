@@ -100,21 +100,22 @@ def make_dict(keys: list, values: list) -> dict:
 if __name__ == "__main__":
     from pymol import preset
 
-    PYMOL_COLORS = [
-        "red", "tv_red", "salmon", "raspberry",
-        "green", "tv_green", "palegreen", "forest",
-        "blue", "tv_blue", "lightblue", "skyblue",
-        "yellow", "tv_yellow", "paleyellow", "sand",
-        "magenta", "purple", "pink", "hotpink",
-        "cyan", "aquamarine", "palecyan", "teal",
-        "orange", "tv_orange", "lightorange", "olive",
-        "white", "grey70", "grey30", "black"
-    ]
-    cmd.fetch("3bmp")
-    for tmp_color in PYMOL_COLORS:
-        print(tmp_color)
-        cmd.color(tmp_color, "3bmp")
-        get_residue_colors("3bmp")
+    # PYMOL_COLORS = [
+    #     "red", "tv_red", "salmon", "raspberry",
+    #     "green", "tv_green", "palegreen", "forest",
+    #     "blue", "tv_blue", "lightblue", "skyblue",
+    #     "yellow", "tv_yellow", "paleyellow", "sand",
+    #     "magenta", "purple", "pink", "hotpink",
+    #     "cyan", "aquamarine", "palecyan", "teal",
+    #     "orange", "tv_orange", "lightorange", "olive",
+    #     "white", "grey70", "grey30", "black"
+    # ]
+    # cmd.fetch("3bmp")
+    # for tmp_color in PYMOL_COLORS:
+    #     print(tmp_color)
+    #     cmd.color(tmp_color, "3bmp")
+    #     get_residue_colors("3bmp")
+
     # PYMOL_REPS = {
     #     1: 'sticks',
     #     2: 'spheres',

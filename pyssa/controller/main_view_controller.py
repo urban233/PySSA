@@ -20,11 +20,13 @@ from Bio import SeqRecord
 from Bio import SeqIO
 from xml import sax
 
+from pyssa.async_pyssa import main_tasks_async
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
-    add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller
+    add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
+    predict_protein_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -164,6 +166,7 @@ class MainViewController:
         self._view.ui.action_about.triggered.connect(self.open_about)
         self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
         self._view.ui.action_predict_multimer.triggered.connect(self._predict_multimer)
+        self._view.ui.action_abort_prediction.triggered.connect(self.abort_prediction)
         self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
         self._view.ui.action_arrange_windows.triggered.connect(self.arrange_windows)
 
@@ -1008,15 +1011,15 @@ class MainViewController:
 
     # <editor-fold desc="Monomer">
     def _predict_monomer(self):
-        self._external_controller = predict_monomer_view_controller.PredictMonomerViewController(
+        self._external_controller = predict_protein_view_controller.PredictProteinViewController(
             self._interface_manager
         )
         self._external_controller.job_input.connect(self._post_predict_monomer)
-        self._interface_manager.get_predict_monomer_view().show()
+        self._interface_manager.get_predict_protein_view().show()
 
     def _post_predict_monomer(self, result: tuple) -> None:
         """Sets up the worker for the prediction of the proteins."""
-        self._view.wait_spinner.start()
+        #self._view.wait_spinner.start()
 
         # <editor-fold desc="Check if WSL2 and ColabFold are installed">
         if globals.g_os == "win32":
@@ -1052,7 +1055,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
             # Analysis should be run after the prediction
             self._active_task = tasks.Task(
-                target=main_presenter_async.predict_protein_with_colabfold,
+                target=main_tasks_async.predict_protein_with_colabfold,
                 args=(
                     result[1],
                     result[2],
@@ -1062,10 +1065,20 @@ class MainViewController:
             )
             self._active_task.start()
         else:
-            constants.PYSSA_LOGGER.info("Running only a prediction.")
-            # No analysis after prediction
-            self._active_task = tasks.Task(
-                target=main_presenter_async.predict_protein_with_colabfold,
+            # constants.PYSSA_LOGGER.info("Running only a prediction.")
+            # # No analysis after prediction
+            # self._active_task = tasks.Task(
+            #     target=main_tasks_async.predict_protein_with_colabfold,
+            #     args=(
+            #         result[1],
+            #         result[2],
+            #         self._interface_manager.get_current_project(),
+            #     ),
+            #     post_func=self.__await_predict_protein_with_colabfold,
+            # )
+            # self._active_task.start()
+            tmp_prediction_task = tasks.Task(
+                target=main_tasks_async.predict_protein_with_colabfold,
                 args=(
                     result[1],
                     result[2],
@@ -1073,25 +1086,24 @@ class MainViewController:
                 ),
                 post_func=self.__await_predict_protein_with_colabfold,
             )
-            self._active_task.start()
-
-        self._view.status_bar.showMessage("A prediction is currently running ...")
-        self.block_box_prediction = QtWidgets.QMessageBox()
-        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self.block_box_prediction)
-        self.block_box_prediction.setWindowTitle("Structure Prediction")
-        self.block_box_prediction.setText("A prediction is currently running.")
-        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
-        self.block_box_prediction.exec_()
-        if self.block_box_prediction.clickedButton() == btn_abort:
-            self.abort_prediction()
-            self.block_box_prediction.close()
-            self._view.wait_spinner.stop()
-        else:
-            self.block_box_prediction.close()
-            self._view.wait_spinner.stop()
-        # self._interface_manager.update_status_bar("")
+            self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
+        self._interface_manager.update_status_bar("A prediction is currently running ...")
+        self._interface_manager.refresh_main_view()
+        # self.block_box_prediction = QtWidgets.QMessageBox()
+        # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
+        # self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+        # styles.set_stylesheet(self.block_box_prediction)
+        # self.block_box_prediction.setWindowTitle("Structure Prediction")
+        # self.block_box_prediction.setText("A prediction is currently running.")
+        # btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
+        # self.block_box_prediction.exec_()
+        # if self.block_box_prediction.clickedButton() == btn_abort:
+        #     self.abort_prediction()
+        #     self.block_box_prediction.close()
+        #     self._view.wait_spinner.stop()
+        # else:
+        #     self.block_box_prediction.close()
+        #     self._view.wait_spinner.stop()
 
     def abort_prediction(self) -> None:
         """Aborts the running prediction."""
@@ -1308,6 +1320,16 @@ class MainViewController:
             )
             tmp_dialog.exec_()
             self._interface_manager.update_status_bar("Prediction failed because of an unknown case!")
+            self._view.status_bar.setStyleSheet("""
+                QStatusBar {
+                    background-color: #ba1a1a;
+                    color: white;
+                    border-style: solid;
+                    border-width: 2px;
+                    border-radius: 4px;
+                    border-color: #5b5b5b;
+                }
+            """)
         self._interface_manager.stop_wait_spinner()
 
     # </editor-fold>
@@ -1357,7 +1379,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
             # Analysis should be run after the prediction
             self._active_task = tasks.Task(
-                target=main_presenter_async.predict_protein_with_colabfold,
+                target=main_tasks_async.predict_protein_with_colabfold,
                 args=(
                     result[1],
                     result[2],
@@ -1370,7 +1392,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Running only a prediction.")
             # No analysis after prediction
             self._active_task = tasks.Task(
-                target=main_presenter_async.predict_protein_with_colabfold,
+                target=main_tasks_async.predict_protein_with_colabfold,
                 args=(
                     result[1],
                     result[2],

@@ -8,13 +8,13 @@ from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from pyssa.controller import database_manager, pymol_session_manager, settings_manager
+from pyssa.controller import database_manager, pymol_session_manager, settings_manager, main_tasks_manager
 from pyssa.controller.database_manager import logger
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
-    predict_multimer_view, add_sequence_view, add_scene_view, settings_view
+    predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -34,6 +34,7 @@ class InterfaceManager:
     _main_view: "main_view.MainView"
     _settings_view: "settings_view.SettingsView"
     _predict_monomer_view: "predict_monomer_view.PredictMonomerView"
+    _predict_protein_view: "predict_protein_view.PredictProteinView"
     _distance_analysis_view: "distance_analysis_view.DistanceAnalysisView"
     _create_project_view: "create_project_view.CreateProjectView"
     _open_project_view: "open_project_view.OpenProjectView"
@@ -64,6 +65,7 @@ class InterfaceManager:
         self._settings_view = settings_view.SettingsView()
         self._predict_monomer_view = predict_monomer_view.PredictMonomerView()
         self._predict_multimer_view = predict_multimer_view.PredictMultimerView()
+        self._predict_protein_view = predict_protein_view.PredictProteinView()
         self._distance_analysis_view = distance_analysis_view.DistanceAnalysisView()
         self._create_project_view = create_project_view.CreateProjectView()
         self._open_project_view = open_project_view.OpenProjectView()
@@ -77,6 +79,7 @@ class InterfaceManager:
         self._use_project_view = use_project_view.UseProjectView()
         self._add_scene_view = add_scene_view.AddSceneView()
 
+        self.main_tasks_manager = main_tasks_manager.MainTasksManager()
         self._settings_manager = settings_manager.SettingsManager()
 
         self.documentation_window = None
@@ -167,6 +170,9 @@ class InterfaceManager:
 
     def get_predict_multimer_view(self) -> "predict_multimer_view.PredictMultimerView":
         return self._predict_multimer_view
+
+    def get_predict_protein_view(self):
+        return self._predict_protein_view
 
     def get_distance_analysis_view(self) -> "distance_analysis_view.DistanceAnalysisView":
         return self._distance_analysis_view
@@ -507,6 +513,36 @@ class InterfaceManager:
             self._main_view.ui.action_open_project.setEnabled(False)
             self._main_view.ui.action_delete_project.setEnabled(False)
 
+        if self.main_tasks_manager.prediction_task is not None:
+            if not self.main_tasks_manager.check_if_prediction_task_is_finished():
+                logger.info("Running prediction in the background ...")
+                self._main_view.status_bar.setStyleSheet("""
+                    QStatusBar {
+                        background-color: #ff9000;
+                        border-style: solid;
+                        border-width: 2px;
+                        border-radius: 4px;
+                        border-color: #5b5b5b;
+                    }
+                """)
+                self._main_view.ui.action_abort_prediction.setEnabled(True)
+                self._main_view.ui.action_predict_monomer.setEnabled(False)
+                self._main_view.ui.action_predict_multimer.setEnabled(False)
+            else:
+                logger.info("Prediction finished.")
+                self._main_view.status_bar.setStyleSheet("""
+                    QStatusBar {
+                        background-color: white;
+                        border-style: solid;
+                        border-width: 2px;
+                        border-radius: 4px;
+                        border-color: #DCDBE3;
+                    }
+                """)
+                self._main_view.ui.action_abort_prediction.setEnabled(False)
+        else:
+            self._main_view.ui.action_abort_prediction.setEnabled(False)
+
     def restore_default_main_view(self):
         # Restore sequences table
         logger.info("Restoring default main view at seq table")
@@ -781,6 +817,11 @@ class InterfaceManager:
 
     # Proteins
     def show_menu_options_with_protein(self):
+        self._main_view.ui.menuAnalysis.setEnabled(True)
+        self._main_view.ui.menuResults.setEnabled(True)
+        self._main_view.ui.menuImage.setEnabled(True)
+        self._main_view.ui.menuHotspots.setEnabled(True)
+
         self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
         self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
 

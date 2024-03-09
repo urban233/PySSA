@@ -413,10 +413,14 @@ class Project:
             #     return True
         return False
 
-    def delete_specific_sequence(self, a_seq_name):
+    def delete_specific_sequence(self, a_seq_name) -> None:
         tmp_seq_record = self.search_sequence(a_seq_name)
-        if tmp_seq_record in self.sequences:
-            self.sequences.remove(tmp_seq_record)
+        i = 0
+        for tmp_seq in self.sequences:
+            if tmp_seq.name == tmp_seq_record.name:
+                self.sequences.pop(i)
+                return
+            i += 1
         else:
             raise ValueError("An argument is not in the list.")
 

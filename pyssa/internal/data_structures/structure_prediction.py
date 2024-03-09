@@ -82,11 +82,20 @@ class StructurePrediction:
     def create_tmp_directories() -> None:
         """This function creates tmp directories in a scratch folder to organize prediction inputs and outputs."""
         # TODO: is there a more elegant way to do it?
-        if not os.path.exists(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions")):
+        if os.path.exists(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions")):
+            shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
             os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
-        if not os.path.exists(constants.PREDICTION_FASTA_DIR):
+        else:
+            os.mkdir(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
+        if os.path.exists(constants.PREDICTION_FASTA_DIR):
+            shutil.rmtree(constants.PREDICTION_FASTA_DIR)
             os.mkdir(constants.PREDICTION_FASTA_DIR)
-        if not os.path.exists(constants.PREDICTION_PDB_DIR):
+        else:
+            os.mkdir(constants.PREDICTION_FASTA_DIR)
+        if os.path.exists(constants.PREDICTION_PDB_DIR):
+            shutil.rmtree(constants.PREDICTION_PDB_DIR)
+            os.mkdir(constants.PREDICTION_PDB_DIR)
+        else:
             os.mkdir(constants.PREDICTION_PDB_DIR)
 
     def create_fasta_files_for_prediction(self) -> None:

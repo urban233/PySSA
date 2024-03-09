@@ -687,6 +687,8 @@ class Ui_MainWindow(object):
         self.actionExit.setObjectName("actionExit")
         self.action_exit_application = QtWidgets.QAction(MainWindow)
         self.action_exit_application.setObjectName("action_exit_application")
+        self.action_abort_prediction = QtWidgets.QAction(MainWindow)
+        self.action_abort_prediction.setObjectName("action_abort_prediction")
         self.menuProject.addAction(self.action_new_project)
         self.menuProject.addAction(self.action_open_project)
         self.menuProject.addAction(self.action_use_project)
@@ -699,6 +701,8 @@ class Ui_MainWindow(object):
         self.menuProject.addAction(self.action_exit_application)
         self.menuPrediction.addAction(self.action_predict_monomer)
         self.menuPrediction.addAction(self.action_predict_multimer)
+        self.menuPrediction.addSeparator()
+        self.menuPrediction.addAction(self.action_abort_prediction)
         self.menuAnalysis.addAction(self.action_distance_analysis)
         self.menuResults.addAction(self.action_results_summary)
         self.menuSettings.addAction(self.action_edit_settings)
@@ -726,7 +730,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.project_tab_widget.setCurrentIndex(1)
+        self.project_tab_widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -856,3 +860,4 @@ class Ui_MainWindow(object):
         self.action_arrange_windows.setText(_translate("MainWindow", "Arrange Windows"))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
         self.action_exit_application.setText(_translate("MainWindow", "Exit Application"))
+        self.action_abort_prediction.setText(_translate("MainWindow", "Abort"))
