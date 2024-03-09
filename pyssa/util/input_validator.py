@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the input validator class."""
+import re
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
@@ -66,6 +67,76 @@ class InputValidator:
                 """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
             )
             return True, ""
+
+    def validate_input_for_sequence_name(self,
+                                        the_current_entered_text: str,
+                                        the_current_sequences: set) -> tuple[bool, str]:
+        """Validates the input for a protein name.
+
+        Returns:
+            True: if the input is valid, False if the input is invalid + a message
+        """
+        allowed_chars = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '-', '_'}
+        for char in the_current_entered_text:
+            if char not in allowed_chars:
+                self.line_edit.setStyleSheet(
+                    """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                )
+                return False, "Invalid character!"
+        if the_current_entered_text in the_current_sequences:
+            self.line_edit.setStyleSheet(
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            return False, "Sequence name already exists!"
+        elif the_current_entered_text == "":
+            self.line_edit.setStyleSheet(
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            return False, "Please enter a sequence name!"
+        else:
+            self.line_edit.setStyleSheet(
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+            )
+            return True, ""
+
+    def validate_input_for_protein_sequence(self, the_current_entered_text: str):
+        """Validates the input for a protein sequence.
+
+        Returns:
+            True: if the input is valid, False if the input is invalid + a message
+        """
+        allowed_chars = {"C", "D", "S", "Q", "K", "I", "P", "T", "F", "N", "G", "H", "L", "R", "W", "A", "V", "E", "Y", "M", ","}
+        for char in the_current_entered_text:
+            if char not in allowed_chars:
+                self.line_edit.setStyleSheet(
+                    """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+                )
+                return False, "Invalid character!"
+        if the_current_entered_text == "":
+            self.line_edit.setStyleSheet(
+                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            return False, "Please enter a protein sequence!"
+        elif the_current_entered_text[-1] == "," and the_current_entered_text[-2] == ",":
+            self.line_edit.setStyleSheet(
+                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            return False, "You already entered a protein sequence delimter!"
+        elif self._detect_multiple_commas(the_current_entered_text) > 0:
+            self.line_edit.setStyleSheet(
+                """QTextEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            return False, "You already entered a protein sequence delimter!"
+        else:
+            self.line_edit.setStyleSheet(
+                """QTextEdit {color: #000000; border-color: #DCDBE3;}"""
+            )
+            return True, ""
+
+    def _detect_multiple_commas(self, text) -> int:
+        pattern = r',{2,}'
+        matches = re.findall(pattern, text)
+        return len(matches)
 
     @staticmethod
     def validate_project_name(

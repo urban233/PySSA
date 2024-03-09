@@ -23,10 +23,13 @@
 
 import glob
 import os
+import subprocess
+
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from pyssa.controller import interface_manager, pymol_session_manager
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
@@ -42,9 +45,14 @@ class AddSequenceViewController(QtCore.QObject):
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_add_sequence_view()
+
+        self._view.ui.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
+        self._view.ui.lbl_status_seq.setStyleSheet("color: #ba1a1a; font-size: 11px;")
+        self._sequence_names = self._convert_sequence_model_into_set()
         self._connect_all_ui_elements_to_slot_functions()
         self.restore_default_view()
 
+    # <editor-fold desc="Util methods">
     def open_help(self, a_page_name: str):
         """Opens the pyssa documentation window if it's not already open.
 
@@ -73,7 +81,16 @@ class AddSequenceViewController(QtCore.QObject):
             self._interface_manager.update_status_bar("Opening help center finished.")
 
     def _open_help_for_dialog(self):
-        self.open_help("help/project/open_project/")
+        self.open_help("help/sequences/sequence_add/")
+    # </editor-fold>
+
+    def _convert_sequence_model_into_set(self) -> set:
+        tmp_sequence_names = []
+        for tmp_row in range(self._interface_manager.get_main_view().ui.seqs_list_view.model().rowCount()):
+            tmp_sequence_names.append(
+                self._interface_manager.get_main_view().ui.seqs_list_view.model().index(tmp_row, 0).data(Qt.DisplayRole)
+            )
+        return set(tmp_sequence_names)
 
     def restore_default_view(self) -> None:
         self._view.ui.le_seq_name.clear()
@@ -81,6 +98,9 @@ class AddSequenceViewController(QtCore.QObject):
         self._switch_ui_to_sequence_name_input()
         self._view.ui.btn_next.setEnabled(False)
         self._view.ui.btn_add.setEnabled(False)
+        self._view.ui.le_protein_seq.setStyleSheet(
+            """QTextEdit {color: #000000; border-color: #DCDBE3;}"""
+        )
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.le_seq_name.textChanged.connect(self._validate_protein_name)
@@ -88,23 +108,40 @@ class AddSequenceViewController(QtCore.QObject):
         self._view.ui.btn_next.clicked.connect(self._switch_ui_to_sequence_input)
         self._view.ui.btn_back.clicked.connect(self._switch_ui_to_sequence_name_input)
         self._view.ui.btn_add.clicked.connect(self._add_sequence)
-        # self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
-    def _validate_protein_name(self) -> None:
+    def _validate_protein_name(self, the_entered_text: str) -> None:
         """Validates the input of the protein name in real-time."""
-        tools.validate_protein_name(
-            self._view.ui.le_seq_name,
-            self._view.ui.lbl_status,
-            self._view.ui.btn_next,
+        tmp_input_validator = input_validator.InputValidator(self._view.ui.le_seq_name)
+        tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_sequence_name(
+            the_entered_text, self._sequence_names
         )
+        if tmp_validate_flag:
+            self._view.ui.lbl_status.setText("")
+            self._view.ui.btn_next.setEnabled(True)
+        else:
+            self._view.ui.lbl_status.setText(tmp_message)
+            self._view.ui.btn_next.setEnabled(False)
+
+        # tools.validate_protein_name(
+        #     self._view.ui.le_seq_name,
+        #     self._view.ui.lbl_status,
+        #     self._view.ui.btn_next,
+        # )
 
     def _validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
-        tools.validate_protein_sequence(
-            self._view.ui.le_protein_seq,
-            self._view.ui.lbl_status_seq,
-            self._view.ui.btn_add,
+        tmp_input_validator = input_validator.InputValidator(self._view.ui.le_protein_seq)
+        the_entered_text = self._view.ui.le_protein_seq.toPlainText()
+        tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_protein_sequence(
+            the_entered_text
         )
+        if tmp_validate_flag:
+            self._view.ui.lbl_status_seq.setText("")
+            self._view.ui.btn_add.setEnabled(True)
+        else:
+            self._view.ui.lbl_status_seq.setText(tmp_message)
+            self._view.ui.btn_add.setEnabled(False)
 
     def _switch_ui_to_sequence_input(self):
         self._view.ui.le_seq_name.setEnabled(False)
@@ -127,9 +164,13 @@ class AddSequenceViewController(QtCore.QObject):
     def _activate_add_button(self) -> None:
         """Activates the open button."""
         if self._view.ui.le_protein_seq.toPlainText() == "":
+            self._view.ui.le_protein_seq.setStyleSheet(
+                """QTextEdit {color: #000000; border-color: #DCDBE3;}"""
+            )
+            self._view.ui.lbl_status_seq.setText("")
             self._view.ui.btn_add.setEnabled(False)
         else:
-            self._view.ui.btn_add.setEnabled(True)
+            self._validate_protein_sequence()
 
     def _add_sequence(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""
