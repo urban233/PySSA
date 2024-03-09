@@ -26,6 +26,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAbstractItemView
 from pyqtspinner import spinner
 from pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
@@ -225,6 +226,8 @@ class MainView(QtWidgets.QMainWindow):
         #self.build_proteins_table()
         #self.build_protein_pairs_table()
 
+        # Main tree views
+        self.ui.seqs_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.ui.proteins_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.protein_pairs_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setMinimumWidth(700)

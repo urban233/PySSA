@@ -14,7 +14,8 @@ from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
-    predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view
+    predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, \
+    fasta_file_import_preview_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -42,6 +43,7 @@ class InterfaceManager:
     _results_view: "results_view.ResultsView"
     _add_protein_view: "add_protein_view.AddProteinView"
     _import_sequence_view: "import_sequence_view.ImportSequenceView"
+    _fasta_file_import_preview_view: "fasta_file_import_preview_view.FastaFileImportPreviewView"
     _add_sequence_view: "add_sequence_view.AddSequenceView"
     _rename_protein_view: "rename_protein_view.RenameProteinView"
     _use_project_view: "use_project_view.UseProjectView"
@@ -74,6 +76,7 @@ class InterfaceManager:
         self._results_view = results_view.ResultsView()
         self._add_protein_view = add_protein_view.AddProteinView()
         self._import_sequence_view: "import_sequence_view.ImportSequenceView" = import_sequence_view.ImportSequenceView()
+        self._fasta_file_import_preview_view = fasta_file_import_preview_view.FastaFileImportPreviewView()
         self._add_sequence_view = add_sequence_view.AddSequenceView()
         self._rename_protein_view = rename_protein_view.RenameProteinView()
         self._use_project_view = use_project_view.UseProjectView()
@@ -161,6 +164,9 @@ class InterfaceManager:
 
     def get_import_sequence_view(self):
         return self._import_sequence_view
+
+    def get_fasta_file_import_preview_view(self):
+        return self._fasta_file_import_preview_view
 
     def get_add_sequence_view(self):
         return self._add_sequence_view

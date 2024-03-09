@@ -16,18 +16,19 @@ from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
-from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util
+from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums
 
 
 class PredictProteinViewController(QtCore.QObject):
     job_input = pyqtSignal(tuple)
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager"):
+    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager", the_selected_indexes: list):
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view: "predict_protein_view.PredictProteinView" = the_interface_manager.get_predict_protein_view()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
         self.restore_ui_defaults()
+        self._fill_protein_to_predict_table_with_sequences(the_selected_indexes)
         self._connect_all_ui_elements_to_slot_functions()
 
     # <editor-fold desc="Util methods">
@@ -110,6 +111,7 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.ui.tab_widget.setTabEnabled(1, False)
         self._view.ui.tab_widget.setTabEnabled(0, True)
         self._view.ui.table_proteins_to_predict.setEnabled(True)
+        self._view.resize(700, 800)
 
     def _check_if_prediction_and_analysis_should_be_done(self):
         if self._view.ui.checkbox_add_analysis.isChecked():
@@ -161,6 +163,31 @@ class PredictProteinViewController(QtCore.QObject):
     # <editor-fold desc="Prediction + analysis">
 
     # <editor-fold desc="Prediction section">
+    def _fill_protein_to_predict_table_with_sequences(self, tmp_selected_indices):
+        tmp_sequences_to_predict: list = []
+        for tmp_model_index in tmp_selected_indices:
+            if tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ:
+                tmp_sequences_to_predict.append(tmp_model_index.data(enums.ModelEnum.OBJECT_ROLE))
+
+        self._view.ui.table_proteins_to_predict.setColumnCount(2)
+        self._view.ui.table_proteins_to_predict.setRowCount(len(tmp_sequences_to_predict))
+        i = 0
+        for tmp_seq_record in tmp_sequences_to_predict:
+            tmp_seq_name_item = QtWidgets.QTableWidgetItem(tmp_seq_record.name)
+            self._view.ui.table_proteins_to_predict.setVerticalHeaderItem(i, tmp_seq_name_item)
+
+            tmp_seqs = tmp_seq_record.seq.split(",")
+            j = 0
+            for tmp_seq in tmp_seqs:
+                tmp_chain_letter_item = QtWidgets.QTableWidgetItem(constants.chain_dict.get(j))
+                tmp_seq_item = QtWidgets.QTableWidgetItem(tmp_seq)
+                self._view.ui.table_proteins_to_predict.setItem(i, 0, tmp_chain_letter_item)
+                self._view.ui.table_proteins_to_predict.setItem(i, 1, tmp_seq_item)
+                j += 1
+            i += 1
+        self._view.ui.table_proteins_to_predict.resizeColumnsToContents()
+        self._check_if_proteins_to_predict_table_is_empty()
+
     def _check_if_proteins_to_predict_table_is_empty(self) -> None:
         """Checks if the list of proteins to predict is empty."""
         if self._view.ui.table_proteins_to_predict.rowCount() == 0:
@@ -170,22 +197,6 @@ class PredictProteinViewController(QtCore.QObject):
             ]
             gui_elements_to_hide = [
                 self._view.ui.btn_prediction_remove,
-                self._view.ui.lbl_pred_analysis_multi_prot_name,
-                self._view.ui.txt_pred_analysis_multi_prot_name,
-                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                self._view.ui.btn_pred_analysis_multi_back,
-                self._view.ui.btn_pred_analysis_multi_next,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq,
-                self._view.ui.txt_pred_analysis_multi_prot_seq,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-                self._view.ui.lbl_pred_multi_prot_seq_add_2,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-                self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-                self._view.ui.btn_pred_analysis_multi_back_2,
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
                 self._view.ui.lbl_advanced_config,
                 self._view.ui.btn_edit_advanced_config,
                 self._view.ui.btn_go_to_analysis_setup,
@@ -202,30 +213,13 @@ class PredictProteinViewController(QtCore.QObject):
                 self._view.ui.lbl_proteins_to_predict,
                 self._view.ui.table_proteins_to_predict,
                 self._view.ui.btn_prediction_remove,
-                
                 self._view.ui.lbl_advanced_config,
                 self._view.ui.btn_edit_advanced_config,
                 self._view.ui.btn_go_to_analysis_setup,
                 self._view.ui.lbl_go_to_analysis_setup,
+                self._view.ui.checkbox_add_analysis,
             ]
-            gui_elements_to_hide = [
-                self._view.ui.lbl_pred_analysis_multi_prot_name,
-                self._view.ui.txt_pred_analysis_multi_prot_name,
-                self._view.ui.lbl_pred_analysis_multi_prot_name_status,
-                self._view.ui.btn_pred_analysis_multi_back,
-                self._view.ui.btn_pred_analysis_multi_next,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq,
-                self._view.ui.txt_pred_analysis_multi_prot_seq,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_status,
-                self._view.ui.lbl_pred_multi_prot_seq_add_2,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_add,
-                self._view.ui.lbl_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.list_pred_analysis_multi_prot_seq_overview,
-                self._view.ui.btn_pred_analysis_multi_prot_seq_overview_remove,
-                self._view.ui.lbl_pred_analysis_multi_prot_to_predict_2,
-                self._view.ui.btn_pred_analysis_multi_back_2,
-                self._view.ui.btn_pred_analysis_multi_prot_to_predict_add_2,
-            ]
+            gui_elements_to_hide = []
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
             self._view.ui.btn_prediction_remove.setEnabled(False)

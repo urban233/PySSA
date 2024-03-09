@@ -56,11 +56,8 @@ class ImportSequenceView(QtWidgets.QDialog):
         self.ui.btn_import_sequence.setEnabled(False)
         self.ui.txt_import_sequence.setEnabled(False)
         styles.color_bottom_frame_button(self.ui.btn_import_sequence)
-        self.ui.btn_choose_fasta_file.clicked.connect(self.load_model)
-        self.ui.btn_import_sequence.clicked.connect(self.import_sequence)
-        #self.ui.txt_import_sequence.textChanged.connect(self.validate_reference_in_project)
         self.ui.lbl_status.setText("")
-        self.ui.btn_choose_fasta_file.setToolTip("Click to add a .pdb file")
+        self.ui.btn_choose_fasta_file.setToolTip("Click to add a .fasta file")
         self.setWindowTitle("Import Protein Sequence")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
@@ -81,74 +78,4 @@ class ImportSequenceView(QtWidgets.QDialog):
         #     self.ui.txt_import_sequence.setEnabled(False)
         #     self.ui.lbl_status.setText("You cannot enter a PDB ID (no internet).")
 
-    # @SLOT
-    def validate_reference_in_project(self) -> None:
-        """Checks if the entered reference protein is valid or not."""
-        if len(self.ui.txt_import_sequence.text()) == 0:
-            self.ui.txt_import_sequence.setStyleSheet("color: #FC5457")
-            self.ui.lbl_status.setText("")
-            self.ui.btn_import_sequence.setEnabled(False)
-        elif len(self.ui.txt_import_sequence.text()) < 4:
-            self.ui.txt_import_sequence.setStyleSheet("color: #FC5457")
-            self.ui.btn_import_sequence.setEnabled(False)
-            self.ui.lbl_status.setText("")
-        # checks if a pdb id was entered
-        elif len(self.ui.txt_import_sequence.text()) == 4:
-            pdb_id = self.ui.txt_import_sequence.text().upper()
-            try:
-                # the pdb file gets saved in a scratch directory where it gets deleted immediately
-                cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
-                os.remove(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
-                cmd.reinitialize()
-                self.ui.txt_import_sequence.setStyleSheet("color: #000000")
-                self.ui.btn_import_sequence.setEnabled(True)
-            # if the id does not exist an exception gets raised
-            except pymol.CmdException:
-                self.ui.txt_import_sequence.setStyleSheet("color: #FC5457")
-                return
-            except FileNotFoundError:
-                self.ui.txt_import_sequence.setStyleSheet("color: #FC5457")
-                self.ui.lbl_status.setText("Invalid PDB ID.")
-                self.ui.btn_import_sequence.setEnabled(False)
-                return
-        else:
-            if self.ui.txt_import_sequence.text().find("/") == -1:
-                self.ui.txt_import_sequence.setStyleSheet("color: #FC5457")
-                self.ui.btn_import_sequence.setEnabled(False)
 
-            elif self.ui.txt_import_sequence.text().find("\\") == -1:
-                self.ui.txt_import_sequence.setStyleSheet("color: #FC5457")
-                self.ui.btn_import_sequence.setEnabled(False)
-            else:
-                # TODO: displays a correct filepath in red, needs to be fixed!
-                self.ui.txt_import_sequence.setStyleSheet("color: #000000")
-                self.ui.btn_import_sequence.setEnabled(True)
-
-    def close_dialog(self) -> None:
-        """Closes the dialog."""
-        self.close()
-
-    def load_model(self) -> None:
-        """Loads a protein from the filesystem into the textbox."""
-        try:
-            # open file dialog
-            file_name = QtWidgets.QFileDialog.getOpenFileName(
-                self,
-                "Import existing sequence",
-                QtCore.QDir.homePath(),
-                "FASTA Files (*.fasta)",
-            )
-            if file_name == ("", ""):
-                self.ui.lbl_status.setText("No file has been selected.")
-            else:
-                # display path in text box
-                self.ui.txt_import_sequence.setText(str(file_name[0]))
-                self.ui.btn_import_sequence.setEnabled(True)
-        except FileNotFoundError:
-            self.status_bar.showMessage("Loading the protein sequence failed!")
-            self.ui.lbl_status.setText("Loading the protein sequence failed!")
-
-    def import_sequence(self) -> None:
-        """Adds a protein to the global variable and closes the dialog."""
-        self.return_value.emit((self.ui.txt_import_sequence.text(), len(self.ui.txt_import_sequence.text())))
-        self.close()

@@ -26,7 +26,7 @@ from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
-    predict_protein_view_controller
+    predict_protein_view_controller, import_sequence_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -1012,7 +1012,7 @@ class MainViewController:
     # <editor-fold desc="Monomer">
     def _predict_monomer(self):
         self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-            self._interface_manager
+            self._interface_manager, self._view.ui.seqs_list_view.selectedIndexes()
         )
         self._external_controller.job_input.connect(self._post_predict_monomer)
         self._interface_manager.get_predict_protein_view().show()
@@ -1985,7 +1985,9 @@ class MainViewController:
         self._view.ui.btn_delete_sequence.setEnabled(True)
 
     def _import_sequence(self) -> None:
-        self._interface_manager.get_import_sequence_view().return_value.connect(self._post_import_sequence)
+        self._external_controller = import_sequence_view_controller.ImportSequenceViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self._post_add_sequence)
+        self._external_controller.restore_ui()
         self._interface_manager.get_import_sequence_view().show()
 
     def _post_import_sequence(self, return_value: tuple):
