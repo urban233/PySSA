@@ -42,6 +42,8 @@ class ImportSequenceViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_import_sequence_view()
         self._external_controller = None
+        self._parsed_sequences: dict[str, tuple[str, str]] = {}
+        self._parsed_seq_records = []
         self._connect_all_ui_elements_to_slot_functions()
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
@@ -57,9 +59,8 @@ class ImportSequenceViewController(QtCore.QObject):
 
     # @SLOT
     def _open_preview(self):
-        tmp_sequences: dict = self.parse_fasta(self._view.ui.txt_import_sequence.text())
         self._external_controller = fasta_file_import_preview_view_controller.FastaFileImportPreviewViewController(
-            self._interface_manager, tmp_sequences)
+            self._interface_manager, self._parsed_sequences)
         self._external_controller.user_input.connect(self._post_open_preview)
         self._external_controller.restore_ui()
         self._external_controller.fill_sequence_table()
@@ -83,6 +84,9 @@ class ImportSequenceViewController(QtCore.QObject):
             else:
                 # display path in text box
                 self._view.ui.txt_import_sequence.setText(str(file_name[0]))
+                self._parsed_sequences: dict = self.parse_fasta(self._view.ui.txt_import_sequence.text())
+                print(self._parsed_sequences)
+                self._convert_seqs_to_seq_records()
                 self._view.ui.btn_preview.setEnabled(True)
                 self._view.ui.btn_import_sequence.setEnabled(True)
         except FileNotFoundError:
@@ -112,6 +116,25 @@ class ImportSequenceViewController(QtCore.QObject):
             for tmp_chain in tmp_chains:
                 sequences[tmp_chain] = (tmp_name, tmp_sequence)
         return sequences
+
+    def _convert_seqs_to_seq_records(self):
+        # Create SeqRecord objects
+        from Bio.SeqRecord import SeqRecord
+        seq_records = []
+        for chain_letter, (name, sequence) in sorted(self._parsed_sequences.items()):
+            name = name.split('_')[0]  # Extracting the name without _1 or _2
+            seq_record = SeqRecord(sequence, id=name, name=name, description="")
+            seq_records.append(seq_record)
+
+        # Join SeqRecord objects
+        joined_seq = ','.join([str(record.seq) for record in seq_records])
+
+        print(joined_seq)
+
+        # for tmp_key in self._parsed_sequences:
+        #     tmp_name = self._parsed_sequences[tmp_key][0]
+        #     tmp_chain_letter = tmp_key
+        #     tmp_seq = self._parsed_sequences[tmp_key][1]
 
     def import_sequence(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""
