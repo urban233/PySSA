@@ -26,7 +26,7 @@ from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
-    predict_protein_view_controller, import_sequence_view_controller
+    predict_protein_view_controller, import_sequence_view_controller, rename_sequence_view_controller
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
@@ -174,6 +174,7 @@ class MainViewController:
         # </editor-fold>
 
         # <editor-fold desc="Sequence Tab">
+        self._view.ui.seqs_list_view.customContextMenuRequested.connect(self.open_context_menu_for_sequences)
         self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
         self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
         self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
@@ -181,7 +182,7 @@ class MainViewController:
         self._view.ui.btn_delete_sequence.clicked.connect(self._delete_selected_sequence)
         self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
-        self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
+        #self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
         self._view.ui.btn_help.clicked.connect(self._open_sequences_tab_help)
         # </editor-fold>
 
@@ -397,11 +398,10 @@ class MainViewController:
             self._interface_manager.update_status_bar("Opening help center finished.")
         self._interface_manager.stop_wait_spinner()
 
-
     def _init_context_menus(self):
         # <editor-fold desc="General context menu setup">
-        self.context_menu = QtWidgets.QMenu()
-        self.help_context_action = self.context_menu.addAction(self._view.tr("Get Help"))
+        context_menu = QtWidgets.QMenu()
+        self.help_context_action = context_menu.addAction(self._view.tr("Get Help"))
         self.help_context_action.triggered.connect(self._open_sequences_tab_help)
 
         # </editor-fold>
@@ -559,114 +559,136 @@ class MainViewController:
 
     # <editor-fold desc="Context menu connections">
     def _show_context_menu_for_seq_list(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_sequences_tab_help)
-        self.context_menu.exec_(self._view.ui.seqs_list_view.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_sequences_tab_help)
+        context_menu.exec_(self._view.ui.seqs_list_view.mapToGlobal(a_point))
 
     def _show_context_menu_for_seq_table(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_additional_information_table_help)
-        self.context_menu.exec_(self._view.ui.seqs_table_widget.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_additional_information_table_help)
+        context_menu.exec_(self._view.ui.seqs_table_widget.mapToGlobal(a_point))
 
     def _show_context_menu_for_seq_import(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_sequence_import_help)
-        self.context_menu.exec_(self._view.ui.btn_import_seq.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_sequence_import_help)
+        context_menu.exec_(self._view.ui.btn_import_seq.mapToGlobal(a_point))
 
     def _show_context_menu_for_seq_add(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_sequence_add_help)
-        self.context_menu.exec_(self._view.ui.btn_add_sequence.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_sequence_add_help)
+        context_menu.exec_(self._view.ui.btn_add_sequence.mapToGlobal(a_point))
 
     def _show_context_menu_for_seq_save(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_sequence_save_help)
-        self.context_menu.exec_(self._view.ui.btn_save_sequence.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_sequence_save_help)
+        context_menu.exec_(self._view.ui.btn_save_sequence.mapToGlobal(a_point))
 
     def _show_context_menu_for_seq_delete(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_sequence_delete_help)
-        self.context_menu.exec_(self._view.ui.btn_delete_sequence.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_sequence_delete_help)
+        context_menu.exec_(self._view.ui.btn_delete_sequence.mapToGlobal(a_point))
 
     def _show_context_menu_for_proteins_tree_view(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_proteins_tab_help)
-        self.context_menu.exec_(self._view.ui.proteins_tree_view.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_proteins_tab_help)
+        context_menu.exec_(self._view.ui.proteins_tree_view.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_import(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_import_help)
-        self.context_menu.exec_(self._view.ui.btn_import_protein.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_import_help)
+        context_menu.exec_(self._view.ui.btn_import_protein.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_save(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_save_help)
-        self.context_menu.exec_(self._view.ui.btn_save_protein.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_save_help)
+        context_menu.exec_(self._view.ui.btn_save_protein.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_delete(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_delete_help)
-        self.context_menu.exec_(self._view.ui.btn_delete_protein.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_delete_help)
+        context_menu.exec_(self._view.ui.btn_delete_protein.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_load_session(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_load_session_help)
-        self.context_menu.exec_(self._view.ui.btn_open_protein_session.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_load_session_help)
+        context_menu.exec_(self._view.ui.btn_open_protein_session.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_add_scene(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_add_scene_help)
-        self.context_menu.exec_(self._view.ui.btn_create_protein_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_add_scene_help)
+        context_menu.exec_(self._view.ui.btn_create_protein_scene.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_update_scene(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_update_scene_help)
-        self.context_menu.exec_(self._view.ui.btn_update_protein_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_update_scene_help)
+        context_menu.exec_(self._view.ui.btn_update_protein_scene.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_delete_scene(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_delete_scene_help)
-        self.context_menu.exec_(self._view.ui.btn_delete_protein_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_delete_scene_help)
+        context_menu.exec_(self._view.ui.btn_delete_protein_scene.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pymol_scene_config(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pymol_scene_config_help)
-        self.context_menu.exec_(self._view.ui.frame_protein_pymol_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pymol_scene_config_help)
+        context_menu.exec_(self._view.ui.frame_protein_pymol_scene.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pairs_tree_view(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pairs_tab_help)
-        self.context_menu.exec_(self._view.ui.protein_pairs_tree_view.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pairs_tab_help)
+        context_menu.exec_(self._view.ui.protein_pairs_tree_view.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pair_delete(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pair_delete_help)
-        self.context_menu.exec_(self._view.ui.btn_delete_protein_pair.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pair_delete_help)
+        context_menu.exec_(self._view.ui.btn_delete_protein_pair.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pair_load_session(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pair_load_session_help)
-        self.context_menu.exec_(self._view.ui.btn_open_protein_pair_session.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pair_load_session_help)
+        context_menu.exec_(self._view.ui.btn_open_protein_pair_session.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pair_add_scene(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pair_add_scene_help)
-        self.context_menu.exec_(self._view.ui.btn_create_protein_pair_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pair_add_scene_help)
+        context_menu.exec_(self._view.ui.btn_create_protein_pair_scene.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pair_update_scene(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pair_update_scene_help)
-        self.context_menu.exec_(self._view.ui.btn_update_protein_pair_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pair_update_scene_help)
+        context_menu.exec_(self._view.ui.btn_update_protein_pair_scene.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pair_delete_scene(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pair_delete_scene_help)
-        self.context_menu.exec_(self._view.ui.btn_delete_protein_pair_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pair_delete_scene_help)
+        context_menu.exec_(self._view.ui.btn_delete_protein_pair_scene.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pair_pymol_scene_config(self, a_point):
-        self.help_context_action.triggered.disconnect()
-        self.help_context_action.triggered.connect(self._open_protein_pair_pymol_scene_config_help)
-        self.context_menu.exec_(self._view.ui.frame_protein_pair_pymol_scene.mapToGlobal(a_point))
+        context_menu = QtWidgets.QMenu()
+        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
+        help_context_action.triggered.connect(self._open_protein_pair_pymol_scene_config_help)
+        context_menu.exec_(self._view.ui.frame_protein_pair_pymol_scene.mapToGlobal(a_point))
 
     # </editor-fold>
 
@@ -1012,7 +1034,7 @@ class MainViewController:
     # <editor-fold desc="Monomer">
     def _predict_monomer(self):
         self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-            self._interface_manager, self._view.ui.seqs_list_view.selectedIndexes()
+            self._interface_manager, self._view.ui.seqs_list_view.selectedIndexes(), "monomer"
         )
         self._external_controller.job_input.connect(self._post_predict_monomer)
         self._interface_manager.get_predict_protein_view().show()
@@ -1336,11 +1358,16 @@ class MainViewController:
 
     # <editor-fold desc="Multimer">
     def _predict_multimer(self):
-        self._external_controller = predict_multimer_view_controller.PredictMultimerViewController(
-            self._interface_manager
+        # self._external_controller = predict_multimer_view_controller.PredictMultimerViewController(
+        #     self._interface_manager
+        # )
+        # self._external_controller.job_input.connect(self._post_predict_monomer)
+        # self._interface_manager.get_predict_multimer_view().show()
+        self._external_controller = predict_protein_view_controller.PredictProteinViewController(
+            self._interface_manager, self._view.ui.seqs_list_view.selectedIndexes(), "multimer"
         )
-        self._external_controller.job_input.connect(self._post_predict_monomer)
-        self._interface_manager.get_predict_multimer_view().show()
+        self._external_controller.job_input.connect(self._post_predict_multimer)
+        self._interface_manager.get_predict_protein_view().show()
 
     def _post_predict_multimer(self, result: tuple):
         self._view.wait_spinner.start()
@@ -1944,24 +1971,27 @@ class MainViewController:
 
     # <editor-fold desc="Sequences tab methods">
     def _open_text_editor_for_seq(self):
-        self.tmp_txt_browser = QtWidgets.QTextBrowser()
-        try:
-            tmp_seq = self._view.ui.seqs_table_widget.currentItem().data(enums.ModelEnum.OBJECT_ROLE).seq
-            tmp_seqs = tmp_seq.split(",")
-            tmp_seq = ",\n\n".join(tmp_seqs)
-            self.tmp_txt_browser.setText(tmp_seq)
-        except AttributeError:
-            return
-        else:
-            self.tmp_txt_browser.setWindowTitle("View Sequence")
-            self.tmp_txt_browser.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-            self.tmp_txt_browser.resize(500, 150)
-            self.tmp_txt_browser.show()
+        if self._view.ui.seqs_table_widget.currentColumn() == 1 and self._view.ui.seqs_table_widget.currentRow() == 0:
+            self.rename_selected_sequence()
+        elif self._view.ui.seqs_table_widget.currentColumn() == 1 and self._view.ui.seqs_table_widget.currentRow() == 1:
+            self.tmp_txt_browser = QtWidgets.QTextBrowser()
+            try:
+                tmp_seq = self._view.ui.seqs_table_widget.currentItem().data(enums.ModelEnum.OBJECT_ROLE).seq
+                tmp_seqs = tmp_seq.split(",")
+                tmp_seq = ",\n\n".join(tmp_seqs)
+                self.tmp_txt_browser.setText(tmp_seq)
+            except AttributeError:
+                return
+            else:
+                self.tmp_txt_browser.setWindowTitle("View Sequence")
+                self.tmp_txt_browser.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
+                self.tmp_txt_browser.resize(500, 150)
+                self.tmp_txt_browser.show()
 
     def _set_new_sequence_name_in_table_item(self):
         try:
             tmp_new_seq = self._view.line_edit_seq_name.text()
-            self._view.ui.seqs_table_widget.currentItem().setText(tmp_new_seq)
+            self._view.ui.seqs_table_widget.item(0, 1).setText(tmp_new_seq)
         except AttributeError:
             return
 
@@ -1969,7 +1999,7 @@ class MainViewController:
         tmp_old_name = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name
         try:
             # this is needed because the signal is fired even if the current item is None
-            tmp_new_name = self._view.ui.seqs_table_widget.currentItem().text()
+            tmp_new_name = self._view.ui.seqs_table_widget.item(0, 1).text()
         except AttributeError:
             return
         else:
@@ -2119,6 +2149,37 @@ class MainViewController:
 
         else:
             constants.PYSSA_LOGGER.info("No sequence has been deleted. No changes were made.")
+
+    def rename_selected_sequence(self) -> None:
+        """Opens a new view to rename the selected sequence."""
+        self._external_controller = rename_sequence_view_controller.RenameSequenceViewController(self._interface_manager)
+        self._external_controller.user_input.connect(self.post_rename_selected_sequence_structure)
+        self._external_controller.restore_ui()
+        self._interface_manager.get_rename_sequence_view().show()
+
+    def post_rename_selected_sequence_structure(self, return_value: tuple):
+        tmp_new_name = return_value[0]
+        tmp_old_name = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name
+        tmp_seq = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).seq
+        self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name = tmp_new_name
+        self._view.ui.seqs_list_view.model().setData(self._view.ui.seqs_list_view.currentIndex(), tmp_new_name,
+                                                     Qt.DisplayRole)
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq)
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        self._view.ui.seqs_table_widget.item(0, 1).setText(tmp_new_name)
+        self._interface_manager.refresh_main_view()
+
+    def open_context_menu_for_sequences(self, position):
+        sequence_context_menu = QtWidgets.QMenu()
+
+        self.sequences_context_menu_rename_action = sequence_context_menu.addAction(
+            self._view.tr("Rename selected sequence")
+        )
+        self.sequences_context_menu_rename_action.triggered.connect(self.rename_selected_sequence)
+
+        sequence_context_menu.exec_(self._view.ui.seqs_list_view.viewport().mapToGlobal(position))
 
     # </editor-fold>
 
@@ -3133,6 +3194,7 @@ class MainViewController:
         """Opens a new view to rename the selected protein."""
         self._external_controller = rename_protein_view_controller.RenameProteinViewController(self._interface_manager)
         self._external_controller.user_input.connect(self.post_rename_selected_protein_structure)
+        self._external_controller.restore_ui()
         self._interface_manager.get_rename_protein_view().show()
 
     def post_rename_selected_protein_structure(self, return_value: tuple) -> None:

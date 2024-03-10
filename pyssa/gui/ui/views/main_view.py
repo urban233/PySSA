@@ -238,6 +238,7 @@ class MainView(QtWidgets.QMainWindow):
 
         # Main tree views
         self.ui.seqs_list_view.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.ui.seqs_list_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.proteins_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.protein_pairs_tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setMinimumWidth(700)
@@ -474,7 +475,7 @@ class MainView(QtWidgets.QMainWindow):
         constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
     def build_sequence_table(self):
-        self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
+        #self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
 
         self.ui.seqs_table_widget.verticalHeader().setVisible(False)
         self.ui.seqs_table_widget.setColumnCount(2)
@@ -505,9 +506,9 @@ class MainView(QtWidgets.QMainWindow):
     #     self.cb_chain_representation_protein_pair.adjustSize()
 
     def setup_sequences_table(self, row_count):
-        self.line_edit_seq_name.setStyleSheet("QLineEdit { background-color: white; border-radius: 0; }")
+        #self.line_edit_seq_name.setStyleSheet("QLineEdit { background-color: white; border-radius: 0; }")
         self.ui.seqs_table_widget.setRowCount(row_count)
-        self.ui.seqs_table_widget.setCellWidget(0, 1, self.line_edit_seq_name)
+        #self.ui.seqs_table_widget.setCellWidget(0, 1, self.line_edit_seq_name)
 
     def setup_proteins_table(self, row_count):
         self.ui.proteins_table_widget.setRowCount(row_count)

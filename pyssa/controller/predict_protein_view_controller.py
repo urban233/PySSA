@@ -22,13 +22,13 @@ from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util,
 class PredictProteinViewController(QtCore.QObject):
     job_input = pyqtSignal(tuple)
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager", the_selected_indexes: list):
+    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager", the_selected_indexes: list, a_prediction_type: str):
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view: "predict_protein_view.PredictProteinView" = the_interface_manager.get_predict_protein_view()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
         self.restore_ui_defaults()
-        self._fill_protein_to_predict_table_with_sequences(the_selected_indexes)
+        self._fill_protein_to_predict_table_with_sequences(the_selected_indexes, a_prediction_type)
         self._connect_all_ui_elements_to_slot_functions()
 
     # <editor-fold desc="Util methods">
@@ -83,6 +83,7 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.ui.list_analysis_overview.clear()
         self._view.ui.btn_analysis_remove.hide()
         self._view.ui.table_proteins_to_predict.clear()
+        self._view.ui.table_proteins_to_predict.setRowCount(0)
         self._view.ui.table_proteins_to_predict.setHorizontalHeaderItem(
             0,
             QtWidgets.QTableWidgetItem("Chain"),
@@ -163,28 +164,37 @@ class PredictProteinViewController(QtCore.QObject):
     # <editor-fold desc="Prediction + analysis">
 
     # <editor-fold desc="Prediction section">
-    def _fill_protein_to_predict_table_with_sequences(self, tmp_selected_indices):
-        tmp_sequences_to_predict: list = []
+    def _fill_protein_to_predict_table_with_sequences(self, tmp_selected_indices, a_prediction_type):
+        tmp_sequences_to_predict_monomer: list = []
+        tmp_sequences_to_predict_multimer: list = []
         for tmp_model_index in tmp_selected_indices:
             if tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ:
-                tmp_sequences_to_predict.append(tmp_model_index.data(enums.ModelEnum.OBJECT_ROLE))
-
+                tmp_sequences_to_predict_monomer.append(tmp_model_index.data(enums.ModelEnum.OBJECT_ROLE))
+            elif tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ:
+                tmp_sequences_to_predict_multimer.append(tmp_model_index.data(enums.ModelEnum.OBJECT_ROLE))
         self._view.ui.table_proteins_to_predict.setColumnCount(2)
-        self._view.ui.table_proteins_to_predict.setRowCount(len(tmp_sequences_to_predict))
-        i = 0
-        for tmp_seq_record in tmp_sequences_to_predict:
-            tmp_seq_name_item = QtWidgets.QTableWidgetItem(tmp_seq_record.name)
-            self._view.ui.table_proteins_to_predict.setVerticalHeaderItem(i, tmp_seq_name_item)
 
+        if a_prediction_type == "monomer":
+            tmp_sequences_to_predict = tmp_sequences_to_predict_monomer
+        elif a_prediction_type == "multimer":
+            tmp_sequences_to_predict = tmp_sequences_to_predict_multimer
+        else:
+            raise ValueError(f"Unknown prediction type: {a_prediction_type}")
+
+        tmp_row_no = 0
+        for tmp_seq_record in tmp_sequences_to_predict:
             tmp_seqs = tmp_seq_record.seq.split(",")
-            j = 0
+            tmp_chain_no = 0
             for tmp_seq in tmp_seqs:
-                tmp_chain_letter_item = QtWidgets.QTableWidgetItem(constants.chain_dict.get(j))
+                self._view.ui.table_proteins_to_predict.insertRow(tmp_row_no)
+                tmp_seq_name_item = QtWidgets.QTableWidgetItem(tmp_seq_record.name)
+                tmp_chain_letter_item = QtWidgets.QTableWidgetItem(constants.chain_dict.get(tmp_chain_no))
                 tmp_seq_item = QtWidgets.QTableWidgetItem(tmp_seq)
-                self._view.ui.table_proteins_to_predict.setItem(i, 0, tmp_chain_letter_item)
-                self._view.ui.table_proteins_to_predict.setItem(i, 1, tmp_seq_item)
-                j += 1
-            i += 1
+                self._view.ui.table_proteins_to_predict.setVerticalHeaderItem(tmp_row_no, tmp_seq_name_item)
+                self._view.ui.table_proteins_to_predict.setItem(tmp_row_no, 0, tmp_chain_letter_item)
+                self._view.ui.table_proteins_to_predict.setItem(tmp_row_no, 1, tmp_seq_item)
+                tmp_chain_no += 1
+                tmp_row_no += 1
         self._view.ui.table_proteins_to_predict.resizeColumnsToContents()
         self._check_if_proteins_to_predict_table_is_empty()
 

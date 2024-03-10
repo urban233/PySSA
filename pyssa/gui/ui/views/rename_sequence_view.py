@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the rename protein view."""
+"""Module for the rename sequence view."""
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -31,7 +31,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
-class RenameProteinView(QtWidgets.QDialog):
+class RenameSequenceView(QtWidgets.QDialog):
     # Define a custom signal
     dialogClosed = QtCore.pyqtSignal(tuple)
 
@@ -42,7 +42,7 @@ class RenameProteinView(QtWidgets.QDialog):
         self.ui = auto_rename_object_view.Ui_Dialog()
         self.ui.setupUi(self)
 
-        self.ui.lbl_description.setText("Enter a new protein name")
+        self.ui.lbl_description.setText("Enter a new sequence name")
         self.ui.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         styles.color_bottom_frame_button(self.ui.btn_rename)
 
@@ -53,7 +53,7 @@ class RenameProteinView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Rename Selected Protein Structure")
+        self.setWindowTitle("Rename Selected Sequence")
         self.setModal(True)
 
     def closeEvent(self, event):

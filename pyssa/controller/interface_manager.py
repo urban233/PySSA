@@ -15,7 +15,7 @@ from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
     predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, \
-    fasta_file_import_preview_view
+    fasta_file_import_preview_view, rename_sequence_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -79,6 +79,7 @@ class InterfaceManager:
         self._fasta_file_import_preview_view = fasta_file_import_preview_view.FastaFileImportPreviewView()
         self._add_sequence_view = add_sequence_view.AddSequenceView()
         self._rename_protein_view = rename_protein_view.RenameProteinView()
+        self._rename_sequence_view = rename_sequence_view.RenameSequenceView()
         self._use_project_view = use_project_view.UseProjectView()
         self._add_scene_view = add_scene_view.AddSceneView()
 
@@ -170,6 +171,9 @@ class InterfaceManager:
 
     def get_add_sequence_view(self):
         return self._add_sequence_view
+
+    def get_rename_sequence_view(self):
+        return self._rename_sequence_view
 
     def get_predict_monomer_view(self) -> "predict_monomer_view.PredictMonomerView":
         return self._predict_monomer_view
@@ -762,12 +766,10 @@ class InterfaceManager:
         tmp_sequence_item.setData(enums.ModelEnum.OBJECT_ROLE, tmp_sequence)
         self._main_view.ui.seqs_table_widget.setItem(1, 1, tmp_sequence_item)
         # Table item flags
+        tmp_seq_name_item.setFlags(tmp_seq_name_item.flags() & ~Qt.ItemIsEditable)
         tmp_sequence_item.setFlags(tmp_sequence_item.flags() & ~Qt.ItemIsEditable)
         tmp_name_label_item.setFlags(tmp_name_label_item.flags() & ~Qt.ItemIsEditable)
         tmp_sequence_label_item.setFlags(tmp_sequence_label_item.flags() & ~Qt.ItemIsEditable)
-        # Extra cell widgets
-
-        self._main_view.line_edit_seq_name.setText(tmp_seq_name_item.data(Qt.DisplayRole))
         self._main_view.ui.seqs_table_widget.resizeColumnsToContents()
 
     def show_menu_options_with_seq(self):
