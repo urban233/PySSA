@@ -24,6 +24,7 @@ import logging
 import subprocess
 
 from pyssa.internal.data_structures import structure_prediction
+from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import exception, exit_codes
 
@@ -35,6 +36,7 @@ def predict_protein_with_colabfold(
     the_prediction_protein_infos: list["prediction_protein_info.PredictionProteinInfo"],
     the_prediction_configuration: "prediction_configuration.PredictionConfiguration",
     a_project: "project.Project",
+    the_custom_progress_signal: "custom_signals.ProgressSignal"
 ) -> tuple:
     """Runs structure prediction for a monomeric protein.
 
@@ -53,10 +55,12 @@ def predict_protein_with_colabfold(
         the_prediction_configuration,
         a_project,
     )
+    the_custom_progress_signal.emit_signal("Creating temp directories ...", 5)
     structure_prediction_obj.create_tmp_directories()
     logger.info("Tmp directories were created.")
 
     # <editor-fold desc="Creates fasta files for prediction">
+    the_custom_progress_signal.emit_signal("Creating FASTA files ...", 10)
     try:
         structure_prediction_obj.create_fasta_files_for_prediction()
     except exception.FastaFilesNotCreatedError:
@@ -74,6 +78,7 @@ def predict_protein_with_colabfold(
     # </editor-fold>
 
     # <editor-fold desc="Runs structure prediction">
+    the_custom_progress_signal.emit_signal("Running ColabFold prediction ...", 25)
     try:
         structure_prediction_obj.run_prediction()
     except exception.PredictionEndedWithError:
@@ -85,6 +90,7 @@ def predict_protein_with_colabfold(
     # </editor-fold>
 
     # <editor-fold desc="Saves predicted protein to project">
+    the_custom_progress_signal.emit_signal("Saving best prediction results ...", 85)
     try:
         structure_prediction_obj.move_best_prediction_models()
         logger.info("Saved predicted pdb file into XML file.")

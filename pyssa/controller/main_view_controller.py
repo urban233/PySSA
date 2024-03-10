@@ -22,7 +22,7 @@ from xml import sax
 
 from pyssa.async_pyssa import main_tasks_async
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.internal.thread.async_pyssa import util_async
+from pyssa.internal.thread.async_pyssa import util_async, custom_signals
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
@@ -126,6 +126,8 @@ class MainViewController:
         self._workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self._workspace_status = f"Current workspace: {str(self._workspace_path)}"
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
+        self.custom_progress_signal = custom_signals.ProgressSignal()
+        self.temp_message_timer = QtCore.QTimer(self._interface_manager.get_main_view())
 
         self._setup_statusbar()
         self._init_context_menus()
@@ -136,6 +138,8 @@ class MainViewController:
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.dialogClosed.connect(self._close_main_window)
+        self.custom_progress_signal.progress.connect(self._update_progress_bar)
+
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self._create_project)
         self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
@@ -696,6 +700,62 @@ class MainViewController:
 
     # </editor-fold>
 
+    # <editor-fold desc="Status bar methods">
+    def _show_long_running_task_message(self, a_message):
+        self._view.status_bar.setStyleSheet("""
+            QStatusBar {
+                background-color: #ff9000;
+                border-style: solid;
+                border-width: 2px;
+                border-radius: 4px;
+                border-color: #5b5b5b;
+            }
+        """)
+        self._view.status_bar.showMessage(a_message)
+
+    def _show_error_message(self, a_message):
+        self._view.status_bar.setStyleSheet("""
+            QStatusBar {
+                background-color: #ba1a1a;
+                color: white;
+                border-style: solid;
+                border-width: 2px;
+                border-radius: 4px;
+                border-color: #5b5b5b;
+            }
+        """)
+        self._view.status_bar.showMessage(a_message)
+
+    def _show_temporary_message(self, a_temporary_message, the_long_running_task_message):
+        self._view.status_bar.setStyleSheet("""
+            QStatusBar {
+                background-color: white;
+                border-style: solid;
+                border-width: 2px;
+                border-radius: 4px;
+                border-color: #DCDBE3;
+            }
+        """)
+        self._view.status_bar.showMessage(a_temporary_message)
+        if self.temp_message_timer:
+            self.temp_message_timer.stop()  # Stop previous timer if exists
+        self.temp_message_timer.setSingleShot(True)
+        self.temp_message_timer.timeout.connect(lambda a_long_running_task_message=the_long_running_task_message: self._switch_to_long_running_task_message(a_long_running_task_message))
+        self.temp_message_timer.start(6000)  # Display temporary message for 2000 milliseconds
+
+    def _switch_to_long_running_task_message(self, a_long_running_task_message):
+        self._show_long_running_task_message(a_long_running_task_message)
+
+    def _update_progress_bar(self, a_message_value_tuple: tuple):
+        tmp_message, tmp_value = a_message_value_tuple
+        if tmp_value < 0 or tmp_value > 100:
+            raise ValueError("Value for progress bar must be between 0 and 100!")
+        self._view.progress_bar.show()
+        self._view.progress_bar.setFormat(tmp_message)
+        self._view.progress_bar.setValue(tmp_value)
+
+    # </editor-fold>
+
     # <editor-fold desc="Project menu">
     def _close_project(self):
         """Closes the current project"""
@@ -809,7 +869,6 @@ class MainViewController:
             return
 
         self._interface_manager.update_status_bar("Opening existing project ...")
-        #self._interface_manager.update_progress_bar(10, "Opening existing project ...")
         self._interface_manager.start_wait_spinner()
         tmp_project_name = return_value
         tmp_project_database_filepath = str(
@@ -828,23 +887,22 @@ class MainViewController:
                 tmp_project_database_filepath,
                 self._interface_manager,
                 self._pymol_session_manager,
+                self.custom_progress_signal
             ),
             post_func=self.__await_open_project,
         )
         self._active_task.start()
-        self._interface_manager.update_progress_of_progress_bar(50)
 
     def __await_open_project(self, return_value: tuple):
-        self._interface_manager.update_progress_of_progress_bar(60)
         exit_code, tmp_project, tmp_interface_manager = return_value
         if exit_code == 0:
             self._interface_manager = tmp_interface_manager
             self._interface_manager.refresh_main_view()
             self._interface_manager.hide_progress_bar()
-            self._interface_manager.update_status_bar("Opening existing project finished.")
+            self._show_temporary_message("Opening existing project finished.", "")
             self._connect_sequence_selection_model()
         else:
-            self._interface_manager.update_status_bar("Opening existing project failed!")
+            self._show_error_message("Opening existing project failed!")
         self._interface_manager.stop_wait_spinner()
 
     def _use_project(self) -> None:
@@ -1116,6 +1174,7 @@ class MainViewController:
                     result[1],
                     result[2],
                     self._interface_manager.get_current_project(),
+                    self.custom_progress_signal
                 ),
                 post_func=self.__await_monomer_prediction_for_subsequent_analysis,
             )
@@ -1139,11 +1198,13 @@ class MainViewController:
                     result[1],
                     result[2],
                     self._interface_manager.get_current_project(),
+                    self.custom_progress_signal
                 ),
                 post_func=self.__await_predict_protein_with_colabfold,
             )
             self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
-        self._interface_manager.update_status_bar("A prediction is currently running ...")
+        self._show_long_running_task_message("A prediction is currently running ...")
+        #self._interface_manager.update_status_bar("A prediction is currently running ...")
         self._interface_manager.refresh_main_view()
         # self.block_box_prediction = QtWidgets.QMessageBox()
         # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
@@ -2106,8 +2167,9 @@ class MainViewController:
         )
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_sequence_model()
-        self._interface_manager.show_menu_options_with_seq()
+        #self._interface_manager.show_menu_options_with_seq()
         self._interface_manager.refresh_main_view()
+        self._show_temporary_message("Adding a sequence was successful", "A prediction is currently running ...")
 
     def _save_selected_sequence_as_fasta_file(self):
         self._view.wait_spinner.start()
