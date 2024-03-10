@@ -193,6 +193,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein_pair_scene.setEnabled(False)
         self.ui.protein_pairs_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Loaded")
+
         # Hides all ui elements for the scene modifications
         self.ui.lbl_protein_pair_color.hide()
         self.ui.lbl_protein_pair_atoms.hide()
@@ -212,8 +213,19 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_hide_ribbon.hide()
         self.ui.btn_protein_pair_hide_all_representations.hide()
 
-        self.ui.lbl_info_protein_pair.setText("Please select a protein pair.")
-        self.ui.lbl_info_protein_pair_2.hide()
+        # checkboxes
+        self.ui.cb_protein_pair_atoms.hide()
+        self.ui.cb_protein_pair_cartoon.hide()
+        self.ui.cb_protein_pair_sticks.hide()
+        self.ui.cb_protein_pair_ribbon.hide()
+        self.ui.cb_protein_pair_lines.hide()
+        self.ui.cb_protein_pair_spheres.hide()
+        self.ui.cb_protein_pair_dots.hide()
+        self.ui.cb_protein_pair_mesh.hide()
+        self.ui.cb_protein_pair_surface.hide()
+
+        self.ui.lbl_info_3.setText("Please select a protein pair.")
+        self.ui.lbl_info_4.hide()
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
