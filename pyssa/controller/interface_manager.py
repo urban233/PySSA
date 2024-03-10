@@ -978,12 +978,12 @@ class InterfaceManager:
             self._main_view.ui.box_protein_color.show()
             self._main_view.ui.lbl_protein_current_color.hide()
             self._main_view.ui.lbl_protein_pymol_colors.hide()
-            self._main_view.color_grid.hide()
+            self._main_view.color_grid_proteins.hide()
         else:
             self._main_view.ui.box_protein_color.hide()
             self._main_view.ui.lbl_protein_current_color.show()
             self._main_view.ui.lbl_protein_pymol_colors.show()
-            self._main_view.color_grid.show()
+            self._main_view.color_grid_proteins.show()
 
         if self._settings_manager.settings.proteins_tab_use_toggle == 1:
             self._main_view.ui.verticalLayout_15.setSpacing(0)  # layout for the representation section
@@ -1102,7 +1102,7 @@ class InterfaceManager:
 
     def manage_protein_color_grid(self):
         if self._main_view.ui.lbl_protein_current_color.text() == "tv_red":
-            self._main_view.color_grid.c_tv_red.setStyleSheet("""""")
+            self._main_view.color_grid_proteins.c_tv_red.setStyleSheet("""""")
 
     def manage_coloring_by_element_option_for_protein_chain(self):
         if self.get_protein_repr_toggle_flag() == 1:
@@ -1439,6 +1439,8 @@ class InterfaceManager:
             return self._main_view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
                 enums.ModelEnum.OBJECT_ROLE
             )
+        elif tmp_type == "":
+            raise ValueError("Nothing there!")
         else:
             raise ValueError("Unknown type!")
 

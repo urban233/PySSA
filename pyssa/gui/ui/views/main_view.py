@@ -98,6 +98,9 @@ class MainView(QtWidgets.QMainWindow):
         self.tg_protein_surface = toggle_button.ToggleWidget()
         self.ui.protein_surface_layout.addWidget(self.tg_protein_surface)
 
+        self.color_grid_proteins = color_grid.PyMOLColorGrid()
+        self.ui.verticalLayout_6.insertWidget(2, self.color_grid_proteins)
+
         # Protein Pair
         self.tg_protein_pair_color_atoms = toggle_button.ToggleWidget()
         self.ui.protein_pair_atoms_layout.addWidget(self.tg_protein_pair_color_atoms)
@@ -118,8 +121,8 @@ class MainView(QtWidgets.QMainWindow):
         self.tg_protein_pair_surface = toggle_button.ToggleWidget()
         self.ui.protein_pair_surface_layout.addWidget(self.tg_protein_pair_surface)
 
-        self.color_grid = color_grid.PyMOLColorGrid()
-        self.ui.verticalLayout_6.insertWidget(2, self.color_grid)
+        self.color_grid_protein_pairs = color_grid.PyMOLColorGrid()
+        self.ui.horizontalLayout_21.insertWidget(2, self.color_grid_protein_pairs)
 
     def initialize_ui(self) -> None:
         """Initialize the UI elements."""
