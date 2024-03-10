@@ -21,11 +21,14 @@
 #
 """Module for the FastaFileImportPreviewView Dialog."""
 import os
+from collections import defaultdict
 import pymol
 from pymol import cmd
+from Bio.SeqRecord import SeqRecord
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager, fasta_file_import_preview_view_controller
+from pyssa.internal.data_structures.data_classes import basic_seq_info
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import validate_async
@@ -42,7 +45,7 @@ class ImportSequenceViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_import_sequence_view()
         self._external_controller = None
-        self._parsed_sequences: dict[str, tuple[str, str]] = {}
+        self._parsed_sequences: list[basic_seq_info.BasicSeqInfo] = []
         self._parsed_seq_records = []
         self._connect_all_ui_elements_to_slot_functions()
 
@@ -50,6 +53,7 @@ class ImportSequenceViewController(QtCore.QObject):
         self._view.ui.btn_choose_fasta_file.clicked.connect(self.load_model)
         self._view.ui.btn_preview.clicked.connect(self._open_preview)
         self._view.ui.btn_import_sequence.clicked.connect(self.import_sequence)
+
 
     def restore_ui(self):
         self._view.ui.txt_import_sequence.setText("")
@@ -66,8 +70,10 @@ class ImportSequenceViewController(QtCore.QObject):
         self._external_controller.fill_sequence_table()
         self._interface_manager.get_fasta_file_import_preview_view().show()
 
-    def _post_open_preview(self):
-        pass
+    def _post_open_preview(self, return_value: tuple):
+        _, self._parsed_sequences = return_value
+        self._parsed_seq_records = self._convert_seqs_to_seq_records()
+        print(self._parsed_seq_records)
 
     def load_model(self) -> None:
         """Loads a protein from the filesystem into the textbox."""
@@ -84,9 +90,8 @@ class ImportSequenceViewController(QtCore.QObject):
             else:
                 # display path in text box
                 self._view.ui.txt_import_sequence.setText(str(file_name[0]))
-                self._parsed_sequences: dict = self.parse_fasta(self._view.ui.txt_import_sequence.text())
-                print(self._parsed_sequences)
-                self._convert_seqs_to_seq_records()
+                self._parsed_sequences: list[basic_seq_info.BasicSeqInfo] = self.parse_fasta(self._view.ui.txt_import_sequence.text())
+                self._parsed_seq_records = self._convert_seqs_to_seq_records()
                 self._view.ui.btn_preview.setEnabled(True)
                 self._view.ui.btn_import_sequence.setEnabled(True)
         except FileNotFoundError:
@@ -95,7 +100,7 @@ class ImportSequenceViewController(QtCore.QObject):
             self._view.ui.btn_import_sequence.setEnabled(False)
 
     def parse_fasta(self, file_path):
-        sequences = {}
+        sequences = []
         with open(file_path, 'r') as file:
             tmp_chains = []
             tmp_sequence = ""
@@ -104,7 +109,8 @@ class ImportSequenceViewController(QtCore.QObject):
                 line = line.strip()
                 if line.startswith('>'):
                     for tmp_chain in tmp_chains:
-                        sequences[tmp_chain] = (tmp_name, tmp_sequence)
+                        tmp_seq_info = basic_seq_info.BasicSeqInfo(tmp_name, tmp_chain, tmp_sequence)
+                        sequences.append(tmp_seq_info)
                     tmp_chains = []
                     tmp_sequence = ""
                     tmp_name = line.split('|')[0].replace(">", "")
@@ -114,29 +120,45 @@ class ImportSequenceViewController(QtCore.QObject):
                     tmp_sequence += line
             # for the last fasta file entry
             for tmp_chain in tmp_chains:
-                sequences[tmp_chain] = (tmp_name, tmp_sequence)
+                tmp_seq_info = basic_seq_info.BasicSeqInfo(tmp_name, tmp_chain, tmp_sequence)
+                sequences.append(tmp_seq_info)
         return sequences
 
-    def _convert_seqs_to_seq_records(self):
-        # Create SeqRecord objects
-        from Bio.SeqRecord import SeqRecord
-        seq_records = []
-        for chain_letter, (name, sequence) in sorted(self._parsed_sequences.items()):
-            name = name.split('_')[0]  # Extracting the name without _1 or _2
-            seq_record = SeqRecord(sequence, id=name, name=name, description="")
-            seq_records.append(seq_record)
+    def merge_sequences(self, seq_infos):
+        merged_seqs = defaultdict(lambda: {'name': '', 'chain': '', 'seq': ''})
 
-        # Join SeqRecord objects
-        joined_seq = ','.join([str(record.seq) for record in seq_records])
+        for seq_info in seq_infos:
+            name_base = seq_info.name[:-2]
+            name_suffix = seq_info.name[-2:]
 
-        print(joined_seq)
+            if merged_seqs[name_base]['name'] == '':
+                merged_seqs[name_base]['name'] = name_base
 
-        # for tmp_key in self._parsed_sequences:
-        #     tmp_name = self._parsed_sequences[tmp_key][0]
-        #     tmp_chain_letter = tmp_key
-        #     tmp_seq = self._parsed_sequences[tmp_key][1]
+            if merged_seqs[name_base]['chain'] == '':
+                merged_seqs[name_base]['chain'] = seq_info.chain
+            else:
+                merged_seqs[name_base]['chain'] += seq_info.chain
+
+            if merged_seqs[name_base]['seq'] == '':
+                merged_seqs[name_base]['seq'] = seq_info.seq
+            else:
+                merged_seqs[name_base]['seq'] += ',' + seq_info.seq
+
+        merged_seq_infos = [basic_seq_info.BasicSeqInfo(name=val['name'], chain=val['chain'], seq=val['seq']) for val in
+                            merged_seqs.values()]
+
+        return merged_seq_infos
+
+    def _convert_seqs_to_seq_records(self) -> list:
+        merged_seq_infos = self.merge_sequences(self._parsed_sequences)
+
+        tmp_seq_records = []
+        for seq_info in merged_seq_infos:
+            tmp_seq_record = SeqRecord(seq_info.seq, name=seq_info.name)
+            tmp_seq_records.append(tmp_seq_record)
+        return tmp_seq_records
 
     def import_sequence(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""
         self._view.close()
-        self.user_input.emit((self._view.ui.txt_import_sequence.text(), len(self._view.ui.txt_import_sequence.text())))
+        self.user_input.emit((0, self._parsed_seq_records))

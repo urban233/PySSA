@@ -75,6 +75,9 @@ class Ui_Dialog(object):
         self.btn_save = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_save.setObjectName("btn_save")
         self.horizontalLayout.addWidget(self.btn_save)
+        self.btn_restore = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_restore.setObjectName("btn_restore")
+        self.horizontalLayout.addWidget(self.btn_restore)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_5.addWidget(self.frame_bottom)
 
@@ -92,3 +95,4 @@ class Ui_Dialog(object):
         self.btn_delete.setText(_translate("Dialog", "Delete"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_save.setText(_translate("Dialog", "Save"))
+        self.btn_restore.setText(_translate("Dialog", "Restore"))

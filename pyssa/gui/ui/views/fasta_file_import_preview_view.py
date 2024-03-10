@@ -20,7 +20,7 @@ class FastaFileImportPreviewView(QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-        self.ui.table.setItemDelegate(sequence_table_delegate.FastaFileImportPreviewTableDelegate())
+        self.ui.table.setItemDelegate(sequence_table_delegate.InputCheckDelegate(self.ui.table))
 
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))

@@ -1,41 +1,48 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5 import QtCore
 
 
-class FastaFileImportPreviewTableDelegate(QtWidgets.QItemDelegate):
-    def __init__(self, parent=None):
-        super(FastaFileImportPreviewTableDelegate, self).__init__(parent)
+class InputCheckDelegate(QtWidgets.QStyledItemDelegate):
+    def __init__(self, table_widget):
+        super().__init__()
+        self.table_widget: QtWidgets.QTableWidget = table_widget
+        self._first_text = ""
 
     def createEditor(self, parent, option, index):
-        editor = super(FastaFileImportPreviewTableDelegate, self).createEditor(parent, option, index)
-        return editor
-
-    def setModelData(self, editor, model, index):
-        tmp_item_text = editor.text()
+        self.editor = QtWidgets.QLineEdit(parent)
         tmp_column = index.column()
+        self._first_text = self.table_widget.currentItem().text()
+        self.editor.textChanged.connect(lambda text, a_column=tmp_column: self.validateInput(text, a_column))
+        return self.editor
 
-        if tmp_column == 0:
+    def validateInput(self, text, a_column):
+        if a_column == 0:
+            # validate name
             allowed_chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-"
-            tmp_item_new_text = ''.join(char for char in tmp_item_text if char in allowed_chars)
-        elif tmp_column == 1:
-            allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            tmp_item_new_text = ''.join(char for char in tmp_item_text if char in allowed_chars)
-            tmp_item_new_text = ''.join(char for char in tmp_item_new_text if char not in self._get_all_chain_letters(model, index))
-        # elif tmp_column == 2:
-        #     allowed_chars = {"C", "D", "S", "Q", "K", "I", "P", "T", "F", "N", "G", "H", "L", "R", "W", "A", "V", "E", "Y", "M"}
-        #     tmp_item_new_text = ''.join(char for char in tmp_item_text if char in allowed_chars)
+            tmp_corrected_text = ''.join(char for char in text if char in allowed_chars)
+        elif a_column == 1:
+            # validate chain letter
+            full_name = self.table_widget.item(self.table_widget.currentRow(), 0).text()
+            base_name = full_name.rsplit('_', 1)[0]
+            not_allowed_chars: set = self.pool_chains_by_base_name(self.table_widget)[base_name]
+            not_allowed_chars.remove(self._first_text)
+            tmp_corrected_text = ''.join(char for char in text if char not in not_allowed_chars)
+            tmp_corrected_text = tmp_corrected_text[:1]
+        elif a_column == 2:
+            # validate protein sequence
+            allowed_chars = {"C", "D", "S", "Q", "K", "I", "P", "T", "F", "N", "G", "H", "L", "R", "W", "A", "V", "E", "Y", "M"}
+            tmp_corrected_text = ''.join(char for char in text if char in allowed_chars)
         else:
-            model.setData(index, "")
-            return
-        if tmp_item_new_text == "":
-            model.setData(index, "Invalid input!")
-        else:
-            model.setData(index, tmp_item_new_text)
+            tmp_corrected_text = ""
+        self.editor.setText(tmp_corrected_text)
 
-    def _get_all_chain_letters(self, model: QtCore.QAbstractTableModel, index):
-        # TODO: this needs to be fixed! (Problem: all chain letters are considered for one sequence, which is wrong!)
-        tmp_all_chains = []
-        for tmp_row_no in range(model.rowCount()):
-            tmp_all_chains.append(model.index(tmp_row_no, 1).data(Qt.DisplayRole))
-        return tmp_all_chains
+    def pool_chains_by_base_name(self, a_table_widget) -> dict:
+        pool = {}
+        rows = a_table_widget.rowCount()
+        for i in range(rows):
+            full_name = a_table_widget.item(i, 0).text()
+            base_name = full_name.rsplit('_', 1)[0]
+            chain = a_table_widget.item(i, 1).text()
+            if base_name not in pool:
+                pool[base_name] = set()
+            pool[base_name].add(chain)
+        return pool

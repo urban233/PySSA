@@ -1946,9 +1946,10 @@ class MainViewController:
     def _open_text_editor_for_seq(self):
         self.tmp_txt_browser = QtWidgets.QTextBrowser()
         try:
-            self.tmp_txt_browser.setText(
-                self._view.ui.seqs_table_widget.currentItem().data(enums.ModelEnum.OBJECT_ROLE).seq
-            )
+            tmp_seq = self._view.ui.seqs_table_widget.currentItem().data(enums.ModelEnum.OBJECT_ROLE).seq
+            tmp_seqs = tmp_seq.split(",")
+            tmp_seq = ",\n\n".join(tmp_seqs)
+            self.tmp_txt_browser.setText(tmp_seq)
         except AttributeError:
             return
         else:
@@ -1966,38 +1967,52 @@ class MainViewController:
 
     def _rename_sequence(self):
         tmp_old_name = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name
-        tmp_new_name = self._view.ui.seqs_table_widget.currentItem().text()
-        tmp_seq = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).seq
-        self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name = tmp_new_name
-        self._view.ui.seqs_list_view.model().setData(self._view.ui.seqs_list_view.currentIndex(), tmp_new_name, Qt.DisplayRole)
-        tmp_database_operation = database_operation.DatabaseOperation(
-            enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq)
-        )
-        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        try:
+            # this is needed because the signal is fired even if the current item is None
+            tmp_new_name = self._view.ui.seqs_table_widget.currentItem().text()
+        except AttributeError:
+            return
+        else:
+            tmp_seq = self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).seq
+            self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name = tmp_new_name
+            self._view.ui.seqs_list_view.model().setData(self._view.ui.seqs_list_view.currentIndex(), tmp_new_name, Qt.DisplayRole)
+            tmp_database_operation = database_operation.DatabaseOperation(
+                enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq)
+            )
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def _show_sequence_information(self):
-        self._view.ui.seqs_table_widget.cellChanged.disconnect(self._rename_sequence)
         self._interface_manager.show_sequence_parameters(
             self._view.ui.seqs_list_view.currentIndex()
         )
-        self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
         self._view.ui.btn_save_sequence.setEnabled(True)
         self._view.ui.btn_delete_sequence.setEnabled(True)
 
     def _import_sequence(self) -> None:
         self._external_controller = import_sequence_view_controller.ImportSequenceViewController(self._interface_manager)
-        self._external_controller.user_input.connect(self._post_add_sequence)
+        self._external_controller.user_input.connect(self._post_import_sequence)
         self._external_controller.restore_ui()
         self._interface_manager.get_import_sequence_view().show()
 
     def _post_import_sequence(self, return_value: tuple):
-        tmp_fasta_filepath, _ = return_value
-        with open(tmp_fasta_filepath, "r") as handle:
-            for tmp_record in SeqIO.parse(handle, "fasta"):
-                # Append each SeqRecord object to the list
-                self._interface_manager.get_current_project().sequences.append(tmp_record)
-                self._database_manager.insert_new_sequence(tmp_record)
+        # tmp_fasta_filepath, _ = return_value
+        # with open(tmp_fasta_filepath, "r") as handle:
+        #     for tmp_record in SeqIO.parse(handle, "fasta"):
+        #         # Append each SeqRecord object to the list
+        #         self._interface_manager.get_current_project().sequences.append(tmp_record)
+        #         self._database_manager.insert_new_sequence(tmp_record)
+        # self._interface_manager.refresh_sequence_model()
+        # self._interface_manager.refresh_main_view()
+        for tmp_seq_record in return_value[1]:
+            logger.info(f"Adding new sequence {tmp_seq_record.name} with {tmp_seq_record.seq} to the current project.")
+            self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
+            tmp_database_operation = database_operation.DatabaseOperation(
+                enums.SQLQueryType.INSERT_NEW_SEQUENCE,
+                (0, tmp_seq_record)
+            )
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_sequence_model()
+        self._interface_manager.show_menu_options_with_seq()
         self._interface_manager.refresh_main_view()
 
     def _add_sequence(self):

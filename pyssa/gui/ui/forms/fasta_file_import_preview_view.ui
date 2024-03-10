@@ -146,6 +146,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="btn_restore">
+          <property name="text">
+           <string>Restore</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
