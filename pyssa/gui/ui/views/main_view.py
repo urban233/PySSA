@@ -162,7 +162,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_show_ribbon.hide()
         self.ui.btn_protein_hide_ribbon.hide()
         # checkboxes
-        self.ui.cb_protein_atoms.hide()
         self.ui.cb_protein_cartoon.hide()
         self.ui.cb_protein_sticks.hide()
         self.ui.cb_protein_ribbon.hide()
@@ -215,7 +214,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_hide_all_representations.hide()
 
         # checkboxes
-        self.ui.cb_protein_pair_atoms.hide()
         self.ui.cb_protein_pair_cartoon.hide()
         self.ui.cb_protein_pair_sticks.hide()
         self.ui.cb_protein_pair_ribbon.hide()
@@ -225,8 +223,8 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.cb_protein_pair_mesh.hide()
         self.ui.cb_protein_pair_surface.hide()
 
-        self.ui.lbl_info_3.setText("Please select a protein pair.")
-        self.ui.lbl_info_4.hide()
+        self.ui.lbl_info_protein_pair.setText("Please select a protein pair.")
+        self.ui.lbl_info_protein_pair_2.hide()
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()
