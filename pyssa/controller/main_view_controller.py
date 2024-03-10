@@ -128,9 +128,9 @@ class MainViewController:
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
         self._setup_statusbar()
-        self._connect_all_ui_elements_with_slot_functions()
         self._init_context_menus()
         self._interface_manager.refresh_main_view()
+        self._connect_all_ui_elements_with_slot_functions()
         if self._interface_manager.get_application_settings().start_help_at_startup == 1:
             self._start_documentation_server()
 
@@ -710,6 +710,7 @@ class MainViewController:
         #                                       QtWidgets.QMessageBox.Information)
         # # self.msg_box.show()
         self._interface_manager.restore_default_main_view()
+        self._disconnect_sequence_selection_model()
         self.update_status("Saving current project ...")
         self._view.wait_spinner.start()
 
@@ -795,6 +796,7 @@ class MainViewController:
         self._interface_manager.refresh_workspace_model()
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
+        self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_spinner()
 
     def _open_project(self) -> None:
@@ -840,6 +842,7 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
             self._interface_manager.hide_progress_bar()
             self._interface_manager.update_status_bar("Opening existing project finished.")
+            self._connect_sequence_selection_model()
         else:
             self._interface_manager.update_status_bar("Opening existing project failed!")
         self._interface_manager.stop_wait_spinner()
@@ -872,6 +875,7 @@ class MainViewController:
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
+        self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_spinner()
         self._interface_manager.update_status_bar("Use process finished.")
 
@@ -1030,11 +1034,41 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Prediction menu">
+    def _connect_sequence_selection_model(self):
+        self._view.ui.seqs_list_view.selectionModel().selectionChanged.connect(
+            self._check_options_for_sequence_selection)
+
+    def _disconnect_sequence_selection_model(self):
+        self._view.ui.seqs_list_view.selectionModel().selectionChanged.disconnect(
+            self._check_options_for_sequence_selection)
+
+    def _check_options_for_sequence_selection(self):
+        if len(self._view.ui.seqs_list_view.selectedIndexes()) > 0:
+            tmp_enable_monomer_flag = False
+            tmp_enable_multimer_flag = False
+            for tmp_model_index in self._view.ui.seqs_list_view.selectedIndexes():
+                if tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ and tmp_enable_monomer_flag is False:
+                    tmp_enable_monomer_flag = True
+                elif tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ and tmp_enable_multimer_flag is False:
+                    tmp_enable_multimer_flag = True
+            self._view.ui.action_predict_monomer.setEnabled(tmp_enable_monomer_flag)
+            self._view.ui.action_predict_multimer.setEnabled(tmp_enable_multimer_flag)
+        else:
+            self._interface_manager.refresh_main_view()
 
     # <editor-fold desc="Monomer">
     def _predict_monomer(self):
+        tmp_indexes = []
+        if len(self._view.ui.seqs_list_view.selectedIndexes()) == 0:
+            tmp_model = self._interface_manager.get_main_view().ui.seqs_list_view.model()
+            for tmp_row_no in range(tmp_model.rowCount()):
+                tmp_index = tmp_model.index(tmp_row_no, 0)
+                if tmp_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ:
+                    tmp_indexes.append(tmp_index)
+        else:
+            tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
         self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-            self._interface_manager, self._view.ui.seqs_list_view.selectedIndexes(), "monomer"
+            self._interface_manager, tmp_indexes, "monomer"
         )
         self._external_controller.job_input.connect(self._post_predict_monomer)
         self._interface_manager.get_predict_protein_view().show()
@@ -1363,8 +1397,17 @@ class MainViewController:
         # )
         # self._external_controller.job_input.connect(self._post_predict_monomer)
         # self._interface_manager.get_predict_multimer_view().show()
+        tmp_indexes = []
+        if len(self._view.ui.seqs_list_view.selectedIndexes()) == 0:
+            tmp_model = self._interface_manager.get_main_view().ui.seqs_list_view.model()
+            for tmp_row_no in range(tmp_model.rowCount()):
+                tmp_index = tmp_model.index(tmp_row_no, 0)
+                if tmp_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ:
+                    tmp_indexes.append(tmp_index)
+        else:
+            tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
         self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-            self._interface_manager, self._view.ui.seqs_list_view.selectedIndexes(), "multimer"
+            self._interface_manager, tmp_indexes, "multimer"
         )
         self._external_controller.job_input.connect(self._post_predict_multimer)
         self._interface_manager.get_predict_protein_view().show()
