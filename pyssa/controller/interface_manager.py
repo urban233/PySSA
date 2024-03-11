@@ -8,7 +8,8 @@ from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from pyssa.controller import database_manager, pymol_session_manager, settings_manager, main_tasks_manager
+from pyssa.controller import database_manager, pymol_session_manager, settings_manager, main_tasks_manager, \
+    status_bar_manager
 from pyssa.controller.database_manager import logger
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
@@ -84,6 +85,7 @@ class InterfaceManager:
         self._add_scene_view = add_scene_view.AddSceneView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
+        self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view)
         self._settings_manager = settings_manager.SettingsManager()
 
         self.documentation_window = None

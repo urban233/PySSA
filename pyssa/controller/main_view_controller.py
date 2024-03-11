@@ -127,7 +127,6 @@ class MainViewController:
         self._workspace_status = f"Current workspace: {str(self._workspace_path)}"
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
         self.custom_progress_signal = custom_signals.ProgressSignal()
-        self.temp_message_timer = QtCore.QTimer(self._interface_manager.get_main_view())
 
         self._setup_statusbar()
         self._init_context_menus()
@@ -138,7 +137,7 @@ class MainViewController:
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.dialogClosed.connect(self._close_main_window)
-        self.custom_progress_signal.progress.connect(self._update_progress_bar)
+        #self.custom_progress_signal.progress.connect(self._update_progress_bar)
 
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self._create_project)
@@ -700,62 +699,6 @@ class MainViewController:
 
     # </editor-fold>
 
-    # <editor-fold desc="Status bar methods">
-    def _show_long_running_task_message(self, a_message):
-        self._view.status_bar.setStyleSheet("""
-            QStatusBar {
-                background-color: #ff9000;
-                border-style: solid;
-                border-width: 2px;
-                border-radius: 4px;
-                border-color: #5b5b5b;
-            }
-        """)
-        self._view.status_bar.showMessage(a_message)
-
-    def _show_error_message(self, a_message):
-        self._view.status_bar.setStyleSheet("""
-            QStatusBar {
-                background-color: #ba1a1a;
-                color: white;
-                border-style: solid;
-                border-width: 2px;
-                border-radius: 4px;
-                border-color: #5b5b5b;
-            }
-        """)
-        self._view.status_bar.showMessage(a_message)
-
-    def _show_temporary_message(self, a_temporary_message, the_long_running_task_message):
-        self._view.status_bar.setStyleSheet("""
-            QStatusBar {
-                background-color: white;
-                border-style: solid;
-                border-width: 2px;
-                border-radius: 4px;
-                border-color: #DCDBE3;
-            }
-        """)
-        self._view.status_bar.showMessage(a_temporary_message)
-        if self.temp_message_timer:
-            self.temp_message_timer.stop()  # Stop previous timer if exists
-        self.temp_message_timer.setSingleShot(True)
-        self.temp_message_timer.timeout.connect(lambda a_long_running_task_message=the_long_running_task_message: self._switch_to_long_running_task_message(a_long_running_task_message))
-        self.temp_message_timer.start(6000)  # Display temporary message for 2000 milliseconds
-
-    def _switch_to_long_running_task_message(self, a_long_running_task_message):
-        self._show_long_running_task_message(a_long_running_task_message)
-
-    def _update_progress_bar(self, a_message_value_tuple: tuple):
-        tmp_message, tmp_value = a_message_value_tuple
-        if tmp_value < 0 or tmp_value > 100:
-            raise ValueError("Value for progress bar must be between 0 and 100!")
-        self._view.progress_bar.show()
-        self._view.progress_bar.setFormat(tmp_message)
-        self._view.progress_bar.setValue(tmp_value)
-
-    # </editor-fold>
-
     # <editor-fold desc="Project menu">
     def _close_project(self):
         """Closes the current project"""
@@ -868,7 +811,9 @@ class MainViewController:
         if return_value[1] is False:
             return
 
-        self._interface_manager.update_status_bar("Opening existing project ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            enums.StatusMessages.OPENING_PROJECT.value, self._interface_manager.main_tasks_manager
+        )
         self._interface_manager.start_wait_spinner()
         tmp_project_name = return_value
         tmp_project_database_filepath = str(
@@ -878,7 +823,6 @@ class MainViewController:
         )
         self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
         self._database_thread.start()
-        self._interface_manager.update_progress_of_progress_bar(20)
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._active_task = tasks.Task(
             target=main_presenter_async.open_project,
@@ -899,10 +843,15 @@ class MainViewController:
             self._interface_manager = tmp_interface_manager
             self._interface_manager.refresh_main_view()
             self._interface_manager.hide_progress_bar()
-            self._show_temporary_message("Opening existing project finished.", "")
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                enums.StatusMessages.OPENING_PROJECT_FINISHED.value,
+                self._interface_manager.main_tasks_manager)
             self._connect_sequence_selection_model()
         else:
-            self._show_error_message("Opening existing project failed!")
+            self._interface_manager.status_bar_manager.show_error_message(
+                enums.StatusMessages.OPENING_PROJECT_FAILED.value,
+                self._interface_manager.main_tasks_manager
+            )
         self._interface_manager.stop_wait_spinner()
 
     def _use_project(self) -> None:
@@ -2449,6 +2398,7 @@ class MainViewController:
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
         cmd.color(color='atomic', selection=f"{tmp_selection.selection_string} and not elem C")
+        cmd.color("grey30", "elem C")
 
     def _change_chain_reset_proteins_atoms(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection

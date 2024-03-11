@@ -95,3 +95,12 @@ class PyMOLRepresentation(enum.Enum):
     DOTS = 'dots'
     MESH = 'mesh'
     SURFACE = 'surface'
+
+
+class StatusMessages(enum.Enum):
+    """An enum for all status messages, displayed in the statusbar."""
+    PREDICTION_IS_RUNNING = "A structure prediction is running ..."
+    DISTANCE_ANALYSIS_IS_RUNNING = "A distance analysis is running ..."
+    OPENING_PROJECT = "Opening existing project ..."
+    OPENING_PROJECT_FINISHED = "Opening existing project finished."
+    OPENING_PROJECT_FAILED = "Opening existing project failed!"
