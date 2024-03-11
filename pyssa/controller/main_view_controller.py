@@ -850,7 +850,6 @@ class MainViewController:
         else:
             self._interface_manager.status_bar_manager.show_error_message(
                 enums.StatusMessages.OPENING_PROJECT_FAILED.value,
-                self._interface_manager.main_tasks_manager
             )
         self._interface_manager.stop_wait_spinner()
 
@@ -1152,7 +1151,10 @@ class MainViewController:
                 post_func=self.__await_predict_protein_with_colabfold,
             )
             self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
-        self._show_long_running_task_message("A prediction is currently running ...")
+        self._interface_manager.status_bar_manager.show_long_running_task_message(
+            enums.StatusMessages.PREDICTION_IS_RUNNING.value
+        )
+        #self._show_long_running_task_message("A prediction is currently running ...")
         #self._interface_manager.update_status_bar("A prediction is currently running ...")
         self._interface_manager.refresh_main_view()
         # self.block_box_prediction = QtWidgets.QMessageBox()

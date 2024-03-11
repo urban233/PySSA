@@ -43,7 +43,7 @@ class StatusBarManager:
                 border-style: solid;
                 border-width: 2px;
                 border-radius: 4px;
-                border-color: #5b5b5b;
+                border-color: #DCDBE3;
             }
         """)
 

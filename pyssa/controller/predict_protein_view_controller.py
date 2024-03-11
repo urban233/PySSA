@@ -75,6 +75,7 @@ class PredictProteinViewController(QtCore.QObject):
         """Displays the multimer prediction + analysis page."""
         self._view.ui.btn_go_to_analysis_setup.setText("Predict")
         self._view.ui.lbl_go_to_analysis_setup.setText("Protein Structure(s)")
+        self._view.ui.checkbox_add_analysis.setChecked(False)
         # checks internet connection
         if not tools.check_internet_connectivity():
             gui_utils.no_internet_dialog()
@@ -96,8 +97,6 @@ class PredictProteinViewController(QtCore.QObject):
         gui_elements_to_show = [
             self._view.ui.lbl_proteins_to_predict,
             self._view.ui.table_proteins_to_predict,
-        ]
-        gui_elements_to_hide = [
             self._view.ui.checkbox_add_analysis,
             self._view.ui.btn_prediction_remove,
             self._view.ui.lbl_advanced_config,
@@ -106,7 +105,7 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.ui.lbl_go_to_analysis_setup,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
-        gui_utils.hide_gui_elements(gui_elements_to_hide)
+
         if self._view.ui.tab_widget.currentIndex() == 1:
             self._view.ui.tab_widget.setCurrentIndex(0)
         self._view.ui.tab_widget.setTabEnabled(1, False)
@@ -309,7 +308,6 @@ class PredictProteinViewController(QtCore.QObject):
                     self._view.ui.btn_analysis_remove.show()
                     self._view.ui.btn_analysis_remove.setEnabled(False)
                     self._view.ui.btn_start_prediction_analysis.show()
-                    self._view.ui.cb_pred_analysis_multi_images.hide()
             else:
                 # goes from analysis to prediction
                 self._view.ui.tab_widget.setCurrentIndex(0)
@@ -359,6 +357,8 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.ui.lbl_analysis_batch_vs_3,
             self._view.ui.lbl_analysis_protein_struct_2,
             self._view.ui.box_analysis_protein_struct_2,
+            self._view.ui.btn_analysis_next,
+            self._view.ui.btn_analysis_back,
         ]
         gui_elements_to_hide = [
             self._view.ui.btn_analysis_remove,
@@ -402,6 +402,8 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.ui.lbl_analysis_batch_vs_3,
             self._view.ui.lbl_analysis_protein_1_chains,
             self._view.ui.list_analysis_protein_1_chains,
+            self._view.ui.btn_analysis_next,
+            self._view.ui.btn_analysis_back,
             self._view.ui.btn_analysis_back_2,
             self._view.ui.btn_analysis_next_2,
             self._view.ui.box_analysis_protein_struct_1,
@@ -418,7 +420,6 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.ui.btn_analysis_remove.show()
             self._view.ui.btn_analysis_remove.setEnabled(False)
             self._view.ui.btn_start_prediction_analysis.show()
-            self._view.ui.cb_pred_analysis_multi_images.hide()
 
     def _show_chains_of_protein_structure_1(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""
@@ -607,6 +608,8 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.ui.lbl_analysis_batch_vs_3,
             self._view.ui.lbl_analysis_protein_struct_2,
             self._view.ui.box_analysis_protein_struct_2,
+            self._view.ui.btn_analysis_next,
+            self._view.ui.btn_analysis_back,
             self._view.ui.btn_analysis_back_4,
         ]
         gui_elements_to_hide = [
