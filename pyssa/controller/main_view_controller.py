@@ -317,7 +317,7 @@ class MainViewController:
         self._view.ui.btn_help_3.clicked.connect(self._open_protein_pairs_tab_help)
 
         # <editor-fold desc="Color Grid">
-        self._view.color_grid_proteins.c_red.clicked.connect(self.set_color_name_in_label_red_in_protein_pairs_tab())
+        self._view.color_grid_proteins.c_red.clicked.connect(self.set_color_name_in_label_red_in_protein_pairs_tab)
         self._view.color_grid_proteins.c_tv_red.clicked.connect(self.set_color_name_in_label_tv_red_in_protein_pairs_tab)
         self._view.color_grid_proteins.c_salomon.clicked.connect(self.set_color_name_in_label_salmon_in_protein_pairs_tab)
         self._view.color_grid_proteins.c_raspberry.clicked.connect(self.set_color_name_in_label_raspberry_in_protein_pairs_tab)
@@ -390,7 +390,7 @@ class MainViewController:
         self._interface_manager.current_tab_index = self._view.ui.project_tab_widget.currentIndex()
         if self._pymol_session_manager.session_object_type == "protein" and self._interface_manager.current_tab_index == 2:
             self._interface_manager.hide_protein_pair_pymol_scene_configuration()
-            self._view.ui.lbl_info_protein_pair.setText(
+            self._view.ui.lbl_info_3.setText(
                 "Please load the PyMOL session of the \nselected protein pair.")
         elif self._pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.current_tab_index == 1:
             self._interface_manager.hide_protein_pymol_scene_configuration()
@@ -399,7 +399,7 @@ class MainViewController:
             self._interface_manager.hide_protein_pymol_scene_configuration()
             self._interface_manager.hide_protein_pair_pymol_scene_configuration()
             self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
-            self._view.ui.lbl_info_protein_pair.setText(
+            self._view.ui.lbl_info_3.setText(
                 "Please load the PyMOL session of the \nselected protein pair.")
 
     def _setup_statusbar(self) -> None:
@@ -3460,14 +3460,14 @@ class MainViewController:
             self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_protein_pair.name}")
             logger.info("Successfully opened protein pair session.")
             self._interface_manager.update_status_bar("Loading the PyMOL session was successful.")
-            self._view.ui.lbl_info_protein_pair.setText("Please select a chain.")
+            self._view.ui.lbl_info_3.setText("Please select a chain.")
         else:
             logger.error("The protein name could not be found in the object list in PyMOL!")
             self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
             self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
             self._interface_manager.update_status_bar(
                 "Loading the PyMOL session failed! Check out the log file to get more information.")
-            self._view.ui.lbl_info_protein_pair.setText("Please load the PyMOL session of the selected protein.")
+            self._view.ui.lbl_info_3.setText("Please load the PyMOL session of the selected protein.")
         self._interface_manager.stop_wait_spinner()
 
     def _change_chain_color_protein_pairs(self) -> None:

@@ -122,7 +122,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.protein_pair_surface_layout.addWidget(self.tg_protein_pair_surface)
 
         self.color_grid_protein_pairs = color_grid.PyMOLColorGrid()
-        self.ui.horizontalLayout_21.insertWidget(2, self.color_grid_protein_pairs)
+        self.ui.verticalLayout_10.insertWidget(2, self.color_grid_protein_pairs)
 
     def initialize_ui(self) -> None:
         """Initialize the UI elements."""
@@ -244,7 +244,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_show_ribbon.hide()
         self.ui.btn_protein_pair_hide_ribbon.hide()
         self.ui.btn_protein_pair_hide_all_representations.hide()
-
         # checkboxes
         self.ui.cb_protein_pair_cartoon.hide()
         self.ui.cb_protein_pair_sticks.hide()
