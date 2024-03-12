@@ -220,6 +220,9 @@ class InterfaceManager:
     def get_protein_repr_toggle_flag(self) -> int:
         return self._settings_manager.settings.proteins_tab_use_toggle
 
+    def get_protein_pair_repr_toggle_flag(self) -> int:
+        return self._settings_manager.settings.protein_pairs_tab_use_toggle
+
     def get_current_project(self) -> "project.Project":
         """Returns the current project."""
         return self._current_project
@@ -1351,53 +1354,89 @@ class InterfaceManager:
     def show_protein_pair_pymol_scene_configuration(self):
         self._main_view.ui.frame_protein_pair.show()
         self._main_view.ui.frame_protein_pair_repr.show()
+        if self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors == 1:
+            self._main_view.ui.box_protein_pair_color.show()
+            self._main_view.ui.lbl_protein_pair_current_color.hide()
+            self._main_view.ui.lbl_protein_pair_pymol_colors.hide()
+            self._main_view.color_grid_protein_pairs.hide()
+        else:
+            self._main_view.ui.box_protein_pair_color.hide()
+            self._main_view.ui.lbl_protein_pair_current_color.show()
+            self._main_view.ui.lbl_protein_pair_pymol_colors.show()
+            self._main_view.color_grid_protein_pairs.show()
 
-        self._main_view.ui.lbl_protein_pair_current_color.show()
+        if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
+            self._main_view.ui.verticalLayout_18.setSpacing(0)  # layout for the representation section
+            """IMPORTANT: 
+                The layout for the hide all repr frame must have a top and bottom margin of 6, 
+                set in the QDesigner's settings
+            """
+            # toggles should be used
+            self._main_view.ui.lbl_protein_pair_atoms.show()
+            self._main_view.ui.lbl_protein_pair_cartoon.show()
+            self._main_view.ui.lbl_protein_pair_sticks.show()
+            self._main_view.ui.lbl_protein_pair_ribbon.show()
+            self._main_view.ui.lbl_protein_pair_lines.show()
+            self._main_view.ui.lbl_protein_pair_spheres.show()
+            self._main_view.ui.lbl_protein_pair_dots.show()
+            self._main_view.ui.lbl_protein_pair_mesh.show()
+            self._main_view.ui.lbl_protein_pair_surface.show()
+
+            self._main_view.tg_protein_pair_cartoon.show()
+            self._main_view.tg_protein_pair_sticks.show()
+            self._main_view.tg_protein_pair_ribbon.show()
+            self._main_view.tg_protein_pair_lines.show()
+            self._main_view.tg_protein_pair_spheres.show()
+            self._main_view.tg_protein_pair_dots.show()
+            self._main_view.tg_protein_pair_mesh.show()
+            self._main_view.tg_protein_pair_surface.show()
+            # hide ui elements from checkbox options
+            self._main_view.ui.cb_protein_pair_cartoon.hide()
+            self._main_view.ui.cb_protein_pair_sticks.hide()
+            self._main_view.ui.cb_protein_pair_ribbon.hide()
+            self._main_view.ui.cb_protein_pair_lines.hide()
+            self._main_view.ui.cb_protein_pair_spheres.hide()
+            self._main_view.ui.cb_protein_pair_dots.hide()
+            self._main_view.ui.cb_protein_pair_mesh.hide()
+            self._main_view.ui.cb_protein_pair_surface.hide()
+        else:
+            self._main_view.ui.lbl_protein_pair_atoms.show()
+            self._main_view.ui.cb_protein_pair_cartoon.show()
+            self._main_view.ui.cb_protein_pair_sticks.show()
+            self._main_view.ui.cb_protein_pair_ribbon.show()
+            self._main_view.ui.cb_protein_pair_lines.show()
+            self._main_view.ui.cb_protein_pair_spheres.show()
+            self._main_view.ui.cb_protein_pair_dots.show()
+            self._main_view.ui.cb_protein_pair_mesh.show()
+            self._main_view.ui.cb_protein_pair_surface.show()
+            # hide ui elements from toggle options
+            self._main_view.ui.lbl_protein_pair_cartoon.hide()
+            self._main_view.ui.lbl_protein_pair_sticks.hide()
+            self._main_view.ui.lbl_protein_pair_ribbon.hide()
+            self._main_view.ui.lbl_protein_pair_lines.hide()
+            self._main_view.ui.lbl_protein_pair_spheres.hide()
+            self._main_view.ui.lbl_protein_pair_dots.hide()
+            self._main_view.ui.lbl_protein_pair_mesh.hide()
+            self._main_view.ui.lbl_protein_pair_surface.hide()
+
+            self._main_view.tg_protein_pair_color_atoms.hide()
+            self._main_view.tg_protein_pair_cartoon.hide()
+            self._main_view.tg_protein_pair_sticks.hide()
+            self._main_view.tg_protein_pair_ribbon.hide()
+            self._main_view.tg_protein_pair_lines.hide()
+            self._main_view.tg_protein_pair_spheres.hide()
+            self._main_view.tg_protein_pair_dots.hide()
+            self._main_view.tg_protein_pair_mesh.hide()
+            self._main_view.tg_protein_pair_surface.hide()
+
         self._main_view.ui.lbl_protein_pair_color.show()
-        self._main_view.ui.lbl_protein_pair_pymol_colors.show()
-        self._main_view.ui.lbl_protein_pair_atoms.show()
-        self._main_view.ui.lbl_protein_pair_cartoon.show()
-        self._main_view.ui.lbl_protein_pair_sticks.show()
-        self._main_view.ui.lbl_protein_pair_ribbon.show()
-        self._main_view.ui.lbl_protein_pair_lines.show()
-        self._main_view.ui.lbl_protein_pair_spheres.show()
-        self._main_view.ui.lbl_protein_pair_dots.show()
-        self._main_view.ui.lbl_protein_pair_mesh.show()
-        self._main_view.ui.lbl_protein_pair_surface.show()
         self._main_view.ui.lbl_protein_pair_all_representations.show()
-
-        # self._main_view.ui.box_protein_pair_color.show()
+        self._main_view.ui.btn_protein_pair_hide_all_representations.show()
         self._main_view.ui.btn_protein_pair_color_atoms.show()
         self._main_view.ui.btn_protein_pair_reset_atoms.show()
-        # self._main_view.ui.btn_protein_pair_show_cartoon.show()
-        # self._main_view.ui.btn_protein_pair_hide_cartoon.show()
-        # self._main_view.ui.btn_protein_pair_show_sticks.show()
-        # self._main_view.ui.btn_protein_pair_hide_sticks.show()
-        # self._main_view.ui.btn_protein_pair_show_ribbon.show()
-        # self._main_view.ui.btn_protein_pair_hide_ribbon.show()
-        # checkboxes
-        # Fixme: If there is a selection option in settings, it can be changed here with if and else and settings manager!
-        # self._main_view.ui.cb_protein_pair_cartoon.show()
-        # self._main_view.ui.cb_protein_pair_sticks.show()
-        # self._main_view.ui.cb_protein_pair_ribbon.show()
-        # self._main_view.ui.cb_protein_pair_lines.show()
-        # self._main_view.ui.cb_protein_pair_spheres.show()
-        # self._main_view.ui.cb_protein_pair_dots.show()
-        # self._main_view.ui.cb_protein_pair_mesh.show()
-        # self._main_view.ui.cb_protein_pair_surface.show()
-        # toggles
-        self._main_view.tg_protein_pair_cartoon.show()
-        self._main_view.tg_protein_pair_sticks.show()
-        self._main_view.tg_protein_pair_ribbon.show()
-        self._main_view.tg_protein_pair_lines.show()
-        self._main_view.tg_protein_pair_spheres.show()
-        self._main_view.tg_protein_pair_dots.show()
-        self._main_view.tg_protein_pair_mesh.show()
-        self._main_view.tg_protein_pair_surface.show()
-
-        self._main_view.ui.btn_protein_pair_hide_all_representations.show()
         self._main_view.ui.lbl_info_3.hide()
         self._main_view.ui.lbl_info_4.hide()
+
     # </editor-fold>
 
     # <editor-fold desc="Getter methods for protein pairs tab in main view">

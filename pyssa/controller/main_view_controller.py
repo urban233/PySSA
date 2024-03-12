@@ -270,13 +270,6 @@ class MainViewController:
         # </editor-fold>
         # </editor-fold>
 
-        # <editor-fold desc="Context Menu">
-        self._interface_manager.get_rename_protein_view().dialogClosed.connect(
-            self.post_rename_selected_protein_structure)
-
-        self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
-        # </editor-fold>
-
         # <editor-fold desc="Proteins Pair Tab">
         self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_protein_pairs)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_pair_branch)
@@ -356,7 +349,15 @@ class MainViewController:
         self._view.color_grid_proteins.c_grey_70.clicked.connect(self.set_color_name_in_label_grey_70_in_protein_pairs_tab)
         self._view.color_grid_proteins.c_grey_30.clicked.connect(self.set_color_name_in_label_grey_30_in_protein_pairs_tab)
         self._view.color_grid_proteins.c_black.clicked.connect(self.set_color_name_in_label_black_in_protein_pairs_tab)
+
         # </editor-fold>
+        # </editor-fold>
+
+        # <editor-fold desc="Context Menu">
+        self._interface_manager.get_rename_protein_view().dialogClosed.connect(
+            self.post_rename_selected_protein_structure)
+
+        self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
         # </editor-fold>
 
     @staticmethod
@@ -2806,83 +2807,50 @@ class MainViewController:
     # <editor-fold desc="Representations">
     # cartoon
     def __slot_protein_chain_as_cartoon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
         if self._view.ui.cb_protein_cartoon.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-            self.__slot_show_protein_chain_as_cartoon()
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
         elif self._view.tg_protein_cartoon.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-            self.__slot_show_protein_chain_as_cartoon()
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
         else:
-            self.__slot_hide_protein_chain_as_cartoon()
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-
-    def __slot_show_protein_chain_as_cartoon(self):
-        # TODO: should be refactored after the checkbox approach is the way to go
-        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object().chain_letter)
-        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
-
-    def __slot_hide_protein_chain_as_cartoon(self):
-        # TODO: should be refactored after the checkbox approach is the way to go
-        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object().chain_letter)
-        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
 
     # sticks
     def __slot_protein_chain_as_sticks(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
         if self._view.ui.cb_protein_sticks.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-            self.__slot_show_protein_chain_as_sticks()
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
         elif self._view.tg_protein_sticks.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-            self.__slot_show_protein_chain_as_sticks()
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
         else:
-            self.__slot_hide_protein_chain_as_sticks()
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-
-    def __slot_show_protein_chain_as_sticks(self):
-        # TODO: should be refactored after the checkbox approach is the way to go
-        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object().chain_letter)
-        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
-
-    def __slot_hide_protein_chain_as_sticks(self):
-        # TODO: should be refactored after the checkbox approach is the way to go
-        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object().chain_letter)
-        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
 
     # ribbon
     def __slot_protein_chain_as_ribbon(self):
+        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object().chain_letter)
         if self._view.ui.cb_protein_ribbon.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-            self.__slot_show_protein_chain_as_ribbon()
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
         elif self._view.tg_protein_ribbon.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-            self.__slot_show_protein_chain_as_ribbon()
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
         else:
-            self.__slot_hide_protein_chain_as_ribbon()
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
-    def __slot_show_protein_chain_as_ribbon(self):
-        # TODO: should be refactored after the checkbox approach is the way to go
-        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object().chain_letter)
-        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
-
-    def __slot_hide_protein_chain_as_ribbon(self):
-        # TODO: should be refactored after the checkbox approach is the way to go
-        tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object().chain_letter)
-        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
-
-    # others
+    # lines
     def __slot_protein_chain_as_lines(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2897,6 +2865,7 @@ class MainViewController:
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # spheres
     def __slot_protein_chain_as_spheres(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2911,6 +2880,7 @@ class MainViewController:
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # dots
     def __slot_protein_chain_as_dots(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2925,6 +2895,7 @@ class MainViewController:
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # mesh
     def __slot_protein_chain_as_mesh(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2939,6 +2910,7 @@ class MainViewController:
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # surface
     def __slot_protein_chain_as_surface(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2971,9 +2943,9 @@ class MainViewController:
         self._view.tg_protein_dots.toggle_button.setChecked(False)
         self._view.tg_protein_mesh.toggle_button.setChecked(False)
         self._view.tg_protein_surface.toggle_button.setChecked(False)
-        self.__slot_hide_protein_chain_as_cartoon()
-        self.__slot_hide_protein_chain_as_sticks()
-        self.__slot_hide_protein_chain_as_ribbon()
+        self.__slot_protein_chain_as_cartoon()
+        self.__slot_protein_chain_as_sticks()
+        self.__slot_protein_chain_as_ribbon()
         self.__slot_protein_chain_as_lines()
         self.__slot_protein_chain_as_spheres()
         self.__slot_protein_chain_as_dots()
@@ -3975,130 +3947,123 @@ class MainViewController:
     # <editor-fold desc="Representations">
     # cartoon
     def __slot_protein_pair_chain_as_cartoon(self):
-        if self._view.ui.cb_protein_pair_cartoon.isChecked():
-            self.__slot_show_protein_pair_chain_as_cartoon()
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_cartoon.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
+        elif self._view.tg_protein_pair_cartoon.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
         else:
-            self.__slot_hide_protein_pair_chain_as_cartoon()
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
-
-    def __slot_show_protein_pair_chain_as_cartoon(self):
-        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
-
-    def __slot_hide_protein_pair_chain_as_cartoon(self):
-        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
     # sticks
     def __slot_protein_pair_chain_as_sticks(self):
-        if self._view.ui.cb_protein_pair_sticks.isChecked():
-            self.__slot_show_protein_pair_chain_as_sticks()
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_sticks.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+        elif self._view.tg_protein_pair_sticks.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
         else:
-            self.__slot_hide_protein_pair_chain_as_sticks()
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
-
-    def __slot_show_protein_pair_chain_as_sticks(self):
-        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
-
-    def __slot_hide_protein_pair_chain_as_sticks(self):
-        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
     # ribbon
     def __slot_protein_pair_chain_as_ribbon(self):
-        if self._view.ui.cb_protein_pair_ribbon.isChecked():
-            self.__slot_show_protein_pair_chain_as_ribbon()
+        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        tmp_selection.set_selection_for_a_single_chain(
+            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+        if self._view.ui.cb_protein_pair_ribbon.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+        elif self._view.tg_protein_pair_ribbon.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
         else:
-            self.__slot_hide_protein_pair_chain_as_ribbon()
+            tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
-    def __slot_show_protein_pair_chain_as_ribbon(self):
-        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
-
-    def __slot_hide_protein_pair_chain_as_ribbon(self):
-        tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-        tmp_selection.set_selection_for_a_single_chain(
-            self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
-
-    # others
+    # lines
     def __slot_protein_pair_chain_as_lines(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        if self._view.ui.cb_protein_pair_lines.isChecked():
+        if self._view.ui.cb_protein_pair_lines.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
+        elif self._view.tg_protein_pair_lines.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # spheres
     def __slot_protein_pair_chain_as_spheres(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        if self._view.ui.cb_protein_pair_spheres.isChecked():
+        if self._view.ui.cb_protein_pair_spheres.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
+        elif self._view.tg_protein_pair_spheres.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # dots
     def __slot_protein_pair_chain_as_dots(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        if self._view.ui.cb_protein_pair_dots.isChecked():
+        if self._view.ui.cb_protein_pair_dots.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
+        elif self._view.tg_protein_pair_dots.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # mesh
     def __slot_protein_pair_chain_as_mesh(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        if self._view.ui.cb_protein_pair_mesh.isChecked():
+        if self._view.ui.cb_protein_pair_mesh.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
+        elif self._view.tg_protein_pair_mesh.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
+    # surface
     def __slot_protein_pair_chain_as_surface(self):
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-        if self._view.ui.cb_protein_pair_surface.isChecked():
+        if self._view.ui.cb_protein_pair_surface.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
+            tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
+        elif self._view.tg_protein_pair_surface.toggle_button.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 1:
             tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
         else:
             tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
         self._update_scene()
         self._save_protein_pair_pymol_session()
-        self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
 
     # all
     def __slot_hide_protein_pair_chain_all(self):
@@ -4110,9 +4075,17 @@ class MainViewController:
         self._view.ui.cb_protein_pair_dots.setChecked(False)
         self._view.ui.cb_protein_pair_mesh.setChecked(False)
         self._view.ui.cb_protein_pair_surface.setChecked(False)
-        self.__slot_hide_protein_pair_chain_as_cartoon()
-        self.__slot_hide_protein_pair_chain_as_sticks()
-        self.__slot_hide_protein_pair_chain_as_ribbon()
+        self._view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
+        self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
+        self._view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
+        self._view.tg_protein_pair_lines.toggle_button.setChecked(False)
+        self._view.tg_protein_pair_spheres.toggle_button.setChecked(False)
+        self._view.tg_protein_pair_dots.toggle_button.setChecked(False)
+        self._view.tg_protein_pair_mesh.toggle_button.setChecked(False)
+        self._view.tg_protein_pair_surface.toggle_button.setChecked(False)
+        self.__slot_protein_pair_chain_as_cartoon()
+        self.__slot_protein_pair_chain_as_sticks()
+        self.__slot_protein_pair_chain_as_ribbon()
         self.__slot_protein_pair_chain_as_lines()
         self.__slot_protein_pair_chain_as_spheres()
         self.__slot_protein_pair_chain_as_dots()

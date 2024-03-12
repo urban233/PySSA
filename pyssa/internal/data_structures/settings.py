@@ -75,6 +75,8 @@ class Settings:
         self.start_help_at_startup: int = 1  # or "0"
         self.proteins_tab_use_toggle: int = 1  # or "0"
         self.proteins_tab_use_combobox_for_colors: int = 0  # or "1"
+        self.protein_pairs_tab_use_toggle: int = 1  # or "0"
+        self.protein_pairs_tab_use_combobox_for_colors: int = 0  # or "1"
 
     def serialize_settings(self) -> None:
         """This function serialize the protein object."""
@@ -148,6 +150,14 @@ class Settings:
             )
             tmp_settings.proteins_tab_use_combobox_for_colors = Settings._check_integrity_of_proteins_tab_use_combobox_for_colors_flag(
                 int(settings_dict.get("proteins_tab_use_combobox_for_colors"))
+            )
+            # integrity checks are also valid for protein pairs
+            # TODO: create more abstract integrity checks
+            tmp_settings.protein_pairs_tab_use_toggle = Settings._check_integrity_of_proteins_tab_use_toggle_flag(
+                int(settings_dict.get("protein_pairs_tab_use_toggle"))
+            )
+            tmp_settings.protein_pairs_tab_use_combobox_for_colors = Settings._check_integrity_of_proteins_tab_use_combobox_for_colors_flag(
+                int(settings_dict.get("protein_pairs_tab_use_combobox_for_colors"))
             )
 
         except ValueError as e:
@@ -338,5 +348,7 @@ class Settings:
         self.start_help_at_startup: int = 1  # or "0"
         self.proteins_tab_use_toggle: int = 1  # or "0"
         self.proteins_tab_use_combobox_for_colors: int = 0  # or "1"
+        self.protein_pairs_tab_use_toggle: int = 1  # or "0"
+        self.protein_pairs_tab_use_combobox_for_colors: int = 0  # or "1"
 
         self.serialize_settings()
