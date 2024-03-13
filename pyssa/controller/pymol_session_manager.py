@@ -1,9 +1,14 @@
+import os.path
+import pathlib
+
 from pymol import cmd
 
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.views import main_view
 from pyssa.internal.data_structures import protein, protein_pair
-from pyssa.util import enums
+from pyssa.internal.data_structures.data_classes import database_operation
+from pyssa.internal.portal import pymol_io
+from pyssa.util import enums, constants
 
 
 class PymolSessionManager:
@@ -13,6 +18,10 @@ class PymolSessionManager:
     session_objects: list
     current_scene_name: str
     all_scenes: list[str]
+
+    frozen_scene_name: str
+    frozen_session_base64_string_filepath: pathlib.Path
+    frozen_protein_object: "protein.Protein"
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
         self.session_name = ""
@@ -30,6 +39,31 @@ class PymolSessionManager:
         self.session_objects: list = []
         # reset actual pymol session
         cmd.reinitialize()
+
+    def freeze_current_protein_pymol_session(self,
+                                             a_protein: "protein.Protein") -> "database_operation.DatabaseOperation":
+        self.frozen_scene_name = self.current_scene_name
+        self.frozen_protein_object = a_protein
+
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
+            (0, self.frozen_protein_object)
+        )
+        return tmp_database_operation
+
+    def unfreeze_current_protein_pymol_session(self):
+        self.load_protein_session(self.frozen_protein_object)
+        self.frozen_protein_object = None
+        self.frozen_scene_name = ""
+
+    def unfreeze_current_pymol_session(self):
+        self.current_scene_name = self.frozen_scene_name
+        if os.path.exists(self.frozen_session_base64_string_filepath):
+            pymol_io.load_pymol_session(self.frozen_session_base64_string_filepath)
+            os.remove(self.frozen_session_base64_string_filepath)
+        else:
+            raise FileNotFoundError("The frozen session file could not be found!")
+
 
     def load_protein_session(self, a_protein: "protein.Protein"):
         """Loads a pymol session of a single protein."""
@@ -61,6 +95,9 @@ class PymolSessionManager:
 
     def load_scene(self, a_scene_name):
         cmd.scene(a_scene_name, "recall")
+
+    def save_current_pymol_session_as_base64_string(self) -> str:
+        return pymol_io.convert_pymol_session_to_base64_string("temp_active")
 
     def is_the_current_session_empty(self) -> bool:
         """Checks if the manager is in an empty session state."""

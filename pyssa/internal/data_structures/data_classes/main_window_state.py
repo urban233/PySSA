@@ -23,6 +23,7 @@
 from dataclasses import dataclass
 from pyssa.internal.data_structures.data_classes import results_state, image_state
 
+# OLD CODE; SHOULD NOT BE USED ANYMORE
 
 @dataclass
 class MainWindowState:

@@ -24,3 +24,15 @@ class MainTasksManager:
         if self.prediction_task is None:
             raise ValueError("Cannot check the state of the prediction task if the task object is None! Please check first if the task object is None!")
         return self.prediction_task.is_finished()
+
+    def start_distance_analysis_task(self, the_distance_analysis_task: "tasks.Task"):
+        """Runs a structure distance_analysis"""
+        constants.PYSSA_LOGGER.info("Running only a distance_analysis.")
+        # No analysis after distance_analysis
+        self.distance_analysis_task = the_distance_analysis_task
+        self.distance_analysis_task.start()
+
+    def check_if_distance_analysis_task_is_finished(self) -> bool:
+        if self.distance_analysis_task is None:
+            raise ValueError("Cannot check the state of the distance_analysis task if the task object is None! Please check first if the task object is None!")
+        return self.distance_analysis_task.is_finished()

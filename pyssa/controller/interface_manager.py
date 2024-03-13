@@ -25,6 +25,7 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import pymol_io
+from pyssa.internal.thread.async_pyssa import locks
 from pyssa.model import proteins_model, protein_pairs_model
 from pyssa.util import enums, constants, exception, main_window_util
 
@@ -54,6 +55,9 @@ class InterfaceManager:
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
     _current_pymol_session: "current_session.CurrentPymolSession"
+
+    pymol_lock: "locks.PyMOL_LOCK"
+
     # _application_settings: "settings.Settings"
     current_tab_index: int = 0
 
@@ -143,6 +147,9 @@ class InterfaceManager:
         self._current_workspace = self._settings_manager.settings.workspace_path
         self._current_project = project.Project()
         self._current_pymol_session = current_session.CurrentPymolSession("", "")
+
+        self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
+
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
         self._sequence_model = QtGui.QStandardItemModel()
@@ -1015,7 +1022,6 @@ class InterfaceManager:
             self._main_view.tg_protein_mesh.show()
             self._main_view.tg_protein_surface.show()
             # hide ui elements from checkbox options
-            self._main_view.ui.cb_protein_atoms.hide()
             self._main_view.ui.cb_protein_cartoon.hide()
             self._main_view.ui.cb_protein_sticks.hide()
             self._main_view.ui.cb_protein_ribbon.hide()

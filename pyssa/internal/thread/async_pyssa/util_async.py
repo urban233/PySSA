@@ -5,6 +5,7 @@ import subprocess
 import zmq
 import pygetwindow
 
+from pyssa.controller import interface_manager
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, enums
 from pyssa.util import globals
@@ -119,3 +120,10 @@ def start_documentation_server(
     socket.close()
 
     return "result", tmp_docs_window
+
+
+def refresh_protein_model(the_interface_manager: "interface_manager.InterfaceManager",
+                          placeholder_1: int):
+    """Refreshes the protein model of the interface manager."""
+    the_interface_manager.refresh_protein_model()
+    return "result", the_interface_manager

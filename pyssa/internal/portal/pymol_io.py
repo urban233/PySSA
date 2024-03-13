@@ -135,18 +135,22 @@ def load_pymol_session(pymol_session_filepath: pathlib.Path) -> None:
     graphic_operations.setup_default_session_graphic_settings()
 
 
+def save_pymol_session_as_base64_string(pymol_molecule_object: str) -> pathlib.Path:
+    session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{pymol_molecule_object}_session.pse")
+    cmd.save(session_filepath)
+    return session_filepath
+
+
 def convert_pymol_session_to_base64_string(pymol_molecule_object: str) -> str:
     """This function converts a pymol session file into a base64 string.
 
     Args:
         pymol_molecule_object (str): PyMOL molecule object to be converted.
     """
-    session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{pymol_molecule_object}_session.pse")
-    cmd.save(session_filepath)
+    session_filepath = save_pymol_session_as_base64_string(pymol_molecule_object)
     base64_string = binary_data.create_base64_string_from_file(path_util.FilePath(session_filepath))
     os.remove(session_filepath)
     return base64_string
-
 
 def get_all_scenes_from_pymol_session() -> list[str]:
     return cmd.get_scene_list()

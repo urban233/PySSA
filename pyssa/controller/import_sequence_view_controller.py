@@ -54,7 +54,6 @@ class ImportSequenceViewController(QtCore.QObject):
         self._view.ui.btn_preview.clicked.connect(self._open_preview)
         self._view.ui.btn_import_sequence.clicked.connect(self.import_sequence)
 
-
     def restore_ui(self):
         self._view.ui.txt_import_sequence.setText("")
         self._view.ui.lbl_status.setText("")
@@ -114,8 +113,15 @@ class ImportSequenceViewController(QtCore.QObject):
                     tmp_chains = []
                     tmp_sequence = ""
                     tmp_name = line.split('|')[0].replace(">", "")
-                    chain_info = line.split('|')[1].replace("Chains ", "")
-                    tmp_chains = chain_info.split(", ")  # Extracting chain letters
+
+                    if line.find("Chains") != -1:
+                        chain_info = line.split('|')[1].replace("Chains ", "")
+                        tmp_chains = chain_info.split(", ")  # Extracting chain letters
+                    elif line.find("Chain") != -1:
+                        chain_info = line.split('|')[1].replace("Chain ", "")
+                        tmp_chains = chain_info.split(", ")  # Extracting chain letters
+                    else:
+                        tmp_chains = ["A"]
                 else:
                     tmp_sequence += line
             # for the last fasta file entry
@@ -128,8 +134,7 @@ class ImportSequenceViewController(QtCore.QObject):
         merged_seqs = defaultdict(lambda: {'name': '', 'chain': '', 'seq': ''})
 
         for seq_info in seq_infos:
-            name_base = seq_info.name[:-2]
-            name_suffix = seq_info.name[-2:]
+            name_base = seq_info.name
 
             if merged_seqs[name_base]['name'] == '':
                 merged_seqs[name_base]['name'] = name_base

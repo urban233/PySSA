@@ -1,9 +1,11 @@
+import copy
 import logging
 import os
 import pathlib
 import shutil
 import subprocess
 import platform
+import time
 from io import BytesIO
 
 import pygetwindow
@@ -33,7 +35,7 @@ from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
     dialog_rename_protein, dialog_help
 from pyssa.internal.data_structures import project, settings, protein, protein_pair, chain, selection
-from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation
+from pyssa.internal.data_structures.data_classes import prediction_protein_info, database_operation, main_view_state
 from pyssa.internal.portal import graphic_operations, pymol_io
 from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
@@ -126,7 +128,17 @@ class MainViewController:
         self._workspace_path = constants.DEFAULT_WORKSPACE_PATH
         self._workspace_status = f"Current workspace: {str(self._workspace_path)}"
         self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
+        self.active_custom_message_box: "custom_message_box.CustomMessageBoxOk" = None
+        self._main_view_state = main_view_state.MainViewState(
+            self._view.ui.seqs_list_view,
+            self._show_sequence_information,
+            self._view.ui.proteins_tree_view,
+            self.__slot_get_information_about_selected_object_in_protein_branch,
+            self._view.ui.protein_pairs_tree_view,
+            self.__slot_get_information_about_selected_object_in_protein_pair_branch
+        )
         self.custom_progress_signal = custom_signals.ProgressSignal()
+        self.disable_pymol_signal = custom_signals.DisablePyMOLSignal()
 
         self._setup_statusbar()
         self._init_context_menus()
@@ -138,6 +150,7 @@ class MainViewController:
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.dialogClosed.connect(self._close_main_window)
         #self.custom_progress_signal.progress.connect(self._update_progress_bar)
+        self.disable_pymol_signal.disable_pymol.connect(self._lock_pymol)
 
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self._create_project)
@@ -332,6 +345,27 @@ class MainViewController:
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)) == 1:
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
+
+    def _lock_pymol(self, return_value):
+        if return_value[0] is True and return_value[1] == "ColabFold Prediction":
+            if self._pymol_session_manager.session_object_type == "protein":
+                tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
+                    self._interface_manager.get_current_active_protein_object()
+                )
+                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+            # TODO: add elif for protein pair
+            self._interface_manager.pymol_lock.lock()
+
+            self._interface_manager.start_wait_spinner()
+            self._interface_manager.status_bar_manager.show_long_running_task_message(
+                enums.StatusMessages.PREDICTION_IS_FINALIZING.value
+            )
+            self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+                "The structure prediction is finalizing.\nPlease wait until this process has finished.\n\nYour current work is saved automatically.",
+                "Structure Prediction",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            )
+            self.active_custom_message_box.show()
 
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
@@ -1081,7 +1115,6 @@ class MainViewController:
 
     def _post_predict_monomer(self, result: tuple) -> None:
         """Sets up the worker for the prediction of the proteins."""
-        #self._view.wait_spinner.start()
 
         # <editor-fold desc="Check if WSL2 and ColabFold are installed">
         if globals.g_os == "win32":
@@ -1116,7 +1149,7 @@ class MainViewController:
         if result[3] is True:
             constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
             # Analysis should be run after the prediction
-            self._active_task = tasks.Task(
+            tmp_prediction_task = tasks.Task(
                 target=main_tasks_async.predict_protein_with_colabfold,
                 args=(
                     result[1],
@@ -1126,7 +1159,7 @@ class MainViewController:
                 ),
                 post_func=self.__await_monomer_prediction_for_subsequent_analysis,
             )
-            self._active_task.start()
+            self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
         else:
             # constants.PYSSA_LOGGER.info("Running only a prediction.")
             # # No analysis after prediction
@@ -1146,7 +1179,9 @@ class MainViewController:
                     result[1],
                     result[2],
                     self._interface_manager.get_current_project(),
-                    self.custom_progress_signal
+                    self.custom_progress_signal,
+                    self._interface_manager.pymol_lock,
+                    self.disable_pymol_signal
                 ),
                 post_func=self.__await_predict_protein_with_colabfold,
             )
@@ -1154,9 +1189,8 @@ class MainViewController:
         self._interface_manager.status_bar_manager.show_long_running_task_message(
             enums.StatusMessages.PREDICTION_IS_RUNNING.value
         )
-        #self._show_long_running_task_message("A prediction is currently running ...")
-        #self._interface_manager.update_status_bar("A prediction is currently running ...")
         self._interface_manager.refresh_main_view()
+        self._main_view_state.set_proteins_list(self._interface_manager.get_current_project().proteins)
         # self.block_box_prediction = QtWidgets.QMessageBox()
         # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
         # self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
@@ -1206,7 +1240,18 @@ class MainViewController:
 
             self._database_manager.close_project_database()
             self._interface_manager.refresh_protein_model()
-            self._active_task = tasks.Task(
+            # self._active_task = tasks.Task(
+            #     target=main_presenter_async.run_distance_analysis,
+            #     args=(
+            #         tmp_raw_analysis_run_names,
+            #         self._interface_manager.get_current_project(),
+            #         self._interface_manager.get_application_settings(),
+            #         self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
+            #     ),
+            #     post_func=self.post_analysis_process,
+            # )
+            # self._active_task.start()
+            tmp_distance_analysis_task = tasks.Task(
                 target=main_presenter_async.run_distance_analysis,
                 args=(
                     tmp_raw_analysis_run_names,
@@ -1216,8 +1261,14 @@ class MainViewController:
                 ),
                 post_func=self.post_analysis_process,
             )
-            self._active_task.start()
-            if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+            self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
+            self._interface_manager.status_bar_manager.show_long_running_task_message(
+                enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING
+            )
+            if os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+                shutil.rmtree(constants.SCRATCH_DIR_ANALYSIS)
+                os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+            else:
                 os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
@@ -1368,17 +1419,39 @@ class MainViewController:
             self._interface_manager.update_status_bar(f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
-            self._interface_manager.refresh_protein_model()
+            tmp_proteins = self._main_view_state.get_not_matching_proteins(
+                self._interface_manager.get_current_project().proteins
+            )
+            for tmp_protein in tmp_proteins:
+                self._interface_manager.add_protein_to_proteins_model(tmp_protein)
+
+            if self.active_custom_message_box is not None:
+                self.active_custom_message_box.close()
             self._interface_manager.refresh_main_view()
-            self.block_box_prediction.destroy(True)
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "All structure predictions are done. Go to View to the Proteins tab to see the new protein(s).",
+            self._pymol_session_manager.unfreeze_current_protein_pymol_session()
+            self._main_view_state.restore_main_view_state()
+
+            self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+                "All structure predictions are done.\nGo to the Proteins tab to see the new protein(s).",
                 "Structure Prediction",
                 custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
-            tmp_dialog.exec_()
+            self.active_custom_message_box.exec_()
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
             self._interface_manager.update_status_bar("All structure predictions are done.")
+            self._interface_manager.stop_wait_spinner()
+            #
+            # self._active_task = tasks.Task(
+            #     target=util_async.refresh_protein_model,
+            #     args=(
+            #         self._interface_manager, 0
+            #     ),
+            #     post_func=self.__await_refresh_protein_model_after_prediction,
+            # )
+            # self._active_task.start()
+            # self._interface_manager.status_bar_manager.show_long_running_task_message(
+            #     enums.StatusMessages.PREDICTION_IS_FINALIZING.value
+            # )
         else:
             self.block_box_prediction.destroy(True)
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1398,7 +1471,6 @@ class MainViewController:
                     border-color: #5b5b5b;
                 }
             """)
-        self._interface_manager.stop_wait_spinner()
 
     # </editor-fold>
 
@@ -2120,7 +2192,7 @@ class MainViewController:
         self._interface_manager.refresh_sequence_model()
         #self._interface_manager.show_menu_options_with_seq()
         self._interface_manager.refresh_main_view()
-        self._show_temporary_message("Adding a sequence was successful", "A prediction is currently running ...")
+        #self._show_temporary_message("Adding a sequence was successful", "A prediction is currently running ...")
 
     def _save_selected_sequence_as_fasta_file(self):
         self._view.wait_spinner.start()
@@ -2300,10 +2372,11 @@ class MainViewController:
                 self._pymol_session_manager.load_scene(tmp_scene_name)
 
         elif tmp_type == "chain":
-            if self._pymol_session_manager.current_scene_name != "":
+            if self._pymol_session_manager.current_scene_name != "" and self._pymol_session_manager.is_the_current_protein_in_session():
                 self.set_icon_for_current_color_in_proteins_tab()
                 self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
                 self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
+                self._main_view_state.selected_chain_proteins = self._interface_manager.get_current_protein_tree_index()
         elif tmp_type == "header":
             pass
 
@@ -3106,7 +3179,11 @@ class MainViewController:
         self._interface_manager.get_add_protein_view().show()
 
     def _post_import_protein_structure(self, return_value: tuple):
-        # TODO: this function needs an async/await part
+        tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
+            self._interface_manager.get_current_active_protein_object()
+        )
+        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+
         tmp_protein_name, tmp_name_len = return_value
         if tmp_name_len == 4:
             self._active_task = tasks.Task(
@@ -3146,6 +3223,8 @@ class MainViewController:
             database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
                                                  (0, tmp_protein)))
         self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.unfreeze_current_protein_pymol_session()
+        self._main_view_state.restore_main_view_state()
         self._interface_manager.update_status_bar("Importing protein structure finished.")
         self._interface_manager.stop_wait_spinner()
 

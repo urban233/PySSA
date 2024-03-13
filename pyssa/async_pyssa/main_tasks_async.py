@@ -22,9 +22,11 @@
 """Module for all asynchronous functions used in the main tasks."""
 import logging
 import subprocess
+import time
 
+from pyssa.controller import interface_manager
 from pyssa.internal.data_structures import structure_prediction
-from pyssa.internal.thread.async_pyssa import custom_signals
+from pyssa.internal.thread.async_pyssa import custom_signals, locks
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import exception, exit_codes
 
@@ -36,7 +38,9 @@ def predict_protein_with_colabfold(
     the_prediction_protein_infos: list["prediction_protein_info.PredictionProteinInfo"],
     the_prediction_configuration: "prediction_configuration.PredictionConfiguration",
     a_project: "project.Project",
-    the_custom_progress_signal: "custom_signals.ProgressSignal"
+    the_custom_progress_signal: "custom_signals.ProgressSignal",
+    the_pymol_lock: "locks.PyMOL_LOCK",
+    the_disable_pymol_signal: "custom_signals.DisablePyMOLSignal"
 ) -> tuple:
     """Runs structure prediction for a monomeric protein.
 
@@ -90,6 +94,12 @@ def predict_protein_with_colabfold(
     # </editor-fold>
 
     # <editor-fold desc="Saves predicted protein to project">
+    the_disable_pymol_signal.emit_signal("ColabFold Prediction")
+    while the_pymol_lock.is_locked() is False:
+        print("Waiting in seperate thread for PyMOL LOCK ...")
+        time.sleep(1)
+    print("LOCK acquired.")
+
     the_custom_progress_signal.emit_signal("Saving best prediction results ...", 85)
     try:
         structure_prediction_obj.move_best_prediction_models()

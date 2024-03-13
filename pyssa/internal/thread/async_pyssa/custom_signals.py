@@ -31,3 +31,16 @@ class ProgressSignal(QtCore.QObject):
         if a_value < 0 or a_value > 100:
             raise ValueError(f"Value must be between 0 and 100 but the given value us {a_value}!")
         self.progress.emit((a_message, a_value))
+
+
+class DisablePyMOLSignal(QtCore.QObject):
+    disable_pymol = pyqtSignal(tuple)
+
+    def emit_signal(self, a_source):
+        """Emits the signal
+
+        Args:
+            a_source: the function or task where the signal is to be emitted
+
+        """
+        self.disable_pymol.emit((True, a_source))

@@ -4,7 +4,7 @@ import subprocess
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
-
+from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
@@ -189,6 +189,10 @@ class PredictProteinViewController(QtCore.QObject):
                 tmp_seq_name_item = QtWidgets.QTableWidgetItem(tmp_seq_record.name)
                 tmp_chain_letter_item = QtWidgets.QTableWidgetItem(constants.chain_dict.get(tmp_chain_no))
                 tmp_seq_item = QtWidgets.QTableWidgetItem(tmp_seq)
+                tmp_seq_name_item.setFlags(tmp_seq_name_item.flags() & ~Qt.ItemIsEditable)
+                tmp_chain_letter_item.setFlags(tmp_chain_letter_item.flags() & ~Qt.ItemIsEditable)
+                tmp_seq_item.setFlags(tmp_seq_item.flags() & ~Qt.ItemIsEditable)
+
                 self._view.ui.table_proteins_to_predict.setVerticalHeaderItem(tmp_row_no, tmp_seq_name_item)
                 self._view.ui.table_proteins_to_predict.setItem(tmp_row_no, 0, tmp_chain_letter_item)
                 self._view.ui.table_proteins_to_predict.setItem(tmp_row_no, 1, tmp_seq_item)
