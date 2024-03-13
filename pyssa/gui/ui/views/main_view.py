@@ -78,6 +78,7 @@ class MainView(QtWidgets.QMainWindow):
         event.accept()
 
     def add_custom_widgets(self):
+        # Protein
         self.tg_protein_color_atoms = toggle_button.ToggleWidget()
         self.ui.protein_atoms_layout.addWidget(self.tg_protein_color_atoms)
         self.tg_protein_cartoon = toggle_button.ToggleWidget()
@@ -97,8 +98,31 @@ class MainView(QtWidgets.QMainWindow):
         self.tg_protein_surface = toggle_button.ToggleWidget()
         self.ui.protein_surface_layout.addWidget(self.tg_protein_surface)
 
-        self.color_grid = color_grid.PyMOLColorGrid()
-        self.ui.verticalLayout_6.insertWidget(2, self.color_grid)
+        self.color_grid_proteins = color_grid.PyMOLColorGrid()
+        self.ui.verticalLayout_6.insertWidget(2, self.color_grid_proteins)
+
+        # Protein Pair
+        self.tg_protein_pair_color_atoms = toggle_button.ToggleWidget()
+        self.ui.protein_pair_atoms_layout.addWidget(self.tg_protein_pair_color_atoms)
+        self.tg_protein_pair_cartoon = toggle_button.ToggleWidget()
+        self.ui.protein_pair_cartoon_layout.addWidget(self.tg_protein_pair_cartoon)
+        self.tg_protein_pair_sticks = toggle_button.ToggleWidget()
+        self.ui.protein_pair_sticks_layout.addWidget(self.tg_protein_pair_sticks)
+        self.tg_protein_pair_ribbon = toggle_button.ToggleWidget()
+        self.ui.protein_pair_ribbon_layout.addWidget(self.tg_protein_pair_ribbon)
+        self.tg_protein_pair_lines = toggle_button.ToggleWidget()
+        self.ui.protein_pair_lines_layout.addWidget(self.tg_protein_pair_lines)
+        self.tg_protein_pair_spheres = toggle_button.ToggleWidget()
+        self.ui.protein_pair_spheres_layout.addWidget(self.tg_protein_pair_spheres)
+        self.tg_protein_pair_dots = toggle_button.ToggleWidget()
+        self.ui.protein_pair_dots_layout.addWidget(self.tg_protein_pair_dots)
+        self.tg_protein_pair_mesh = toggle_button.ToggleWidget()
+        self.ui.protein_pair_mesh_layout.addWidget(self.tg_protein_pair_mesh)
+        self.tg_protein_pair_surface = toggle_button.ToggleWidget()
+        self.ui.protein_pair_surface_layout.addWidget(self.tg_protein_pair_surface)
+
+        self.color_grid_protein_pairs = color_grid.PyMOLColorGrid()
+        self.ui.verticalLayout_10.insertWidget(2, self.color_grid_protein_pairs)
 
     def initialize_ui(self) -> None:
         """Initialize the UI elements."""
@@ -195,11 +219,19 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Loaded")
 
         # Hides all ui elements for the scene modifications
+        self.ui.lbl_protein_pair_current_color.hide()
+        self.ui.lbl_protein_pair_current_color.setText("")
+        self.ui.lbl_protein_pair_pymol_colors.hide()
         self.ui.lbl_protein_pair_color.hide()
         self.ui.lbl_protein_pair_atoms.hide()
         self.ui.lbl_protein_pair_cartoon.hide()
         self.ui.lbl_protein_pair_sticks.hide()
         self.ui.lbl_protein_pair_ribbon.hide()
+        self.ui.lbl_protein_pair_lines.hide()
+        self.ui.lbl_protein_pair_spheres.hide()
+        self.ui.lbl_protein_pair_dots.hide()
+        self.ui.lbl_protein_pair_mesh.hide()
+        self.ui.lbl_protein_pair_surface.hide()
         self.ui.lbl_protein_pair_all_representations.hide()
 
         self.ui.box_protein_pair_color.hide()
@@ -212,7 +244,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_protein_pair_show_ribbon.hide()
         self.ui.btn_protein_pair_hide_ribbon.hide()
         self.ui.btn_protein_pair_hide_all_representations.hide()
-
         # checkboxes
         self.ui.cb_protein_pair_cartoon.hide()
         self.ui.cb_protein_pair_sticks.hide()
@@ -222,9 +253,19 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.cb_protein_pair_dots.hide()
         self.ui.cb_protein_pair_mesh.hide()
         self.ui.cb_protein_pair_surface.hide()
+        # toggle buttons
+        self.tg_protein_pair_color_atoms.hide()
+        self.tg_protein_pair_cartoon.hide()
+        self.tg_protein_pair_sticks.hide()
+        self.tg_protein_pair_ribbon.hide()
+        self.tg_protein_pair_lines.hide()
+        self.tg_protein_pair_spheres.hide()
+        self.tg_protein_pair_dots.hide()
+        self.tg_protein_pair_mesh.hide()
+        self.tg_protein_pair_surface.hide()
 
-        self.ui.lbl_info_protein_pair.setText("Please select a protein pair.")
-        self.ui.lbl_info_protein_pair_2.hide()
+        self.ui.lbl_info_3.setText("Please select a protein pair.")
+        self.ui.lbl_info_4.hide()
 
         # Extra UI elements
         self.cb_chain_color = QtWidgets.QComboBox()

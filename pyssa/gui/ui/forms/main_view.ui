@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>625</width>
+    <width>767</width>
     <height>863</height>
    </rect>
   </property>
@@ -73,7 +73,7 @@
     <item>
      <widget class="QTabWidget" name="project_tab_widget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="sequences">
        <attribute name="title">
@@ -387,7 +387,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="protein_atoms_layout_2">
+                    <layout class="QHBoxLayout" name="protein_color_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pymol_colors">
                        <property name="text">
@@ -1039,7 +1039,7 @@
                  <number>5</number>
                 </property>
                 <item>
-                 <widget class="QFrame" name="frame_protein_pair_color">
+                 <widget class="QFrame" name="frame_protein_pair">
                   <property name="frameShape">
                    <enum>QFrame::StyledPanel</enum>
                   </property>
@@ -1082,7 +1082,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_18">
+                    <layout class="QHBoxLayout" name="protein_pair_color_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_pymol_colors">
                        <property name="text">
@@ -1106,7 +1106,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_27">
+                    <layout class="QHBoxLayout" name="protein_pair_atoms_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_atoms">
                        <property name="text">
@@ -1159,7 +1159,7 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_37">
+                    <layout class="QHBoxLayout" name="protein_pair_cartoon_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_cartoon">
                        <property name="text">
@@ -1204,7 +1204,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_36">
+                    <layout class="QHBoxLayout" name="protein_pair_sticks_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_sticks">
                        <property name="text">
@@ -1249,7 +1249,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_35">
+                    <layout class="QHBoxLayout" name="protein_pair_ribbon_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_ribbon">
                        <property name="text">
@@ -1294,7 +1294,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_40">
+                    <layout class="QHBoxLayout" name="protein_pair_lines_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_lines">
                        <property name="text">
@@ -1325,7 +1325,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_41">
+                    <layout class="QHBoxLayout" name="protein_pair_spheres_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_spheres">
                        <property name="text">
@@ -1356,7 +1356,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_38">
+                    <layout class="QHBoxLayout" name="protein_pair_dots_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_dots">
                        <property name="text">
@@ -1387,7 +1387,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_34">
+                    <layout class="QHBoxLayout" name="protein_pair_mesh_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_mesh">
                        <property name="text">
@@ -1418,7 +1418,7 @@
                     </layout>
                    </item>
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_33">
+                    <layout class="QHBoxLayout" name="protein_pair_surface_layout">
                      <item>
                       <widget class="QLabel" name="lbl_protein_pair_surface">
                        <property name="text">
@@ -1510,7 +1510,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="lbl_info_protein_pair">
+                 <widget class="QLabel" name="lbl_info_3">
                   <property name="text">
                    <string>1. Select A Scene</string>
                   </property>
@@ -1520,7 +1520,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="lbl_info_protein_pair_2">
+                 <widget class="QLabel" name="lbl_info_4">
                   <property name="text">
                    <string>2. Select A Chain</string>
                   </property>
@@ -1642,8 +1642,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>625</width>
-     <height>21</height>
+     <width>767</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">
