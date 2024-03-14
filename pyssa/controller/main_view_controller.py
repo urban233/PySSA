@@ -149,7 +149,7 @@ class MainViewController:
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.dialogClosed.connect(self._close_main_window)
-        #self.custom_progress_signal.progress.connect(self._update_progress_bar)
+        self.custom_progress_signal.progress.connect(self._update_progress_bar)
         self.disable_pymol_signal.disable_pymol.connect(self._lock_pymol)
 
         # <editor-fold desc="Menu">
@@ -419,6 +419,9 @@ class MainViewController:
                 custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
             self.active_custom_message_box.show()
+
+    def _update_progress_bar(self, return_value):
+        self._interface_manager.status_bar_manager.update_progress_bar(return_value)
 
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
@@ -1198,7 +1201,6 @@ class MainViewController:
 
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        self._interface_manager.update_status_bar("Begin prediction process ...")
         if result[3] is True:
             constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
             # Analysis should be run after the prediction
@@ -1212,7 +1214,6 @@ class MainViewController:
                 ),
                 post_func=self.__await_monomer_prediction_for_subsequent_analysis,
             )
-            self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
         else:
             # constants.PYSSA_LOGGER.info("Running only a prediction.")
             # # No analysis after prediction
@@ -1238,27 +1239,13 @@ class MainViewController:
                 ),
                 post_func=self.__await_predict_protein_with_colabfold,
             )
-            self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
-        self._interface_manager.status_bar_manager.show_long_running_task_message(
-            enums.StatusMessages.PREDICTION_IS_RUNNING.value
-        )
+        self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
+        # self._interface_manager.status_bar_manager.show_long_running_task_message(
+        #     enums.StatusMessages.PREDICTION_IS_RUNNING.value
+        # )
+        self._interface_manager.status_bar_manager.update_progress_bar(("Starting structure prediction ...", 0))
         self._interface_manager.refresh_main_view()
         self._main_view_state.set_proteins_list(self._interface_manager.get_current_project().proteins)
-        # self.block_box_prediction = QtWidgets.QMessageBox()
-        # self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-        # self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        # styles.set_stylesheet(self.block_box_prediction)
-        # self.block_box_prediction.setWindowTitle("Structure Prediction")
-        # self.block_box_prediction.setText("A prediction is currently running.")
-        # btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
-        # self.block_box_prediction.exec_()
-        # if self.block_box_prediction.clickedButton() == btn_abort:
-        #     self.abort_prediction()
-        #     self.block_box_prediction.close()
-        #     self._view.wait_spinner.stop()
-        # else:
-        #     self.block_box_prediction.close()
-        #     self._view.wait_spinner.stop()
 
     def abort_prediction(self) -> None:
         """Aborts the running prediction."""
@@ -1506,7 +1493,6 @@ class MainViewController:
             #     enums.StatusMessages.PREDICTION_IS_FINALIZING.value
             # )
         else:
-            self.block_box_prediction.destroy(True)
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown case!",
                 "Structure Prediction",

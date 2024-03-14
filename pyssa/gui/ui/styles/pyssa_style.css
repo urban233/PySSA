@@ -733,9 +733,15 @@ QStatusBar {
     border-radius: 4px;
     border-color: #DCDBE3;
 }
+
+
+QStatusBar::item {
+    border: none;
+}
+
 QStatusBar QLabel {
-    color: red;
-    font-weight: bold;
+    color: black;
+    border-style: none;
 }
 
 QProgressBar {
@@ -745,11 +751,11 @@ QProgressBar {
     border-color: #DCDBE3;
     background-color: #efefef;
     max-height: 17px;
-    max-width: 250px;
+    max-width: 80px;
     text-align: center;
     color: black;
 }
 QProgressBar::chunk {
     background-color: #367af6;
-    width: 20px;
+    width: 10px;
 }

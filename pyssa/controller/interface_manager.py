@@ -865,15 +865,15 @@ class InterfaceManager:
         if self.main_tasks_manager.prediction_task is not None:
             if not self.main_tasks_manager.check_if_prediction_task_is_finished():
                 logger.info("Running prediction in the background ...")
-                self._main_view.status_bar.setStyleSheet("""
-                    QStatusBar {
-                        background-color: #ff9000;
-                        border-style: solid;
-                        border-width: 2px;
-                        border-radius: 4px;
-                        border-color: #5b5b5b;
-                    }
-                """)
+                # self._main_view.status_bar.setStyleSheet("""
+                #     QStatusBar {
+                #         background-color: #ff9000;
+                #         border-style: solid;
+                #         border-width: 2px;
+                #         border-radius: 4px;
+                #         border-color: #5b5b5b;
+                #     }
+                # """)
                 self._main_view.ui.action_abort_prediction.setEnabled(True)
                 self._main_view.ui.action_predict_monomer.setEnabled(False)
                 self._main_view.ui.action_predict_multimer.setEnabled(False)
