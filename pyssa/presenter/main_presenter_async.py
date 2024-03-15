@@ -877,11 +877,12 @@ def open_project(
             tmp_project = db_manager.get_project_as_object(
                 tmp_project_name,
                 the_interface_manager.get_application_settings().workspace_path,
-                the_interface_manager.get_application_settings()
+                the_interface_manager.get_application_settings(),
+                the_custom_progress_signal
             )
             db_manager.close_project_database()
         the_interface_manager.set_new_project(tmp_project)
-        the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 80)
+        the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 96)
         the_pymol_session_manager.reinitialize_session()
     except Exception as e:
         logger.error(f"Unexpected error occured. Exception: {e}")

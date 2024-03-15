@@ -236,7 +236,6 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         Args:
             a_page_name (str): a name of a documentation page to display
         """
-        self._interface_manager.update_status_bar("Opening help center ...")
         self._active_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, self._interface_manager.documentation_window),
@@ -246,7 +245,6 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
 
     def __await_open_help(self):
         subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-        self._interface_manager.update_status_bar("Opening help center finished.")
 
     def open_page_information(self) -> None:
         """Opens the message box, to display extra information based on the page."""

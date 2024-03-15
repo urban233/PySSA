@@ -102,6 +102,8 @@ class StatusMessages(enum.Enum):
     PREDICTION_IS_RUNNING = "A structure prediction is running ..."
     PREDICTION_IS_FINALIZING = "The structure prediction is finalizing ..."
     DISTANCE_ANALYSIS_IS_RUNNING = "A distance analysis is running ..."
+
     OPENING_PROJECT = "Opening existing project ..."
     OPENING_PROJECT_FINISHED = "Opening existing project finished."
     OPENING_PROJECT_FAILED = "Opening existing project failed!"
+

@@ -24,7 +24,7 @@ from xml import sax
 
 from pyssa.async_pyssa import main_tasks_async
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.internal.thread.async_pyssa import util_async, custom_signals
+from pyssa.internal.thread.async_pyssa import util_async, custom_signals, project_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
@@ -138,8 +138,10 @@ class MainViewController:
             self.__slot_get_information_about_selected_object_in_protein_pair_branch
         )
         self.custom_progress_signal = custom_signals.ProgressSignal()
+        self.abort_signal = custom_signals.AbortSignal()
         self.disable_pymol_signal = custom_signals.DisablePyMOLSignal()
 
+        self._interface_manager.status_bar_manager.set_abort_signal(self.abort_signal)
         self._setup_statusbar()
         self._init_context_menus()
         self._interface_manager.refresh_main_view()
@@ -150,6 +152,7 @@ class MainViewController:
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.dialogClosed.connect(self._close_main_window)
         self.custom_progress_signal.progress.connect(self._update_progress_bar)
+        self.abort_signal.abort.connect(self._abort_task)
         self.disable_pymol_signal.disable_pymol.connect(self._lock_pymol)
 
         # <editor-fold desc="Menu">
@@ -399,6 +402,10 @@ class MainViewController:
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)) == 1:
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
 
+    def _abort_task(self, return_value):
+        if return_value[0] is True and return_value[1] == "ColabFold Prediction":
+            self.abort_prediction()
+
     def _lock_pymol(self, return_value):
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
             if self._pymol_session_manager.session_object_type == "protein":
@@ -406,11 +413,19 @@ class MainViewController:
                     self._interface_manager.get_current_active_protein_object()
                 )
                 self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-            # TODO: add elif for protein pair
+            elif self._pymol_session_manager.session_object_type == "protein_pair":
+                tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pair_pymol_session(
+                    self._interface_manager.get_current_active_protein_pair_object()
+                )
+                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+            else:
+                self._pymol_session_manager.frozen_protein_object = None
+                self._pymol_session_manager.frozen_protein_pair_object = None
+
             self._interface_manager.pymol_lock.lock()
 
             self._interface_manager.start_wait_spinner()
-            self._interface_manager.status_bar_manager.show_long_running_task_message(
+            self._interface_manager.status_bar_manager.show_permanent_message(
                 enums.StatusMessages.PREDICTION_IS_FINALIZING.value
             )
             self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
@@ -421,6 +436,7 @@ class MainViewController:
             self.active_custom_message_box.show()
 
     def _update_progress_bar(self, return_value):
+        print(return_value)
         self._interface_manager.status_bar_manager.update_progress_bar(return_value)
 
     # <editor-fold desc="Util methods">
@@ -459,7 +475,7 @@ class MainViewController:
 
     def __await_start_documentation_server(self, return_value: tuple):
         self._interface_manager.documentation_window = return_value[1]
-        self._interface_manager.update_status_bar("Opening help center finished.")
+        self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def open_help(self, a_page_name: str):
         """Opens the pyssa documentation window if it's not already open.
@@ -468,7 +484,8 @@ class MainViewController:
             a_page_name (str): a name of a documentation page to display
         """
         self._interface_manager.start_wait_spinner()
-        self._interface_manager.update_status_bar("Opening help center ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            "Opening help center ...", False)
 
         self._active_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
@@ -488,7 +505,7 @@ class MainViewController:
         else:
             self._interface_manager.documentation_window.restore()
             subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-            self._interface_manager.update_status_bar("Opening help center finished.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
         self._interface_manager.stop_wait_spinner()
 
     def _init_context_menus(self):
@@ -902,7 +919,7 @@ class MainViewController:
             return
 
         self._interface_manager.status_bar_manager.show_temporary_message(
-            enums.StatusMessages.OPENING_PROJECT.value, self._interface_manager.main_tasks_manager
+            enums.StatusMessages.OPENING_PROJECT.value, False
         )
         self._interface_manager.start_wait_spinner()
         tmp_project_name = return_value
@@ -928,14 +945,15 @@ class MainViewController:
         self._active_task.start()
 
     def __await_open_project(self, return_value: tuple):
+        self._interface_manager.status_bar_manager.hide_progress_bar()
         exit_code, tmp_project, tmp_interface_manager = return_value
         if exit_code == 0:
             self._interface_manager = tmp_interface_manager
             self._interface_manager.refresh_main_view()
             self._interface_manager.hide_progress_bar()
             self._interface_manager.status_bar_manager.show_temporary_message(
-                enums.StatusMessages.OPENING_PROJECT_FINISHED.value,
-                self._interface_manager.main_tasks_manager)
+                enums.StatusMessages.OPENING_PROJECT_FINISHED.value
+            )
             self._connect_sequence_selection_model()
         else:
             self._interface_manager.status_bar_manager.show_error_message(
@@ -973,7 +991,7 @@ class MainViewController:
         self._pymol_session_manager.reinitialize_session()
         self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_spinner()
-        self._interface_manager.update_status_bar("Use process finished.")
+        self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
 
     # def __await_open_project(self, a_result: tuple) -> None:
     #     self._interface_manager.set_new_project(a_result[1])
@@ -1035,7 +1053,7 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
             self._pymol_session_manager.reinitialize_session()
             self._interface_manager.stop_wait_spinner()
-            self._interface_manager.update_status_bar("Importing project finished.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Importing project finished.")
 
             # tmp_project = project.Project()
             # handler = filesystem_io.ProjectParserHandler(tmp_project,
@@ -1240,9 +1258,6 @@ class MainViewController:
                 post_func=self.__await_predict_protein_with_colabfold,
             )
         self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
-        # self._interface_manager.status_bar_manager.show_long_running_task_message(
-        #     enums.StatusMessages.PREDICTION_IS_RUNNING.value
-        # )
         self._interface_manager.status_bar_manager.update_progress_bar(("Starting structure prediction ...", 0))
         self._interface_manager.refresh_main_view()
         self._main_view_state.set_proteins_list(self._interface_manager.get_current_project().proteins)
@@ -1260,6 +1275,7 @@ class MainViewController:
             custom_message_box.CustomMessageBoxIcons.INFORMATION.value
         )
         tmp_dialog.exec_()
+        self._interface_manager.status_bar_manager.hide_progress_bar()
         self._interface_manager.refresh_main_view()
 
     def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
@@ -1269,9 +1285,9 @@ class MainViewController:
             # Prediction was successful
             self.block_box_prediction.destroy(True)
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
-            self._interface_manager.update_status_bar("All structure predictions are done.")
+            self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
             constants.PYSSA_LOGGER.info("Begin analysis process.")
-            self._interface_manager.update_status_bar("Running analysis process ...")
+            self._interface_manager.status_bar_manager.show_temporary_message("Running analysis process ...")
 
             tmp_raw_analysis_run_names: list = []
             for row_no in range(self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.count()):
@@ -1302,7 +1318,7 @@ class MainViewController:
                 post_func=self.post_analysis_process,
             )
             self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
-            self._interface_manager.status_bar_manager.show_long_running_task_message(
+            self._interface_manager.status_bar_manager.show_permanent_message(
                 enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING
             )
             if os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
@@ -1372,7 +1388,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1384,7 +1400,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
             constants.PYSSA_LOGGER.info("Project has been saved to project database.")
@@ -1395,7 +1411,7 @@ class MainViewController:
             )
             tmp_dialog.exec_()
             constants.PYSSA_LOGGER.info("All structure analysis' are done.")
-            self._interface_manager.update_status_bar("All structure analysis' are done.")
+            self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
         self._database_manager.open_project_database()
         self._interface_manager.refresh_protein_pair_model()
         self._interface_manager.refresh_main_view()
@@ -1404,6 +1420,7 @@ class MainViewController:
     def __await_predict_protein_with_colabfold(self, result: tuple) -> None:
         """Process which runs after each prediction job."""
         print(result)
+        self._interface_manager.status_bar_manager.hide_progress_bar()
         tmp_exit_code = result[0]
         tmp_exit_code_description = result[1]
         if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
@@ -1417,7 +1434,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             self.block_box_prediction.destroy(True)
@@ -1430,7 +1447,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             self.block_box_prediction.destroy(True)
@@ -1443,10 +1460,9 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            self.block_box_prediction.destroy(True)
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown error!",
                 "Structure Prediction",
@@ -1456,30 +1472,17 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+            self._interface_manager.status_bar_manager.show_error_message(f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
-            tmp_proteins = self._main_view_state.get_not_matching_proteins(
-                self._interface_manager.get_current_project().proteins
+            self._active_task = tasks.Task(
+                target=util_async.unfreeze_pymol_session,
+                args=(
+                    self._pymol_session_manager, 0
+                ),
+                post_func=self.__await_unfreeze_pymol_session_after_prediction,
             )
-            for tmp_protein in tmp_proteins:
-                self._interface_manager.add_protein_to_proteins_model(tmp_protein)
-
-            if self.active_custom_message_box is not None:
-                self.active_custom_message_box.close()
-            self._interface_manager.refresh_main_view()
-            self._pymol_session_manager.unfreeze_current_protein_pymol_session()
-            self._main_view_state.restore_main_view_state()
-
-            self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
-                "All structure predictions are done.\nGo to the Proteins tab to see the new protein(s).",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            self.active_custom_message_box.exec_()
-            constants.PYSSA_LOGGER.info("All structure predictions are done.")
-            self._interface_manager.update_status_bar("All structure predictions are done.")
-            self._interface_manager.stop_wait_spinner()
+            self._active_task.start()
             #
             # self._active_task = tasks.Task(
             #     target=util_async.refresh_protein_model,
@@ -1499,17 +1502,30 @@ class MainViewController:
                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
             tmp_dialog.exec_()
-            self._interface_manager.update_status_bar("Prediction failed because of an unknown case!")
-            self._view.status_bar.setStyleSheet("""
-                QStatusBar {
-                    background-color: #ba1a1a;
-                    color: white;
-                    border-style: solid;
-                    border-width: 2px;
-                    border-radius: 4px;
-                    border-color: #5b5b5b;
-                }
-            """)
+            self._interface_manager.status_bar_manager.show_error_message("Prediction failed because of an unknown case!")
+
+    def __await_unfreeze_pymol_session_after_prediction(self):
+        tmp_proteins_to_add = self._main_view_state.get_not_matching_proteins(
+            self._interface_manager.get_current_project().proteins
+        )
+        for tmp_protein in tmp_proteins_to_add:
+            self._interface_manager.add_protein_to_proteins_model(tmp_protein)
+        self._interface_manager.refresh_main_view()
+
+        if self.active_custom_message_box is not None:
+            self.active_custom_message_box.close()
+
+        self._main_view_state.restore_main_view_state()
+
+        self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+            "All structure predictions are done.\nGo to the Proteins tab to see the new protein(s).",
+            "Structure Prediction",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        )
+        self.active_custom_message_box.exec_()
+        constants.PYSSA_LOGGER.info("All structure predictions are done.")
+        self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
+        self._interface_manager.stop_wait_spinner()
 
     # </editor-fold>
 
@@ -1567,7 +1583,6 @@ class MainViewController:
 
         self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
         constants.PYSSA_LOGGER.info("Begin prediction process.")
-        self._interface_manager.update_status_bar("Begin prediction process ...")
         if result[3] is True:
             constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
             # Analysis should be run after the prediction
@@ -1652,7 +1667,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
@@ -1666,7 +1681,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
@@ -1680,7 +1695,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
@@ -1694,7 +1709,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
 
@@ -1836,7 +1851,8 @@ class MainViewController:
         dialog.exec_()
 
     def get_demo_projects(self):
-        self._interface_manager.update_status_bar("Getting demo projects ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            "Getting demo projects ...", False)
         import zipfile
         download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
         if not os.path.exists(download_dest):
@@ -1870,7 +1886,7 @@ class MainViewController:
                     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
                 )
                 tmp_dialog.exec_()
-                self._interface_manager.update_status_bar("The download of the demo projects failed.")
+                self._interface_manager.status_bar_manager.show_error_message("The download of the demo projects failed.")
                 return
         else:
             constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")
@@ -1888,7 +1904,7 @@ class MainViewController:
                     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
                 )
                 tmp_dialog.exec_()
-                self._interface_manager.update_status_bar("Extraction process of demo projects finished with an error.")
+                self._interface_manager.status_bar_manager.show_error_message("Extraction process of demo projects finished with an error.")
                 return
         try:
             path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
@@ -1910,7 +1926,7 @@ class MainViewController:
                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
             )
             tmp_dialog.exec_()
-            self._interface_manager.update_status_bar("Import process of demo projects finished with an error.")
+            self._interface_manager.status_bar_manager.show_error_message("Import process of demo projects finished with an error.")
         else:
             self._interface_manager.refresh_workspace_model()
             self._interface_manager.refresh_main_view()
@@ -1919,7 +1935,7 @@ class MainViewController:
                 custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
             tmp_dialog.exec_()
-            self._interface_manager.update_status_bar("Getting demo projects finished successfully.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Getting demo projects finished successfully.")
 
     # </editor-fold>
 
@@ -2419,7 +2435,9 @@ class MainViewController:
         self._active_task.start()
         self._pymol_session_manager.current_scene_name = "base"
         self._interface_manager.start_wait_spinner()
-        self._interface_manager.update_status_bar(f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...", False
+        )
 
     def __await_open_protein_pymol_session(self, return_value: tuple):
         _, exit_boolean = return_value
@@ -2435,14 +2453,15 @@ class MainViewController:
             self._view.ui.lbl_info.setText("Please select a chain.")
             self._pymol_session_manager.get_all_scenes_in_current_session()
             logger.info("Successfully opened protein session.")
-            self._interface_manager.update_status_bar("Loading the PyMOL session was successful.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")
         else:
             logger.error("The protein name could not be found in the object list in PyMOL!")
             self._view.cb_chain_color.setEnabled(False)
             self._view.cb_chain_representation.setEnabled(False)
             self._view.ui.btn_create_protein_scene.setEnabled(False)
             self._view.ui.btn_update_protein_scene.setEnabled(False)
-            self._interface_manager.update_status_bar("Loading the PyMOL session failed! Check out the log file to get more information.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "Loading the PyMOL session failed! Check out the log file to get more information.")
             self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
         self._interface_manager.stop_wait_spinner()
 
@@ -3219,7 +3238,9 @@ class MainViewController:
         else:
             logger.warning("No protein object was created.")
             return
-        self._interface_manager.update_status_bar("Importing protein structure ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            "Importing protein structure ...", False
+        )
         self._interface_manager.start_wait_spinner()
 
     def __await_post_import_protein_structure(self, return_value: tuple):
@@ -3231,7 +3252,7 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.unfreeze_current_protein_pymol_session()
         self._main_view_state.restore_main_view_state()
-        self._interface_manager.update_status_bar("Importing protein structure finished.")
+        self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")
         self._interface_manager.stop_wait_spinner()
 
     def _delete_protein(self):
@@ -3420,7 +3441,8 @@ class MainViewController:
                 post_func=self.__await_save_scene_protein,
             )
             self._active_task.start()
-            self._interface_manager.update_status_bar("Adding new scene to protein ...")
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                "Adding new scene to protein ...", False)
             self._interface_manager.start_wait_spinner()
             self._interface_manager.add_scene_to_proteins_model(tmp_scene_name)
         elif self._interface_manager.current_tab_index == 2:
@@ -3435,7 +3457,8 @@ class MainViewController:
                 post_func=self.__await_save_scene_protein_pair,
             )
             self._active_task.start()
-            self._interface_manager.update_status_bar("Adding new scene to protein pair ...")
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                "Adding new scene to protein pair ...", False)
             self._interface_manager.start_wait_spinner()
             self._interface_manager.add_scene_to_protein_pairs_model(tmp_scene_name)
         else:
@@ -3446,18 +3469,18 @@ class MainViewController:
         _, exit_flag = return_value
         if exit_flag:
             self._interface_manager.refresh_main_view()
-            self._interface_manager.update_status_bar("Adding new scene to protein finished.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein finished.")
         else:
-            self._interface_manager.update_status_bar("Adding new scene to protein failed!")
+            self._interface_manager.status_bar_manager.show_error_message("Adding new scene to protein failed!")
         self._interface_manager.stop_wait_spinner()
 
     def __await_save_scene_protein_pair(self, return_value: tuple):
         _, exit_flag = return_value
         if exit_flag:
             self._interface_manager.refresh_main_view()
-            self._interface_manager.update_status_bar("Adding new scene to protein pair finished.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein pair finished.")
         else:
-            self._interface_manager.update_status_bar("Adding new scene to protein pair failed!")
+            self._interface_manager.status_bar_manager.show_error_message("Adding new scene to protein pair failed!")
         self._interface_manager.stop_wait_spinner()
 
     def delete_current_scene(self):
@@ -3486,7 +3509,9 @@ class MainViewController:
                     post_func=self.__await_delete_current_scene,
                 )
                 self._active_task.start()
-                self._interface_manager.update_status_bar("Deleting selected scene ...")
+                self._interface_manager.status_bar_manager.show_temporary_message(
+                    "Deleting selected scene ...", False
+                )
                 self._interface_manager.start_wait_spinner()
                 self._interface_manager.remove_scene_from_protein_pairs_model(
                     self._interface_manager.get_current_protein_pair_tree_index()
@@ -3499,9 +3524,9 @@ class MainViewController:
         _, exit_flag = return_value
         if exit_flag:
             self._interface_manager.refresh_main_view()
-            self._interface_manager.update_status_bar("Deleted the scene successfully.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Deleted the scene successfully.")
         else:
-            self._interface_manager.update_status_bar("Deleting the scene failed!")
+            self._interface_manager.status_bar_manager.show_error_message("Deleting the scene failed!")
         self._interface_manager.stop_wait_spinner()
 
     def _save_protein_pymol_session(self):
@@ -3572,7 +3597,9 @@ class MainViewController:
         )
         self._active_task.start()
         self._interface_manager.start_wait_spinner()
-        self._interface_manager.update_status_bar(f"Loading PyMOL session of {tmp_protein_pair.name} ...")
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            f"Loading PyMOL session of {tmp_protein_pair.name} ...", False
+        )
 
     def __await_open_protein_pair_pymol_session(self, return_value: tuple):
         _, exit_boolean = return_value
@@ -3586,13 +3613,13 @@ class MainViewController:
             self._pymol_session_manager.current_scene_name = tmp_protein_pair.name
             self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_protein_pair.name}")
             logger.info("Successfully opened protein pair session.")
-            self._interface_manager.update_status_bar("Loading the PyMOL session was successful.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")
             self._view.ui.lbl_info_3.setText("Please select a chain.")
         else:
             logger.error("The protein name could not be found in the object list in PyMOL!")
             self._view.ui.btn_create_protein_pair_scene.setEnabled(False)
             self._view.ui.btn_update_protein_pair_scene.setEnabled(False)
-            self._interface_manager.update_status_bar(
+            self._interface_manager.status_bar_manager.show_error_message(
                 "Loading the PyMOL session failed! Check out the log file to get more information.")
             self._view.ui.lbl_info_3.setText("Please load the PyMOL session of the selected protein.")
         self._interface_manager.stop_wait_spinner()

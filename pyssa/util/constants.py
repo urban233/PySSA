@@ -229,6 +229,9 @@ DEFAULT_HISTOGRAM_PROPERTIES = {
     enums.HistogramPropertiesEnum.DISTANCE_INTERVAL: 1.0,
 }
 
+# possible setting parameters
+STATUS_MESSAGE_TIMEOUT = 5000  # value in msec
+
 # pymol parameters
 PYMOL_COLORS = [
     "red", "tv_red", "salmon", "raspberry",

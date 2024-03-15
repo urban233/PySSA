@@ -38,7 +38,7 @@ class PredictProteinViewController(QtCore.QObject):
         Args:
             a_page_name (str): a name of a documentation page to display
         """
-        self._interface_manager.update_status_bar("Opening help center ...")
+        self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
         self._active_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, self._interface_manager.documentation_window),
@@ -57,7 +57,7 @@ class PredictProteinViewController(QtCore.QObject):
         else:
             self._interface_manager.documentation_window.restore()
             subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
-            self._interface_manager.update_status_bar("Opening help center finished.")
+            self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
         self.open_help("help/protein_structure_prediction/colabfold_multimer/")

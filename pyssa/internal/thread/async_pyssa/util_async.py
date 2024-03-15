@@ -5,7 +5,7 @@ import subprocess
 import zmq
 import pygetwindow
 
-from pyssa.controller import interface_manager
+from pyssa.controller import interface_manager, pymol_session_manager
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, enums
 from pyssa.util import globals
@@ -122,8 +122,16 @@ def start_documentation_server(
     return "result", tmp_docs_window
 
 
-def refresh_protein_model(the_interface_manager: "interface_manager.InterfaceManager",
-                          placeholder_1: int):
+def unfreeze_pymol_session(the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", placeholder_1: int):
     """Refreshes the protein model of the interface manager."""
-    the_interface_manager.refresh_protein_model()
-    return "result", the_interface_manager
+    if the_pymol_session_manager.frozen_protein_object is not None:
+        logger.info("Unfreezing protein pymol session ...")
+        the_pymol_session_manager.unfreeze_current_protein_pymol_session()
+        logger.info("Unfreezing protein pymol session finished.")
+    elif the_pymol_session_manager.frozen_protein_pair_object is not None:
+        logger.info("Unfreezing protein pair pymol session ...")
+        the_pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
+        logger.info("Unfreezing protein pair pymol session finished.")
+    else:
+        logger.info("There is no pymol session to unfreeze.")
+    return "result", the_pymol_session_manager

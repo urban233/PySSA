@@ -22,6 +22,7 @@ class PymolSessionManager:
     frozen_scene_name: str
     frozen_session_base64_string_filepath: pathlib.Path
     frozen_protein_object: "protein.Protein"
+    frozen_protein_pair_object: "protein_pair.ProteinPair"
 
     def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
         self.session_name = ""
@@ -52,18 +53,27 @@ class PymolSessionManager:
         return tmp_database_operation
 
     def unfreeze_current_protein_pymol_session(self):
-        self.load_protein_session(self.frozen_protein_object)
-        self.frozen_protein_object = None
-        self.frozen_scene_name = ""
+        if self.frozen_protein_object is not None:
+            self.load_protein_session(self.frozen_protein_object)
+            self.frozen_protein_object = None
+            self.frozen_scene_name = ""
 
-    def unfreeze_current_pymol_session(self):
-        self.current_scene_name = self.frozen_scene_name
-        if os.path.exists(self.frozen_session_base64_string_filepath):
-            pymol_io.load_pymol_session(self.frozen_session_base64_string_filepath)
-            os.remove(self.frozen_session_base64_string_filepath)
-        else:
-            raise FileNotFoundError("The frozen session file could not be found!")
+    def freeze_current_protein_pair_pymol_session(
+            self, a_protein_pair: "protein_pair.ProteinPair"
+    ) -> "database_operation.DatabaseOperation":
+        self.frozen_scene_name = self.current_scene_name
+        self.frozen_protein_pair_object = a_protein_pair
+        tmp_database_operation = database_operation.DatabaseOperation(
+            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
+            (0, self.frozen_protein_pair_object)
+        )
+        return tmp_database_operation
 
+    def unfreeze_current_protein_pair_pymol_session(self):
+        if self.frozen_protein_pair_object is not None:
+            self.load_protein_pair_session(self.frozen_protein_pair_object)
+            self.frozen_protein_pair_object = None
+            self.frozen_scene_name = ""
 
     def load_protein_session(self, a_protein: "protein.Protein"):
         """Loads a pymol session of a single protein."""

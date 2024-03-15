@@ -89,7 +89,9 @@ class InterfaceManager:
         self._add_scene_view = add_scene_view.AddSceneView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
-        self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view)
+        self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
+                                                                      self.main_tasks_manager,
+                                                                      None)
         self._settings_manager = settings_manager.SettingsManager()
 
         self.documentation_window = None
@@ -921,20 +923,11 @@ class InterfaceManager:
     # </editor-fold>
 
     # <editor-fold desc="Progress bar methods">
-    def update_status_bar(self, message: str) -> None:
-        """Sets a custom message into the status bar."""
-        self._main_view.status_bar.showMessage(message)
-
     def update_progress_bar(self, value: int, message: str):
         if value < 0 or value > 100:
             raise ValueError("Value for progress bar must be between 0 and 100!")
         self._main_view.progress_bar.show()
         self._main_view.progress_bar.setFormat(message)
-        self._main_view.progress_bar.setValue(value)
-
-    def update_progress_of_progress_bar(self, value):
-        if value < 0 or value > 100:
-            raise ValueError("Value for progress bar must be between 0 and 100!")
         self._main_view.progress_bar.setValue(value)
 
     def hide_progress_bar(self):

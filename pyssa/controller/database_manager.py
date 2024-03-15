@@ -2,9 +2,11 @@ import logging
 import pathlib
 import sqlite3
 import numpy as np
+from PyQt5 import QtCore
 from Bio import SeqRecord
 
 from pyssa.internal.data_structures import protein, project, protein_pair, structure_analysis, results, chain, sequence
+from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import enums, pyssa_keys
 
@@ -677,25 +679,44 @@ class DatabaseManager:
         self._connection.commit()
         return self.get_last_id()
 
-    def get_project_as_object(self, a_project_name: str, a_workspace_path: pathlib.Path, the_app_settings) -> "project.Project":
+    def get_project_as_object(self,
+                              a_project_name: str,
+                              a_workspace_path: pathlib.Path,
+                              the_app_settings,
+                              the_progress_signal: "custom_signals.ProgressSignal" = custom_signals.ProgressSignal()) -> "project.Project":
         """Creates a project object based on the data from the project database."""
         tmp_project = project.Project(a_project_name, a_workspace_path)
         tmp_project_id, = self._get_project(a_project_name)
         tmp_project.set_id(tmp_project_id)
 
+        tmp_progress = 0
+        i = 1
         for tmp_seq_info in self._get_sequence():
+            tmp_progress = min(tmp_progress + i, 40)
+            the_progress_signal.emit_signal(f"Loading sequence ({i}/{len(self._get_sequence())}) ...", tmp_progress)
             tmp_seq_id, tmp_seq, tmp_seq_name = tmp_seq_info
             tmp_sequence = SeqRecord.SeqRecord(tmp_seq, id=tmp_seq_id, name=tmp_seq_name)
             tmp_project.sequences.append(tmp_sequence)
+            i += 1
 
+        i = 1
         # create protein objects
         for tmp_protein_info in self._get_protein(tmp_project_id):
+            tmp_progress = 20
+            tmp_message = f"Loading protein ({i}/{len(self._get_protein(tmp_project_id))}) ..."
+            the_progress_signal.emit_signal(tmp_message, tmp_progress)
+
             tmp_protein_id, tmp_protein_name, tmp_pymol_session = tmp_protein_info
             tmp_protein = protein.Protein(tmp_protein_name)
             tmp_protein.set_id(tmp_protein_id)
             tmp_protein.pymol_session = tmp_pymol_session
+
             # Chains
+            j = 5
             for tmp_chain_info in self._get_chain(tmp_protein_id):
+                tmp_progress += j
+                the_progress_signal.emit_signal(tmp_message, min(tmp_progress, 50))
+
                 tmp_chain_id, tmp_chain_identifier, tmp_chain_type, tmp_chain_sequence = tmp_chain_info
                 tmp_seq = sequence.Sequence(tmp_protein_name, tmp_chain_sequence)
                 tmp_chain = chain.Chain(tmp_chain_identifier, tmp_seq, tmp_chain_type)
@@ -707,14 +728,20 @@ class DatabaseManager:
                     enums.PymolParameterEnum.REPRESENTATION.value: tmp_representation,
                 }
                 tmp_protein.chains.append(tmp_chain)
+                j += 3
             # pymol selection
             tmp_selection, = self._get_pymol_selection(tmp_protein_id)
             tmp_protein.pymol_selection.selection_string = tmp_selection
             # add protein to project
             tmp_project.proteins.append(tmp_protein)
+            i += 1
 
+        i = 1
         # create protein pair objects
         for tmp_protein_pair_info in self._get_protein_pair(tmp_project_id):
+            tmp_progress = 20
+            tmp_message = f"Loading protein pair ({i}/{len(self._get_protein_pair(tmp_project_id))}) ..."
+            the_progress_signal.emit_signal(tmp_message, tmp_progress)
             # create protein pair
             tmp_protein_pair_id, tmp_protein_1_id, tmp_protein_2_id, tmp_pymol_session, tmp_pp_name = tmp_protein_pair_info
             tmp_protein_1_name, = self._get_protein_name_by_id(tmp_protein_1_id)
@@ -726,6 +753,8 @@ class DatabaseManager:
             tmp_protein_pair.name = tmp_pp_name
             tmp_protein_pair.pymol_session = tmp_pymol_session
 
+            tmp_progress += 20
+            the_progress_signal.emit_signal(tmp_message, tmp_progress)
             # create distance analysis object
             tmp_distance_analysis_info = self._get_distance_analysis(tmp_protein_pair_id)
             tmp_distance_analysis_id, tmp_name, tmp_cutoff, tmp_cycles, tmp_figure_size_x, tmp_figure_size_y = tmp_distance_analysis_info
@@ -737,6 +766,8 @@ class DatabaseManager:
 
             tmp_protein_pair.distance_analysis = tmp_distance_analysis
 
+            tmp_progress += 10
+            the_progress_signal.emit_signal(tmp_message, tmp_progress)
             # create distance analysis results object
             tmp_distance_analysis_results_info = self._get_distance_analysis_results(tmp_distance_analysis_id)
             tmp_dist_analysis_results_id, tmp_pymol_session, tmp_rmsd, tmp_aligned_aa = tmp_distance_analysis_results_info
@@ -750,6 +781,8 @@ class DatabaseManager:
             prot_2_residue = []
             distances = []
             for tmp_distance_data in self._get_distance_analysis_result_data(tmp_dist_analysis_results_id):
+                tmp_progress += 0.5
+                the_progress_signal.emit_signal(tmp_message, min(round(tmp_progress, 2), 90))
                 index.append(tmp_distance_data[0])
                 prot_1_chains.append(tmp_distance_data[1])
                 prot_1_position.append(tmp_distance_data[2])
@@ -775,6 +808,7 @@ class DatabaseManager:
                                                                         tmp_aligned_aa)
             tmp_protein_pair.distance_analysis.analysis_results = tmp_dist_analysis_results
             tmp_project.protein_pairs.append(tmp_protein_pair)
+            i += 1
 
         return tmp_project
 
