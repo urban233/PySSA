@@ -3205,10 +3205,18 @@ class MainViewController:
         self._interface_manager.get_add_protein_view().show()
 
     def _post_import_protein_structure(self, return_value: tuple):
-        tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
-            self._interface_manager.get_current_active_protein_object()
-        )
-        self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        try:
+            tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
+                self._interface_manager.get_current_active_protein_object()
+            )
+            if tmp_database_operation is None:
+                tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pair_pymol_session(
+                    self._interface_manager.get_current_active_protein_pair_object()
+                )
+            if tmp_database_operation is not None:
+                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+        except ValueError:
+            logger.info("There is no pymol session to freeze.")
 
         tmp_protein_name, tmp_name_len = return_value
         if tmp_name_len == 4:
@@ -3251,6 +3259,7 @@ class MainViewController:
             database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
                                                  (0, tmp_protein)))
         self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.unfreeze_current_protein_pymol_session()
         self._pymol_session_manager.unfreeze_current_protein_pymol_session()
         self._main_view_state.restore_main_view_state()
         self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")

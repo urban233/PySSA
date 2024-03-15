@@ -30,6 +30,10 @@ class PymolSessionManager:
         self.session_objects = []
         self.current_scene_name: str = ""
         self.all_scenes: list[str] = []
+
+        self.frozen_protein_object = None
+        self.frozen_protein_pair_object = None
+
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
 
     def reinitialize_session(self) -> None:
@@ -43,14 +47,15 @@ class PymolSessionManager:
 
     def freeze_current_protein_pymol_session(self,
                                              a_protein: "protein.Protein") -> "database_operation.DatabaseOperation":
-        self.frozen_scene_name = self.current_scene_name
-        self.frozen_protein_object = a_protein
+        if not self.is_the_current_session_empty() and self.session_object_type == "protein":
+            self.frozen_scene_name = self.current_scene_name
+            self.frozen_protein_object = a_protein
 
-        tmp_database_operation = database_operation.DatabaseOperation(
-            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
-            (0, self.frozen_protein_object)
-        )
-        return tmp_database_operation
+            tmp_database_operation = database_operation.DatabaseOperation(
+                enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
+                (0, self.frozen_protein_object)
+            )
+            return tmp_database_operation
 
     def unfreeze_current_protein_pymol_session(self):
         if self.frozen_protein_object is not None:
@@ -61,13 +66,14 @@ class PymolSessionManager:
     def freeze_current_protein_pair_pymol_session(
             self, a_protein_pair: "protein_pair.ProteinPair"
     ) -> "database_operation.DatabaseOperation":
-        self.frozen_scene_name = self.current_scene_name
-        self.frozen_protein_pair_object = a_protein_pair
-        tmp_database_operation = database_operation.DatabaseOperation(
-            enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
-            (0, self.frozen_protein_pair_object)
-        )
-        return tmp_database_operation
+        if not self.is_the_current_session_empty() and self.session_object_type == "protein_pair":
+            self.frozen_scene_name = self.current_scene_name
+            self.frozen_protein_pair_object = a_protein_pair
+            tmp_database_operation = database_operation.DatabaseOperation(
+                enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
+                (0, self.frozen_protein_pair_object)
+            )
+            return tmp_database_operation
 
     def unfreeze_current_protein_pair_pymol_session(self):
         if self.frozen_protein_pair_object is not None:
