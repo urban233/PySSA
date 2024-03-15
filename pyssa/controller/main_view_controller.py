@@ -2478,6 +2478,7 @@ class MainViewController:
                 self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
                 self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
                 self._main_view_state.selected_chain_proteins = self._interface_manager.get_current_protein_tree_index()
+
         elif tmp_type == "header":
             pass
 
@@ -3649,11 +3650,14 @@ class MainViewController:
                 self._pymol_session_manager.current_scene_name = tmp_scene_name
                 self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_scene_name}")
                 self._pymol_session_manager.load_scene(tmp_scene_name)
+
         elif tmp_type == "chain":
             if self._pymol_session_manager.current_scene_name != "" and self._pymol_session_manager.is_the_current_protein_pair_in_session():
                 self.set_icon_for_current_color_in_protein_pairs_tab()
                 self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._pymol_session_manager)
                 self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(self._pymol_session_manager)
+                self._main_view_state.selected_chain_protein_pairs = self._interface_manager.get_current_protein_pair_tree_index()
+
         elif tmp_type == "header":
             pass
         else:
