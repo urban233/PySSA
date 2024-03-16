@@ -838,10 +838,16 @@ class InterfaceManager:
             self._main_view.ui.action_about.setEnabled(True)
 
         # Sequence
-        if len(self._current_project.sequences) > 0:
+        if len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is not None:
+            # There are sequences in the project and there is also one selected
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
             self.show_menu_options_with_seq()
-        if len(self._current_project.sequences) == 0 or self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
+        elif len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
+            # There are sequences in the project and there is NO one selected
+            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+            self.show_menu_options_without_seq()
+        else:
+            # There are no sequences in the project
             self.show_menu_options_without_seq()
             self._sequence_model = QtGui.QStandardItemModel()
             self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
@@ -1399,6 +1405,9 @@ class InterfaceManager:
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs">
+    def add_protein_pair_to_protein_pairs_model(self, a_protein_pair: "protein_pair.ProteinPair"):
+        self._protein_pair_model.add_protein_pair(a_protein_pair)
+
     def remove_protein_pair_from_protein_pairs_model(self):
         self._protein_pair_model.remove_protein_pair(self.get_current_protein_pair_tree_index())
 

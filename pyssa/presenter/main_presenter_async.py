@@ -470,57 +470,6 @@ def rename_selected_protein_structure(
 #         return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
 
 
-def run_distance_analysis(
-    a_list_with_analysis_names: list,
-    a_project: "project.Project",
-    the_settings: "settings.Settings",
-    an_make_images_flag: bool,
-) -> tuple:
-    """Runs the distance analysis for all protein pairs in the given job.
-
-    Args:
-        a_list_with_analysis_names: a list of the raw QListWidget analysis names.
-        a_project: the current project.
-        the_settings: the application settings.
-        an_make_images_flag: True if images should be generated and False if not.
-
-    Returns:
-        a tuple containing exit codes.
-    """
-    # TODO: checks are needed
-    logger.info("Running distance analysis in QThread using the Task class.")
-    try:
-        analysis_runs = structure_analysis.Analysis(a_project)
-        analysis_runs.analysis_list = analysis_util.transform_gui_input_to_practical_data(
-            a_list_with_analysis_names,
-            a_project,
-            the_settings,
-        )
-        logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
-        analysis_runs.run_analysis("distance", an_make_images_flag)
-        logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
-        for tmp_protein_pair in analysis_runs.analysis_list:
-            tmp_protein_pair.db_project_id = a_project.get_id()
-            copy_tmp_protein_pair = copy.deepcopy(tmp_protein_pair)
-            with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
-                copy_tmp_protein_pair.set_id(db_manager.insert_new_protein_pair(copy_tmp_protein_pair))
-                db_manager.close_project_database()
-            # Protein pair gets added to "a_project" argument of this function
-            a_project.add_protein_pair(copy_tmp_protein_pair)
-
-    except exception.UnableToSetupAnalysisError:
-        logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
-        return (
-            exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0],
-            exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1],
-        )
-    except Exception as e:
-        logger.error(f"Unknown error: {e}")
-        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
-    else:
-        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1], analysis_runs.analysis_list)
-
 
 def load_results(a_project: "project.Project", a_results_name: str) -> tuple:
     """Loads the results of a given protein pair name.

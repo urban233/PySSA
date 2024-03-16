@@ -407,23 +407,29 @@ class MainViewController:
             self.abort_prediction()
 
     def _lock_pymol(self, return_value):
+        # <editor-fold desc="Freeze PyMOL session">
+        if self._pymol_session_manager.session_object_type == "protein":
+            tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
+                self._interface_manager.get_current_active_protein_object()
+            )
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+            logger.info("Frozen protein PyMOL session.")
+        elif self._pymol_session_manager.session_object_type == "protein_pair":
+            tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pair_pymol_session(
+                self._interface_manager.get_current_active_protein_pair_object()
+            )
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+            logger.info("Frozen protein pair PyMOL session.")
+        else:
+            self._pymol_session_manager.frozen_protein_object = None
+            self._pymol_session_manager.frozen_protein_pair_object = None
+            logger.info("No PyMOL session needs to be frozen.")
+        # </editor-fold>
+
+        self._interface_manager.pymol_lock.lock()
+
+        # <editor-fold desc="User information">
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
-            if self._pymol_session_manager.session_object_type == "protein":
-                tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
-                    self._interface_manager.get_current_active_protein_object()
-                )
-                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-            elif self._pymol_session_manager.session_object_type == "protein_pair":
-                tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pair_pymol_session(
-                    self._interface_manager.get_current_active_protein_pair_object()
-                )
-                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-            else:
-                self._pymol_session_manager.frozen_protein_object = None
-                self._pymol_session_manager.frozen_protein_pair_object = None
-
-            self._interface_manager.pymol_lock.lock()
-
             self._interface_manager.start_wait_spinner()
             self._interface_manager.status_bar_manager.show_permanent_message(
                 enums.StatusMessages.PREDICTION_IS_FINALIZING.value
@@ -434,6 +440,17 @@ class MainViewController:
                 custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
             self.active_custom_message_box.show()
+        elif return_value[0] is True and return_value[1] == "Distance Analysis":
+            self._interface_manager.status_bar_manager.show_permanent_message(
+                enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value
+            )
+            self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+                "A distance analysis is running.\nUntil this process has finished, the PyMOL will be unavailable!\n\nYour current work is saved automatically.",
+                "Distance Analysis",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            )
+            self.active_custom_message_box.show()
+        # </editor-fold>
 
     def _update_progress_bar(self, return_value):
         print(return_value)
@@ -1120,30 +1137,86 @@ class MainViewController:
         self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
             self._interface_manager
         )
-        self._external_controller.job_input.connect(self.start_process_batch)
+        self._external_controller.job_input.connect(self._post_distance_analysis)
         self._interface_manager.get_distance_analysis_view().show()
 
-    def start_process_batch(self, job_input: tuple) -> None:
+    def _post_distance_analysis(self, job_input: tuple) -> None:
         """Sets up the worker for the analysis task."""
         constants.PYSSA_LOGGER.info("Begin analysis process.")
 
         _, tmp_raw_analysis_run_names, tmp_checkbox_state = job_input
 
-        self._active_task = tasks.Task(
-            target=main_presenter_async.run_distance_analysis,
+        tmp_distance_analysis_task = tasks.Task(
+            target=main_tasks_async.run_distance_analysis,
             args=(
                 tmp_raw_analysis_run_names,
                 self._interface_manager.get_current_project(),
                 self._interface_manager.get_application_settings(),
                 tmp_checkbox_state,
+                self.custom_progress_signal,
+                self._interface_manager.pymol_lock,
+                self.disable_pymol_signal
             ),
-            post_func=self.post_analysis_process,
+            post_func=self.__await_run_distance_analysis,
         )
-        self._active_task.start()
+        self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
 
         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-        #self.block_box_analysis.exec_()
+        self._interface_manager.status_bar_manager.update_progress_bar(
+            (enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value, 10)
+        )
+        self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
+        self._interface_manager.refresh_main_view()
+
+    def __await_run_distance_analysis(self, an_exit_code: tuple[int, str, list]) -> None:
+        """Post process after the analysis thread finished."""
+        self._interface_manager.status_bar_manager.hide_progress_bar()
+        constants.PYSSA_LOGGER.debug("__await_run_distance_analysis() started ...")
+        if an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
+            constants.PYSSA_LOGGER.info("Project has been saved to project database.")
+            self._add_new_protein_pairs_to_protein_pair_model()
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
+                "Distance Analysis",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            )
+            tmp_dialog.exec_()
+            constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+            self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
+        elif an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "Distance analysis failed because there was an error during the analysis!",
+                "Distance Analysis",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            )
+            tmp_dialog.exec_()
+            constants.PYSSA_LOGGER.error(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
+            )
+            self._interface_manager.status_bar_manager.show_error_message(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
+        elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "Distance analysis failed because of an unknown error!",
+                "Distance Analysis",
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            )
+            tmp_dialog.exec_()
+            constants.PYSSA_LOGGER.error(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
+            )
+            self._interface_manager.status_bar_manager.show_error_message(
+                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
+        self._interface_manager.refresh_main_view()
+
+    def _add_new_protein_pairs_to_protein_pair_model(self):
+        """Adds the new protein pairs to the interface manager's protein pair model."""
+        tmp_protein_pairs_to_add = self._main_view_state.get_not_matching_protein_pairs(
+            self._interface_manager.get_current_project().protein_pairs
+        )
+        for tmp_protein_pair in tmp_protein_pairs_to_add:
+            self._interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
 
     # </editor-fold>
 
@@ -1228,23 +1301,14 @@ class MainViewController:
                     result[1],
                     result[2],
                     self._interface_manager.get_current_project(),
-                    self.custom_progress_signal
+                    self.custom_progress_signal,
+                    self._interface_manager.pymol_lock,
+                    self.disable_pymol_signal
                 ),
                 post_func=self.__await_monomer_prediction_for_subsequent_analysis,
             )
         else:
-            # constants.PYSSA_LOGGER.info("Running only a prediction.")
-            # # No analysis after prediction
-            # self._active_task = tasks.Task(
-            #     target=main_tasks_async.predict_protein_with_colabfold,
-            #     args=(
-            #         result[1],
-            #         result[2],
-            #         self._interface_manager.get_current_project(),
-            #     ),
-            #     post_func=self.__await_predict_protein_with_colabfold,
-            # )
-            # self._active_task.start()
+            constants.PYSSA_LOGGER.info("Running prediction without subsequent analysis.")
             tmp_prediction_task = tasks.Task(
                 target=main_tasks_async.predict_protein_with_colabfold,
                 args=(
@@ -1259,8 +1323,9 @@ class MainViewController:
             )
         self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
         self._interface_manager.status_bar_manager.update_progress_bar(("Starting structure prediction ...", 0))
-        self._interface_manager.refresh_main_view()
         self._main_view_state.set_proteins_list(self._interface_manager.get_current_project().proteins)
+        self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
+        self._interface_manager.refresh_main_view()
 
     def abort_prediction(self) -> None:
         """Aborts the running prediction."""
@@ -1279,54 +1344,50 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
 
     def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
-        tmp_exit_code = result[0]
-        tmp_exit_code_description = [1]
+        print(result)
+        tmp_exit_code, tmp_exit_code_description = result
+
         if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
+            self._interface_manager.stop_wait_spinner()
+            if self.active_custom_message_box is not None:
+                self.active_custom_message_box.close()
             # Prediction was successful
-            self.block_box_prediction.destroy(True)
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
             self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
             constants.PYSSA_LOGGER.info("Begin analysis process.")
-            self._interface_manager.status_bar_manager.show_temporary_message("Running analysis process ...")
 
+            # <editor-fold desc="Analysis preperations">
             tmp_raw_analysis_run_names: list = []
-            for row_no in range(self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.count()):
+            for row_no in range(self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.count()):
                 tmp_raw_analysis_run_names.append(
-                    self._interface_manager.get_predict_monomer_view().ui.list_pred_analysis_mono_overview.item(row_no).text())
+                    self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.item(row_no).text())
 
-            self._database_manager.close_project_database()
-            self._interface_manager.refresh_protein_model()
-            # self._active_task = tasks.Task(
-            #     target=main_presenter_async.run_distance_analysis,
-            #     args=(
-            #         tmp_raw_analysis_run_names,
-            #         self._interface_manager.get_current_project(),
-            #         self._interface_manager.get_application_settings(),
-            #         self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
-            #     ),
-            #     post_func=self.post_analysis_process,
-            # )
-            # self._active_task.start()
-            tmp_distance_analysis_task = tasks.Task(
-                target=main_presenter_async.run_distance_analysis,
-                args=(
-                    tmp_raw_analysis_run_names,
-                    self._interface_manager.get_current_project(),
-                    self._interface_manager.get_application_settings(),
-                    self._interface_manager.get_predict_monomer_view().ui.cb_pred_analysis_mono_images.isChecked(),
-                ),
-                post_func=self.post_analysis_process,
-            )
-            self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
-            self._interface_manager.status_bar_manager.show_permanent_message(
-                enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING
-            )
             if os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
                 shutil.rmtree(constants.SCRATCH_DIR_ANALYSIS)
                 os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
             else:
                 os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+            # </editor-fold>
 
+            self._add_new_proteins_to_protein_model()
+
+            tmp_distance_analysis_task = tasks.Task(
+                target=main_tasks_async.run_distance_analysis,
+                args=(
+                    tmp_raw_analysis_run_names,
+                    self._interface_manager.get_current_project(),
+                    self._interface_manager.get_application_settings(),
+                    False,
+                                        self.custom_progress_signal,
+                    self._interface_manager.pymol_lock,
+                    self.disable_pymol_signal
+                ),
+                post_func=self.__await_run_distance_analysis_after_prediction,
+            )
+            self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
+            self._interface_manager.status_bar_manager.show_permanent_message(
+                enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value
+            )
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
             self.block_box_prediction.destroy(True)
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1372,13 +1433,24 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-        self._view.wait_spinner.stop()
         self._interface_manager.refresh_main_view()
 
-    def post_analysis_process(self, an_exit_code: tuple[int, str, list]) -> None:
+    def __await_run_distance_analysis_after_prediction(self, an_exit_code: tuple[int, str, list]) -> None:
         """Post process after the analysis thread finished."""
-        constants.PYSSA_LOGGER.debug("post_analysis_process() started ...")
-        if an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
+        self._interface_manager.status_bar_manager.hide_progress_bar()
+        constants.PYSSA_LOGGER.debug("__await_run_distance_analysis() started ...")
+        if an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
+            # Analysis was successful
+            self._add_new_protein_pairs_to_protein_pair_model()
+            self._active_task = tasks.Task(
+                target=util_async.unfreeze_pymol_session,
+                args=(
+                    self._pymol_session_manager, 0
+                ),
+                post_func=self.__await_unfreeze_pymol_session_after_prediction_and_analysis,
+            )
+            self._active_task.start()
+        elif an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Distance analysis failed because there was an error during the analysis!",
                 "Distance Analysis",
@@ -1402,19 +1474,19 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
-        elif an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
-            constants.PYSSA_LOGGER.info("Project has been saved to project database.")
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "All structure analysis' are done. Go to results to check the new results.",
-                "Distance Analysis",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            tmp_dialog.exec_()
-            constants.PYSSA_LOGGER.info("All structure analysis' are done.")
-            self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
-        self._database_manager.open_project_database()
-        self._interface_manager.refresh_protein_pair_model()
+
+    def __await_unfreeze_pymol_session_after_prediction_and_analysis(self):
         self._interface_manager.refresh_main_view()
+        self._main_view_state.restore_main_view_state()
+
+        self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+            "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
+            "Distance Analysis",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        )
+        self.active_custom_message_box.exec_()
+        constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+        self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
         self._interface_manager.stop_wait_spinner()
 
     def __await_predict_protein_with_colabfold(self, result: tuple) -> None:
@@ -1475,6 +1547,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message(f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
+            self._add_new_proteins_to_protein_model()
             self._active_task = tasks.Task(
                 target=util_async.unfreeze_pymol_session,
                 args=(
@@ -1483,18 +1556,6 @@ class MainViewController:
                 post_func=self.__await_unfreeze_pymol_session_after_prediction,
             )
             self._active_task.start()
-            #
-            # self._active_task = tasks.Task(
-            #     target=util_async.refresh_protein_model,
-            #     args=(
-            #         self._interface_manager, 0
-            #     ),
-            #     post_func=self.__await_refresh_protein_model_after_prediction,
-            # )
-            # self._active_task.start()
-            # self._interface_manager.status_bar_manager.show_long_running_task_message(
-            #     enums.StatusMessages.PREDICTION_IS_FINALIZING.value
-            # )
         else:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown case!",
@@ -1505,11 +1566,6 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("Prediction failed because of an unknown case!")
 
     def __await_unfreeze_pymol_session_after_prediction(self):
-        tmp_proteins_to_add = self._main_view_state.get_not_matching_proteins(
-            self._interface_manager.get_current_project().proteins
-        )
-        for tmp_protein in tmp_proteins_to_add:
-            self._interface_manager.add_protein_to_proteins_model(tmp_protein)
         self._interface_manager.refresh_main_view()
 
         if self.active_custom_message_box is not None:
@@ -1526,6 +1582,14 @@ class MainViewController:
         constants.PYSSA_LOGGER.info("All structure predictions are done.")
         self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
         self._interface_manager.stop_wait_spinner()
+
+    def _add_new_proteins_to_protein_model(self):
+        """Adds the new predicted proteins to the interface manager's protein model."""
+        tmp_proteins_to_add = self._main_view_state.get_not_matching_proteins(
+            self._interface_manager.get_current_project().proteins
+        )
+        for tmp_protein in tmp_proteins_to_add:
+            self._interface_manager.add_protein_to_proteins_model(tmp_protein)
 
     # </editor-fold>
 
@@ -1552,7 +1616,6 @@ class MainViewController:
         self._interface_manager.get_predict_protein_view().show()
 
     def _post_predict_multimer(self, result: tuple):
-        self._view.wait_spinner.start()
 
         # <editor-fold desc="Check if WSL2 and ColabFold are installed">
         if globals.g_os == "win32":
@@ -1592,8 +1655,11 @@ class MainViewController:
                     result[1],
                     result[2],
                     self._interface_manager.get_current_project(),
+                    self.custom_progress_signal,
+                    self._interface_manager.pymol_lock,
+                    self.disable_pymol_signal
                 ),
-                post_func=self.__await_multimer_prediction_for_subsequent_analysis,
+                post_func=self.__await_monomer_prediction_for_subsequent_analysis,
             )
             self._active_task.start()
         else:
@@ -1605,27 +1671,13 @@ class MainViewController:
                     result[1],
                     result[2],
                     self._interface_manager.get_current_project(),
+                    self.custom_progress_signal,
+                    self._interface_manager.pymol_lock,
+                    self.disable_pymol_signal
                 ),
                 post_func=self.__await_predict_protein_with_colabfold,
             )
             self._active_task.start()
-
-        self._view.status_bar.showMessage("A prediction is currently running ...")
-        self.block_box_prediction = QtWidgets.QMessageBox()
-        self.block_box_prediction.setIcon(QtWidgets.QMessageBox.Information)
-        self.block_box_prediction.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
-        styles.set_stylesheet(self.block_box_prediction)
-        self.block_box_prediction.setWindowTitle("Structure Prediction")
-        self.block_box_prediction.setText("A prediction is currently running.")
-        btn_abort = self.block_box_prediction.addButton("Abort", QtWidgets.QMessageBox.ActionRole)
-        self.block_box_prediction.exec_()
-        if self.block_box_prediction.clickedButton() == btn_abort:
-            self.abort_prediction()
-            self.block_box_prediction.close()
-            self._view.wait_spinner.stop()
-        else:
-            self.block_box_prediction.close()
-            self._view.wait_spinner.stop()
 
     def __await_multimer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
         tmp_exit_code = result[0]
@@ -1642,14 +1694,17 @@ class MainViewController:
                 tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_multi_overview.item(row_no).text())
 
             self._active_task = tasks.Task(
-                target=main_presenter_async.run_distance_analysis,
+                target=main_tasks_async.run_distance_analysis,
                 args=(
                     tmp_raw_analysis_run_names,
                     self._interface_manager.get_current_project(),
                     self._interface_manager.get_application_settings(),
-                    self._interface_manager.get_predict_multimer_view().cb_pred_analysis_multi_images.isChecked(),
+                    False,
+                    self.custom_progress_signal,
+                    self._interface_manager.pymol_lock,
+                    self.disable_pymol_signal
                 ),
-                post_func=self.post_analysis_process,
+                post_func=self.__await_run_distance_analysis,
             )
             self._active_task.start()
 

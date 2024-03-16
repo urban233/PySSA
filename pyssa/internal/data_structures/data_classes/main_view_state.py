@@ -23,7 +23,7 @@
 from dataclasses import dataclass
 from PyQt5 import QtCore
 
-from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import protein, protein_pair
 
 
 @dataclass
@@ -32,6 +32,7 @@ class MainViewState:
     selected_sequence: QtCore.QModelIndex
     selected_chain_proteins: QtCore.QModelIndex
     current_proteins: list[str]
+    current_protein_pairs: list[str]
     selected_chain_protein_pairs: QtCore.QModelIndex
 
     def __init__(self,
@@ -54,6 +55,7 @@ class MainViewState:
         self.__slot_get_information_about_selected_object_in_protein_pair_branch = __slot_get_information_about_selected_object_in_protein_pair_branch
 
         self.current_proteins: list[str] = []
+        self.current_protein_pairs: list[str] = []
 
     def restore_main_view_state(self):
         """Restores the main view state."""
@@ -88,3 +90,15 @@ class MainViewState:
             if tmp_protein.get_molecule_object() not in self.current_proteins:
                 not_matching_proteins.append(tmp_protein)
         return not_matching_proteins
+
+    def set_protein_pairs_list(self, a_list_of_protein_pairs: list["protein_pair.ProteinPair"]):
+        for tmp_protein_pair in a_list_of_protein_pairs:
+            self.current_protein_pairs.append(tmp_protein_pair.name)
+
+    def get_not_matching_protein_pairs(self, protein_pairs_to_check: list["protein_pair.ProteinPair"]) -> list["protein_pair.ProteinPair"]:
+        """Returns all proteins that are not in the current_proteins list of this class."""
+        not_matching_protein_pairs = []
+        for tmp_protein_pair in protein_pairs_to_check:
+            if tmp_protein_pair.name not in self.current_protein_pairs:
+                not_matching_protein_pairs.append(tmp_protein_pair)
+        return not_matching_protein_pairs

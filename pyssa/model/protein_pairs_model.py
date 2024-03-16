@@ -96,10 +96,52 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
         tmp_scenes_item = tmp_scene_item.parent()
         tmp_scenes_item.removeRow(tmp_scene_item.row())
 
+    def add_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair"):
+        """Adds a protein pair to the model."""
+        tmp_protein_pair_item = QtGui.QStandardItem(a_protein_pair.name)
+        tmp_protein_pair_item.setData(a_protein_pair, enums.ModelEnum.OBJECT_ROLE)
+        tmp_protein_pair_item.setData("protein_pair", enums.ModelEnum.TYPE_ROLE)
+        self.appendRow(tmp_protein_pair_item)
+        tmp_scenes_item = QtGui.QStandardItem("Scenes")
+        tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
+        tmp_protein_pair_item.appendRow(tmp_scenes_item)
+        a_protein_pair.load_pymol_session()
+        for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+            tmp_scene_item = QtGui.QStandardItem(tmp_scene)
+            tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
+            tmp_scenes_item.appendRow(tmp_scene_item)
+        # Create protein 1 item
+        tmp_protein_item_1 = QtGui.QStandardItem(a_protein_pair.protein_1.get_molecule_object())
+        tmp_protein_item_1.setData(a_protein_pair.protein_1, enums.ModelEnum.OBJECT_ROLE)
+        tmp_protein_item_1.setData("protein", enums.ModelEnum.TYPE_ROLE)
+        tmp_chains_item_1 = QtGui.QStandardItem("Chains")
+        tmp_chains_item_1.setData("header", enums.ModelEnum.TYPE_ROLE)
+        tmp_protein_item_1.appendRow(tmp_chains_item_1)
+        for tmp_chain in a_protein_pair.protein_1.chains:
+            tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+            tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+            tmp_chains_item_1.appendRow(tmp_chain_item)
+        # Create protein 2 item
+        tmp_protein_item_2 = QtGui.QStandardItem(a_protein_pair.protein_2.get_molecule_object())
+        tmp_protein_item_2.setData(a_protein_pair.protein_2, enums.ModelEnum.OBJECT_ROLE)
+        tmp_protein_item_2.setData("protein", enums.ModelEnum.TYPE_ROLE)
+        tmp_chains_item_2 = QtGui.QStandardItem("Chains")
+        tmp_chains_item_2.setData("header", enums.ModelEnum.TYPE_ROLE)
+        tmp_protein_item_2.appendRow(tmp_chains_item_2)
+        for tmp_chain in a_protein_pair.protein_2.chains:
+            tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
+            tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
+            tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+            tmp_chains_item_2.appendRow(tmp_chain_item)
+        tmp_protein_pair_item.appendRow(tmp_protein_item_1)
+        tmp_protein_pair_item.appendRow(tmp_protein_item_2)
+
     def remove_protein_pair(self, the_model_index_of_the_scene: QtCore.QModelIndex):
         """Removes a protein from the model."""
         # <editor-fold desc="Checks">
-        if self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE) != "protein":
+        if self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE) != "protein_pair":
+            tmp_value = self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE)
             raise ValueError("Wrong type!")
 
         # </editor-fold>

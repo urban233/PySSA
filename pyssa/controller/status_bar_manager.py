@@ -85,14 +85,23 @@ class StatusBarManager:
     def _style_status_bar_for_error_message(self):
         self._view.status_bar.setStyleSheet("""
             QStatusBar {
-                background-color: #ba1a1a;
-                color: white;
+                background-color: #ff9000;
                 border-style: solid;
                 border-width: 2px;
                 border-radius: 4px;
-                border-color: #DCDBE3;
+                border-color: #5b5b5b;
             }
         """)
+        # self._view.status_bar.setStyleSheet("""
+        #     QStatusBar {
+        #         background-color: #ba1a1a;
+        #         color: white;
+        #         border-style: solid;
+        #         border-width: 2px;
+        #         border-radius: 4px;
+        #         border-color: #DCDBE3;
+        #     }
+        # """)
 
     # </editor-fold>
 
@@ -158,8 +167,11 @@ class StatusBarManager:
 
     def show_error_message(self, a_message):
         self._style_status_bar_for_error_message()
-        self._permanent_message.show()
-        self._permanent_message.setText(a_message)
+        if self._permanent_message.text() == "":
+            self._permanent_message.show()
+            self._permanent_message.setText(a_message)
+        else:
+            self._view.status_bar.showMessage(a_message, 999999)
 
     def show_temporary_message(self, a_temporary_message, a_with_timeout_flag: bool = True):
         self._style_status_bar_for_normal_message()
@@ -197,6 +209,7 @@ class StatusBarManager:
     def hide_progress_bar(self):
         self._progress_bar.hide()
         self._permanent_message.hide()
+        self._permanent_message.setText("")
         self._btn_task.hide()
 
     # </editor-fold>

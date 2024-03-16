@@ -309,8 +309,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._view.ui.btn_distance_analysis_remove.show()
             self._view.ui.btn_distance_analysis_remove.setEnabled(False)
             self._view.ui.btn_distance_analysis_start.show()
-            self._view.ui.lbl_distance_analysis_ray_trace_images.show()
-            self._view.ui.cb_distance_analysis_ray_trace_images.show()
 
     def structure_analysis_next_2(self) -> None:
         """Shows the gui elements to select the chains in protein 2."""
