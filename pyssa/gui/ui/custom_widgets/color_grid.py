@@ -6,6 +6,9 @@ class PyMOLColorGrid(QtWidgets.QWidget):
 
     def __init__(self):
         super().__init__()
+
+        self.last_clicked_color = ""
+
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
         tmp_basic_stylesheet = """min-width: 30px; max-width: 30px; min-height: 30px; max-height: 30px;"""

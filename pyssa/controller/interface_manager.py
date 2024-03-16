@@ -28,6 +28,7 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread.async_pyssa import locks
 from pyssa.model import proteins_model, protein_pairs_model
 from pyssa.util import enums, constants, exception, main_window_util
+from pyssa.util.void import rvoid
 
 
 class InterfaceManager:
@@ -563,7 +564,7 @@ class InterfaceManager:
         if the_pymol_session_manager.is_the_current_protein_in_session():
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA"
-            tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)
+            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string))
         if self.get_protein_repr_toggle_flag() == 1:
             self._main_view.ui.lbl_protein_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
         else:
@@ -1549,7 +1550,7 @@ class InterfaceManager:
         if the_pymol_session_manager.is_the_current_protein_pair_in_session():
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()} and name CA"
-            tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)
+            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string))
         self._main_view.ui.box_protein_pair_color.setCurrentIndex(
             self._main_view.ui.box_protein_pair_color.findText(tmp_chain.pymol_parameters["chain_color"])
         )

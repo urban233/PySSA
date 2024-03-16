@@ -41,16 +41,24 @@ def get_residue_colors(a_selection_string: str):
 def get_chain_color(a_selection_string: str, chain_letter: str):
     pymol.stored.colors = []
     cmd.iterate(a_selection_string, "stored.colors.append((chain, resi, name, color))")
-    tmp_chain_colors = []
+    tmp_ca_atom_colors = []
+    tmp_residue_atom_colors = []
+    tmp_is_colored_by_elements = False
     for chain, resi, name, color_index in pymol.stored.colors:
         if chain == chain_letter and name == 'CA':  # c-alpha atom
-            print(color_index)
+            #print(color_index)
             try:
-                tmp_chain_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
+                tmp_ca_atom_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
             except KeyError:
-                tmp_chain_colors.append("By RMSD")
-    tmp_chain_color = list(set(tmp_chain_colors))[0]
-    return tmp_chain_color
+                tmp_ca_atom_colors.append("By RMSD")
+        else:
+            try:
+                tmp_residue_atom_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
+            except KeyError:
+                tmp_is_colored_by_elements = True
+    tmp_chain_color = list(set(tmp_ca_atom_colors))[0]
+    print(tmp_residue_atom_colors)
+    return tmp_chain_color, tmp_ca_atom_colors, tmp_is_colored_by_elements
 
 
 def get_chain_repr_state(a_selection_string: str, chain_letter: str) -> dict:
