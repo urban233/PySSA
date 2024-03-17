@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 
-from pyssa.controller import interface_manager
+from pyssa.controller import interface_manager, add_protein_pair_view_controller
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
@@ -64,7 +64,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     def _connect_all_ui_elements_to_slot_functions(self):
         self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
-        self._view.ui.btn_distance_analysis_add.clicked.connect(self.structure_analysis_add)
+        self._view.ui.btn_distance_analysis_add.clicked.connect(self._add_protein_pair)
         self._view.ui.btn_distance_analysis_remove.clicked.connect(self.remove_analysis_run)
         self._view.ui.btn_distance_analysis_back.clicked.connect(self.structure_analysis_back)
         self._view.ui.btn_distance_analysis_next.clicked.connect(self.structure_analysis_next)
@@ -229,6 +229,33 @@ class DistanceAnalysisViewController(QtCore.QObject):
                     f"Select chains in protein structure {self._view.ui.lbl_distance_analysis_prot_struct_1.text()}.",
                 )
         self._view.wait_spinner.stop()
+
+    def _get_all_current_analysis_runs(self):
+        tmp_analysis_runs = []
+        for tmp_row in range(self._view.ui.list_distance_analysis_overview.count()):
+            tmp_analysis_runs.append(self._view.ui.list_distance_analysis_overview.item(tmp_row).text())
+        return tmp_analysis_runs
+
+    def _get_all_current_protein_pair_names(self):
+        tmp_protein_pair_names = []
+        for tmp_protein_pair in self._interface_manager.get_current_project().protein_pairs:
+            tmp_protein_pair_names.append(tmp_protein_pair.name)
+        return tmp_protein_pair_names
+
+    def _add_protein_pair(self):
+        self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
+            self._interface_manager, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names()
+        )
+        self._external_controller.user_input.connect(self._post_add_protein_pair)
+        self._interface_manager.get_add_protein_pair_view().show()
+
+    def _post_add_protein_pair(self, return_value: tuple):
+        tmp_item, _ = return_value
+        self._view.ui.list_distance_analysis_overview.addItem(tmp_item)
+        self._view.ui.btn_distance_analysis_remove.show()
+        self._view.ui.btn_distance_analysis_remove.setEnabled(False)
+        self._view.ui.btn_distance_analysis_start.show()
+        self._view.ui.btn_distance_analysis_start.setEnabled(True)
 
     # </editor-fold>
 

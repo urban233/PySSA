@@ -16,7 +16,7 @@ from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
     predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, \
-    fasta_file_import_preview_view, rename_sequence_view
+    fasta_file_import_preview_view, rename_sequence_view, add_protein_pair_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -52,6 +52,7 @@ class InterfaceManager:
     _use_project_view: "use_project_view.UseProjectView"
     _hotspots_protein_regions_view: "hotspots_protein_regions_view.HotspotsProteinRegionsView"
     _add_scene_view: "add_scene_view.AddSceneView"
+    _add_protein_pair_view: "add_protein_pair_view.AddProteinPairView"
 
     _current_workspace: pathlib.Path
     _current_project: "project.Project"
@@ -88,6 +89,7 @@ class InterfaceManager:
         self._rename_sequence_view = rename_sequence_view.RenameSequenceView()
         self._use_project_view = use_project_view.UseProjectView()
         self._add_scene_view = add_scene_view.AddSceneView()
+        self._add_protein_pair_view = add_protein_pair_view.AddProteinPairView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
         self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
@@ -239,6 +241,9 @@ class InterfaceManager:
 
     def get_add_scene_view(self):
         return self._add_scene_view
+
+    def get_add_protein_pair_view(self):
+        return self._add_protein_pair_view
 
     # <editor-fold desc="Getter methods for Sequence Tab in main view">
     def get_current_sequence_list_index(self):
@@ -529,6 +534,9 @@ class InterfaceManager:
 
     def get_information_about_current_session(self):
         return self._current_pymol_session.session_name, self._current_pymol_session.object_type
+
+    def get_protein_model(self):
+        return self._protein_model
 
     # </editor-fold>
 

@@ -5,12 +5,13 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
-from pyssa.controller import interface_manager
+from pyssa.controller import interface_manager, add_protein_pair_view_controller
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import distance_analysis_view, predict_monomer_view, predict_multimer_view, predict_protein_view
+from pyssa.internal.data_structures import protein, chain
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
@@ -27,6 +28,7 @@ class PredictProteinViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view: "predict_protein_view.PredictProteinView" = the_interface_manager.get_predict_protein_view()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
+        self.temporary_protein_objs = []
         self.restore_ui_defaults()
         self._fill_protein_to_predict_table_with_sequences(the_selected_indexes, a_prediction_type)
         self._connect_all_ui_elements_to_slot_functions()
@@ -134,7 +136,8 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.ui.table_proteins_to_predict.itemSelectionChanged.connect(self._enable_remove_button_of_prediction_table)
 
         # Analysis tab
-        self._view.ui.btn_analysis_add.clicked.connect(self._enable_selection_of_proteins_for_analysis)
+        self._view.ui.btn_analysis_add.clicked.connect(self._add_protein_pair)
+
         self._view.ui.btn_analysis_remove.clicked.connect(self._remove_analysis_run_from_list)
         self._view.ui.btn_analysis_back.clicked.connect(self._disable_selection_of_proteins_for_analysis)
         self._view.ui.btn_analysis_next.clicked.connect(self._show_chains_of_protein_structure_1)
@@ -181,6 +184,7 @@ class PredictProteinViewController(QtCore.QObject):
             raise ValueError(f"Unknown prediction type: {a_prediction_type}")
 
         tmp_row_no = 0
+        self.temporary_protein_objs.clear()
         for tmp_seq_record in tmp_sequences_to_predict:
             tmp_seqs = tmp_seq_record.seq.split(",")
             tmp_chain_no = 0
@@ -198,6 +202,16 @@ class PredictProteinViewController(QtCore.QObject):
                 self._view.ui.table_proteins_to_predict.setItem(tmp_row_no, 1, tmp_seq_item)
                 tmp_chain_no += 1
                 tmp_row_no += 1
+            tmp_protein = protein.Protein(tmp_seq_record.name)
+            tmp_chains = []
+            for tmp_chain_number in range(tmp_chain_no):
+                tmp_chain = chain.Chain(constants.chain_dict.get(tmp_chain_number),
+                                        tmp_seqs[tmp_chain_number],
+                                        "protein_chain")
+                tmp_chains.append(tmp_chain)
+            tmp_protein.chains = tmp_chains
+            self.temporary_protein_objs.append(tmp_protein)
+
         self._view.ui.table_proteins_to_predict.resizeColumnsToContents()
         self._check_if_proteins_to_predict_table_is_empty()
 
@@ -239,22 +253,34 @@ class PredictProteinViewController(QtCore.QObject):
 
     def _remove_protein_to_predict(self) -> None:
         """Removes the selected protein from the list of proteins to predict."""
-        if self._view.ui.table_proteins_to_predict.rowCount() == 1:
-            self._view.ui.table_proteins_to_predict.removeRow(0)
+        tmp_table = self._view.ui.table_proteins_to_predict
+        for tmp_protein in self.temporary_protein_objs:
+            if tmp_protein.get_molecule_object() == tmp_table.verticalHeaderItem(tmp_table.currentRow()).text() and len(tmp_protein.chains) > 1:
+                tmp_protein.chains.pop(constants.chain_dict_reverse.get(tmp_table.item(tmp_table.currentRow(), 0).text()))
+                i = 0
+                for tmp_chain in tmp_protein.chains:
+                    tmp_chain.chain_letter = constants.chain_dict.get(i)
+                    i += 1
+            elif tmp_protein.get_molecule_object() == tmp_table.verticalHeaderItem(tmp_table.currentRow()).text() and len(tmp_protein.chains) == 1:
+                self.temporary_protein_objs.remove(tmp_protein)
+
+        if tmp_table.rowCount() == 1:
+            tmp_table.removeRow(0)
         else:
-            self._view.ui.table_proteins_to_predict.removeRow(
-                self._view.ui.table_proteins_to_predict.currentRow(),
+            tmp_table.removeRow(
+                tmp_table.currentRow(),
             )
-            prot_name = self._view.ui.table_proteins_to_predict.verticalHeaderItem(
-                self._view.ui.table_proteins_to_predict.currentRow(),
+            prot_name = tmp_table.verticalHeaderItem(
+                tmp_table.currentRow(),
             ).text()
-            for i in range(self._view.ui.table_proteins_to_predict.rowCount()):
-                if self._view.ui.table_proteins_to_predict.verticalHeaderItem(
-                        i).text() == prot_name:
-                    self._view.ui.table_proteins_to_predict.setItem(
+            for i in range(tmp_table.rowCount()):
+                if tmp_table.verticalHeaderItem(i).text() == prot_name:
+                    tmp_chain_letter_item = QtWidgets.QTableWidgetItem(constants.chain_dict.get(i))
+                    tmp_chain_letter_item.setFlags(tmp_chain_letter_item.flags() & ~Qt.ItemIsEditable)
+                    tmp_table.setItem(
                         i,
                         0,
-                        QtWidgets.QTableWidgetItem(constants.chain_dict.get(i)),
+                        tmp_chain_letter_item,
                     )
         self._check_if_proteins_to_predict_table_is_empty()
         self._view.ui.btn_prediction_remove.setEnabled(False)
@@ -351,6 +377,36 @@ class PredictProteinViewController(QtCore.QObject):
                 self._view.ui.tab_widget.setTabEnabled(1, False)
 
     # <editor-fold desc="Analysis section">
+    def _get_all_current_analysis_runs(self):
+        tmp_analysis_runs = []
+        for tmp_row in range(self._view.ui.list_analysis_overview.count()):
+            tmp_analysis_runs.append(self._view.ui.list_analysis_overview.item(tmp_row).text())
+        return tmp_analysis_runs
+
+    def _get_all_current_protein_pair_names(self):
+        tmp_protein_pair_names = []
+        for tmp_protein_pair in self._interface_manager.get_current_project().protein_pairs:
+            tmp_protein_pair_names.append(tmp_protein_pair.name)
+        return tmp_protein_pair_names
+
+    def _add_protein_pair(self):
+        self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
+            self._interface_manager, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names(),
+            a_list_of_extra_proteins=self.temporary_protein_objs
+        )
+
+        self._external_controller.user_input.connect(self._post_add_protein_pair)
+        self._interface_manager.get_add_protein_pair_view().show()
+
+    def _post_add_protein_pair(self, return_value: tuple):
+        tmp_item, _ = return_value
+        self._view.ui.list_analysis_overview.addItem(tmp_item)
+        self._view.ui.btn_analysis_remove.show()
+        self._view.ui.btn_analysis_remove.setEnabled(False)
+        self._view.ui.btn_start_prediction_analysis.show()
+        self._view.ui.btn_start_prediction_analysis.setEnabled(True)
+
+
     def _enable_selection_of_proteins_for_analysis(self) -> None:
         """Shows the gui elements to choose the two proteins."""
         gui_elements_to_show = [
