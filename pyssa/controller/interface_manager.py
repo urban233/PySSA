@@ -861,16 +861,6 @@ class InterfaceManager:
             # Hotspots
             self._main_view.ui.menuHotspots.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
-            # Settings
-            self._main_view.ui.action_edit_settings.setEnabled(True)
-            self._main_view.ui.action_restore_settings.setEnabled(True)
-            # Help
-            self._main_view.ui.action_documentation.setEnabled(True)
-            self._main_view.ui.action_get_demo_projects.setEnabled(True)
-            self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
-            self._main_view.ui.action_clear_logs.setEnabled(True)
-            self._main_view.ui.action_about.setEnabled(True)
-
 
         self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
 
@@ -1010,6 +1000,10 @@ class InterfaceManager:
         self._main_view.ui.menuImage.setEnabled(False)
         self._main_view.ui.menuHotspots.setEnabled(False)
 
+    def show_menu_options_without_seq(self):
+        self._main_view.ui.btn_save_sequence.setEnabled(False)
+        self._main_view.ui.btn_delete_sequence.setEnabled(False)
+
         # <editor-fold desc="Checks type(s) of sequences">
         tmp_sequence_model_state = self._check_sequence_model_state()
         if tmp_sequence_model_state == "monomer":
@@ -1026,10 +1020,6 @@ class InterfaceManager:
             self._main_view.ui.action_predict_multimer.setEnabled(False)
 
         # </editor-fold>
-
-    def show_menu_options_without_seq(self):
-        self._main_view.ui.btn_save_sequence.setEnabled(False)
-        self._main_view.ui.btn_delete_sequence.setEnabled(False)
 
     def _check_sequence_model_state(self) -> str:
         """Checks what type(s) of sequences are in the sequence model.
@@ -1084,8 +1074,6 @@ class InterfaceManager:
         self._main_view.ui.menuResults.setEnabled(False)
         self._main_view.ui.menuImage.setEnabled(False)
         self._main_view.ui.menuHotspots.setEnabled(False)
-
-
 
     # </editor-fold>
 
