@@ -763,13 +763,22 @@ class InterfaceManager:
     def refresh_main_view(self):
         """Modifies the UI of the main view based on an app model."""
         self._main_view.ui.lbl_logo.hide()
+        # Settings
+        self._main_view.ui.action_edit_settings.setEnabled(True)
+        self._main_view.ui.action_restore_settings.setEnabled(True)
+        # Help
+        self._main_view.ui.action_documentation.setEnabled(True)
+        self._main_view.ui.action_get_demo_projects.setEnabled(True)
+        self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
+        self._main_view.ui.action_clear_logs.setEnabled(True)
+        self._main_view.ui.action_about.setEnabled(True)
         if self._current_project.get_project_name() != "":
             # A project is open
             self._main_view.ui.lbl_project_name.show()
             self._main_view.ui.lbl_project_name.setText(f"Project Name: {self._current_project.get_project_name()}")
             self._main_view.ui.lbl_session_name.show()
             self._main_view.ui.project_tab_widget.show()
-            # project
+            # Project options
             self._main_view.ui.action_new_project.setEnabled(False)
             self._main_view.ui.action_open_project.setEnabled(False)
             self._main_view.ui.action_use_project.setEnabled(True)
@@ -777,40 +786,63 @@ class InterfaceManager:
             self._main_view.ui.action_import_project.setEnabled(False)
             self._main_view.ui.action_export_project.setEnabled(True)
             self._main_view.ui.action_close_project.setEnabled(True)
-            # prediction
-            self._main_view.ui.menuPrediction.setEnabled(True)
-            self._main_view.ui.action_predict_monomer.setEnabled(True)
-            self._main_view.ui.action_predict_multimer.setEnabled(True)
-            # analysis
-            self._main_view.ui.menuAnalysis.setEnabled(True)
-            self._main_view.ui.action_distance_analysis.setEnabled(True)
-            # results
-            self._main_view.ui.menuResults.setEnabled(True)
-            # image
-            self._main_view.ui.menuImage.setEnabled(True)
-            self._main_view.ui.action_preview_image.setEnabled(True)
-            self._main_view.ui.action_ray_tracing_image.setEnabled(True)
-            self._main_view.ui.action_simple_image.setEnabled(True)
-            # hotspots
-            self._main_view.ui.menuHotspots.setEnabled(True)
-            self._main_view.ui.action_protein_regions.setEnabled(False)
-            # settings
-            self._main_view.ui.action_edit_settings.setEnabled(True)
-            self._main_view.ui.action_restore_settings.setEnabled(True)
-            # help
-            self._main_view.ui.action_documentation.setEnabled(True)
-            self._main_view.ui.action_get_demo_projects.setEnabled(True)
-            self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
-            self._main_view.ui.action_clear_logs.setEnabled(True)
-            self._main_view.ui.action_about.setEnabled(True)
+            if len(self._current_project.sequences) > 0:
+                # A project has sequence(s)
+                # It is possible to do a prediction
+                self._main_view.ui.menuPrediction.setEnabled(True)
+                self._main_view.ui.action_predict_monomer.setEnabled(True)
+                self._main_view.ui.action_predict_multimer.setEnabled(True)
 
-            self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
+                if len(self._current_project.proteins) > 0:
+                    # A project has protein(s)
+                    # It is possible to do an analysis, image and hotspots
+                    # Analysis
+                    self._main_view.ui.menuAnalysis.setEnabled(True)
+                    self._main_view.ui.action_distance_analysis.setEnabled(True)
+                    # Image
+                    self._main_view.ui.menuImage.setEnabled(True)
+                    self._main_view.ui.action_preview_image.setEnabled(True)
+                    self._main_view.ui.action_ray_tracing_image.setEnabled(True)
+                    self._main_view.ui.action_simple_image.setEnabled(True)
+                    # Hotspots
+                    self._main_view.ui.menuHotspots.setEnabled(True)
+                    self._main_view.ui.action_protein_regions.setEnabled(True)
+
+                    if len(self._current_project.protein_pairs) > 0:
+                        # A project has protein pair(s)
+                        # It is possible to view results
+                        self._main_view.ui.menuResults.setEnabled(True)
+                    else:
+                        # A project hasn't protein pair(s)
+                        # It isn't possible to view results
+                        self._main_view.ui.menuResults.setEnabled(False)
+                else:
+                    # A project hasn't protein(s)
+                    # It isn't possible to do an analysis, image and hotspots
+                    # Analysis
+                    self._main_view.ui.menuAnalysis.setEnabled(False)
+                    self._main_view.ui.action_distance_analysis.setEnabled(False)
+                    # Image
+                    self._main_view.ui.menuImage.setEnabled(False)
+                    self._main_view.ui.action_preview_image.setEnabled(False)
+                    self._main_view.ui.action_ray_tracing_image.setEnabled(False)
+                    self._main_view.ui.action_simple_image.setEnabled(False)
+                    # Hotspots
+                    self._main_view.ui.menuHotspots.setEnabled(False)
+                    self._main_view.ui.action_protein_regions.setEnabled(False)
+            else:
+                # A project hasn't sequence(s)
+                # It isn't possible to do a prediction
+                self._main_view.ui.menuPrediction.setEnabled(False)
+                self._main_view.ui.action_predict_monomer.setEnabled(False)
+                self._main_view.ui.action_predict_multimer.setEnabled(False)
         else:
+            # Hompage view
             # No project is open
             self._main_view.ui.lbl_project_name.hide()
             self._main_view.ui.project_tab_widget.hide()
             self._main_view.ui.lbl_logo.show()
-            # project
+            # Project
             self._main_view.ui.action_new_project.setEnabled(True)
             self._main_view.ui.action_open_project.setEnabled(True)
             self._main_view.ui.action_use_project.setEnabled(False)
@@ -818,69 +850,102 @@ class InterfaceManager:
             self._main_view.ui.action_import_project.setEnabled(True)
             self._main_view.ui.action_export_project.setEnabled(False)
             self._main_view.ui.action_close_project.setEnabled(False)
-            # prediction
+            # Prediction
             self._main_view.ui.menuPrediction.setEnabled(False)
             self._main_view.ui.action_predict_monomer.setEnabled(False)
             self._main_view.ui.action_predict_multimer.setEnabled(False)
-            # analysis
+            # Analysis
             self._main_view.ui.menuAnalysis.setEnabled(False)
             self._main_view.ui.action_distance_analysis.setEnabled(True)
-            # results
+            # Results
             self._main_view.ui.menuResults.setEnabled(False)
             self._main_view.ui.action_results_summary.setEnabled(False)
-            # image
+            # Image
             self._main_view.ui.menuImage.setEnabled(False)
             self._main_view.ui.action_preview_image.setEnabled(False)
             self._main_view.ui.action_ray_tracing_image.setEnabled(False)
             self._main_view.ui.action_simple_image.setEnabled(False)
-            # hotspots
+            # Hotspots
             self._main_view.ui.menuHotspots.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
-            # settings
-            self._main_view.ui.action_edit_settings.setEnabled(True)
-            self._main_view.ui.action_restore_settings.setEnabled(True)
-            # help
-            self._main_view.ui.action_documentation.setEnabled(True)
-            self._main_view.ui.action_get_demo_projects.setEnabled(True)
-            self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
-            self._main_view.ui.action_clear_logs.setEnabled(True)
-            self._main_view.ui.action_about.setEnabled(True)
 
-        # Sequence
-        if len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is not None:
-            # There are sequences in the project and there is also one selected
-            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
-            self.show_menu_options_with_seq()
-        elif len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
-            # There are sequences in the project and there is NO one selected
-            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
-            self.show_menu_options_without_seq()
-        else:
-            # There are no sequences in the project
-            self.show_menu_options_without_seq()
-            self._sequence_model = QtGui.QStandardItemModel()
-            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        # Menu bar view for prediction
+        if self.main_tasks_manager.prediction_task is not None:
+            if not self.main_tasks_manager.check_if_prediction_task_is_finished():
+                # A prediction is running.
+                self._main_view.ui.action_predict_monomer.setEnabled(False)
+                self._main_view.ui.action_predict_multimer.setEnabled(False)
+                self._main_view.ui.action_abort_prediction.setEnabled(True)
+                self._main_view.ui.menuAnalysis.setEnabled(False)
+                self._main_view.ui.menuImage.setEnabled(False)
+                self._main_view.ui.menuHotspots.setEnabled(True)
+                # Check for results
+                if len(self._current_project.protein_pairs) > 0:
+                    self._main_view.ui.menuResults.setEnabled(True)
+                    self._main_view.ui.action_results_summary.setEnabled(True)
+                else:
+                    self._main_view.ui.menuResults.setEnabled(False)
+            else:
+                # A prediction is finished or not running.
+                return
 
-        # Proteins Tab
-        if len(self._current_project.proteins) > 0:
-            self.show_menu_options_with_protein()
-        if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self.show_menu_options_without_protein()
+        # Menu bar view for analysis
+        if self.main_tasks_manager.distance_analysis_task is not None:
+            if not self.main_tasks_manager.check_if_distance_analysis_task_is_finished():
+                # An analysis is running.
+                self._main_view.ui.menuPrediction.setEnabled(False)
+                self._main_view.ui.menuAnalysis.setEnabled(False)
+                self._main_view.ui.menuImage.setEnabled(False)
+                self._main_view.ui.menuHotspots.setEnabled(False)
+                # Check for results
+                if len(self._current_project.protein_pairs) > 0:
+                    self._main_view.ui.menuResults.setEnabled(True)
+                    self._main_view.ui.action_results_summary.setEnabled(True)
+                else:
+                    self._main_view.ui.menuResults.setEnabled(False)
+            else:
+                # An analysis is finished or not running.
+                return
 
-        # Protein Pairs Tab
-        if len(self._current_project.protein_pairs) > 0:
-            self.show_menu_options_with_protein_pair()
-        if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self.show_menu_options_without_protein_pair()
+        # # Fixme: The following code below is for clicking on sequence, protein or protein pair with available options.
+        # # Fixme: Is this important with the code above?
+        # self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
+        # # Sequence
+        # if len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is not None:
+        #     # There are sequences in the project and there is also one selected
+        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        #     self.show_menu_options_with_seq()
+        # elif len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
+        #     # There are sequences in the project and there is NO one selected
+        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        #     self.show_menu_options_without_seq()
+        # else:
+        #     # There are no sequences in the project
+        #     self.show_menu_options_without_seq()
+        #     self._sequence_model = QtGui.QStandardItemModel()
+        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        #
+        # # Proteins Tab
+        # if len(self._current_project.proteins) > 0:
+        #     self.show_menu_options_with_protein()
+        # if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+        #     self.show_menu_options_without_protein()
+        #
+        # # Protein Pairs Tab
+        # if len(self._current_project.protein_pairs) > 0:
+        #     self.show_menu_options_with_protein_pair()
+        # if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+        #     self.show_menu_options_without_protein_pair()
 
-        tmp_projects = self.get_workspace_projects_as_list()
-        if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
-            self._main_view.ui.action_open_project.setEnabled(True)
-            self._main_view.ui.action_delete_project.setEnabled(True)
-        else:
-            self._main_view.ui.action_open_project.setEnabled(False)
-            self._main_view.ui.action_delete_project.setEnabled(False)
+        # tmp_projects = self.get_workspace_projects_as_list()
+        # if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
+        #     self._main_view.ui.action_open_project.setEnabled(True)
+        #     self._main_view.ui.action_delete_project.setEnabled(True)
+        # else:
+        #     self._main_view.ui.action_open_project.setEnabled(False)
+        #     self._main_view.ui.action_delete_project.setEnabled(False)
 
+        # Fixme: Is the text in statusbar and logger not enough?
         if self.main_tasks_manager.prediction_task is not None:
             if not self.main_tasks_manager.check_if_prediction_task_is_finished():
                 logger.info("Running prediction in the background ...")
@@ -982,6 +1047,10 @@ class InterfaceManager:
         self._main_view.ui.menuImage.setEnabled(False)
         self._main_view.ui.menuHotspots.setEnabled(False)
 
+    def show_menu_options_without_seq(self):
+        self._main_view.ui.btn_save_sequence.setEnabled(False)
+        self._main_view.ui.btn_delete_sequence.setEnabled(False)
+
         # <editor-fold desc="Checks type(s) of sequences">
         tmp_sequence_model_state = self._check_sequence_model_state()
         if tmp_sequence_model_state == "monomer":
@@ -998,10 +1067,6 @@ class InterfaceManager:
             self._main_view.ui.action_predict_multimer.setEnabled(False)
 
         # </editor-fold>
-
-    def show_menu_options_without_seq(self):
-        self._main_view.ui.btn_save_sequence.setEnabled(False)
-        self._main_view.ui.btn_delete_sequence.setEnabled(False)
 
     def _check_sequence_model_state(self) -> str:
         """Checks what type(s) of sequences are in the sequence model.
@@ -1051,6 +1116,12 @@ class InterfaceManager:
         self._main_view.ui.btn_open_protein_session.setEnabled(False)
         self._main_view.ui.btn_create_protein_scene.setEnabled(False)
         self._main_view.ui.btn_update_protein_scene.setEnabled(False)
+
+        self._main_view.ui.menuAnalysis.setEnabled(False)
+        self._main_view.ui.menuResults.setEnabled(False)
+        self._main_view.ui.menuImage.setEnabled(False)
+        self._main_view.ui.menuHotspots.setEnabled(False)
+
     # </editor-fold>
 
     def manage_ui_of_protein_tab(
