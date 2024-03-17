@@ -764,7 +764,6 @@ class InterfaceManager:
         self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
         self._main_view.ui.action_clear_logs.setEnabled(True)
         self._main_view.ui.action_about.setEnabled(True)
-
         if self._current_project.get_project_name() != "":
             # A project is open
             self._main_view.ui.lbl_project_name.show()
@@ -862,43 +861,83 @@ class InterfaceManager:
             self._main_view.ui.menuHotspots.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
-        self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
+        # Menu bar view for prediction
+        if self.main_tasks_manager.prediction_task is not None:
+            if not self.main_tasks_manager.check_if_prediction_task_is_finished():
+                # A prediction is running.
+                self._main_view.ui.action_predict_monomer.setEnabled(False)
+                self._main_view.ui.action_predict_multimer.setEnabled(False)
+                self._main_view.ui.action_abort_prediction.setEnabled(True)
+                self._main_view.ui.menuAnalysis.setEnabled(False)
+                self._main_view.ui.menuImage.setEnabled(False)
+                self._main_view.ui.menuHotspots.setEnabled(True)
+                # Check for results
+                if len(self._current_project.protein_pairs) > 0:
+                    self._main_view.ui.menuResults.setEnabled(True)
+                    self._main_view.ui.action_results_summary.setEnabled(True)
+                else:
+                    self._main_view.ui.menuResults.setEnabled(False)
+            else:
+                # A prediction is finished or not running.
+                return
 
-        # Sequence
-        if len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is not None:
-            # There are sequences in the project and there is also one selected
-            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
-            self.show_menu_options_with_seq()
-        elif len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
-            # There are sequences in the project and there is NO one selected
-            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
-            self.show_menu_options_without_seq()
-        else:
-            # There are no sequences in the project
-            self.show_menu_options_without_seq()
-            self._sequence_model = QtGui.QStandardItemModel()
-            self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        # Menu bar view for analysis
+        if self.main_tasks_manager.distance_analysis_task is not None:
+            if not self.main_tasks_manager.check_if_distance_analysis_task_is_finished():
+                # An analysis is running.
+                self._main_view.ui.menuPrediction.setEnabled(False)
+                self._main_view.ui.menuAnalysis.setEnabled(False)
+                self._main_view.ui.menuImage.setEnabled(False)
+                self._main_view.ui.menuHotspots.setEnabled(False)
+                # Check for results
+                if len(self._current_project.protein_pairs) > 0:
+                    self._main_view.ui.menuResults.setEnabled(True)
+                    self._main_view.ui.action_results_summary.setEnabled(True)
+                else:
+                    self._main_view.ui.menuResults.setEnabled(False)
+            else:
+                # An analysis is finished or not running.
+                return
 
-        # Proteins Tab
-        if len(self._current_project.proteins) > 0:
-            self.show_menu_options_with_protein()
-        if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self.show_menu_options_without_protein()
+        # # Fixme: The following code below is for clicking on sequence, protein or protein pair with available options.
+        # # Fixme: Is this important with the code above?
+        # self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
+        # # Sequence
+        # if len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is not None:
+        #     # There are sequences in the project and there is also one selected
+        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        #     self.show_menu_options_with_seq()
+        # elif len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
+        #     # There are sequences in the project and there is NO one selected
+        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        #     self.show_menu_options_without_seq()
+        # else:
+        #     # There are no sequences in the project
+        #     self.show_menu_options_without_seq()
+        #     self._sequence_model = QtGui.QStandardItemModel()
+        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        #
+        # # Proteins Tab
+        # if len(self._current_project.proteins) > 0:
+        #     self.show_menu_options_with_protein()
+        # if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+        #     self.show_menu_options_without_protein()
+        #
+        # # Protein Pairs Tab
+        # if len(self._current_project.protein_pairs) > 0:
+        #     self.show_menu_options_with_protein_pair()
+        # if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+        #     self.show_menu_options_without_protein_pair()
 
-        # Protein Pairs Tab
-        if len(self._current_project.protein_pairs) > 0:
-            self.show_menu_options_with_protein_pair()
-        if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-            self.show_menu_options_without_protein_pair()
+        # tmp_projects = self.get_workspace_projects_as_list()
+        # if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
+        #     self._main_view.ui.action_open_project.setEnabled(True)
+        #     self._main_view.ui.action_delete_project.setEnabled(True)
+        # else:
+        #     self._main_view.ui.action_open_project.setEnabled(False)
+        #     self._main_view.ui.action_delete_project.setEnabled(False)
 
-        tmp_projects = self.get_workspace_projects_as_list()
-        if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
-            self._main_view.ui.action_open_project.setEnabled(True)
-            self._main_view.ui.action_delete_project.setEnabled(True)
-        else:
-            self._main_view.ui.action_open_project.setEnabled(False)
-            self._main_view.ui.action_delete_project.setEnabled(False)
-
+        # Fixme: Is the text in statusbar and logger not enough?
         if self.main_tasks_manager.prediction_task is not None:
             if not self.main_tasks_manager.check_if_prediction_task_is_finished():
                 logger.info("Running prediction in the background ...")
