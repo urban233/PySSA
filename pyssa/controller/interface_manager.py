@@ -788,56 +788,64 @@ class InterfaceManager:
             self._main_view.ui.action_close_project.setEnabled(True)
             if len(self._current_project.sequences) > 0:
                 # A project has sequence(s)
+                self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
                 # It is possible to do a prediction
                 self._main_view.ui.menuPrediction.setEnabled(True)
                 self._main_view.ui.action_predict_monomer.setEnabled(True)
                 self._main_view.ui.action_predict_multimer.setEnabled(True)
-
-                if len(self._current_project.proteins) > 0:
-                    # A project has protein(s)
-                    # It is possible to do an analysis, image and hotspots
-                    # Analysis
-                    self._main_view.ui.menuAnalysis.setEnabled(True)
-                    self._main_view.ui.action_distance_analysis.setEnabled(True)
-                    # Image
-                    self._main_view.ui.menuImage.setEnabled(True)
-                    self._main_view.ui.action_preview_image.setEnabled(True)
-                    self._main_view.ui.action_ray_tracing_image.setEnabled(True)
-                    self._main_view.ui.action_simple_image.setEnabled(True)
-                    # Hotspots
-                    self._main_view.ui.menuHotspots.setEnabled(True)
-                    self._main_view.ui.action_protein_regions.setEnabled(True)
-
-                    if len(self._current_project.protein_pairs) > 0:
-                        # A project has protein pair(s)
-                        # It is possible to view results
-                        self._main_view.ui.menuResults.setEnabled(True)
-                    else:
-                        # A project hasn't protein pair(s)
-                        # It isn't possible to view results
-                        self._main_view.ui.menuResults.setEnabled(False)
-                else:
-                    # A project hasn't protein(s)
-                    # It isn't possible to do an analysis, image and hotspots
-                    # Analysis
-                    self._main_view.ui.menuAnalysis.setEnabled(False)
-                    self._main_view.ui.action_distance_analysis.setEnabled(False)
-                    # Image
-                    self._main_view.ui.menuImage.setEnabled(False)
-                    self._main_view.ui.action_preview_image.setEnabled(False)
-                    self._main_view.ui.action_ray_tracing_image.setEnabled(False)
-                    self._main_view.ui.action_simple_image.setEnabled(False)
-                    # Hotspots
-                    self._main_view.ui.menuHotspots.setEnabled(False)
-                    self._main_view.ui.action_protein_regions.setEnabled(False)
             else:
-                # A project hasn't sequence(s)
+                # A project has no sequence(s)
+                self._sequence_model = QtGui.QStandardItemModel()
+                self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
                 # It isn't possible to do a prediction
                 self._main_view.ui.menuPrediction.setEnabled(False)
                 self._main_view.ui.action_predict_monomer.setEnabled(False)
                 self._main_view.ui.action_predict_multimer.setEnabled(False)
+
+            if len(self._current_project.proteins) > 0:
+                # A project has protein(s)
+                self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
+                self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
+                # It is possible to do an analysis, image and hotspots
+                # Analysis
+                self._main_view.ui.menuAnalysis.setEnabled(True)
+                self._main_view.ui.action_distance_analysis.setEnabled(True)
+                # Image
+                self._main_view.ui.menuImage.setEnabled(True)
+                self._main_view.ui.action_preview_image.setEnabled(True)
+                self._main_view.ui.action_ray_tracing_image.setEnabled(True)
+                self._main_view.ui.action_simple_image.setEnabled(True)
+                # Hotspots
+                self._main_view.ui.menuHotspots.setEnabled(True)
+                self._main_view.ui.action_protein_regions.setEnabled(True)
+
+                if len(self._current_project.protein_pairs) > 0:
+                    # A project has protein pair(s)
+                    self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
+                    self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+                    # It is possible to view results
+                    self._main_view.ui.menuResults.setEnabled(True)
+                else:
+                    # A project has no protein pair(s)
+                    # It isn't possible to view results
+                    self._main_view.ui.menuResults.setEnabled(False)
+            else:
+                # A project has no protein(s)
+                # It isn't possible to do an analysis, image and hotspots
+                # Analysis
+                self._main_view.ui.menuAnalysis.setEnabled(False)
+                self._main_view.ui.action_distance_analysis.setEnabled(False)
+                # Image
+                self._main_view.ui.menuImage.setEnabled(False)
+                self._main_view.ui.action_preview_image.setEnabled(False)
+                self._main_view.ui.action_ray_tracing_image.setEnabled(False)
+                self._main_view.ui.action_simple_image.setEnabled(False)
+                # Hotspots
+                self._main_view.ui.menuHotspots.setEnabled(False)
+                self._main_view.ui.action_protein_regions.setEnabled(False)
+
         else:
-            # Hompage view
+            # Homepage view
             # No project is open
             self._main_view.ui.lbl_project_name.hide()
             self._main_view.ui.project_tab_widget.hide()
@@ -887,7 +895,7 @@ class InterfaceManager:
                     self._main_view.ui.menuResults.setEnabled(False)
             else:
                 # A prediction is finished or not running.
-                return
+                pass
 
         # Menu bar view for analysis
         if self.main_tasks_manager.distance_analysis_task is not None:
@@ -905,7 +913,9 @@ class InterfaceManager:
                     self._main_view.ui.menuResults.setEnabled(False)
             else:
                 # An analysis is finished or not running.
-                return
+                pass
+
+        self._main_view.ui.project_tab_widget.setCurrentIndex(0)
 
         # # Fixme: The following code below is for clicking on sequence, protein or protein pair with available options.
         # # Fixme: Is this important with the code above?
@@ -949,15 +959,6 @@ class InterfaceManager:
         if self.main_tasks_manager.prediction_task is not None:
             if not self.main_tasks_manager.check_if_prediction_task_is_finished():
                 logger.info("Running prediction in the background ...")
-                # self._main_view.status_bar.setStyleSheet("""
-                #     QStatusBar {
-                #         background-color: #ff9000;
-                #         border-style: solid;
-                #         border-width: 2px;
-                #         border-radius: 4px;
-                #         border-color: #5b5b5b;
-                #     }
-                # """)
                 self._main_view.ui.action_abort_prediction.setEnabled(True)
                 self._main_view.ui.action_predict_monomer.setEnabled(False)
                 self._main_view.ui.action_predict_multimer.setEnabled(False)

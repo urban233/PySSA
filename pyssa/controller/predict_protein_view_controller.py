@@ -113,6 +113,7 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.ui.tab_widget.setTabEnabled(1, False)
         self._view.ui.tab_widget.setTabEnabled(0, True)
         self._view.ui.table_proteins_to_predict.setEnabled(True)
+        self._view.ui.btn_go_to_analysis_setup.setEnabled(True)
         self._view.resize(700, 800)
 
     def _check_if_prediction_and_analysis_should_be_done(self):
@@ -249,6 +250,7 @@ class PredictProteinViewController(QtCore.QObject):
             gui_elements_to_hide = []
             gui_utils.show_gui_elements(gui_elements_to_show)
             gui_utils.hide_gui_elements(gui_elements_to_hide)
+            self._view.ui.btn_go_to_analysis_setup.setEnabled(True)
             self._view.ui.btn_prediction_remove.setEnabled(False)
 
     def _remove_protein_to_predict(self) -> None:
