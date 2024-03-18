@@ -23,6 +23,8 @@ from Bio import SeqIO
 from xml import sax
 
 from pyssa.async_pyssa import main_tasks_async
+from pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
+    sequence_list_context_menu
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread.async_pyssa import util_async, custom_signals, project_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
@@ -141,9 +143,13 @@ class MainViewController:
         self.abort_signal = custom_signals.AbortSignal()
         self.disable_pymol_signal = custom_signals.DisablePyMOLSignal()
 
+        self._sequence_list_context_menu = sequence_list_context_menu.SequenceListContextMenu()
+        self._protein_tree_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
+        self._protein_pair_tree_context_menu = protein_pair_tree_context_menu.ProteinPairTreeContextMenu()
+
         self._interface_manager.status_bar_manager.set_abort_signal(self.abort_signal)
         self._setup_statusbar()
-        self._init_context_menus()
+        self._init_generic_help_context_menus()
         self._interface_manager.refresh_main_view()
         self._connect_all_ui_elements_with_slot_functions()
         if self._interface_manager.get_application_settings().start_help_at_startup == 1:
@@ -203,6 +209,12 @@ class MainViewController:
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         #self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
         self._view.ui.btn_help.clicked.connect(self._open_sequences_tab_help)
+
+        # <editor-fold desc="Context menu">
+        self._sequence_list_context_menu.connect_rename_sequence_action(self.rename_selected_sequence)
+        self._sequence_list_context_menu.connect_help_action(self._open_sequences_tab_help)
+        # </editor-fold>
+
         # </editor-fold>
 
         # <editor-fold desc="Proteins Tab">
@@ -246,6 +258,7 @@ class MainViewController:
         self._view.tg_protein_surface.toggleChanged.connect(self.__slot_protein_chain_as_surface)
 
         self._view.ui.btn_protein_hide_all_representations.clicked.connect(self.__slot_hide_protein_chain_all)
+        self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
 
         # <editor-fold desc="Color Grid">
         self._view.color_grid_proteins.c_red.clicked.connect(self.set_color_name_in_label_red_in_proteins_tab)
@@ -288,6 +301,14 @@ class MainViewController:
         self._view.color_grid_proteins.c_grey_30.clicked.connect(self.set_color_name_in_label_grey_30_in_proteins_tab)
         self._view.color_grid_proteins.c_black.clicked.connect(self.set_color_name_in_label_black_in_proteins_tab)
         # </editor-fold>
+
+        # <editor-fold desc="Protein tree context menu">
+        self._protein_tree_context_menu.connect_clean_protein_action(self.clean_protein_update)
+        self._protein_tree_context_menu.connect_rename_protein_action(self.rename_selected_protein_structure)
+        self._protein_tree_context_menu.connect_show_sequence_action(self._show_protein_chain_sequence)
+        self._protein_tree_context_menu.connect_help_action(self._open_proteins_tab_help)
+        # </editor-fold>
+
         # </editor-fold>
 
         # <editor-fold desc="Proteins Pair Tab">
@@ -371,13 +392,13 @@ class MainViewController:
         self._view.color_grid_protein_pairs.c_black.clicked.connect(self.set_color_name_in_label_black_in_protein_pairs_tab)
 
         # </editor-fold>
+
+        # <editor-fold desc="Context menu">
+        self._protein_pair_tree_context_menu.connect_open_results_summary_action(self._results_summary)
+        self._protein_pair_tree_context_menu.connect_color_based_on_rmsd_action(self._color_protein_pair_by_rmsd)
+        self._protein_pair_tree_context_menu.connect_help_action(self._open_protein_pairs_tab_help)
         # </editor-fold>
 
-        # <editor-fold desc="Context Menu">
-        self._interface_manager.get_rename_protein_view().dialogClosed.connect(
-            self.post_rename_selected_protein_structure)
-
-        self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
         # </editor-fold>
 
     @staticmethod
@@ -525,7 +546,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
         self._interface_manager.stop_wait_spinner()
 
-    def _init_context_menus(self):
+    def _init_generic_help_context_menus(self):
         # <editor-fold desc="General context menu setup">
         context_menu = QtWidgets.QMenu()
         self.help_context_action = context_menu.addAction(self._view.tr("Get Help"))
@@ -534,8 +555,6 @@ class MainViewController:
         # </editor-fold>
 
         # Set the context menu for the buttons
-        self._view.ui.seqs_list_view.setContextMenuPolicy(3)
-        self._view.ui.seqs_list_view.customContextMenuRequested.connect(self._show_context_menu_for_seq_list)
         self._view.ui.seqs_table_widget.setContextMenuPolicy(3)
         self._view.ui.seqs_table_widget.customContextMenuRequested.connect(self._show_context_menu_for_seq_table)
         self._view.ui.btn_import_seq.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
@@ -546,10 +565,6 @@ class MainViewController:
         self._view.ui.btn_save_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_save)
         self._view.ui.btn_delete_sequence.setContextMenuPolicy(3)  # 3 corresponds to Qt.CustomContextMenu
         self._view.ui.btn_delete_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_delete)
-        self._view.ui.proteins_tree_view.setContextMenuPolicy(3)
-        self._view.ui.proteins_tree_view.customContextMenuRequested.connect(
-            self._show_context_menu_for_proteins_tree_view
-        )
         self._view.ui.btn_import_protein.setContextMenuPolicy(3)
         self._view.ui.btn_import_protein.customContextMenuRequested.connect(
             self._show_context_menu_for_protein_import
@@ -581,11 +596,6 @@ class MainViewController:
         self._view.ui.frame_protein_pymol_scene.setContextMenuPolicy(3)
         self._view.ui.frame_protein_pymol_scene.customContextMenuRequested.connect(
             self._show_context_menu_for_protein_pymol_scene_config
-        )
-        # add more buttons here ...
-        self._view.ui.protein_pairs_tree_view.setContextMenuPolicy(3)
-        self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pairs_tree_view
         )
         self._view.ui.btn_delete_protein_pair.setContextMenuPolicy(3)
         self._view.ui.btn_delete_protein_pair.customContextMenuRequested.connect(
@@ -685,12 +695,6 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Context menu connections">
-    def _show_context_menu_for_seq_list(self, a_point):
-        context_menu = QtWidgets.QMenu()
-        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
-        help_context_action.triggered.connect(self._open_sequences_tab_help)
-        context_menu.exec_(self._view.ui.seqs_list_view.mapToGlobal(a_point))
-
     def _show_context_menu_for_seq_table(self, a_point):
         context_menu = QtWidgets.QMenu()
         help_context_action = context_menu.addAction(self._view.tr("Get Help"))
@@ -720,12 +724,6 @@ class MainViewController:
         help_context_action = context_menu.addAction(self._view.tr("Get Help"))
         help_context_action.triggered.connect(self._open_sequence_delete_help)
         context_menu.exec_(self._view.ui.btn_delete_sequence.mapToGlobal(a_point))
-
-    def _show_context_menu_for_proteins_tree_view(self, a_point):
-        context_menu = QtWidgets.QMenu()
-        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
-        help_context_action.triggered.connect(self._open_proteins_tab_help)
-        context_menu.exec_(self._view.ui.proteins_tree_view.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_import(self, a_point):
         context_menu = QtWidgets.QMenu()
@@ -774,12 +772,6 @@ class MainViewController:
         help_context_action = context_menu.addAction(self._view.tr("Get Help"))
         help_context_action.triggered.connect(self._open_protein_pymol_scene_config_help)
         context_menu.exec_(self._view.ui.frame_protein_pymol_scene.mapToGlobal(a_point))
-
-    def _show_context_menu_for_protein_pairs_tree_view(self, a_point):
-        context_menu = QtWidgets.QMenu()
-        help_context_action = context_menu.addAction(self._view.tr("Get Help"))
-        help_context_action.triggered.connect(self._open_protein_pairs_tab_help)
-        context_menu.exec_(self._view.ui.protein_pairs_tree_view.mapToGlobal(a_point))
 
     def _show_context_menu_for_protein_pair_delete(self, a_point):
         context_menu = QtWidgets.QMenu()
@@ -2410,64 +2402,37 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
 
     def open_context_menu_for_sequences(self, position):
-        sequence_context_menu = QtWidgets.QMenu()
-
-        self.sequences_context_menu_rename_action = sequence_context_menu.addAction(
-            self._view.tr("Rename selected sequence")
+        tmp_context_menu = self._sequence_list_context_menu.get_context_menu(
+            self._view.ui.seqs_list_view.selectedIndexes()
         )
-        self.sequences_context_menu_rename_action.triggered.connect(self.rename_selected_sequence)
-
-        sequence_context_menu.exec_(self._view.ui.seqs_list_view.viewport().mapToGlobal(position))
+        tmp_context_menu.exec_(self._view.ui.seqs_list_view.viewport().mapToGlobal(position))
+        # sequence_context_menu = QtWidgets.QMenu()
+        #
+        # self.sequences_context_menu_rename_action = sequence_context_menu.addAction(
+        #     self._view.tr("Rename selected sequence")
+        # )
+        # self.sequences_context_menu_rename_action.triggered.connect(self.rename_selected_sequence)
+        #
+        # sequence_context_menu.exec_(self._view.ui.seqs_list_view.viewport().mapToGlobal(position))
 
     # </editor-fold>
 
     # <editor-fold desc="Proteins tab methods">
     def open_context_menu_for_proteins(self, position):
-        indexes = self._view.ui.proteins_tree_view.selectedIndexes()
-        if len(indexes) > 0:
-            level = 0
-            index = indexes[0]
-            while index.parent().isValid():
-                index = index.parent()
-                level += 1
-        else:
-            return
-
-        tmp_type = self._interface_manager.get_current_protein_tree_index_type()
-
-        if tmp_type == "protein" or tmp_type == "chain":
+        try:
             tmp_protein = self._interface_manager.get_current_active_protein_object()
-        elif tmp_type == "header" or tmp_type == "scene":
-            return
+        except ValueError:
+            tmp_is_protein_in_any_pair_flag = True
         else:
-            logger.warning("Unknown object type occurred in Protein tab.")
-            return
-        tmp_is_protein_in_any_pair: bool = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
-            tmp_protein.get_molecule_object()
+            tmp_is_protein_in_any_pair_flag = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
+                tmp_protein.get_molecule_object()
+            )
+        tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
+            self._view.ui.proteins_tree_view.selectedIndexes(),
+            self._interface_manager.get_current_protein_tree_index_type(),
+            tmp_is_protein_in_any_pair_flag
         )
-        self.protein_context_menu = QtWidgets.QMenu()
-        if level == 0:
-            self.proteins_context_menu_clean_action = self.protein_context_menu.addAction(self._view.tr("Clean selected protein"))
-            self.proteins_context_menu_clean_action.triggered.connect(self.clean_protein_update)
-            self.proteins_context_menu_rename_action = self.protein_context_menu.addAction(self._view.tr("Rename selected protein"))
-            self.proteins_context_menu_rename_action.triggered.connect(self.rename_selected_protein_structure)
-
-            # <editor-fold desc="Check if protein is in any protein pair">
-            if tmp_is_protein_in_any_pair:
-                self.proteins_context_menu_rename_action.setEnabled(False)
-            else:
-                self.proteins_context_menu_rename_action.setEnabled(True)
-
-            # </editor-fold>
-
-        elif level == 1:
-            # header level
-            pass
-        elif level == 2:
-            tmp_show_sequence_action = self.protein_context_menu.addAction(self._view.tr("Show sequence"))
-            tmp_show_sequence_action.triggered.connect(self._show_protein_chain_sequence)
-
-        self.protein_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
+        tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
     def _open_protein_pymol_session(self):
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
@@ -3484,7 +3449,7 @@ class MainViewController:
             self._active_task.start()
             self._interface_manager.start_wait_spinner()
         else:
-            self._interface_manager.start_wait_spinner()
+            pass
 
     def __await_post_rename_selected_protein_structure(self, result: tuple) -> None:
         self._view.ui.proteins_tree_view.model().setData(
@@ -3650,41 +3615,11 @@ class MainViewController:
 
     # <editor-fold desc="Protein Pairs tab methods">
     def open_context_menu_for_protein_pairs(self, position):
-        indexes = self._view.ui.protein_pairs_tree_view.selectedIndexes()
-        if len(indexes) > 0:
-            level = 0
-            index = indexes[0]
-            while index.parent().isValid():
-                index = index.parent()
-                level += 1
-        else:
-            return
-
-        # elif tmp_type == "chain":
-        #     tmp_protein = self._interface_manager.get_parent_index_object_of_current_protein_tree_index()
-        # else:
-        #     logger.warning("Unknown object type occurred in Protein tab.")
-        #     return
-        # tmp_is_protein_in_any_pair: bool = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
-        #     tmp_protein.get_molecule_object()
-        # )
-
-        self.protein_pair_context_menu = QtWidgets.QMenu()
-        if level == 0:
-            # protein pair level
-            self.protein_pair_context_open_results_summary_action = self.protein_pair_context_menu.addAction(self._view.tr("Open Results Summary"))
-            self.protein_pair_context_open_results_summary_action.triggered.connect(self._results_summary)
-            self.protein_pair_context_color_based_on_rmsd_action = self.protein_pair_context_menu.addAction(self._view.tr("Color By RMSD"))
-            self.protein_pair_context_color_based_on_rmsd_action.triggered.connect(self._color_protein_pair_by_rmsd)
-
-            if not self._pymol_session_manager.is_the_current_protein_pair_in_session():
-                self.protein_pair_context_color_based_on_rmsd_action.setEnabled(False)
-            else:
-                self.protein_pair_context_color_based_on_rmsd_action.setEnabled(True)
-        else:
-            pass
-
-        self.protein_pair_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
+        tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
+            self._view.ui.protein_pairs_tree_view.selectedIndexes(),
+            self._pymol_session_manager.is_the_current_protein_pair_in_session()
+        )
+        tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
 
     def _open_protein_pair_pymol_session(self):
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()

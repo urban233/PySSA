@@ -204,7 +204,7 @@ class StatusBarManager:
         self._progress_bar.setValue(tmp_value)
         self._permanent_message.show()
         self._permanent_message.setText(tmp_message)
-        self._btn_task.show()
+        self._btn_task.hide()  # until now this feature stays hidden
 
     def hide_progress_bar(self):
         self._progress_bar.hide()

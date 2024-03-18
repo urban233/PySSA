@@ -138,15 +138,6 @@ class PymolSessionManager:
 
     def is_the_current_protein_pair_in_session(self) -> bool:
         """Checks if the current protein pair is in the session."""
-        # if self._interface_manager.get_current_protein_pair_tree_index_type() == "protein":
-        #     tmp_protein_pair_name: str = self._interface_manager.get_parent_index_object_of_current_protein_pair_tree_index().name
-        # elif self._interface_manager.get_current_protein_pair_tree_index_type() == "chain":
-        #     tmp_protein_pair_name: str = self._interface_manager.get_grand_parent_index_object_of_current_protein_pair_tree_index().name
-        # elif self._interface_manager.get_current_protein_pair_tree_index_type() == "protein_pair":
-        #     tmp_protein_pair_name: str = self._interface_manager.get_current_protein_pair_tree_index_object().name
-        # else:
-        #     raise ValueError("Unknown type!")
-
         if self.session_object_type == "protein_pair" and self.session_name == self._interface_manager.get_current_active_protein_pair_object().name:
             return True
         else:
