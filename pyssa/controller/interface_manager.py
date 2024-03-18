@@ -791,8 +791,24 @@ class InterfaceManager:
                 self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
                 # It is possible to do a prediction
                 self._main_view.ui.menuPrediction.setEnabled(True)
-                self._main_view.ui.action_predict_monomer.setEnabled(True)
-                self._main_view.ui.action_predict_multimer.setEnabled(True)
+
+                # <editor-fold desc="Checks type(s) of sequences">
+                tmp_sequence_model_state = self._check_sequence_model_state()
+                if tmp_sequence_model_state == "monomer":
+                    self._main_view.ui.action_predict_monomer.setEnabled(True)
+                    self._main_view.ui.action_predict_multimer.setEnabled(False)
+                elif tmp_sequence_model_state == "multimer":
+                    self._main_view.ui.action_predict_monomer.setEnabled(False)
+                    self._main_view.ui.action_predict_multimer.setEnabled(True)
+                elif tmp_sequence_model_state == "both":
+                    self._main_view.ui.action_predict_monomer.setEnabled(True)
+                    self._main_view.ui.action_predict_multimer.setEnabled(True)
+                elif tmp_sequence_model_state == "nothing":
+                    self._main_view.ui.action_predict_monomer.setEnabled(False)
+                    self._main_view.ui.action_predict_multimer.setEnabled(False)
+
+                # </editor-fold>
+
             else:
                 # A project has no sequence(s)
                 self._sequence_model = QtGui.QStandardItemModel()
@@ -887,7 +903,7 @@ class InterfaceManager:
                 self._main_view.ui.menuAnalysis.setEnabled(False)
                 self._main_view.ui.menuImage.setEnabled(False)
                 self._main_view.ui.menuHotspots.setEnabled(True)
-                # Check for results
+                # Check for existing results
                 if len(self._current_project.protein_pairs) > 0:
                     self._main_view.ui.menuResults.setEnabled(True)
                     self._main_view.ui.action_results_summary.setEnabled(True)
@@ -905,7 +921,7 @@ class InterfaceManager:
                 self._main_view.ui.menuAnalysis.setEnabled(False)
                 self._main_view.ui.menuImage.setEnabled(False)
                 self._main_view.ui.menuHotspots.setEnabled(False)
-                # Check for results
+                # Check for existing results
                 if len(self._current_project.protein_pairs) > 0:
                     self._main_view.ui.menuResults.setEnabled(True)
                     self._main_view.ui.action_results_summary.setEnabled(True)
