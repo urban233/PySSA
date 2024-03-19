@@ -195,7 +195,7 @@ class SettingsViewController(QtCore.QObject):
         
     def choose_workspace_dir(self) -> None:
         """Opens a QFileDialog to choose a workspace directory."""
-        gui_utils.choose_directory(self, self._view.ui.txt_workspace_dir)
+        gui_utils.choose_directory(self._interface_manager.get_settings_view(), self._view.ui.txt_workspace_dir)
     
     def ok_dialog(self) -> None:
         """Sets all settings from the gui elements into the settings object and closes the dialog window."""
