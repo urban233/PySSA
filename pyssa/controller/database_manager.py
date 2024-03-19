@@ -226,6 +226,7 @@ class DatabaseManager:
 
     def open_project_database(self):
         """Opens a project database"""
+        logger.debug(f"Filepath of the database_manager: {self._database_filepath}")
         self._connection = sqlite3.connect(self._database_filepath)
         self._cursor = self._connection.cursor()
 

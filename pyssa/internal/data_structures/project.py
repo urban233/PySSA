@@ -199,6 +199,7 @@ class Project:
         Returns:
             the path of the projects xml file
         """
+        raise NotImplementedError("This function should no longer be used!!!")
         return pathlib.Path(f"{self._workspace}/{self.get_project_name()}.xml")
 
     def get_database_filepath(self) -> pathlib.Path:

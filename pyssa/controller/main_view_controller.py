@@ -912,6 +912,7 @@ class MainViewController:
 
         _, tmp_project = return_value
         self._interface_manager.set_new_project(tmp_project)
+        print(self._interface_manager.get_current_project())
         self._interface_manager.refresh_workspace_model()
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
@@ -1218,8 +1219,11 @@ class MainViewController:
             self._check_options_for_sequence_selection)
 
     def _disconnect_sequence_selection_model(self):
-        self._view.ui.seqs_list_view.selectionModel().selectionChanged.disconnect(
-            self._check_options_for_sequence_selection)
+        try:
+            self._view.ui.seqs_list_view.selectionModel().selectionChanged.disconnect(
+                self._check_options_for_sequence_selection)
+        except TypeError:
+            logger.warning("Catching error because no sequences exist in the project. Therefore the selectionChanged signal does not need to be disconnected.")
 
     def _check_options_for_sequence_selection(self):
         if len(self._view.ui.seqs_list_view.selectedIndexes()) > 0:
@@ -3288,7 +3292,6 @@ class MainViewController:
                 target=main_presenter_async.add_protein_from_pdb_to_project,
                 args=(
                     tmp_protein_name,
-                    self._database_manager,
                     self._interface_manager
                 ),
                 post_func=self.__await_post_import_protein_structure,
@@ -3301,7 +3304,6 @@ class MainViewController:
                 target=main_presenter_async.add_protein_from_local_filesystem_to_project,
                 args=(
                     tmp_protein_name,
-                    self._database_manager,
                     self._interface_manager
                 ),
                 post_func=self.__await_post_import_protein_structure,
