@@ -3324,7 +3324,7 @@ class MainViewController:
                                                  (0, tmp_protein)))
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.unfreeze_current_protein_pymol_session()
-        self._pymol_session_manager.unfreeze_current_protein_pymol_session()
+        self._pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
         self._main_view_state.restore_main_view_state()
         self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")
         self._interface_manager.stop_wait_spinner()
