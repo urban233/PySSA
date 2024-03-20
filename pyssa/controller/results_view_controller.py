@@ -9,7 +9,6 @@ from pymol import cmd
 from pyssa.controller import interface_manager, database_manager, pymol_session_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import results_view, plot_view
 from pyssa.internal.data_structures import protein_pair, selection

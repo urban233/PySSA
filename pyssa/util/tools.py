@@ -40,7 +40,6 @@ from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures.data_classes import basic_protein_info
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names

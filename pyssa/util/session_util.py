@@ -25,7 +25,6 @@ from PyQt5.QtWidgets import QMessageBox
 from pymol import cmd
 
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.gui.ui.messageboxes import basic_boxes
 
 
 def check_if_sele_is_empty() -> bool:

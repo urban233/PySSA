@@ -45,7 +45,6 @@ from pyssa.gui.ui.dialogs import dialog_about
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.dialogs import dialog_tutorial_videos
 from pyssa.gui.ui.dialogs import dialog_rename_protein
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import plot_view, add_protein_view
 

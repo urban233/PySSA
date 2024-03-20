@@ -30,7 +30,6 @@ from PyQt5 import QtWidgets
 
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_settings_global
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.internal.portal import pymol_io, graphic_operations
 from pyssa.internal.data_structures import protein
 from pyssa.io_pyssa import path_util

@@ -31,7 +31,6 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.util import tools, constants
 from pyssa.util.void import rvoid

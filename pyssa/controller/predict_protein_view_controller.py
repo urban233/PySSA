@@ -8,7 +8,6 @@ from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager, add_protein_pair_view_controller
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import distance_analysis_view, predict_monomer_view, predict_multimer_view, predict_protein_view
 from pyssa.internal.data_structures import protein, chain

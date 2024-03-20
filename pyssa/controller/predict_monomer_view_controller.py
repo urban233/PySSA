@@ -8,7 +8,6 @@ from PyQt5.QtCore import pyqtSignal
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
-from pyssa.gui.ui.messageboxes import basic_boxes
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import distance_analysis_view, predict_monomer_view
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
