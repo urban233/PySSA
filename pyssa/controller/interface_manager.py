@@ -902,7 +902,11 @@ class InterfaceManager:
                 self._main_view.ui.action_abort_prediction.setEnabled(True)
                 self._main_view.ui.menuAnalysis.setEnabled(False)
                 self._main_view.ui.menuImage.setEnabled(False)
-                self._main_view.ui.menuHotspots.setEnabled(True)
+                # Check for existing protein(s)
+                if len(self._current_project.proteins) > 0:
+                    self._main_view.ui.menuHotspots.setEnabled(True)
+                else:
+                    self._main_view.ui.menuHotspots.setEnabled(False)
                 # Check for existing results
                 if len(self._current_project.protein_pairs) > 0:
                     self._main_view.ui.menuResults.setEnabled(True)
