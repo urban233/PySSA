@@ -31,6 +31,7 @@ from PyQt5 import QtWidgets
 from pyqtspinner import spinner
 
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants, tools, gui_utils
@@ -86,11 +87,14 @@ class AddProteinView(QtWidgets.QDialog):
         self.setModal(True)
         # check internet connectivity
         if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog_with_custom_msg(
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "You do not have a working internet connection which is "
                 "necessary for connecting to the PDB!\n"
                 "However you can add a protein structure from "
                 "your local filesystem.",
+                "Internet Connection",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
             )
+            tmp_dialog.exec_()
             self.ui.txt_add_protein.setEnabled(False)
             self.ui.lbl_status.setText("You cannot enter a PDB ID (no working internet connection).")

@@ -80,7 +80,12 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.ui.checkbox_add_analysis.setChecked(False)
         # checks internet connection
         if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog()
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "You do not have a working internet connection but that is necessary for this operation!",
+                "Internet Connection",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
             return
 
         self._view.ui.list_analysis_overview.clear()

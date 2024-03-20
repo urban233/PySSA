@@ -1385,7 +1385,7 @@ class MainViewController:
                 enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value
             )
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because there was an error writing the fasta file(s)!",
                 "Structure Prediction",
@@ -1396,7 +1396,7 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because the fasta file(s) could not be found!",
                 "Structure Prediction",
@@ -1407,7 +1407,7 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because a subprocess failed!",
                 "Structure Prediction",
@@ -1419,7 +1419,7 @@ class MainViewController:
             )
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown error!",
                 "Structure Prediction",
@@ -1492,7 +1492,7 @@ class MainViewController:
         tmp_exit_code = result[0]
         tmp_exit_code_description = result[1]
         if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because there was an error writing the fasta file(s)!",
                 "Structure Prediction",
@@ -1505,7 +1505,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because the fasta file(s) could not be found!",
                 "Structure Prediction",
@@ -1518,7 +1518,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because a subprocess failed!",
                 "Structure Prediction",
@@ -1680,7 +1680,6 @@ class MainViewController:
         tmp_exit_code_description = [1]
         if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
-            self.block_box_prediction.destroy(True)
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
             self.update_status("All structure predictions are done.")
             constants.PYSSA_LOGGER.info("Begin analysis process.")
@@ -1708,7 +1707,6 @@ class MainViewController:
                 os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-            self.block_box_prediction.destroy(True)
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because there was an error writing the fasta file(s)!",
                 "Structure Prediction",
@@ -1722,7 +1720,7 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because the fasta file(s) could not be found!",
                 "Structure Prediction",
@@ -1736,7 +1734,7 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because a subprocess failed!",
                 "Structure Prediction",
@@ -1750,7 +1748,7 @@ class MainViewController:
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
             self._view.wait_spinner.stop()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            self.block_box_prediction.destroy(True)
+            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown error!",
                 "Structure Prediction",
@@ -1858,12 +1856,13 @@ class MainViewController:
     @staticmethod
     def clear_all_log_files() -> None:
         """Clears all log files generated under .pyssa/logs."""
-        response = basic_boxes.yes_or_no(
-            "Clear log files",
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
             "Are you sure you want to delete all log files?",
-            QtWidgets.QMessageBox.Information,
+            "Clear Log Files",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
         )
-        if response:
+        tmp_dialog.exec_()
+        if tmp_dialog.response:
             try:
                 shutil.rmtree(str(constants.LOG_PATH))
             except PermissionError:
@@ -3325,6 +3324,7 @@ class MainViewController:
             database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
                                                  (0, tmp_protein)))
         self._interface_manager.refresh_main_view()
+        self._pymol_session_manager.reinitialize_session()
         self._pymol_session_manager.unfreeze_current_protein_pymol_session()
         self._pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
         self._main_view_state.restore_main_view_state()

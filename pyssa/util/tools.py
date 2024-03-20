@@ -301,11 +301,12 @@ def ask_to_save_pymol_session(
         app_settings: the app settings.
     """
     if app_settings.ask_save_pymol_session == 1:
-        session_msg = basic_boxes.yes_or_no(
-            "PyMOL Session",
-            "Do you want to save your current pymol session?",
-            QMessageBox.Information,
-        )
-        if session_msg is True:
-            the_current_session.session = pymol_io.convert_pymol_session_to_base64_string(the_current_session.name)
-            app_project.save_pymol_session(the_current_session)
+        pass
+        # session_msg = basic_boxes.yes_or_no(
+        #     "PyMOL Session",
+        #     "Do you want to save your current pymol session?",
+        #     QMessageBox.Information,
+        # )
+        # if session_msg is True:
+        #     the_current_session.session = pymol_io.convert_pymol_session_to_base64_string(the_current_session.name)
+        #     app_project.save_pymol_session(the_current_session)

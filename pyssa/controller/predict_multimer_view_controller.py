@@ -285,7 +285,12 @@ class PredictMultimerViewController(QtCore.QObject):
         self._view.ui.lbl_pred_analysis_multi_to_analysis_setup.setText("Protein Structure(s)")
         # checks internet connection
         if not tools.check_internet_connectivity():
-            gui_utils.no_internet_dialog()
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "You do not have a working internet connection but that is necessary for this operation!",
+                "Internet Connection",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
             return
 
         self._init_multi_pred_analysis_page()
