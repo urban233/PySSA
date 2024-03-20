@@ -863,35 +863,45 @@ class InterfaceManager:
         else:
             # Homepage view
             # No project is open
-            self._main_view.ui.lbl_project_name.hide()
-            self._main_view.ui.project_tab_widget.hide()
-            self._main_view.ui.lbl_logo.show()
-            # Project
-            self._main_view.ui.action_new_project.setEnabled(True)
-            self._main_view.ui.action_open_project.setEnabled(True)
-            self._main_view.ui.action_use_project.setEnabled(False)
-            self._main_view.ui.action_delete_project.setEnabled(True)
-            self._main_view.ui.action_import_project.setEnabled(True)
-            self._main_view.ui.action_export_project.setEnabled(False)
-            self._main_view.ui.action_close_project.setEnabled(False)
-            # Prediction
-            self._main_view.ui.menuPrediction.setEnabled(False)
-            self._main_view.ui.action_predict_monomer.setEnabled(False)
-            self._main_view.ui.action_predict_multimer.setEnabled(False)
-            # Analysis
-            self._main_view.ui.menuAnalysis.setEnabled(False)
-            self._main_view.ui.action_distance_analysis.setEnabled(True)
-            # Results
-            self._main_view.ui.menuResults.setEnabled(False)
-            self._main_view.ui.action_results_summary.setEnabled(False)
-            # Image
-            self._main_view.ui.menuImage.setEnabled(False)
-            self._main_view.ui.action_preview_image.setEnabled(False)
-            self._main_view.ui.action_ray_tracing_image.setEnabled(False)
-            self._main_view.ui.action_simple_image.setEnabled(False)
-            # Hotspots
-            self._main_view.ui.menuHotspots.setEnabled(False)
-            self._main_view.ui.action_protein_regions.setEnabled(False)
+            # No project(s) available
+            if len(self.get_workspace_projects_as_list()) == 0:
+                self._main_view.ui.action_new_project.setEnabled(True)
+                self._main_view.ui.action_open_project.setEnabled(False)
+                self._main_view.ui.action_use_project.setEnabled(False)
+                self._main_view.ui.action_delete_project.setEnabled(False)
+                self._main_view.ui.action_import_project.setEnabled(True)
+                self._main_view.ui.action_export_project.setEnabled(False)
+                self._main_view.ui.action_close_project.setEnabled(False)
+            else:
+                self._main_view.ui.lbl_project_name.hide()
+                self._main_view.ui.project_tab_widget.hide()
+                self._main_view.ui.lbl_logo.show()
+                # Project
+                self._main_view.ui.action_new_project.setEnabled(True)
+                self._main_view.ui.action_open_project.setEnabled(True)
+                self._main_view.ui.action_use_project.setEnabled(False)
+                self._main_view.ui.action_delete_project.setEnabled(True)
+                self._main_view.ui.action_import_project.setEnabled(True)
+                self._main_view.ui.action_export_project.setEnabled(False)
+                self._main_view.ui.action_close_project.setEnabled(False)
+                # Prediction
+                self._main_view.ui.menuPrediction.setEnabled(False)
+                self._main_view.ui.action_predict_monomer.setEnabled(False)
+                self._main_view.ui.action_predict_multimer.setEnabled(False)
+                # Analysis
+                self._main_view.ui.menuAnalysis.setEnabled(False)
+                self._main_view.ui.action_distance_analysis.setEnabled(True)
+                # Results
+                self._main_view.ui.menuResults.setEnabled(False)
+                self._main_view.ui.action_results_summary.setEnabled(False)
+                # Image
+                self._main_view.ui.menuImage.setEnabled(False)
+                self._main_view.ui.action_preview_image.setEnabled(False)
+                self._main_view.ui.action_ray_tracing_image.setEnabled(False)
+                self._main_view.ui.action_simple_image.setEnabled(False)
+                # Hotspots
+                self._main_view.ui.menuHotspots.setEnabled(False)
+                self._main_view.ui.action_protein_regions.setEnabled(False)
 
         # Menu bar view for prediction
         if self.main_tasks_manager.prediction_task is not None:
@@ -902,7 +912,11 @@ class InterfaceManager:
                 self._main_view.ui.action_abort_prediction.setEnabled(True)
                 self._main_view.ui.menuAnalysis.setEnabled(False)
                 self._main_view.ui.menuImage.setEnabled(False)
-                self._main_view.ui.menuHotspots.setEnabled(True)
+                # Check for existing protein(s)
+                if len(self._current_project.proteins) > 0:
+                    self._main_view.ui.menuHotspots.setEnabled(True)
+                else:
+                    self._main_view.ui.menuHotspots.setEnabled(False)
                 # Check for existing results
                 if len(self._current_project.protein_pairs) > 0:
                     self._main_view.ui.menuResults.setEnabled(True)
