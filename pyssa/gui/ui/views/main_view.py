@@ -567,7 +567,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.seqs_table_widget.setToolTip("A table with additional information about the selected sequence")
         self.ui.btn_import_seq.setToolTip("Import an existing .fasta file")
         self.ui.btn_add_sequence.setToolTip("Add a sequence by pasting the sequence string")
-        self.ui.btn_save_sequence.setToolTip("Save the selected sequence as .fasta file")
+        self.ui.btn_save_sequence.setToolTip("Export the selected sequence as .fasta file")
         self.ui.btn_delete_sequence.setToolTip("Delete the selected sequence from the project")
 
         # self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
@@ -575,7 +575,7 @@ class MainView(QtWidgets.QMainWindow):
         #     "A table with changeable PyMOL parameters for the currently active session"
         # )
         self.ui.btn_import_protein.setToolTip("Import an existing .pdb file")
-        self.ui.btn_save_protein.setToolTip("Save the selected protein as .pdb file")
+        self.ui.btn_save_protein.setToolTip("Export the selected protein as .pdb file")
         self.ui.btn_delete_protein.setToolTip("Delete the selected protein from the project")
         self.ui.btn_open_protein_session.setToolTip("Open protein PyMOL session")
         self.ui.btn_create_protein_scene.setToolTip("Create a new PyMOL scene")
