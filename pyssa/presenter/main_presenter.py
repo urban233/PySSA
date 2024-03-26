@@ -4090,7 +4090,7 @@ class MainPresenter:
 
     def validate_project_name(self) -> None:
         """Validates the input of the project name in real-time."""
-        input_validator.InputValidator.validate_project_name(
+        input_validator.InputValidator.validate_project_name_use_project(
             self._view.ui.list_new_projects,
             self._view.ui.txt_new_project_name,
             self._view.ui.lbl_new_status_project_name,
@@ -4215,7 +4215,7 @@ class MainPresenter:
     # <editor-fold desc="Use page">
     def validate_use_project_name(self) -> None:
         """Validates the input of the project name in real-time."""
-        input_validator.InputValidator.validate_project_name(
+        input_validator.InputValidator.validate_project_name_use_project(
             self._view.ui.list_use_existing_projects,
             self._view.ui.txt_use_project_name,
             self._view.ui.lbl_use_status_project_name,

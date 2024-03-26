@@ -45,6 +45,7 @@ class OpenProjectViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_open_view()
         self._fill_projects_list_view()
+        self._project_names = self._convert_model_into_set()
         self._connect_all_ui_elements_to_slot_functions()
         self.restore_default_view()
 
@@ -86,6 +87,14 @@ class OpenProjectViewController(QtCore.QObject):
         """Lists all projects."""
         self._view.ui.projects_list_view.setModel(self._interface_manager.get_workspace_projects())
 
+    def _convert_model_into_set(self) -> set:
+        tmp_project_names = []
+        for tmp_row in range(self._view.ui.projects_list_view.model().rowCount()):
+            tmp_project_names.append(
+                self._view.ui.projects_list_view.model().index(tmp_row, 0).data(Qt.DisplayRole)
+            )
+        return set(tmp_project_names)
+
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.txt_open_search.textChanged.connect(self._validate_open_search)
         self._view.ui.projects_list_view.clicked.connect(self._select_project_from_open_list)
@@ -94,27 +103,37 @@ class OpenProjectViewController(QtCore.QObject):
         self._view.ui.projects_list_view.doubleClicked.connect(self._open_selected_project)
         self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
-    def _validate_open_search(self) -> None:
+    def _validate_open_search(self, the_entered_text: str) -> None:
         """Validates the input of the project name in real-time."""
-        projects_list_view = self._view.ui.projects_list_view
-
-        # Deselect any current item in the list view
-        if projects_list_view.currentIndex().isValid():
-            projects_list_view.model().itemFromIndex(projects_list_view.currentIndex()).setSelected(False)
-
-        # Assuming validate_search_input is a static method
-        input_validator.InputValidator.validate_search_input(
-            projects_list_view.model(),
-            self._view.ui.txt_open_search,
-            self._view.ui.lbl_open_status_search,
-            self._view.ui.txt_open_selected_project,
+        tmp_validate_flag, tmp_stylesheet_string, tmp_message = input_validator.check_project_names_for_given_project_name(
+            the_entered_text, self._project_names
         )
+
+        self._view.ui.txt_open_search.setStyleSheet(tmp_stylesheet_string)
+        if tmp_validate_flag:
+            self._view.ui.lbl_open_status_search.setText("")
+        else:
+            self._view.ui.lbl_open_status_search.setText(tmp_message)
+
+        # projects_list_view = self._view.ui.projects_list_view
+        #
+        # # Deselect any current item in the list view
+        # if projects_list_view.currentIndex().isValid():
+        #     projects_list_view.model().itemFromIndex(projects_list_view.currentIndex()).setSelected(False)
+        #
+        # # Assuming validate_search_input is a static method
+        # input_validator.InputValidator.validate_search_input(
+        #     projects_list_view.model(),
+        #     self._view.ui.txt_open_search,
+        #     self._view.ui.lbl_open_status_search,
+        #     self._view.ui.txt_open_selected_project,
+        # )
 
     def _select_project_from_open_list(self) -> None:
         """Sets the selected project name in the text box."""
         try:
-            self._view.ui.txt_open_selected_project.setText(
-                self._view.ui.projects_list_view.model().data(self._view.ui.projects_list_view.currentIndex(),
+            self._view.ui.txt_open_selected_project.setText(self._view.ui.projects_list_view.model().data
+                                                            (self._view.ui.projects_list_view.currentIndex(),
                                                               Qt.DisplayRole))
         except AttributeError:
             self._view.ui.txt_open_selected_project.setText("")
