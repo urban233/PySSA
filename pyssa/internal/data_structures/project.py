@@ -185,6 +185,12 @@ class Project:
         """
         return len(self.proteins)
 
+    def is_sequence_as_protein_in_project(self, a_sequence_name) -> bool:
+        for tmp_protein in self.proteins:
+            if tmp_protein.get_molecule_object() == a_sequence_name:
+                return True
+        return False
+
     def get_project_name(self) -> str:
         """Getter for the project name.
 

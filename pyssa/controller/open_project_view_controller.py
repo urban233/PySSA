@@ -80,6 +80,8 @@ class OpenProjectViewController(QtCore.QObject):
 
     def restore_default_view(self) -> None:
         self._view.ui.txt_open_selected_project.clear()
+        self._view.ui.label_28.hide()
+        self._view.ui.txt_open_search.setPlaceholderText("Search")
         self._view.ui.btn_open_project.setEnabled(False)
 
     def _fill_projects_list_view(self) -> None:

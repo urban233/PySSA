@@ -24,6 +24,7 @@ class Ui_Dialog(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.frame)
+        self.verticalLayout_9.setContentsMargins(0, -1, 0, 0)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.tabWidget = QtWidgets.QTabWidget(self.frame)
         self.tabWidget.setObjectName("tabWidget")

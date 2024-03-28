@@ -773,6 +773,7 @@ class InterfaceManager:
         self._main_view.ui.action_clear_logs.setEnabled(True)
         self._main_view.ui.action_about.setEnabled(True)
         if self._current_project.get_project_name() != "":
+            self._main_view.setStyleSheet("""QMainWindow {background: #E6E6E6;}""")
             # A project is open
             self._main_view.ui.lbl_project_name.show()
             self._main_view.ui.lbl_project_name.setText(f"Project Name: {self._current_project.get_project_name()}")
@@ -807,6 +808,15 @@ class InterfaceManager:
                     self._main_view.ui.action_predict_monomer.setEnabled(False)
                     self._main_view.ui.action_predict_multimer.setEnabled(False)
 
+                tmp_are_all_monomer_sequences_predicted = self._check_if_sequences_are_already_predicted()[0]
+                tmp_are_all_multimer_sequences_predicted = self._check_if_sequences_are_already_predicted()[1]
+                if tmp_are_all_monomer_sequences_predicted:
+                    self._main_view.ui.action_predict_monomer.setEnabled(False)
+                if tmp_are_all_multimer_sequences_predicted:
+                    self._main_view.ui.action_predict_multimer.setEnabled(False)
+                if tmp_are_all_monomer_sequences_predicted and tmp_are_all_multimer_sequences_predicted:
+                    self._main_view.ui.menuPrediction.setEnabled(
+                        False)  # the entire menu can be disabled because all sequences are predicted
                 # </editor-fold>
 
             else:
@@ -862,6 +872,7 @@ class InterfaceManager:
 
         else:
             # Homepage view
+            self._main_view.setStyleSheet("""QMainWindow {background: #EFEFEF;}""")
             # No project is open
             # No project(s) available
             if len(self.get_workspace_projects_as_list()) == 0:
@@ -1122,6 +1133,41 @@ class InterfaceManager:
             return "multimer"
         else:
             return "nothing"
+
+    def _check_if_sequences_are_already_predicted(self) -> tuple[bool, bool]:
+        """Checks if sequences are already predicted or not.
+
+        Returns:
+            a tuple of booleans where True means all sequences of the type are already predicted.
+        """
+        tmp_number_of_monomer_sequences = 0
+        tmp_number_of_multimer_sequences = 0
+        tmp_number_of_predicted_monomer_sequences = 0
+        tmp_number_of_predicted_multimer_sequences = 0
+        for tmp_row in range(self._sequence_model.rowCount()):
+            tmp_item = self._sequence_model.item(tmp_row, 0)
+            if tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ:
+                tmp_number_of_monomer_sequences += 1
+            elif tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ:
+                tmp_number_of_multimer_sequences += 1
+            else:
+                logger.warning("Invalid TYPE_ROLE!")
+
+            if self._current_project.is_sequence_as_protein_in_project(tmp_item.data(enums.ModelEnum.OBJECT_ROLE).name) and tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ:
+                tmp_number_of_predicted_monomer_sequences += 1
+            elif self._current_project.is_sequence_as_protein_in_project(tmp_item.data(enums.ModelEnum.OBJECT_ROLE).name) and tmp_item.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ:
+                tmp_number_of_predicted_multimer_sequences += 1
+
+        if tmp_number_of_predicted_monomer_sequences == tmp_number_of_monomer_sequences:
+            tmp_monomer_sequence_flag = True
+        else:
+            tmp_monomer_sequence_flag = False
+        if tmp_number_of_predicted_multimer_sequences == tmp_number_of_multimer_sequences:
+            tmp_multimer_sequence_flag = True
+        else:
+            tmp_multimer_sequence_flag = False
+        return tmp_monomer_sequence_flag, tmp_multimer_sequence_flag
+
     # </editor-fold>
 
     # <editor-fold desc="Proteins">

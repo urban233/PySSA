@@ -19,6 +19,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout_9.setContentsMargins(0, -1, 0, 0)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -660,7 +661,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_9.addWidget(self.project_tab_widget)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 767, 26))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 767, 21))
         self.menubar.setObjectName("menubar")
         self.menuProject = QtWidgets.QMenu(self.menubar)
         self.menuProject.setObjectName("menuProject")
@@ -779,7 +780,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.project_tab_widget.setCurrentIndex(2)
+        self.project_tab_widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

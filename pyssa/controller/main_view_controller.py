@@ -1229,13 +1229,21 @@ class MainViewController:
             tmp_enable_monomer_flag = False
             tmp_enable_multimer_flag = False
             for tmp_model_index in self._view.ui.seqs_list_view.selectedIndexes():
-                if tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MONOMER_SEQ and tmp_enable_monomer_flag is False:
+                tmp_type = tmp_model_index.data(enums.ModelEnum.TYPE_ROLE)
+                tmp_sequence_name: SeqRecord.SeqRecord = tmp_model_index.data(enums.ModelEnum.OBJECT_ROLE).name
+                if tmp_type == enums.ModelTypeEnum.MONOMER_SEQ and tmp_enable_monomer_flag is False and not self._interface_manager.get_current_project().is_sequence_as_protein_in_project(tmp_sequence_name):
                     tmp_enable_monomer_flag = True
-                elif tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ and tmp_enable_multimer_flag is False:
+                elif tmp_model_index.data(enums.ModelEnum.TYPE_ROLE) == enums.ModelTypeEnum.MULTIMER_SEQ and tmp_enable_multimer_flag is False and not self._interface_manager.get_current_project().is_sequence_as_protein_in_project(tmp_sequence_name):
                     tmp_enable_multimer_flag = True
             self._view.ui.action_predict_monomer.setEnabled(tmp_enable_monomer_flag)
             self._view.ui.action_predict_multimer.setEnabled(tmp_enable_multimer_flag)
+            if tmp_enable_monomer_flag or tmp_enable_multimer_flag:
+                self._view.ui.menuPrediction.setEnabled(True)
+            elif not tmp_enable_monomer_flag and not tmp_enable_multimer_flag:
+                self._view.ui.menuPrediction.setEnabled(False)
         else:
+            self._view.ui.btn_save_sequence.setEnabled(False)
+            self._view.ui.btn_delete_sequence.setEnabled(False)
             self._interface_manager.refresh_main_view()
 
     # <editor-fold desc="Monomer">

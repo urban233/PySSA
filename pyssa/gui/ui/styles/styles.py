@@ -26,6 +26,10 @@ from PyQt5 import QtWidgets
 from pyssa.util import constants, global_variables
 
 
+def switch_background_color_main_window(main_window: QtWidgets.QMainWindow):
+    main_window.setStyleSheet("""QMainWindow {background: rgb(255, 255, 255);}""")
+
+
 def color_bottom_frame_button(button: QtWidgets.QPushButton) -> None:
     """This functions colors a button blue to signal it is ready to be pressed.
 

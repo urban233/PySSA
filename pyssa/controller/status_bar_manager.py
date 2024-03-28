@@ -63,7 +63,7 @@ class StatusBarManager:
     def _style_status_bar_for_normal_message(self):
         self._view.status_bar.setStyleSheet("""
             QStatusBar {
-                background-color: white;
+                background-color: #F2F2F2;
                 border-style: solid;
                 border-width: 2px;
                 border-radius: 4px;
