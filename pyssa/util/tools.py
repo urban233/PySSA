@@ -25,6 +25,8 @@ import pathlib
 import shutil
 import logging
 import fnmatch
+import socket
+
 import zmq
 import pygetwindow
 import subprocess
@@ -52,10 +54,15 @@ if TYPE_CHECKING:
 
 def check_internet_connectivity() -> bool:
     """Checks the connection to the internet."""
-    timeout: float = 3
+    timeout: float = 4
     try:
         urlopen("https://www.google.com", timeout=timeout)
     except URLError:
+        return False
+    except socket.timeout:
+        return False
+    except Exception as e:
+        constants.PYSSA_LOGGER.error(f"Could not connect to internet, due to an unknown error: {e}")
         return False
     else:
         return True

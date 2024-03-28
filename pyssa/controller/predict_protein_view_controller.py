@@ -1,4 +1,5 @@
 import os
+import socket
 import subprocess
 
 from PyQt5 import QtWidgets
@@ -191,6 +192,10 @@ class PredictProteinViewController(QtCore.QObject):
         tmp_row_no = 0
         self.temporary_protein_objs.clear()
         for tmp_seq_record in tmp_sequences_to_predict:
+            if self._interface_manager.get_current_project().is_sequence_as_protein_in_project(tmp_seq_record.name):
+                # Continues if a protein with the name of the given sequence already exists
+                continue
+
             tmp_seqs = tmp_seq_record.seq.split(",")
             tmp_chain_no = 0
             for tmp_seq in tmp_seqs:
