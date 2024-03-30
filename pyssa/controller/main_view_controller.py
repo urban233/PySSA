@@ -96,6 +96,11 @@ class MainViewController:
     _active_task: tasks.Task
 
     """
+    The active task which controls the help window of the application.
+    """
+    _help_task: tasks.Task
+
+    """
     a thread for database related processes
     """
     _database_thread: "database_thread.DatabaseThread"
@@ -503,12 +508,12 @@ class MainViewController:
 
     # <editor-fold desc="Help related methods">
     def _start_documentation_server(self):
-        self._active_task = tasks.Task(
+        self._help_task = tasks.Task(
             target=util_async.start_documentation_server,
             args=(0, 0),
             post_func=self.__await_start_documentation_server,
         )
-        self._active_task.start()
+        self._help_task.start()
 
     def __await_start_documentation_server(self, return_value: tuple):
         self._interface_manager.documentation_window = return_value[1]
@@ -524,12 +529,12 @@ class MainViewController:
         self._interface_manager.status_bar_manager.show_temporary_message(
             "Opening help center ...", False)
 
-        self._active_task = tasks.Task(
+        self._help_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, self._interface_manager.documentation_window),
             post_func=self.__await_open_help,
         )
-        self._active_task.start()
+        self._help_task.start()
 
     def __await_open_help(self, return_value):
         self._interface_manager.documentation_window = return_value[2]
