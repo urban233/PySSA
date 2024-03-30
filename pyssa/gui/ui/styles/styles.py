@@ -26,10 +26,6 @@ from PyQt5 import QtWidgets
 from pyssa.util import constants, global_variables
 
 
-def switch_background_color_main_window(main_window: QtWidgets.QMainWindow):
-    main_window.setStyleSheet("""QMainWindow {background: rgb(255, 255, 255);}""")
-
-
 def color_bottom_frame_button(button: QtWidgets.QPushButton) -> None:
     """This functions colors a button blue to signal it is ready to be pressed.
 
@@ -70,6 +66,22 @@ def set_stylesheet(self) -> None:  # noqa: ANN001
     """
     with open(
         pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/pyssa_style.css"),
+        "r",
+        encoding="utf-8",
+    ) as file:
+        style = file.read()
+        # Set the stylesheet of the application
+        self.setStyleSheet(style)
+
+
+def set_stylesheet_homepage(self) -> None:  # noqa: ANN001
+    """Sets the style sheet to the QMainWindow or a QDialog.
+
+    Args:
+        self: a QMainWindow or QDialog
+    """
+    with open(
+        pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/pyssa_style_homepage.css"),
         "r",
         encoding="utf-8",
     ) as file:

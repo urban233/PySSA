@@ -773,7 +773,8 @@ class InterfaceManager:
         self._main_view.ui.action_clear_logs.setEnabled(True)
         self._main_view.ui.action_about.setEnabled(True)
         if self._current_project.get_project_name() != "":
-            self._main_view.setStyleSheet("""QMainWindow {background: #E6E6E6;}""")
+            styles.set_stylesheet(self._main_view)
+
             # A project is open
             self._main_view.ui.lbl_project_name.show()
             self._main_view.ui.lbl_project_name.setText(f"Project Name: {self._current_project.get_project_name()}")
@@ -872,7 +873,7 @@ class InterfaceManager:
 
         else:
             # Homepage view
-            self._main_view.setStyleSheet("""QMainWindow {background: #EFEFEF;}""")
+            styles.set_stylesheet_homepage(self._main_view)
             # No project is open
             # No project(s) available
             if len(self.get_workspace_projects_as_list()) == 0:

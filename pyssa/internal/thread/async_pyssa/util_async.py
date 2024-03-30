@@ -4,6 +4,7 @@ import subprocess
 
 import zmq
 import pygetwindow
+from pymol import cmd
 
 from pyssa.controller import interface_manager, pymol_session_manager
 from pyssa.logging_pyssa import log_handlers
@@ -134,4 +135,5 @@ def unfreeze_pymol_session(the_pymol_session_manager: "pymol_session_manager.Pym
         logger.info("Unfreezing protein pair pymol session finished.")
     else:
         logger.info("There is no pymol session to unfreeze.")
+        cmd.reinitialize()
     return "result", the_pymol_session_manager

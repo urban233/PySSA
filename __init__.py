@@ -95,5 +95,5 @@ def run_plugin_gui() -> None:
         #     with open(styles_path_list[1], "r", encoding="utf-8") as file:
         #         style = file.read()
         # Set the stylesheet of the application
-        styles.set_stylesheet(mainWindow)
+        styles.set_stylesheet_homepage(mainWindow)
     mainWindow.show()

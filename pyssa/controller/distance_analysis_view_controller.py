@@ -124,8 +124,8 @@ class DistanceAnalysisViewController(QtCore.QObject):
         tmp_raw_analysis_run_names: list = []
         for row_no in range(self._view.ui.list_distance_analysis_overview.count()):
             tmp_raw_analysis_run_names.append(self._view.ui.list_distance_analysis_overview.item(row_no).text())
-        self.job_input.emit(("job_input", tmp_raw_analysis_run_names, False))
         self._view.close()
+        self.job_input.emit(("job_input", tmp_raw_analysis_run_names, False))
 
     def structure_analysis_next(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""

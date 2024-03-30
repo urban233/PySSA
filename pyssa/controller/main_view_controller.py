@@ -1002,12 +1002,6 @@ class MainViewController:
         self._interface_manager.stop_wait_spinner()
         self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
 
-    # def __await_open_project(self, a_result: tuple) -> None:
-    #     self._interface_manager.set_new_project(a_result[1])
-    #     self._interface_manager.update_status_bar(self._workspace_status)
-    #     self._interface_manager.refresh_main_view()
-    #     self._interface_manager.stop_wait_spinner()
-
     def _delete_project(self) -> None:
         self._external_controller = delete_project_view_controller.DeleteProjectViewController(self._interface_manager)
         self._interface_manager.get_delete_view().show()
@@ -1168,14 +1162,15 @@ class MainViewController:
         if an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
             constants.PYSSA_LOGGER.info("Project has been saved to project database.")
             self._add_new_protein_pairs_to_protein_pair_model()
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
-                "Distance Analysis",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            self._active_task = tasks.Task(
+                target=util_async.unfreeze_pymol_session,
+                args=(
+                    self._pymol_session_manager, 0
+                ),
+                post_func=self.__await_unfreeze_pymol_session_after_analysis,
             )
-            tmp_dialog.exec_()
-            constants.PYSSA_LOGGER.info("All structure analysis' are done.")
-            self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
+            self._active_task.start()
+
         elif an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Distance analysis failed because there was an error during the analysis!",
@@ -1209,6 +1204,16 @@ class MainViewController:
         )
         for tmp_protein_pair in tmp_protein_pairs_to_add:
             self._interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
+
+    def __await_unfreeze_pymol_session_after_analysis(self):
+        self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+            "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
+            "Distance Analysis",
+            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        )
+        self.active_custom_message_box.exec_()
+        constants.PYSSA_LOGGER.info("All structure analysis' are done.")
+        self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
 
     # </editor-fold>
 

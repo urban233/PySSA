@@ -7689,6 +7689,6 @@ if __name__ == "__main__":
     pymolSessionManager = pymol_session_manager.PymolSessionManager(interfaceManager)
     main_window = interfaceManager.get_main_view()
     main_controller = main_view_controller.MainViewController(interfaceManager, pymolSessionManager)
-    styles.set_stylesheet(main_window)
+    styles.set_stylesheet_homepage(main_window)
     main_window.show()
     sys.exit(app.exec_())
