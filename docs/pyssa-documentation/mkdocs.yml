@@ -5,11 +5,11 @@ nav:
         - help/index.md
         - Project:
             - Overview: help/project/index.md
-            - New: help/project/new_project.md
-            - Open: help/project/open_project.md
-            - Delete: help/project/delete_project.md
-            - Import: help/project/import_project.md
-            - Export: help/project/export_project.md
+            - New Project: help/project/new_project.md
+            - Open Project: help/project/open_project.md
+            - Delete Project: help/project/delete_project.md
+            - Import Project: help/project/import_project.md
+            - Export Project: help/project/export_project.md
         - Sequences:
             - Overview: help/sequences/index.md
             - Sequences Tab: help/sequences/sequences_tab.md
@@ -32,6 +32,7 @@ nav:
         - Protein Pairs:
               - Overview: help/protein_pairs/index.md
               - Protein Pairs Tab: help/protein_pairs/protein_pairs_tab.md
+              - Protein Pair PyMOL Scene Configuration: help/protein_pairs/protein_pair_pymol_scene_configuration.md
               - Delete Protein Pair: help/protein_pairs/protein_pair_delete.md
               - Load Protein Pair PyMOL Session: help/protein_pairs/protein_pair_load_session.md
               - Add Protein Pair PyMOL Scene: help/protein_pairs/protein_pair_add_scene.md
@@ -41,6 +42,7 @@ nav:
               - Overview: help/protein_structure_prediction/index.md
               - ColabFold Monomer Prediction: help/protein_structure_prediction/colabfold_monomer.md
               - ColabFold Multimer Prediction: help/protein_structure_prediction/colabfold_multimer.md
+              - Advanced Prediction Configurations: help/protein_structure_prediction/advanced_prediction_configurations.md
         - Protein Structure Analysis:
             - Overview: help/protein_structure_analysis/index.md
             - Distance Analysis: help/protein_structure_analysis/distance_analysis.md

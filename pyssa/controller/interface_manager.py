@@ -16,7 +16,7 @@ from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
     predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, \
-    fasta_file_import_preview_view, rename_sequence_view, add_protein_pair_view
+    fasta_file_import_preview_view, rename_sequence_view, add_protein_pair_view, advanced_prediction_configurations
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
@@ -90,6 +90,7 @@ class InterfaceManager:
         self._use_project_view = use_project_view.UseProjectView()
         self._add_scene_view = add_scene_view.AddSceneView()
         self._add_protein_pair_view = add_protein_pair_view.AddProteinPairView()
+        self._advanced_prediction_configurations = advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
         self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
@@ -244,6 +245,9 @@ class InterfaceManager:
 
     def get_add_protein_pair_view(self):
         return self._add_protein_pair_view
+
+    def get_advanced_prediction_configurations_view(self):
+        return self._advanced_prediction_configurations
 
     # <editor-fold desc="Getter methods for Sequence Tab in main view">
     def get_current_sequence_list_index(self):

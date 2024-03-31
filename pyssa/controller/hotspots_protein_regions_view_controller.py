@@ -24,6 +24,7 @@ import os
 import subprocess
 import typing
 
+import pygetwindow
 from PyQt5 import QtCore
 from pymol import cmd
 
@@ -53,6 +54,8 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
             a_page_name (str): a name of a documentation page to display
         """
         self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
+        if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
+            self._interface_manager.documentation_window = None
         self._active_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, self._interface_manager.documentation_window),

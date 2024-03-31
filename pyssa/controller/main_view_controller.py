@@ -529,6 +529,8 @@ class MainViewController:
         self._interface_manager.status_bar_manager.show_temporary_message(
             "Opening help center ...", False)
 
+        if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
+            self._interface_manager.documentation_window = None
         self._help_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, self._interface_manager.documentation_window),
@@ -1814,15 +1816,15 @@ class MainViewController:
             tmp_type = self._interface_manager.get_current_protein_tree_index_type()
         except AttributeError:
             return
-        if self._view.ui.cb_protein_atoms.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-            self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
-            self._view.ui.cb_protein_atoms.setChecked(False)
-        elif self._view.tg_protein_color_atoms.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-            self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
-            self._view.ui.cb_protein_atoms.setChecked(True)
-        else:
-            self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
-            self._view.ui.cb_protein_atoms.setChecked(False)
+        # if self._view.ui.cb_protein_atoms.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+        #     self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
+        #     self._view.ui.cb_protein_atoms.setChecked(False)
+        # elif self._view.tg_protein_color_atoms.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+        #     self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+        #     self._view.ui.cb_protein_atoms.setChecked(True)
+        # else:
+        #     self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+        #     self._view.ui.cb_protein_atoms.setChecked(False)
 
         if tmp_type == "chain":
             self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)

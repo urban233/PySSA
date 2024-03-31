@@ -2,11 +2,13 @@ import os
 import socket
 import subprocess
 
+import pygetwindow
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
-from pyssa.controller import interface_manager, add_protein_pair_view_controller
+from pyssa.controller import interface_manager, add_protein_pair_view_controller, \
+    advanced_prediction_configurations_view_controller
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.styles import styles
@@ -41,6 +43,8 @@ class PredictProteinViewController(QtCore.QObject):
             a_page_name (str): a name of a documentation page to display
         """
         self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
+        if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
+            self._interface_manager.documentation_window = None
         self._active_task = tasks.Task(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, self._interface_manager.documentation_window),
@@ -66,12 +70,16 @@ class PredictProteinViewController(QtCore.QObject):
 
     def _show_prediction_configuration(self) -> None:
         """Opens the prediction configuration dialog window."""
-        config = dialog_advanced_prediction_configurations.DialogAdvancedPredictionConfigurations(
-            self.prediction_configuration,
+        self._external_controller = advanced_prediction_configurations_view_controller.AdvancedPredictionConfigurationsViewController(
+            self._interface_manager, self.prediction_configuration
         )
-        config.exec_()
-        self.prediction_configuration.amber_force_field = config.prediction_config.amber_force_field
-        self.prediction_configuration.templates = config.prediction_config.templates
+        self._external_controller.user_input.connect(self._post_show_prediction_configuration)
+        self._interface_manager.get_advanced_prediction_configurations_view().show()
+
+    def _post_show_prediction_configuration(self, user_input):
+        _, tmp_config = user_input
+        self.prediction_configuration.amber_force_field = tmp_config.amber_force_field
+        self.prediction_configuration.templates = tmp_config.templates
 
     def restore_ui_defaults(self) -> None:
         """Displays the multimer prediction + analysis page."""
