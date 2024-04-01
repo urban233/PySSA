@@ -22,6 +22,7 @@
 """Module for the Open Dialog."""
 
 import glob
+import logging
 import os
 import subprocess
 
@@ -35,6 +36,10 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, constants
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class OpenProjectViewController(QtCore.QObject):
@@ -79,6 +84,7 @@ class OpenProjectViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/project/open_project/")
 
     def restore_default_view(self) -> None:
@@ -117,6 +123,7 @@ class OpenProjectViewController(QtCore.QObject):
 
     def _select_project_from_open_list(self) -> None:
         """Sets the selected project name in the text box."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A project from the list was clicked.")
         try:
             self._view.ui.txt_open_selected_project.setText(
                 self._view.ui.projects_list_view.model().data(self._view.ui.projects_list_view.currentIndex(),
@@ -134,5 +141,6 @@ class OpenProjectViewController(QtCore.QObject):
             # styles.color_button_ready(self._view.ui.btn_open_project)
 
     def _open_selected_project(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A project from the list was double clicked or the 'Open' button was clicked.")
         self._view.close()
         self.return_value.emit(self._view.ui.txt_open_selected_project.text())

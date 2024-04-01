@@ -19,8 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the Open Dialog."""
+"""Module for the Rename Protein Dialog."""
 import glob
+import logging
 import os
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -28,6 +29,10 @@ from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.styles import styles
 from pyssa.util import input_validator, constants
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class RenameProteinViewController(QtCore.QObject):
@@ -48,5 +53,6 @@ class RenameProteinViewController(QtCore.QObject):
         self._view.ui.btn_rename.clicked.connect(self._rename_protein)
 
     def _rename_protein(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Rename' button was clicked.")
         self._view.close()
         self.user_input.emit((self._view.ui.le_name.text(), True))

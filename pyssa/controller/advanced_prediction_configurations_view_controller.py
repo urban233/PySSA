@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Open Dialog."""
+import logging
 import os
 import subprocess
 
@@ -36,6 +37,10 @@ from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import validate_async, util_async
 from pyssa.io_pyssa import bio_data
 from pyssa.util import constants, gui_utils
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class AdvancedPredictionConfigurationsViewController(QtCore.QObject):
@@ -89,6 +94,7 @@ class AdvancedPredictionConfigurationsViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/protein_structure_prediction/advanced_prediction_configurations/")
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
@@ -99,6 +105,7 @@ class AdvancedPredictionConfigurationsViewController(QtCore.QObject):
         self._view.setMinimumWidth(500)
 
     def save_config(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'OK' button was clicked.")
         self.prediction_config.amber_force_field = self._view.ui.cb_amber.isChecked()
         self.prediction_config.templates = self._view.ui.combo_box_template.currentText()
         self._view.close()

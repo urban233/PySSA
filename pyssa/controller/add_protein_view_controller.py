@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Open Dialog."""
+import logging
 import os
 import pymol
 from pymol import cmd
@@ -30,7 +31,11 @@ from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import validate_async
 from pyssa.io_pyssa import bio_data
+from pyssa.logging_pyssa import log_levels, log_handlers
 from pyssa.util import constants
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class AddProteinViewController(QtCore.QObject):
@@ -56,6 +61,7 @@ class AddProteinViewController(QtCore.QObject):
     # @SLOT
     def __slot_validate_input(self, the_entered_text) -> None:
         """Checks if the entered reference protein is valid or not."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         self._view.ui.lbl_status.setStyleSheet(
             """QLabel {color: #ba1a1a;}"""
         )
@@ -152,6 +158,7 @@ class AddProteinViewController(QtCore.QObject):
 
     def __slot_load_protein_from_filesystem(self) -> None:
         """Loads a protein from the filesystem into the textbox."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Load protein from filesystem' button was clicked.")
         try:
             # open file dialog
             file_name = QtWidgets.QFileDialog.getOpenFileName(
@@ -171,6 +178,7 @@ class AddProteinViewController(QtCore.QObject):
 
     def __slot_add_protein(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._view.close()
         self.user_input.emit((self._view.ui.txt_add_protein.text(), len(self._view.ui.txt_add_protein.text())))
     

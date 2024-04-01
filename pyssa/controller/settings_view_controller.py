@@ -31,7 +31,7 @@ from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import gui_utils
-from pyssa.logging_pyssa import log_handlers
+from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.util import constants
 
 logger = logging.getLogger(__file__)
@@ -82,6 +82,7 @@ class SettingsViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/settings/pyssa_settings/")
 
     def restore_ui(self):
@@ -198,10 +199,12 @@ class SettingsViewController(QtCore.QObject):
         
     def choose_workspace_dir(self) -> None:
         """Opens a QFileDialog to choose a workspace directory."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Choose workspace' button was clicked.")
         gui_utils.choose_directory(self._interface_manager.get_settings_view(), self._view.ui.txt_workspace_dir)
     
     def ok_dialog(self) -> None:
         """Sets all settings from the gui elements into the settings object and closes the dialog window."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'OK' button was clicked.")
         self._settings_manager.settings.set_workspace_path(self._view.ui.txt_workspace_dir.text())
         self._settings_manager.settings.set_cycles(self._view.ui.spb_cycles.value())
         self._settings_manager.settings.set_cutoff(self._view.ui.dspb_cutoff.value())

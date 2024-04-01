@@ -1,3 +1,26 @@
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2022
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Module for the Distance Analysis Dialog."""
+import logging
 import os
 import subprocess
 
@@ -17,6 +40,10 @@ from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
 from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class DistanceAnalysisViewController(QtCore.QObject):
@@ -62,6 +89,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/protein_structure_analysis/distance_analysis/")
 
     def _connect_all_ui_elements_to_slot_functions(self):
@@ -124,6 +152,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     # <editor-fold desc="Logic">
     def start_process_batch(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Start' button was clicked.")
         tmp_raw_analysis_run_names: list = []
         for row_no in range(self._view.ui.list_distance_analysis_overview.count()):
             tmp_raw_analysis_run_names.append(self._view.ui.list_distance_analysis_overview.item(row_no).text())
@@ -132,6 +161,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     def structure_analysis_next(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
         self._view.wait_spinner.start()
         self._active_task = tasks.Task(
             target=main_presenter_async.check_chains_for_analysis,
@@ -245,6 +275,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
         return tmp_protein_pair_names
 
     def _add_protein_pair(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
             self._interface_manager, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names()
         )
@@ -306,6 +337,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     def structure_analysis_back(self) -> None:
         """Hides the gui elements to choose the two proteins."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked.")
         gui_elements_to_show = [
             self._view.ui.lbl_distance_analysis_overview,
             self._view.ui.list_distance_analysis_overview,
@@ -505,6 +537,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     def structure_analysis_overview_clicked(self) -> None:
         """Enables the remove button."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A distance analysis run from the list was clicked.")
         self._view.ui.btn_distance_analysis_remove.setEnabled(True)
 
     def fill_protein_boxes_batch(self) -> None:
@@ -520,6 +553,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     def remove_analysis_run(self) -> None:
         """Removes the selected protein pair from the list of protein pairs to analyze."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Remove' button was clicked.")
         self._view.ui.list_distance_analysis_overview.takeItem(self._view.ui.list_distance_analysis_overview.currentRow())
         if self._view.ui.list_distance_analysis_overview.count() == 0:
             gui_elements_to_show = [

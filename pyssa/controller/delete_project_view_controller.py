@@ -19,9 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 """Module for the Delete Dialog."""
 
+import logging
 import os
 import subprocess
 
@@ -35,6 +35,10 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, gui_utils, constants, enums
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class DeleteProjectViewController(QtCore.QObject):
@@ -78,6 +82,7 @@ class DeleteProjectViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/project/delete_project/")
 
     def restore_default_view(self):
@@ -97,6 +102,7 @@ class DeleteProjectViewController(QtCore.QObject):
 
     def validate_delete_search(self) -> None:
         """Validates the input of the project name in real-time."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         input_validator.InputValidator.validate_project_name(
             self._view.ui.list_delete_projects_view.model(),
             self._view.ui.txt_delete_search,
@@ -106,6 +112,7 @@ class DeleteProjectViewController(QtCore.QObject):
 
     def select_project_from_delete_list(self) -> None:
         """Selects a project from the project list on the delete page."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A project from the list of existing projects was clicked.")
         try:
             self._view.ui.txt_delete_selected_projects.setText(self._view.ui.list_delete_projects_view.model().data
                                                                (self._view.ui.list_delete_projects_view.currentIndex(),
@@ -123,6 +130,7 @@ class DeleteProjectViewController(QtCore.QObject):
 
     def delete_project(self) -> None:
         """Deletes an existing project."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete' button was clicked.")
         # popup message which warns the user that the selected project gets deleted
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(
             "Are you sure you want to delete this project?",

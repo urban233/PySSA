@@ -22,6 +22,7 @@
 """Module for the Add Protein Pair Dialog."""
 import copy
 import glob
+import logging
 import os
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
@@ -29,8 +30,12 @@ from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager
 from pyssa.internal.data_structures import chain, protein
+from pyssa.logging_pyssa import log_levels, log_handlers
 from pyssa.model import proteins_model
 from pyssa.util import constants, enums
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class AddProteinPairViewController(QtCore.QObject):
@@ -235,6 +240,7 @@ class AddProteinPairViewController(QtCore.QObject):
         # </editor-fold>
 
     def __slot_collapse_all_tree_prot_1(self, the_selected_index: QtCore.QModelIndex):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An object of the tree view 1 was expanded.")
         tmp_type = the_selected_index.data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
             tmp_index_to_check = the_selected_index
@@ -252,6 +258,7 @@ class AddProteinPairViewController(QtCore.QObject):
                 self._view.ui.tree_prot_1.collapse(self._view.ui.tree_prot_1.model().index(tmp_row, 0))
 
     def __slot_collapse_all_tree_prot_2(self, the_selected_index: QtCore.QModelIndex):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An object of the tree view 1 was expanded.")
         tmp_type = the_selected_index.data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
             tmp_index_to_check = the_selected_index
@@ -269,6 +276,7 @@ class AddProteinPairViewController(QtCore.QObject):
                 self._view.ui.tree_prot_2.collapse(self._view.ui.tree_prot_2.model().index(tmp_row, 0))
 
     def __slot_show_tree_prot_2(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
         # UI changes
         self._view.ui.lbl_prot_1.setEnabled(False)
         self._view.ui.tree_prot_1.setEnabled(False)
@@ -282,6 +290,7 @@ class AddProteinPairViewController(QtCore.QObject):
         )
 
     def __slot_show_tree_prot_1(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked.")
         # UI changes
         self._view.ui.lbl_prot_1.setEnabled(True)
         self._view.ui.tree_prot_1.setEnabled(True)
@@ -292,6 +301,7 @@ class AddProteinPairViewController(QtCore.QObject):
         self._view.ui.btn_add.setEnabled(False)
 
     def __slot_add_protein_pair(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         tmp_item = QtWidgets.QListWidgetItem(self._create_analysis_run_name())
         self._view.close()
         self.user_input.emit((tmp_item, True))

@@ -22,6 +22,7 @@
 """Module for the Open Dialog."""
 
 import glob
+import logging
 import os
 import subprocess
 
@@ -36,6 +37,10 @@ from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.util import input_validator, constants, tools
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class AddSequenceViewController(QtCore.QObject):
@@ -84,6 +89,7 @@ class AddSequenceViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/sequences/sequence_add/")
     # </editor-fold>
 
@@ -115,6 +121,7 @@ class AddSequenceViewController(QtCore.QObject):
 
     def _validate_protein_name(self, the_entered_text: str) -> None:
         """Validates the input of the protein name in real-time."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         tmp_input_validator = input_validator.InputValidator(self._view.ui.le_seq_name)
         tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_sequence_name(
             the_entered_text, self._sequence_names
@@ -134,6 +141,7 @@ class AddSequenceViewController(QtCore.QObject):
 
     def _validate_protein_sequence(self) -> None:
         """Validates the input of the protein sequence in real-time."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         tmp_input_validator = input_validator.InputValidator(self._view.ui.le_protein_seq)
         the_entered_text = self._view.ui.le_protein_seq.toPlainText()
         tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_protein_sequence(
@@ -147,6 +155,7 @@ class AddSequenceViewController(QtCore.QObject):
             self._view.ui.btn_add.setEnabled(False)
 
     def _switch_ui_to_sequence_input(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
         self._view.ui.le_seq_name.setEnabled(False)
         self._view.ui.btn_next.setEnabled(False)
         self._view.ui.lbl_protein_seq.show()
@@ -156,6 +165,7 @@ class AddSequenceViewController(QtCore.QObject):
         self._activate_add_button()
 
     def _switch_ui_to_sequence_name_input(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked.")
         self._view.ui.le_seq_name.setEnabled(True)
         self._view.ui.btn_next.setEnabled(True)
         self._view.ui.lbl_protein_seq.hide()
@@ -177,5 +187,6 @@ class AddSequenceViewController(QtCore.QObject):
 
     def _add_sequence(self) -> None:
         """Adds a protein to the global variable and closes the dialog."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self.return_value.emit((self._view.ui.le_seq_name.text(), self._view.ui.le_protein_seq.toPlainText()))
         self._view.close()

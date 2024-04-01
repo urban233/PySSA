@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Hotspots Dialog."""
+import logging
 import os
 import subprocess
 import typing
@@ -34,6 +35,10 @@ from pyssa.internal.data_structures import protein_pair
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import session_util, constants
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class HotspotsProteinRegionsViewController(QtCore.QObject):
@@ -77,6 +82,7 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/hotspots/protein_regions/")
 
     def _get_protein_names_from_tree_view(self):
@@ -108,6 +114,7 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
 
     def show_resi_sticks(self) -> None:
         """Shows the pymol selection as sticks."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
         if session_util.check_if_sele_is_empty():
             return
         cmd.show(representation="sticks", selection="sele and not hydrogens")
@@ -117,12 +124,14 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
 
     def hide_resi_sticks(self) -> None:
         """Hides the balls and sticks representation of the pymol selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
         if session_util.check_if_sele_is_empty():
             return
         cmd.hide(representation="sticks", selection="sele")
 
     def show_disulfide_bonds(self) -> None:
         """Shows all disulfid bonds within the pymol session."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' disulfide bonds button was clicked.")
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         for tmp_protein_name in self._protein_names:
             if tmp_protein_name != 0:
@@ -137,6 +146,7 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
 
     def hide_disulfide_bonds(self) -> None:
         """Hides all disulfid bonds within the pymol session."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
         for tmp_protein_name in self._protein_names:
             if tmp_protein_name != 0:
@@ -148,5 +158,6 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
 
     def zoom_resi_position(self) -> None:
         """Zooms to the pymol selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
         session_util.check_if_sele_is_empty()
         cmd.zoom(selection="sele", buffer=8.0, state=0, complete=0)

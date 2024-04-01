@@ -20,11 +20,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the Open Dialog."""
+import logging
 
 from PyQt5 import QtCore
 
 from pyssa.controller import interface_manager
 from pyssa.internal.portal import pymol_io
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class AddSceneViewController(QtCore.QObject):
@@ -43,10 +48,12 @@ class AddSceneViewController(QtCore.QObject):
         self._view.btn_add_scene.clicked.connect(self._add_scene)
 
     def _add_scene(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._view.close()
         self.user_input.emit((self._view.line_edit_scene_name.text(), True))
     
     def _validate_scene_name(self, text):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         new_text = ''.join(char for char in text)
         self._view.line_edit_scene_name.setText(new_text)
         if new_text in self._all_current_scenes:

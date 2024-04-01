@@ -44,7 +44,7 @@ from pyssa.internal.data_structures.data_classes import database_operation
 from pyssa.internal.portal import graphic_operations
 from pyssa.internal.thread import tasks, task_workers, database_thread
 from pyssa.io_pyssa import safeguard, filesystem_io
-from pyssa.logging_pyssa import log_handlers
+from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.presenter import main_presenter_async
 from pyssa.util import constants, enums, exit_codes, gui_utils, tools
 from pyssa.gui.ui.views import main_view
@@ -137,7 +137,7 @@ class MainViewController:
         self.active_custom_message_box: "custom_message_box.CustomMessageBoxOk" = None
         self._main_view_state = main_view_state.MainViewState(
             self._view.ui.seqs_list_view,
-            self._show_sequence_information,
+            self.__slot_show_sequence_information,
             self._view.ui.proteins_tree_view,
             self.__slot_get_information_about_selected_object_in_protein_branch,
             self._view.ui.protein_pairs_tree_view,
@@ -166,57 +166,57 @@ class MainViewController:
         self.disable_pymol_signal.disable_pymol.connect(self._lock_pymol)
 
         # <editor-fold desc="Menu">
-        self._view.ui.action_new_project.triggered.connect(self._create_project)
-        self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
-        self._view.ui.action_open_project.triggered.connect(self._open_project)
-        self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
-        self._view.ui.action_use_project.triggered.connect(self._use_project)
-        self._view.ui.action_delete_project.triggered.connect(self._delete_project)
-        self._interface_manager.get_delete_view().dialogClosed.connect(self._post_delete_project)
-        self._view.ui.action_import_project.triggered.connect(self.import_project)
-        self._view.ui.action_export_project.triggered.connect(self.export_current_project)
-        self._view.ui.action_close_project.triggered.connect(self._close_project)
-        self._view.ui.action_exit_application.triggered.connect(self._close_all)
+        self._view.ui.action_new_project.triggered.connect(self.__slot_create_project)
+        #self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
+        self._view.ui.action_open_project.triggered.connect(self.__slot_open_project)
+        #self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
+        self._view.ui.action_use_project.triggered.connect(self.__slot_use_project)
+        self._view.ui.action_delete_project.triggered.connect(self.__slot_delete_project)
+        #self._interface_manager.get_delete_view().dialogClosed.connect(self._post_delete_project)
+        self._view.ui.action_import_project.triggered.connect(self.__slot_import_project)
+        self._view.ui.action_export_project.triggered.connect(self.__slot_export_current_project)
+        self._view.ui.action_close_project.triggered.connect(self.__slot_close_project)
+        self._view.ui.action_exit_application.triggered.connect(self.__slot_close_all)
 
-        self._view.ui.action_results_summary.triggered.connect(self._results_summary)
-        self._view.ui.action_preview_image.triggered.connect(self._preview_image)
-        self._view.ui.action_ray_tracing_image.triggered.connect(self._create_ray_traced_image)
-        self._view.ui.action_simple_image.triggered.connect(self._create_drawn_image)
-        self._view.ui.action_protein_regions.triggered.connect(self._hotspots_protein_regions)
+        self._view.ui.action_results_summary.triggered.connect(self.__slot_results_summary)
+        self._view.ui.action_preview_image.triggered.connect(self.__slot_preview_image)
+        self._view.ui.action_ray_tracing_image.triggered.connect(self.__slot_create_ray_traced_image)
+        self._view.ui.action_simple_image.triggered.connect(self.__slot_create_drawn_image)
+        self._view.ui.action_protein_regions.triggered.connect(self.__slot_hotspots_protein_regions)
         self._interface_manager.get_hotspots_protein_regions_view().dialogClosed.connect(self.post_hotspots_protein_regions)
 
-        self._view.ui.action_edit_settings.triggered.connect(self.open_settings_global)
-        self._view.ui.action_restore_settings.triggered.connect(self.restore_settings)
-        self._view.ui.action_show_log_in_explorer.triggered.connect(self.open_logs)
-        self._view.ui.action_clear_logs.triggered.connect(self.clear_all_log_files)
-        self._view.ui.action_documentation.triggered.connect(self._open_help_center)
-        self._view.ui.action_tutorials.triggered.connect(self.open_tutorial)
-        self._view.ui.action_get_demo_projects.triggered.connect(self.get_demo_projects)
-        self._view.ui.action_about.triggered.connect(self.open_about)
-        self._view.ui.action_predict_monomer.triggered.connect(self._predict_monomer)
-        self._view.ui.action_predict_multimer.triggered.connect(self._predict_multimer)
-        self._view.ui.action_abort_prediction.triggered.connect(self.abort_prediction)
-        self._view.ui.action_distance_analysis.triggered.connect(self._distance_analysis)
-        self._view.ui.action_arrange_windows.triggered.connect(self.arrange_windows)
+        self._view.ui.action_edit_settings.triggered.connect(self.__slot_open_settings_global)
+        self._view.ui.action_restore_settings.triggered.connect(self.__slot_restore_settings)
+        self._view.ui.action_show_log_in_explorer.triggered.connect(self.__slot_open_logs)
+        self._view.ui.action_clear_logs.triggered.connect(self.__slot_clear_all_log_files)
+        self._view.ui.action_documentation.triggered.connect(self.__slot_open_help_center)
+        self._view.ui.action_tutorials.triggered.connect(self.__slot_open_tutorial)
+        self._view.ui.action_get_demo_projects.triggered.connect(self.__slot_get_demo_projects)
+        self._view.ui.action_about.triggered.connect(self.__slot_open_about)
+        self._view.ui.action_predict_monomer.triggered.connect(self.__slot_predict_monomer)
+        self._view.ui.action_predict_multimer.triggered.connect(self.__slot_predict_multimer)
+        self._view.ui.action_abort_prediction.triggered.connect(self.__slot_abort_prediction)
+        self._view.ui.action_distance_analysis.triggered.connect(self.__slot_distance_analysis)
+        self._view.ui.action_arrange_windows.triggered.connect(self.__slot_arrange_windows)
 
         self._view.ui.project_tab_widget.currentChanged.connect(self._update_tab)
         # </editor-fold>
 
         # <editor-fold desc="Sequence Tab">
         self._view.ui.seqs_list_view.customContextMenuRequested.connect(self.open_context_menu_for_sequences)
-        self._view.ui.seqs_list_view.clicked.connect(self._show_sequence_information)
-        self._view.ui.btn_add_sequence.clicked.connect(self._add_sequence)
-        self._view.ui.btn_import_seq.clicked.connect(self._import_sequence)
-        self._view.ui.btn_save_sequence.clicked.connect(self._save_selected_sequence_as_fasta_file)
-        self._view.ui.btn_delete_sequence.clicked.connect(self._delete_selected_sequence)
-        self._view.ui.seqs_table_widget.cellClicked.connect(self._open_text_editor_for_seq)
+        self._view.ui.seqs_list_view.clicked.connect(self.__slot_show_sequence_information)
+        self._view.ui.btn_add_sequence.clicked.connect(self.__slot_add_sequence)
+        self._view.ui.btn_import_seq.clicked.connect(self.__slot_import_sequence)
+        self._view.ui.btn_save_sequence.clicked.connect(self.__slot_save_selected_sequence_as_fasta_file)
+        self._view.ui.btn_delete_sequence.clicked.connect(self.__slot_delete_selected_sequence)
+        self._view.ui.seqs_table_widget.cellClicked.connect(self.__slot_open_text_editor_for_seq)
         self._view.line_edit_seq_name.textChanged.connect(self._set_new_sequence_name_in_table_item)
         #self._view.ui.seqs_table_widget.cellChanged.connect(self._rename_sequence)
-        self._view.ui.btn_help.clicked.connect(self._open_sequences_tab_help)
+        self._view.ui.btn_help.clicked.connect(self.__slot_open_sequences_tab_help)
 
         # <editor-fold desc="Context menu">
-        self._sequence_list_context_menu.connect_rename_sequence_action(self.rename_selected_sequence)
-        self._sequence_list_context_menu.connect_help_action(self._open_sequences_tab_help)
+        self._sequence_list_context_menu.connect_rename_sequence_action(self.__slot_rename_selected_sequence)
+        self._sequence_list_context_menu.connect_help_action(self.__slot_open_sequences_tab_help)
         # </editor-fold>
 
         # </editor-fold>
@@ -224,18 +224,18 @@ class MainViewController:
         # <editor-fold desc="Proteins Tab">
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_branch)
-        self._view.ui.btn_save_protein.clicked.connect(self._save_selected_protein_structure_as_pdb_file)
+        self._view.ui.btn_save_protein.clicked.connect(self.__slot_save_selected_protein_structure_as_pdb_file)
         # import
-        self._view.ui.btn_import_protein.clicked.connect(self._import_protein_structure)
+        self._view.ui.btn_import_protein.clicked.connect(self.__slot_import_protein_structure)
         self._interface_manager.get_add_protein_view().return_value.connect(self._post_import_protein_structure)
-        self._view.ui.btn_open_protein_session.clicked.connect(self._open_protein_pymol_session)
-        self._view.ui.btn_create_protein_scene.clicked.connect(self.save_scene)
-        self._view.ui.btn_delete_protein.clicked.connect(self._delete_protein)
-        self._view.ui.btn_update_protein_scene.clicked.connect(self._update_scene)
-        self._view.ui.btn_delete_protein_scene.clicked.connect(self.delete_current_scene)
-        self._view.ui.box_protein_color.currentIndexChanged.connect(self._change_chain_color_proteins)
-        self._view.ui.btn_protein_color_atoms.clicked.connect(self._change_chain_color_proteins_atoms)
-        self._view.ui.btn_protein_reset_atoms.clicked.connect(self._change_chain_reset_proteins_atoms)
+        self._view.ui.btn_open_protein_session.clicked.connect(self.__slot_open_protein_pymol_session)
+        self._view.ui.btn_create_protein_scene.clicked.connect(self.__slot_save_scene)
+        self._view.ui.btn_delete_protein.clicked.connect(self.__slot_delete_protein)
+        self._view.ui.btn_update_protein_scene.clicked.connect(self.__slot_update_protein_scene)
+        self._view.ui.btn_delete_protein_scene.clicked.connect(self.__slot_delete_current_scene)
+        self._view.ui.box_protein_color.currentIndexChanged.connect(self.__slot_change_chain_color_proteins)
+        self._view.ui.btn_protein_color_atoms.clicked.connect(self.__slot_change_chain_color_proteins_atoms)
+        self._view.ui.btn_protein_reset_atoms.clicked.connect(self.__slot_change_chain_reset_proteins_atoms)
         # self._view.ui.btn_protein_show_cartoon.clicked.connect(self.__slot_show_protein_chain_as_cartoon)
         # self._view.ui.btn_protein_hide_cartoon.clicked.connect(self.__slot_hide_protein_chain_as_cartoon)
         # self._view.ui.btn_protein_show_sticks.clicked.connect(self.__slot_show_protein_chain_as_sticks)
@@ -262,7 +262,7 @@ class MainViewController:
         self._view.tg_protein_surface.toggleChanged.connect(self.__slot_protein_chain_as_surface)
 
         self._view.ui.btn_protein_hide_all_representations.clicked.connect(self.__slot_hide_protein_chain_all)
-        self._view.ui.btn_help_2.clicked.connect(self._open_proteins_tab_help)
+        self._view.ui.btn_help_2.clicked.connect(self.__slot_open_proteins_tab_help)
 
         # <editor-fold desc="Color Grid">
         self._view.color_grid_proteins.c_red.clicked.connect(self.set_color_name_in_label_red_in_proteins_tab)
@@ -307,10 +307,10 @@ class MainViewController:
         # </editor-fold>
 
         # <editor-fold desc="Protein tree context menu">
-        self._protein_tree_context_menu.connect_clean_protein_action(self.clean_protein_update)
-        self._protein_tree_context_menu.connect_rename_protein_action(self.rename_selected_protein_structure)
-        self._protein_tree_context_menu.connect_show_sequence_action(self._show_protein_chain_sequence)
-        self._protein_tree_context_menu.connect_help_action(self._open_proteins_tab_help)
+        self._protein_tree_context_menu.connect_clean_protein_action(self.__slot_clean_protein_update)
+        self._protein_tree_context_menu.connect_rename_protein_action(self.__slot_rename_selected_protein_structure)
+        self._protein_tree_context_menu.connect_show_sequence_action(self.__slot_show_protein_chain_sequence)
+        self._protein_tree_context_menu.connect_help_action(self.__slot_open_proteins_tab_help)
         # </editor-fold>
 
         # </editor-fold>
@@ -318,15 +318,15 @@ class MainViewController:
         # <editor-fold desc="Proteins Pair Tab">
         self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_protein_pairs)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_pair_branch)
-        self._view.ui.btn_delete_protein_pair.clicked.connect(self._delete_protein_pair_from_project)
-        self._view.ui.btn_open_protein_pair_session.clicked.connect(self._open_protein_pair_pymol_session)
-        self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.save_scene)
-        self._view.ui.btn_update_protein_pair_scene.clicked.connect(self._update_scene)
-        self._view.ui.btn_delete_protein_pair_scene.clicked.connect(self.delete_current_scene)
+        self._view.ui.btn_delete_protein_pair.clicked.connect(self.__slot_delete_protein_pair_from_project)
+        self._view.ui.btn_open_protein_pair_session.clicked.connect(self.__slot_open_protein_pair_pymol_session)
+        self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.__slot_save_scene)
+        self._view.ui.btn_update_protein_pair_scene.clicked.connect(self.__slot_update_protein_pair_scene)
+        self._view.ui.btn_delete_protein_pair_scene.clicked.connect(self.__slot_delete_current_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
-        self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self._change_chain_color_protein_pairs)
-        self._view.ui.btn_protein_pair_color_atoms.clicked.connect(self._change_chain_color_protein_pairs_atoms)
-        self._view.ui.btn_protein_pair_reset_atoms.clicked.connect(self._change_chain_reset_protein_pairs_atoms)
+        self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self.__slot_change_chain_color_protein_pairs)
+        self._view.ui.btn_protein_pair_color_atoms.clicked.connect(self.__slot_change_chain_color_protein_pairs_atoms)
+        self._view.ui.btn_protein_pair_reset_atoms.clicked.connect(self.__slot_change_chain_reset_protein_pairs_atoms)
         # self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
         # self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
         # self._view.ui.btn_protein_pair_show_sticks.clicked.connect(self.__slot_show_protein_pair_chain_as_sticks)
@@ -398,8 +398,8 @@ class MainViewController:
         # </editor-fold>
 
         # <editor-fold desc="Context menu">
-        self._protein_pair_tree_context_menu.connect_open_results_summary_action(self._results_summary)
-        self._protein_pair_tree_context_menu.connect_color_based_on_rmsd_action(self._color_protein_pair_by_rmsd)
+        self._protein_pair_tree_context_menu.connect_open_results_summary_action(self.__slot_results_summary)
+        self._protein_pair_tree_context_menu.connect_color_based_on_rmsd_action(self.__slot_color_protein_pair_by_rmsd)
         self._protein_pair_tree_context_menu.connect_help_action(self._open_protein_pairs_tab_help)
         # </editor-fold>
 
@@ -412,7 +412,8 @@ class MainViewController:
         if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
 
-    def _close_all(self):
+    def __slot_close_all(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Exit Application' clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
             "Are you sure you want to close PySSA?", "Close PySSA",
             custom_message_box.CustomMessageBoxIcons.WARNING.value
@@ -421,7 +422,7 @@ class MainViewController:
         if tmp_dialog.response:
             # PySSA should be closed
             if not self._view.ui.lbl_logo.isVisible():
-                self._close_project()
+                self.__slot_close_project()
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)) == 1:
@@ -429,7 +430,7 @@ class MainViewController:
 
     def _abort_task(self, return_value):
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
-            self.abort_prediction()
+            self.__slot_abort_prediction()
 
     def _lock_pymol(self, return_value):
         # <editor-fold desc="Freeze PyMOL session">
@@ -556,7 +557,7 @@ class MainViewController:
         # <editor-fold desc="General context menu setup">
         context_menu = QtWidgets.QMenu()
         self.help_context_action = context_menu.addAction(self._view.tr("Get Help"))
-        self.help_context_action.triggered.connect(self._open_sequences_tab_help)
+        self.help_context_action.triggered.connect(self.__slot_open_sequences_tab_help)
 
         # </editor-fold>
 
@@ -629,10 +630,12 @@ class MainViewController:
         )
 
     # <editor-fold desc="Help pages">
-    def _open_help_center(self):
+    def __slot_open_help_center(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Documentation' clicked.")
         self.open_help("help/")
 
-    def _open_sequences_tab_help(self):
+    def __slot_open_sequences_tab_help(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button on the 'Sequence Tab' was clicked.")
         self.open_help("help/sequences/sequences_tab/")
 
     def _open_additional_information_table_help(self):
@@ -650,7 +653,8 @@ class MainViewController:
     def _open_sequence_delete_help(self):
         self.open_help("help/sequences/sequence_delete/")
 
-    def _open_proteins_tab_help(self):
+    def __slot_open_proteins_tab_help(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,"'Help' button on the 'Proteins Tab' was clicked.")
         self.open_help("help/proteins/proteins_tab/")
 
     def _open_protein_import_help(self):
@@ -678,6 +682,7 @@ class MainViewController:
         self.open_help("help/proteins/protein_delete_scene/")
 
     def _open_protein_pairs_tab_help(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button on the 'Protein Pairs Tab' was clicked.")
         self.open_help("help/protein_pairs/protein_pairs_tab/")
 
     def _open_protein_pair_delete_help(self):
@@ -822,8 +827,9 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Project menu">
-    def _close_project(self):
+    def __slot_close_project(self):
         """Closes the current project"""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Close' clicked.")
         self._active_task = tasks.Task(
             target=main_presenter_async.close_project,
             args=(self._database_thread, self._pymol_session_manager),
@@ -847,7 +853,8 @@ class MainViewController:
         self.update_status("Closing project finished.")
         self._view.wait_spinner.stop()
 
-    def _create_project(self) -> None:
+    def __slot_create_project(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Create' clicked.")
         self._external_controller = create_project_view_controller.CreateProjectViewController(self._interface_manager)
         self._external_controller.user_input.connect(self._post_create_project)
         self._interface_manager.get_create_view().show()
@@ -925,7 +932,8 @@ class MainViewController:
         self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_spinner()
 
-    def _open_project(self) -> None:
+    def __slot_open_project(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Open' clicked.")
         self._external_controller = open_project_view_controller.OpenProjectViewController(self._interface_manager)
         self._external_controller.return_value.connect(self._post_open_project)
         self._interface_manager.get_open_view().show()
@@ -977,7 +985,8 @@ class MainViewController:
             )
         self._interface_manager.stop_wait_spinner()
 
-    def _use_project(self) -> None:
+    def __slot_use_project(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Use' clicked.")
         self._external_controller = use_project_view_controller.UseProjectViewController(self._interface_manager)
         self._external_controller.user_input.connect(self._post_use_project)
         self._interface_manager.get_use_project_view().show()
@@ -1009,15 +1018,17 @@ class MainViewController:
         self._interface_manager.stop_wait_spinner()
         self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
 
-    def _delete_project(self) -> None:
+    def __slot_delete_project(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Delete' clicked.")
         self._external_controller = delete_project_view_controller.DeleteProjectViewController(self._interface_manager)
         self._interface_manager.get_delete_view().show()
 
     def _post_delete_project(self) -> None:
         self._interface_manager.refresh_main_view()
 
-    def import_project(self) -> None:
+    def __slot_import_project(self) -> None:
         """Imports a project.xml into the current workspace."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Import' clicked.")
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -1108,8 +1119,9 @@ class MainViewController:
             #     QtWidgets.QMessageBox.Information,
             # )
 
-    def export_current_project(self) -> None:
+    def __slot_export_current_project(self) -> None:
         """Exports the current project to an importable format."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Export' clicked.")
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -1126,7 +1138,8 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Analysis menu">
-    def _distance_analysis(self):
+    def __slot_distance_analysis(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Analysis/Distance' clicked.")
         self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
             self._interface_manager
         )
@@ -1259,7 +1272,8 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
 
     # <editor-fold desc="Monomer">
-    def _predict_monomer(self):
+    def __slot_predict_monomer(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Prediction/Monomer' clicked.")
         tmp_indexes = []
         if len(self._view.ui.seqs_list_view.selectedIndexes()) == 0:
             tmp_model = self._interface_manager.get_main_view().ui.seqs_list_view.model()
@@ -1342,8 +1356,9 @@ class MainViewController:
         self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
         self._interface_manager.refresh_main_view()
 
-    def abort_prediction(self) -> None:
+    def __slot_abort_prediction(self) -> None:
         """Aborts the running prediction."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Prediction/Abort' clicked.")
         constants.PYSSA_LOGGER.info("Structure prediction process was aborted manually.")
         subprocess.run(["wsl", "--shutdown"])
         constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
@@ -1609,12 +1624,13 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Multimer">
-    def _predict_multimer(self):
+    def __slot_predict_multimer(self):
         # self._external_controller = predict_multimer_view_controller.PredictMultimerViewController(
         #     self._interface_manager
         # )
         # self._external_controller.job_input.connect(self._post_predict_monomer)
         # self._interface_manager.get_predict_multimer_view().show()
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Prediction/Multimer' clicked.")
         tmp_indexes = []
         if len(self._view.ui.seqs_list_view.selectedIndexes()) == 0:
             tmp_model = self._interface_manager.get_main_view().ui.seqs_list_view.model()
@@ -1786,7 +1802,8 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Hotspots">
-    def _hotspots_protein_regions(self) -> None:
+    def __slot_hotspots_protein_regions(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
         self._external_controller = hotspots_protein_regions_view_controller.HotspotsProteinRegionsViewController(
             self._interface_manager
         )
@@ -1800,8 +1817,9 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Settings menu methods">
-    def open_settings_global(self) -> None:
+    def __slot_open_settings_global(self) -> None:
         """Opens the dialog for the global settings."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Settings/Edit' clicked.")
         self._external_controller = settings_view_controller.SettingsViewController(self._interface_manager)
         self._external_controller.user_input.connect(self.post_open_settings_global)
         self._external_controller.restore_ui()
@@ -1831,8 +1849,9 @@ class MainViewController:
             self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
             self._interface_manager.show_protein_pymol_scene_configuration()
 
-    def restore_settings(self) -> None:
+    def __slot_restore_settings(self) -> None:
         """Restores the settings.xml file to the default values."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Settings/Restore' clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
             "Are you sure you want to restore all settings?", "Restore Settings",
             custom_message_box.CustomMessageBoxIcons.INFORMATION.value
@@ -1851,7 +1870,8 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Help menu methods">
-    def arrange_windows(self):
+    def __slot_arrange_windows(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Arrange Windows' clicked.")
         if not os.path.exists(constants.ARRANGE_WINDOWS_EXE_FILEPATH):
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "The script for arranging the windows could not be found!", "Arrange Windows",
@@ -1863,8 +1883,9 @@ class MainViewController:
             subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH])
             logger.debug("Script to arrange windows finished.")
 
-    def open_logs(self) -> None:
+    def __slot_open_logs(self) -> None:
         """Opens a file explorer with all log files and can open a log file in the default application."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Show Logs in Explorer' clicked.")
         file_dialog = QtWidgets.QFileDialog()
         log_path = str(constants.LOG_PATH)
         file_dialog.setDirectory(log_path)
@@ -1873,8 +1894,9 @@ class MainViewController:
             os.startfile(file_path)
 
     @staticmethod
-    def clear_all_log_files() -> None:
+    def __slot_clear_all_log_files() -> None:
         """Clears all log files generated under .pyssa/logs."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Clear All Logs' clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
             "Are you sure you want to delete all log files?",
             "Clear Log Files",
@@ -1903,8 +1925,9 @@ class MainViewController:
                 constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
 
     @staticmethod
-    def open_tutorial() -> None:
+    def __slot_open_tutorial() -> None:
         """Opens the official tutorial pdf file."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Tutorials' clicked.")
         tmp_dialog = dialog_tutorial_videos.TutorialVideosDialog()
         tmp_dialog.exec_()
 
@@ -1914,12 +1937,14 @@ class MainViewController:
         os.startfile(constants.DOCS_PATH)
 
     @staticmethod
-    def open_about() -> None:
+    def __slot_open_about() -> None:
         """Opens the About dialog."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/About' clicked.")
         dialog = dialog_about.DialogAbout()
         dialog.exec_()
 
-    def get_demo_projects(self):
+    def __slot_get_demo_projects(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Get Demo Projects' clicked.")
         self._interface_manager.status_bar_manager.show_temporary_message(
             "Getting demo projects ...", False)
         import zipfile
@@ -2048,7 +2073,8 @@ class MainViewController:
     #         self._view.status_bar.showMessage("Finished preview of drawn image.")
     #         QtWidgets.QApplication.restoreOverrideCursor()
 
-    def _preview_image(self):
+    def __slot_preview_image(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Image/Preview' clicked.")
         self._active_task = tasks.Task(
             target=main_presenter_async.preview_image,
             args=(0, 0),
@@ -2062,7 +2088,8 @@ class MainViewController:
         self._view.wait_spinner.stop()
         self.update_status("Preview finished.")
 
-    def _create_ray_traced_image(self) -> None:
+    def __slot_create_ray_traced_image(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Image/Ray-Traced' clicked.")
         save_dialog = QtWidgets.QFileDialog()
         full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
         if full_file_name == ("", ""):
@@ -2087,7 +2114,8 @@ class MainViewController:
         self._view.wait_spinner.stop()
         self.update_status("Image creation finished.")
 
-    def _create_drawn_image(self) -> None:
+    def __slot_create_drawn_image(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Image/Simple' clicked.")
         save_dialog = QtWidgets.QFileDialog()
         full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
         if full_file_name == ("", ""):
@@ -2221,9 +2249,10 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Sequences tab methods">
-    def _open_text_editor_for_seq(self):
+    def __slot_open_text_editor_for_seq(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A sequence in the 'Addition Information' table was clicked.")
         if self._view.ui.seqs_table_widget.currentColumn() == 1 and self._view.ui.seqs_table_widget.currentRow() == 0:
-            self.rename_selected_sequence()
+            self.__slot_rename_selected_sequence()
         elif self._view.ui.seqs_table_widget.currentColumn() == 1 and self._view.ui.seqs_table_widget.currentRow() == 1:
             self.tmp_txt_browser = QtWidgets.QTextBrowser()
             try:
@@ -2262,14 +2291,16 @@ class MainViewController:
             )
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
-    def _show_sequence_information(self):
+    def __slot_show_sequence_information(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A sequence on the 'Sequence Tab' was clicked.")
         self._interface_manager.show_sequence_parameters(
             self._view.ui.seqs_list_view.currentIndex()
         )
         self._view.ui.btn_save_sequence.setEnabled(True)
         self._view.ui.btn_delete_sequence.setEnabled(True)
 
-    def _import_sequence(self) -> None:
+    def __slot_import_sequence(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Import sequence' button on the 'Sequence Tab' was clicked.")
         self._external_controller = import_sequence_view_controller.ImportSequenceViewController(self._interface_manager)
         self._external_controller.user_input.connect(self._post_import_sequence)
         self._external_controller.restore_ui()
@@ -2296,7 +2327,8 @@ class MainViewController:
         self._interface_manager.show_menu_options_with_seq()
         self._interface_manager.refresh_main_view()
 
-    def _add_sequence(self):
+    def __slot_add_sequence(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add sequence' button on the 'Sequence Tab' was clicked.")
         self._external_controller = add_sequence_view_controller.AddSequenceViewController(self._interface_manager)
         self._external_controller.return_value.connect(self._post_add_sequence)
         self._external_controller.restore_default_view()
@@ -2318,7 +2350,8 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         #self._show_temporary_message("Adding a sequence was successful", "A prediction is currently running ...")
 
-    def _save_selected_sequence_as_fasta_file(self):
+    def __slot_save_selected_sequence_as_fasta_file(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Export sequence' button on the 'Sequence Tab' was clicked.")
         self._view.wait_spinner.start()
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
@@ -2375,8 +2408,9 @@ class MainViewController:
         self._interface_manager.refresh_sequence_model()
         self._interface_manager.refresh_main_view()
 
-    def _delete_selected_sequence(self):
+    def __slot_delete_selected_sequence(self):
         # popup message which warns the user that the selected sequence gets deleted
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete sequence' button on the 'Sequence Tab' was clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(
             "Are you sure you want to delete this sequence?",
             "Delete Sequence",
@@ -2402,8 +2436,9 @@ class MainViewController:
         else:
             constants.PYSSA_LOGGER.info("No sequence has been deleted. No changes were made.")
 
-    def rename_selected_sequence(self) -> None:
+    def __slot_rename_selected_sequence(self) -> None:
         """Opens a new view to rename the selected sequence."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Rename sequence' context menu action was clicked.")
         self._external_controller = rename_sequence_view_controller.RenameSequenceViewController(self._interface_manager)
         self._external_controller.user_input.connect(self.post_rename_selected_sequence_structure)
         self._external_controller.restore_ui()
@@ -2456,7 +2491,8 @@ class MainViewController:
         )
         tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
-    def _open_protein_pymol_session(self):
+    def __slot_open_protein_pymol_session(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Open protein pymol session' button on the 'Proteins Tab' was clicked.")
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
         # fixme: I am no sure if the code below is needed
         # if not self._pymol_session_manager.is_the_current_session_empty():
@@ -2508,6 +2544,7 @@ class MainViewController:
         self._interface_manager.stop_wait_spinner()
 
     def __slot_get_information_about_selected_object_in_protein_branch(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An object on the 'Proteins Tab' was clicked.")
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
 
         if tmp_type == "protein":
@@ -2541,7 +2578,9 @@ class MainViewController:
             self._pymol_session_manager
         )
 
-    def _change_chain_color_proteins(self) -> None:
+    def __slot_change_chain_color_proteins(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "The 'Color' attribute of a protein chain on the 'Proteins Tab' changed.")
         tmp_protein = self._interface_manager.get_current_active_protein_object()
         tmp_chain = self._interface_manager.get_current_active_chain_object()
         if self._interface_manager.get_settings_manager().settings.proteins_tab_use_combobox_for_colors == 1:
@@ -2569,7 +2608,8 @@ class MainViewController:
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
-    def _change_chain_color_proteins_atoms(self):
+    def __slot_change_chain_color_proteins_atoms(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Color atoms by element' button on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -2581,7 +2621,9 @@ class MainViewController:
         self._view.color_grid_proteins.c_grey_70.setIconSize(
             self._view.color_grid_proteins.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
 
-    def _change_chain_reset_proteins_atoms(self):
+    def __slot_change_chain_reset_proteins_atoms(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -2679,7 +2721,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("red    ")
         self._view.color_grid_proteins.last_clicked_color = "red"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_red.setIconSize(self._view.color_grid_proteins.c_red.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -2687,7 +2729,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("tv_red    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_red"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_tv_red.setIconSize(self._view.color_grid_proteins.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -2695,7 +2737,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("salmon    ")
         self._view.color_grid_proteins.last_clicked_color = "salmon"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_salomon.setIconSize(self._view.color_grid_proteins.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -2703,7 +2745,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("raspberry    ")
         self._view.color_grid_proteins.last_clicked_color = "raspberry"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_raspberry.setIconSize(self._view.color_grid_proteins.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -2711,7 +2753,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("green    ")
         self._view.color_grid_proteins.last_clicked_color = "green"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_green.setIconSize(
             self._view.color_grid_proteins.c_green.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2720,7 +2762,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("tv_green    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_green"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_tv_green.setIconSize(
             self._view.color_grid_proteins.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2729,7 +2771,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("palegreen    ")
         self._view.color_grid_proteins.last_clicked_color = "palegreen"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_palegreen.setIconSize(
             self._view.color_grid_proteins.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2738,7 +2780,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("forest    ")
         self._view.color_grid_proteins.last_clicked_color = "forest"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_forest.setIconSize(
             self._view.color_grid_proteins.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2747,7 +2789,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("blue    ")
         self._view.color_grid_proteins.last_clicked_color = "blue"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_blue.setIcon(QtGui.QIcon(
             ":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_blue.setIconSize(self._view.color_grid_proteins.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2756,7 +2798,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("tv_blue    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_blue"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_tv_blue.setIconSize(
             self._view.color_grid_proteins.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2765,7 +2807,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("lightblue    ")
         self._view.color_grid_proteins.last_clicked_color = "lightblue"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_lightblue.setIconSize(
             self._view.color_grid_proteins.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2774,7 +2816,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("skyblue    ")
         self._view.color_grid_proteins.last_clicked_color = "skyblue"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_skyblue.setIconSize(
             self._view.color_grid_proteins.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2783,7 +2825,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("yellow    ")
         self._view.color_grid_proteins.last_clicked_color = "yellow"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_yellow.setIconSize(
             self._view.color_grid_proteins.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2792,7 +2834,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("tv_yellow    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_yellow"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_tv_yellow.setIconSize(
             self._view.color_grid_proteins.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2801,7 +2843,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("paleyellow    ")
         self._view.color_grid_proteins.last_clicked_color = "paleyellow"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_paleyellow.setIconSize(
             self._view.color_grid_proteins.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2810,7 +2852,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("sand    ")
         self._view.color_grid_proteins.last_clicked_color = "sand"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_sand.setIconSize(
             self._view.color_grid_proteins.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2819,7 +2861,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("magenta    ")
         self._view.color_grid_proteins.last_clicked_color = "magenta"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_magenta.setIconSize(
             self._view.color_grid_proteins.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2828,7 +2870,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("purple    ")
         self._view.color_grid_proteins.last_clicked_color = "purple"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_purple.setIconSize(
             self._view.color_grid_proteins.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2837,7 +2879,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("pink    ")
         self._view.color_grid_proteins.last_clicked_color = "pink"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_pink.setIconSize(
             self._view.color_grid_proteins.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2846,7 +2888,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("hotpink    ")
         self._view.color_grid_proteins.last_clicked_color = "hotpink"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_hotpink.setIconSize(
             self._view.color_grid_proteins.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2855,7 +2897,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("cyan    ")
         self._view.color_grid_proteins.last_clicked_color = "cyan"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_cyan.setIconSize(
             self._view.color_grid_proteins.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2864,7 +2906,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("aquamarine    ")
         self._view.color_grid_proteins.last_clicked_color = "aquamarine"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_aquamarine.setIconSize(
             self._view.color_grid_proteins.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2873,7 +2915,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("palecyan    ")
         self._view.color_grid_proteins.last_clicked_color = "palecyan"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_palecyan.setIconSize(
             self._view.color_grid_proteins.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2882,7 +2924,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("teal    ")
         self._view.color_grid_proteins.last_clicked_color = "teal"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_teal.setIconSize(
             self._view.color_grid_proteins.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2891,7 +2933,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("orange    ")
         self._view.color_grid_proteins.last_clicked_color = "orange"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_orange.setIconSize(
             self._view.color_grid_proteins.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2900,7 +2942,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("tv_orange    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_orange"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_tv_orange.setIconSize(
             self._view.color_grid_proteins.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2909,7 +2951,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("lightorange    ")
         self._view.color_grid_proteins.last_clicked_color = "lightorange"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_lightorange.setIconSize(
             self._view.color_grid_proteins.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2918,7 +2960,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("olive    ")
         self._view.color_grid_proteins.last_clicked_color = "olive"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_olive.setIconSize(
             self._view.color_grid_proteins.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2927,7 +2969,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("white    ")
         self._view.color_grid_proteins.last_clicked_color = "white"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_white.setIconSize(
             self._view.color_grid_proteins.c_white.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2939,9 +2981,9 @@ class MainViewController:
         tmp_is_colored_by_elements: bool = tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)[1]
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("grey70    ")
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         if tmp_is_colored_by_elements:
-            self._change_chain_color_proteins_atoms()
+            self.__slot_change_chain_color_proteins_atoms()
         else:
             self._view.color_grid_proteins.last_clicked_color = "grey70"
         self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
@@ -2952,7 +2994,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("grey30    ")
         self._view.color_grid_proteins.last_clicked_color = "grey30"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_grey_30.setIconSize(
             self._view.color_grid_proteins.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
@@ -2961,7 +3003,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("black    ")
         self._view.color_grid_proteins.last_clicked_color = "black"
-        self._change_chain_color_proteins()
+        self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_proteins.c_black.setIconSize(
             self._view.color_grid_proteins.c_black.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3101,6 +3143,8 @@ class MainViewController:
     # <editor-fold desc="Representations">
     # cartoon
     def __slot_protein_chain_as_cartoon(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3116,6 +3160,8 @@ class MainViewController:
 
     # sticks
     def __slot_protein_chain_as_sticks(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Sticks' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3131,6 +3177,8 @@ class MainViewController:
 
     # ribbon
     def __slot_protein_chain_as_ribbon(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Ribbon' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3146,6 +3194,8 @@ class MainViewController:
 
     # lines
     def __slot_protein_chain_as_lines(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Lines' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3161,6 +3211,8 @@ class MainViewController:
 
     # spheres
     def __slot_protein_chain_as_spheres(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Spheres' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3176,6 +3228,8 @@ class MainViewController:
 
     # dots
     def __slot_protein_chain_as_dots(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Dots' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3191,6 +3245,8 @@ class MainViewController:
 
     # mesh
     def __slot_protein_chain_as_mesh(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Mesh' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3206,6 +3262,8 @@ class MainViewController:
 
     # surface
     def __slot_protein_chain_as_surface(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Surface' toggle on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object().chain_letter)
@@ -3221,6 +3279,8 @@ class MainViewController:
 
     # all
     def __slot_hide_protein_chain_all(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Hide all' representations button on the 'Proteins Tab' was clicked.")
         self._view.ui.cb_protein_cartoon.setChecked(False)
         self._view.ui.cb_protein_sticks.setChecked(False)
         self._view.ui.cb_protein_ribbon.setChecked(False)
@@ -3284,7 +3344,8 @@ class MainViewController:
     #     else:
     #         logger.warning("The representation of a protein chain could not be changed. This can be due to UI setup reasons.")
 
-    def _import_protein_structure(self):
+    def __slot_import_protein_structure(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Import protein' button on the 'Proteins Tab' was clicked.")
         self._external_controller = add_protein_view_controller.AddProteinViewController(self._interface_manager)
         self._external_controller.user_input.connect(self._post_import_protein_structure)
         self._external_controller.restore_ui()
@@ -3350,7 +3411,8 @@ class MainViewController:
         self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")
         self._interface_manager.stop_wait_spinner()
 
-    def _delete_protein(self):
+    def __slot_delete_protein(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein' button on the 'Proteins Tab' was clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(
             "Are you sure you want to delete this protein?", "Delete Protein",
             custom_message_box.CustomMessageBoxIcons.WARNING.value
@@ -3366,8 +3428,9 @@ class MainViewController:
             self._interface_manager.remove_protein_from_proteins_model()
             self._interface_manager.refresh_main_view()
 
-    def _save_selected_protein_structure_as_pdb_file(self) -> None:
+    def __slot_save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Export protein' button on the 'Proteins Tab' was clicked.")
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -3419,8 +3482,9 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
 
-    def clean_protein_update(self) -> None:
+    def __slot_clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Clean protein' context menu action was clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
             "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!", "Clean Protein",
             custom_message_box.CustomMessageBoxIcons.WARNING.value
@@ -3448,8 +3512,9 @@ class MainViewController:
         self.update_status("Cleaning protein finished.")
         self._interface_manager.stop_wait_spinner()
 
-    def rename_selected_protein_structure(self) -> None:
+    def __slot_rename_selected_protein_structure(self) -> None:
         """Opens a new view to rename the selected protein."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Rename protein' context menu action was clicked.")
         self._external_controller = rename_protein_view_controller.RenameProteinViewController(self._interface_manager)
         self._external_controller.user_input.connect(self.post_rename_selected_protein_structure)
         self._external_controller.restore_ui()
@@ -3491,7 +3556,8 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         self._interface_manager.start_wait_spinner()
 
-    def _show_protein_chain_sequence(self) -> None:
+    def __slot_show_protein_chain_sequence(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show protein sequence' context menu action was clicked.")
         self.tmp_txt_browser = QtWidgets.QTextBrowser()
         try:
             tmp_chain: "chain.Chain" = self._interface_manager.get_current_protein_tree_index_object()
@@ -3511,13 +3577,18 @@ class MainViewController:
             self.tmp_txt_browser.resize(500, 150)
             self.tmp_txt_browser.show()
 
+    def __slot_update_protein_scene(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
+        cmd.scene(key="auto", action="update")
+
     @staticmethod
     def _update_scene() -> None:
         """Updates the current selected PyMOL scene."""
         cmd.scene(key="auto", action="update")
 
-    def save_scene(self) -> None:
+    def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create pymol scene' button on the 'Proteins or Protein Pairs Tab' was clicked.")
         self._external_controller = add_scene_view_controller.AddSceneViewController(self._interface_manager)
         self._external_controller.user_input.connect(self.post_save_scene)
         self._interface_manager.get_add_scene_view().show()
@@ -3578,7 +3649,9 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("Adding new scene to protein pair failed!")
         self._interface_manager.stop_wait_spinner()
 
-    def delete_current_scene(self):
+    def __slot_delete_current_scene(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Delete pymol scene' button on the 'Proteins or Protein Pairs Tab' was clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(
             "Are you sure you want to delete this scene?", "Delete PyMOL Scene",
             custom_message_box.CustomMessageBoxIcons.WARNING.value
@@ -3642,7 +3715,9 @@ class MainViewController:
         )
         tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
 
-    def _open_protein_pair_pymol_session(self):
+    def __slot_open_protein_pair_pymol_session(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Open protein pair pymol session' button on the 'Protein Pairs Tab' was clicked.")
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
         # fixme: I am no sure if the code below is needed
         # if not self._pymol_session_manager.is_the_current_session_empty():
@@ -3697,7 +3772,8 @@ class MainViewController:
         )
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
-    def _delete_protein_pair_from_project(self):
+    def __slot_delete_protein_pair_from_project(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein pair' button on the 'Protein Pairs Tab' was clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(
             "Are you sure you want to delete this protein pair?","Delete Protein Pair",
             custom_message_box.CustomMessageBoxIcons.WARNING.value
@@ -3715,6 +3791,7 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
 
     def __slot_get_information_about_selected_object_in_protein_pair_branch(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An object on the 'Protein Pairs Tab' was clicked.")
         tmp_type = self._interface_manager.get_current_protein_pair_tree_index_type()
 
         if tmp_type == "protein_pair":
@@ -3742,8 +3819,9 @@ class MainViewController:
             return
         self._interface_manager.manage_ui_of_protein_pairs_tab(tmp_type, self._pymol_session_manager)
 
-    def _color_protein_pair_by_rmsd(self) -> None:
+    def __slot_color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Color protein pair by rmsd' context menu action was clicked.")
         self._active_task = tasks.Task(
             target=main_presenter_async.color_protein_pair_by_rmsd_value,
             args=(
@@ -3758,7 +3836,9 @@ class MainViewController:
     def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
         self._interface_manager.stop_wait_spinner()
 
-    def _change_chain_color_protein_pairs(self) -> None:
+    def __slot_change_chain_color_protein_pairs(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "The 'Color' attribute of a protein chain on the 'Protein Pairs Tab' changed.")
         tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
         tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
@@ -3779,7 +3859,9 @@ class MainViewController:
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
-    def _change_chain_color_protein_pairs_atoms(self):
+    def __slot_change_chain_color_protein_pairs_atoms(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -3791,7 +3873,9 @@ class MainViewController:
         self._view.color_grid_protein_pairs.c_grey_70.setIconSize(
             self._view.color_grid_protein_pairs.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
 
-    def _change_chain_reset_protein_pairs_atoms(self):
+    def __slot_change_chain_reset_protein_pairs_atoms(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Reset color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -3885,7 +3969,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("red    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "red"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_red.setIconSize(self._view.color_grid_protein_pairs.c_red.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3893,7 +3977,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("tv_red    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_red"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_tv_red.setIconSize(self._view.color_grid_protein_pairs.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3901,7 +3985,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("salmon    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "salmon"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_salomon.setIconSize(self._view.color_grid_protein_pairs.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3909,7 +3993,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("raspberry    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "raspberry"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_raspberry.setIconSize(self._view.color_grid_protein_pairs.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3917,7 +4001,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("green    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "green"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_green.setIconSize(
             self._view.color_grid_protein_pairs.c_green.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3926,7 +4010,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("tv_green    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_green"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_tv_green.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3935,7 +4019,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("palegreen    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "palegreen"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_palegreen.setIconSize(
             self._view.color_grid_protein_pairs.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3944,7 +4028,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("forest    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "forest"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_forest.setIconSize(
             self._view.color_grid_protein_pairs.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3953,7 +4037,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("blue    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "blue"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_blue.setIcon(QtGui.QIcon(
             ":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_blue.setIconSize(self._view.color_grid_protein_pairs.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3962,7 +4046,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("tv_blue    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_blue"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_tv_blue.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3971,7 +4055,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("lightblue    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "lightblue"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_lightblue.setIconSize(
             self._view.color_grid_protein_pairs.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3980,7 +4064,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("skyblue    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "skyblue"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_skyblue.setIconSize(
             self._view.color_grid_protein_pairs.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3989,7 +4073,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("yellow    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "yellow"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_yellow.setIconSize(
             self._view.color_grid_protein_pairs.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
@@ -3998,7 +4082,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("tv_yellow    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_yellow"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_tv_yellow.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4007,7 +4091,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("paleyellow    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "paleyellow"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_paleyellow.setIconSize(
             self._view.color_grid_protein_pairs.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4016,7 +4100,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("sand    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "sand"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_sand.setIconSize(
             self._view.color_grid_protein_pairs.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4025,7 +4109,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("magenta    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "magenta"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_magenta.setIconSize(
             self._view.color_grid_protein_pairs.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4034,7 +4118,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("purple    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "purple"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_purple.setIconSize(
             self._view.color_grid_protein_pairs.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4043,7 +4127,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("pink    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "pink"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_pink.setIconSize(
             self._view.color_grid_protein_pairs.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4052,7 +4136,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("hotpink    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "hotpink"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_hotpink.setIconSize(
             self._view.color_grid_protein_pairs.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4061,7 +4145,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("cyan    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "cyan"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_cyan.setIconSize(
             self._view.color_grid_protein_pairs.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4070,7 +4154,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("aquamarine    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "aquamarine"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_aquamarine.setIconSize(
             self._view.color_grid_protein_pairs.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4079,7 +4163,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("palecyan    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "palecyan"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_palecyan.setIconSize(
             self._view.color_grid_protein_pairs.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4088,7 +4172,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("teal    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "teal"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_teal.setIconSize(
             self._view.color_grid_protein_pairs.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4097,7 +4181,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("orange    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "orange"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_orange.setIconSize(
             self._view.color_grid_protein_pairs.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4106,7 +4190,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("tv_orange    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_orange"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_tv_orange.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4115,7 +4199,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("lightorange    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "lightorange"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_lightorange.setIconSize(
             self._view.color_grid_protein_pairs.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4124,7 +4208,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("olive    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "olive"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_olive.setIconSize(
             self._view.color_grid_protein_pairs.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4133,7 +4217,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("white    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "white"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_white.setIconSize(
             self._view.color_grid_protein_pairs.c_white.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4145,9 +4229,9 @@ class MainViewController:
         tmp_is_colored_by_elements = tmp_chain.get_color(tmp_protein.pymol_selection.selection_string)[1]
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("grey70    ")
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         if tmp_is_colored_by_elements:
-            self._change_chain_color_protein_pairs_atoms()
+            self.__slot_change_chain_color_protein_pairs_atoms()
         else:
             self._view.color_grid_protein_pairs.last_clicked_color = "grey70"
         self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
@@ -4158,7 +4242,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("grey30    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "grey30"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_grey_30.setIconSize(
             self._view.color_grid_protein_pairs.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4167,7 +4251,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("black    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "black"
-        self._change_chain_color_protein_pairs()
+        self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
         self._view.color_grid_protein_pairs.c_black.setIconSize(
             self._view.color_grid_protein_pairs.c_black.icon().actualSize(QtCore.QSize(14, 14)))
@@ -4307,6 +4391,8 @@ class MainViewController:
     # <editor-fold desc="Representations">
     # cartoon
     def __slot_protein_pair_chain_as_cartoon(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4322,6 +4408,8 @@ class MainViewController:
 
     # sticks
     def __slot_protein_pair_chain_as_sticks(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Sticks' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4337,6 +4425,8 @@ class MainViewController:
 
     # ribbon
     def __slot_protein_pair_chain_as_ribbon(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Ribbon' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4352,6 +4442,8 @@ class MainViewController:
 
     # lines
     def __slot_protein_pair_chain_as_lines(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Lines' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4367,6 +4459,8 @@ class MainViewController:
 
     # spheres
     def __slot_protein_pair_chain_as_spheres(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Spheres' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4382,6 +4476,8 @@ class MainViewController:
 
     # dots
     def __slot_protein_pair_chain_as_dots(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Dots' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4397,6 +4493,8 @@ class MainViewController:
 
     # mesh
     def __slot_protein_pair_chain_as_mesh(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Mesh' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4412,6 +4510,8 @@ class MainViewController:
 
     # surface
     def __slot_protein_pair_chain_as_surface(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Surface' toggle on the 'Protein Pairs Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
@@ -4427,6 +4527,8 @@ class MainViewController:
 
     # all
     def __slot_hide_protein_pair_chain_all(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "'Hide all' representations button on the 'Protein Pairs Tab' was clicked.")
         self._view.ui.cb_protein_pair_cartoon.setChecked(False)
         self._view.ui.cb_protein_pair_sticks.setChecked(False)
         self._view.ui.cb_protein_pair_ribbon.setChecked(False)
@@ -4457,13 +4559,18 @@ class MainViewController:
 
     # </editor-fold>
 
+    def __slot_update_protein_pair_scene(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
+        cmd.scene(key="auto", action="update")
+
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
             self._view.ui.action_results_summary.setEnabled(True)
         else:
             self._view.ui.action_results_summary.setEnabled(False)
 
-    def _results_summary(self) -> None:
+    def __slot_results_summary(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Results/Summary' clicked.")
         tmp_protein_pair = self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(),
                                                                               enums.ModelEnum.OBJECT_ROLE)
         self._external_controller = results_view_controller.ResultsViewController(self._interface_manager,

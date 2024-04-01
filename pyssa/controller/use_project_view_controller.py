@@ -19,9 +19,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the Open Dialog."""
+"""Module for the Use Dialog."""
 import copy
 import glob
+import logging
 import os
 import pathlib
 import subprocess
@@ -36,6 +37,10 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, constants, gui_utils, enums
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class UseProjectViewController(QtCore.QObject):
@@ -80,6 +85,7 @@ class UseProjectViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/project/use_project/")
 
     def _initialize_ui(self) -> None:
@@ -145,6 +151,7 @@ class UseProjectViewController(QtCore.QObject):
 
     def validate_use_project_name(self) -> None:
         """Validates the input of the project name in real-time."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         projects_list_view = self._view.ui.list_use_existing_projects
 
         # Deselect any current item in the list view
@@ -171,6 +178,7 @@ class UseProjectViewController(QtCore.QObject):
 
     def add_protein_structure_to_new_project(self) -> None:
         """Adds the selected protein to the list which is used to create the new project."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' protein to new project button was clicked.")
         prot_to_add = QtWidgets.QListWidgetItem(self._view.ui.list_use_available_protein_structures.currentItem().text())
         prot_to_add.setData(
             enums.ModelEnum.OBJECT_ROLE,
@@ -191,6 +199,7 @@ class UseProjectViewController(QtCore.QObject):
 
     def remove_protein_structure_to_new_project(self) -> None:
         """Removes the selected protein from the list which is used to create the new project."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Remove' button was clicked.")
         prot_to_remove = self._view.ui.list_use_selected_protein_structures.currentItem()
         self._view.ui.list_use_selected_protein_structures.takeItem(
             self._view.ui.list_use_selected_protein_structures.currentRow(),
@@ -224,6 +233,7 @@ class UseProjectViewController(QtCore.QObject):
 
     def show_protein_selection_for_use(self) -> None:
         """Shows the two lists for the protein selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
         gui_elements_to_show = [
             self._view.ui.lbl_use_search,
             self._view.ui.lbl_use_status_search,
@@ -262,6 +272,7 @@ class UseProjectViewController(QtCore.QObject):
 
     def hide_protein_selection_for_use(self) -> None:
         """Hides the two lists for the protein selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked.")
         gui_elements_to_show = [
             self._view.ui.btn_use_next,
             self._view.ui.list_use_existing_projects,
@@ -329,6 +340,7 @@ class UseProjectViewController(QtCore.QObject):
 
     def use_enable_add(self) -> None:
         """Enables the add button."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein from the list of available proteins was clicked.")
         if self._are_duplicate_proteins_in_selected_protein_list():
             self._view.ui.btn_use_add_available_protein_structures.setEnabled(False)
         else:
@@ -336,9 +348,11 @@ class UseProjectViewController(QtCore.QObject):
 
     def use_enable_remove(self) -> None:
         """Enables the remove button."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein from the list of proteins to add to the new project was clicked.")
         self._view.ui.btn_use_remove_selected_protein_structures.setEnabled(True)
 
     def create_use_project(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked.")
         tmp_proteins: list = []
         for tmp_row in range(self._view.ui.list_use_selected_protein_structures.count()):
             tmp_proteins.append(self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(enums.ModelEnum.OBJECT_ROLE))

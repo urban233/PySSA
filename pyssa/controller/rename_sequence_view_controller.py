@@ -19,8 +19,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the Open Dialog."""
+"""Module for the Rename Sequence Dialog."""
 import glob
+import logging
 import os
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -28,6 +29,10 @@ from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.styles import styles
 from pyssa.util import input_validator, constants
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class RenameSequenceViewController(QtCore.QObject):
@@ -62,6 +67,7 @@ class RenameSequenceViewController(QtCore.QObject):
 
     def _validate_protein_name(self, the_entered_text: str) -> None:
         """Validates the input of the protein name in real-time."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         tmp_input_validator = input_validator.InputValidator(self._view.ui.le_name)
         tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_sequence_name(
             the_entered_text, self._sequence_names
@@ -74,5 +80,6 @@ class RenameSequenceViewController(QtCore.QObject):
             self._view.ui.btn_rename.setEnabled(False)
 
     def _rename_sequence(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Rename' button was clicked.")
         self._view.close()
         self.user_input.emit((self._view.ui.le_name.text(), True))

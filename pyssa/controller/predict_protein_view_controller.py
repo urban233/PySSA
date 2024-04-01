@@ -1,5 +1,27 @@
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2022
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Module for the Predict Protein Dialog."""
+import logging
 import os
-import socket
 import subprocess
 
 import pygetwindow
@@ -20,6 +42,10 @@ from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
 from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class PredictProteinViewController(QtCore.QObject):
@@ -66,10 +92,12 @@ class PredictProteinViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/protein_structure_prediction/colabfold_multimer/")
 
     def _show_prediction_configuration(self) -> None:
         """Opens the prediction configuration dialog window."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Edit' advanced configurations button was clicked.")
         self._external_controller = advanced_prediction_configurations_view_controller.AdvancedPredictionConfigurationsViewController(
             self._interface_manager, self.prediction_configuration
         )
@@ -130,6 +158,7 @@ class PredictProteinViewController(QtCore.QObject):
         self._view.resize(700, 800)
 
     def _check_if_prediction_and_analysis_should_be_done(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add analysis' checkbox was clicked.")
         if self._view.ui.checkbox_add_analysis.isChecked():
             self._view.ui.btn_go_to_analysis_setup.setText("Go")
             self._view.ui.lbl_go_to_analysis_setup.setText("To Analysis Setup")
@@ -272,6 +301,7 @@ class PredictProteinViewController(QtCore.QObject):
 
     def _remove_protein_to_predict(self) -> None:
         """Removes the selected protein from the list of proteins to predict."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Remove' button on the 'Prediction Tab' was clicked.")
         tmp_table = self._view.ui.table_proteins_to_predict
         for tmp_protein in self.temporary_protein_objs:
             if tmp_protein.get_molecule_object() == tmp_table.verticalHeaderItem(tmp_table.currentRow()).text() and len(tmp_protein.chains) > 1:
@@ -313,6 +343,7 @@ class PredictProteinViewController(QtCore.QObject):
     def _switch_tab(self) -> None:
         """Switches the tabs from prediction to analysis and vice versa."""
         if self._view.ui.btn_go_to_analysis_setup.text() == "Predict":
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Predict' button was clicked.")
             tmp_prediction_runs: list[
                 prediction_protein_info.PredictionProteinInfo
             ] = prediction_util.get_prediction_name_and_seq_from_table(
@@ -320,6 +351,7 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.close()
             self.job_input.emit(("job_input", tmp_prediction_runs, self.prediction_configuration, False))
         else:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Go' button was clicked.")
             if self._view.ui.tab_widget.currentIndex() == 0:
                 # goes from prediction to analysis
                 self._view.ui.tab_widget.setCurrentIndex(1)
@@ -409,6 +441,7 @@ class PredictProteinViewController(QtCore.QObject):
         return tmp_protein_pair_names
 
     def _add_protein_pair(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
             self._interface_manager, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names(),
             a_list_of_extra_proteins=self.temporary_protein_objs
@@ -467,6 +500,7 @@ class PredictProteinViewController(QtCore.QObject):
                 constants.PYSSA_LOGGER.debug("No selection in struction analysis overview.")
 
     def _disable_selection_of_proteins_for_analysis(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Back' button was clicked.")
         """Hides the gui elements to choose the two proteins."""
         gui_elements_to_show = [
             self._view.ui.lbl_analysis_overview,
@@ -502,6 +536,7 @@ class PredictProteinViewController(QtCore.QObject):
 
     def _show_chains_of_protein_structure_1(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
         self._view.wait_spinner.start()
         tmp_proteins_to_predict: list[str] = []
         for i in range(self._view.ui.table_proteins_to_predict.rowCount()):
@@ -789,6 +824,7 @@ class PredictProteinViewController(QtCore.QObject):
 
     def _enable_remove_button_for_analysis_list(self) -> None:
         """Enables the remove button."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An analysis run from the list was clicked.")
         self._view.ui.btn_analysis_remove.setEnabled(True)
 
     def _fill_protein_struct_combo_boxes(self) -> None:
@@ -808,6 +844,7 @@ class PredictProteinViewController(QtCore.QObject):
 
     def _remove_analysis_run_from_list(self) -> None:
         """Removes the selected protein pair from the list of protein pairs to analyze."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Remove' button on the 'Analysis Tab' was clicked.")
         self._view.ui.list_analysis_overview.takeItem(
             self._view.ui.list_analysis_overview.currentRow(),
         )
@@ -885,6 +922,7 @@ class PredictProteinViewController(QtCore.QObject):
             self._view.ui.btn_analysis_next_2.setEnabled(False)
 
     def _start_prediction_analysis(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Start' button was clicked.")
         tmp_prediction_runs: list[
             prediction_protein_info.PredictionProteinInfo
         ] = prediction_util.get_prediction_name_and_seq_from_table(

@@ -22,6 +22,7 @@
 """Module for the Create Dialog."""
 
 import glob
+import logging
 import os
 import subprocess
 
@@ -36,6 +37,10 @@ from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.util import input_validator, gui_utils, constants, tools
+from pyssa.logging_pyssa import log_levels, log_handlers
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 class CreateProjectViewController(QtCore.QObject):
@@ -82,6 +87,7 @@ class CreateProjectViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
 
     def _open_help_for_dialog(self):
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/project/new_project/")
 
     def _restore_ui(self):
@@ -124,6 +130,7 @@ class CreateProjectViewController(QtCore.QObject):
         self._view.ui.txt_new_choose_reference.textChanged.connect(self._validate_reference_in_project)
 
     def _create_new_project(self) -> None:
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create' button was clicked.")
         self._view.close()
         self.user_input.emit((self._view.ui.txt_new_project_name.text(), self._view.ui.txt_new_choose_reference.text()))
 
@@ -135,6 +142,7 @@ class CreateProjectViewController(QtCore.QObject):
 
     def _validate_project_name(self, the_entered_text: str) -> None:
         """Validates the input of the project name in real-time."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         tmp_input_validator = input_validator.InputValidator(self._view.ui.txt_new_project_name)
         tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_project_name(the_entered_text,
                                                                                              self._project_names)
