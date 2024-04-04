@@ -2652,6 +2652,7 @@ class MainViewController:
         # else:
         #     tmp_color_name = self._view.ui.lbl_protein_current_color.text().strip()
         cmd.color(color=self._view.color_grid_proteins.last_clicked_color, selection=f"{tmp_selection.selection_string}")
+        self.set_icon_for_current_color_in_proteins_tab()
 
     # <editor-fold desc="Color Grid slot methods">
     def set_icon_for_current_color_in_proteins_tab(self):
@@ -3900,6 +3901,7 @@ class MainViewController:
         tmp_selection.set_selection_for_a_single_chain(
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
         cmd.color(color=self._view.color_grid_protein_pairs.last_clicked_color, selection=f"{tmp_selection.selection_string}")
+        self.set_icon_for_current_color_in_protein_pairs_tab()
 
     # <editor-fold desc="Color Grid slot methods">
     def set_icon_for_current_color_in_protein_pairs_tab(self):
