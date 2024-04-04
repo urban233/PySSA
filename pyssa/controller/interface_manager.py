@@ -1732,7 +1732,7 @@ class InterfaceManager:
         )
 
     def show_protein_pair_pymol_scene_configuration(self):
-        self._main_view.ui.frame_protein_pair.show()
+        self._main_view.ui.frame_protein_pair_color.show()
         self._main_view.ui.frame_protein_pair_repr.show()
         if self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors == 1:
             self._main_view.ui.box_protein_pair_color.show()
@@ -1818,7 +1818,7 @@ class InterfaceManager:
         self._main_view.ui.lbl_info_4.hide()
 
     def hide_protein_pair_pymol_scene_configuration(self):
-        self._main_view.ui.frame_protein_pair.hide()
+        self._main_view.ui.frame_protein_pair_color.hide()
         self._main_view.ui.frame_protein_pair_repr.hide()
         self._main_view.ui.lbl_info_3.show()
         # self._main_view.ui.lbl_protein_pair_color.hide()

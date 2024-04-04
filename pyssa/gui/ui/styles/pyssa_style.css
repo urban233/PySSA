@@ -733,6 +733,22 @@ QFrame#frame_protein_pair_pymol_scene {
     border-color: #DCDBE3;
 }
 
+QFrame#frame_protein_pair_color {
+    background-color: white;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QFrame#frame_protein_pair_repr {
+    background-color: white;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
 QStatusBar {
     background-color: #F2F2F2;
     border-style: solid;

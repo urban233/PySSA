@@ -1048,7 +1048,7 @@
                  <number>5</number>
                 </property>
                 <item>
-                 <widget class="QFrame" name="frame_protein_pair">
+                 <widget class="QFrame" name="frame_protein_pair_color">
                   <property name="frameShape">
                    <enum>QFrame::StyledPanel</enum>
                   </property>
