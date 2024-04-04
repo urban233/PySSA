@@ -98,7 +98,6 @@ QTreeView::branch:open:has-children:has-siblings{
 }
 
 QMainWindow {
-    /*background-color: #fcfcfc;*/
     background-color: #f2f2f2;
 }
 

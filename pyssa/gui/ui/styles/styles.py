@@ -20,10 +20,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all styles related functions."""
+import logging
 import os
 import pathlib
 from PyQt5 import QtWidgets
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, global_variables
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 def color_bottom_frame_button(button: QtWidgets.QPushButton) -> None:
@@ -64,6 +69,7 @@ def set_stylesheet(self) -> None:  # noqa: ANN001
     Args:
         self: a QMainWindow or QDialog
     """
+    logger.info("Using the 'in-project' stylesheet.")
     with open(
         pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/pyssa_style.css"),
         "r",
@@ -80,6 +86,7 @@ def set_stylesheet_homepage(self) -> None:  # noqa: ANN001
     Args:
         self: a QMainWindow or QDialog
     """
+    logger.info("Using the homepage stylesheet.")
     with open(
         pathlib.Path(f"{constants.PLUGIN_ROOT_PATH}/pyssa/gui/ui/styles/pyssa_style_homepage.css"),
         "r",

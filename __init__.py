@@ -20,6 +20,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Init file for PySSA plugin."""
+import logging
 import pathlib
 import sys
 import os
@@ -71,6 +72,11 @@ def run_plugin_gui() -> None:
         app = Qt.QtWidgets.QApplication(sys.argv)
         app.exec_()
     """
+    from .pyssa.logging_pyssa import log_handlers
+    logger = logging.getLogger(__file__)
+    logger.addHandler(log_handlers.log_file_handler)
+
+    logger.info("Import of all necessary modules.")
     from .pyssa.gui.ui.styles import styles
     from .pyssa.controller import main_view_controller
     from .pyssa.controller import interface_manager
@@ -83,6 +89,7 @@ def run_plugin_gui() -> None:
     global pymolSessionManager
 
     if mainWindow is None:
+        logger.info("Creating manager objects.")
         interfaceManager = interface_manager.InterfaceManager()
         pymolSessionManager = pymol_session_manager.PymolSessionManager(interfaceManager)
         mainWindow = interfaceManager.get_main_view()
@@ -95,5 +102,7 @@ def run_plugin_gui() -> None:
         #     with open(styles_path_list[1], "r", encoding="utf-8") as file:
         #         style = file.read()
         # Set the stylesheet of the application
+        logger.info("Setting homepage stylesheet for the main window.")
         styles.set_stylesheet_homepage(mainWindow)
+        logger.info("Ready to show the main window.")
     mainWindow.show()
