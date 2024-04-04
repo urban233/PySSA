@@ -880,7 +880,11 @@ class InterfaceManager:
             styles.set_stylesheet_homepage(self._main_view)
             # No project is open
             # No project(s) available
+            self._main_view.ui.lbl_logo.show()
+            self._main_view.ui.lbl_project_name.hide()
+            self._main_view.ui.project_tab_widget.hide()
             if len(self.get_workspace_projects_as_list()) == 0:
+                # Project
                 self._main_view.ui.action_new_project.setEnabled(True)
                 self._main_view.ui.action_open_project.setEnabled(False)
                 self._main_view.ui.action_use_project.setEnabled(False)
@@ -889,9 +893,6 @@ class InterfaceManager:
                 self._main_view.ui.action_export_project.setEnabled(False)
                 self._main_view.ui.action_close_project.setEnabled(False)
             else:
-                self._main_view.ui.lbl_project_name.hide()
-                self._main_view.ui.project_tab_widget.hide()
-                self._main_view.ui.lbl_logo.show()
                 # Project
                 self._main_view.ui.action_new_project.setEnabled(True)
                 self._main_view.ui.action_open_project.setEnabled(True)
@@ -900,24 +901,24 @@ class InterfaceManager:
                 self._main_view.ui.action_import_project.setEnabled(True)
                 self._main_view.ui.action_export_project.setEnabled(False)
                 self._main_view.ui.action_close_project.setEnabled(False)
-                # Prediction
-                self._main_view.ui.menuPrediction.setEnabled(False)
-                self._main_view.ui.action_predict_monomer.setEnabled(False)
-                self._main_view.ui.action_predict_multimer.setEnabled(False)
-                # Analysis
-                self._main_view.ui.menuAnalysis.setEnabled(False)
-                self._main_view.ui.action_distance_analysis.setEnabled(True)
-                # Results
-                self._main_view.ui.menuResults.setEnabled(False)
-                self._main_view.ui.action_results_summary.setEnabled(False)
-                # Image
-                self._main_view.ui.menuImage.setEnabled(False)
-                self._main_view.ui.action_preview_image.setEnabled(False)
-                self._main_view.ui.action_ray_tracing_image.setEnabled(False)
-                self._main_view.ui.action_simple_image.setEnabled(False)
-                # Hotspots
-                self._main_view.ui.menuHotspots.setEnabled(False)
-                self._main_view.ui.action_protein_regions.setEnabled(False)
+            # Prediction
+            self._main_view.ui.menuPrediction.setEnabled(False)
+            self._main_view.ui.action_predict_monomer.setEnabled(False)
+            self._main_view.ui.action_predict_multimer.setEnabled(False)
+            # Analysis
+            self._main_view.ui.menuAnalysis.setEnabled(False)
+            self._main_view.ui.action_distance_analysis.setEnabled(True)
+            # Results
+            self._main_view.ui.menuResults.setEnabled(False)
+            self._main_view.ui.action_results_summary.setEnabled(False)
+            # Image
+            self._main_view.ui.menuImage.setEnabled(False)
+            self._main_view.ui.action_preview_image.setEnabled(False)
+            self._main_view.ui.action_ray_tracing_image.setEnabled(False)
+            self._main_view.ui.action_simple_image.setEnabled(False)
+            # Hotspots
+            self._main_view.ui.menuHotspots.setEnabled(False)
+            self._main_view.ui.action_protein_regions.setEnabled(False)
 
         # Menu bar view for prediction
         if self.main_tasks_manager.prediction_task is not None:
@@ -961,7 +962,8 @@ class InterfaceManager:
                 # An analysis is finished or not running.
                 pass
 
-        self._main_view.ui.project_tab_widget.setCurrentIndex(0)
+        # TODO: this could be not needed
+        #self._main_view.ui.project_tab_widget.setCurrentIndex(0)
 
         # # Fixme: The following code below is for clicking on sequence, protein or protein pair with available options.
         # # Fixme: Is this important with the code above?
