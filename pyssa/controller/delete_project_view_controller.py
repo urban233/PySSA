@@ -94,17 +94,25 @@ class DeleteProjectViewController(QtCore.QObject):
         self._view.ui.list_delete_projects_view.setModel(self._interface_manager.get_workspace_model())
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
-        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.txt_delete_search.textChanged.connect(self.validate_delete_search)
         self._view.ui.list_delete_projects_view.clicked.connect(self.select_project_from_delete_list)
         self._view.ui.txt_delete_selected_projects.textChanged.connect(self.activate_delete_button)
         self._view.ui.btn_delete_delete_project.clicked.connect(self.delete_project)
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
 
     def validate_delete_search(self) -> None:
         """Validates the input of the project name in real-time."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
-        input_validator.InputValidator.validate_project_name(
-            self._view.ui.list_delete_projects_view.model(),
+        projects_list_view = self._view.ui.list_delete_projects_view
+
+        # Deselect any current item in the list view
+        if projects_list_view.currentIndex().isValid():
+            projects_list_view.model().itemFromIndex(projects_list_view.currentIndex()).setSelected(False)
+
+        # Assuming validate_search_input is a static method
+
+        input_validator.InputValidator.validate_project_name_delete_project(
+            projects_list_view.model(),
             self._view.ui.txt_delete_search,
             self._view.ui.lbl_delete_status_search,
             self._view.ui.txt_delete_selected_projects,

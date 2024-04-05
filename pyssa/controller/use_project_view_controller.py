@@ -158,7 +158,7 @@ class UseProjectViewController(QtCore.QObject):
         if projects_list_view.currentIndex().isValid():
             projects_list_view.model().itemFromIndex(projects_list_view.currentIndex()).setSelected(False)
 
-        input_validator.InputValidator.validate_project_name(
+        input_validator.InputValidator.validate_project_name_use_project(
             projects_list_view.model(),
             self._view.ui.txt_use_project_name,
             self._view.ui.lbl_use_status_project_name,

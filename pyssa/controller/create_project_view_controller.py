@@ -144,8 +144,13 @@ class CreateProjectViewController(QtCore.QObject):
         """Validates the input of the project name in real-time."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         tmp_input_validator = input_validator.InputValidator(self._view.ui.txt_new_project_name)
-        tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_project_name(the_entered_text,
-                                                                                             self._project_names)
+        # tmp_validate_flag, tmp_message = tmp_input_validator.validate_input_for_project_name(the_entered_text,
+        #                                                                                      self._project_names)
+        tmp_validate_flag, tmp_stylesheet_string, tmp_message = input_validator.validate_input_for_project_name(
+            the_entered_text, self._project_names
+        )
+        self._view.ui.txt_new_project_name.setStyleSheet(tmp_stylesheet_string)
+
         if tmp_validate_flag:
             self._view.ui.lbl_new_status_project_name.setText("")
             self._view.ui.btn_new_create_project.setEnabled(True)

@@ -792,6 +792,8 @@ class InterfaceManager:
             self._main_view.ui.action_import_project.setEnabled(False)
             self._main_view.ui.action_export_project.setEnabled(True)
             self._main_view.ui.action_close_project.setEnabled(True)
+            # Demo Projects
+            self._main_view.ui.action_get_demo_projects.setEnabled(False)
             if len(self._current_project.sequences) > 0:
                 # A project has sequence(s)
                 self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
@@ -830,8 +832,6 @@ class InterfaceManager:
                 self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
                 # It isn't possible to do a prediction
                 self._main_view.ui.menuPrediction.setEnabled(False)
-                self._main_view.ui.action_predict_monomer.setEnabled(False)
-                self._main_view.ui.action_predict_multimer.setEnabled(False)
 
             if len(self._current_project.proteins) > 0:
                 # A project has protein(s)
@@ -865,16 +865,10 @@ class InterfaceManager:
                 # It isn't possible to do an analysis, image and hotspots
                 # Analysis
                 self._main_view.ui.menuAnalysis.setEnabled(False)
-                self._main_view.ui.action_distance_analysis.setEnabled(False)
                 # Image
                 self._main_view.ui.menuImage.setEnabled(False)
-                self._main_view.ui.action_preview_image.setEnabled(False)
-                self._main_view.ui.action_ray_tracing_image.setEnabled(False)
-                self._main_view.ui.action_simple_image.setEnabled(False)
                 # Hotspots
                 self._main_view.ui.menuHotspots.setEnabled(False)
-                self._main_view.ui.action_protein_regions.setEnabled(False)
-
         else:
             # Homepage view
             styles.set_stylesheet_homepage(self._main_view)
@@ -924,6 +918,7 @@ class InterfaceManager:
         if self.main_tasks_manager.prediction_task is not None:
             if not self.main_tasks_manager.check_if_prediction_task_is_finished():
                 # A prediction is running.
+                self._main_view.ui.menuProject.setEnabled(False)
                 self._main_view.ui.action_predict_monomer.setEnabled(False)
                 self._main_view.ui.action_predict_multimer.setEnabled(False)
                 self._main_view.ui.action_abort_prediction.setEnabled(True)
@@ -948,6 +943,7 @@ class InterfaceManager:
         if self.main_tasks_manager.distance_analysis_task is not None:
             if not self.main_tasks_manager.check_if_distance_analysis_task_is_finished():
                 # An analysis is running.
+                self._main_view.ui.menuProject.setEnabled(False)
                 self._main_view.ui.menuPrediction.setEnabled(False)
                 self._main_view.ui.menuAnalysis.setEnabled(False)
                 self._main_view.ui.menuImage.setEnabled(False)
