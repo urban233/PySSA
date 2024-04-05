@@ -35,7 +35,7 @@ from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
-from pyssa.util import input_validator, constants
+from pyssa.util import input_validator, constants, ui_util
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
@@ -89,14 +89,15 @@ class OpenProjectViewController(QtCore.QObject):
         self.open_help("help/project/open_project/")
 
     def restore_default_view(self) -> None:
-        self._view.ui.txt_open_selected_project.clear()
         self._view.ui.label_28.hide()
         self._view.ui.txt_open_search.setPlaceholderText("Search")
+        self._view.ui.txt_open_search.clear()
+        self._view.ui.txt_open_selected_project.clear()
         self._view.ui.btn_open_project.setEnabled(False)
 
     def _fill_projects_list_view(self) -> None:
         """Lists all projects."""
-        self._view.ui.projects_list_view.setModel(self._interface_manager.get_workspace_projects())
+        self._view.ui.projects_list_view.setModel(self._interface_manager.get_workspace_model())
 
     def _convert_model_into_set(self) -> set:
         tmp_project_names = []
@@ -116,15 +117,21 @@ class OpenProjectViewController(QtCore.QObject):
 
     def _validate_open_search(self, the_entered_text: str) -> None:
         """Validates the input of the project name in real-time."""
-        tmp_validate_flag, tmp_stylesheet_string, tmp_message = input_validator.check_project_names_for_given_project_name(
-            the_entered_text, self._project_names
+        ui_util.select_matching_string_in_q_list_view(
+            self._view.ui.txt_open_search.text(),
+            self._view.ui.projects_list_view,
+            self._view.ui.txt_open_selected_project
         )
 
-        self._view.ui.txt_open_search.setStyleSheet(tmp_stylesheet_string)
-        if tmp_validate_flag:
-            self._view.ui.lbl_open_status_search.setText("")
-        else:
-            self._view.ui.lbl_open_status_search.setText(tmp_message)
+        # tmp_validate_flag, tmp_stylesheet_string, tmp_message = input_validator.check_project_names_for_given_project_name(
+        #     the_entered_text, self._project_names
+        # )
+        #
+        # self._view.ui.txt_open_search.setStyleSheet(tmp_stylesheet_string)
+        # if tmp_validate_flag:
+        #     self._view.ui.lbl_open_status_search.setText("")
+        # else:
+        #     self._view.ui.lbl_open_status_search.setText(tmp_message)
 
         # projects_list_view = self._view.ui.projects_list_view
         #

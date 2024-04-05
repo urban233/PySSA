@@ -52,7 +52,19 @@ def validate_input_for_project_name(the_current_entered_text: str,
         return True, """QLineEdit {color: #000000; border-color: #DCDBE3;}""", ""
 
 
-
+def find_match_in_model(a_model, a_text_to_search_for) -> list[QtGui.QStandardItem]:
+    tmp_exactly_matched_items = a_model.findItems(
+        a_text_to_search_for,
+        QtCore.Qt.MatchExactly,
+    )
+    tmp_partial_matched_items = a_model.findItems(
+        a_text_to_search_for,
+        QtCore.Qt.MatchContains,
+    )
+    if len(tmp_exactly_matched_items) == 1:
+        return tmp_exactly_matched_items
+    else:
+        return tmp_partial_matched_items
 
 
 

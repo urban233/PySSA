@@ -34,7 +34,7 @@ from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
-from pyssa.util import input_validator, gui_utils, constants, enums
+from pyssa.util import input_validator, gui_utils, constants, enums, ui_util
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
@@ -86,6 +86,9 @@ class DeleteProjectViewController(QtCore.QObject):
         self.open_help("help/project/delete_project/")
 
     def restore_default_view(self):
+        self._view.ui.label_31.hide()
+        self._view.ui.txt_delete_search.setPlaceholderText("Search")
+        self._view.ui.txt_delete_search.clear()
         self._view.ui.txt_delete_selected_projects.clear()
         self._view.ui.btn_delete_delete_project.setEnabled(False)
 
@@ -105,18 +108,27 @@ class DeleteProjectViewController(QtCore.QObject):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         projects_list_view = self._view.ui.list_delete_projects_view
 
-        # Deselect any current item in the list view
-        if projects_list_view.currentIndex().isValid():
-            projects_list_view.model().itemFromIndex(projects_list_view.currentIndex()).setSelected(False)
-
-        # Assuming validate_search_input is a static method
-
-        input_validator.InputValidator.validate_project_name_delete_project(
-            projects_list_view.model(),
-            self._view.ui.txt_delete_search,
-            self._view.ui.lbl_delete_status_search,
-            self._view.ui.txt_delete_selected_projects,
+        ui_util.select_matching_string_in_q_list_view(
+            self._view.ui.txt_delete_search.text(),
+            projects_list_view,
+            self._view.ui.txt_delete_selected_projects
         )
+
+        # # Deselect any current item in the list view
+        # if projects_list_view.currentIndex().isValid():
+        #     projects_list_view.selectionModel().clearCurrentIndex()
+        #
+        # tmp_match_item = input_validator.find_match_in_model(projects_list_view.model(), self._view.ui.txt_delete_search.text())
+        # projects_list_view.selectionModel().setCurrentIndex(tmp_match_item[0].index(), QtCore.QItemSelectionModel.Clear | QtCore.QItemSelectionModel.Select)
+        # self._view.ui.txt_delete_selected_projects.setText(tmp_match_item[0].data(Qt.DisplayRole))
+        # # Assuming validate_search_input is a static method
+        #
+        # input_validator.InputValidator.validate_project_name_delete_project(
+        #     projects_list_view.model(),
+        #     self._view.ui.txt_delete_search,
+        #     self._view.ui.lbl_delete_status_search,
+        #     self._view.ui.txt_delete_selected_projects,
+        # )
 
     def select_project_from_delete_list(self) -> None:
         """Selects a project from the project list on the delete page."""

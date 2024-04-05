@@ -52,8 +52,9 @@ class UseProjectViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_use_project_view()
         self._initialize_ui()
-        self._connect_all_ui_elements_to_slot_functions()
         self._fill_projects_list_view()
+        self._project_names: set = self._convert_model_into_set()
+        self._connect_all_ui_elements_to_slot_functions()
 
     def open_help(self, a_page_name: str):
         """Opens the pyssa documentation window if it's not already open.
@@ -88,6 +89,14 @@ class UseProjectViewController(QtCore.QObject):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
         self.open_help("help/project/use_project/")
 
+    def _convert_model_into_set(self) -> set:
+        tmp_project_names = []
+        for tmp_row in range(self._view.ui.list_use_existing_projects.model().rowCount()):
+            tmp_project_names.append(
+                self._view.ui.list_use_existing_projects.model().index(tmp_row, 0).data(Qt.DisplayRole)
+            )
+        return set(tmp_project_names)
+
     def _initialize_ui(self) -> None:
         gui_elements = [
             self._view.ui.lbl_use_search,
@@ -103,16 +112,16 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.list_use_selected_protein_structures,
             self._view.ui.btn_use_back,
             self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_project_name,
         ]
         gui_utils.hide_gui_elements(gui_elements)
         self._view.ui.txt_use_project_name.clear()
+        self._view.ui.txt_use_project_name.setStyleSheet(
+            """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+        )
         self._view.ui.lbl_use_status_project_name.setText("")
+        self._view.ui.lbl_use_status_project_name.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         self._view.ui.txt_use_search.clear()
         self._view.ui.lbl_use_status_search.setText("")
-        #self._view.ui.list_use_available_protein_structures.clear()
-        #self._view.ui.list_use_selected_protein_structures.clear()
-        #self._view.ui.list_use_existing_projects.clear()
         self._view.ui.btn_use_next.setEnabled(False)
         self._temporary_redesign()
         self._fill_projects_combobox()
@@ -134,36 +143,33 @@ class UseProjectViewController(QtCore.QObject):
             self.add_protein_structure_to_new_project,
         )
         self._view.ui.cb_choose_project.currentIndexChanged.connect(self._list_all_proteins_of_selected_project)
-        # self._view.ui.list_use_available_protein_structures.doubleClicked.connect(
-        #     self.add_protein_structure_to_new_project,
-        # )
         self._view.ui.list_use_available_protein_structures.itemClicked.connect(self.use_enable_add)
         self._view.ui.btn_use_remove_selected_protein_structures.clicked.connect(
             self.remove_protein_structure_to_new_project,
         )
-        # self._view.ui.list_use_selected_protein_structures.doubleClicked.connect(
-        #     self.remove_protein_structure_to_new_project,
-        # )
         self._view.ui.list_use_selected_protein_structures.itemClicked.connect(self.use_enable_remove)
         self._view.ui.btn_use_back.clicked.connect(self.hide_protein_selection_for_use)
-        # self._view.ui.txt_use_search.textChanged.connect(self.validate_use_search)
         self._view.ui.btn_use_create_new_project.clicked.connect(self.create_use_project)
 
-    def validate_use_project_name(self) -> None:
+    def validate_use_project_name(self, the_entered_text) -> None:
         """Validates the input of the project name in real-time."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A text was entered.")
         projects_list_view = self._view.ui.list_use_existing_projects
-
         # Deselect any current item in the list view
         if projects_list_view.currentIndex().isValid():
-            projects_list_view.model().itemFromIndex(projects_list_view.currentIndex()).setSelected(False)
+            projects_list_view.selectionModel().clearSelection()
 
-        input_validator.InputValidator.validate_project_name_use_project(
-            projects_list_view.model(),
-            self._view.ui.txt_use_project_name,
-            self._view.ui.lbl_use_status_project_name,
-            self._view.ui.btn_use_next,
+        tmp_validate_flag, tmp_stylesheet_string, tmp_message = input_validator.validate_input_for_project_name(
+            the_entered_text, self._project_names
         )
+        self._view.ui.txt_use_project_name.setStyleSheet(tmp_stylesheet_string)
+
+        if tmp_validate_flag:
+            self._view.ui.lbl_use_status_project_name.setText("")
+            self._view.ui.btn_use_next.setEnabled(True)
+        else:
+            self._view.ui.lbl_use_status_project_name.setText(tmp_message)
+            self._view.ui.btn_use_next.setEnabled(False)
 
     def validate_use_search(self) -> None:
         """Validates the input of the protein name in real-time."""
@@ -277,6 +283,7 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.btn_use_next,
             self._view.ui.list_use_existing_projects,
             self._view.ui.label,
+            self._view.ui.lbl_use_project_name,
         ]
         gui_utils.show_gui_elements(gui_elements_to_show)
         self._view.ui.txt_use_project_name.setEnabled(True)
@@ -295,7 +302,6 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.list_use_selected_protein_structures,
             self._view.ui.btn_use_back,
             self._view.ui.btn_use_create_new_project,
-            self._view.ui.lbl_use_project_name,
         ]
         gui_utils.hide_gui_elements(gui_elements_to_hide)
         gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
