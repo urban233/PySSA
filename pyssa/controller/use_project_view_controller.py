@@ -53,6 +53,7 @@ class UseProjectViewController(QtCore.QObject):
         self._view = the_interface_manager.get_use_project_view()
         self._initialize_ui()
         self._fill_projects_list_view()
+        self._fill_projects_combobox()
         self._project_names: set = self._convert_model_into_set()
         self._connect_all_ui_elements_to_slot_functions()
 
@@ -98,7 +99,16 @@ class UseProjectViewController(QtCore.QObject):
         return set(tmp_project_names)
 
     def _initialize_ui(self) -> None:
-        gui_elements = [
+        gui_elements_to_show = [
+            self._view.ui.btn_use_next,
+            self._view.ui.list_use_existing_projects,
+            self._view.ui.label,
+            self._view.ui.lbl_use_project_name,
+        ]
+        gui_utils.show_gui_elements(gui_elements_to_show)
+        self._view.ui.txt_use_project_name.setEnabled(True)
+
+        gui_elements_to_hide = [
             self._view.ui.lbl_use_search,
             self._view.ui.lbl_use_status_search,
             self._view.ui.txt_use_search,
@@ -113,7 +123,8 @@ class UseProjectViewController(QtCore.QObject):
             self._view.ui.btn_use_back,
             self._view.ui.btn_use_create_new_project,
         ]
-        gui_utils.hide_gui_elements(gui_elements)
+        gui_utils.hide_gui_elements(gui_elements_to_hide)
+        gui_utils.enable_text_box(self._view.ui.txt_use_project_name, self._view.ui.lbl_use_project_name)
         self._view.ui.txt_use_project_name.clear()
         self._view.ui.txt_use_project_name.setStyleSheet(
             """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
@@ -121,10 +132,10 @@ class UseProjectViewController(QtCore.QObject):
         self._view.ui.lbl_use_status_project_name.setText("")
         self._view.ui.lbl_use_status_project_name.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         self._view.ui.txt_use_search.clear()
+        self._view.ui.list_use_selected_protein_structures.clear()
         self._view.ui.lbl_use_status_search.setText("")
         self._view.ui.btn_use_next.setEnabled(False)
         self._temporary_redesign()
-        self._fill_projects_combobox()
 
     def _temporary_redesign(self):
         self._view.ui.lbl_use_search.hide()
@@ -315,6 +326,8 @@ class UseProjectViewController(QtCore.QObject):
         )
 
     def _list_all_proteins_of_selected_project(self):
+        if self._view.ui.cb_choose_project.currentText() == "":
+            return
         tmp_database_filepath: str = str(
             pathlib.Path(
                 f"{self._interface_manager.get_application_settings().get_workspace_path()}/{self._view.ui.cb_choose_project.currentText()}.db"
