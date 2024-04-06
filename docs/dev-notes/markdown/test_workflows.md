@@ -29,7 +29,7 @@
     * [Test workflow 19](#Test-workflow-19) Result:
 * Prediction + Analysis
   * Monomer
-    * [Test workflow 20](#Test-workflow-20) Result: **Error** -> Project menu option is disabled
+    * [Test workflow 20](#Test-workflow-20) Result: OK (06.04.2024)
     * [Test workflow 21](#Test-workflow-21) Result:
   * Multimer
     * [Test workflow 22](#Test-workflow-22) Result:

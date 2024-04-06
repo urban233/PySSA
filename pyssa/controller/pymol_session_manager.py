@@ -112,6 +112,9 @@ class PymolSessionManager:
     def load_scene(self, a_scene_name):
         cmd.scene(a_scene_name, "recall")
 
+    def load_current_scene(self):
+        cmd.scene(self.current_scene_name, "recall")
+
     def save_current_pymol_session_as_base64_string(self) -> str:
         return pymol_io.convert_pymol_session_to_base64_string("temp_active")
 

@@ -1246,6 +1246,8 @@ class MainViewController:
             self._interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
 
     def __await_unfreeze_pymol_session_after_analysis(self):
+        self._interface_manager.main_tasks_manager.distance_analysis_task = None
+        self._interface_manager.refresh_main_view()
         self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
             "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
             "Distance Analysis",
@@ -1526,6 +1528,8 @@ class MainViewController:
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
 
     def __await_unfreeze_pymol_session_after_prediction_and_analysis(self):
+        self._interface_manager.main_tasks_manager.prediction_task = None
+        self._interface_manager.main_tasks_manager.distance_analysis_task = None
         self._interface_manager.refresh_main_view()
         self._main_view_state.restore_main_view_state()
 
@@ -1616,6 +1620,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("Prediction failed because of an unknown case!")
 
     def __await_unfreeze_pymol_session_after_prediction(self):
+        self._interface_manager.main_tasks_manager.prediction_task = None
         self._interface_manager.refresh_main_view()
 
         if self.active_custom_message_box is not None:
@@ -3772,7 +3777,8 @@ class MainViewController:
             self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
-            self._pymol_session_manager.current_scene_name = tmp_protein_pair.name
+            self._pymol_session_manager.current_scene_name = f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}"
+            self._pymol_session_manager.load_current_scene()
             self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_protein_pair.name}")
             logger.info("Successfully opened protein pair session.")
             self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")

@@ -776,9 +776,10 @@ class InterfaceManager:
         self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
         self._main_view.ui.action_clear_logs.setEnabled(True)
         self._main_view.ui.action_about.setEnabled(True)
+
+        self._main_view.ui.menuProject.setEnabled(True)
         if self._current_project.get_project_name() != "":
             styles.set_stylesheet(self._main_view)
-
             # A project is open
             self._main_view.ui.lbl_project_name.show()
             self._main_view.ui.lbl_project_name.setText(f"Project Name: {self._current_project.get_project_name()}")
