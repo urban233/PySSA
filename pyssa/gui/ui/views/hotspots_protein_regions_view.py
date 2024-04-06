@@ -42,7 +42,7 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
         self.ui = auto_hotspots_protein_regions_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
-        self.setModal(True)
+        self.setModal(False)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""

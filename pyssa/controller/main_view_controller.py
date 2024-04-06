@@ -167,12 +167,12 @@ class MainViewController:
 
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self.__slot_create_project)
-        #self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
+        self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
         self._view.ui.action_open_project.triggered.connect(self.__slot_open_project)
-        #self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
+        self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
         self._view.ui.action_use_project.triggered.connect(self.__slot_use_project)
         self._view.ui.action_delete_project.triggered.connect(self.__slot_delete_project)
-        #self._interface_manager.get_delete_view().dialogClosed.connect(self._post_delete_project)
+        self._interface_manager.get_delete_view().dialogClosed.connect(self._post_delete_project)
         self._view.ui.action_import_project.triggered.connect(self.__slot_import_project)
         self._view.ui.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._view.ui.action_close_project.triggered.connect(self.__slot_close_project)
@@ -939,12 +939,12 @@ class MainViewController:
 
     def __await_create_project(self, return_value: tuple):
         if return_value[1] is False:
-            self._interface_manager.stop_wait_spinner()
+            #self._interface_manager.stop_wait_spinner()
+            self._interface_manager.refresh_main_view()
             return
 
         _, tmp_project = return_value
         self._interface_manager.set_new_project(tmp_project)
-        print(self._interface_manager.get_current_project())
         self._interface_manager.refresh_workspace_model()
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
@@ -959,6 +959,7 @@ class MainViewController:
 
     def _post_open_project(self, return_value: str):
         if return_value[1] is False:
+            self._interface_manager.refresh_main_view()
             return
 
         self._interface_manager.status_bar_manager.show_temporary_message(

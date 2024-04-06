@@ -1,26 +1,26 @@
 # Workflow Results
 * 
-  * [Test workflow 1](#Test-workflow-1) Result:
-  * [Test workflow 2](#Test-workflow-2) Result: OK (04.04.2024; @MU; no more testing needed)
-  * [Test workflow 3](#Test-workflow-3) Result:
-  * [Test workflow 4](#Test-workflow-4) Result:
-  * [Test workflow 5](#Test-workflow-5) Result: 
+  * [Test workflow 1](#Test-workflow-1) Result: OK (05.04.2024)
+  * [Test workflow 2](#Test-workflow-2) Result: OK (04.04.2024; no more testing needed)
+  * [Test workflow 3](#Test-workflow-3) Result: OK (05.04.2024)
+  * [Test workflow 4](#Test-workflow-4) Result: OK (05.04.2024)
+  * [Test workflow 5](#Test-workflow-5) Result: OK (05.04.2024)
 * Proteins
   * Import
-    * [Test workflow 6](#Test-workflow-6) Result: OK (19.03.2024; @MU)
-    * [Test workflow 7](#Test-workflow-7) Result:
-    * [Test workflow 8](#Test-workflow-8) Result:
-    * [Test workflow 9](#Test-workflow-9) Result:
+    * [Test workflow 6](#Test-workflow-6) Result: OK (05.04.2024)
+    * [Test workflow 7](#Test-workflow-7) Result: OK (05.04.2024)
+    * [Test workflow 8](#Test-workflow-8) Result: OK (05.04.2024)
+    * [Test workflow 9](#Test-workflow-9) Result: OK (05.04.2024)
 * Sequences
   * Add
-    * [Test workflow 10](#Test-workflow-10) Result:
+    * [Test workflow 10](#Test-workflow-10) Result: OK (06.04.2024)
   * Import
-    * [Test workflow 11](#Test-workflow-11) Result:
+    * [Test workflow 11](#Test-workflow-11) Result: OK (06.04.2024)
 * Prediction
   * Monomer
-    * [Test workflow 12](#Test-workflow-12) Result:
-    * [Test workflow 13](#Test-workflow-13) Result:
-    * [Test workflow 14](#Test-workflow-14) Result:
+    * [Test workflow 12](#Test-workflow-12) Result: **Error** -> Project menu option is disabled
+    * [Test workflow 13](#Test-workflow-13) Result: 
+    * [Test workflow 14](#Test-workflow-14) Result: **Error** -> Project menu option is disabled
     * [Test workflow 15](#Test-workflow-15) Result:
   * Multimer
     * [Test workflow 16](#Test-workflow-16) Result:
@@ -29,7 +29,7 @@
     * [Test workflow 19](#Test-workflow-19) Result:
 * Prediction + Analysis
   * Monomer
-    * [Test workflow 20](#Test-workflow-20) Result:
+    * [Test workflow 20](#Test-workflow-20) Result: **Error** -> Project menu option is disabled
     * [Test workflow 21](#Test-workflow-21) Result:
   * Multimer
     * [Test workflow 22](#Test-workflow-22) Result:
@@ -56,9 +56,6 @@
  * Add protein sequence: CGETCVGGTCNTPGCTCSWPVCTRNGLPV
    * Error: All menue entries become visible.
 
-
-
-
 ### Test workflow 5
  * Start PySSA
  * New project: "Kalata-B1-Prediction"
@@ -83,16 +80,14 @@ Steps:
  2. Switch tab to "Proteins".
  3. Import protein with the id "3bmp".
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name 3BMP (case-sensitive!).
-
-Result: OK (19.03.2024; @MU)
 
 Cleanup:
  * Delete the protein "3BMP".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project has no proteins (tree view on proteins tab is empty).
 
 
@@ -110,17 +105,15 @@ Steps:
  2. Switch tab to "Proteins".
  3. Import protein with the id "3bmp".
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name 3BMP (case-sensitive!).
-
-Result: OK (19.03.2024; @MU)
 
 Cleanup:
  * Close the project.
  * Delete the project "BMP2-xray_mono".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "BMP2-xray_mono" is removed from the workspace.
 
 
@@ -139,16 +132,14 @@ Steps:
  2. Switch tab to "Proteins".
  3. Import protein from the "3bmp.pdb" file.
 
-Postconditions:
- * Project contains a protein with the name 3BMP (case-sensitive!).
-
-Result: ?
+Post-conditions:
+ * Project contains a protein with the name 3bmp (case-sensitive!).
 
 Cleanup:
- * Delete the protein "3BMP".
+ * Delete the protein "3bmp".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project has no proteins (tree view on proteins tab is empty).
 
 
@@ -166,17 +157,17 @@ Steps:
  2. Switch tab to "Proteins".
  3. Import protein from the "3bmp.pdb" file.
 
-Postconditions:
- * Project contains a protein with the name 3BMP (case-sensitive!).
+Post-conditions:
+ * Project contains a protein with the name 3bmp (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "BMP2-xray_mono".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "BMP2-xray_mono" is removed from the workspace.
 
 # Sequences
@@ -196,17 +187,17 @@ Steps:
  4. Paste the sequence "CGETCVGGTCNTPGCTCSWPVCTRNGLPV " into the text field.
  5. Click on "Add"
 
-Postconditions:
+Post-conditions:
  * Project contains a sequence with the name kalata_b1 (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Seqs".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Seqs" is removed from the workspace.
 
 
@@ -225,17 +216,17 @@ Steps:
  3. Choose the kalata.fasta file from the filesystem.
  4. Click on "Import"
 
-Postconditions:
- * Project contains a sequence with the name kalata (case-sensitive!).
+Post-conditions:
+ * Project contains a sequence with the name Kalata (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Seqs".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Seqs" is removed from the workspace.
 
 # Prediction
@@ -258,17 +249,17 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata_b1 (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction" is removed from the workspace.
 
 
@@ -290,17 +281,17 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction" is removed from the workspace.
 
 
@@ -323,18 +314,18 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains two proteins with the name kalata_b1 and kalata_b1_m
    (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction" is removed from the workspace.
 
 
@@ -356,17 +347,17 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction" is removed from the workspace.
 
 
@@ -390,17 +381,17 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata_b1_dimer (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-Dimer-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-Dimer-Prediction" is removed from the workspace.
 
 
@@ -422,17 +413,17 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata_dimer (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-Dimer-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-Dimer-Prediction" is removed from the workspace.
 
 
@@ -456,18 +447,18 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains two proteins with the name kalata_b1 and kalata_b1_m
    (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-Dimer-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-Dimer-Prediction" is removed from the workspace.
 
 
@@ -489,17 +480,17 @@ Steps:
  5. Click on "Predict".
  6. Wait for the prediction to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata (case-sensitive!).
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-Dimer-Prediction".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-Dimer-Prediction" is removed from the workspace.
 
 # Prediction + Analysis
@@ -525,18 +516,18 @@ Steps:
  8. Start prediction + analysis job.
  9. Wait for the job to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata_b1 (case-sensitive!).
  * Project contains a protein pair with the name kalata_b1_A_vs_1NB1_A
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction_Analysis".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction_Analysis" is removed from the workspace.
 
 
@@ -563,19 +554,19 @@ Steps:
  9.  Start prediction + analysis job.
  10. Wait for the job to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains two new proteins with the name kalata_b1 and kalata_b1_m
    (case-sensitive!)
  * Project contains a protein pair with the name kalata_b1_A_vs_1NB1_A
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction_Analysis".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction_Analysis" is removed from the workspace.
 
 
@@ -602,18 +593,18 @@ Steps:
  8. Start prediction + analysis job.
  9. Wait for the job to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein with the name kalata_b1 (case-sensitive!).
  * Project contains a protein pair with the name kalata_b1_dimer_A_vs_1NB1_A
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction_Analysis".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction_Analysis" is removed from the workspace.
 
 
@@ -641,19 +632,19 @@ Steps:
  9.  Start prediction + analysis job.
  10. Wait for the job to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains two new proteins with the name kalata_b1 and kalata_b1_m
    (case-sensitive!)
  * Project contains a protein pair with the name kalata_b1_dimer_A_vs_1NB1_A
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "Kalata-B1-Prediction_Analysis".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "Kalata-B1-Prediction_Analysis" is removed from the workspace.
 
 # Distance Analysis
@@ -676,17 +667,17 @@ Steps:
  7. Start analysis job.
  8. Wait for the job to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein pair with the name 3BMP_A_vs_6OMN_E
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "BMP2-xray_analysis".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "BMP2-xray_analysis" is removed from the workspace.
 
 
@@ -710,17 +701,17 @@ Steps:
  8. Start analysis job.
  9. Wait for the job to finish!
 
-Postconditions:
+Post-conditions:
  * Project contains a protein pair with the name 3BMP_A_vs_6OMN_F
 
-Result: ?
+
 
 Cleanup:
  * Close the project.
  * Delete the project "BMP2-xray_analysis".
  * Exit application.
 
-Postconditions after cleanup:
+Post-conditions after cleanup:
  * Project "BMP2-xray_analysis" is removed from the workspace.
 
 
