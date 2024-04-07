@@ -85,16 +85,3 @@ class AddProteinView(QtWidgets.QDialog):
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setModal(True)
-        # check internet connectivity
-        if not tools.check_internet_connectivity():
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "You do not have a working internet connection which is "
-                "necessary for connecting to the PDB!\n"
-                "However you can add a protein structure from "
-                "your local filesystem.",
-                "Internet Connection",
-                custom_message_box.CustomMessageBoxIcons.ERROR.value
-            )
-            tmp_dialog.exec_()
-            self.ui.txt_add_protein.setEnabled(False)
-            self.ui.lbl_status.setText("You cannot enter a PDB ID (no working internet connection).")

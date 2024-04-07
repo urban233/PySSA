@@ -103,6 +103,7 @@ def choose_directory(self, txt_box_dir: QtWidgets.QLineEdit) -> None:  # noqa: A
     else:
         txt_box_dir.setText(str(current_file_path))
 
+
 def hide_gui_elements(gui_elements: list) -> None:
     """This function hides gui elements.
 

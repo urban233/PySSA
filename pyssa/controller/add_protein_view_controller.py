@@ -27,12 +27,13 @@ from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import validate_async
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_levels, log_handlers
-from pyssa.util import constants
+from pyssa.util import constants, tools
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -47,6 +48,19 @@ class AddProteinViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_add_protein_view()
         self._connect_all_ui_elements_to_slot_functions()
+        # check internet connectivity
+        if not tools.check_internet_connectivity():
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "You do not have a working internet connection which is "
+                "necessary for connecting to the PDB!\n"
+                "However you can add a protein structure from "
+                "your local filesystem.",
+                "Internet Connection",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
+            self._view.ui.txt_add_protein.setEnabled(False)
+            self._view.ui.lbl_status.setText("You cannot enter a PDB ID (no working internet connection).")
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.btn_choose_protein.clicked.connect(self.__slot_load_protein_from_filesystem)

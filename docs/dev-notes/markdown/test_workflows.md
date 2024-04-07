@@ -18,9 +18,9 @@
     * [Test workflow 11](#Test-workflow-11) Result: OK (06.04.2024)
 * Prediction
   * Monomer
-    * [Test workflow 12](#Test-workflow-12) Result: **Error** -> Project menu option is disabled
+    * [Test workflow 12](#Test-workflow-12) Result: OK (06.04.2024)
     * [Test workflow 13](#Test-workflow-13) Result: 
-    * [Test workflow 14](#Test-workflow-14) Result: **Error** -> Project menu option is disabled
+    * [Test workflow 14](#Test-workflow-14) Result: OK (06.04.2024)
     * [Test workflow 15](#Test-workflow-15) Result:
   * Multimer
     * [Test workflow 16](#Test-workflow-16) Result:

@@ -54,7 +54,7 @@ if TYPE_CHECKING:
 
 def check_internet_connectivity() -> bool:
     """Checks the connection to the internet."""
-    timeout: float = 4
+    timeout: float = 6
     try:
         urlopen("https://www.google.com", timeout=timeout)
     except URLError:
