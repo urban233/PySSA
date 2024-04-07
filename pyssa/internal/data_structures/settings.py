@@ -82,14 +82,18 @@ class Settings:
         """This function serialize the protein object."""
         if not os.path.exists(constants.SETTINGS_DIR):
             os.mkdir(constants.SETTINGS_DIR)
+        tmp_settings_filepath = f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}"
+        if os.path.exists(tmp_settings_filepath):
+            os.remove(tmp_settings_filepath)
         settings_dict = self.__dict__
+        print(settings_dict)
         update = {
             "workspace_path": str(self.workspace_path),
             "dir_settings": str(self.dir_settings),
         }
         settings_dict.update(update)
-        settings_file = open(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}", "w", encoding="utf-8")
-        json.dump(settings_dict, settings_file, indent=4)
+        with open(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}", "w", encoding="utf-8") as settings_file:
+            json.dump(settings_dict, settings_file, indent=4)
 
     @staticmethod
     def deserialize_settings() -> "Settings":
@@ -98,17 +102,13 @@ class Settings:
         Returns:
             a complete project object deserialized from a json file
         """
-        try:
-            settings_obj_file = open(
+        if not os.path.exists(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}"):
+            raise FileNotFoundError  #TODO: more precise error is needed
+        with open(
                 pathlib.Path(f"{constants.SETTINGS_DIR}\\{constants.SETTINGS_FILENAME}"),
                 "r",
-                encoding="utf-8",
-            )
-        except FileNotFoundError:
-            # TODO: log message is needed
-            return  # noqa: RET502 #TODO: needs to be fixed
-        settings_dict = json.load(settings_obj_file)
-
+                encoding="utf-8") as settings_obj_file:
+            settings_dict = json.load(settings_obj_file)
         try:
             tmp_settings: Settings = Settings(settings_dict.get("dir_settings"), settings_dict.get("filename"))
 

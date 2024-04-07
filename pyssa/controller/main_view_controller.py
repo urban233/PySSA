@@ -1883,8 +1883,6 @@ class MainViewController:
             custom_message_box.CustomMessageBoxIcons.INFORMATION.value
         )
         tmp_dialog.exec_()
-        if tmp_dialog.dialogClosed is not None:
-            return
         if tmp_dialog.response:
             tools.restore_default_settings(self._interface_manager.get_application_settings())
             self._view.status_bar.showMessage("Settings were successfully restored.")

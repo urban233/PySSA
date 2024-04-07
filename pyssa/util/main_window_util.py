@@ -33,7 +33,7 @@ from pyssa.gui.ui.dialogs import dialog_settings_global
 from pyssa.internal.portal import pymol_io, graphic_operations
 from pyssa.internal.data_structures import protein
 from pyssa.io_pyssa import path_util
-from pyssa.util import constants, gui_utils
+from pyssa.util import constants, gui_utils, tools
 from pyssa.util import globals
 
 if TYPE_CHECKING:
@@ -106,7 +106,8 @@ def setup_app_settings(the_app_settings: "settings.Settings") -> "settings.Setti
             custom_message_box.CustomMessageBoxIcons.WARNING.value
         )
         tmp_dialog.exec_()
-        tmp_settings: "settings.Settings" = the_app_settings
+        tools.restore_default_settings(the_app_settings)
+        tmp_settings: "settings.Settings" = the_app_settings.deserialize_settings()
     return tmp_settings
 
 
