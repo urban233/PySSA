@@ -43,6 +43,12 @@ class AddSceneViewController(QtCore.QObject):
         self._all_current_scenes = pymol_io.get_all_scenes_from_pymol_session()  # TODO: this can be optimized for more performance!
         self._connect_all_ui_elements_to_slot_functions()
 
+    def restore_ui(self):
+        self._view.line_edit_scene_name.clear()
+        self._view.line_edit_scene_name.setStyleSheet(
+            """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+        )
+
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.line_edit_scene_name.textChanged.connect(self._validate_scene_name)
         self._view.btn_add_scene.clicked.connect(self._add_scene)

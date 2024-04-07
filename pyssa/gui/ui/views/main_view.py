@@ -28,7 +28,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
 from pyqtspinner import spinner
-from pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid
+from pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid, custom_label
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
@@ -273,6 +273,7 @@ class MainView(QtWidgets.QMainWindow):
         self.cb_chain_color_protein_pair = QtWidgets.QComboBox()
         self.cb_chain_representation_protein_pair = QtWidgets.QComboBox()
         self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
+        self.ui.lbl_pymol_protein_pair_scene.setWordWrap(False)
         self.build_sequence_table()
         #self.build_proteins_table()
         #self.build_protein_pairs_table()

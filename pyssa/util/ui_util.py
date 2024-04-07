@@ -28,7 +28,7 @@ from pyssa.util import input_validator
 
 def select_matching_string_in_q_list_view(a_string_to_match: str,
                                           a_q_list_view_to_select: QtWidgets.QListView,
-                                          a_q_line_edit: QtWidgets.QLineEdit):
+                                          a_q_line_edit: QtWidgets.QLineEdit) -> None:
     """Selects a QListView item from a QListView with a string to match and sets it into a q_line_edit.
 
     Notes:
@@ -53,3 +53,14 @@ def select_matching_string_in_q_list_view(a_string_to_match: str,
         QtCore.QItemSelectionModel.Clear | QtCore.QItemSelectionModel.Select
     )
     a_q_line_edit.setText(tmp_match_items[0].data(Qt.DisplayRole))
+
+
+def set_pymol_scene_name_into_label(a_scene_name: str, a_label: QtWidgets.QLabel) -> None:
+    """Sets a pymol scene name to a label."""
+    if len(a_scene_name) > 45:
+        a_label.setText(f"PyMOL Scene: {a_scene_name[:45]}...")
+        a_label.setToolTip(f"PyMOL Scene: {a_scene_name}")
+    else:
+        a_label.setText(f"PyMOL Scene: {a_scene_name}")
+        a_label.setToolTip("")
+    

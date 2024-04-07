@@ -46,7 +46,7 @@ from pyssa.internal.thread import tasks, task_workers, database_thread
 from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.presenter import main_presenter_async
-from pyssa.util import constants, enums, exit_codes, gui_utils, tools
+from pyssa.util import constants, enums, exit_codes, gui_utils, tools, ui_util
 from pyssa.gui.ui.views import main_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
@@ -2554,6 +2554,8 @@ class MainViewController:
             self._view.ui.btn_update_protein_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             self._view.ui.lbl_pymol_protein_scene.setText(f"PyMOL Scene: base")
+            self._pymol_session_manager.current_scene_name = "base"
+            self._pymol_session_manager.load_current_scene()
             self._view.ui.lbl_info.setText("Please select a chain.")
             self._pymol_session_manager.get_all_scenes_in_current_session()
             logger.info("Successfully opened protein session.")
@@ -2579,7 +2581,8 @@ class MainViewController:
             if self._pymol_session_manager.is_the_current_protein_in_session():
                 tmp_scene_name = self._interface_manager.get_current_active_scene_name()
                 self._pymol_session_manager.current_scene_name = tmp_scene_name
-                self._view.ui.lbl_pymol_protein_scene.setText(f"PyMOL Scene: {tmp_scene_name}")
+                ui_util.set_pymol_scene_name_into_label(self._pymol_session_manager.current_scene_name,
+                                                        self._view.ui.lbl_pymol_protein_scene)
                 self._pymol_session_manager.load_scene(tmp_scene_name)
 
         elif tmp_type == "chain":
@@ -3618,6 +3621,7 @@ class MainViewController:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create pymol scene' button on the 'Proteins or Protein Pairs Tab' was clicked.")
         self._external_controller = add_scene_view_controller.AddSceneViewController(self._interface_manager)
         self._external_controller.user_input.connect(self.post_save_scene)
+        self._external_controller.restore_ui()
         self._interface_manager.get_add_scene_view().show()
 
     def post_save_scene(self, return_value: tuple):
@@ -3779,7 +3783,8 @@ class MainViewController:
             tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
             self._pymol_session_manager.current_scene_name = tmp_protein_pair.get_protein_name_without_chains()
             self._pymol_session_manager.load_current_scene()
-            self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_protein_pair.get_protein_name_without_chains()}")
+            ui_util.set_pymol_scene_name_into_label(self._pymol_session_manager.current_scene_name,
+                                                    self._view.ui.lbl_pymol_protein_pair_scene)
             logger.info("Successfully opened protein pair session.")
             self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")
             self._view.ui.lbl_info_3.setText("Please select a chain.")
@@ -3830,7 +3835,8 @@ class MainViewController:
             if self._pymol_session_manager.is_the_current_protein_pair_in_session():
                 tmp_scene_name = self._interface_manager.get_current_active_scene_name_of_protein_pair()
                 self._pymol_session_manager.current_scene_name = tmp_scene_name
-                self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_scene_name}")
+                ui_util.set_pymol_scene_name_into_label(self._pymol_session_manager.current_scene_name,
+                                                        self._view.ui.lbl_pymol_protein_pair_scene)
                 self._pymol_session_manager.load_scene(tmp_scene_name)
 
         elif tmp_type == "chain":

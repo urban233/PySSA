@@ -62,7 +62,7 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
     ) -> None:
         """Adds a scene to the model."""
         tmp_type = a_model_index.data(enums.ModelEnum.TYPE_ROLE)
-        # on protein node
+        # on protein pair node
         if tmp_type == "protein_pair":
             tmp_scenes_header_item = self.itemFromIndex(a_model_index).child(0, 0)
         # on protein node
@@ -73,7 +73,7 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
             tmp_scenes_header_item = self.itemFromIndex(a_model_index)
         # on scene node
         elif tmp_type == "scene":
-            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent().parent()
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent()
         # on header node (Chains)
         elif tmp_type == "header" and a_model_index.data(Qt.DisplayRole) == "Chains":
             tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent().parent().child(0, 0)
