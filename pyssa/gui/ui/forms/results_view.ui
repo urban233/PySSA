@@ -91,9 +91,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="btn_save_data">
+         <widget class="QPushButton" name="btn_export_data">
           <property name="text">
-           <string>Save Data</string>
+           <string>Export Data</string>
           </property>
          </widget>
         </item>

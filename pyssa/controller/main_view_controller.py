@@ -3777,9 +3777,9 @@ class MainViewController:
             self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
             tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
-            self._pymol_session_manager.current_scene_name = f"{tmp_protein_pair.protein_1.get_molecule_object()}-{tmp_protein_pair.protein_2.get_molecule_object()}"
+            self._pymol_session_manager.current_scene_name = tmp_protein_pair.get_protein_name_without_chains()
             self._pymol_session_manager.load_current_scene()
-            self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_protein_pair.name}")
+            self._view.ui.lbl_pymol_protein_pair_scene.setText(f"PyMOL Scene: {tmp_protein_pair.get_protein_name_without_chains()}")
             logger.info("Successfully opened protein pair session.")
             self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")
             self._view.ui.lbl_info_3.setText("Please select a chain.")

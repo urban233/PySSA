@@ -224,6 +224,9 @@ class ProteinPair:
     def set_id(self, value):
         self._id = value
 
+    def get_protein_name_without_chains(self) -> str:
+        return f"{self.protein_1.get_molecule_object()}-{self.protein_2.get_molecule_object()}"
+
     # def create_plain_text_memory_mirror(self) -> list[Union[str, list[tuple[str, "sequence.Sequence", str]]]]:
     #     """Creates a plain text memory mirror of the current protein pair."""
     #     return [

@@ -107,7 +107,7 @@ class ResultsViewController(QtCore.QObject):
     def _connect_all_ui_elements_to_slot_functions(self):
         self._view.ui.btn_view_plots.clicked.connect(self._open_plot_view)
         self.cb_protein_pair_color.currentIndexChanged.connect(self.__slot_color_protein_pair)
-        self._view.ui.btn_save_data.clicked.connect(self.__slot_export_data)
+        self._view.ui.btn_export_data.clicked.connect(self.__slot_export_data)
         self._view.ui.table_widget_results.clicked.connect(self.__slot_highlight_protein)
 
     # <editor-fold desc="Util methods">
@@ -192,8 +192,8 @@ class ResultsViewController(QtCore.QObject):
     def _open_plot_view(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'View plots' button was clicked.")
         self._distance_data_visualizer = plot_view.PlotView(self._protein_pair,
-                                        self._interface_manager.get_current_project(),
-                                        self._protein_pair)
+                                                            self._interface_manager.get_current_project(),
+                                                            self._protein_pair)
         self._distance_data_visualizer.show()
 
     # <editor-fold desc="Methods for coloring protein pair">
@@ -269,13 +269,13 @@ class ResultsViewController(QtCore.QObject):
     # </editor-fold>
 
     def __slot_export_data(self):
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Save data' button was clicked.")
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Export data' button was clicked.")
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
         file_path, _ = file_dialog.getSaveFileName(
             self._view,
-            "Save distance data",
+            "Export Distance Data",
             "",
             "Comma-Separated Values (*.csv)",
         )

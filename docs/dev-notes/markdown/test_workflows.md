@@ -35,7 +35,7 @@
     * [Test workflow 22](#Test-workflow-22) Result:
     * [Test workflow 23](#Test-workflow-23) Result:
 * Distance Analysis
-  * [Test workflow 24](#Test-workflow-24) Result:
+  * [Test workflow 24](#Test-workflow-24) Result: OK (06.04.2024)
   * [Test workflow 25](#Test-workflow-25) Result:
 
 # Test Workflows (Extended)

@@ -104,10 +104,15 @@ class AddSequenceViewController(QtCore.QObject):
     def restore_default_view(self) -> None:
         self._view.ui.le_seq_name.clear()
         self._view.ui.le_protein_seq.clear()
+        self._view.ui.lbl_status.setText("")
+        self._view.ui.lbl_status_seq.setText("")
         self._switch_ui_to_sequence_name_input()
         self._view.ui.btn_next.setEnabled(False)
         self._view.ui.btn_add.setEnabled(False)
         self._view.ui.le_protein_seq.setStyleSheet(
+            """QTextEdit {color: #000000; border-color: #DCDBE3;}"""
+        )
+        self._view.ui.le_seq_name.setStyleSheet(
             """QTextEdit {color: #000000; border-color: #DCDBE3;}"""
         )
 

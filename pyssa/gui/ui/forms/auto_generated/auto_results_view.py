@@ -52,9 +52,9 @@ class Ui_Dialog(object):
         self.btn_view_plots = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_view_plots.setObjectName("btn_view_plots")
         self.horizontalLayout.addWidget(self.btn_view_plots)
-        self.btn_save_data = QtWidgets.QPushButton(self.frame_bottom)
-        self.btn_save_data.setObjectName("btn_save_data")
-        self.horizontalLayout.addWidget(self.btn_save_data)
+        self.btn_export_data = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_export_data.setObjectName("btn_export_data")
+        self.horizontalLayout.addWidget(self.btn_export_data)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
         self.verticalLayout_4.addWidget(self.frame_bottom)
 
@@ -67,4 +67,4 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "Results"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_view_plots.setText(_translate("Dialog", "View Plots"))
-        self.btn_save_data.setText(_translate("Dialog", "Save Data"))
+        self.btn_export_data.setText(_translate("Dialog", "Export Data"))

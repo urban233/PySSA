@@ -161,7 +161,15 @@ class DeleteProjectViewController(QtCore.QObject):
         response: bool = tmp_dialog.response
         tmp_index = self._view.ui.list_delete_projects_view.currentIndex()
         if response is True:
-            os.remove(self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE))  # TODO: throws permission error
+            try:
+                os.remove(self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE))  # TODO: throws permission error
+            except PermissionError:
+                tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                    "The project cannot be deleted, due to a permission error. Restart the application and try again.",
+                    "Delete Project",
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                )
+                tmp_dialog.exec_()
             self._view.ui.list_delete_projects_view.model().removeRow(tmp_index.row())  # removes item from model
             self.restore_default_view()
         else:
