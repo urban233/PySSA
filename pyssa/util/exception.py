@@ -268,3 +268,11 @@ class ProteinNotFoundInCurrentProjectError(Exception):
     def __init__(self, message: str) -> None:
         """Constructor."""
         super().__init__(message)
+
+
+class ProteinNotFoundInPyMOLSession(Exception):
+    """Class for protein not found in current pymol session exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)

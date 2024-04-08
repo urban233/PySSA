@@ -149,11 +149,12 @@ class OpenProjectViewController(QtCore.QObject):
 
     def _select_project_from_open_list(self) -> None:
         """Sets the selected project name in the text box."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A project from the list was clicked.")
+        tmp_project_name = self._view.ui.projects_list_view.model().data(
+            self._view.ui.projects_list_view.currentIndex(), Qt.DisplayRole
+        )
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, f"The project '{tmp_project_name}' from the list was clicked.")
         try:
-            self._view.ui.txt_open_selected_project.setText(self._view.ui.projects_list_view.model().data
-                                                            (self._view.ui.projects_list_view.currentIndex(),
-                                                              Qt.DisplayRole))
+            self._view.ui.txt_open_selected_project.setText(tmp_project_name)
         except AttributeError:
             self._view.ui.txt_open_selected_project.setText("")
 
@@ -167,6 +168,9 @@ class OpenProjectViewController(QtCore.QObject):
             # styles.color_button_ready(self._view.ui.btn_open_project)
 
     def _open_selected_project(self):
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A project from the list was double clicked or the 'Open' button was clicked.")
+        tmp_project_name = self._view.ui.projects_list_view.model().data(
+            self._view.ui.projects_list_view.currentIndex(), Qt.DisplayRole
+        )
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, f"The project '{tmp_project_name}' from the list was double-clicked or the 'Open' button was clicked.")
         self._view.close()
         self.return_value.emit(self._view.ui.txt_open_selected_project.text())

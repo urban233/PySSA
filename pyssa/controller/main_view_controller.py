@@ -2317,7 +2317,7 @@ class MainViewController:
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
     def __slot_show_sequence_information(self):
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A sequence on the 'Sequence Tab' was clicked.")
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, f"The sequence '{self._view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole)}' on the 'Sequence Tab' was clicked.")
         self._interface_manager.show_sequence_parameters(
             self._view.ui.seqs_list_view.currentIndex()
         )
@@ -2571,12 +2571,21 @@ class MainViewController:
         self._interface_manager.stop_wait_spinner()
 
     def __slot_get_information_about_selected_object_in_protein_branch(self) -> None:
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An object on the 'Proteins Tab' was clicked.")
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()
 
         if tmp_type == "protein":
-            pass
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The protein object '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked."
+            )
+
         elif tmp_type == "scene":
+            tmp_scene_name = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
+            tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The scene '{tmp_scene_name}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
+            )
             if self._pymol_session_manager.is_the_current_protein_in_session():
                 tmp_scene_name = self._interface_manager.get_current_active_scene_name()
                 self._pymol_session_manager.current_scene_name = tmp_scene_name
@@ -2585,6 +2594,12 @@ class MainViewController:
                 self._pymol_session_manager.load_scene(tmp_scene_name)
 
         elif tmp_type == "chain":
+            tmp_chain_letter = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
+            tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
+            )
             if self._pymol_session_manager.current_scene_name != "" and self._pymol_session_manager.is_the_current_protein_in_session():
                 self.set_icon_for_current_color_in_proteins_tab()
                 self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
@@ -2592,7 +2607,10 @@ class MainViewController:
                 self._main_view_state.selected_chain_proteins = self._interface_manager.get_current_protein_tree_index()
 
         elif tmp_type == "header":
-            pass
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The header '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked."
+            )
 
         else:
             logger.warning("Unknown object type occurred in Protein tab.")
@@ -3823,14 +3841,25 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
 
     def __slot_get_information_about_selected_object_in_protein_pair_branch(self):
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "An object on the 'Protein Pairs Tab' was clicked.")
         tmp_type = self._interface_manager.get_current_protein_pair_tree_index_type()
 
         if tmp_type == "protein_pair":
-            pass
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The protein pair object '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked."
+            )
         elif tmp_type == "protein":
-            pass
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The protein object '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked."
+            )
         elif tmp_type == "scene":
+            tmp_scene_name = self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
+            tmp_protein_pair_name = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The scene '{tmp_scene_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
+            )
             if self._pymol_session_manager.is_the_current_protein_pair_in_session():
                 tmp_scene_name = self._interface_manager.get_current_active_scene_name_of_protein_pair()
                 self._pymol_session_manager.current_scene_name = tmp_scene_name
@@ -3839,6 +3868,13 @@ class MainViewController:
                 self._pymol_session_manager.load_scene(tmp_scene_name)
 
         elif tmp_type == "chain":
+            tmp_chain_letter = self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
+            tmp_protein_name = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
+            tmp_protein_pair_name = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().parent().data(Qt.DisplayRole)
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
+            )
             if self._pymol_session_manager.current_scene_name != "" and self._pymol_session_manager.is_the_current_protein_pair_in_session():
                 self.set_icon_for_current_color_in_protein_pairs_tab()
                 self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._pymol_session_manager)
@@ -3846,7 +3882,10 @@ class MainViewController:
                 self._main_view_state.selected_chain_protein_pairs = self._interface_manager.get_current_protein_pair_tree_index()
 
         elif tmp_type == "header":
-            pass
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The header '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked."
+            )
         else:
             logger.warning("Unknown object type occurred in Protein Pairs tab.")
             return

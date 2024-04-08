@@ -8,7 +8,7 @@ from pyssa.gui.ui.views import main_view
 from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.data_classes import database_operation
 from pyssa.internal.portal import pymol_io
-from pyssa.util import enums, constants
+from pyssa.util import enums, constants, exception
 
 
 class PymolSessionManager:
@@ -90,7 +90,7 @@ class PymolSessionManager:
 
         # <editor-fold desc="Integrity check">
         if not self._check_session_integrity(self.session_name):
-            raise RuntimeError(f"Loading the PyMOL session failed, because the protein {self.session_name} can not be found in the PyMOL object list.")
+            raise exception.ProteinNotFoundInPyMOLSession(f"Loading the PyMOL session failed, because the protein {self.session_name} can not be found in the PyMOL object list.")
 
         # </editor-fold>
 
@@ -103,9 +103,9 @@ class PymolSessionManager:
 
         # <editor-fold desc="Integrity check">
         if not self._check_session_integrity(a_protein_pair.protein_1.get_molecule_object()):
-            raise RuntimeError(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_1.get_molecule_object()} can not be found in the PyMOL object list.")
+            raise exception.ProteinNotFoundInPyMOLSession(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_1.get_molecule_object()} can not be found in the PyMOL object list.")
         if not self._check_session_integrity(a_protein_pair.protein_2.get_molecule_object()):
-            raise RuntimeError(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_2.get_molecule_object()} can not be found in the PyMOL object list.")
+            raise exception.ProteinNotFoundInPyMOLSession(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_2.get_molecule_object()} can not be found in the PyMOL object list.")
 
         # </editor-fold>
 

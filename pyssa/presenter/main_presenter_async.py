@@ -758,9 +758,6 @@ def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, n
     try:
         logger.info(f"Loading session of {a_protein_pair.name}")
         the_pymol_session_manager.load_protein_pair_session(a_protein_pair)
-    except RuntimeError:
-        logger.error("Loading the session failed due to a RuntimeError!")
-        return 0, False
     except Exception as e:
         logger.error(f"Loading the session failed because this error was raised: {e}")
         return 0, False
