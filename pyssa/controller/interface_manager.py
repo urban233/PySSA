@@ -150,7 +150,6 @@ class InterfaceManager:
         # </editor-fold>
 
         # General attributes definitions
-        self._current_workspace = self._settings_manager.settings.workspace_path
         self._current_project = project.Project()
         self._current_pymol_session = current_session.CurrentPymolSession("", "")
 
@@ -174,7 +173,7 @@ class InterfaceManager:
 
     # <editor-fold desc="Workspace">
     def get_workspace_path(self):
-        return self._current_workspace
+        return self._settings_manager.settings.workspace_path
 
     def get_workspace_model(self) -> QtGui.QStandardItemModel:
         """Returns the current workspace model"""
@@ -557,7 +556,7 @@ class InterfaceManager:
 
     def set_new_workspace(self, the_current_workspace) -> None:
         """Sets the new current workspace into the interface manager."""
-        self._current_workspace = the_current_workspace
+        self._settings_manager.settings.workspace_path = the_current_workspace
         self._workspace_model.clear()
         self._build_workspace_model()
 
@@ -1039,7 +1038,7 @@ class InterfaceManager:
         self._build_protein_pairs_model()
 
     def _build_workspace_model(self) -> None:
-        tmp_workspace = self._current_workspace
+        tmp_workspace = self._settings_manager.settings.workspace_path
         db_pattern = os.path.join(tmp_workspace, '*.db')
         tmp_root_item = self._workspace_model.invisibleRootItem()
         for tmp_filename in [os.path.basename(file).replace(".db", "") for file in glob.glob(db_pattern)]:

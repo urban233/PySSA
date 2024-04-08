@@ -1855,6 +1855,7 @@ class MainViewController:
         # self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
 
     def post_open_settings_global(self, return_value):
+        self._interface_manager.refresh_workspace_model()
         self._interface_manager.refresh_main_view()
         try:
             tmp_type = self._interface_manager.get_current_protein_tree_index_type()
