@@ -102,10 +102,18 @@ class PymolSessionManager:
         a_protein_pair.load_pymol_session()
 
         # <editor-fold desc="Integrity check">
-        if not self._check_session_integrity(a_protein_pair.protein_1.get_molecule_object()):
-            raise exception.ProteinNotFoundInPyMOLSession(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_1.get_molecule_object()} can not be found in the PyMOL object list.")
-        if not self._check_session_integrity(a_protein_pair.protein_2.get_molecule_object()):
-            raise exception.ProteinNotFoundInPyMOLSession(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_2.get_molecule_object()} can not be found in the PyMOL object list.")
+        if a_protein_pair.protein_1.get_molecule_object() == a_protein_pair.protein_2.get_molecule_object():
+            if not self._check_session_integrity(f"{a_protein_pair.protein_1.get_molecule_object()}_1"):
+                raise exception.ProteinNotFoundInPyMOLSession(
+                    f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_1.get_molecule_object()}_1 can not be found in the PyMOL object list.")
+            if not self._check_session_integrity(f"{a_protein_pair.protein_2.get_molecule_object()}_2"):
+                raise exception.ProteinNotFoundInPyMOLSession(
+                    f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_1.get_molecule_object()}_1 can not be found in the PyMOL object list.")
+        else:
+            if not self._check_session_integrity(a_protein_pair.protein_1.get_molecule_object()):
+                raise exception.ProteinNotFoundInPyMOLSession(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_1.get_molecule_object()} can not be found in the PyMOL object list.")
+            if not self._check_session_integrity(a_protein_pair.protein_2.get_molecule_object()):
+                raise exception.ProteinNotFoundInPyMOLSession(f"Loading the PyMOL session failed, because the protein {a_protein_pair.protein_2.get_molecule_object()} can not be found in the PyMOL object list.")
 
         # </editor-fold>
 

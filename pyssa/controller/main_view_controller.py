@@ -490,7 +490,7 @@ class MainViewController:
                 enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value
             )
             self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
-                "A distance analysis is running.\nUntil this process has finished, the PyMOL will be unavailable!\n\nYour current work is saved automatically.",
+                "A distance analysis is running.\nUntil this process has finished, PyMOL will be unavailable!\n\nYour current work is saved automatically.",
                 "Distance Analysis",
                 custom_message_box.CustomMessageBoxIcons.INFORMATION.value
             )
@@ -3767,6 +3767,10 @@ class MainViewController:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                    "'Open protein pair pymol session' button on the 'Protein Pairs Tab' was clicked.")
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
+        print(tmp_protein_pair.protein_1.get_molecule_object())
+        print(tmp_protein_pair.protein_1)
+        print(tmp_protein_pair.protein_2.get_molecule_object())
+        print(tmp_protein_pair.protein_2)
         # fixme: I am no sure if the code below is needed
         # if not self._pymol_session_manager.is_the_current_session_empty():
         #     tmp_flag = True  # Session is NOT empty and needs reinitialization
@@ -3797,8 +3801,7 @@ class MainViewController:
             self._view.ui.btn_create_protein_pair_scene.setEnabled(True)
             self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
-            tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
-            self._pymol_session_manager.current_scene_name = tmp_protein_pair.get_protein_name_without_chains()
+            self._pymol_session_manager.current_scene_name = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).child(1, 0).data(Qt.DisplayRole)
             self._pymol_session_manager.load_current_scene()
             ui_util.set_pymol_scene_name_into_label(self._pymol_session_manager.current_scene_name,
                                                     self._view.ui.lbl_pymol_protein_pair_scene)
