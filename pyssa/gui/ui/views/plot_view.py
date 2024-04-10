@@ -143,6 +143,7 @@ class PlotView(QtWidgets.QDialog):
             writer.writerows(distance_data_array_transpose)
 
         file.close()
+        import decimal
 
         with open(csv_filepath, "r", encoding="utf-8") as csv_file:
             i = 0
@@ -165,7 +166,8 @@ class PlotView(QtWidgets.QDialog):
                 model_resi_item = QtGui.QStandardItem()
                 model_resi_item.setData(str(tmp_list[6]), role=QtCore.Qt.DisplayRole)
                 distance_item = QtGui.QStandardItem()
-                distance_item.setData(float(tmp_list[7]), role=QtCore.Qt.DisplayRole)
+                tmp_distance_value = decimal.Decimal(float(tmp_list[7]))
+                distance_item.setData(str(tmp_distance_value.quantize(decimal.Decimal('0.00'))), role=QtCore.Qt.DisplayRole)
                 standard_item_list.append(pair_no_item)
                 standard_item_list.append(ref_chain_item)
                 standard_item_list.append(ref_pos_item)
@@ -184,6 +186,7 @@ class PlotView(QtWidgets.QDialog):
         self.table_view.setSortingEnabled(True)
         self.table_view.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.table_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)  # disables editing of cells
+        self.table_view.setLocale(QtCore.QLocale("English"))
         # </editor-fold>
 
         # --END
@@ -800,9 +803,9 @@ class PlotView(QtWidgets.QDialog):
         tmp_x_value = self.table_view.model().index(
             self.table_view.currentIndex().row(), 0
         ).data(Qt.DisplayRole)
-        tmp_y_value = self.table_view.model().index(
+        tmp_y_value = float(self.table_view.model().index(
             self.table_view.currentIndex().row(), 7
-        ).data(Qt.DisplayRole)
+        ).data(Qt.DisplayRole))
 
         # Clear the previous clicked point
         if self.clicked_point_scatter is not None:
@@ -834,7 +837,7 @@ class PlotView(QtWidgets.QDialog):
             self.lbl_status.setText(msg)
         else:
             self.lbl_status.setText(f"Status: Residue pair no. = {tmp_x_value}, Distance (Å) = {tmp_y_value}")
-        self.highlight_histogram_bar(tmp_y_value)
+        self.highlight_histogram_bar(float(tmp_y_value))
 
     def highlight_histogram_bar(self, point_to_highlight):
         # Highlight a specific data point (example: point_to_highlight)

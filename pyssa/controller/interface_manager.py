@@ -768,9 +768,11 @@ class InterfaceManager:
         self._main_view.ui.project_tab_widget.setEnabled(True)
         self._main_view.ui.lbl_logo.hide()
         # Settings
+        self._main_view.ui.menuSettings.setEnabled(True)
         self._main_view.ui.action_edit_settings.setEnabled(True)
         self._main_view.ui.action_restore_settings.setEnabled(True)
         # Help
+        self._main_view.ui.menuAbout.setEnabled(True)
         self._main_view.ui.action_documentation.setEnabled(True)
         self._main_view.ui.action_get_demo_projects.setEnabled(True)
         self._main_view.ui.action_show_log_in_explorer.setEnabled(True)
@@ -914,10 +916,6 @@ class InterfaceManager:
             # Hotspots
             self._main_view.ui.menuHotspots.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
-            # Settings
-            self._main_view.ui.menuSettings.setEnabled(True)
-            # Help
-            self._main_view.ui.menuAbout.setEnabled(True)
 
         # Menu bar view for prediction
         if self.main_tasks_manager.prediction_task is not None:
