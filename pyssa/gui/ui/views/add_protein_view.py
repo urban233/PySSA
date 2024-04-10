@@ -70,7 +70,7 @@ class AddProteinView(QtWidgets.QDialog):
             line_width=10,
             speed=1.25,
             color=QtGui.QColor(75, 145, 247),
-        )
+        )  # TODO: remove spinner and add wait cursor
         self.ui.btn_add_protein.setEnabled(False)
         self.ui.lbl_status.setText("")
         self.ui.lbl_status.setStyleSheet("""color: #ba1a1a; font-size: 11px;""")
@@ -82,6 +82,6 @@ class AddProteinView(QtWidgets.QDialog):
         self.setWindowTitle("Import Protein Structure")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
-        # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
+        # this flag needs to be set if the WhatsThat icon in the window bar should be hidden
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setModal(True)

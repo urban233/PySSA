@@ -516,6 +516,19 @@ class MainView(QtWidgets.QMainWindow):
         constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
         constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
+    def disable_menu_bar(self):
+        self.ui.menuProject.setEnabled(False)
+        self.ui.menuPrediction.setEnabled(False)
+        self.ui.menuAnalysis.setEnabled(False)
+        self.ui.menuResults.setEnabled(False)
+        self.ui.menuImage.setEnabled(False)
+        self.ui.menuHotspots.setEnabled(False)
+        self.ui.menuSettings.setEnabled(False)
+        self.ui.menuAbout.setEnabled(False)
+
+    def disable_tab_widget(self):
+        self.ui.project_tab_widget.setEnabled(False)
+
     def build_sequence_table(self):
         #self.line_edit_seq_name = custom_line_edit.CustomLineEdit()
 

@@ -862,7 +862,7 @@ class MainViewController:
         self._interface_manager.restore_default_main_view()
         self._disconnect_sequence_selection_model()
         self.update_status("Saving current project ...")
-        self._view.wait_spinner.start()
+        self._interface_manager.start_wait_spinner()
 
     def __await_close_project(self):
         """Await the async closing process."""
@@ -870,7 +870,7 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         # self.msg_box.hide()
         self.update_status("Closing project finished.")
-        self._view.wait_spinner.stop()
+        self._interface_manager.stop_wait_spinner()
 
     def __slot_create_project(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Create' clicked.")
@@ -1473,7 +1473,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1778,7 +1778,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1792,7 +1792,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1806,7 +1806,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1820,7 +1820,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
 
     # </editor-fold>
 
@@ -2107,10 +2107,10 @@ class MainViewController:
         )
         self._active_task.start()
         self.update_status("Creating preview of image ...")
-        self._view.wait_spinner.start()
+        self._interface_manager.start_wait_spinner()
 
     def __await_preview_image(self, return_value: tuple):
-        self._view.wait_spinner.stop()
+        self._interface_manager.stop_wait_spinner()
         self.update_status("Preview finished.")
 
     def __slot_create_ray_traced_image(self) -> None:
@@ -2133,10 +2133,10 @@ class MainViewController:
         )
         self._active_task.start()
         self.update_status("Creating ray-traced image ...")
-        self._view.wait_spinner.start()
+        self._interface_manager.start_wait_spinner()
 
     def __await_create_ray_traced_image(self, return_value: tuple) -> None:
-        self._view.wait_spinner.stop()
+        self._interface_manager.stop_wait_spinner()
         self.update_status("Image creation finished.")
 
     def __slot_create_drawn_image(self) -> None:
@@ -2159,10 +2159,10 @@ class MainViewController:
         )
         self._active_task.start()
         self.update_status("Creating simple image ...")
-        self._view.wait_spinner.start()
+        self._interface_manager.start_wait_spinner()
 
     def __await_create_drawn_image(self, return_value: tuple) -> None:
-        self._view.wait_spinner.stop()
+        self._interface_manager.stop_wait_spinner()
         self.update_status("Image creation finished.")
 
 
@@ -2377,7 +2377,7 @@ class MainViewController:
 
     def __slot_save_selected_sequence_as_fasta_file(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Export sequence' button on the 'Sequence Tab' was clicked.")
-        self._view.wait_spinner.start()
+        self._interface_manager.start_wait_spinner()
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -2405,10 +2405,10 @@ class MainViewController:
             )
             self._active_task.start()
         else:
-            self._view.wait_spinner.stop()
+            self._interface_manager.stop_wait_spinner()
 
     def __await_save_selected_sequence_as_fasta_file(self, result: tuple):
-        self._view.wait_spinner.stop()
+        self._interface_manager.stop_wait_spinner()
         if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the sequence as .fasta file failed!",
@@ -2569,6 +2569,7 @@ class MainViewController:
                 "Loading the PyMOL session failed! Check out the log file to get more information.")
             self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
         self._interface_manager.stop_wait_spinner()
+        self._interface_manager.refresh_main_view()
 
     def __slot_get_information_about_selected_object_in_protein_branch(self) -> None:
         tmp_type = self._interface_manager.get_current_protein_tree_index_type()

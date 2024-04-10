@@ -395,6 +395,8 @@ class PlotView(QtWidgets.QDialog):
 
         # </editor-fold>
 
+        self.change_selection_color()
+
     # <editor-fold desc="Help related methods">
     def open_help(self, a_page_name: str):
         """Opens the pyssa documentation window if it's not already open.
@@ -522,6 +524,7 @@ class PlotView(QtWidgets.QDialog):
         self.toggle_graphics_visibility()
 
     def toggle_graphics_visibility(self):
+        self.table_view.selectionModel().clearSelection()
         self.plot_widget_dplot.figure.clear()
         self.plot_widget_dhistogram.figure.clear()
         if self.action_plot.isChecked() and self.action_histogram.isChecked():
@@ -732,10 +735,6 @@ class PlotView(QtWidgets.QDialog):
             self._ax_hist.set_yticklabels(custom_labels)
 
     # </editor-fold>
-    # def _on_move(self, event):
-    #     if event.inaxes:
-    #         print(f'data coords {event.xdata} {event.ydata},',
-    #               f'pixel coords {event.x} {event.y}')
 
     def on_canvas_click(self, event):
         if event.button is MouseButton.LEFT:
@@ -769,14 +768,14 @@ class PlotView(QtWidgets.QDialog):
             else:
                 self.lbl_status.setText(f"Status: Residue pair no. = {x_nearest}, Distance (Å) = {y_nearest}")
             # Change the selection color
-            #self.change_selection_color(QtGui.QColor(75, 145, 247, 200))
             self.highlight_histogram_bar(y_nearest)
         elif event.button is MouseButton.RIGHT:
             print("Open Context Menu ...")
 
-    def change_selection_color(self, color):
+    def change_selection_color(self):
         palette = self.table_view.palette()
-        palette.setColor(QtGui.QPalette.Highlight, color)
+        palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor("red"))
+        palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor("white"))
         self.table_view.setPalette(palette)
 
     def search_point_by_id(self, target_id):
@@ -851,7 +850,7 @@ class PlotView(QtWidgets.QDialog):
         self.highlighted_bin_index = self.bins_without_zeros.index(self.highlighted_bin_index)  # TODO: Could be cleaner
         if 0 <= self.highlighted_bin_index < len(self.bars):
             bar = self.bars[self.highlighted_bin_index]
-            bar.set_facecolor("#2D5794")
+            bar.set_facecolor("red")
 
         # Update the plot
         self.plot_widget_dhistogram.canvas.draw()

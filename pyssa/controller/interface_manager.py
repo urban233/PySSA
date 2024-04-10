@@ -765,6 +765,7 @@ class InterfaceManager:
     # <editor-fold desc="Refresh Methods">
     def refresh_main_view(self):
         """Modifies the UI of the main view based on an app model."""
+        self._main_view.ui.project_tab_widget.setEnabled(True)
         self._main_view.ui.lbl_logo.hide()
         # Settings
         self._main_view.ui.action_edit_settings.setEnabled(True)
@@ -913,6 +914,10 @@ class InterfaceManager:
             # Hotspots
             self._main_view.ui.menuHotspots.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
+            # Settings
+            self._main_view.ui.menuSettings.setEnabled(True)
+            # Help
+            self._main_view.ui.menuAbout.setEnabled(True)
 
         # Menu bar view for prediction
         if self.main_tasks_manager.prediction_task is not None:
@@ -1888,8 +1893,11 @@ class InterfaceManager:
 
     def start_wait_spinner(self) -> None:
         """Starts the spinner."""
-        self._main_view.wait_spinner.start()
+        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+        self._main_view.disable_menu_bar()
+        self._main_view.disable_tab_widget()
 
     def stop_wait_spinner(self) -> None:
         """Stops the spinner."""
-        self._main_view.wait_spinner.stop()
+        QtWidgets.QApplication.restoreOverrideCursor()
+
