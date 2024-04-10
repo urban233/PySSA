@@ -661,6 +661,7 @@ class PlotView(QtWidgets.QDialog):
         # for i in range(len(distance_list)):
         #     cutoff_line.append(self.protein_pair_for_analysis.distance_analysis.cutoff)
         self._ax_plot.plot(distance_list, color="#367AF6")
+        self._ax_plot.grid(True, linestyle='--', color='lightgray', linewidth=0.7)
 
     def create_distance_histogram(self):
         distance_data: dict[
