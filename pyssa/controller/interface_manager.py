@@ -574,7 +574,10 @@ class InterfaceManager:
         tmp_chain = self.get_current_active_chain_object()
         if the_pymol_session_manager.is_the_current_protein_in_session():
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
-            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA"
+            if tmp_chain.chain_type == "protein_chain":
+                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA"
+            else:
+                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
             rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string))
         if self.get_protein_repr_toggle_flag() == 1:
             self._main_view.ui.lbl_protein_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
@@ -589,11 +592,24 @@ class InterfaceManager:
         if the_pymol_session_manager.is_the_current_protein_in_session():
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
-            if self._settings_manager.settings.proteins_tab_use_toggle == 1:
-                self.manage_toggle_state_of_protein_repr(tmp_repr_state)
+            print(f"This is a chain type: {tmp_chain.chain_type}")
+            if tmp_chain.chain_type == "protein_chain":
+                self._main_view.ui.frame_protein_repr.setEnabled(True)
+                tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
+                if self._settings_manager.settings.proteins_tab_use_toggle == 1:
+                    self.manage_toggle_state_of_protein_repr(tmp_repr_state)
+                else:
+                    self.manage_check_state_of_protein_repr(tmp_repr_state)
             else:
-                self.manage_check_state_of_protein_repr(tmp_repr_state)
+                self._main_view.ui.frame_protein_repr.setEnabled(False)
+                self._main_view.tg_protein_cartoon.toggle_button.setChecked(False)
+                self._main_view.tg_protein_ribbon.toggle_button.setChecked(False)
+                self._main_view.tg_protein_sticks.toggle_button.setChecked(False)
+                self._main_view.tg_protein_lines.toggle_button.setChecked(False)
+                self._main_view.tg_protein_spheres.toggle_button.setChecked(False)
+                self._main_view.tg_protein_dots.toggle_button.setChecked(False)
+                self._main_view.tg_protein_mesh.toggle_button.setChecked(False)
+                self._main_view.tg_protein_surface.toggle_button.setChecked(False)
     # </editor-fold>
 
     def set_repr_state_in_ui_for_protein_pair_chain(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
@@ -602,11 +618,23 @@ class InterfaceManager:
         if the_pymol_session_manager.is_the_current_protein_pair_in_session():
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-            tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
-            if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
-                self.manage_toggle_state_of_protein_pair_repr(tmp_repr_state)
+            if tmp_chain.chain_type == "protein_chain":
+                self._main_view.ui.frame_protein_pair_repr.setEnabled(True)
+                tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
+                if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
+                    self.manage_toggle_state_of_protein_pair_repr(tmp_repr_state)
+                else:
+                    self.manage_check_state_of_protein_pair(tmp_repr_state)
             else:
-                self.manage_check_state_of_protein_pair(tmp_repr_state)
+                self._main_view.ui.frame_protein_pair_repr.setEnabled(False)
+                self._main_view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
+                self._main_view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
+                self._main_view.tg_protein_pair_sticks.toggle_button.setChecked(False)
+                self._main_view.tg_protein_pair_lines.toggle_button.setChecked(False)
+                self._main_view.tg_protein_pair_spheres.toggle_button.setChecked(False)
+                self._main_view.tg_protein_pair_dots.toggle_button.setChecked(False)
+                self._main_view.tg_protein_pair_mesh.toggle_button.setChecked(False)
+                self._main_view.tg_protein_pair_surface.toggle_button.setChecked(False)
 
     def manage_check_state_of_protein_pair(self, tmp_repr_state):
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
@@ -1717,7 +1745,10 @@ class InterfaceManager:
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
         if the_pymol_session_manager.is_the_current_protein_pair_in_session():
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
-            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()} and name CA"
+            if tmp_chain.chain_type == "protein_chain":
+                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()} and name CA"
+            else:
+                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
             rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string))
         self._main_view.ui.box_protein_pair_color.setCurrentIndex(
             self._main_view.ui.box_protein_pair_color.findText(tmp_chain.pymol_parameters["chain_color"])

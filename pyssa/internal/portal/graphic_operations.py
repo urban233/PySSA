@@ -53,11 +53,10 @@ def get_chain_color(a_selection_string: str, chain_letter: str):
                 tmp_ca_atom_colors.append("By RMSD")
         else:
             try:
-                tmp_residue_atom_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
+                tmp_ca_atom_colors.append(constants.PYMOL_COLORS_WITH_INDICES[color_index])
             except KeyError:
                 tmp_is_colored_by_elements = True
     tmp_chain_color = list(set(tmp_ca_atom_colors))[0]
-    print(tmp_residue_atom_colors)
     return tmp_chain_color, tmp_ca_atom_colors, tmp_is_colored_by_elements
 
 
