@@ -124,7 +124,6 @@ class PredictMonomerViewController(QtCore.QObject):
 
     def mono_pred_analysis_structure_analysis_next_2(self) -> None:
         """Shows the gui elements for the chain selection of protein 1."""
-        self._view.wait_spinner.start()
         tmp_proteins_to_predict: list[str] = []
         for i in range(self._view.ui.table_pred_analysis_mono_prot_to_predict.rowCount()):
             tmp_proteins_to_predict.append(
@@ -239,7 +238,6 @@ class PredictMonomerViewController(QtCore.QObject):
                 self._view.ui.lbl_pred_analysis_mono_ref_chains.setText(
                     f"Select chains in protein structure {self._view.ui.lbl_pred_analysis_mono_prot_struct_1.text()}.",
                 )
-        self._view.wait_spinner.stop()
 
     def start_monomer_prediction_analysis(self):
         tmp_prediction_runs: list[

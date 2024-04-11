@@ -1889,13 +1889,13 @@ class InterfaceManager:
         # Initialize UI
         self._main_view.initialize_ui()
 
-    def start_wait_spinner(self) -> None:
-        """Starts the spinner."""
+    def start_wait_cursor(self) -> None:
+        """Starts the wait cursor."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self._main_view.disable_menu_bar()
         self._main_view.disable_tab_widget()
 
-    def stop_wait_spinner(self) -> None:
+    def stop_wait_cursor(self) -> None:
         """Stops the spinner."""
         QtWidgets.QApplication.restoreOverrideCursor()
 

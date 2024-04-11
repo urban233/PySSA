@@ -40,11 +40,7 @@ class AddProteinPairView(QtWidgets.QDialog):
         # build ui object
         self.ui = auto_add_protein_pair_view.Ui_Dialog()
         self.ui.setupUi(self)
-
         styles.color_bottom_frame_button(self.ui.btn_add)
-
-        # self.setMaximumSize(600, 80)
-        # self.setMinimumWidth(250)
         self.resize(550, 650)
 
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
