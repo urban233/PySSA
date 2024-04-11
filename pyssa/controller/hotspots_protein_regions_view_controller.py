@@ -106,13 +106,13 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
-        self._view.ui.btn_sticks_show.clicked.connect(self.show_resi_sticks)
-        self._view.ui.btn_sticks_hide.clicked.connect(self.hide_resi_sticks)
-        self._view.ui.btn_disulfide_bonds_show.clicked.connect(self.show_disulfide_bonds)
-        self._view.ui.btn_disulfide_bonds_hide.clicked.connect(self.hide_disulfide_bonds)
-        self._view.ui.btn_position_zoom.clicked.connect(self.zoom_resi_position)
+        self._view.ui.btn_sticks_show.clicked.connect(self.__slot_show_resi_sticks)
+        self._view.ui.btn_sticks_hide.clicked.connect(self.__slot_hide_resi_sticks)
+        self._view.ui.btn_disulfide_bonds_show.clicked.connect(self.__slot_show_disulfide_bonds)
+        self._view.ui.btn_disulfide_bonds_hide.clicked.connect(self.__slot_hide_disulfide_bonds)
+        self._view.ui.btn_position_zoom.clicked.connect(self.__slot_zoom_resi_position)
 
-    def show_resi_sticks(self) -> None:
+    def __slot_show_resi_sticks(self) -> None:
         """Shows the pymol selection as sticks."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
         if session_util.check_if_sele_is_empty():
@@ -122,14 +122,14 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
         cmd.color(color="atomic", selection="sele and not elem C")
         cmd.set("valence", 0)  # this needs to be better implemented
 
-    def hide_resi_sticks(self) -> None:
+    def __slot_hide_resi_sticks(self) -> None:
         """Hides the balls and sticks representation of the pymol selection."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
         if session_util.check_if_sele_is_empty():
             return
         cmd.hide(representation="sticks", selection="sele")
 
-    def show_disulfide_bonds(self) -> None:
+    def __slot_show_disulfide_bonds(self) -> None:
         """Shows all disulfid bonds within the pymol session."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' disulfide bonds button was clicked.")
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
@@ -144,7 +144,7 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
                 cmd.show("sticks", "disulfides")
                 cmd.hide("sticks", "elem H")
 
-    def hide_disulfide_bonds(self) -> None:
+    def __slot_hide_disulfide_bonds(self) -> None:
         """Hides all disulfid bonds within the pymol session."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
@@ -156,7 +156,7 @@ class HotspotsProteinRegionsViewController(QtCore.QObject):
                 )
                 cmd.hide("sticks", "disulfides")
 
-    def zoom_resi_position(self) -> None:
+    def __slot_zoom_resi_position(self) -> None:
         """Zooms to the pymol selection."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
         session_util.check_if_sele_is_empty()

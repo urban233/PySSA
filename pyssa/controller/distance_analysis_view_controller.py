@@ -162,7 +162,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
     def structure_analysis_next(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
-        self._view.wait_spinner.start()
         self._active_task = tasks.Task(
             target=main_presenter_async.check_chains_for_analysis,
             args=(
@@ -260,7 +259,6 @@ class DistanceAnalysisViewController(QtCore.QObject):
                 self._view.ui.lbl_distance_analysis_prot_1_chains.setText(
                     f"Select chains in protein structure {self._view.ui.lbl_distance_analysis_prot_struct_1.text()}.",
                 )
-        self._view.wait_spinner.stop()
 
     def _get_all_current_analysis_runs(self):
         tmp_analysis_runs = []

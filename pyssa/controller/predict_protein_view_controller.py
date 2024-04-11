@@ -537,7 +537,6 @@ class PredictProteinViewController(QtCore.QObject):
     def _show_chains_of_protein_structure_1(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Next' button was clicked.")
-        self._view.wait_spinner.start()
         tmp_proteins_to_predict: list[str] = []
         for i in range(self._view.ui.table_proteins_to_predict.rowCount()):
             tmp_proteins_to_predict.append(
@@ -652,7 +651,6 @@ class PredictProteinViewController(QtCore.QObject):
                 self._view.ui.lbl_analysis_protein_1_chains.setText(
                     f"Select chains in protein structure {self._view.ui.lbl_analysis_protein_struct_1.text()}.",
                 )
-        self._view.wait_spinner.stop()
 
     def _show_chains_of_protein_structure_2(self) -> None:
         """Shows the gui elements to select the chains in protein 2."""

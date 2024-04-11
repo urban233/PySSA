@@ -779,6 +779,12 @@ class InterfaceManager:
         self._main_view.ui.action_clear_logs.setEnabled(True)
         self._main_view.ui.action_about.setEnabled(True)
 
+        # Protein hotspots
+        self._main_view.ui.lbl_protein_protein_regions.hide()
+        self._main_view.ui.frame_protein_protein_regions.hide()
+        self._main_view.ui.lbl_protein_pair_protein_regions.hide()
+        self._main_view.ui.frame_protein_pair_protein_regions.hide()
+
         self._main_view.ui.menuProject.setEnabled(True)
         if self._current_project.get_project_name() != "":
             styles.set_stylesheet(self._main_view)
@@ -1889,13 +1895,13 @@ class InterfaceManager:
         # Initialize UI
         self._main_view.initialize_ui()
 
-    def start_wait_spinner(self) -> None:
-        """Starts the spinner."""
+    def start_wait_cursor(self) -> None:
+        """Starts the wait cursor."""
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self._main_view.disable_menu_bar()
         self._main_view.disable_tab_widget()
 
-    def stop_wait_spinner(self) -> None:
+    def stop_wait_cursor(self) -> None:
         """Stops the spinner."""
         QtWidgets.QApplication.restoreOverrideCursor()
 

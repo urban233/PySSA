@@ -25,6 +25,7 @@ import os
 import pymol
 from pymol import cmd
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
@@ -107,7 +108,7 @@ class AddProteinViewController(QtCore.QObject):
                 post_func=self.__await__slot_validate_input,
             )
             self._active_task.start()
-            self._view.wait_spinner.start()
+            QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
             self._view.ui.txt_add_protein.setStyleSheet(
                 """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
             )
@@ -171,7 +172,7 @@ class AddProteinViewController(QtCore.QObject):
             self._view.ui.btn_add_protein.setEnabled(False)
         else:
             constants.PYSSA_LOGGER.error("There is an unknown case, while validating the add protein view user input!")
-        self._view.wait_spinner.stop()
+        QtWidgets.QApplication.restoreOverrideCursor()
         self._view.ui.txt_add_protein.setFocus()
 
     def __slot_load_protein_from_filesystem(self) -> None:

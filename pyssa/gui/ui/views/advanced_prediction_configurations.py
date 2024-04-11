@@ -55,20 +55,6 @@ class AdvancedPredictionConfigurationsView(QtWidgets.QDialog):
         # build ui object
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-        self.wait_spinner = spinner.WaitingSpinner(
-            parent=self,
-            center_on_parent=True,
-            disable_parent_when_spinning=True,
-            modality=Qt.ApplicationModal,
-            roundness=100.0,
-            fade=45.0,
-            radius=14,
-            lines=8,
-            line_length=17,
-            line_width=10,
-            speed=1.25,
-            color=QtGui.QColor(75, 145, 247),
-        )
         styles.color_bottom_frame_button(self.ui.btn_ok)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))

@@ -230,7 +230,6 @@ class ResultsViewController(QtCore.QObject):
 
     def _color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
-        #self._view.wait_spinner.start()
         self._active_task = tasks.Task(
             target=main_presenter_async.color_protein_pair_by_rmsd_value,
             args=(
@@ -248,7 +247,6 @@ class ResultsViewController(QtCore.QObject):
 
     def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
         pass
-        #self._view.wait_spinner.stop()
 
     def _color_protein_back_to_normal(self):
         self._get_color_configuration_of_protein_pair()

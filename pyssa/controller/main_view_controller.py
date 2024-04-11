@@ -46,7 +46,7 @@ from pyssa.internal.thread import tasks, task_workers, database_thread
 from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.presenter import main_presenter_async
-from pyssa.util import constants, enums, exit_codes, gui_utils, tools, ui_util
+from pyssa.util import constants, enums, exit_codes, gui_utils, tools, ui_util, session_util
 from pyssa.gui.ui.views import main_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
@@ -314,6 +314,14 @@ class MainViewController:
         self._protein_tree_context_menu.connect_help_action(self.__slot_open_proteins_tab_help)
         # </editor-fold>
 
+        self._view.ui.btn_protein_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_disulfide_bonds_show.clicked.connect(
+            self.__slot_show_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_disulfide_bonds_hide.clicked.connect(
+            self.__slot_hide_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
+
         # </editor-fold>
 
         # <editor-fold desc="Proteins Pair Tab">
@@ -405,6 +413,14 @@ class MainViewController:
         self._protein_pair_tree_context_menu.connect_help_action(self._open_protein_pairs_tab_help)
         # </editor-fold>
 
+        self._view.ui.btn_protein_pair_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_pair_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_pair_disulfide_bonds_show.clicked.connect(
+            self.__slot_show_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_pair_disulfide_bonds_hide.clicked.connect(
+            self.__slot_hide_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_pair_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
+
         # </editor-fold>
 
     @staticmethod
@@ -477,7 +493,7 @@ class MainViewController:
 
         # <editor-fold desc="User information">
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
-            self._interface_manager.start_wait_spinner()
+            self._interface_manager.start_wait_cursor()
             self._interface_manager.status_bar_manager.show_permanent_message(
                 enums.StatusMessages.PREDICTION_IS_FINALIZING.value
             )
@@ -547,7 +563,7 @@ class MainViewController:
         Args:
             a_page_name (str): a name of a documentation page to display
         """
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
         self._interface_manager.status_bar_manager.show_temporary_message(
             "Opening help center ...", False)
 
@@ -572,7 +588,7 @@ class MainViewController:
             self._interface_manager.documentation_window.restore()
             subprocess.run([constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH])
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center finished.")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def _init_generic_help_context_menus(self):
         # <editor-fold desc="General context menu setup">
@@ -864,15 +880,14 @@ class MainViewController:
         self._interface_manager.restore_default_main_view()
         self._disconnect_sequence_selection_model()
         self.update_status("Saving current project ...")
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
 
     def __await_close_project(self):
         """Await the async closing process."""
         self._interface_manager.set_new_project(project.Project())
         self._interface_manager.refresh_main_view()
-        # self.msg_box.hide()
         self.update_status("Closing project finished.")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_create_project(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Create' clicked.")
@@ -881,7 +896,7 @@ class MainViewController:
         self._interface_manager.get_create_view().show()
 
     def _post_create_project(self, user_input: tuple) -> None:
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
         tmp_project_name, tmp_protein_name = user_input
         tmp_project_database_filepath = str(
             pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
@@ -941,7 +956,6 @@ class MainViewController:
 
     def __await_create_project(self, return_value: tuple):
         if return_value[1] is False:
-            #self._interface_manager.stop_wait_spinner()
             self._interface_manager.refresh_main_view()
             return
 
@@ -951,7 +965,7 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
         self._connect_sequence_selection_model()
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_open_project(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Open' clicked.")
@@ -967,7 +981,7 @@ class MainViewController:
         self._interface_manager.status_bar_manager.show_temporary_message(
             enums.StatusMessages.OPENING_PROJECT.value, False
         )
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
         tmp_project_name = return_value
         tmp_project_database_filepath = str(
             pathlib.Path(
@@ -1005,7 +1019,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message(
                 enums.StatusMessages.OPENING_PROJECT_FAILED.value,
             )
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_use_project(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Use' clicked.")
@@ -1014,7 +1028,7 @@ class MainViewController:
         self._interface_manager.get_use_project_view().show()
 
     def _post_use_project(self, user_input: tuple) -> None:
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
         tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
         with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
             db_manager.build_new_database()
@@ -1037,7 +1051,7 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         self._pymol_session_manager.reinitialize_session()
         self._connect_sequence_selection_model()
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
         self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
 
     def __slot_delete_project(self) -> None:
@@ -1095,7 +1109,7 @@ class MainViewController:
 
             self._interface_manager.refresh_main_view()
             self._pymol_session_manager.reinitialize_session()
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
             self._interface_manager.status_bar_manager.show_temporary_message("Importing project finished.")
 
             # tmp_project = project.Project()
@@ -1402,7 +1416,7 @@ class MainViewController:
         tmp_exit_code, tmp_exit_code_description = result
 
         if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
             if self.active_custom_message_box is not None:
                 self.active_custom_message_box.close()
             # Prediction was successful
@@ -1475,7 +1489,7 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1543,7 +1557,7 @@ class MainViewController:
         self.active_custom_message_box.exec_()
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __await_predict_protein_with_colabfold(self, result: tuple) -> None:
         """Process which runs after each prediction job."""
@@ -1638,7 +1652,7 @@ class MainViewController:
         self.active_custom_message_box.exec_()
         constants.PYSSA_LOGGER.info("All structure predictions are done.")
         self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def _add_new_proteins_to_protein_model(self):
         """Adds the new predicted proteins to the interface manager's protein model."""
@@ -1780,7 +1794,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1794,7 +1808,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1808,7 +1822,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1822,7 +1836,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
 
     # </editor-fold>
 
@@ -1831,15 +1845,78 @@ class MainViewController:
     # <editor-fold desc="Hotspots">
     def __slot_hotspots_protein_regions(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
-        self._external_controller = hotspots_protein_regions_view_controller.HotspotsProteinRegionsViewController(
-            self._interface_manager
-        )
-        self._interface_manager.get_hotspots_protein_regions_view().show()
+        if self._interface_manager.current_tab_index == 1 and self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.is_the_current_protein_in_session():
+            # Proteins tab
+            if self._view.ui.lbl_protein_protein_regions.isVisible():
+                self._view.ui.lbl_protein_protein_regions.hide()
+                self._view.ui.frame_protein_protein_regions.hide()
+            else:
+                self._view.ui.lbl_protein_protein_regions.show()
+                self._view.ui.frame_protein_protein_regions.show()
+        elif self._interface_manager.current_tab_index == 2 and self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.is_the_current_protein_pair_in_session():
+            if self._view.ui.lbl_protein_pair_protein_regions.isVisible():
+                # Protein Pairs tab
+                self._view.ui.lbl_protein_pair_protein_regions.hide()
+                self._view.ui.frame_protein_pair_protein_regions.hide()
+            else:
+                self._view.ui.lbl_protein_pair_protein_regions.show()
+                self._view.ui.frame_protein_pair_protein_regions.show()
+
         self._pymol_session_manager.show_sequence_view()
 
     def post_hotspots_protein_regions(self) -> None:
         self._pymol_session_manager.hide_sequence_view()
         cmd.select(name="", selection="none")
+
+    def __slot_show_protein_regions_resi_sticks(self) -> None:
+        """Shows the pymol selection as sticks."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
+        if session_util.check_if_sele_is_empty():
+            return
+        cmd.show(representation="sticks", selection="sele and not hydrogens")
+        cmd.select(name="sele", selection="sele and not hydrogens")
+        cmd.color(color="atomic", selection="sele and not elem C")
+        cmd.set("valence", 0)  # this needs to be better implemented
+
+    def __slot_hide_protein_regions_resi_sticks(self) -> None:
+        """Hides the balls and sticks representation of the pymol selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
+        if session_util.check_if_sele_is_empty():
+            return
+        cmd.hide(representation="sticks", selection="sele")
+
+    def __slot_show_protein_regions_disulfide_bonds(self) -> None:
+        """Shows all disulfid bonds within the pymol session."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' disulfide bonds button was clicked.")
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+        for tmp_protein_name in self._protein_names:
+            if tmp_protein_name != 0:
+                cmd.select(
+                    name="disulfides",
+                    selection=f"{tmp_protein_name} & {tmp_pymol_selection_option}",
+                )
+                cmd.color(color="atomic", selection="disulfides and not elem C")
+                cmd.set("valence", 0)  # this needs to be better implemented
+                cmd.show("sticks", "disulfides")
+                cmd.hide("sticks", "elem H")
+
+    def __slot_hide_protein_regions_disulfide_bonds(self) -> None:
+        """Hides all disulfid bonds within the pymol session."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+        for tmp_protein_name in self._protein_names:
+            if tmp_protein_name != 0:
+                cmd.select(
+                    name="disulfides",
+                    selection=f"{tmp_protein_name} & {tmp_pymol_selection_option}",
+                )
+                cmd.hide("sticks", "disulfides")
+
+    def __slot_zoom_protein_regions_resi_position(self) -> None:
+        """Zooms to the pymol selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
+        session_util.check_if_sele_is_empty()
+        cmd.zoom(selection="sele", buffer=8.0, state=0, complete=0)
 
     # </editor-fold>
 
@@ -2109,10 +2186,10 @@ class MainViewController:
         )
         self._active_task.start()
         self.update_status("Creating preview of image ...")
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
 
     def __await_preview_image(self, return_value: tuple):
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
         self.update_status("Preview finished.")
 
     def __slot_create_ray_traced_image(self) -> None:
@@ -2135,10 +2212,10 @@ class MainViewController:
         )
         self._active_task.start()
         self.update_status("Creating ray-traced image ...")
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
 
     def __await_create_ray_traced_image(self, return_value: tuple) -> None:
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
         self.update_status("Image creation finished.")
 
     def __slot_create_drawn_image(self) -> None:
@@ -2161,10 +2238,10 @@ class MainViewController:
         )
         self._active_task.start()
         self.update_status("Creating simple image ...")
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
 
     def __await_create_drawn_image(self, return_value: tuple) -> None:
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
         self.update_status("Image creation finished.")
 
 
@@ -2379,7 +2456,7 @@ class MainViewController:
 
     def __slot_save_selected_sequence_as_fasta_file(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Export sequence' button on the 'Sequence Tab' was clicked.")
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
         file_dialog = QtWidgets.QFileDialog()
         desktop_path = QtCore.QStandardPaths.standardLocations(QtCore.QStandardPaths.DesktopLocation)[0]
         file_dialog.setDirectory(desktop_path)
@@ -2407,10 +2484,10 @@ class MainViewController:
             )
             self._active_task.start()
         else:
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
 
     def __await_save_selected_sequence_as_fasta_file(self, result: tuple):
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
         if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the sequence as .fasta file failed!",
@@ -2540,7 +2617,7 @@ class MainViewController:
         )
         self._active_task.start()
         self._pymol_session_manager.current_scene_name = "base"
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
         self._interface_manager.status_bar_manager.show_temporary_message(
             f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...", False
         )
@@ -2571,7 +2648,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message(
                 "Loading the PyMOL session failed! Check out the log file to get more information.")
             self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
         self._interface_manager.refresh_main_view()
 
     def __slot_get_information_about_selected_object_in_protein_branch(self) -> None:
@@ -3457,7 +3534,7 @@ class MainViewController:
         self._interface_manager.status_bar_manager.show_temporary_message(
             "Importing protein structure ...", False
         )
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
 
     def __await_post_import_protein_structure(self, return_value: tuple):
         tmp_protein: "protein.Protein" = return_value[1]
@@ -3471,7 +3548,7 @@ class MainViewController:
         self._pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
         self._main_view_state.restore_main_view_state()
         self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_delete_protein(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein' button on the 'Proteins Tab' was clicked.")
@@ -3514,9 +3591,9 @@ class MainViewController:
                 post_func=self.__await_save_selected_protein_structure_as_pdb_file,
             )
             self._active_task.start()
-            self._interface_manager.start_wait_spinner()
+            self._interface_manager.start_wait_cursor()
         else:
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
 
     def __await_save_selected_protein_structure_as_pdb_file(self, result: tuple) -> None:
         if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
@@ -3542,7 +3619,7 @@ class MainViewController:
             tmp_dialog.exec_()
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
@@ -3562,17 +3639,17 @@ class MainViewController:
                 post_func=self.__await_clean_protein_update,
             )
             self._active_task.start()
-            self._interface_manager.start_wait_spinner()
+            self._interface_manager.start_wait_cursor()
             self.update_status("Cleaning protein ...")
         else:
             constants.PYSSA_LOGGER.info("No protein has been cleaned.")
-            self._interface_manager.stop_wait_spinner()
+            self._interface_manager.stop_wait_cursor()
 
     def __await_clean_protein_update(self) -> None:
         self._update_scene()
         self._save_protein_pymol_session()
         self.update_status("Cleaning protein finished.")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_rename_selected_protein_structure(self) -> None:
         """Opens a new view to rename the selected protein."""
@@ -3595,7 +3672,7 @@ class MainViewController:
                 post_func=self.__await_post_rename_selected_protein_structure,
             )
             self._active_task.start()
-            self._interface_manager.start_wait_spinner()
+            self._interface_manager.start_wait_cursor()
         else:
             pass
 
@@ -3616,7 +3693,7 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
 
     def __slot_show_protein_chain_sequence(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show protein sequence' context menu action was clicked.")
@@ -3642,6 +3719,7 @@ class MainViewController:
     def __slot_update_protein_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
         cmd.scene(key="auto", action="update")
+        self._save_protein_pymol_session()
 
     @staticmethod
     def _update_scene() -> None:
@@ -3672,7 +3750,7 @@ class MainViewController:
             self._active_task.start()
             self._interface_manager.status_bar_manager.show_temporary_message(
                 "Adding new scene to protein ...", False)
-            self._interface_manager.start_wait_spinner()
+            self._interface_manager.start_wait_cursor()
             self._interface_manager.add_scene_to_proteins_model(tmp_scene_name)
         elif self._interface_manager.current_tab_index == 2:
             # The database thread cannot be used here because the session gets loaded again
@@ -3688,7 +3766,7 @@ class MainViewController:
             self._active_task.start()
             self._interface_manager.status_bar_manager.show_temporary_message(
                 "Adding new scene to protein pair ...", False)
-            self._interface_manager.start_wait_spinner()
+            self._interface_manager.start_wait_cursor()
             self._interface_manager.add_scene_to_protein_pairs_model(tmp_scene_name)
         else:
             logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
@@ -3701,7 +3779,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein finished.")
         else:
             self._interface_manager.status_bar_manager.show_error_message("Adding new scene to protein failed!")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __await_save_scene_protein_pair(self, return_value: tuple):
         _, exit_flag = return_value
@@ -3710,7 +3788,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein pair finished.")
         else:
             self._interface_manager.status_bar_manager.show_error_message("Adding new scene to protein pair failed!")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_delete_current_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3743,7 +3821,7 @@ class MainViewController:
                 self._interface_manager.status_bar_manager.show_temporary_message(
                     "Deleting selected scene ...", False
                 )
-                self._interface_manager.start_wait_spinner()
+                self._interface_manager.start_wait_cursor()
                 self._interface_manager.remove_scene_from_protein_pairs_model(
                     self._interface_manager.get_current_protein_pair_tree_index()
                 )
@@ -3758,7 +3836,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_temporary_message("Deleted the scene successfully.")
         else:
             self._interface_manager.status_bar_manager.show_error_message("Deleting the scene failed!")
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def _save_protein_pymol_session(self):
         """Saves the session as base64 string and updates the database"""
@@ -3804,7 +3882,7 @@ class MainViewController:
             post_func=self.__await_open_protein_pair_pymol_session,
         )
         self._active_task.start()
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
         self._interface_manager.status_bar_manager.show_temporary_message(
             f"Loading PyMOL session of {tmp_protein_pair.name} ...", False
         )
@@ -3832,7 +3910,7 @@ class MainViewController:
                 "Loading the PyMOL session failed! Check out the log file to get more information.")
             self._view.ui.lbl_info_3.setText("Please load the PyMOL session of the selected protein.")
         self._interface_manager.refresh_main_view()
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def _save_protein_pair_pymol_session(self):
         tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
@@ -3923,10 +4001,10 @@ class MainViewController:
             post_func=self.__await_color_protein_pair_by_rmsd,
         )
         self._active_task.start()
-        self._interface_manager.start_wait_spinner()
+        self._interface_manager.start_wait_cursor()
 
     def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
-        self._interface_manager.stop_wait_spinner()
+        self._interface_manager.stop_wait_cursor()
 
     def __slot_change_chain_color_protein_pairs(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -4664,6 +4742,7 @@ class MainViewController:
     def __slot_update_protein_pair_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
         cmd.scene(key="auto", action="update")
+        self._save_protein_pair_pymol_session()
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:

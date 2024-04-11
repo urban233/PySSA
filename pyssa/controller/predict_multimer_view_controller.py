@@ -137,7 +137,6 @@ class PredictMultimerViewController(QtCore.QObject):
 
     def multi_pred_analysis_structure_analysis_next_2(self) -> None:
         """Shows the gui elements to select the chains in protein 1."""
-        self._view.wait_spinner.start()
         tmp_proteins_to_predict: list[str] = []
         for i in range(self._view.ui.table_pred_analysis_multi_prot_to_predict.rowCount()):
             tmp_proteins_to_predict.append(
@@ -252,7 +251,6 @@ class PredictMultimerViewController(QtCore.QObject):
                 self._view.ui.lbl_pred_analysis_multi_ref_chains.setText(
                     f"Select chains in protein structure {self._view.ui.lbl_pred_analysis_multi_prot_struct_1.text()}.",
                 )
-        self._view.wait_spinner.stop()
 
     # <editor-fold desc="Multimer prediction + analysis">
     def _init_multi_pred_analysis_page(self) -> None:
