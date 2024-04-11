@@ -3816,6 +3816,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message(
                 "Loading the PyMOL session failed! Check out the log file to get more information.")
             self._view.ui.lbl_info_3.setText("Please load the PyMOL session of the selected protein.")
+        self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_spinner()
 
     def _save_protein_pair_pymol_session(self):

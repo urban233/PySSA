@@ -79,8 +79,12 @@ class MainView(QtWidgets.QMainWindow):
 
     def add_custom_widgets(self):
         # Protein
+        self.tg_protein_white_bg = toggle_button.ToggleWidget()
+        self.ui.protein_white_bg_layout.addWidget(self.tg_protein_white_bg)
         self.tg_protein_color_atoms = toggle_button.ToggleWidget()
         self.ui.protein_atoms_layout.addWidget(self.tg_protein_color_atoms)
+        self.tg_protein_hydrogens = toggle_button.ToggleWidget()
+        self.ui.protein_hydrogen_layout.addWidget(self.tg_protein_hydrogens)
         self.tg_protein_cartoon = toggle_button.ToggleWidget()
         self.ui.protein_cartoon_layout.addWidget(self.tg_protein_cartoon)
         self.tg_protein_sticks = toggle_button.ToggleWidget()
@@ -102,8 +106,12 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.verticalLayout_6.insertWidget(2, self.color_grid_proteins)
 
         # Protein Pair
+        self.tg_protein_pair_white_bg = toggle_button.ToggleWidget()
+        self.ui.protein_pair_white_bg_layout.addWidget(self.tg_protein_pair_white_bg)
         self.tg_protein_pair_color_atoms = toggle_button.ToggleWidget()
         self.ui.protein_pair_atoms_layout.addWidget(self.tg_protein_pair_color_atoms)
+        self.tg_protein_pair_hydrogens = toggle_button.ToggleWidget()
+        self.ui.protein_pair_hydrogen_layout.addWidget(self.tg_protein_pair_hydrogens)
         self.tg_protein_pair_cartoon = toggle_button.ToggleWidget()
         self.ui.protein_pair_cartoon_layout.addWidget(self.tg_protein_pair_cartoon)
         self.tg_protein_pair_sticks = toggle_button.ToggleWidget()
