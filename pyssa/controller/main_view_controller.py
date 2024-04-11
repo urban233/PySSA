@@ -252,7 +252,9 @@ class MainViewController:
         self._view.ui.cb_protein_dots.stateChanged.connect(self.__slot_protein_chain_as_dots)
         self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
         self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
-        # toggle representation
+        # representation
+        self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
+        self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
         self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
         self._view.tg_protein_ribbon.toggleChanged.connect(self.__slot_protein_chain_as_ribbon)
@@ -352,6 +354,8 @@ class MainViewController:
         self._view.ui.cb_protein_pair_mesh.stateChanged.connect(self.__slot_protein_pair_chain_as_mesh)
         self._view.ui.cb_protein_pair_surface.stateChanged.connect(self.__slot_protein_pair_chain_as_surface)
         # toggle representation
+        self._view.ui.btn_protein_pair_show_hydrogens.clicked.connect(self.__slot_show_protein_pair_chain_with_hydrogens)
+        self._view.ui.btn_protein_pair_hide_hydrogens.clicked.connect(self.__slot_hide_protein_pair_chain_with_hydrogens)
         self._view.tg_protein_pair_cartoon.toggleChanged.connect(self.__slot_protein_pair_chain_as_cartoon)
         self._view.tg_protein_pair_sticks.toggleChanged.connect(self.__slot_protein_pair_chain_as_sticks)
         self._view.tg_protein_pair_ribbon.toggleChanged.connect(self.__slot_protein_pair_chain_as_ribbon)
@@ -3277,8 +3281,24 @@ class MainViewController:
     # <editor-fold desc="Representations">
     # hydrogens
     def __slot_show_protein_chain_with_hydrogens(self):
+        tmp_protein = self._interface_manager.get_current_active_protein_object()
+        tmp_chain = self._interface_manager.get_current_active_chain_object()
+        if self._view.tg_protein_sticks.toggle_button.isChecked():
+            cmd.show(representation="sticks", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_lines.toggle_button.isChecked():
+            cmd.show(representation="lines", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_spheres.toggle_button.isChecked():
+            cmd.show(representation="spheres", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
 
-        cmd.show(representation=)
+    def __slot_hide_protein_chain_with_hydrogens(self):
+        tmp_protein = self._interface_manager.get_current_active_protein_object()
+        tmp_chain = self._interface_manager.get_current_active_chain_object()
+        if self._view.tg_protein_sticks.toggle_button.isChecked():
+            cmd.hide(representation="sticks", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_lines.toggle_button.isChecked():
+            cmd.hide(representation="lines", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_spheres.toggle_button.isChecked():
+            cmd.hide(representation="spheres", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
 
     # cartoon
     def __slot_protein_chain_as_cartoon(self):
@@ -4567,7 +4587,25 @@ class MainViewController:
 
     # <editor-fold desc="Representations">
     # hydrogens
+    def __slot_show_protein_pair_chain_with_hydrogens(self):
+        tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
+            cmd.show(representation="sticks", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_pair_lines.toggle_button.isChecked():
+            cmd.show(representation="lines", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
+            cmd.show(representation="spheres", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
 
+    def __slot_hide_protein_pair_chain_with_hydrogens(self):
+        tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
+            cmd.hide(representation="sticks", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_pair_lines.toggle_button.isChecked():
+            cmd.hide(representation="lines", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
+        if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
+            cmd.hide(representation="spheres", selection=f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}")
 
     # cartoon
     def __slot_protein_pair_chain_as_cartoon(self):
