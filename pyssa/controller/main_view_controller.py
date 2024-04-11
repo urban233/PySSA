@@ -3316,6 +3316,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # sticks
     def __slot_protein_chain_as_sticks(self):
@@ -3333,6 +3334,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # ribbon
     def __slot_protein_chain_as_ribbon(self):
@@ -3350,6 +3352,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # lines
     def __slot_protein_chain_as_lines(self):
@@ -3367,6 +3370,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # spheres
     def __slot_protein_chain_as_spheres(self):
@@ -3384,6 +3388,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # dots
     def __slot_protein_chain_as_dots(self):
@@ -3401,6 +3406,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # mesh
     def __slot_protein_chain_as_mesh(self):
@@ -3418,6 +3424,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # surface
     def __slot_protein_chain_as_surface(self):
@@ -3435,6 +3442,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_chain()
 
     # all
     def __slot_hide_protein_chain_all(self):
@@ -4623,6 +4631,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # sticks
     def __slot_protein_pair_chain_as_sticks(self):
@@ -4640,6 +4649,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # ribbon
     def __slot_protein_pair_chain_as_ribbon(self):
@@ -4657,6 +4667,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # lines
     def __slot_protein_pair_chain_as_lines(self):
@@ -4674,6 +4685,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # spheres
     def __slot_protein_pair_chain_as_spheres(self):
@@ -4691,6 +4703,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # dots
     def __slot_protein_pair_chain_as_dots(self):
@@ -4708,6 +4721,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # mesh
     def __slot_protein_pair_chain_as_mesh(self):
@@ -4725,6 +4739,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # surface
     def __slot_protein_pair_chain_as_surface(self):
@@ -4742,6 +4757,7 @@ class MainViewController:
         self._update_scene()
         self._save_protein_pair_pymol_session()
         self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
+        self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
 
     # all
     def __slot_hide_protein_pair_chain_all(self):
