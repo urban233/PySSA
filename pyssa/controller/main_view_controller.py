@@ -236,6 +236,7 @@ class MainViewController:
         self._view.ui.box_protein_color.currentIndexChanged.connect(self.__slot_change_chain_color_proteins)
         self._view.ui.btn_protein_color_atoms.clicked.connect(self.__slot_change_chain_color_proteins_atoms)
         self._view.ui.btn_protein_reset_atoms.clicked.connect(self.__slot_change_chain_reset_proteins_atoms)
+        self._view.tg_protein_white_bg.toggleChanged.connect(self.__slot_protein_change_background_color)
         # self._view.ui.btn_protein_show_cartoon.clicked.connect(self.__slot_show_protein_chain_as_cartoon)
         # self._view.ui.btn_protein_hide_cartoon.clicked.connect(self.__slot_hide_protein_chain_as_cartoon)
         # self._view.ui.btn_protein_show_sticks.clicked.connect(self.__slot_show_protein_chain_as_sticks)
@@ -251,7 +252,7 @@ class MainViewController:
         self._view.ui.cb_protein_dots.stateChanged.connect(self.__slot_protein_chain_as_dots)
         self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
         self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
-        # self._view.tg_protein_color_atoms.toggleChanged.connect(self.__slot_color_protein_chain_atoms_by_element)
+        # toggle representation
         self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
         self._view.tg_protein_ribbon.toggleChanged.connect(self.__slot_protein_chain_as_ribbon)
@@ -327,6 +328,7 @@ class MainViewController:
         self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self.__slot_change_chain_color_protein_pairs)
         self._view.ui.btn_protein_pair_color_atoms.clicked.connect(self.__slot_change_chain_color_protein_pairs_atoms)
         self._view.ui.btn_protein_pair_reset_atoms.clicked.connect(self.__slot_change_chain_reset_protein_pairs_atoms)
+        self._view.tg_protein_pair_white_bg.toggleChanged.connect(self.__slot_protein_pair_change_background_color)
         # self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
         # self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
         # self._view.ui.btn_protein_pair_show_sticks.clicked.connect(self.__slot_show_protein_pair_chain_as_sticks)
@@ -341,7 +343,7 @@ class MainViewController:
         self._view.ui.cb_protein_pair_dots.stateChanged.connect(self.__slot_protein_pair_chain_as_dots)
         self._view.ui.cb_protein_pair_mesh.stateChanged.connect(self.__slot_protein_pair_chain_as_mesh)
         self._view.ui.cb_protein_pair_surface.stateChanged.connect(self.__slot_protein_pair_chain_as_surface)
-
+        # toggle representation
         self._view.tg_protein_pair_cartoon.toggleChanged.connect(self.__slot_protein_pair_chain_as_cartoon)
         self._view.tg_protein_pair_sticks.toggleChanged.connect(self.__slot_protein_pair_chain_as_sticks)
         self._view.tg_protein_pair_ribbon.toggleChanged.connect(self.__slot_protein_pair_chain_as_ribbon)
@@ -2518,6 +2520,7 @@ class MainViewController:
 
     def __slot_open_protein_pymol_session(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Open protein pymol session' button on the 'Proteins Tab' was clicked.")
+        self._view.tg_protein_white_bg.toggle_button.setCheckState(False)
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
         # fixme: I am no sure if the code below is needed
         # if not self._pymol_session_manager.is_the_current_session_empty():
@@ -2680,6 +2683,12 @@ class MainViewController:
         #     tmp_color_name = self._view.ui.lbl_protein_current_color.text().strip()
         cmd.color(color=self._view.color_grid_proteins.last_clicked_color, selection=f"{tmp_selection.selection_string}")
         self.set_icon_for_current_color_in_proteins_tab()
+
+    def __slot_protein_change_background_color(self):
+        if self._view.tg_protein_white_bg.toggle_button.isChecked():
+            cmd.bg_color("white")
+        else:
+            cmd.bg_color("black")
 
     # <editor-fold desc="Color Grid slot methods">
     def set_icon_for_current_color_in_proteins_tab(self):
@@ -3189,6 +3198,11 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Representations">
+    # hydrogens
+    def __slot_show_protein_chain_with_hydrogens(self):
+
+        cmd.show(representation=)
+
     # cartoon
     def __slot_protein_chain_as_cartoon(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3767,6 +3781,7 @@ class MainViewController:
     def __slot_open_protein_pair_pymol_session(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                    "'Open protein pair pymol session' button on the 'Protein Pairs Tab' was clicked.")
+        self._view.tg_protein_pair_white_bg.toggle_button.setCheckState(False)
         tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
         print(tmp_protein_pair.protein_1.get_molecule_object())
         print(tmp_protein_pair.protein_1)
@@ -3958,6 +3973,12 @@ class MainViewController:
             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
         cmd.color(color=self._view.color_grid_protein_pairs.last_clicked_color, selection=f"{tmp_selection.selection_string}")
         self.set_icon_for_current_color_in_protein_pairs_tab()
+
+    def __slot_protein_pair_change_background_color(self):
+        if self._view.tg_protein_pair_white_bg.toggle_button.isChecked():
+            cmd.bg_color("white")
+        else:
+            cmd.bg_color("black")
 
     # <editor-fold desc="Color Grid slot methods">
     def set_icon_for_current_color_in_protein_pairs_tab(self):
@@ -4467,6 +4488,9 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Representations">
+    # hydrogens
+
+
     # cartoon
     def __slot_protein_pair_chain_as_cartoon(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
