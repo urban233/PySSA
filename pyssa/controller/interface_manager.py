@@ -1342,6 +1342,16 @@ class InterfaceManager:
                 self._main_view.ui.btn_protein_color_atoms.setEnabled(False)
                 self._main_view.ui.btn_protein_reset_atoms.setEnabled(False)
 
+    def manage_hydrogen_representation_for_protein_chain(self):
+        if (self._main_view.tg_protein_sticks.toggle_button.isChecked()
+                    or self._main_view.tg_protein_lines.toggle_button.isChecked()
+                    or self._main_view.tg_protein_spheres.toggle_button.isChecked()):
+            self._main_view.ui.btn_protein_show_hydrogens.setEnabled(True)
+            self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(True)
+        else:
+            self._main_view.ui.btn_protein_show_hydrogens.setEnabled(False)
+            self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(False)
+
     def manage_toggle_state_of_protein_repr(self, tmp_repr_state):
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
             self._main_view.tg_protein_cartoon.toggle_button.setChecked(False)
@@ -1737,6 +1747,16 @@ class InterfaceManager:
             else:
                 self._main_view.ui.btn_protein_pair_color_atoms.setEnabled(False)
                 self._main_view.ui.btn_protein_pair_reset_atoms.setEnabled(False)
+
+    def manage_hydrogen_representation_for_protein_pair_chain(self):
+        if (self._main_view.tg_protein_pair_sticks.toggle_button.isChecked()
+                    or self._main_view.tg_protein_pair_lines.toggle_button.isChecked()
+                    or self._main_view.tg_protein_pair_spheres.toggle_button.isChecked()):
+            self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(True)
+            self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(True)
+        else:
+            self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(False)
+            self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(False)
 
     def show_chain_pymol_parameter_for_protein_pairs(
             self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
