@@ -305,6 +305,9 @@
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
                       </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Minimum</enum>
+                      </property>
                       <property name="sizeHint" stdset="0">
                        <size>
                         <width>40</width>
@@ -343,9 +346,12 @@
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
                       </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Minimum</enum>
+                      </property>
                       <property name="sizeHint" stdset="0">
                        <size>
-                        <width>88</width>
+                        <width>40</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -380,6 +386,9 @@
                      <spacer name="horizontalSpacer_39">
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Minimum</enum>
                       </property>
                       <property name="sizeHint" stdset="0">
                        <size>
@@ -625,6 +634,9 @@
                   <layout class="QVBoxLayout" name="verticalLayout_15">
                    <item>
                     <layout class="QHBoxLayout" name="protein_hydrogen_layout">
+                     <property name="spacing">
+                      <number>6</number>
+                     </property>
                      <item>
                       <widget class="QLabel" name="label_3">
                        <property name="text">
@@ -637,13 +649,30 @@
                        <property name="orientation">
                         <enum>Qt::Horizontal</enum>
                        </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Minimum</enum>
+                       </property>
                        <property name="sizeHint" stdset="0">
                         <size>
-                         <width>40</width>
+                         <width>30</width>
                          <height>20</height>
                         </size>
                        </property>
                       </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_protein_show_hydrogens">
+                       <property name="text">
+                        <string>Show</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_protein_hide_hydrogens">
+                       <property name="text">
+                        <string>Hide</string>
+                       </property>
+                      </widget>
                      </item>
                     </layout>
                    </item>
@@ -1189,6 +1218,9 @@
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
                       </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Minimum</enum>
+                      </property>
                       <property name="sizeHint" stdset="0">
                        <size>
                         <width>40</width>
@@ -1227,9 +1259,12 @@
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
                       </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Minimum</enum>
+                      </property>
                       <property name="sizeHint" stdset="0">
                        <size>
-                        <width>88</width>
+                        <width>40</width>
                         <height>20</height>
                        </size>
                       </property>
@@ -1264,6 +1299,9 @@
                      <spacer name="horizontalSpacer_45">
                       <property name="orientation">
                        <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeType">
+                       <enum>QSizePolicy::Minimum</enum>
                       </property>
                       <property name="sizeHint" stdset="0">
                        <size>
@@ -1495,6 +1533,9 @@
                   <layout class="QVBoxLayout" name="verticalLayout_18">
                    <item>
                     <layout class="QHBoxLayout" name="protein_pair_hydrogen_layout">
+                     <property name="spacing">
+                      <number>6</number>
+                     </property>
                      <item>
                       <widget class="QLabel" name="label_7">
                        <property name="text">
@@ -1507,13 +1548,30 @@
                        <property name="orientation">
                         <enum>Qt::Horizontal</enum>
                        </property>
+                       <property name="sizeType">
+                        <enum>QSizePolicy::Minimum</enum>
+                       </property>
                        <property name="sizeHint" stdset="0">
                         <size>
-                         <width>40</width>
+                         <width>30</width>
                          <height>20</height>
                         </size>
                        </property>
                       </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_protein_pair_show_hydrogens">
+                       <property name="text">
+                        <string>Show</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_protein_pair_hide_hydrogens">
+                       <property name="text">
+                        <string>Hide</string>
+                       </property>
+                      </widget>
                      </item>
                     </layout>
                    </item>

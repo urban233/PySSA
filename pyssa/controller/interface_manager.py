@@ -779,6 +779,12 @@ class InterfaceManager:
         self._main_view.ui.action_clear_logs.setEnabled(True)
         self._main_view.ui.action_about.setEnabled(True)
 
+        # Protein hotspots
+        self._main_view.ui.lbl_protein_protein_regions.hide()
+        self._main_view.ui.frame_protein_protein_regions.hide()
+        self._main_view.ui.lbl_protein_pair_protein_regions.hide()
+        self._main_view.ui.frame_protein_pair_protein_regions.hide()
+
         self._main_view.ui.menuProject.setEnabled(True)
         if self._current_project.get_project_name() != "":
             styles.set_stylesheet(self._main_view)

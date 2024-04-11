@@ -46,7 +46,7 @@ from pyssa.internal.thread import tasks, task_workers, database_thread
 from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.presenter import main_presenter_async
-from pyssa.util import constants, enums, exit_codes, gui_utils, tools, ui_util
+from pyssa.util import constants, enums, exit_codes, gui_utils, tools, ui_util, session_util
 from pyssa.gui.ui.views import main_view
 from pyssa.model import application_model
 from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
@@ -313,6 +313,14 @@ class MainViewController:
         self._protein_tree_context_menu.connect_help_action(self.__slot_open_proteins_tab_help)
         # </editor-fold>
 
+        self._view.ui.btn_protein_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_disulfide_bonds_show.clicked.connect(
+            self.__slot_show_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_disulfide_bonds_hide.clicked.connect(
+            self.__slot_hide_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
+
         # </editor-fold>
 
         # <editor-fold desc="Proteins Pair Tab">
@@ -402,6 +410,14 @@ class MainViewController:
         self._protein_pair_tree_context_menu.connect_color_based_on_rmsd_action(self.__slot_color_protein_pair_by_rmsd)
         self._protein_pair_tree_context_menu.connect_help_action(self._open_protein_pairs_tab_help)
         # </editor-fold>
+
+        self._view.ui.btn_protein_pair_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_pair_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
+        self._view.ui.btn_protein_pair_disulfide_bonds_show.clicked.connect(
+            self.__slot_show_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_pair_disulfide_bonds_hide.clicked.connect(
+            self.__slot_hide_protein_regions_disulfide_bonds)
+        self._view.ui.btn_protein_pair_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
 
         # </editor-fold>
 
@@ -1827,15 +1843,78 @@ class MainViewController:
     # <editor-fold desc="Hotspots">
     def __slot_hotspots_protein_regions(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
-        self._external_controller = hotspots_protein_regions_view_controller.HotspotsProteinRegionsViewController(
-            self._interface_manager
-        )
-        self._interface_manager.get_hotspots_protein_regions_view().show()
+        if self._interface_manager.current_tab_index == 1 and self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.is_the_current_protein_in_session():
+            # Proteins tab
+            if self._view.ui.lbl_protein_protein_regions.isVisible():
+                self._view.ui.lbl_protein_protein_regions.hide()
+                self._view.ui.frame_protein_protein_regions.hide()
+            else:
+                self._view.ui.lbl_protein_protein_regions.show()
+                self._view.ui.frame_protein_protein_regions.show()
+        elif self._interface_manager.current_tab_index == 2 and self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.is_the_current_protein_pair_in_session():
+            if self._view.ui.lbl_protein_pair_protein_regions.isVisible():
+                # Protein Pairs tab
+                self._view.ui.lbl_protein_pair_protein_regions.hide()
+                self._view.ui.frame_protein_pair_protein_regions.hide()
+            else:
+                self._view.ui.lbl_protein_pair_protein_regions.show()
+                self._view.ui.frame_protein_pair_protein_regions.show()
+
         self._pymol_session_manager.show_sequence_view()
 
     def post_hotspots_protein_regions(self) -> None:
         self._pymol_session_manager.hide_sequence_view()
         cmd.select(name="", selection="none")
+
+    def __slot_show_protein_regions_resi_sticks(self) -> None:
+        """Shows the pymol selection as sticks."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
+        if session_util.check_if_sele_is_empty():
+            return
+        cmd.show(representation="sticks", selection="sele and not hydrogens")
+        cmd.select(name="sele", selection="sele and not hydrogens")
+        cmd.color(color="atomic", selection="sele and not elem C")
+        cmd.set("valence", 0)  # this needs to be better implemented
+
+    def __slot_hide_protein_regions_resi_sticks(self) -> None:
+        """Hides the balls and sticks representation of the pymol selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
+        if session_util.check_if_sele_is_empty():
+            return
+        cmd.hide(representation="sticks", selection="sele")
+
+    def __slot_show_protein_regions_disulfide_bonds(self) -> None:
+        """Shows all disulfid bonds within the pymol session."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' disulfide bonds button was clicked.")
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+        for tmp_protein_name in self._protein_names:
+            if tmp_protein_name != 0:
+                cmd.select(
+                    name="disulfides",
+                    selection=f"{tmp_protein_name} & {tmp_pymol_selection_option}",
+                )
+                cmd.color(color="atomic", selection="disulfides and not elem C")
+                cmd.set("valence", 0)  # this needs to be better implemented
+                cmd.show("sticks", "disulfides")
+                cmd.hide("sticks", "elem H")
+
+    def __slot_hide_protein_regions_disulfide_bonds(self) -> None:
+        """Hides all disulfid bonds within the pymol session."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
+        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+        for tmp_protein_name in self._protein_names:
+            if tmp_protein_name != 0:
+                cmd.select(
+                    name="disulfides",
+                    selection=f"{tmp_protein_name} & {tmp_pymol_selection_option}",
+                )
+                cmd.hide("sticks", "disulfides")
+
+    def __slot_zoom_protein_regions_resi_position(self) -> None:
+        """Zooms to the pymol selection."""
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
+        session_util.check_if_sele_is_empty()
+        cmd.zoom(selection="sele", buffer=8.0, state=0, complete=0)
 
     # </editor-fold>
 
@@ -3626,6 +3705,7 @@ class MainViewController:
     def __slot_update_protein_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
         cmd.scene(key="auto", action="update")
+        self._save_protein_pymol_session()
 
     @staticmethod
     def _update_scene() -> None:
@@ -4638,6 +4718,7 @@ class MainViewController:
     def __slot_update_protein_pair_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
         cmd.scene(key="auto", action="update")
+        self._save_protein_pair_pymol_session()
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
