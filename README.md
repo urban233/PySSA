@@ -61,6 +61,12 @@ To start PySSA, double-click the created shortcut on the desktop.
 To uninstall PySSA, open the PySSA-Installer and uninstall the components which
 should get removed.
 
+To install PySSA in an offline environment the <a href="https://github.com/urban233/PySSACliInstaller">"PySSA-CLI-Installer"</a> can be used.
+This is a command line tool that installs ColabFold and PySSA without an internet connection. 
+The WSL2 needs to be setup beforehand. 
+Mamba/Conda should be installed with the install_mamba.bat file.
+To update PySSA it is necessary to uninstall and then install the component that gets updated.
+
 ### Source code
 It is also possible to install PySSA without the help of the PySSA-Installer.
 In order to install PySSA a WSL2 environment needs to be setup and a WSL2

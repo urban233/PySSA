@@ -1,0 +1,37 @@
+#+TITLE: Windows Offline Deployment
+#+AUTHOR: MU
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="../org/styles.css"/>
+
+* Useful Documents
+- [[file:central_station.org][Central Station]]
+- [[file:windows_deployment.org][Windows Deployment]]
+
+* Summary
+This document describes the steps that are needed for the Windows offline deployment and all related tasks.
+
+* Build Instructions
+
+** PySSA-CLI-Installer
+
+** Conda environment
+conda create --download-only -n offline_pyssa biopython pymol-open-source matplotlib pandas
+
+zmq pip wheel file
+requests pip wheel file
+
+C:\Users\martin\Miniforge3\pkgs
+
+1. Check if env with name offline_pyssa exists (if one exists, delete it first!)
+2. conda env create -f environment.yaml --name offline_pyssa
+3. conda pack -n offline_pyssa
+4. Move offline_pyssa.tar.gz to win_offline_package folder
+
+
+** Current State
+0. Use "conda pack" to freeze the conda environment & Download the wheel file for pymol
+1. Move the tar.gz and pymol wheel file to the target machine
+2. Create folder for conda env
+3. Unpack the tar.gz into the newly created folder
+5. Activate new environment & run "conda-unpack"
+6. pip install pymol wheel file
+
