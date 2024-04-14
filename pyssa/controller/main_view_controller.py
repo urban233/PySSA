@@ -1025,6 +1025,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message(
                 enums.StatusMessages.OPENING_PROJECT_FAILED.value,
             )
+            self._interface_manager.refresh_main_view()
         self._interface_manager.stop_wait_cursor()
 
     def __slot_use_project(self) -> None:
@@ -1420,9 +1421,8 @@ class MainViewController:
     def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
         print(result)
         tmp_exit_code, tmp_exit_code_description = result
-
+        self._interface_manager.stop_wait_cursor()
         if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
-            self._interface_manager.stop_wait_cursor()
             if self.active_custom_message_box is not None:
                 self.active_custom_message_box.close()
             # Prediction was successful
@@ -1495,7 +1495,6 @@ class MainViewController:
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1760,6 +1759,7 @@ class MainViewController:
     def __await_multimer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
         tmp_exit_code = result[0]
         tmp_exit_code_description = [1]
+        self._interface_manager.stop_wait_cursor()
         if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
             constants.PYSSA_LOGGER.info("All structure predictions are done.")
@@ -1800,7 +1800,6 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1814,7 +1813,6 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
             
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -1828,9 +1826,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_cursor()
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Prediction failed because of an unknown error!",
                 "Structure Prediction",
@@ -1842,7 +1838,7 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_error_message(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
-            self._interface_manager.stop_wait_cursor()
+        self._interface_manager.refresh_main_view()
 
     # </editor-fold>
 
@@ -2215,6 +2211,7 @@ class MainViewController:
 
     def __await_preview_image(self, return_value: tuple):
         self._interface_manager.stop_wait_cursor()
+        self._interface_manager.refresh_main_view()
         self.update_status("Preview finished.")
 
     def __slot_create_ray_traced_image(self) -> None:
@@ -2241,6 +2238,7 @@ class MainViewController:
 
     def __await_create_ray_traced_image(self, return_value: tuple) -> None:
         self._interface_manager.stop_wait_cursor()
+        self._interface_manager.refresh_main_view()
         self.update_status("Image creation finished.")
 
     def __slot_create_drawn_image(self) -> None:
@@ -2267,6 +2265,7 @@ class MainViewController:
 
     def __await_create_drawn_image(self, return_value: tuple) -> None:
         self._interface_manager.stop_wait_cursor()
+        self._interface_manager.refresh_main_view()
         self.update_status("Image creation finished.")
 
 
@@ -2510,6 +2509,7 @@ class MainViewController:
             self._active_task.start()
         else:
             self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
     def __await_save_selected_sequence_as_fasta_file(self, result: tuple):
         self._interface_manager.stop_wait_cursor()
@@ -2616,7 +2616,8 @@ class MainViewController:
         tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
             self._view.ui.proteins_tree_view.selectedIndexes(),
             self._interface_manager.get_current_protein_tree_index_type(),
-            tmp_is_protein_in_any_pair_flag
+            tmp_is_protein_in_any_pair_flag,
+            self._pymol_session_manager.is_the_current_protein_in_session()
         )
         tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
@@ -3643,6 +3644,7 @@ class MainViewController:
             self._interface_manager.start_wait_cursor()
         else:
             self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
     def __await_save_selected_protein_structure_as_pdb_file(self, result: tuple) -> None:
         if result[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
@@ -3693,12 +3695,14 @@ class MainViewController:
         else:
             constants.PYSSA_LOGGER.info("No protein has been cleaned.")
             self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
     def __await_clean_protein_update(self) -> None:
         self._update_scene()
         self._save_protein_pymol_session()
         self.update_status("Cleaning protein finished.")
         self._interface_manager.stop_wait_cursor()
+        self._interface_manager.refresh_main_view()
 
     def __slot_rename_selected_protein_structure(self) -> None:
         """Opens a new view to rename the selected protein."""
@@ -3721,6 +3725,7 @@ class MainViewController:
                 post_func=self.__await_post_rename_selected_protein_structure,
             )
             self._active_task.start()
+            self.update_status("Renaming protein ...")
             self._interface_manager.start_wait_cursor()
         else:
             pass
@@ -3742,7 +3747,8 @@ class MainViewController:
         self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         self._interface_manager.refresh_protein_model()
         self._interface_manager.refresh_main_view()
-        self._interface_manager.start_wait_cursor()
+        self._interface_manager.stop_wait_cursor()
+        self.update_status("Renaming protein finished.")
 
     def __slot_show_protein_chain_sequence(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show protein sequence' context menu action was clicked.")
@@ -3823,8 +3829,8 @@ class MainViewController:
 
     def __await_save_scene_protein(self, return_value: tuple):
         _, exit_flag = return_value
+        self._interface_manager.refresh_main_view()
         if exit_flag:
-            self._interface_manager.refresh_main_view()
             self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein finished.")
         else:
             self._interface_manager.status_bar_manager.show_error_message("Adding new scene to protein failed!")
@@ -3832,8 +3838,8 @@ class MainViewController:
 
     def __await_save_scene_protein_pair(self, return_value: tuple):
         _, exit_flag = return_value
+        self._interface_manager.refresh_main_view()
         if exit_flag:
-            self._interface_manager.refresh_main_view()
             self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein pair finished.")
         else:
             self._interface_manager.status_bar_manager.show_error_message("Adding new scene to protein pair failed!")
@@ -3880,8 +3886,8 @@ class MainViewController:
 
     def __await_delete_current_scene(self, return_value: tuple):
         _, exit_flag = return_value
+        self._interface_manager.refresh_main_view()
         if exit_flag:
-            self._interface_manager.refresh_main_view()
             self._interface_manager.status_bar_manager.show_temporary_message("Deleted the scene successfully.")
         else:
             self._interface_manager.status_bar_manager.show_error_message("Deleting the scene failed!")
@@ -4054,6 +4060,7 @@ class MainViewController:
 
     def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
         self._interface_manager.stop_wait_cursor()
+        self._interface_manager.refresh_main_view()
 
     def __slot_change_chain_color_protein_pairs(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,

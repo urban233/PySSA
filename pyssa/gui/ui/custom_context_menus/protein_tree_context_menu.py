@@ -45,7 +45,8 @@ class ProteinTreeContextMenu:
     def get_context_menu(self,
                          the_selected_indexes,
                          the_type: str,
-                         is_protein_in_any_pair_flag: bool):
+                         is_protein_in_any_pair_flag: bool,
+                         is_protein_in_session_flag: bool):
         # <editor-fold desc="Checks">
         if len(the_selected_indexes) > 0:
             level = 0
@@ -65,7 +66,7 @@ class ProteinTreeContextMenu:
         if level == 0:
             # A protein is selected
             self._clean_protein_action.setVisible(True)
-            self._rename_protein_action.setVisible(True)
+            self._rename_protein_action.setVisible(False)
             self._show_sequence_action.setVisible(False)
 
             # <editor-fold desc="Check if protein is in any protein pair">
@@ -73,6 +74,11 @@ class ProteinTreeContextMenu:
                 self._rename_protein_action.setEnabled(False)
             else:
                 self._rename_protein_action.setEnabled(True)
+
+            if is_protein_in_session_flag:
+                self._rename_protein_action.setEnabled(True)
+            else:
+                self._rename_protein_action.setEnabled(False)
 
             # </editor-fold>
 
