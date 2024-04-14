@@ -3,7 +3,7 @@
     This contains all basic information related to the protein object.
 
 # Proteins Overview
-PySSA can be used to store protein structures. It is the second central object type.
+PySSA can be used to store protein structures. It is one of the central object types.
 
 [Proteins Tab :material-chevron-double-right: ](proteins_tab.md)
 

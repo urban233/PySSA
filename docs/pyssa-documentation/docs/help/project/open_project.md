@@ -10,7 +10,7 @@
      In this dialog you can ...
 
     - open a project from your workspace.
-    - search a project name in your workspace.
+    - search for a project name in your workspace.
 
 
 </div>
@@ -19,19 +19,19 @@
 
 ## Getting Started
 ### Open a project from your workspace
-1. Click on one of the project from the list.
-2. `Optional:` Check in the text box under _Selected Project_ if the selected name is displayed.
-3. Click on _Open_.
+1. Select a project from the list.
+2. `Optional:` Check the text box under _Selected Project_ to see if the selected name is displayed.
+3. Click on **Open**.
 
-### Search a project name in your workspace
-1. Enter a part of the project name into the first text box.
-2. Check if the correct project was detected by looking in the text box under _Selected Project_.
-3. Click on _Open_.
+### Search for a project name in your workspace.
+1. Type part of the project name in the first textbox.
+2. Verify if the text box under 'Selected Project' displays the correct project.
+3. Click on **Open**.
 
 ## Details
 
 ## Tips
-- If you enter a part of the project name then the list jumps to the location. This can be used to quickly find a project, even if the name is only partially known.
+- Entering a partial project name can quickly navigate the list to the corresponding location, allowing you to quickly find a project if you only know part of the name.
 
 ---
 ##

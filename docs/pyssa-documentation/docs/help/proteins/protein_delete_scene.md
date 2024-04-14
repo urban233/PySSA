@@ -7,12 +7,18 @@
 
 -   __Description__
 
-     With this button you can delete a selected PyMOL scene of the current session.
+     With this button you can ... 
+
+    - delete a selected PyMOL scene of the current session.
 
 </div>
 
 ## Getting Started
-TODO
+### Delete a PyMOL scene
+1. Select a protein from the tree.
+2. Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.
+3. Click on a scene in the tree you want to delete.
+4. Click on :google_material-cancel_w200:, to delete the selected scene.
 
 ---
 

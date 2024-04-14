@@ -88,6 +88,8 @@ class SettingsViewController(QtCore.QObject):
     def restore_ui(self):
         """Restores the ui."""
         self._view.ui.tabWidget.setCurrentIndex(0)
+        self._view.ui.tabWidget.setTabVisible(4, False)
+        self._view.ui.tabWidget.setTabVisible(3, False)
 
     # </editor-fold>
     

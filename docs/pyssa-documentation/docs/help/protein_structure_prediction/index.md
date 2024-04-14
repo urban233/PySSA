@@ -6,6 +6,6 @@
 PySSA can run protein structures predictions as a job. This job can consist of a single prediction run or
 multiple runs can be defined.
 
-[ColabFold Monomer Prediction :material-chevron-double-right: ](colabfold_monomer.md)
+[ColabFold Prediction :material-chevron-double-right: ](colabfold.md)
 
-[ColabFold Multimer Prediction :material-chevron-double-right: ](colabfold_multimer.md)
+[Advanced Prediction Configuration :material-chevron-double-right: ](advanced_prediction_configurations.md)

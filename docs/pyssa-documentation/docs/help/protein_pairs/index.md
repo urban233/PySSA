@@ -3,7 +3,7 @@
     This contains all basic information related to the protein pair object.
 
 # Protein Pairs Overview
-PySSA can be used to store pairs of protein structures in the form of a protein pair object. It is the third central object type.
+PySSA can be used to store pairs of protein structures in the form of a protein pair object. It is one of the central object types.
 
 [Protein Pairs Tab :material-chevron-double-right: ](protein_pairs_tab.md)
 

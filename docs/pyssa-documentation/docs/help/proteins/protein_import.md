@@ -19,13 +19,13 @@
 1. Click on :google_material-upload_file_w200:, to open a new dialog window.
 2. In the new dialog, click on the three dots.
 3. In the file dialog choose an existing .pdb file from your computer.
-4. Click on _Open_.
-5. Click on _Import_.
+4. Click on **Open**.
+5. Click on **Import**.
 
 ### Import a protein structure using a PDB id
 1. Click on :google_material-upload_file_w200:, to open a new dialog window.
 2. In the new dialog, enter the PDB id into the text field.
-3. Click on _Import_.
+3. Click on **Import**.
 
 ---
 

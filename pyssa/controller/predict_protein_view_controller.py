@@ -93,7 +93,7 @@ class PredictProteinViewController(QtCore.QObject):
 
     def _open_help_for_dialog(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button was clicked.")
-        self.open_help("help/protein_structure_prediction/colabfold_multimer/")
+        self.open_help("help/protein_structure_prediction/colabfold/")
 
     def _show_prediction_configuration(self) -> None:
         """Opens the prediction configuration dialog window."""

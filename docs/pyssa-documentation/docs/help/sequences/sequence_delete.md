@@ -7,7 +7,9 @@
 
 -   __Description__
 
-     With this button you can delete a selected sequence.
+     With this button you can ... 
+
+    - delete a selected sequence.
 
 </div>
 

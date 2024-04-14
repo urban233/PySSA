@@ -16,15 +16,15 @@
 
 ## Getting Started
 ### Import a project into your workspace
-1. Click on _Import_ under the _Project_ menu.
-2. In the file dialog, choose a _Project Database File_ (.db) from your computer.
-3. Click on _Open_.
+1. Select **Import** from the Project menu.
+2. Select a _Project Database File_ (.db) from your computer in the file dialog.
+3. Click on **Open**.
 4. Either accept the project name or enter a new project name.
 5. Wait until the project is imported.
 
 ## Details
 ### Tech Note
-- The _Project Database File_ is a SQLite3 database file. The import will only be successful if the project was exported through the PySSA application!
+- The _Project Database File_ is a SQLite3 database file. To ensure a successful import, the project must have been exported through the PySSA application.
 
 ---
 ##

@@ -15,17 +15,17 @@
 </div>
 
 ## Getting Started
-After selecting a sequence from the list, the table on the right side will appear and display additional information.
+To obtain more information about a sequence from the list, simply click on it. 
+A table will then appear on the right-hand side.
 
 ### Rename a selected sequence
-1. Click on a sequence from the list.
-2. In the right table edit the name under _Name_.
-3. The changes are automatically saved.
+1. Select a sequence from the list.
+2. Edit the name in the _Name_ field in the table on the right. (The application automatically saves any changes made.)
 
 ### Display the full sequence of a selected sequence
-1. Click on a sequence from the list.
-2. Click in the right table on the sequence.
-3. A new dialog opens with the full sequence string.
+1. Select a sequence from the list.
+2. Click on the sequence in the right table.
+3. A new dialog window with the complete sequence string will be opened.
 
 ---
 ##

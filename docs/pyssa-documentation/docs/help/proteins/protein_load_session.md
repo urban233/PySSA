@@ -7,12 +7,16 @@
 
 -   __Description__
 
-     With this button you can load the PyMOL session of the selected protein.
+     With this button you can
+
+    - load the PyMOL session of the selected protein.
 
 </div>
 
 ## Getting Started
-TODO
+### Open a PyMOL session
+1. Select a protein from the tree.
+2. Click on :google_material-open_in_new_w200:, to load the pymol session of the selected protein.
 
 ---
 

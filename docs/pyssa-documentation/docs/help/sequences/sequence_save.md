@@ -7,7 +7,9 @@
 
 -   __Description__
 
-     With this button you can save the selected sequence as .fasta file.
+     With this button you can ... 
+
+    - save the selected sequence as .fasta file.
 
 </div>
 
@@ -15,7 +17,7 @@
 ### Save a selected sequence as .fasta file
 1. Click on :google_material-file_save_w200:, to open a file dialog window.
 2. Enter a name for the .fasta file.
-3. Click on _Save_.
+3. Click on **Save**.
 
 ---
 

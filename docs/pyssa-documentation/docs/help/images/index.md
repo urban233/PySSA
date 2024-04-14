@@ -3,7 +3,7 @@
     This contains all basic information related to the image functionality.
 
 # Images Overview
-PySSA can create high-quality images which can be ray-traced.
+PySSA uses PyMOL to generate high-quality images using ray-tracing.
 
 [Preview Image :material-chevron-double-right: ](preview_image.md)
 

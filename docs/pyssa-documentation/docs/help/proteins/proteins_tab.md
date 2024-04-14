@@ -12,12 +12,12 @@
     - [import](protein_import.md) existing protein structures through .pdb files or by PDB id's.
     - [save](protein_save.md) stored proteins as .pdb files.
     - [delete](protein_delete.md) stored proteins.
-    - display the structure of a stored protein.
+    - [load](protein_load_session.md) a pymol session to display the structure of a stored protein.
+    - [add](protein_add_scene.md) a pymol scene.
+    - [update](protein_update_scene.md) the selected pymol scene.
+    - [delete](protein_delete_scene.md) the selected pymol scene.
 
 </div>
-
-## Getting Started
-TODO
 
 ---
 ##

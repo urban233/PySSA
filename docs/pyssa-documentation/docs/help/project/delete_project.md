@@ -16,12 +16,12 @@
 
 ## Getting Started
 ### Delete a project from your workspace
-1. Click on one of the project from the list.
-2. `Optional:` Check in the text box under _Selected Project_ if the selected name is displayed.
-3. Click on _Delete_.
+1. Click on one of the projects from the list.
+2. `Optional:` Check the text box under 'Selected Project' to confirm that the selected name is displayed.
+3. Click on **Delete**.
 
 ## Details
-- There will be a warning message everytime a project will be deleted.
+- A warning message will appear every time a project is deleted.
 
 ---
 ##

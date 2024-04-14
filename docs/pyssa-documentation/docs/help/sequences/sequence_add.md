@@ -6,17 +6,19 @@
 <div class="grid cards" markdown>
 
 -   __Description__
+    
+    With this button you can ... 
 
-     With this button you can add a protein sequence string.
+    - add a protein sequence string.
 
 </div>
 
 ## Getting Started
 ### Add a protein sequence string
 1. Click on :google_material-note_add_w200:, to open a new dialog window.
-2. Enter a new sequence name and click on _Next_.
+2. Enter a new sequence name and click on **Next**.
 3. Paste the protein sequence in the large text box.
-4. Click _Add_.
+4. Click **Add**.
 
 ---
 

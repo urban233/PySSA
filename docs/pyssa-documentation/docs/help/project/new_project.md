@@ -10,7 +10,6 @@
      In this dialog you can ...
 
     - create a new project.
-    - create a new project and adding directly a protein structure in form of a PDB ID or a .pdb file.
 
 
 </div>
@@ -21,10 +20,10 @@
     { .annotate }
     1. The project name must have 20 characters or fewer. Moreover, the only characters that can be used are 0-9, a-z, A-Z, -, _.
 
-2. Click on _Create_.
+2. Click on **Create**.
 
 ## Details
-- You can add existing protein structures after you created the project.
+- You can add existing protein structures after you have created the project.
 
 
 ---

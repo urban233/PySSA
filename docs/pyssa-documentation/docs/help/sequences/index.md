@@ -3,9 +3,11 @@
     This contains all basic information related to the sequence object.
 
 # Sequences Overview
-PySSA can be used to store protein sequences. It is the first central object type.
+PySSA can be used to store protein sequences. It is one of the central object types.
 
 [Sequences Tab :material-chevron-double-right: ](sequences_tab.md)
+
+[Additional Information Table :material-chevron-double-right: ](additional_sequence_information.md)
 
 [Import Sequence :material-chevron-double-right: ](sequence_import.md)
 
