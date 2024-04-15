@@ -365,7 +365,7 @@ def rename_selected_protein_structure(
     the_new_protein_name: str,
     the_database_filepath: str,
 ) -> tuple:
-    """Deletes a certain protein from a project.
+    """Renames a certain protein from a project.
 
     Args:
         a_protein: the protein object to rename.
