@@ -134,10 +134,14 @@ class DeleteProjectViewController(QtCore.QObject):
         """Selects a project from the project list on the delete page."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A project from the list of existing projects was clicked.")
         try:
-            self._view.ui.txt_delete_selected_projects.setText(self._view.ui.list_delete_projects_view.model().data
-                                                               (self._view.ui.list_delete_projects_view.currentIndex(),
-                                                                Qt.DisplayRole))
-
+            if len(self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()) == 1:
+                self._view.ui.txt_delete_selected_projects.setText(self._view.ui.list_delete_projects_view.model().data
+                                                                   (self._view.ui.list_delete_projects_view.currentIndex(),
+                                                                    Qt.DisplayRole))
+            elif len(self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()) > 1:
+                self._view.ui.txt_delete_selected_projects.setText("Multiple projects selected.")
+            else:
+                self._view.ui.txt_delete_selected_projects.setText("")
         except AttributeError:
             self._view.ui.txt_delete_selected_projects.setText("")
 
@@ -151,26 +155,52 @@ class DeleteProjectViewController(QtCore.QObject):
     def delete_project(self) -> None:
         """Deletes an existing project."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete' button was clicked.")
-        # popup message which warns the user that the selected project gets deleted
-        tmp_dialog = custom_message_box.CustomMessageBoxDelete(
-            "Are you sure you want to delete this project?",
-            "Delete Project",
-            custom_message_box.CustomMessageBoxIcons.WARNING.value
-        )
-        tmp_dialog.exec_()
-        response: bool = tmp_dialog.response
-        tmp_index = self._view.ui.list_delete_projects_view.currentIndex()
-        if response is True:
-            try:
-                os.remove(self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE))  # TODO: throws permission error
-            except PermissionError:
-                tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                    "The project cannot be deleted, due to a permission error. Restart the application and try again.",
-                    "Delete Project",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+
+        if len(self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()) > 1:
+            tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+                "Are you sure you want to delete these projects?",
+                "Delete Projects",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value
+            )
+            tmp_dialog.exec_()
+            tmp_indexes = self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()
+            tmp_filepaths_with_row_numbers = []
+            for tmp_index in tmp_indexes:
+                tmp_filepaths_with_row_numbers.append(
+                    (self._view.ui.list_delete_projects_view.model().data(tmp_index, enums.ModelEnum.FILEPATH_ROLE),
+                     tmp_index.row())
                 )
-                tmp_dialog.exec_()
-            self._view.ui.list_delete_projects_view.model().removeRow(tmp_index.row())  # removes item from model
+            tmp_filepaths_with_row_numbers.sort(reverse=True)
+        elif len(self._view.ui.list_delete_projects_view.selectionModel().selectedIndexes()) == 1:
+            tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+                "Are you sure you want to delete this project?",
+                "Delete Project",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value
+            )
+            tmp_dialog.exec_()
+            tmp_filepaths_with_row_numbers = [
+                (
+                    self._view.ui.list_delete_projects_view.model().data(
+                    self._view.ui.list_delete_projects_view.currentIndex(), enums.ModelEnum.FILEPATH_ROLE),
+                    self._view.ui.list_delete_projects_view.currentIndex().row()
+                )
+            ]
+        else:
+            return
+
+        response: bool = tmp_dialog.response
+        if response is True:
+            for tmp_filepath, tmp_row in tmp_filepaths_with_row_numbers:
+                try:
+                    os.remove(tmp_filepath)  # TODO: throws permission error
+                except PermissionError:
+                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                        "The project cannot be deleted, due to a permission error. Restart the application and try again.",
+                        "Delete Project",
+                        custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    )
+                    tmp_dialog.exec_()
+                self._view.ui.list_delete_projects_view.model().removeRow(tmp_row)  # removes item from model
             self.restore_default_view()
         else:
             constants.PYSSA_LOGGER.info("No project has been deleted. No changes were made.")

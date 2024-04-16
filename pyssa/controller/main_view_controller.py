@@ -2455,8 +2455,6 @@ class MainViewController:
             self._view.ui.seqs_table_widget.setRowCount(0)
             self._view.build_sequence_table()
             # hide not available menu labels
-
-
         else:
             constants.PYSSA_LOGGER.info("No sequence has been deleted. No changes were made.")
 

@@ -51,6 +51,7 @@ class DeleteProjectView(QtWidgets.QDialog):
         styles.color_bottom_frame_button(self.ui.btn_delete_delete_project)
         self.ui.btn_delete_delete_project.setEnabled(False)
         self.ui.list_delete_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.ui.list_delete_projects_view.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
