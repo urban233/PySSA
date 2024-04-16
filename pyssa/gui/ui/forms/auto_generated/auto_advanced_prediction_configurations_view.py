@@ -71,7 +71,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.lbl_amber.setText(_translate("Dialog", "Activate amber force field"))
+        self.lbl_amber.setText(_translate("Dialog", "Activate Amber force field"))
         self.lbl_template.setText(_translate("Dialog", "Choose template mode"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_ok.setText(_translate("Dialog", "OK"))

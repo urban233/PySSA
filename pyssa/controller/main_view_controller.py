@@ -1172,11 +1172,12 @@ class MainViewController:
         if file_path:
             shutil.copyfile(self._interface_manager.get_current_project().get_database_filepath(),
                             file_path)
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "The project was successfully exported.", "Export Project",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "The project was successfully exported.", "Export Project",
+            #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            # )
+            # tmp_dialog.exec_()
+            self._interface_manager.status_bar_manager.show_temporary_message("The project was successfully exported.")
 
     # </editor-fold>
 
@@ -1235,29 +1236,29 @@ class MainViewController:
             self._active_task.start()
 
         elif an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Distance analysis failed because there was an error during the analysis!",
-                "Distance Analysis",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Distance analysis failed because there was an error during the analysis!",
+            #     "Distance Analysis",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
+                "Distance analysis failed because there was an error during the analysis!")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Distance analysis failed because of an unknown error!",
-                "Distance Analysis",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Distance analysis failed because of an unknown error!",
+            #     "Distance Analysis",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
+                "Distance analysis failed because of an unknown error!")
         self._interface_manager.refresh_main_view()
 
     def _add_new_protein_pairs_to_protein_pair_model(self):
@@ -1271,12 +1272,12 @@ class MainViewController:
     def __await_unfreeze_pymol_session_after_analysis(self):
         self._interface_manager.main_tasks_manager.distance_analysis_task = None
         self._interface_manager.refresh_main_view()
-        self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
-            "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
-            "Distance Analysis",
-            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-        )
-        self.active_custom_message_box.exec_()
+        # self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+        #     "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
+        #     "Distance Analysis",
+        #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        # )
+        # self.active_custom_message_box.exec_()
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
 
@@ -1463,49 +1464,52 @@ class MainViewController:
                 enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value
             )
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because there was an error writing the fasta file(s)!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because there was an error writing the fasta file(s)!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.status_bar_manager.show_error_message("Prediction failed because there was an error writing the fasta file(s)!")
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because the fasta file(s) could not be found!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because the fasta file(s) could not be found!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.status_bar_manager.show_error_message(
+                "Prediction failed because the fasta file(s) could not be found!")
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because a subprocess failed!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because a subprocess failed!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.status_bar_manager.show_error_message(
+                "Prediction failed because a subprocess failed!")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because of an unknown error!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because of an unknown error!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
+            self._interface_manager.status_bar_manager.show_error_message(
+                "Prediction failed because of an unknown error!")
         self._interface_manager.refresh_main_view()
 
     def __await_run_distance_analysis_after_prediction(self, an_exit_code: tuple[int, str, list]) -> None:
@@ -1524,29 +1528,29 @@ class MainViewController:
             )
             self._active_task.start()
         elif an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Distance analysis failed because there was an error during the analysis!",
-                "Distance Analysis",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Distance analysis failed because there was an error during the analysis!",
+            #     "Distance Analysis",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
+                "Distance analysis failed because there was an error during the analysis!")
         elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Distance analysis failed because of an unknown error!",
-                "Distance Analysis",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Distance analysis failed because of an unknown error!",
+            #     "Distance Analysis",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}")
+                "Distance analysis failed because of an unknown error!")
 
     def __await_unfreeze_pymol_session_after_prediction_and_analysis(self):
         self._interface_manager.main_tasks_manager.prediction_task = None
@@ -1554,12 +1558,12 @@ class MainViewController:
         self._interface_manager.refresh_main_view()
         self._main_view_state.restore_main_view_state()
 
-        self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
-            "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
-            "Distance Analysis",
-            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-        )
-        self.active_custom_message_box.exec_()
+        # self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+        #     "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
+        #     "Distance Analysis",
+        #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        # )
+        # self.active_custom_message_box.exec_()
         constants.PYSSA_LOGGER.info("All structure analysis' are done.")
         self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
         self._interface_manager.stop_wait_cursor()
@@ -1572,54 +1576,52 @@ class MainViewController:
         tmp_exit_code_description = result[1]
         if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
             
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because there was an error writing the fasta file(s)!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because there was an error writing the fasta file(s)!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+                "Prediction failed because there was an error writing the fasta file(s)!")
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because the fasta file(s) could not be found!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because the fasta file(s) could not be found!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+                "Prediction failed because the fasta file(s) could not be found!")
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because a subprocess failed!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because a subprocess failed!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+                "Prediction failed because a subprocess failed!")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because of an unknown error!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because of an unknown error!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
-            self._interface_manager.status_bar_manager.show_error_message(f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+            self._interface_manager.status_bar_manager.show_error_message("Prediction failed because of an unknown error!")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
             # Prediction was successful
             self._add_new_proteins_to_protein_model()
@@ -1632,12 +1634,12 @@ class MainViewController:
             )
             self._active_task.start()
         else:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because of an unknown case!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because of an unknown case!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             self._interface_manager.status_bar_manager.show_error_message("Prediction failed because of an unknown case!")
 
     def __await_unfreeze_pymol_session_after_prediction(self):
@@ -1649,12 +1651,12 @@ class MainViewController:
 
         self._main_view_state.restore_main_view_state()
 
-        self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
-            "All structure predictions are done.\nGo to the Proteins tab to see the new protein(s).",
-            "Structure Prediction",
-            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-        )
-        self.active_custom_message_box.exec_()
+        # self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
+        #     "All structure predictions are done.\nGo to the Proteins tab to see the new protein(s).",
+        #     "Structure Prediction",
+        #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        # )
+        # self.active_custom_message_box.exec_()
         constants.PYSSA_LOGGER.info("All structure predictions are done.")
         self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
         self._interface_manager.stop_wait_cursor()
@@ -1789,55 +1791,53 @@ class MainViewController:
                 os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
 
         elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because there was an error writing the fasta file(s)!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because there was an error writing the fasta file(s)!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+                "Prediction failed because there was an error writing the fasta file(s)!")
         elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because the fasta file(s) could not be found!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because the fasta file(s) could not be found!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+                "Prediction failed because the fasta file(s) could not be found!")
         elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-            
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because a subprocess failed!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because a subprocess failed!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+                "Prediction failed because a subprocess failed!")
         elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Prediction failed because of an unknown error!",
-                "Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Prediction failed because of an unknown error!",
+            #     "Structure Prediction",
+            #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+            # )
+            # tmp_dialog.exec_()
             constants.PYSSA_LOGGER.error(
                 f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
             )
             self._interface_manager.status_bar_manager.show_error_message(
-                f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}")
+                "Prediction failed because of an unknown error!")
         self._interface_manager.refresh_main_view()
 
     # </editor-fold>
@@ -2018,8 +2018,7 @@ class MainViewController:
         if file_path:
             os.startfile(file_path)
 
-    @staticmethod
-    def __slot_clear_all_log_files() -> None:
+    def __slot_clear_all_log_files(self) -> None:
         """Clears all log files generated under .pyssa/logs."""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Clear All Logs' clicked.")
         tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
@@ -2034,11 +2033,12 @@ class MainViewController:
             except PermissionError:
                 print("The active log file was not deleted.")
             if len(os.listdir(str(constants.LOG_PATH))) == 1:
-                tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                    "All log files could be deleted.", "Clear Log Files",
-                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-                )
-                tmp_dialog.exec_()
+                # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                #     "All log files could be deleted.", "Clear Log Files",
+                #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                # )
+                # tmp_dialog.exec_()
+                self._interface_manager.status_bar_manager.show_temporary_message("All log files could be deleted.")
                 constants.PYSSA_LOGGER.info("All log files were deleted.")
             else:
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -2149,11 +2149,11 @@ class MainViewController:
         else:
             self._interface_manager.refresh_workspace_model()
             self._interface_manager.refresh_main_view()
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Getting demo projects finished successfully.", "Get Demo Projects",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "Getting demo projects finished successfully.", "Get Demo Projects",
+            #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            # )
+            # tmp_dialog.exec_()
             self._interface_manager.status_bar_manager.show_temporary_message("Getting demo projects finished successfully.")
 
     # </editor-fold>
@@ -2267,112 +2267,6 @@ class MainViewController:
         self._interface_manager.stop_wait_cursor()
         self._interface_manager.refresh_main_view()
         self.update_status("Image creation finished.")
-
-
-    def post_save_image(self) -> None:
-        """Displays a message box which informs that the process has finished."""
-        self.block_box_uni.hide()
-        self.block_box_uni.destroy(True)
-        self._view.status_bar.showMessage("Finished image creation.")
-        QtWidgets.QApplication.restoreOverrideCursor()
-        tmp_dialog = custom_message_box.CustomMessageBoxOk(
-            "The image has been created.", "Image Creation",
-            custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-        )
-        tmp_dialog.exec_()
-
-    def save_image(self) -> None:
-        """Saves the image as a png file."""
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
-        if self._view.ui.cb_ray_tracing.isChecked():
-            save_dialog = QtWidgets.QFileDialog()
-            try:
-                full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
-                if full_file_name == ("", ""):
-                    tools.quick_log_and_display(
-                        "info",
-                        "No file has been selected.",
-                        self._view.status_bar,
-                        "No file has been selected.",
-                    )
-                    return
-                self._view.status_bar.showMessage("Creating ray-traced image ...")
-
-                # <editor-fold desc="Worker setup">
-                # --Begin: worker setup
-                self.tmp_thread = QtCore.QThread()
-                self.tmp_worker = task_workers.SaveRayImageWorker(self.renderer, full_file_name[0])
-                self.tmp_thread = task_workers.setup_worker_for_work(
-                    self.tmp_thread,
-                    self.tmp_worker,
-                    self.display_view_page,
-                )
-                self.tmp_worker.finished.connect(self.post_save_image)
-                self.tmp_thread.start()
-                # --End: worker setup
-
-                # </editor-fold>
-                gui_utils.setup_standard_block_box(
-                    self.block_box_uni,
-                    "Save ray-trace image",
-                    "Creating the ray-traced image ...",
-                )
-                self.block_box_uni.exec_()
-
-                # cmd.ray(2400, 2400, renderer=int(self.renderer))
-                # cmd.png(full_file_name[0], dpi=300)
-
-            except FileExistsError:
-                tools.quick_log_and_display(
-                    "error",
-                    "File exists already.",
-                    self._view.status_bar,
-                    "File exists already.",
-                )
-            except pymol.CmdException:
-                tools.quick_log_and_display(
-                    "error",
-                    "Unexpected Error from PyMOL while saving the " "an image",
-                    self._view.status_bar,
-                    "Unexpected Error from PyMOL",
-                )
-        else:
-            save_dialog = QtWidgets.QFileDialog()
-            try:
-                full_file_name = save_dialog.getSaveFileName(caption="Save Image", filter="Image (*.png)")
-                if full_file_name == ("", ""):
-                    tools.quick_log_and_display(
-                        "info",
-                        "No file has been selected.",
-                        self._view.status_bar,
-                        "No file has been selected.",
-                    )
-                    return
-                self._view.status_bar.showMessage("Creating draw image ...")
-                cmd.draw(2400, 2400)
-                cmd.png(full_file_name[0], dpi=300)
-                self._view.status_bar.showMessage("Finished image creation.")
-                tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                    "The image has been created.", "Image Creation",
-                    custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-                )
-                tmp_dialog.exec_()
-            except FileExistsError:
-                tools.quick_log_and_display(
-                    "error",
-                    "File exists already.",
-                    self._view.status_bar,
-                    "File exists already.",
-                )
-            except pymol.CmdException:
-                tools.quick_log_and_display(
-                    "error",
-                    "Unexpected Error from PyMOL while saving the " "an image",
-                    self._view.status_bar,
-                    "Unexpected Error from PyMOL",
-                )
-            finally:
-                QtWidgets.QApplication.restoreOverrideCursor()
 
     # </editor-fold>
 
@@ -2521,12 +2415,13 @@ class MainViewController:
             )
             tmp_dialog.exec_()
         elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "The sequence was successfully saved as .fasta file.",
-                "Save Protein Sequence",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "The sequence was successfully saved as .fasta file.",
+            #     "Save Protein Sequence",
+            #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            # )
+            # tmp_dialog.exec_()
+            self._interface_manager.status_bar_manager.show_temporary_message("The sequence was successfully saved as .fasta file.")
         else:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the sequence as .fasta file failed with an unexpected error!",
@@ -3655,12 +3550,13 @@ class MainViewController:
             )
             tmp_dialog.exec_()
         elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "The protein was successfully saved as .pdb file.",
-                "Save Protein Structure",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            tmp_dialog.exec_()
+            # tmp_dialog = custom_message_box.CustomMessageBoxOk(
+            #     "The protein was successfully saved as .pdb file.",
+            #     "Save Protein Structure",
+            #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            # )
+            # tmp_dialog.exec_()
+            self._interface_manager.status_bar_manager.show_temporary_message("The protein was successfully saved as .pdb file.")
         else:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the protein as .pdb file failed with an unexpected error!",

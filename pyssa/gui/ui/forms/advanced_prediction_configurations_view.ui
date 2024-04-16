@@ -40,7 +40,7 @@
         <item>
          <widget class="QLabel" name="lbl_amber">
           <property name="text">
-           <string>Activate amber force field</string>
+           <string>Activate Amber force field</string>
           </property>
          </widget>
         </item>
