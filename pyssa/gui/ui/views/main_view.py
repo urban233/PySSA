@@ -599,6 +599,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_open_protein_session.setToolTip("Open protein PyMOL session")
         self.ui.btn_create_protein_scene.setToolTip("Create a new PyMOL scene")
         self.ui.btn_update_protein_scene.setToolTip("Update the current scene in PyMOL")
+        self.ui.btn_delete_protein_scene.setToolTip("Delete the current scene in PyMOL")
 
         # self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
         # self.ui.protein_pairs_table_widget.setToolTip(
@@ -608,6 +609,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_open_protein_pair_session.setToolTip("Open protein pair PyMOL session")
         self.ui.btn_create_protein_pair_scene.setToolTip("Create a new PyMOL scene")
         self.ui.btn_update_protein_pair_scene.setToolTip("Update the current scene in PyMOL")
+        self.ui.btn_delete_protein_pair_scene.setToolTip("Delete the current scene in PyMOL")
 
     #     self.status_bar.setToolTip("Status information: Current process")
     #     # new project page
