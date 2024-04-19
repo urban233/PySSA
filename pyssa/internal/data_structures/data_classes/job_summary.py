@@ -19,13 +19,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module contains the PredictionProteinInfo dataclass."""
+"""Module contains job summary dataclasses."""
 from dataclasses import dataclass
+from pyssa.internal.data_structures.data_classes import prediction_protein_info
 
 
 @dataclass
-class PredictionProteinInfo:
-    """Class which contains the name and sequences of a protein to predict."""
+class PredictionJobSummary:
+    """Class which contains all information about a prediction job."""
 
-    name: str
-    sequences: list
+    prediction_protein_infos: list[prediction_protein_info.PredictionProteinInfo]
+
+    def get_protein_names(self):
+        tmp_protein_names = []
+        for tmp_prediction_info in self.prediction_protein_infos:
+            tmp_protein_names.append(tmp_prediction_info.name)
+        return tmp_protein_names
+
+
+@dataclass
+class DistanceAnalysisJobSummary:
+    """Class which contains all information about a distance analysis job."""
+
+    analysis_names: list[str]

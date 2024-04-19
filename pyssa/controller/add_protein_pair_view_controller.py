@@ -28,7 +28,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
-from pyssa.controller import interface_manager
+from pyssa.controller import interface_manager, watcher
 from pyssa.internal.data_structures import chain, protein
 from pyssa.logging_pyssa import log_levels, log_handlers
 from pyssa.model import proteins_model
@@ -42,12 +42,15 @@ class AddProteinPairViewController(QtCore.QObject):
     """Class for the AddProteinPairViewController class"""
     user_input = QtCore.pyqtSignal(tuple)
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager",
+    def __init__(self,
+                 the_interface_manager: "interface_manager.InterfaceManager",
+                 the_watcher: "watcher.Watcher",
                  the_existing_analysis_runs: list[str],
                  the_protein_pairs: list[str],
                  a_list_of_extra_proteins: list[protein.Protein] = None):
         super().__init__()
         self._interface_manager = the_interface_manager
+        self._watcher = the_watcher
         self._view = the_interface_manager.get_add_protein_pair_view()
         self._temporary_model = proteins_model.TemporaryProteinsModel()  # is needed to not mess up the main model!
         self._temporary_model.build_model_from_scratch(self._interface_manager.get_current_project().proteins)
@@ -210,11 +213,16 @@ class AddProteinPairViewController(QtCore.QObject):
                 i += 1
         if i > 1:
             tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
+            tmp_analysis_run_name = self._create_analysis_run_name()
+            tmp_analysis_run_name_without_semicolon = tmp_analysis_run_name.replace(";", "_")
+            tmp_analysis_run_name_without_semicolon_and_comma = tmp_analysis_run_name_without_semicolon.replace(",", "_")
             if len(tmp_selection.indexes()) != self._number_of_prot_1_selected_chains:
                 self._view.ui.btn_add.setEnabled(False)
-            elif self._create_analysis_run_name() in self._existing_analysis_runs:
+            elif tmp_analysis_run_name in self._existing_analysis_runs:
                 self._view.ui.btn_add.setEnabled(False)
-            elif self._create_analysis_run_name().replace(";", "_") in self._existing_protein_pairs:
+            elif tmp_analysis_run_name_without_semicolon_and_comma in self._existing_protein_pairs:
+                self._view.ui.btn_add.setEnabled(False)
+            elif tmp_analysis_run_name_without_semicolon_and_comma in self._watcher.protein_pair_names_blacklist:
                 self._view.ui.btn_add.setEnabled(False)
             else:
                 self._view.ui.btn_add.setEnabled(True)
@@ -229,11 +237,16 @@ class AddProteinPairViewController(QtCore.QObject):
                 continue
             invalid.select(index, index)
         tmp_selection_model.select(invalid, QtCore.QItemSelectionModel.Deselect)
+        tmp_analysis_run_name = self._create_analysis_run_name()
+        tmp_analysis_run_name_without_semicolon = tmp_analysis_run_name.replace(";", "_")
+        tmp_analysis_run_name_without_semicolon_and_comma = tmp_analysis_run_name_without_semicolon.replace(",", "_")
         if len(tmp_selection.indexes()) != self._number_of_prot_1_selected_chains:
             self._view.ui.btn_add.setEnabled(False)
-        elif self._create_analysis_run_name() in self._existing_analysis_runs:
+        elif tmp_analysis_run_name in self._existing_analysis_runs:
             self._view.ui.btn_add.setEnabled(False)
-        elif self._create_analysis_run_name().replace(";", "_") in self._existing_protein_pairs:
+        elif tmp_analysis_run_name_without_semicolon_and_comma in self._existing_protein_pairs:
+            self._view.ui.btn_add.setEnabled(False)
+        elif tmp_analysis_run_name_without_semicolon_and_comma in self._watcher.protein_pair_names_blacklist:
             self._view.ui.btn_add.setEnabled(False)
         else:
             self._view.ui.btn_add.setEnabled(True)

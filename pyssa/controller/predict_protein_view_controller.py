@@ -30,7 +30,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager, add_protein_pair_view_controller, \
-    advanced_prediction_configurations_view_controller
+    advanced_prediction_configurations_view_controller, watcher
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.styles import styles
@@ -51,14 +51,19 @@ logger.addHandler(log_handlers.log_file_handler)
 class PredictProteinViewController(QtCore.QObject):
     job_input = pyqtSignal(tuple)
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager", the_selected_indexes: list, a_prediction_type: str):
+    def __init__(self,
+                 the_interface_manager: "interface_manager.InterfaceManager",
+                 the_watcher: "watcher.Watcher",
+                 the_selected_indexes: list,
+                 a_prediction_type: str):
         super().__init__()
         self._interface_manager = the_interface_manager
+        self._watcher = the_watcher
         self._view: "predict_protein_view.PredictProteinView" = the_interface_manager.get_predict_protein_view()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
         self.temporary_protein_objs = []
         self.restore_ui_defaults()
-        self._fill_protein_to_predict_table_with_sequences(the_selected_indexes, a_prediction_type)
+        self._fill_protein_to_predict_table_with_sequences(the_selected_indexes, a_prediction_type, the_watcher)
         self._connect_all_ui_elements_to_slot_functions()
 
     # <editor-fold desc="Util methods">
@@ -209,7 +214,7 @@ class PredictProteinViewController(QtCore.QObject):
     # <editor-fold desc="Prediction + analysis">
 
     # <editor-fold desc="Prediction section">
-    def _fill_protein_to_predict_table_with_sequences(self, tmp_selected_indices, a_prediction_type):
+    def _fill_protein_to_predict_table_with_sequences(self, tmp_selected_indices, a_prediction_type, the_watcher: "watcher.Watcher"):
         tmp_sequences_to_predict_monomer: list = []
         tmp_sequences_to_predict_multimer: list = []
         for tmp_model_index in tmp_selected_indices:
@@ -232,7 +237,8 @@ class PredictProteinViewController(QtCore.QObject):
             if self._interface_manager.get_current_project().is_sequence_as_protein_in_project(tmp_seq_record.name):
                 # Continues if a protein with the name of the given sequence already exists
                 continue
-
+            if the_watcher.is_protein_name_on_blacklist(tmp_seq_record.name):
+                continue
             tmp_seqs = tmp_seq_record.seq.split(",")
             tmp_chain_no = 0
             for tmp_seq in tmp_seqs:
@@ -443,7 +449,7 @@ class PredictProteinViewController(QtCore.QObject):
     def _add_protein_pair(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
-            self._interface_manager, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names(),
+            self._interface_manager, self._watcher, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names(),
             a_list_of_extra_proteins=self.temporary_protein_objs
         )
 

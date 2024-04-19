@@ -33,7 +33,7 @@ import pymol
 from Bio import SeqRecord, SeqIO
 from pymol import cmd
 
-from pyssa.controller import database_manager, interface_manager, pymol_session_manager
+from pyssa.controller import database_manager, interface_manager, pymol_session_manager, watcher
 from pyssa.internal.data_structures import project, protein, structure_analysis, structure_prediction
 from pyssa.internal.data_structures.data_classes import (
     prediction_protein_info,
@@ -793,7 +793,7 @@ def save_protein_pymol_session_to_database(
             )
             db_manager.close_project_database()
     except Exception as e:
-        logger.error(f"Unexpected error occured. Exception: {e}")
+        logger.error(f"Unexpected error occurred. Exception: {e}")
         return 0, False
     else:
         return 0, True
@@ -814,7 +814,7 @@ def save_protein_pair_pymol_session_to_database(
             )
             db_manager.close_project_database()
     except Exception as e:
-        logger.error(f"Unexpected error occured. Exception: {e}")
+        logger.error(f"Unexpected error occurred. Exception: {e}")
         return 0, False
     else:
         return 0, True
@@ -825,7 +825,8 @@ def open_project(
         tmp_project_database_filepath: str,
         the_interface_manager: "interface_manager.InterfaceManager",
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
-        the_custom_progress_signal: "custom_signals.ProgressSignal"
+        the_custom_progress_signal: "custom_signals.ProgressSignal",
+        the_watcher: "watcher.Watcher"
 ) -> tuple:
     the_custom_progress_signal.emit_signal("Opening database ...", 10)
     try:
@@ -842,11 +843,18 @@ def open_project(
         the_interface_manager.set_new_project(tmp_project)
         the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 96)
         the_pymol_session_manager.reinitialize_session()
+        the_watcher.setup_blacklists(
+            tmp_project,
+            the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+            the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+            the_interface_manager.job_manager.current_prediction_job,
+            the_interface_manager.job_manager.current_distance_analysis_job,
+        )
     except Exception as e:
-        logger.error(f"Unexpected error occured. Exception: {e}")
+        logger.error(f"Unexpected error occurred. Exception: {e}")
         return 1, 0, 0
     else:
-        return 0, tmp_project, the_interface_manager
+        return 0, tmp_project, the_interface_manager, the_watcher
 
 
 def add_protein_from_pdb_to_project(tmp_protein_name,

@@ -210,6 +210,7 @@ class DistanceAnalysisDataTransformer:
             analysis_name = analysis_name.replace("[", "")
             analysis_name = analysis_name.replace("]", "")
             analysis_name = analysis_name.replace("'", "")
+            analysis_name = analysis_name.replace(" ", "")
         else:
             analysis_name = f"{self.proteins[0].get_molecule_object()}_vs_{self.proteins[1].get_molecule_object()}"
         return analysis_name

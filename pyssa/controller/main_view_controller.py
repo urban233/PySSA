@@ -30,7 +30,7 @@ from pyssa.internal.thread.async_pyssa import util_async, custom_signals, projec
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
-    predict_protein_view_controller, import_sequence_view_controller, rename_sequence_view_controller
+    predict_protein_view_controller, import_sequence_view_controller, rename_sequence_view_controller, watcher
 from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import predict_monomer_view, delete_project_view, rename_protein_view
 from pyssa.gui.ui.dialogs import dialog_startup, dialog_settings_global, dialog_tutorial_videos, dialog_about, \
@@ -127,6 +127,7 @@ class MainViewController:
         self._database_manager = database_manager.DatabaseManager("")
         self._database_manager.set_application_settings(self._interface_manager.get_application_settings())
         self._database_thread: "database_thread.DatabaseThread" = database_thread.DatabaseThread("")
+        self._watcher = watcher.Watcher()
 
         self._app_model: "application_model.ApplicationModel" = application_model.ApplicationModel(project.Project())
         self._external_view = None
@@ -1004,7 +1005,8 @@ class MainViewController:
                 tmp_project_database_filepath,
                 self._interface_manager,
                 self._pymol_session_manager,
-                self.custom_progress_signal
+                self.custom_progress_signal,
+                self._watcher
             ),
             post_func=self.__await_open_project,
         )
@@ -1012,9 +1014,10 @@ class MainViewController:
 
     def __await_open_project(self, return_value: tuple):
         self._interface_manager.status_bar_manager.hide_progress_bar()
-        exit_code, tmp_project, tmp_interface_manager = return_value
+        exit_code, tmp_project, tmp_interface_manager, tmp_watcher = return_value
         if exit_code == 0:
             self._interface_manager = tmp_interface_manager
+            self._watcher = tmp_watcher
             self._interface_manager.refresh_main_view()
             self._interface_manager.hide_progress_bar()
             self._interface_manager.status_bar_manager.show_temporary_message(
@@ -1185,7 +1188,7 @@ class MainViewController:
     def __slot_distance_analysis(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Analysis/Distance' clicked.")
         self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
-            self._interface_manager
+            self._interface_manager, self._watcher
         )
         self._external_controller.job_input.connect(self._post_distance_analysis)
         self._interface_manager.get_distance_analysis_view().show()
@@ -1197,7 +1200,8 @@ class MainViewController:
         _, tmp_raw_analysis_run_names, tmp_checkbox_state = job_input
 
         # --- New job approach
-        self._interface_manager.get_current_project(),
+        #self._interface_manager.get_current_project()
+        self._watcher.add_protein_pairs_from_new_job(tmp_raw_analysis_run_names)
         tmp_distance_analysis_job, tmp_distance_analysis_entry_widget = self._interface_manager.job_manager.create_distance_analysis_job(
             self._interface_manager.get_current_project(),
             self._interface_manager.project_lock,
@@ -1343,7 +1347,7 @@ class MainViewController:
         else:
             tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
         self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-            self._interface_manager, tmp_indexes, "monomer"
+            self._interface_manager, self._watcher, tmp_indexes, "monomer"
         )
         self._external_controller.job_input.connect(self._post_predict_monomer)
         self._interface_manager.get_predict_protein_view().show()
@@ -1413,7 +1417,8 @@ class MainViewController:
             constants.PYSSA_LOGGER.info("Running prediction without subsequent analysis.")
             # --- New job approach
             _, tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
-            self._interface_manager.get_current_project(),
+            #self._interface_manager.get_current_project()
+            self._watcher.add_proteins_from_new_job(tmp_prediction_protein_infos)
             tmp_prediction_job, tmp_prediction_entry_widget = self._interface_manager.job_manager.create_prediction_job(
                 self._interface_manager.get_current_project(),
                 tmp_prediction_protein_infos,
@@ -1727,7 +1732,7 @@ class MainViewController:
         else:
             tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
         self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-            self._interface_manager, tmp_indexes, "multimer"
+            self._interface_manager, self._watcher, tmp_indexes, "multimer"
         )
         self._external_controller.job_input.connect(self._post_predict_multimer)
         self._interface_manager.get_predict_protein_view().show()
@@ -3538,6 +3543,7 @@ class MainViewController:
     def __await_post_import_protein_structure(self, return_value: tuple):
         tmp_protein: "protein.Protein" = return_value[1]
         self._interface_manager.get_current_project().add_existing_protein(tmp_protein)
+        self._watcher.add_protein(tmp_protein.get_molecule_object())
         self._database_thread.put_database_operation_into_queue(
             database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
                                                  (0, tmp_protein)))
@@ -3563,6 +3569,7 @@ class MainViewController:
                                                                           (0, tmp_protein.get_id()))
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
+            self._watcher.remove_protein(tmp_protein.get_molecule_object())
             self._interface_manager.remove_protein_from_proteins_model()
             self._interface_manager.refresh_main_view()
 
@@ -3940,6 +3947,7 @@ class MainViewController:
             )
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
+            self._watcher.remove_protein_pair(tmp_protein_pair.name)
             self._interface_manager.remove_protein_pair_from_protein_pairs_model()
             self._interface_manager.refresh_main_view()
 

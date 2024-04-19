@@ -29,7 +29,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 
-from pyssa.controller import interface_manager, add_protein_pair_view_controller
+from pyssa.controller import interface_manager, add_protein_pair_view_controller, watcher
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
 from pyssa.gui.ui.styles import styles
@@ -50,9 +50,10 @@ class DistanceAnalysisViewController(QtCore.QObject):
 
     job_input = pyqtSignal(tuple)
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager"):
+    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager", the_watcher: "watcher.Watcher"):
         super().__init__()
         self._interface_manager = the_interface_manager
+        self._watcher = the_watcher
         self._view: "distance_analysis_view.DistanceAnalysisView" = the_interface_manager.get_distance_analysis_view()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
 
@@ -275,7 +276,7 @@ class DistanceAnalysisViewController(QtCore.QObject):
     def _add_protein_pair(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Add' button was clicked.")
         self._external_controller = add_protein_pair_view_controller.AddProteinPairViewController(
-            self._interface_manager, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names()
+            self._interface_manager, self._watcher, self._get_all_current_analysis_runs(), self._get_all_current_protein_pair_names()
         )
         self._external_controller.user_input.connect(self._post_add_protein_pair)
         self._interface_manager.get_add_protein_pair_view().show()

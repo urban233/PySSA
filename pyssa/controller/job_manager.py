@@ -30,6 +30,7 @@ from PyQt5 import QtCore
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.internal.data_structures import project, structure_prediction, job
+from pyssa.internal.data_structures.data_classes import job_summary
 from pyssa.internal.thread import tasks
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import enums, exception, exit_codes
@@ -43,8 +44,10 @@ class JobManager:
     def __init__(self):
         self._prediction_queue: "queue.Queue" = queue.Queue()
         self._is_prediction_queue_running = False
+        self.current_prediction_job: "job_summary.PredictionJobSummary" = None
         self._distance_analysis_queue: "queue.Queue" = queue.Queue()
         self._is_distance_analysis_queue_running = False
+        self.current_distance_analysis_job: "job_summary.DistanceAnalysisJobSummary" = None
         self._ray_tracing_queue: "queue.Queue" = queue.Queue()
         self._is_ray_tracing_queue_running = False
 
@@ -92,6 +95,16 @@ class JobManager:
         else:
             pass
 
+    def get_queue(self, a_type: enums.JobType):
+        if a_type == enums.JobType.PREDICTION:
+            return self._prediction_queue
+        elif a_type == enums.JobType.DISTANCE_ANALYSIS:
+            return self._distance_analysis_queue
+        elif a_type == enums.JobType.RAY_TRACING:
+            return self._ray_tracing_queue
+        else:
+            return None
+
     # <editor-fold desc="Prediction job">
     def create_prediction_job(
             self,
@@ -133,13 +146,14 @@ class JobManager:
             if tmp_prediction_job is None:
                 self._is_prediction_queue_running = False
                 break
-            # Do something with the task
+            self.current_prediction_job = job_summary.PredictionJobSummary(tmp_prediction_job.prediction_protein_infos)
             tmp_prediction_job.run_job()
             if self._prediction_queue.empty():
                 logger.info("The prediction queue is empty and will now end execution.")
                 break
             self._prediction_queue.task_done()
         self._is_prediction_queue_running = False
+        self.current_prediction_job = None
         logger.info("Prediction queue is finished.")
         return "Finished.", 0
 
@@ -194,17 +208,20 @@ class JobManager:
         logger.debug("Starting distance analysis queue ...")
         while True:
             self._is_distance_analysis_queue_running = True
-            tmp_distance_analysis_job: "job.PredictionJob" = self._distance_analysis_queue.get()
+            tmp_distance_analysis_job: "job.DistanceAnalysisJob" = self._distance_analysis_queue.get()
             if tmp_distance_analysis_job is None:
                 self._is_distance_analysis_queue_running = False
                 break
-            # Do something with the task
+            self.current_distance_analysis_job = job_summary.DistanceAnalysisJobSummary(
+                tmp_distance_analysis_job.list_with_analysis_names
+            )
             tmp_distance_analysis_job.run_job()
             if self._distance_analysis_queue.empty():
                 logger.info("The distance analysis queue is empty and will now end execution.")
                 break
             self._distance_analysis_queue.task_done()
         self._is_distance_analysis_queue_running = False
+        self.current_distance_analysis_job = None
         logger.info("Distance analysis queue is finished.")
         return "Finished.", 0
 
