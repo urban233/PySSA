@@ -25,12 +25,14 @@ import pathlib
 import shutil
 import logging
 
+from PyQt5 import QtCore
 from pyssa.controller import database_manager
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_processing import data_transformer
+from pyssa.internal.portal import auxiliary_pymol
 from pyssa.internal.prediction_engines import colabbatch
 from pyssa.util import constants
 from pyssa.util import prediction_util
@@ -76,7 +78,7 @@ class StructurePrediction:
         """
         self.predictions: list[prediction_protein_info.PredictionProteinInfo] = predictions
         self.prediction_configuration = prediction_config
-        self.project = current_project
+        #self.project = current_project
 
     @staticmethod
     def create_tmp_directories() -> None:
@@ -155,7 +157,7 @@ class StructurePrediction:
             logger.error("Prediction ended with errors!")
             raise exception.PredictionEndedWithError("")
 
-    def move_best_prediction_models(self) -> None:
+    def move_best_prediction_models(self) -> list[tuple[prediction_protein_info.PredictionProteinInfo, str]]:
         """This function moves the best prediction model(s) to the project directory.
 
         Raises:
@@ -174,35 +176,39 @@ class StructurePrediction:
 
         for tmp_prediction in best_prediction_models:
             try:
-                src = path_util.FilePath(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}")
+                src = path_util.FilePath(pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"))
             except FileNotFoundError:
                 logger.error(
                     "This path does not exists: %s",
                     path_util.FilePath(
-                        f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}",
+                        pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[1]}"),
                     ).get_filepath(),
                 )
                 raise FileNotFoundError()
             dest = pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
             os.rename(src.get_filepath(), dest)
             logger.debug(tmp_prediction[0].name)
+            return best_prediction_models
 
+    def add_proteins_to_project(self, best_prediction_models, a_project, the_project_lock: QtCore.QMutex):
+        the_project_lock.lock()
+        for tmp_prediction in best_prediction_models:
             tmp_protein = protein.Protein(tmp_prediction[0].name)
-            tmp_protein.add_protein_structure_data_from_local_pdb_file(dest)
-            tmp_protein.create_new_pymol_session()
-            tmp_protein.save_pymol_session_as_base64_string()
-            with database_manager.DatabaseManager(str(self.project.get_database_filepath())) as db_manager:
+            tmp_protein.add_protein_structure_data_from_local_pdb_file(
+                pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
+            )
+            tmp_protein.pymol_session = auxiliary_pymol.AuxiliaryPyMOL.create_pymol_session_for_protein(tmp_protein)
+            #tmp_protein.create_new_pymol_session()
+            #tmp_protein.save_pymol_session_as_base64_string()
+            with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
                 logger.info(f"Inserting {tmp_protein.get_molecule_object()} into current project, from prediction thread.")
-                db_manager.open_project_database()
-                tmp_protein.db_project_id = self.project.get_id()
+                tmp_protein.db_project_id = a_project.get_id()
                 tmp_protein.add_id_to_all_chains(db_manager.get_latest_id_of_a_specific_table("Chain"))
                 tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
-                db_manager.close_project_database()
-
-            self.project.add_existing_protein(
+            a_project.add_existing_protein(
                 tmp_protein
             )
-            logger.debug(self.project.proteins)
+        the_project_lock.unlock()
         try:
             shutil.rmtree(pathlib.Path(f"{constants.SCRATCH_DIR}/local_predictions"))
         except Exception as e:

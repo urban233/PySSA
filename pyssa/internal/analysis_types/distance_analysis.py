@@ -102,7 +102,7 @@ class DistanceAnalysis:
     def __init__(
         self,
         protein_pair_for_analysis: "protein_pair.ProteinPair",
-        app_settings: "settings.Settings",
+        a_cutoff: float, cycles: int,
     ) -> None:
         """Constructor.
 
@@ -112,9 +112,8 @@ class DistanceAnalysis:
         """
         self._protein_pair_for_analysis: protein_pair.ProteinPair = protein_pair_for_analysis
         self.name = f"dist_analysis_{self._protein_pair_for_analysis.name}"
-        self.app_settings: settings.Settings = app_settings
-        self.cutoff: float = app_settings.cutoff
-        self.cycles: int = app_settings.cycles
+        self.cutoff: float = a_cutoff
+        self.cycles: int = cycles
         self.figure_size = (11.0, 6.0)
         self.alignment_file_name = "aln"
 

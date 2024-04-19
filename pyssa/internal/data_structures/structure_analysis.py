@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING
 from PyQt5 import QtCore
 
 from pyssa.controller import database_manager
-from pyssa.internal.portal import pymol_io
+from pyssa.internal.portal import pymol_io, auxiliary_pymol
 from pyssa.io_pyssa import path_util, filesystem_helpers
 from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
@@ -105,9 +105,9 @@ class Analysis:
         tmp_latest_protein_pair_id = self._get_last_id_of_protein_pairs()
         # create scratch dirs
         filesystem_helpers.create_directory(constants.SCRATCH_DIR_ANALYSIS)
-        filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)
-        filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
-        filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
+        # filesystem_helpers.create_directory(constants.SCRATCH_DIR_IMAGES)
+        # filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR)
+        # filesystem_helpers.create_directory(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR)
 
         for tmp_protein_pair in self.analysis_list:
             logger.info(f"The protein pair: {tmp_protein_pair.name} gets analyzed.")
@@ -119,74 +119,77 @@ class Analysis:
                 raise exception.UnableToReinitializePymolSessionError(tmp_msg)
             try:
                 # do distance analysis in PyMOL
-                tmp_protein_pair.distance_analysis.analysis_results = (
-                    distance_analysis_util.do_distance_analysis_in_pymol(
-                        tmp_protein_pair,
-                    )
+                # tmp_protein_pair.distance_analysis.analysis_results = (
+                #     distance_analysis_util.do_distance_analysis_in_pymol(
+                #         tmp_protein_pair,
+                #     )
+                # )
+                tmp_protein_pair.distance_analysis.analysis_results, tmp_protein_pair.pymol_session = auxiliary_pymol.AuxiliaryPyMOL.do_distance_analysis(
+                    tmp_protein_pair
                 )
                 # create scene for structure alignment // take images of structure alignment if necessary
-                distance_analysis_util.create_scene_of_protein_pair(
-                    a_protein_pair=tmp_protein_pair,
-                    filename=f"structure_aln_{tmp_protein_pair.name}",
-                    take_images=the_image_creation_option,
-                )
+                # distance_analysis_util.create_scene_of_protein_pair(
+                #     a_protein_pair=tmp_protein_pair,
+                #     filename=f"structure_aln_{tmp_protein_pair.name}",
+                #     take_images=the_image_creation_option,
+                # )
                 # create scenes for interesting regions // take image of interesting regions if necessary
-                distance_analysis_util.create_scenes_of_interesting_regions(
-                    tmp_protein_pair.distance_analysis.analysis_results.distance_data,
-                    tmp_protein_pair.protein_1.get_molecule_object(),
-                    tmp_protein_pair.protein_2.get_molecule_object(),
-                    tmp_protein_pair.distance_analysis.cutoff,
-                    take_images=the_image_creation_option,
-                    filename=f"interesting_reg_{tmp_protein_pair.name}",
-                )
-                if the_image_creation_option is True:
-                    logger.info("Setting the structure alignment image into the results object ...")
-                    tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
-                        path_util.FilePath(
-                            pathlib.Path(
-                                f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
-                                f"structure_aln_{tmp_protein_pair.name}.png",
-                            ),
-                        ),
-                    )
-                    logger.info("Setting all image of the interesting regions into the results object ...")
-                    interesting_region_filepaths = []
-                    for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
-                        interesting_region_filepaths.append(
-                            path_util.FilePath(
-                                pathlib.Path(
-                                    f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/"
-                                    f"{tmp_filename}",
-                                ),
-                            ),
-                        )
-                    (
-                        tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
-                            interesting_region_filepaths,
-                        )
-                    )
-            except FileNotFoundError:
-                tmp_path: str = str(
-                    pathlib.Path(
-                        f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png",
-                    ),
-                )
-                logger.error(f"Image file could not be found! {tmp_path}")
-                raise exception.UnableToOpenFileError(f"Image file: {tmp_path}")
+                # distance_analysis_util.create_scenes_of_interesting_regions(
+                #     tmp_protein_pair.distance_analysis.analysis_results.distance_data,
+                #     tmp_protein_pair.protein_1.get_molecule_object(),
+                #     tmp_protein_pair.protein_2.get_molecule_object(),
+                #     tmp_protein_pair.distance_analysis.cutoff,
+                #     take_images=the_image_creation_option,
+                #     filename=f"interesting_reg_{tmp_protein_pair.name}",
+                # )
+                # if the_image_creation_option is True:
+                #     logger.info("Setting the structure alignment image into the results object ...")
+                #     tmp_protein_pair.distance_analysis.analysis_results.set_structure_aln_image(
+                #         path_util.FilePath(
+                #             pathlib.Path(
+                #                 f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/"
+                #                 f"structure_aln_{tmp_protein_pair.name}.png",
+                #             ),
+                #         ),
+                #     )
+                #     logger.info("Setting all image of the interesting regions into the results object ...")
+                #     interesting_region_filepaths = []
+                #     for tmp_filename in os.listdir(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR):
+                #         interesting_region_filepaths.append(
+                #             path_util.FilePath(
+                #                 pathlib.Path(
+                #                     f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_INTERESTING_REGIONS_DIR}/"
+                #                     f"{tmp_filename}",
+                #                 ),
+                #             ),
+                #         )
+                #     (
+                #         tmp_protein_pair.distance_analysis.analysis_results.set_interesting_region_images(
+                #             interesting_region_filepaths,
+                #         )
+                #     )
+            # except FileNotFoundError:
+            #     tmp_path: str = str(
+            #         pathlib.Path(
+            #             f"{constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR}/structure_aln_{tmp_protein_pair.name}.png",
+            #         ),
+            #     )
+            #     logger.error(f"Image file could not be found! {tmp_path}")
+            #     raise exception.UnableToOpenFileError(f"Image file: {tmp_path}")
             except exception.IllegalArgumentError:
                 logger.error("The argument filename is illegal.")
                 raise exception.UnableToOpenFileError(f"filename: {tmp_protein_pair.name}")
             except Exception as e:
                 logger.error(f"Unknown error: {e}")
                 raise exception.UnableToSetImageError("")
-            filesystem_helpers.delete_directory(constants.SCRATCH_DIR_IMAGES)
-            cmd.scene(
-                f"{tmp_protein_pair.protein_1.get_molecule_object()}-"
-                f"{tmp_protein_pair.protein_2.get_molecule_object()}",
-                action="recall",
-            )
+            filesystem_helpers.delete_directory(constants.SCRATCH_DIR_ANALYSIS)
+            # cmd.scene(
+            #     f"{tmp_protein_pair.protein_1.get_molecule_object()}-"
+            #     f"{tmp_protein_pair.protein_2.get_molecule_object()}",
+            #     action="recall",
+            # )
             # save pymol session of distance analysis
-            tmp_protein_pair.save_session_of_protein_pair()
+            # tmp_protein_pair.save_session_of_protein_pair()
 
     def run_analysis(self, the_analysis_type: str, the_image_option: bool) -> None:
         """This function is used to run the analysis.

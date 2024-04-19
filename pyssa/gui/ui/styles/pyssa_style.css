@@ -732,14 +732,21 @@ QFrame#frame_protein_color {
     border-color: #DCDBE3;
 }
 
-QFrame#frame_protein_repr {
+/*QFrame#frame_protein_repr {*/
+/*    background-color: white;*/
+/*    border-style: solid;*/
+/*    border-width: 1px;*/
+/*    border-radius: 4px;*/
+/*    border-color: #DCDBE3;*/
+/*}*/
+
+QScrollArea#scroll_area_protein_repr {
     background-color: white;
     border-style: solid;
     border-width: 1px;
     border-radius: 4px;
     border-color: #DCDBE3;
 }
-
 
 QFrame#frame_protein_pair_pymol_scene {
     background-color: white;
@@ -757,10 +764,26 @@ QFrame#frame_protein_pair_color {
     border-color: #DCDBE3;
 }
 
-QFrame#frame_protein_pair_repr {
+/*QFrame#frame_protein_pair_repr {*/
+/*    background-color: white;*/
+/*    border-style: solid;*/
+/*    border-width: 1px;*/
+/*    border-radius: 4px;*/
+/*    border-color: #DCDBE3;*/
+/*}*/
+
+QScrollArea#scroll_area_protein_pair_repr {
     background-color: white;
     border-style: solid;
     border-width: 1px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
+QScrollArea#scroll_area_job_overview {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
     border-radius: 4px;
     border-color: #DCDBE3;
 }
@@ -798,3 +821,4 @@ QProgressBar::chunk {
     background-color: #367af6;
     width: 10px;
 }
+

@@ -41,7 +41,7 @@ if TYPE_CHECKING:
 def transform_gui_input_to_practical_data(
     a_list_with_analysis_names: list,
     a_project: "project.Project",
-    the_settings: "settings.Settings",
+    a_cutoff: float, cycles: int,
 ) -> list:
     """Transforms the input from the gui to a practical data basis that can be used to set up analysis runs.
 
@@ -54,7 +54,8 @@ def transform_gui_input_to_practical_data(
             input_transformer = data_transformer.DistanceAnalysisDataTransformer(
                 tmp_analysis_name,
                 a_project,
-                the_settings,
+                a_cutoff,
+                cycles
             )
             protein_pair_for_analysis = input_transformer.transform_gui_input_to_distance_analysis_object()
             new_protein_pair = copy.deepcopy(protein_pair_for_analysis)

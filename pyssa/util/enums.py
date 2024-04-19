@@ -107,3 +107,9 @@ class StatusMessages(enum.Enum):
     OPENING_PROJECT_FINISHED = "Opening existing project finished."
     OPENING_PROJECT_FAILED = "Opening existing project failed!"
 
+
+class JobType(enum.Enum):
+    """An enum for all status messages, displayed in the statusbar."""
+    PREDICTION = "structure prediction"
+    DISTANCE_ANALYSIS = "distance analysis"
+    RAY_TRACING = "ray-tracing"

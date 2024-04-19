@@ -183,7 +183,7 @@ def save_project(a_project: "project.Project", placeholder: int) -> tuple:
     """
     # TODO: needs checks
     # TODO: needs tests!
-    a_project.serialize_project(a_project.get_project_xml_path())
+    #a_project.serialize_project(a_project.get_project_xml_path())
     return ("result", a_project)
 
 
@@ -207,7 +207,7 @@ def clean_protein_new(
     clean_tmp_protein = tmp_protein.clean_protein(new_protein=True)
     constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", clean_tmp_protein.get_molecule_object())
     a_project.add_existing_protein(clean_tmp_protein)
-    a_project.serialize_project(a_project.get_project_xml_path())
+    #a_project.serialize_project(a_project.get_project_xml_path())
     return ("result", a_project)
 
 
@@ -709,14 +709,26 @@ def preview_image(a_placeholder_1: int, a_placeholder_2: int) -> tuple:
     return 0, ""
 
 
-def create_ray_traced_image(an_image_filepath: str, the_app_settings: "settings.Settings") -> tuple:
-    cmd.set("ray_trace_mode", the_app_settings.image_ray_trace_mode)
-    cmd.set("ray_texture", the_app_settings.image_ray_texture)
-    try:
-        cmd.ray(2400, 2400, renderer=int(the_app_settings.image_renderer))
-        cmd.png(an_image_filepath, dpi=300)
-    except pymol.CmdException:
-        logger.warning("Unexpected exception.")
+def create_ray_traced_image(an_image_filepath: str, the_app_settings: "settings.Settings", the_cached_session) -> tuple:
+    import pymol2
+
+    with pymol2.PyMOL() as independent_pymol:
+        independent_pymol.cmd.load(the_cached_session)
+        independent_pymol.cmd.set("ray_trace_mode", the_app_settings.image_ray_trace_mode)
+        independent_pymol.cmd.set("ray_texture", the_app_settings.image_ray_texture)
+        try:
+            independent_pymol.cmd.set("max_threads", str(os.cpu_count() - 2))
+            independent_pymol.cmd.ray(2400, 2400, renderer=int(the_app_settings.image_renderer))
+            independent_pymol.cmd.png(an_image_filepath, dpi=300)
+        except pymol.CmdException:
+            logger.warning("Unexpected exception.")
+    # cmd.set("ray_trace_mode", the_app_settings.image_ray_trace_mode)
+    # cmd.set("ray_texture", the_app_settings.image_ray_texture)
+    # try:
+    #     cmd.ray(2400, 2400, renderer=int(the_app_settings.image_renderer))
+    #     cmd.png(an_image_filepath, dpi=300)
+    # except pymol.CmdException:
+    #     logger.warning("Unexpected exception.")
     return 0, ""
 
 

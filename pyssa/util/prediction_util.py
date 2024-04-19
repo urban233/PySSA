@@ -73,7 +73,7 @@ def get_prediction_name_and_seq_from_table(
 
 def get_relaxed_rank_1_pdb_file(
     proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo],
-) -> list[tuple]:
+) -> list[tuple[prediction_protein_info.PredictionProteinInfo, str]]:
     """This function gets the prediction models which were relaxed and ranked number one.
 
     Args:

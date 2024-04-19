@@ -1,3 +1,25 @@
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2022
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/urban233/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Module for the PyMOL session manager class."""
 import os.path
 import pathlib
 
@@ -8,6 +30,7 @@ from pyssa.gui.ui.views import main_view
 from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.data_classes import database_operation
 from pyssa.internal.portal import pymol_io
+from pyssa.io_pyssa import binary_data
 from pyssa.util import enums, constants, exception
 
 
@@ -122,6 +145,14 @@ class PymolSessionManager:
 
     def load_current_scene(self):
         cmd.scene(self.current_scene_name, "recall")
+
+    def save_current_pymol_session_as_pse_cache_file(self):
+        tmp_session_path = pathlib.Path(
+            f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.session_name}.pse",
+        )
+        tmp_session_info = pymol_io.convert_pymol_session_to_base64_string(self.session_name)
+        binary_data.write_binary_file_from_base64_string(tmp_session_path, tmp_session_info)
+        return tmp_session_path
 
     def save_current_pymol_session_as_base64_string(self) -> str:
         return pymol_io.convert_pymol_session_to_base64_string("temp_active")

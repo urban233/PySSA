@@ -2,7 +2,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from pyssa.controller import main_tasks_manager
-from pyssa.gui.ui.custom_widgets import custom_label
+from pyssa.gui.ui.custom_widgets import custom_label, job_entry
 from pyssa.util import enums, constants
 
 
@@ -12,6 +12,7 @@ class StatusBarManager:
         self._view = the_main_view
         self._main_task_manager = the_main_task_manager
         self._abort_signal = an_abort_signal
+        self.job_entry_widgets = []
 
         self._progress_bar = QtWidgets.QProgressBar()
         self._permanent_message = custom_label.PermanentMessageLabel()
@@ -52,7 +53,7 @@ class StatusBarManager:
         self._view.status_bar.addPermanentWidget(self._permanent_message)
         self._view.status_bar.addPermanentWidget(self._btn_task)
         self._progress_bar.hide()
-        self._btn_task.hide()
+        self._btn_task.show()
         self.temp_message_timer = QtCore.QTimer()
 
         self._connect_ui_elements()
@@ -136,22 +137,23 @@ class StatusBarManager:
         self._abort_action.triggered.connect(self._send_abort_signal)
 
     def __slot_open_menu(self):
-        if self._is_menu_open is False:
-            self._btn_task.setIcon(self.menu_icon_open)
-            self._menu_task.exec(self._btn_task.mapToGlobal(QtCore.QPoint(0, -25)))
-            self._is_menu_open = True
-        else:
+        if self._view.ui.frame_job_overview.isVisible():
+            self._view.ui.frame_job_overview.hide()
             self._btn_task.setIcon(self.menu_icon_closed)
-            self._is_menu_open = False
+        elif not self._view.ui.frame_job_overview.isVisible():
+            self._view.ui.frame_job_overview.show()
+            self._btn_task.setIcon(self.menu_icon_open)
 
     def _manage_status_bar_ui(self, the_current_text):
         if self._main_task_manager.prediction_task is None:
-            self._btn_task.setEnabled(False)
+            #self._btn_task.setEnabled(False)
             return
         if not self._main_task_manager.prediction_task.is_finished():
-            self._btn_task.setEnabled(True)
+            #self._btn_task.setEnabled(True)
+            pass
         else:
-            self._btn_task.setEnabled(False)
+            #self._btn_task.setEnabled(False)
+            pass
 
     def _send_abort_signal(self):
         if not self._main_task_manager.prediction_task.is_finished():
@@ -204,13 +206,30 @@ class StatusBarManager:
         self._progress_bar.setValue(tmp_value)
         self._permanent_message.show()
         self._permanent_message.setText(tmp_message)
-        self._btn_task.hide()  # until now this feature stays hidden
+        #self._btn_task.hide()  # until now this feature stays hidden
 
     def hide_progress_bar(self):
         self._progress_bar.hide()
         self._permanent_message.hide()
         self._permanent_message.setText("")
-        self._btn_task.hide()
+        #self._btn_task.hide()
+
+    def add_job_entry_to_overview(self, a_job_entry_widget):
+        self.job_entry_widgets.append(a_job_entry_widget)
+        self._view.ui.job_overview_layout.addWidget(a_job_entry_widget)
+
+    def update_job_entry(self, signal_tuple):
+        a_job_entry_widget: "job_entry.JobEntry" = signal_tuple[0]
+        _, a_description, a_value = signal_tuple
+        if a_value == 100:
+            # remove job entry widget
+            if a_job_entry_widget.parent():
+                a_job_entry_widget.setParent(None)
+            a_job_entry_widget.deleteLater()
+        else:
+            a_job_entry_widget.progress_bar_job.setValue(a_value)
+            a_job_entry_widget.progress_bar_job.setFormat("")
+
 
     # </editor-fold>
 

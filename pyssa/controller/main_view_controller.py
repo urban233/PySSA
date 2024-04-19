@@ -1196,28 +1196,41 @@ class MainViewController:
 
         _, tmp_raw_analysis_run_names, tmp_checkbox_state = job_input
 
-        tmp_distance_analysis_task = tasks.Task(
-            target=main_tasks_async.run_distance_analysis,
-            args=(
-                tmp_raw_analysis_run_names,
-                self._interface_manager.get_current_project(),
-                self._interface_manager.get_application_settings(),
-                tmp_checkbox_state,
-                self.custom_progress_signal,
-                self._interface_manager.pymol_lock,
-                self.disable_pymol_signal
-            ),
-            post_func=self.__await_run_distance_analysis,
+        # --- New job approach
+        self._interface_manager.get_current_project(),
+        tmp_distance_analysis_job, tmp_distance_analysis_entry_widget = self._interface_manager.job_manager.create_distance_analysis_job(
+            self._interface_manager.get_current_project(),
+            self._interface_manager.project_lock,
+            self._interface_manager,
+            tmp_raw_analysis_run_names,
+            self._interface_manager.get_settings_manager().settings.cutoff,
+            self._interface_manager.get_settings_manager().settings.cycles
         )
-        self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
+        self._interface_manager.job_manager.put_job_into_queue(tmp_distance_analysis_job)
+        self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_distance_analysis_entry_widget)
 
-        if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
-            os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-        self._interface_manager.status_bar_manager.update_progress_bar(
-            (enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value, 10)
-        )
-        self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
-        self._interface_manager.refresh_main_view()
+        # tmp_distance_analysis_task = tasks.Task(
+        #     target=main_tasks_async.run_distance_analysis,
+        #     args=(
+        #         tmp_raw_analysis_run_names,
+        #         self._interface_manager.get_current_project(),
+        #         self._interface_manager.get_application_settings(),
+        #         tmp_checkbox_state,
+        #         self.custom_progress_signal,
+        #         self._interface_manager.pymol_lock,
+        #         self.disable_pymol_signal
+        #     ),
+        #     post_func=self.__await_run_distance_analysis,
+        # )
+        # self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
+        #
+        # if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
+        #     os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
+        # self._interface_manager.status_bar_manager.update_progress_bar(
+        #     (enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value, 10)
+        # )
+        # self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
+        # self._interface_manager.refresh_main_view()
 
     def __await_run_distance_analysis(self, an_exit_code: tuple[int, str, list]) -> None:
         """Post process after the analysis thread finished."""
@@ -1369,6 +1382,20 @@ class MainViewController:
         constants.PYSSA_LOGGER.info("Begin prediction process.")
         if result[3] is True:
             constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
+            # --- New job approach
+            tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
+            self._interface_manager.get_current_project(),
+            self._interface_manager.job_manager.put_prediction_job_into_queue(
+                self._interface_manager.job_manager.create_prediction_job(
+                    self._interface_manager.get_current_project(),
+                    tmp_prediction_protein_infos,
+                    tmp_prediction_configuration,
+                    self._interface_manager.project_lock
+                )
+            )
+
+
+            # --- Old approach
             # Analysis should be run after the prediction
             tmp_prediction_task = tasks.Task(
                 target=main_tasks_async.predict_protein_with_colabfold,
@@ -1384,20 +1411,31 @@ class MainViewController:
             )
         else:
             constants.PYSSA_LOGGER.info("Running prediction without subsequent analysis.")
-            tmp_prediction_task = tasks.Task(
-                target=main_tasks_async.predict_protein_with_colabfold,
-                args=(
-                    result[1],
-                    result[2],
-                    self._interface_manager.get_current_project(),
-                    self.custom_progress_signal,
-                    self._interface_manager.pymol_lock,
-                    self.disable_pymol_signal
-                ),
-                post_func=self.__await_predict_protein_with_colabfold,
+            # --- New job approach
+            _, tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
+            self._interface_manager.get_current_project(),
+            tmp_prediction_job, tmp_prediction_entry_widget = self._interface_manager.job_manager.create_prediction_job(
+                self._interface_manager.get_current_project(),
+                tmp_prediction_protein_infos,
+                tmp_prediction_configuration,
+                self._interface_manager.project_lock,
+                self._interface_manager
             )
-        self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
-        self._interface_manager.status_bar_manager.update_progress_bar(("Starting structure prediction ...", 0))
+            self._interface_manager.job_manager.put_job_into_queue(tmp_prediction_job)
+            self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_prediction_entry_widget)
+        #     tmp_prediction_task = tasks.Task(
+        #         target=main_tasks_async.predict_protein_with_colabfold,
+        #         args=(
+        #             result[1],
+        #             result[2],
+        #             self._interface_manager.get_current_project(),
+        #             self.custom_progress_signal,
+        #             self._interface_manager.pymol_lock,
+        #             self.disable_pymol_signal
+        #         ),
+        #         post_func=self.__await_predict_protein_with_colabfold,
+        #     )
+        # self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
         self._main_view_state.set_proteins_list(self._interface_manager.get_current_project().proteins)
         self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
         self._interface_manager.refresh_main_view()
@@ -2227,14 +2265,32 @@ class MainViewController:
             )
             return
 
-        self._active_task = tasks.Task(
-            target=main_presenter_async.create_ray_traced_image,
-            args=(full_file_name[0], self._interface_manager.get_application_settings()),
-            post_func=self.__await_create_ray_traced_image,
+        # --- New job approach
+        tmp_session_filepath = self._pymol_session_manager.save_current_pymol_session_as_pse_cache_file()
+        tmp_ray_tracing_job, tmp_ray_tracing_entry_widget = self._interface_manager.job_manager.create_ray_tracing_job(
+            full_file_name[0],
+            tmp_session_filepath,
+            self._interface_manager.get_application_settings().image_ray_trace_mode,
+            self._interface_manager.get_application_settings().image_ray_texture,
+            self._interface_manager.get_application_settings().image_renderer,
+            self._interface_manager,
+            self._interface_manager.get_current_project().get_project_name()
         )
-        self._active_task.start()
-        self.update_status("Creating ray-traced image ...")
-        self._interface_manager.start_wait_cursor()
+        self._interface_manager.job_manager.put_job_into_queue(tmp_ray_tracing_job)
+        self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_ray_tracing_entry_widget)
+        #
+        #
+        # #self._interface_manager.status_bar_manager.add_job_entry_to_overview("Ray-tracing for scene 6OMNvsBMP2", "BMP2-validation")
+        #
+        # tmp_session_filepath = self._pymol_session_manager.save_current_pymol_session_as_pse_cache_file()
+        # self._active_task = tasks.Task(
+        #     target=main_presenter_async.create_ray_traced_image,
+        #     args=(full_file_name[0], self._interface_manager.get_application_settings(), tmp_session_filepath),
+        #     post_func=self.__await_create_ray_traced_image,
+        # )
+        # self._active_task.start()
+        # self.update_status("Creating ray-traced image ...")
+        # print(os.cpu_count())
 
     def __await_create_ray_traced_image(self, return_value: tuple) -> None:
         self._interface_manager.stop_wait_cursor()

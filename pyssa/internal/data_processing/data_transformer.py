@@ -43,7 +43,7 @@ logger.addHandler(log_handlers.log_file_handler)
 
 def transform_protein_name_seq_tuple_to_sequence_obj(
     proteins_to_predict: list[prediction_protein_info.PredictionProteinInfo],
-) -> list[protein.Protein]:
+) -> list["protein.Protein"]:
     """Transforms the list of proteins to a list of protein objects.
 
     Args:
@@ -64,7 +64,7 @@ def transform_protein_name_seq_tuple_to_sequence_obj(
 
     # </editor-fold>
 
-    protein_objects: list[protein.Protein] = []
+    protein_objects: list["protein.Protein"] = []
 
     for tmp_protein_to_predict in proteins_to_predict:
         protein_with_sequence = protein.Protein(tmp_protein_to_predict.name)
@@ -119,7 +119,7 @@ class DistanceAnalysisDataTransformer:
         self,
         an_analysis_run_name: str,
         the_app_project: "project.Project",
-        the_app_settings: "settings.Settings",
+        a_cutoff: float, cycles: int
     ) -> None:
         """Constructor.
 
@@ -138,15 +138,12 @@ class DistanceAnalysisDataTransformer:
         if the_app_project is None:
             logger.error(f"The argument 'the_app_project' is illegal: {the_app_project}")
             raise exception.IllegalArgumentError("An argument is illegal.")
-        if the_app_settings is None:
-            logger.error(f"The argument 'the_app_settings' is illegal: {the_app_settings}")
-            raise exception.IllegalArgumentError("An argument is illegal.")
-
         # </editor-fold>
 
         self.analysis_run_name: str = an_analysis_run_name
         self.current_project: "project.Project" = the_app_project
-        self.settings: "settings.Settings" = the_app_settings
+        self.cutoff = a_cutoff
+        self.cycles = cycles
 
     def _create_analysis_run_info(self) -> None:
         """Create the analysis run info based on the analysis run name.
@@ -238,7 +235,7 @@ class DistanceAnalysisDataTransformer:
         """
         try:
             self.analysis_protein_pair.set_distance_analysis(
-                distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.settings),
+                distance_analysis.DistanceAnalysis(self.analysis_protein_pair, self.cutoff, self.cycles),
             )
         except exception.IllegalArgumentError:
             logger.error("Creating and setting the distance analysis into the protein pair faild.")

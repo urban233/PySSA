@@ -9,7 +9,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.controller import database_manager, pymol_session_manager, settings_manager, main_tasks_manager, \
-    status_bar_manager
+    status_bar_manager, job_manager
 from pyssa.controller.database_manager import logger
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
@@ -58,6 +58,7 @@ class InterfaceManager:
     _current_project: "project.Project"
     _current_pymol_session: "current_session.CurrentPymolSession"
 
+    project_lock: QtCore.QMutex
     pymol_lock: "locks.PyMOL_LOCK"
 
     # _application_settings: "settings.Settings"
@@ -93,6 +94,7 @@ class InterfaceManager:
         self._advanced_prediction_configurations = advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
+        self.job_manager = job_manager.JobManager()
         self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
                                                                       self.main_tasks_manager,
                                                                       None)
@@ -153,6 +155,7 @@ class InterfaceManager:
         self._current_project = project.Project()
         self._current_pymol_session = current_session.CurrentPymolSession("", "")
 
+        self.project_lock = QtCore.QMutex()
         self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
 
         # Model definitions
