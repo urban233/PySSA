@@ -32,6 +32,7 @@ from pyssa.util.void import rvoid
 
 
 class InterfaceManager:
+
     """A manager for all views."""
     string_model = QtCore.QStringListModel()
 
