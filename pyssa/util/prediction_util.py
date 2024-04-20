@@ -24,6 +24,7 @@ import os
 import pathlib
 import logging
 import shutil
+import subprocess
 from typing import TYPE_CHECKING
 from pyssa.util import constants
 from pyssa.util import exception
@@ -130,10 +131,13 @@ def copy_pyssa_colabfold_directory_to_wsl2() -> None:
     """
     tmp_pyssa_colabfold_wsl_path: str = r"\\wsl$\almaColabfold9\home\rhel_user\pyssa_colabfold"
     tmp_pyssa_colabfold_windows_path: str = str(pathlib.Path(f"{constants.PLUGIN_PATH}/pyssa_colabfold"))
+    subprocess.run(["wsl", "-d almaColabfold9 -u rhel_user rm -r /home/rhel_user/pyssa_colabfold"])
     if not os.path.exists(tmp_pyssa_colabfold_windows_path):
         logger.error(f"The variable 'tmp_pyssa_colabfold_windows_path' is illegal: {tmp_pyssa_colabfold_windows_path}!")
         raise exception.DirectoryNotFoundError("A variable is illegal.")
     try:
+        if os.path.exists(tmp_pyssa_colabfold_wsl_path):
+            shutil.rmtree(tmp_pyssa_colabfold_wsl_path)
         shutil.copytree(tmp_pyssa_colabfold_windows_path, tmp_pyssa_colabfold_wsl_path)
         if os.path.exists(tmp_pyssa_colabfold_wsl_path):
             logger.info("Successfully copied the pyssa_colabfold directory.")

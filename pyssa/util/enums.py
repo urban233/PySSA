@@ -112,4 +112,5 @@ class JobType(enum.Enum):
     """An enum for all status messages, displayed in the statusbar."""
     PREDICTION = "structure prediction"
     DISTANCE_ANALYSIS = "distance analysis"
+    PREDICTION_AND_DISTANCE_ANALYSIS = "prediction and distance analysis"
     RAY_TRACING = "ray-tracing"

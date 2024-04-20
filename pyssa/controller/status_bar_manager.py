@@ -226,9 +226,14 @@ class StatusBarManager:
             if a_job_entry_widget.parent():
                 a_job_entry_widget.setParent(None)
             a_job_entry_widget.deleteLater()
+        elif a_value == 0:
+            a_job_entry_widget.progress_bar_job.setValue(a_value)
+            a_job_entry_widget.progress_bar_job.setFormat("")
+            a_job_entry_widget.btn_cancel_job.setEnabled(True)
         else:
             a_job_entry_widget.progress_bar_job.setValue(a_value)
             a_job_entry_widget.progress_bar_job.setFormat("")
+            a_job_entry_widget.btn_cancel_job.setEnabled(False)
 
 
     # </editor-fold>

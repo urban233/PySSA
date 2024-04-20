@@ -23,6 +23,7 @@
 import logging
 import queue
 import subprocess
+import time
 from typing import Union
 
 from PyQt5 import QtCore
@@ -48,6 +49,8 @@ class JobManager:
         self._distance_analysis_queue: "queue.Queue" = queue.Queue()
         self._is_distance_analysis_queue_running = False
         self.current_distance_analysis_job: "job_summary.DistanceAnalysisJobSummary" = None
+        self._is_prediction_and_distance_analysis_queue_running = False
+        self._prediction_and_distance_analysis_queue = queue.Queue()
         self._ray_tracing_queue: "queue.Queue" = queue.Queue()
         self._is_ray_tracing_queue_running = False
 
@@ -79,6 +82,32 @@ class JobManager:
                     post_func=self._distance_analysis_queue_finished,
                 )
                 self._distance_analysis_queue_thread.start()
+        elif a_job.type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
+            # if self._is_prediction_queue_running:
+            #     logger.debug("Prediction queue is already running.")
+            #     self._prediction_queue.put(a_job)
+            # else:
+            #     logger.debug("Prediction queue needs to be started.")
+            #     self._prediction_queue.put(a_job)
+            #     self._prediction_queue_thread = tasks.Task(
+            #         target=self._execute_prediction_job_queue,
+            #         args=(0, 0),
+            #         post_func=self._prediction_queue_finished,
+            #     )
+            #     self._prediction_queue_thread.start()
+
+            if self._is_prediction_and_distance_analysis_queue_running:
+                logger.debug("Distance analysis queue is already running.")
+                self._prediction_and_distance_analysis_queue.put(a_job)
+            else:
+                logger.debug("Distance analysis queue needs to be started.")
+                self._prediction_and_distance_analysis_queue.put(a_job)
+                self._prediction_and_distance_analysis_queue_thread = tasks.Task(
+                    target=self._execute_prediction_and_distance_analysis_job_queue,
+                    args=(0, 0),
+                    post_func=self._prediction_and_distance_analysis_queue_finished,
+                )
+                self._prediction_and_distance_analysis_queue_thread.start()
         elif a_job.type == enums.JobType.RAY_TRACING:
             if self._is_ray_tracing_queue_running:
                 logger.debug("Ray-tracing queue is already running.")
@@ -232,6 +261,58 @@ class JobManager:
         """Stops the queue after gracefully after all items until the None are executed."""
         logger.debug("Stopping distance analysis queue ...")
         self._distance_analysis_queue.put(None)
+    # </editor-fold>
+
+    # <editor-fold desc="Distance analysis job">
+    def create_prediction_and_distance_analysis_job(
+            self,
+            a_prediction_job: "job.PredictionJob",
+            a_distance_analysis_job: "job.DistanceAnalysisJob",
+            the_interface_manager
+    ):
+        tmp_prediction_and_distance_analysis_job = job.PredictionAndDistanceAnalysisJob(
+            a_prediction_job,
+            a_distance_analysis_job
+        )
+        tmp_prediction_and_distance_analysis_job.update_status_bar_signal.connect(
+            the_interface_manager.status_bar_manager.update_job_entry)
+        tmp_prediction_and_distance_analysis_job.job_entry_widget = job_entry.JobEntry(
+            "Running ColabFold prediction + distance analysis", a_prediction_job.frozen_project.get_project_name()
+        )
+        return tmp_prediction_and_distance_analysis_job, tmp_prediction_and_distance_analysis_job.job_entry_widget
+
+    def _execute_prediction_and_distance_analysis_job_queue(self, placeholder_1, placeholder_2):
+        logger.debug("Starting prediction and distance analysis queue ...")
+
+        while self._is_prediction_queue_running:
+            time.sleep(60)
+
+        while True:
+            self._is_prediction_and_distance_analysis_queue_running = True
+            tmp_prediction_and_distance_analysis_job: "job.DistanceAnalysisJob" = self._prediction_and_distance_analysis_queue.get()
+            if tmp_prediction_and_distance_analysis_job is None:
+                self._is_prediction_and_distance_analysis_queue_running = False
+                break
+            # self.current_prediction_and_distance_analysis_job = job_summary.DistanceAnalysisJobSummary(
+            #     tmp_prediction_and_distance_analysis_job.list_with_analysis_names
+            # )
+            tmp_prediction_and_distance_analysis_job.run_job()
+            if self._prediction_and_distance_analysis_queue.empty():
+                logger.info("The prediction and distance analysis queue is empty and will now end execution.")
+                break
+            self._prediction_and_distance_analysis_queue.task_done()
+        self._is_prediction_and_distance_analysis_queue_running = False
+        self.current_prediction_and_distance_analysis_job = None
+        logger.info("Prediction and distance analysis queue is finished.")
+        return "Finished.", 0
+
+    def _prediction_and_distance_analysis_queue_finished(self):
+        logger.info("Prediction and distance analysis queue is empty and thread is no longer running.")
+
+    def stop_prediction_and_distance_analysis_queue_execution(self):
+        """Stops the queue after gracefully after all items until the None are executed."""
+        logger.debug("Stopping prediction and distance analysis queue ...")
+        self._prediction_and_distance_analysis_queue.put(None)
     # </editor-fold>
 
     # <editor-fold desc="Ray-tracing job">

@@ -33,7 +33,6 @@ class JobEntry(QtWidgets.QWidget):
         self.lbl_job_description = QtWidgets.QLabel(f"{a_job_description} ({a_project_name})")
         self.progress_bar_job = QtWidgets.QProgressBar()
         self.btn_cancel_job = QtWidgets.QPushButton('Cancel')
-        # TODO: add icon to cancel button
         tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.svg"))
         tmp_cancel_job_icon.addPixmap(QtGui.QPixmap(":icons/cancel_disabled_w200.svg"),
                                               mode=QtGui.QIcon.Mode.Disabled)

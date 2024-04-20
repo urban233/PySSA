@@ -217,7 +217,7 @@ class PredictionJob(Job):
 
 
 class DistanceAnalysisJob(Job):
-    """Job for any type of ray-tracing."""
+    """Job for a distance analysis."""
 
     update_status_bar_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
 
@@ -274,6 +274,29 @@ class DistanceAnalysisJob(Job):
             return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
         else:
             return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1], analysis_runs.analysis_list)
+
+
+class PredictionAndDistanceAnalysisJob(Job):
+    """Job for a prediction and distance analysis."""
+
+    update_status_bar_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
+
+    def __init__(self,
+                 a_prediction_job,
+                 a_distance_analysis_job):
+        super().__init__()
+        self.prediction_job: "PredictionJob" = a_prediction_job
+        self.distance_analysis_job: "DistanceAnalysisJob" = a_distance_analysis_job
+        self.type = enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS
+        self.job_entry_widget = None
+
+    def run_job(self):
+        self.update_status_bar_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 33))
+        self.prediction_job.run_job()
+        self.distance_analysis_job.frozen_project = self.prediction_job.frozen_project
+        self.update_status_bar_signal.emit((self.job_entry_widget, "Running a distance analysis ...", 66))
+        self.distance_analysis_job.run_job()
+        self.update_status_bar_signal.emit((self.job_entry_widget, "Prediction and distance analysis job finished.", 100))
 
 
 class RayTracingJob(Job):

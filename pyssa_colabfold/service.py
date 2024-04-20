@@ -125,8 +125,8 @@ if __name__ == "__main__":
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     # Bind to the WSL2 IP address and port
-    socket.bind("tcp://127.0.0.1:7016")
-
+    tmp_port = 7016
+    socket.bind(f"tcp://127.0.0.1:{str(tmp_port)}")
     print("Server is ready to receive messages.")
 
     while True:

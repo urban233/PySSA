@@ -1387,32 +1387,53 @@ class MainViewController:
         if result[3] is True:
             constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
             # --- New job approach
-            tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
-            self._interface_manager.get_current_project(),
-            self._interface_manager.job_manager.put_prediction_job_into_queue(
-                self._interface_manager.job_manager.create_prediction_job(
-                    self._interface_manager.get_current_project(),
-                    tmp_prediction_protein_infos,
-                    tmp_prediction_configuration,
-                    self._interface_manager.project_lock
-                )
+            _, tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
+            self._watcher.add_proteins_from_new_job(tmp_prediction_protein_infos)
+            tmp_prediction_job, _ = self._interface_manager.job_manager.create_prediction_job(
+                self._interface_manager.get_current_project(),
+                tmp_prediction_protein_infos,
+                tmp_prediction_configuration,
+                self._interface_manager.project_lock,
+                self._interface_manager
             )
+            tmp_raw_analysis_run_names: list = []
+            for row_no in range(self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.count()):
+                tmp_raw_analysis_run_names.append(
+                    self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.item(row_no).text())
 
-
-            # --- Old approach
-            # Analysis should be run after the prediction
-            tmp_prediction_task = tasks.Task(
-                target=main_tasks_async.predict_protein_with_colabfold,
-                args=(
-                    result[1],
-                    result[2],
-                    self._interface_manager.get_current_project(),
-                    self.custom_progress_signal,
-                    self._interface_manager.pymol_lock,
-                    self.disable_pymol_signal
-                ),
-                post_func=self.__await_monomer_prediction_for_subsequent_analysis,
+            self._watcher.add_protein_pairs_from_new_job(tmp_raw_analysis_run_names)
+            tmp_distance_analysis_job, _ = self._interface_manager.job_manager.create_distance_analysis_job(
+                self._interface_manager.get_current_project(),
+                self._interface_manager.project_lock,
+                self._interface_manager,
+                tmp_raw_analysis_run_names,
+                self._interface_manager.get_settings_manager().settings.cutoff,
+                self._interface_manager.get_settings_manager().settings.cycles
             )
+            tmp_job = self._interface_manager.job_manager.create_prediction_and_distance_analysis_job(
+                tmp_prediction_job,
+                tmp_distance_analysis_job,
+                self._interface_manager
+            )
+            tmp_prediction_and_distance_analysis_job = tmp_job[0]
+            tmp_prediction_and_distance_analysis_job_entry_widget = tmp_job[1]
+            self._interface_manager.job_manager.put_job_into_queue(tmp_prediction_and_distance_analysis_job)
+            self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_prediction_and_distance_analysis_job_entry_widget)
+
+            # # --- Old approach
+            # # Analysis should be run after the prediction
+            # tmp_prediction_task = tasks.Task(
+            #     target=main_tasks_async.predict_protein_with_colabfold,
+            #     args=(
+            #         result[1],
+            #         result[2],
+            #         self._interface_manager.get_current_project(),
+            #         self.custom_progress_signal,
+            #         self._interface_manager.pymol_lock,
+            #         self.disable_pymol_signal
+            #     ),
+            #     post_func=self.__await_monomer_prediction_for_subsequent_analysis,
+            # )
         else:
             constants.PYSSA_LOGGER.info("Running prediction without subsequent analysis.")
             # --- New job approach
