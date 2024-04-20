@@ -788,6 +788,14 @@ QScrollArea#scroll_area_job_overview {
     border-color: #DCDBE3;
 }
 
+QScrollArea#scroll_area_job_notification {
+    background-color: white;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+}
+
 QStatusBar {
     background-color: #F2F2F2;
     border-style: solid;

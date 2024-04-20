@@ -2,6 +2,7 @@ import glob
 import os
 import pathlib
 import shutil
+import subprocess
 import sys
 
 from PyQt5 import QtGui, QtCore
@@ -9,7 +10,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from pyssa.controller import database_manager, pymol_session_manager, settings_manager, main_tasks_manager, \
-    status_bar_manager, job_manager
+    status_bar_manager, job_manager, watcher
 from pyssa.controller.database_manager import logger
 from pyssa.gui.ui.custom_widgets import custom_line_edit
 from pyssa.gui.ui.dialogs import dialog_startup
@@ -26,6 +27,7 @@ from pyssa.internal.data_structures import project, settings, chain, protein, pr
 from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread.async_pyssa import locks
+from pyssa.io_pyssa import filesystem_io
 from pyssa.model import proteins_model, protein_pairs_model
 from pyssa.util import enums, constants, exception, main_window_util
 from pyssa.util.void import rvoid
@@ -100,6 +102,7 @@ class InterfaceManager:
                                                                       self.main_tasks_manager,
                                                                       None)
         self._settings_manager = settings_manager.SettingsManager()
+        self.watcher = watcher.Watcher()
 
         self.documentation_window = None
 
@@ -546,6 +549,12 @@ class InterfaceManager:
         return self._protein_model
 
     # </editor-fold>
+
+    def add_protein_to_current_project(self, a_protein: "protein.Protein"):
+        self._current_project.add_existing_protein(a_protein)
+
+    def add_protein_pair_to_current_project(self, a_protein_pair: "protein_pair.ProteinPair"):
+        self._current_project.add_protein_pair(a_protein_pair)
 
     # <editor-fold desc="Setter Methods">
     def set_new_project(self, the_current_project: "project.Project") -> None:
@@ -1960,3 +1969,20 @@ class InterfaceManager:
         """Stops the spinner."""
         QtWidgets.QApplication.restoreOverrideCursor()
 
+    def cancel_job(self, signal_tuple):
+        if signal_tuple[0] == enums.JobType.PREDICTION:
+            # signal_tuple = (job_type, job_entry_widget, job object, protein_prediction_infos)
+            for tmp_protein_info in signal_tuple[3]:
+                self.watcher.remove_protein(tmp_protein_info.name)
+            if signal_tuple[1].parent():
+                signal_tuple[1].setParent(None)
+            signal_tuple[1].deleteLater()
+            if self.job_manager.is_prediction_job_currently_running(signal_tuple[2]):
+                constants.PYSSA_LOGGER.info("Structure prediction process was aborted manually.")
+                subprocess.run(["wsl", "--shutdown"])
+                constants.PYSSA_LOGGER.info("Shutdown of wsl environment.")
+                filesystem_io.FilesystemCleaner.clean_prediction_scratch_folder()
+                constants.PYSSA_LOGGER.info("Cleaned scratch directory.")
+                self.job_manager.stop_prediction_queue()
+            else:
+                self.job_manager.pop_job_from_queue(signal_tuple[2])

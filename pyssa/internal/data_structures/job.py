@@ -46,6 +46,7 @@ class PredictionJob(Job):
     """Job for any type of structure prediction."""
 
     update_status_bar_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
+    cancel_job_signal = QtCore.pyqtSignal(tuple)
 
     def __init__(self,
                  a_project: "project.Project",
@@ -98,7 +99,7 @@ class PredictionJob(Job):
         # </editor-fold>
 
         # <editor-fold desc="Runs structure prediction">
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 25))
+        self.update_status_bar_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 25))  # 25 must only be used for this exact step
         try:
             structure_prediction_obj.run_prediction()
         except exception.PredictionEndedWithError:
@@ -214,6 +215,9 @@ class PredictionJob(Job):
         # else:
         #     self._interface_manager.status_bar_manager.show_error_message(
         #         "Prediction failed because of an unknown case!")
+
+    def cancel_job(self):
+        self.cancel_job_signal.emit((self.type, self.job_entry_widget, self, self.prediction_protein_infos))
 
 
 class DistanceAnalysisJob(Job):

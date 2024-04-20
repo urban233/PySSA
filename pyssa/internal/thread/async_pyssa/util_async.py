@@ -6,7 +6,8 @@ import zmq
 import pygetwindow
 from pymol import cmd
 
-from pyssa.controller import interface_manager, pymol_session_manager
+from pyssa.controller import interface_manager, pymol_session_manager, database_manager
+from pyssa.internal.data_structures.data_classes import database_operation
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, enums
 from pyssa.util import globals
@@ -137,3 +138,81 @@ def unfreeze_pymol_session(the_pymol_session_manager: "pymol_session_manager.Pym
         logger.info("There is no pymol session to unfreeze.")
         cmd.reinitialize()
     return "result", the_pymol_session_manager
+
+
+def add_proteins_to_project_and_model(the_interface_manager, tmp_protein_names):
+    the_interface_manager.project_lock.lock()
+    with database_manager.DatabaseManager(
+            str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
+        db_manager.open_project_database()
+        for tmp_protein_name in tmp_protein_names:
+            tmp_protein = db_manager.get_protein_as_object(tmp_protein_name)
+            the_interface_manager.add_protein_to_current_project(tmp_protein)
+            the_interface_manager.add_protein_to_proteins_model(tmp_protein)
+        db_manager.close_project_database()
+    the_interface_manager.project_lock.unlock()
+    the_interface_manager.watcher.setup_blacklists(
+        the_interface_manager.get_current_project(),
+        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+        the_interface_manager.job_manager.current_prediction_job,
+        the_interface_manager.job_manager.current_distance_analysis_job,
+    )
+    return the_interface_manager, 0
+
+
+def add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pair_names):
+    the_interface_manager.project_lock.lock()
+    with database_manager.DatabaseManager(
+            str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
+        db_manager.open_project_database()
+        for tmp_protein_pair_name in tmp_protein_pair_names:
+            tmp_protein_pair = db_manager.get_protein_pair_as_object(
+                tmp_protein_pair_name,
+                the_interface_manager.get_current_project(),
+                the_interface_manager.get_settings_manager().settings
+            )
+            the_interface_manager.add_protein_pair_to_current_project(tmp_protein_pair)
+            the_interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
+        db_manager.close_project_database()
+    the_interface_manager.project_lock.unlock()
+    the_interface_manager.watcher.setup_blacklists(
+        the_interface_manager.get_current_project(),
+        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+        the_interface_manager.job_manager.current_prediction_job,
+        the_interface_manager.job_manager.current_distance_analysis_job,
+    )
+    return the_interface_manager, 0
+
+
+def add_proteins_and_protein_pairs_to_project_and_model(
+        the_interface_manager,
+        tmp_protein_names,
+        tmp_protein_pair_names
+):
+    add_proteins_to_project_and_model(the_interface_manager, tmp_protein_names)
+    add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pair_names)
+    return the_interface_manager, 0
+
+
+def close_project_automatically(
+        a_project_is_open: bool,
+        the_database_thread,
+        the_pymol_session_manager,
+        a_project_name
+):
+    if a_project_is_open:
+        try:
+            the_database_thread.put_database_operation_into_queue(database_operation.DatabaseOperation(
+                enums.SQLQueryType.CLOSE_PROJECT, (0, ""))
+            )
+            the_pymol_session_manager.reinitialize_session()
+        except Exception as e:
+            logger.error(f"Unknown error occurred while waiting for the database thread to finish: {e}.")
+            return a_project_name, 0
+        else:
+            logger.info("Waiting for database thread queue finished.")
+            return a_project_name, 0
+    else:
+        return a_project_name, 0

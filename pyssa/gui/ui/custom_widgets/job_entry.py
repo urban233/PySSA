@@ -24,13 +24,18 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
+from pyssa.internal.thread.async_pyssa import custom_signals
+from pyssa.util import enums
 
 
 class JobEntry(QtWidgets.QWidget):
     """A widget for the job overview."""
-    def __init__(self, a_job_description, a_project_name: str):
+    def __init__(self, a_job_description, a_project_name: str, protein_names: list[str], protein_pair_names: list[str]):
         super().__init__()
-        self.lbl_job_description = QtWidgets.QLabel(f"{a_job_description} ({a_project_name})")
+        self.project_name = a_project_name
+        self.protein_names = protein_names
+        self.protein_pair_names = protein_pair_names
+        self.lbl_job_description = QtWidgets.QLabel(f"{a_job_description} ({self.project_name})")
         self.progress_bar_job = QtWidgets.QProgressBar()
         self.btn_cancel_job = QtWidgets.QPushButton('Cancel')
         tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.svg"))
@@ -79,3 +84,64 @@ class JobEntry(QtWidgets.QWidget):
         self.main_layout.addWidget(self.progress_bar_job)
         self.main_layout.addWidget(self.btn_cancel_job)
         self.setLayout(self.main_layout)
+
+
+class JobNotification(QtWidgets.QWidget):
+    def __init__(self,
+                 a_job_description: str,
+                 a_project_name: str,
+                 protein_names: list[str],
+                 protein_pair_names: list[str],
+                 job_is_from_current_project: bool,
+                 an_update_signal: "custom_signals.UpdateSignal"):
+        super().__init__()
+        self.project_name = a_project_name
+        self.protein_names = protein_names
+        self.protein_pair_names = protein_pair_names
+        self.update_signal = an_update_signal
+        if a_job_description.find("ColabFold") != -1:
+            self.lbl_job_description = QtWidgets.QLabel(f"A structure prediction job finished. ({a_project_name})")
+            self.type = enums.JobType.PREDICTION
+        elif a_job_description.find("distance analysis") != -1:
+            self.lbl_job_description = QtWidgets.QLabel(f"A distance analysis job finished. ({a_project_name})")
+            self.type = enums.JobType.DISTANCE_ANALYSIS
+        else:
+            self.lbl_job_description = QtWidgets.QLabel(f"Job finished. ({a_project_name})")
+
+        self.btn_refresh = QtWidgets.QPushButton('Refresh')
+        self.btn_open = QtWidgets.QPushButton('Open')
+
+        self.main_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addWidget(self.lbl_job_description)
+        self.main_layout.addWidget(self.btn_refresh)
+        self.main_layout.addWidget(self.btn_open)
+        self.setLayout(self.main_layout)
+        if job_is_from_current_project:
+            self.btn_refresh.show()
+            self.btn_open.hide()
+        else:
+            self.btn_refresh.hide()
+            self.btn_open.show()
+        # Connect signals
+        self.btn_open.clicked.connect(self._send_open_other_project_request)
+        self.btn_refresh.clicked.connect(self._send_update_main_view_request)
+
+    def _send_open_other_project_request(self):
+        self.update_signal.emit_signal(
+            False,
+            self.type,
+            self.project_name,
+            self.protein_names,
+            self.protein_pair_names,
+            self
+        )
+
+    def _send_update_main_view_request(self):
+        self.update_signal.emit_signal(
+            True,
+            self.type,
+            self.project_name,
+            self.protein_names,
+            self.protein_pair_names,
+            self
+        )

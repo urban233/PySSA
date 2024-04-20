@@ -1,9 +1,12 @@
+import concurrent
+import multiprocessing
+
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures.protein import Protein
-from pyssa.internal.portal import pymol_io
+from pyssa.internal.portal import pymol_io, auxiliary_pymol
 from pyssa.util import enums
 
 
@@ -14,7 +17,17 @@ class ProteinsModel(QtGui.QStandardItemModel):
 
     def build_model_from_scratch(self, the_protein_objects: list["protein.Protein"]):
         """Builds the model from scratch."""
+        # TODO: multiprocessing code does not work (gets blocked if a prediction is running) and it is not really faster
+        # pool_information = []
+        # for tmp_protein in the_protein_objects:
+        #     pool_information.append((tmp_protein.pymol_session, tmp_protein.get_molecule_object()))
+        # # Use a context manager to create a multiprocessing pool
+        # with multiprocessing.Pool(multiprocessing.cpu_count() - 2) as pool:
+        #     # Map the function to the pool to run in parallel
+        #     tmp_all_scenes_from_all_sessions = pool.starmap(auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session_multi, pool_information)
+
         tmp_root_item = self.invisibleRootItem()
+        i = 0
         for tmp_protein in the_protein_objects:
             # protein node (type = protein)
             tmp_protein_item = QtGui.QStandardItem(tmp_protein.get_molecule_object())
@@ -26,8 +39,8 @@ class ProteinsModel(QtGui.QStandardItemModel):
             tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
             tmp_protein_item.appendRow(tmp_scenes_item)
             # scene nodes (type = scene)
-            tmp_protein.load_protein_pymol_session()
-            for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+            tmp_all_scenes = auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session(tmp_protein.pymol_session)
+            for tmp_scene in tmp_all_scenes:
                 tmp_scene_item = QtGui.QStandardItem(tmp_scene)
                 tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
                 tmp_scenes_item.appendRow(tmp_scene_item)
@@ -41,6 +54,7 @@ class ProteinsModel(QtGui.QStandardItemModel):
                 tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
                 tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
                 tmp_chains_item.appendRow(tmp_chain_item)
+            i += 1
 
     def add_scene(
             self,

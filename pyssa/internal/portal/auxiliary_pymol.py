@@ -334,4 +334,22 @@ class AuxiliaryPyMOL:
         )
         return analysis_results, base64_string
 
+    @staticmethod
+    def get_all_scenes_of_session(pymol_session):
+        session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/temp_session.pse")
+        binary_data.write_binary_file_from_base64_string(session_filepath, pymol_session)
+        with pymol2.PyMOL() as auxiliary_pymol:
+            auxiliary_pymol.cmd.load(str(session_filepath))
+            tmp_all_scenes = auxiliary_pymol.cmd.get_scene_list()
+        os.remove(session_filepath)
+        return tmp_all_scenes
 
+    @staticmethod
+    def get_all_scenes_of_session_multi(pymol_session, a_name):
+        session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/temp_{a_name}_session.pse")
+        binary_data.write_binary_file_from_base64_string(session_filepath, pymol_session)
+        with pymol2.PyMOL() as auxiliary_pymol:
+            auxiliary_pymol.cmd.load(str(session_filepath))
+            tmp_all_scenes = auxiliary_pymol.cmd.get_scene_list()
+        os.remove(session_filepath)
+        return tmp_all_scenes

@@ -148,6 +148,9 @@ class MainView(QtWidgets.QMainWindow):
         # fixme: the tutorial action of the menubar IS HIDDEN!!!
         self.ui.action_tutorials.setVisible(False)
 
+        self.ui.frame_job_overview.hide()
+        self.ui.frame_job_notification.hide()
+
         # Project and Session name
         self.ui.lbl_project_name.setText("Project Name: No Project Opened")
         self.ui.lbl_session_name.setText("Session Name: No Session Loaded")

@@ -821,6 +821,32 @@ class DatabaseManager:
     # </editor-fold>
 
     # <editor-fold desc="Select statements for protein objects">
+    def get_protein_as_object(self, the_pymol_molecule_object: str) -> "protein.Protein":
+        sql = """SELECT id, pymol_molecule_object, pymol_session FROM Protein WHERE pymol_molecule_object = ?"""
+        self._cursor.execute(sql, (the_pymol_molecule_object,))
+        for tmp_protein_info in self._cursor.fetchall():
+            tmp_protein_id, tmp_protein_name, tmp_pymol_session = tmp_protein_info
+            tmp_protein = protein.Protein(tmp_protein_name)
+            tmp_protein.set_id(tmp_protein_id)
+            tmp_protein.pymol_session = tmp_pymol_session
+            # Chains
+            for tmp_chain_info in self._get_chain(tmp_protein_id):
+                tmp_chain_id, tmp_chain_identifier, tmp_chain_type, tmp_chain_sequence = tmp_chain_info
+                tmp_seq = sequence.Sequence(tmp_protein_name, tmp_chain_sequence)
+                tmp_chain = chain.Chain(tmp_chain_identifier, tmp_seq, tmp_chain_type)
+                tmp_chain.set_id(tmp_chain_id)
+                tmp_chain.db_protein_id = tmp_protein_id
+                tmp_color, tmp_representation = self._get_pymol_parameter(tmp_chain_id)
+                tmp_chain.pymol_parameters = {
+                    enums.PymolParameterEnum.COLOR.value: tmp_color,
+                    enums.PymolParameterEnum.REPRESENTATION.value: tmp_representation,
+                }
+                tmp_protein.chains.append(tmp_chain)
+            # pymol selection
+            tmp_selection, = self._get_pymol_selection(tmp_protein_id)
+            tmp_protein.pymol_selection.selection_string = tmp_selection
+            return tmp_protein
+
     def _get_protein(self, the_project_id: int) -> list[tuple]:
         sql = """SELECT id, pymol_molecule_object, pymol_session FROM Protein WHERE project_id = ?"""
         self._cursor.execute(sql, (the_project_id,))
@@ -879,6 +905,71 @@ class DatabaseManager:
     # </editor-fold>
 
     # <editor-fold desc="Select statements for protein pair objects">
+    def get_protein_pair_as_object(self, a_name: str, a_project: "project.Project", the_app_settings) -> "protein_pair.ProteinPair":
+        sql = """SELECT id, protein_1_id, protein_2_id, pymol_session, name FROM ProteinPair WHERE name = ?"""
+        self._cursor.execute(sql, (a_name,))
+        for tmp_protein_pair_info in self._cursor.fetchall():
+            # create protein pair
+            tmp_protein_pair_id, tmp_protein_1_id, tmp_protein_2_id, tmp_pymol_session, tmp_pp_name = tmp_protein_pair_info
+            tmp_protein_1_name, = self._get_protein_name_by_id(tmp_protein_1_id)
+            tmp_protein_2_name, = self._get_protein_name_by_id(tmp_protein_2_id)
+            tmp_protein_pair = protein_pair.ProteinPair(a_project.search_protein(tmp_protein_1_name),
+                                                        a_project.search_protein(tmp_protein_2_name))
+            tmp_protein_pair.set_id(tmp_protein_pair_id)
+            tmp_protein_pair.db_project_id = a_project.get_id()
+            tmp_protein_pair.name = tmp_pp_name
+            tmp_protein_pair.pymol_session = tmp_pymol_session
+
+            # create distance analysis object
+            tmp_distance_analysis_info = self._get_distance_analysis(tmp_protein_pair_id)
+            tmp_distance_analysis_id, tmp_name, tmp_cutoff, tmp_cycles, tmp_figure_size_x, tmp_figure_size_y = tmp_distance_analysis_info
+            tmp_distance_analysis = structure_analysis.DistanceAnalysis(the_app_settings)
+            tmp_distance_analysis.name = tmp_name
+            tmp_distance_analysis.cutoff = tmp_cutoff
+            tmp_distance_analysis.cycles = tmp_cycles
+            tmp_distance_analysis.figure_size = (tmp_figure_size_x, tmp_figure_size_y)
+
+            tmp_protein_pair.distance_analysis = tmp_distance_analysis
+
+            # create distance analysis results object
+            tmp_distance_analysis_results_info = self._get_distance_analysis_results(tmp_distance_analysis_id)
+            tmp_dist_analysis_results_id, tmp_pymol_session, tmp_rmsd, tmp_aligned_aa = tmp_distance_analysis_results_info
+
+            index = []
+            prot_1_chains = []
+            prot_1_position = []
+            prot_1_residue = []
+            prot_2_chains = []
+            prot_2_position = []
+            prot_2_residue = []
+            distances = []
+            for tmp_distance_data in self._get_distance_analysis_result_data(tmp_dist_analysis_results_id):
+                index.append(tmp_distance_data[0])
+                prot_1_chains.append(tmp_distance_data[1])
+                prot_1_position.append(tmp_distance_data[2])
+                prot_1_residue.append(tmp_distance_data[3])
+                prot_2_chains.append(tmp_distance_data[4])
+                prot_2_position.append(tmp_distance_data[5])
+                prot_2_residue.append(tmp_distance_data[6])
+                distances.append(tmp_distance_data[7])
+
+            tmp_distance_data_records = {
+                pyssa_keys.ARRAY_DISTANCE_INDEX: np.array(index),
+                pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN: np.array(prot_1_chains),
+                pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION: np.array(prot_1_position),
+                pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI: np.array(prot_1_residue),
+                pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN: np.array(prot_2_chains),
+                pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION: np.array(prot_2_position),
+                pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI: np.array(prot_2_residue),
+                pyssa_keys.ARRAY_DISTANCE_DISTANCES: np.array(distances),
+            }
+            tmp_dist_analysis_results = results.DistanceAnalysisResults(tmp_distance_data_records,
+                                                                        tmp_pymol_session,
+                                                                        tmp_rmsd,
+                                                                        tmp_aligned_aa)
+            tmp_protein_pair.distance_analysis.analysis_results = tmp_dist_analysis_results
+            return tmp_protein_pair
+
     def _get_protein_pair(self, the_project_id) -> list[tuple]:
         sql = """SELECT id, protein_1_id, protein_2_id, pymol_session, name FROM ProteinPair WHERE project_id = ?"""
         self._cursor.execute(sql, (the_project_id,))

@@ -1,9 +1,11 @@
+import multiprocessing
+
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.protein import Protein
-from pyssa.internal.portal import pymol_io
+from pyssa.internal.portal import pymol_io, auxiliary_pymol
 from pyssa.util import enums
 
 
@@ -14,7 +16,18 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
 
     def build_model_from_scratch(self, the_protein_pair_objects: list["protein_pair.ProteinPair"]):
         """Builds the model from scratch."""
+        # TODO: multiprocessing code does not work (gets blocked if a prediction is running) and it is not really faster
+        # pool_information = []
+        # for tmp_protein_pair in the_protein_pair_objects:
+        #     pool_information.append((tmp_protein_pair.pymol_session, tmp_protein_pair.name))
+        # # Use a context manager to create a multiprocessing pool
+        # with multiprocessing.Pool(processes=multiprocessing.cpu_count() - 2) as pool:
+        #     # Map the function to the pool to run in parallel
+        #     tmp_all_scenes_from_all_sessions = pool.starmap(
+        #         auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session_multi, pool_information)
+
         tmp_root_item = self.invisibleRootItem()
+        i = 0
         for tmp_protein_pair in the_protein_pair_objects:
             tmp_protein_pair_item = QtGui.QStandardItem(tmp_protein_pair.name)
             tmp_protein_pair_item.setData(tmp_protein_pair, enums.ModelEnum.OBJECT_ROLE)
@@ -22,8 +35,8 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
             tmp_scenes_item = QtGui.QStandardItem("Scenes")
             tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
             tmp_protein_pair_item.appendRow(tmp_scenes_item)
-            tmp_protein_pair.load_pymol_session()
-            for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+            tmp_all_scenes = auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session(tmp_protein_pair.pymol_session)
+            for tmp_scene in tmp_all_scenes[i]:
                 tmp_scene_item = QtGui.QStandardItem(tmp_scene)
                 tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
                 tmp_scenes_item.appendRow(tmp_scene_item)
@@ -54,6 +67,7 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
             tmp_protein_pair_item.appendRow(tmp_protein_item_1)
             tmp_protein_pair_item.appendRow(tmp_protein_item_2)
             tmp_root_item.appendRow(tmp_protein_pair_item)
+            i += 1
 
     def add_scene(
             self,

@@ -44,6 +44,7 @@ class JobManager:
 
     def __init__(self):
         self._prediction_queue: "queue.Queue" = queue.Queue()
+        self._prediction_queue_lock = QtCore.QMutex()
         self._is_prediction_queue_running = False
         self.current_prediction_job: "job_summary.PredictionJobSummary" = None
         self._distance_analysis_queue: "queue.Queue" = queue.Queue()
@@ -124,6 +125,50 @@ class JobManager:
         else:
             pass
 
+    def pop_job_from_queue(self, a_job: Union["job.PredictionJob", "job.DistanceAnalysisJob", "job.RayTracingJob"]):
+        if a_job.type == enums.JobType.PREDICTION:
+            self._prediction_queue_lock.lock()
+            tmp_queue_elements = []
+            while not self._prediction_queue.empty():
+                tmp_queue_elements.append(self._prediction_queue.get())
+            if len(tmp_queue_elements) == 0:
+                self._prediction_queue_lock.unlock()
+                return
+            tmp_queue_elements.pop(tmp_queue_elements.index(a_job))
+            for element in tmp_queue_elements:
+                self._prediction_queue.put(element)
+            self._prediction_queue_lock.unlock()
+
+    def is_prediction_job_currently_running(self, a_job: "job.PredictionJob") -> bool:
+        if a_job.type == enums.JobType.PREDICTION:
+            self._prediction_queue_lock.lock()
+            tmp_queue_elements = []
+            while not self._prediction_queue.empty():
+                tmp_queue_elements.append(self._prediction_queue.get())
+            for element in tmp_queue_elements:
+                self._prediction_queue.put(element)
+            self._prediction_queue_lock.unlock()
+            if a_job in tmp_queue_elements:
+                return False
+            return True
+
+    def stop_prediction_queue(self):
+        # Stop the active queue
+        logger.info("Stopping prediction queue.")
+        self._prediction_queue_thread = None
+        self._is_prediction_queue_running = False
+        # Restart queue if it is not empty
+        if not self._prediction_queue.empty():
+            logger.info("Restating prediction queue.")
+            self._prediction_queue_thread = tasks.Task(
+                target=self._execute_prediction_job_queue,
+                args=(0, 0),
+                post_func=self._prediction_queue_finished,
+            )
+            self._prediction_queue_thread.start()
+        else:
+            logger.info("Prediction queue is empty.")
+
     def get_queue(self, a_type: enums.JobType):
         if a_type == enums.JobType.PREDICTION:
             return self._prediction_queue
@@ -149,8 +194,18 @@ class JobManager:
             the_prediction_configuration,
             the_project_lock
         )
+        tmp_protein_names = []
+        for tmp_protein_info in the_prediction_protein_infos:
+            tmp_protein_names.append(tmp_protein_info.name)
         tmp_prediction_job.update_status_bar_signal.connect(the_interface_manager.status_bar_manager.update_job_entry)
-        tmp_prediction_job.job_entry_widget = job_entry.JobEntry("Running ColabFold prediction", a_project.get_project_name())
+        tmp_prediction_job.job_entry_widget = job_entry.JobEntry(
+            "Running ColabFold prediction",
+            a_project.get_project_name(),
+            tmp_protein_names,
+            []
+        )
+        tmp_prediction_job.job_entry_widget.btn_cancel_job.clicked.connect(tmp_prediction_job.cancel_job)
+        tmp_prediction_job.cancel_job_signal.connect(the_interface_manager.cancel_job)
         return tmp_prediction_job, tmp_prediction_job.job_entry_widget
 
     def put_prediction_job_into_queue(self, a_prediction_job: "job.PredictionJob"):
@@ -171,7 +226,9 @@ class JobManager:
         logger.debug("Starting prediction queue ...")
         while True:
             self._is_prediction_queue_running = True
+            self._prediction_queue_lock.lock()
             tmp_prediction_job: "job.PredictionJob" = self._prediction_queue.get()
+            self._prediction_queue_lock.unlock()
             if tmp_prediction_job is None:
                 self._is_prediction_queue_running = False
                 break

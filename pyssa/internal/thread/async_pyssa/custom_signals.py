@@ -58,3 +58,29 @@ class AbortSignal(QtCore.QObject):
 
         """
         self.abort.emit((True, a_source))
+
+
+class UpdateSignal(QtCore.QObject):
+    update = pyqtSignal(tuple)
+
+    def emit_signal(self,
+                    job_is_for_current_project_flag: bool,
+                    job_type,
+                    a_project_name,
+                    protein_names,
+                    protein_pair_names,
+                    the_widget):
+        """Emits the signal
+
+        Args:
+            a_source: the function or task where the signal is to be emitted
+
+        """
+        self.update.emit(
+            (job_is_for_current_project_flag,
+             job_type,
+             a_project_name,
+             protein_names,
+             protein_pair_names,
+             the_widget)
+        )
