@@ -9,27 +9,24 @@ from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from pyssa.controller import database_manager, pymol_session_manager, settings_manager, main_tasks_manager, \
+from pyssa.controller import pymol_session_manager, settings_manager, main_tasks_manager, \
     status_bar_manager, job_manager, watcher
 from pyssa.controller.database_manager import logger
-from pyssa.gui.ui.custom_widgets import custom_line_edit, job_entry
+from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.gui.ui.dialogs import dialog_startup
-from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
-    create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
+from pyssa.gui.ui.views import rename_protein_view, use_project_view, \
     predict_multimer_view, add_sequence_view, add_scene_view, settings_view, predict_protein_view, \
     fasta_file_import_preview_view, rename_sequence_view, add_protein_pair_view, advanced_prediction_configurations
-from pyssa.gui.ui.styles import styles
 from pyssa.gui.ui.views import create_project_view, open_project_view, delete_project_view, import_sequence_view
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, results_view, add_protein_view
 from pyssa.gui.ui.views import hotspots_protein_regions_view
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
-from pyssa.internal.data_structures.data_classes import current_session, job_summary
-from pyssa.internal.portal import pymol_io
+from pyssa.internal.data_structures.data_classes import current_session
 from pyssa.internal.thread.async_pyssa import locks, custom_signals
 from pyssa.io_pyssa import filesystem_io
 from pyssa.model import proteins_model, protein_pairs_model
-from pyssa.util import enums, constants, exception, main_window_util
+from pyssa.util import enums, constants, main_window_util
 from pyssa.util.void import rvoid
 
 

@@ -6,21 +6,24 @@ import shutil
 import subprocess
 import platform
 import time
-from io import BytesIO
-
 import pygetwindow
 import requests
 import zmq
 import pymol
-from Bio.Seq import Seq
+
+from xml import sax
+from io import BytesIO
 from pymol import cmd
+from Bio import SeqRecord
+from Bio import SeqIO
+from Bio.Seq import Seq
+
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
-from Bio import SeqRecord
-from Bio import SeqIO
-from xml import sax
+
+
 
 from pyssa.async_pyssa import main_tasks_async
 from pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
