@@ -14,11 +14,11 @@ def validate_add_protein_view_input(the_entered_text: str, placeholder: int):
         bio_data.download_pdb_file(pdb_id, tmp_filepath)
         if os.path.exists(tmp_filepath):
             os.remove(tmp_filepath)
-            return 1, True
+            return 1, True, pdb_id
         else:
-            return 1, False
+            return 1, False, pdb_id
     else:
         if os.path.exists(the_entered_text):
-            return 2, True
+            return 2, True, pathlib.Path(the_entered_text).name.replace(".pdb", "")
         else:
-            return 2, False
+            return 2, False, pathlib.Path(the_entered_text).name.replace(".pdb", "")

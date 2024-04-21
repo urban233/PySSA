@@ -98,6 +98,8 @@ class AddProteinViewController(QtCore.QObject):
             )
             self._view.ui.btn_add_protein.setEnabled(False)
             self._view.ui.lbl_status.setText("Please enter more characters.")
+        elif len(the_entered_text) > 4 and not os.path.exists(the_entered_text):
+            self._view.ui.txt_add_protein.setText(the_entered_text[:len(the_entered_text)-1])
         # checks if a pdb id was entered
         else:
             self._active_task = tasks.Task(
@@ -149,6 +151,7 @@ class AddProteinViewController(QtCore.QObject):
     def __await__slot_validate_input(self, return_value: tuple):
         tmp_type: int = return_value[0]
         tmp_is_valid: bool = return_value[1]
+        tmp_name: str = return_value[2]
         self._view.ui.lbl_status.setStyleSheet(
             """QLabel {color: #ba1a1a;}"""
         )
@@ -158,13 +161,13 @@ class AddProteinViewController(QtCore.QObject):
             )
             self._view.ui.lbl_status.setText("")
             self._view.ui.btn_add_protein.setEnabled(True)
-        elif not tmp_is_valid and tmp_type == 1:
+        elif not tmp_is_valid and tmp_type == 1:  # pdb id entered
             self._view.ui.txt_add_protein.setStyleSheet(
                 """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
             )
             self._view.ui.lbl_status.setText("Invalid PDB id!")
             self._view.ui.btn_add_protein.setEnabled(False)
-        elif not tmp_is_valid and tmp_type == 2:
+        elif not tmp_is_valid and tmp_type == 2:  # filepath entered
             self._view.ui.txt_add_protein.setStyleSheet(
                 """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
             )
@@ -172,6 +175,18 @@ class AddProteinViewController(QtCore.QObject):
             self._view.ui.btn_add_protein.setEnabled(False)
         else:
             constants.PYSSA_LOGGER.error("There is an unknown case, while validating the add protein view user input!")
+        if tmp_name in self._interface_manager.watcher.protein_names_blacklist:
+            self._view.ui.txt_add_protein.setStyleSheet(
+                """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
+            )
+            self._view.ui.lbl_status.setText("Protein already exists in current project!")
+            self._view.ui.btn_add_protein.setEnabled(False)
+        else:
+            self._view.ui.txt_add_protein.setStyleSheet(
+                """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
+            )
+            self._view.ui.lbl_status.setText("")
+            self._view.ui.btn_add_protein.setEnabled(True)
         QtWidgets.QApplication.restoreOverrideCursor()
         self._view.ui.txt_add_protein.setFocus()
 

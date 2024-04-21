@@ -3872,13 +3872,13 @@ class MainViewController:
 
     def __slot_update_protein_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
-        cmd.scene(key="auto", action="refresh")
+        cmd.scene(key="auto", action="update")
         self._save_protein_pymol_session()
 
     @staticmethod
     def _update_scene() -> None:
         """Updates the current selected PyMOL scene."""
-        cmd.scene(key="auto", action="refresh")
+        cmd.scene(key="auto", action="update")
 
     def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
@@ -4923,7 +4923,7 @@ class MainViewController:
 
     def __slot_update_protein_pair_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
-        cmd.scene(key="auto", action="refresh")
+        cmd.scene(key="auto", action="update")
         self._save_protein_pair_pymol_session()
 
     def _check_for_results(self) -> None:
