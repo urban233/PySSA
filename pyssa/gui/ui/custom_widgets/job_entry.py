@@ -24,18 +24,19 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
+from pyssa.internal.data_structures.data_classes import job_summary
 from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.util import enums
 
 
-class JobEntry(QtWidgets.QWidget):
+class JobEntryWidget(QtWidgets.QWidget):
     """A widget for the job overview."""
-    def __init__(self, a_job_description, a_project_name: str, protein_names: list[str], protein_pair_names: list[str]):
+    def __init__(self, a_job_description, a_job_base_information_object: "job_summary.JobBaseInformation"):
         super().__init__()
-        self.project_name = a_project_name
-        self.protein_names = protein_names
-        self.protein_pair_names = protein_pair_names
-        self.lbl_job_description = QtWidgets.QLabel(f"{a_job_description} ({self.project_name})")
+        self.job_base_information: "job_summary.JobBaseInformation" = a_job_base_information_object
+
+        # <editor-fold desc="Widget setup">
+        self.lbl_job_description = QtWidgets.QLabel(f"{a_job_description} ({self.job_base_information.project_name})")
         self.progress_bar_job = QtWidgets.QProgressBar()
         self.btn_cancel_job = QtWidgets.QPushButton('Cancel')
         tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.svg"))
@@ -84,29 +85,29 @@ class JobEntry(QtWidgets.QWidget):
         self.main_layout.addWidget(self.progress_bar_job)
         self.main_layout.addWidget(self.btn_cancel_job)
         self.setLayout(self.main_layout)
+        # </editor-fold>
 
 
-class JobNotification(QtWidgets.QWidget):
+class JobNotificationWidget(QtWidgets.QWidget):
     def __init__(self,
-                 a_job_description: str,
-                 a_project_name: str,
-                 protein_names: list[str],
-                 protein_pair_names: list[str],
+                 a_job_base_information_object: "job_summary.JobBaseInformation",
                  job_is_from_current_project: bool,
-                 an_update_signal: "custom_signals.UpdateSignal"):
+                 a_refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal"):
         super().__init__()
-        self.project_name = a_project_name
-        self.protein_names = protein_names
-        self.protein_pair_names = protein_pair_names
-        self.update_signal = an_update_signal
-        if a_job_description.find("ColabFold") != -1:
-            self.lbl_job_description = QtWidgets.QLabel(f"A structure prediction job finished. ({a_project_name})")
-            self.type = enums.JobType.PREDICTION
-        elif a_job_description.find("distance analysis") != -1:
-            self.lbl_job_description = QtWidgets.QLabel(f"A distance analysis job finished. ({a_project_name})")
-            self.type = enums.JobType.DISTANCE_ANALYSIS
+        self.job_base_information: "job_summary.JobBaseInformation" = a_job_base_information_object
+        self._refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal" = a_refresh_after_job_finished_signal
+
+        # <editor-fold desc="Widget setup">
+        if self.job_base_information.job_type == enums.JobType.PREDICTION:
+            self.lbl_job_description = QtWidgets.QLabel(f"A structure prediction job finished. ({self.job_base_information.project_name})")
+        elif self.job_base_information.job_type == enums.JobType.DISTANCE_ANALYSIS:
+            self.lbl_job_description = QtWidgets.QLabel(f"A distance analysis job finished. ({self.job_base_information.project_name})")
+        elif self.job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
+            self.lbl_job_description = QtWidgets.QLabel(f"A ColabFold prediction + distance analysis job finished. ({self.job_base_information.project_name})")
+        elif self.job_base_information.job_type == enums.JobType.RAY_TRACING:
+            self.lbl_job_description = QtWidgets.QLabel(f"Create ray-tracing image job finished. ({self.job_base_information.project_name})")
         else:
-            self.lbl_job_description = QtWidgets.QLabel(f"Job finished. ({a_project_name})")
+            self.lbl_job_description = QtWidgets.QLabel(f"Job finished. ({self.job_base_information.project_name})")
 
         self.btn_refresh = QtWidgets.QPushButton('Refresh')
         self.btn_open = QtWidgets.QPushButton('Open')
@@ -122,26 +123,14 @@ class JobNotification(QtWidgets.QWidget):
         else:
             self.btn_refresh.hide()
             self.btn_open.show()
+        # </editor-fold>
+
         # Connect signals
         self.btn_open.clicked.connect(self._send_open_other_project_request)
         self.btn_refresh.clicked.connect(self._send_update_main_view_request)
 
     def _send_open_other_project_request(self):
-        self.update_signal.emit_signal(
-            False,
-            self.type,
-            self.project_name,
-            self.protein_names,
-            self.protein_pair_names,
-            self
-        )
+        self._refresh_after_job_finished_signal.emit_signal(False, self.job_base_information, self)
 
     def _send_update_main_view_request(self):
-        self.update_signal.emit_signal(
-            True,
-            self.type,
-            self.project_name,
-            self.protein_names,
-            self.protein_pair_names,
-            self
-        )
+        self._refresh_after_job_finished_signal.emit_signal(True, self.job_base_information, self)

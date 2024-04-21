@@ -63,7 +63,7 @@ class ResultsViewController(QtCore.QObject):
         self._distance_data_visualizer = None
         self.cb_protein_pair_color = QtWidgets.QComboBox()
 
-        if not self._pymol_session_manager.is_the_current_protein_pair_in_session():
+        if not self._pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
             self.cb_protein_pair_color.setEnabled(False)
 
         self._connect_all_ui_elements_to_slot_functions()

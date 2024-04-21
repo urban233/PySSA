@@ -26,6 +26,7 @@ from pyssa.async_pyssa import main_tasks_async
 from pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
     sequence_list_context_menu
 from pyssa.gui.ui.custom_dialogs import custom_message_box
+from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.internal.thread.async_pyssa import util_async, custom_signals, project_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
     pymol_session_manager, hotspots_protein_regions_view_controller, predict_multimer_view_controller, \
@@ -106,8 +107,7 @@ class MainViewController:
     _database_thread: "database_thread.DatabaseThread"
 
     def __init__(self,
-                 the_interface_manager: "interface_manager.InterfaceManager",
-                 the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> None:
+                 the_interface_manager: "interface_manager.InterfaceManager") -> None:
         """Constructor.
 
         Args:
@@ -123,7 +123,6 @@ class MainViewController:
 
         self._view: "main_view.MainView" = the_interface_manager.get_main_view()
         self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
-        self._pymol_session_manager = the_pymol_session_manager
         self._database_manager = database_manager.DatabaseManager("")
         self._database_manager.set_application_settings(self._interface_manager.get_application_settings())
         self._database_thread: "database_thread.DatabaseThread" = database_thread.DatabaseThread("")
@@ -145,13 +144,10 @@ class MainViewController:
         self.custom_progress_signal = custom_signals.ProgressSignal()
         self.abort_signal = custom_signals.AbortSignal()
         self.disable_pymol_signal = custom_signals.DisablePyMOLSignal()
-        self.update_based_on_finished_job_signal = custom_signals.UpdateSignal()
         self._sequence_list_context_menu = sequence_list_context_menu.SequenceListContextMenu()
         self._protein_tree_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
         self._protein_pair_tree_context_menu = protein_pair_tree_context_menu.ProteinPairTreeContextMenu()
 
-        self._interface_manager.status_bar_manager.set_abort_signal(self.abort_signal)
-        self._interface_manager.status_bar_manager.set_update_signal(self.update_based_on_finished_job_signal)
         self._setup_statusbar()
         self._init_generic_help_context_menus()
         self._interface_manager.refresh_main_view()
@@ -164,7 +160,9 @@ class MainViewController:
         self.custom_progress_signal.progress.connect(self._update_progress_bar)
         self.abort_signal.abort.connect(self._abort_task)
         self.disable_pymol_signal.disable_pymol.connect(self._lock_pymol)
-        self.update_based_on_finished_job_signal.update.connect(self._update_main_view_ui)
+        self._interface_manager.refresh_after_job_finished_signal.refresh.connect(self._update_main_view_ui)
+        self._view.btn_open_job_overview.clicked.connect(self.__slot_open_job_overview_panel)
+        self._view.btn_open_job_notification.clicked.connect(self.__slot_open_notification_panel)
 
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self.__slot_create_project)
@@ -428,12 +426,26 @@ class MainViewController:
 
         # </editor-fold>
 
-    @staticmethod
-    def _close_main_window():
+    def _close_main_window(self, return_value):
         """Cleans after the main window closes."""
+        _, tmp_event = return_value
+        logger.info("Check if any jobs are running before closing PySSA.")
+        if self._interface_manager.job_manager.there_are_jobs_running():
+            logger.info("Running jobs found!")
+            tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                "There are still jobs running!\n\nAre you sure you want to close PySSA?\nThis could lead to data loss and a damaged project!", "Close PySSA",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value
+            )
+            tmp_dialog.exec_()
+            if not tmp_dialog.response:
+                logger.info("PySSA should not be closed.")
+                tmp_event.ignore()
+                return
+            logger.info("There are jobs running but PySSA will closed! (Requested by the user)")
         # Closes the documentation browser if it is still open
         if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
+        tmp_event.accept()
 
     def __slot_close_all(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Exit Application' clicked.")
@@ -476,21 +488,21 @@ class MainViewController:
 
     def _lock_pymol(self, return_value):
         # <editor-fold desc="Freeze PyMOL session">
-        if self._pymol_session_manager.session_object_type == "protein":
-            tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
+        if self._interface_manager.pymol_session_manager.session_object_type == "protein":
+            tmp_database_operation = self._interface_manager.pymol_session_manager.freeze_current_protein_pymol_session(
                 self._interface_manager.get_current_active_protein_object()
             )
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             logger.info("Frozen protein PyMOL session.")
-        elif self._pymol_session_manager.session_object_type == "protein_pair":
-            tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pair_pymol_session(
+        elif self._interface_manager.pymol_session_manager.session_object_type == "protein_pair":
+            tmp_database_operation = self._interface_manager.pymol_session_manager.freeze_current_protein_pair_pymol_session(
                 self._interface_manager.get_current_active_protein_pair_object()
             )
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             logger.info("Frozen protein pair PyMOL session.")
         else:
-            self._pymol_session_manager.frozen_protein_object = None
-            self._pymol_session_manager.frozen_protein_pair_object = None
+            self._interface_manager.pymol_session_manager.frozen_protein_object = None
+            self._interface_manager.pymol_session_manager.frozen_protein_pair_object = None
             logger.info("No PyMOL session needs to be frozen.")
         # </editor-fold>
 
@@ -520,32 +532,35 @@ class MainViewController:
             self.active_custom_message_box.show()
         # </editor-fold>
 
-    def _update_main_view_ui(self, signal_tuple):
-        should_update_main_view = signal_tuple[0]
-        _, tmp_type, tmp_project_name, tmp_protein_names, tmp_protein_pair_names, the_job_notification_widget = signal_tuple
-        self._interface_manager.status_bar_manager.remove_job_notification_widget(the_job_notification_widget)
-        if should_update_main_view:
-            if tmp_type == enums.JobType.PREDICTION:
-                # update protein model
+    def _update_main_view_ui(self, refresh_after_job_finished_signal_values):
+        tmp_job_is_for_current_project_flag, tmp_job_base_information, tmp_job_notification_widget = refresh_after_job_finished_signal_values
+        self._interface_manager.remove_job_notification_widget(tmp_job_notification_widget)
+        if tmp_job_is_for_current_project_flag:
+            if tmp_job_base_information.job_type == enums.JobType.PREDICTION:
+                # refresh protein model
                 self._active_task = tasks.Task(
                     target=util_async.add_proteins_to_project_and_model,
-                    args=(self._interface_manager, tmp_protein_names),
+                    args=(self._interface_manager, tmp_job_base_information.protein_names),
                     post_func=self._post_update_project_and_model,
                 )
                 self._active_task.start()
-            elif tmp_type == enums.JobType.DISTANCE_ANALYSIS:
-                # update protein pair model
+            elif tmp_job_base_information.job_type == enums.JobType.DISTANCE_ANALYSIS:
+                # refresh protein pair model
                 self._active_task = tasks.Task(
                     target=util_async.add_protein_pairs_to_project_and_model,
-                    args=(self._interface_manager, tmp_protein_pair_names),
+                    args=(self._interface_manager, tmp_job_base_information.protein_pair_names),
                     post_func=self._post_update_project_and_model,
                 )
                 self._active_task.start()
-            elif tmp_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
-                # update protein and protein pair model
+            elif tmp_job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
+                # refresh protein and protein pair model
                 self._active_task = tasks.Task(
                     target=util_async.add_proteins_and_protein_pairs_to_project_and_model,
-                    args=(self._interface_manager, tmp_protein_names, tmp_protein_pair_names),
+                    args=(
+                        self._interface_manager,
+                        tmp_job_base_information.protein_names,
+                        tmp_job_base_information.protein_pair_names
+                    ),
                     post_func=self._post_update_project_and_model,
                 )
                 self._active_task.start()
@@ -556,13 +571,18 @@ class MainViewController:
                 self._disconnect_sequence_selection_model()
             self._active_task = tasks.Task(
                 target=util_async.close_project_automatically,
-                args=(tmp_a_project_is_open, self._database_thread, self._pymol_session_manager, tmp_project_name),
+                args=(
+                    tmp_a_project_is_open,
+                    self._database_thread,
+                    self._interface_manager.pymol_session_manager,
+                    tmp_job_base_information.project_name
+                ),
                 post_func=self._post_close_project_automatically,
             )
             self._active_task.start()
             self.update_status("Saving current project ...")
             self._interface_manager.restore_default_main_view()
-            self._interface_manager.status_bar_manager.close_job_notification_panel()
+            self._interface_manager.close_job_notification_panel()
         self._interface_manager.start_wait_cursor()
 
     def _post_update_project_and_model(self, return_value):
@@ -589,7 +609,7 @@ class MainViewController:
                 tmp_project_name,
                 tmp_project_database_filepath,
                 self._interface_manager,
-                self._pymol_session_manager,
+                self._interface_manager.pymol_session_manager,
                 self.custom_progress_signal,
                 self._interface_manager.watcher
             ),
@@ -608,14 +628,14 @@ class MainViewController:
 
     def _update_tab(self):
         self._interface_manager.current_tab_index = self._view.ui.project_tab_widget.currentIndex()
-        if self._pymol_session_manager.session_object_type == "protein" and self._interface_manager.current_tab_index == 2:
+        if self._interface_manager.pymol_session_manager.session_object_type == "protein" and self._interface_manager.current_tab_index == 2:
             self._interface_manager.hide_protein_pair_pymol_scene_configuration()
             self._view.ui.lbl_info_3.setText(
                 "Please load the PyMOL session of the \nselected protein pair.")
-        elif self._pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.current_tab_index == 1:
+        elif self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.current_tab_index == 1:
             self._interface_manager.hide_protein_pymol_scene_configuration()
             self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
-        elif self._pymol_session_manager.is_the_current_session_empty():
+        elif self._interface_manager.pymol_session_manager.is_the_current_session_empty():
             self._interface_manager.hide_protein_pymol_scene_configuration()
             self._interface_manager.hide_protein_pair_pymol_scene_configuration()
             self._view.ui.lbl_info.setText("Please load the PyMOL session of the selected protein.")
@@ -946,13 +966,35 @@ class MainViewController:
 
     # </editor-fold>
 
+    # <editor-fold desc="Job panels">
+    def __slot_open_job_overview_panel(self):
+        if self._view.ui.frame_job_overview.isVisible():
+            self._view.ui.frame_job_overview.hide()
+            self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_closed)
+        elif not self._view.ui.frame_job_overview.isVisible():
+            self._view.ui.frame_job_notification.hide()
+            self._view.btn_open_job_notification.setIcon(self._view.icon_job_overview_closed)
+            self._view.ui.frame_job_overview.show()
+            self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_open)
+
+    def __slot_open_notification_panel(self):
+        if self._view.ui.frame_job_notification.isVisible():
+            self._view.ui.frame_job_notification.hide()
+            self._view.btn_open_job_notification.setIcon(self._view.icon_job_overview_closed)
+        elif not self._view.ui.frame_job_notification.isVisible():
+            self._view.ui.frame_job_overview.hide()
+            self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_closed)
+            self._view.ui.frame_job_notification.show()
+            self._view.btn_open_job_notification.setIcon(self._view.icon_job_overview_open)
+    # </editor-fold>
+
     # <editor-fold desc="Project menu">
     def __slot_close_project(self):
         """Closes the current project"""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Close' clicked.")
         self._active_task = tasks.Task(
             target=main_presenter_async.close_project,
-            args=(self._database_thread, self._pymol_session_manager),
+            args=(self._database_thread, self._interface_manager.pymol_session_manager),
             post_func=self.__await_close_project,
         )
         self._active_task.start()
@@ -961,6 +1003,8 @@ class MainViewController:
         #                                       QtWidgets.QMessageBox.Information)
         # # self.msg_box.show()
         self._interface_manager.restore_default_main_view()
+        self._interface_manager.close_job_notification_panel()
+        self._interface_manager.close_job_overview_panel()
         self._disconnect_sequence_selection_model()
         self.update_status("Saving current project ...")
         self._interface_manager.start_wait_cursor()
@@ -1047,7 +1091,7 @@ class MainViewController:
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_workspace_model()
         self._interface_manager.refresh_main_view()
-        self._pymol_session_manager.reinitialize_session()
+        self._interface_manager.pymol_session_manager.reinitialize_session()
         self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_cursor()
 
@@ -1081,7 +1125,7 @@ class MainViewController:
                 tmp_project_name,
                 tmp_project_database_filepath,
                 self._interface_manager,
-                self._pymol_session_manager,
+                self._interface_manager.pymol_session_manager,
                 self.custom_progress_signal,
                 self._interface_manager.watcher
             ),
@@ -1136,7 +1180,7 @@ class MainViewController:
         _, tmp_project = return_value
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_main_view()
-        self._pymol_session_manager.reinitialize_session()
+        self._interface_manager.pymol_session_manager.reinitialize_session()
         self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_cursor()
         self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
@@ -1195,7 +1239,7 @@ class MainViewController:
             self._interface_manager.set_new_project(tmp_project)
 
             self._interface_manager.refresh_main_view()
-            self._pymol_session_manager.reinitialize_session()
+            self._interface_manager.pymol_session_manager.reinitialize_session()
             self._interface_manager.stop_wait_cursor()
             self._interface_manager.status_bar_manager.show_temporary_message("Importing project finished.")
 
@@ -1288,7 +1332,7 @@ class MainViewController:
             self._interface_manager.get_settings_manager().settings.cycles
         )
         self._interface_manager.job_manager.put_job_into_queue(tmp_distance_analysis_job)
-        self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_distance_analysis_entry_widget)
+        self._interface_manager.add_job_entry_to_job_overview_layout(tmp_distance_analysis_entry_widget)
 
         # tmp_distance_analysis_task = tasks.Task(
         #     target=main_tasks_async.run_distance_analysis,
@@ -1323,7 +1367,7 @@ class MainViewController:
             self._active_task = tasks.Task(
                 target=util_async.unfreeze_pymol_session,
                 args=(
-                    self._pymol_session_manager, 0
+                    self._interface_manager.pymol_session_manager, 0
                 ),
                 post_func=self.__await_unfreeze_pymol_session_after_analysis,
             )
@@ -1495,7 +1539,7 @@ class MainViewController:
             tmp_prediction_and_distance_analysis_job = tmp_job[0]
             tmp_prediction_and_distance_analysis_job_entry_widget = tmp_job[1]
             self._interface_manager.job_manager.put_job_into_queue(tmp_prediction_and_distance_analysis_job)
-            self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_prediction_and_distance_analysis_job_entry_widget)
+            self._interface_manager.add_job_entry_to_job_overview_layout(tmp_prediction_and_distance_analysis_job_entry_widget)
 
             # # --- Old approach
             # # Analysis should be run after the prediction
@@ -1525,7 +1569,7 @@ class MainViewController:
                 self._interface_manager
             )
             self._interface_manager.job_manager.put_job_into_queue(tmp_prediction_job)
-            self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_prediction_entry_widget)
+            self._interface_manager.add_job_entry_to_job_overview_layout(tmp_prediction_entry_widget)
         #     tmp_prediction_task = tasks.Task(
         #         target=main_tasks_async.predict_protein_with_colabfold,
         #         args=(
@@ -1663,7 +1707,7 @@ class MainViewController:
             self._active_task = tasks.Task(
                 target=util_async.unfreeze_pymol_session,
                 args=(
-                    self._pymol_session_manager, 0
+                    self._interface_manager.pymol_session_manager, 0
                 ),
                 post_func=self.__await_unfreeze_pymol_session_after_prediction_and_analysis,
             )
@@ -1769,7 +1813,7 @@ class MainViewController:
             self._active_task = tasks.Task(
                 target=util_async.unfreeze_pymol_session,
                 args=(
-                    self._pymol_session_manager, 0
+                    self._interface_manager.pymol_session_manager, 0
                 ),
                 post_func=self.__await_unfreeze_pymol_session_after_prediction,
             )
@@ -1988,31 +2032,31 @@ class MainViewController:
     # <editor-fold desc="Hotspots">
     def __slot_hotspots_protein_regions(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
-        if self._interface_manager.current_tab_index == 1 and self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.is_the_current_protein_in_session():
+        if self._interface_manager.current_tab_index == 1 and self._interface_manager.pymol_session_manager.session_object_type == "protein" and self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
             # Proteins tab
             if self._view.ui.lbl_protein_protein_regions.isVisible():
                 self._view.ui.lbl_protein_protein_regions.hide()
                 self._view.ui.frame_protein_protein_regions.hide()
-                self._pymol_session_manager.hide_sequence_view()
+                self._interface_manager.pymol_session_manager.hide_sequence_view()
             else:
                 self._view.ui.lbl_protein_protein_regions.show()
                 self._view.ui.frame_protein_protein_regions.show()
-                self._pymol_session_manager.show_sequence_view()
-        elif self._interface_manager.current_tab_index == 2 and self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.is_the_current_protein_pair_in_session():
+                self._interface_manager.pymol_session_manager.show_sequence_view()
+        elif self._interface_manager.current_tab_index == 2 and self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
             if self._view.ui.lbl_protein_pair_protein_regions.isVisible():
                 # Protein Pairs tab
                 self._view.ui.lbl_protein_pair_protein_regions.hide()
                 self._view.ui.frame_protein_pair_protein_regions.hide()
-                self._pymol_session_manager.hide_sequence_view()
+                self._interface_manager.pymol_session_manager.hide_sequence_view()
             else:
                 self._view.ui.lbl_protein_pair_protein_regions.show()
                 self._view.ui.frame_protein_pair_protein_regions.show()
-                self._pymol_session_manager.show_sequence_view()
+                self._interface_manager.pymol_session_manager.show_sequence_view()
 
 
 
     def post_hotspots_protein_regions(self) -> None:
-        self._pymol_session_manager.hide_sequence_view()
+        self._interface_manager.pymol_session_manager.hide_sequence_view()
         cmd.select(name="", selection="none")
 
     def __slot_show_protein_regions_resi_sticks(self) -> None:
@@ -2113,8 +2157,8 @@ class MainViewController:
         #     self._view.ui.cb_protein_atoms.setChecked(False)
 
         if tmp_type == "chain":
-            self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
-            self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
+            self._interface_manager.set_index_of_protein_color_combo_box(self._interface_manager.pymol_session_manager)
+            self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._interface_manager.pymol_session_manager)
             self._interface_manager.show_protein_pymol_scene_configuration()
 
     def __slot_restore_settings(self) -> None:
@@ -2369,7 +2413,7 @@ class MainViewController:
             return
 
         # --- New job approach
-        tmp_session_filepath = self._pymol_session_manager.save_current_pymol_session_as_pse_cache_file()
+        tmp_session_filepath = self._interface_manager.pymol_session_manager.save_current_pymol_session_as_pse_cache_file()
         tmp_ray_tracing_job, tmp_ray_tracing_entry_widget = self._interface_manager.job_manager.create_ray_tracing_job(
             full_file_name[0],
             tmp_session_filepath,
@@ -2380,12 +2424,12 @@ class MainViewController:
             self._interface_manager.get_current_project().get_project_name()
         )
         self._interface_manager.job_manager.put_job_into_queue(tmp_ray_tracing_job)
-        self._interface_manager.status_bar_manager.add_job_entry_to_overview(tmp_ray_tracing_entry_widget)
+        self._interface_manager.add_job_entry_to_job_overview_layout(tmp_ray_tracing_entry_widget)
         #
         #
-        # #self._interface_manager.status_bar_manager.add_job_entry_to_overview("Ray-tracing for scene 6OMNvsBMP2", "BMP2-validation")
+        # #self.add_job_entry_to_overview("Ray-tracing for scene 6OMNvsBMP2", "BMP2-validation")
         #
-        # tmp_session_filepath = self._pymol_session_manager.save_current_pymol_session_as_pse_cache_file()
+        # tmp_session_filepath = self._interface_manager.pymol_session_manager.save_current_pymol_session_as_pse_cache_file()
         # self._active_task = tasks.Task(
         #     target=main_presenter_async.create_ray_traced_image,
         #     args=(full_file_name[0], self._interface_manager.get_application_settings(), tmp_session_filepath),
@@ -2669,7 +2713,7 @@ class MainViewController:
             self._view.ui.proteins_tree_view.selectedIndexes(),
             self._interface_manager.get_current_protein_tree_index_type(),
             tmp_is_protein_in_any_pair_flag,
-            self._pymol_session_manager.is_the_current_protein_in_session()
+            self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object())
         )
         tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
@@ -2678,7 +2722,7 @@ class MainViewController:
         self._view.tg_protein_white_bg.toggle_button.setCheckState(False)
         tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
         # fixme: I am no sure if the code below is needed
-        # if not self._pymol_session_manager.is_the_current_session_empty():
+        # if not self._interface_manager.pymol_session_manager.is_the_current_session_empty():
         #     tmp_flag = True  # Session is NOT empty and needs reinitialization
         # else:
         #     tmp_flag = False  # Session is empty
@@ -2688,13 +2732,13 @@ class MainViewController:
             target=main_presenter_async.load_protein_pymol_session,
             args=(
                 tmp_protein,
-                self._pymol_session_manager,
+                self._interface_manager.pymol_session_manager,
                 tmp_flag
             ),
             post_func=self.__await_open_protein_pymol_session,
         )
         self._active_task.start()
-        self._pymol_session_manager.current_scene_name = "base"
+        self._interface_manager.pymol_session_manager.current_scene_name = "base"
         self._interface_manager.start_wait_cursor()
         self._interface_manager.status_bar_manager.show_temporary_message(
             f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...", False
@@ -2709,12 +2753,12 @@ class MainViewController:
             self._view.ui.action_protein_regions.setEnabled(True)
             self._view.ui.btn_create_protein_scene.setEnabled(True)
             self._view.ui.btn_update_protein_scene.setEnabled(True)
-            self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
+            self._view.ui.lbl_session_name.setText(f"Session Name: {self._interface_manager.pymol_session_manager.session_name}")
             self._view.ui.lbl_pymol_protein_scene.setText(f"PyMOL Scene: base")
-            self._pymol_session_manager.current_scene_name = "base"
-            self._pymol_session_manager.load_current_scene()
+            self._interface_manager.pymol_session_manager.current_scene_name = "base"
+            self._interface_manager.pymol_session_manager.load_current_scene()
             self._view.ui.lbl_info.setText("Please select a chain.")
-            self._pymol_session_manager.get_all_scenes_in_current_session()
+            self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()
             logger.info("Successfully opened protein session.")
             self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")
         else:
@@ -2745,12 +2789,12 @@ class MainViewController:
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                 f"The scene '{tmp_scene_name}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
             )
-            if self._pymol_session_manager.is_the_current_protein_in_session():
+            if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
                 tmp_scene_name = self._interface_manager.get_current_active_scene_name()
-                self._pymol_session_manager.current_scene_name = tmp_scene_name
-                ui_util.set_pymol_scene_name_into_label(self._pymol_session_manager.current_scene_name,
+                self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
+                ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
                                                         self._view.ui.lbl_pymol_protein_scene)
-                self._pymol_session_manager.load_scene(tmp_scene_name)
+                self._interface_manager.pymol_session_manager.load_scene(tmp_scene_name)
 
         elif tmp_type == "chain":
             tmp_chain_letter = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
@@ -2759,10 +2803,10 @@ class MainViewController:
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                 f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
             )
-            if self._pymol_session_manager.current_scene_name != "" and self._pymol_session_manager.is_the_current_protein_in_session():
+            if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
                 self.set_icon_for_current_color_in_proteins_tab()
-                self._interface_manager.set_index_of_protein_color_combo_box(self._pymol_session_manager)
-                self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._pymol_session_manager)
+                self._interface_manager.set_index_of_protein_color_combo_box(self._interface_manager.pymol_session_manager)
+                self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._interface_manager.pymol_session_manager)
                 self._main_view_state.selected_chain_proteins = self._interface_manager.get_current_protein_tree_index()
 
         elif tmp_type == "header":
@@ -2780,7 +2824,7 @@ class MainViewController:
             self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
                 self._interface_manager.get_current_active_protein_object().get_molecule_object()
             ),
-            self._pymol_session_manager
+            self._interface_manager.pymol_session_manager
         )
 
     def __slot_change_chain_color_proteins(self) -> None:
@@ -2793,7 +2837,7 @@ class MainViewController:
         else:
             tmp_color = self._view.ui.lbl_protein_current_color.text().strip()
 
-        if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
+        if self._interface_manager.pymol_session_manager.session_object_type == "protein" and self._interface_manager.pymol_session_manager.session_name == tmp_protein.get_molecule_object():
             # Update pymol parameter in PyMOL
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             try:
@@ -3565,7 +3609,7 @@ class MainViewController:
     #     else:
     #         return
     #
-    #     if self._pymol_session_manager.session_object_type == "protein" and self._pymol_session_manager.session_name == tmp_protein.get_molecule_object():
+    #     if self._interface_manager.pymol_session_manager.session_object_type == "protein" and self._interface_manager.pymol_session_manager.session_name == tmp_protein.get_molecule_object():
     #         # Update pymol parameter in PyMOL
     #         tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
     #         try:
@@ -3594,11 +3638,11 @@ class MainViewController:
 
     def _post_import_protein_structure(self, return_value: tuple):
         try:
-            tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pymol_session(
+            tmp_database_operation = self._interface_manager.pymol_session_manager.freeze_current_protein_pymol_session(
                 self._interface_manager.get_current_active_protein_object()
             )
             if tmp_database_operation is None:
-                tmp_database_operation = self._pymol_session_manager.freeze_current_protein_pair_pymol_session(
+                tmp_database_operation = self._interface_manager.pymol_session_manager.freeze_current_protein_pair_pymol_session(
                     self._interface_manager.get_current_active_protein_pair_object()
                 )
             if tmp_database_operation is not None:
@@ -3646,9 +3690,9 @@ class MainViewController:
             database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
                                                  (0, tmp_protein)))
         self._interface_manager.refresh_main_view()
-        self._pymol_session_manager.reinitialize_session()
-        self._pymol_session_manager.unfreeze_current_protein_pymol_session()
-        self._pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
+        self._interface_manager.pymol_session_manager.reinitialize_session()
+        self._interface_manager.pymol_session_manager.unfreeze_current_protein_pymol_session()
+        self._interface_manager.pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
         self._main_view_state.restore_main_view_state()
         self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")
         self._interface_manager.stop_wait_cursor()
@@ -3828,13 +3872,13 @@ class MainViewController:
 
     def __slot_update_protein_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
-        cmd.scene(key="auto", action="update")
+        cmd.scene(key="auto", action="refresh")
         self._save_protein_pymol_session()
 
     @staticmethod
     def _update_scene() -> None:
         """Updates the current selected PyMOL scene."""
-        cmd.scene(key="auto", action="update")
+        cmd.scene(key="auto", action="refresh")
 
     def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
@@ -3910,7 +3954,7 @@ class MainViewController:
         tmp_dialog.exec_()
         response: bool = tmp_dialog.response
         if response:
-            cmd.scene(key=self._pymol_session_manager.current_scene_name, action="clear")  # TODO: Does not work as expected!
+            cmd.scene(key=self._interface_manager.pymol_session_manager.current_scene_name, action="clear")  # TODO: Does not work as expected!
 
             if self._interface_manager.current_tab_index == 1:
                 self._save_protein_pymol_session()
@@ -3962,7 +4006,7 @@ class MainViewController:
     def open_context_menu_for_protein_pairs(self, position):
         tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
             self._view.ui.protein_pairs_tree_view.selectedIndexes(),
-            self._pymol_session_manager.is_the_current_protein_pair_in_session()
+            self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name)
         )
         tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
 
@@ -3976,7 +4020,7 @@ class MainViewController:
         print(tmp_protein_pair.protein_2.get_molecule_object())
         print(tmp_protein_pair.protein_2)
         # fixme: I am no sure if the code below is needed
-        # if not self._pymol_session_manager.is_the_current_session_empty():
+        # if not self._interface_manager.pymol_session_manager.is_the_current_session_empty():
         #     tmp_flag = True  # Session is NOT empty and needs reinitialization
         # else:
         #     tmp_flag = False  # Session is empty
@@ -3986,7 +4030,7 @@ class MainViewController:
             target=main_presenter_async.load_protein_pair_pymol_session,
             args=(
                 tmp_protein_pair,
-                self._pymol_session_manager,
+                self._interface_manager.pymol_session_manager,
                 tmp_flag
             ),
             post_func=self.__await_open_protein_pair_pymol_session,
@@ -4004,10 +4048,10 @@ class MainViewController:
             self._view.ui.action_protein_regions.setEnabled(True)
             self._view.ui.btn_create_protein_pair_scene.setEnabled(True)
             self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
-            self._view.ui.lbl_session_name.setText(f"Session Name: {self._pymol_session_manager.session_name}")
-            self._pymol_session_manager.current_scene_name = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).child(1, 0).data(Qt.DisplayRole)
-            self._pymol_session_manager.load_current_scene()
-            ui_util.set_pymol_scene_name_into_label(self._pymol_session_manager.current_scene_name,
+            self._view.ui.lbl_session_name.setText(f"Session Name: {self._interface_manager.pymol_session_manager.session_name}")
+            self._interface_manager.pymol_session_manager.current_scene_name = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).child(1, 0).data(Qt.DisplayRole)
+            self._interface_manager.pymol_session_manager.load_current_scene()
+            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
                                                     self._view.ui.lbl_pymol_protein_pair_scene)
             logger.info("Successfully opened protein pair session.")
             self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")
@@ -4069,12 +4113,12 @@ class MainViewController:
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                 f"The scene '{tmp_scene_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
             )
-            if self._pymol_session_manager.is_the_current_protein_pair_in_session():
+            if self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
                 tmp_scene_name = self._interface_manager.get_current_active_scene_name_of_protein_pair()
-                self._pymol_session_manager.current_scene_name = tmp_scene_name
-                ui_util.set_pymol_scene_name_into_label(self._pymol_session_manager.current_scene_name,
+                self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
+                ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
                                                         self._view.ui.lbl_pymol_protein_pair_scene)
-                self._pymol_session_manager.load_scene(tmp_scene_name)
+                self._interface_manager.pymol_session_manager.load_scene(tmp_scene_name)
 
         elif tmp_type == "chain":
             tmp_chain_letter = self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
@@ -4084,10 +4128,10 @@ class MainViewController:
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                 f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
             )
-            if self._pymol_session_manager.current_scene_name != "" and self._pymol_session_manager.is_the_current_protein_pair_in_session():
+            if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
                 self.set_icon_for_current_color_in_protein_pairs_tab()
-                self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._pymol_session_manager)
-                self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(self._pymol_session_manager)
+                self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._interface_manager.pymol_session_manager)
+                self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(self._interface_manager.pymol_session_manager)
                 self._main_view_state.selected_chain_protein_pairs = self._interface_manager.get_current_protein_pair_tree_index()
 
         elif tmp_type == "header":
@@ -4098,7 +4142,7 @@ class MainViewController:
         else:
             logger.warning("Unknown object type occurred in Protein Pairs tab.")
             return
-        self._interface_manager.manage_ui_of_protein_pairs_tab(tmp_type, self._pymol_session_manager)
+        self._interface_manager.manage_ui_of_protein_pairs_tab(tmp_type, self._interface_manager.pymol_session_manager)
 
     def __slot_color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
@@ -4128,7 +4172,7 @@ class MainViewController:
             tmp_color = self._view.ui.box_protein_pair_color.currentText()
         else:
             tmp_color = self._view.ui.lbl_protein_pair_current_color.text().strip()
-        if self._pymol_session_manager.session_object_type == "protein_pair" and self._pymol_session_manager.session_name == tmp_protein_pair.name:
+        if self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.pymol_session_manager.session_name == tmp_protein_pair.name:
             # Update pymol parameter in PyMOL
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             try:
@@ -4879,7 +4923,7 @@ class MainViewController:
 
     def __slot_update_protein_pair_scene(self):
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
-        cmd.scene(key="auto", action="update")
+        cmd.scene(key="auto", action="refresh")
         self._save_protein_pair_pymol_session()
 
     def _check_for_results(self) -> None:
@@ -4894,7 +4938,7 @@ class MainViewController:
                                                                               enums.ModelEnum.OBJECT_ROLE)
         self._external_controller = results_view_controller.ResultsViewController(self._interface_manager,
                                                                                   tmp_protein_pair,
-                                                                                  self._pymol_session_manager)
+                                                                                  self._interface_manager.pymol_session_manager)
         self._interface_manager.get_results_view().show()
 
     # </editor-fold>

@@ -969,7 +969,7 @@ class MainPresenter:
             f"{self._project_watcher.current_project.get_project_name()} is the current project.",
         )
         self._project_watcher.on_home_page = False
-        # update gui
+        # refresh gui
         self._project_watcher.show_valid_options(self._view.ui)
         self._view.ui.lbl_current_project_name.setText(self._current_project.get_project_name())
         self.main_window_state = main_window_state.MainWindowState(
@@ -1030,7 +1030,7 @@ class MainPresenter:
             if self._view.ui.txt_delete_selected_projects.text() == self._view.ui.lbl_current_project_name.text():
                 self._view.ui.lbl_current_project_name.clear()
             self._view.ui.txt_delete_selected_projects.clear()
-            # update list
+            # refresh list
             self._view.ui.list_delete_projects.clear()
             # pre-process
             self._view.status_bar.showMessage(self._workspace_label.text())
@@ -3215,7 +3215,7 @@ class MainPresenter:
     @staticmethod
     def update_scene() -> None:
         """Updates the current selected PyMOL scene."""
-        cmd.scene(key="auto", action="update")
+        cmd.scene(key="auto", action="refresh")
 
     def save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""

@@ -8,89 +8,26 @@ from pyssa.util import enums, constants
 
 class StatusBarManager:
     """A class to manage the statusbar style and messages."""
-    def __init__(self, the_main_view, the_main_task_manager: "main_tasks_manager.MainTasksManager", an_abort_signal):
+    def __init__(self, the_main_view, the_main_task_manager: "main_tasks_manager.MainTasksManager"):
         self._view = the_main_view
         self._main_task_manager = the_main_task_manager
-        self._abort_signal = an_abort_signal
         self._update_signal = None
-        self.job_entry_widgets = []
 
         self._progress_bar = QtWidgets.QProgressBar()
         self._permanent_message = custom_label.PermanentMessageLabel()
-        self._btn_task = QtWidgets.QPushButton()
-        self._lbl_task = QtWidgets.QLabel("No running jobs.")
-        self._btn_notification = QtWidgets.QPushButton()
-        self._lbl_notification = QtWidgets.QLabel("No new notifications.")
+        
         self._menu_task = QtWidgets.QMenu()
         self._is_menu_open = False
         self._abort_action = QtWidgets.QAction("Abort Job")
         self._menu_task.addAction(self._abort_action)
 
-        self.menu_icon_closed = QtGui.QIcon(QtGui.QPixmap(":icons/arrow_right_w400.svg"))
-        self.menu_icon_open = QtGui.QIcon(QtGui.QPixmap(":icons/arrow_drop_up_w400.svg"))
-        self._btn_task.setIcon(self.menu_icon_closed)
-        self._btn_task.setText("")
-        self._btn_task.setIconSize(self.menu_icon_closed.actualSize(QtCore.QSize(30, 30)))
-        self._btn_task.setStyleSheet("""
-            QPushButton {
-                background-color: white;
-                border: none;
-                border-width: 2px;
-                border-radius: 10px;
-                padding: 2px;
-                min-width: 20px;
-                max-width: 20px;
-                min-height: 20px;
-                max-height: 20px
-            }
-            QPushButton::hover {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                            stop: 0 #4B91F7, stop: 0.4 #367AF6,
-                                            stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-                background: white;
-                color: white;
-                color: #4B91F7;
-                border: 2px solid #DCDBE3;
-            }
-        """)
-        self._lbl_task.setStyleSheet("""padding-top: 30px;""")
-        self._btn_notification.setIcon(self.menu_icon_closed)
-        self._btn_notification.setText("")
-        self._btn_notification.setIconSize(self.menu_icon_closed.actualSize(QtCore.QSize(30, 30)))
-        self._btn_notification.setStyleSheet("""
-                    QPushButton {
-                        background-color: red;
-                        border: none;
-                        border-width: 2px;
-                        border-radius: 10px;
-                        padding: 2px;
-                        min-width: 20px;
-                        max-width: 20px;
-                        min-height: 20px;
-                        max-height: 20px
-                    }
-                    QPushButton::hover {
-                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                                    stop: 0 #4B91F7, stop: 0.4 #367AF6,
-                                                    stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-                        background: white;
-                        color: white;
-                        color: #4B91F7;
-                        border: 2px solid #DCDBE3;
-                    }
-                """)
-        self._lbl_notification.setStyleSheet("""padding-top: 30px;""")
         self._view.status_bar.addPermanentWidget(self._progress_bar)
         self._view.status_bar.addPermanentWidget(self._permanent_message)
-        self._view.status_bar.addPermanentWidget(self._btn_task)
-        self._view.status_bar.addPermanentWidget(self._btn_notification)
+        self._view.status_bar.addPermanentWidget(self._view.btn_open_job_overview)
+        self._view.status_bar.addPermanentWidget(self._view.btn_open_job_notification)
         self._progress_bar.hide()
-        self._btn_task.show()
-        self._btn_notification.show()
-        self._view.ui.job_overview_layout.insertWidget(0, self._lbl_task)  # After inserting the widget count is 2
-        self._view.ui.job_overview_layout.setAlignment(self._lbl_task, QtCore.Qt.AlignHCenter)
-        self._view.ui.job_notification_layout.insertWidget(0, self._lbl_notification)  # After inserting the widget count is 2
-        self._view.ui.job_notification_layout.setAlignment(self._lbl_notification, QtCore.Qt.AlignHCenter)
+        self._view.btn_open_job_overview.show()
+        self._view.btn_open_job_notification.show()
         self.temp_message_timer = QtCore.QTimer()
 
         self._connect_ui_elements()
@@ -130,24 +67,7 @@ class StatusBarManager:
                 border-color: #5b5b5b;
             }
         """)
-        # self._view.status_bar.setStyleSheet("""
-        #     QStatusBar {
-        #         background-color: #ba1a1a;
-        #         color: white;
-        #         border-style: solid;
-        #         border-width: 2px;
-        #         border-radius: 4px;
-        #         border-color: #DCDBE3;
-        #     }
-        # """)
-
     # </editor-fold>
-
-    def set_abort_signal(self, the_abort_signal):
-        self._abort_signal = the_abort_signal
-
-    def set_update_signal(self, the_update_signal):
-        self._update_signal = the_update_signal
 
     def _setup_status_bar_message_timer(self, running_task=False, the_long_running_task_message=""):
         """Connects the timer to reset the status bar to the long-runnnig task message."""
@@ -173,29 +93,6 @@ class StatusBarManager:
 
     def _connect_ui_elements(self):
         self._permanent_message.textChanged.connect(self._manage_status_bar_ui)
-        self._btn_task.clicked.connect(self.__slot_open_menu)
-        self._btn_notification.clicked.connect(self.__slot_open_notification_panel)
-        self._abort_action.triggered.connect(self._send_abort_signal)
-
-    def __slot_open_menu(self):
-        if self._view.ui.frame_job_overview.isVisible():
-            self._view.ui.frame_job_overview.hide()
-            self._btn_task.setIcon(self.menu_icon_closed)
-        elif not self._view.ui.frame_job_overview.isVisible():
-            self._view.ui.frame_job_notification.hide()
-            self._btn_notification.setIcon(self.menu_icon_closed)
-            self._view.ui.frame_job_overview.show()
-            self._btn_task.setIcon(self.menu_icon_open)
-
-    def __slot_open_notification_panel(self):
-        if self._view.ui.frame_job_notification.isVisible():
-            self._view.ui.frame_job_notification.hide()
-            self._btn_notification.setIcon(self.menu_icon_closed)
-        elif not self._view.ui.frame_job_notification.isVisible():
-            self._view.ui.frame_job_overview.hide()
-            self._btn_task.setIcon(self.menu_icon_closed)
-            self._view.ui.frame_job_notification.show()
-            self._btn_notification.setIcon(self.menu_icon_open)
 
     def _manage_status_bar_ui(self, the_current_text):
         if self._main_task_manager.prediction_task is None:
@@ -207,12 +104,6 @@ class StatusBarManager:
         else:
             #self._btn_task.setEnabled(False)
             pass
-
-    def _send_abort_signal(self):
-        if not self._main_task_manager.prediction_task.is_finished():
-            self._abort_signal.emit_signal("ColabFold Prediction")
-        self._btn_task.setIcon(self.menu_icon_closed)
-        self._is_menu_open = False
 
     # <editor-fold desc="Public methods">
     def show_permanent_message(self, a_message):
@@ -259,65 +150,9 @@ class StatusBarManager:
         self._progress_bar.setValue(tmp_value)
         self._permanent_message.show()
         self._permanent_message.setText(tmp_message)
-        #self._btn_task.hide()  # until now this feature stays hidden
 
     def hide_progress_bar(self):
         self._progress_bar.hide()
         self._permanent_message.hide()
         self._permanent_message.setText("")
-        #self._btn_task.hide()
-
-    def add_job_entry_to_overview(self, a_job_entry_widget):
-        self.job_entry_widgets.append(a_job_entry_widget)
-        self._view.ui.job_overview_layout.insertWidget(self._view.ui.job_overview_layout.count() - 1,
-                                                       a_job_entry_widget)
-        self._lbl_task.hide()
-
-    def update_job_entry(self, signal_tuple):
-        a_job_entry_widget: "job_entry.JobEntry" = signal_tuple[0]
-        _, a_description, a_value = signal_tuple
-        if a_value == 100:
-            # Setup variables for the new notification widget
-            if a_job_entry_widget.project_name == self._view.ui.lbl_project_name.text().replace("Project Name: ", ""):
-                tmp_job_is_from_current_project = True
-            else:
-                tmp_job_is_from_current_project = False
-            tmp_job_notification_widget = job_entry.JobNotification(a_job_entry_widget.lbl_job_description.text(),
-                                                                    a_job_entry_widget.project_name,
-                                                                    a_job_entry_widget.protein_names,
-                                                                    a_job_entry_widget.protein_pair_names,
-                                                                    tmp_job_is_from_current_project,
-                                                                    self._update_signal)
-            # remove job entry widget
-            if a_job_entry_widget.parent():
-                a_job_entry_widget.setParent(None)
-            a_job_entry_widget.deleteLater()
-            # Add new notification widget to notification panel
-            self._view.ui.job_notification_layout.insertWidget(self._view.ui.job_notification_layout.count() - 1,
-                                                               tmp_job_notification_widget)
-            self._lbl_notification.hide()
-            if self._view.ui.job_overview_layout.count() == 2:
-                self._lbl_task.show()
-        elif a_value == 0:
-            a_job_entry_widget.progress_bar_job.setValue(a_value)
-            a_job_entry_widget.progress_bar_job.setFormat("")
-            a_job_entry_widget.btn_cancel_job.setEnabled(True)
-        elif a_value == 25:
-            a_job_entry_widget.progress_bar_job.setValue(a_value)
-            a_job_entry_widget.progress_bar_job.setFormat("")
-            a_job_entry_widget.btn_cancel_job.setEnabled(True)
-        else:
-            a_job_entry_widget.progress_bar_job.setValue(a_value)
-            a_job_entry_widget.progress_bar_job.setFormat("")
-            a_job_entry_widget.btn_cancel_job.setEnabled(False)
-
-    def remove_job_notification_widget(self, a_job_notification_widget):
-        self._view.ui.job_notification_layout.removeWidget(a_job_notification_widget)
-        if self._view.ui.job_notification_layout.count() == 2:
-            self._lbl_notification.show()
-
-    def close_job_notification_panel(self):
-        self._view.ui.frame_job_notification.hide()
-        self._btn_notification.setIcon(self.menu_icon_closed)
-
     # </editor-fold>

@@ -852,7 +852,7 @@ def open_project(
         )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
-        return 1, 0, 0
+        return 1, 0, 0, 0
     else:
         return 0, tmp_project, the_interface_manager, the_watcher
 

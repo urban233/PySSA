@@ -1326,7 +1326,7 @@ def run(
         logger.warning("Jax uses a GPU by default, trying to switch to CPU ...")
         # PYSSA-BEGIN:
         import jax
-        jax.config.update('jax_platform_name', 'cpu')
+        jax.config.refresh('jax_platform_name', 'cpu')
         import os
         os.environ['CUDA_VISIBLE_DEVICES'] = ''
         # PYSSA-END.

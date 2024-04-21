@@ -12,7 +12,7 @@ from PyQt5.QtCore import Qt
 from pyssa.controller import database_manager, pymol_session_manager, settings_manager, main_tasks_manager, \
     status_bar_manager, job_manager, watcher
 from pyssa.controller.database_manager import logger
-from pyssa.gui.ui.custom_widgets import custom_line_edit
+from pyssa.gui.ui.custom_widgets import custom_line_edit, job_entry
 from pyssa.gui.ui.dialogs import dialog_startup
 from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysis_view, delete_project_view, \
     create_project_view, open_project_view, import_sequence_view, rename_protein_view, use_project_view, \
@@ -24,9 +24,9 @@ from pyssa.gui.ui.views import main_view, predict_monomer_view, distance_analysi
 from pyssa.gui.ui.views import hotspots_protein_regions_view
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
-from pyssa.internal.data_structures.data_classes import current_session
+from pyssa.internal.data_structures.data_classes import current_session, job_summary
 from pyssa.internal.portal import pymol_io
-from pyssa.internal.thread.async_pyssa import locks
+from pyssa.internal.thread.async_pyssa import locks, custom_signals
 from pyssa.io_pyssa import filesystem_io
 from pyssa.model import proteins_model, protein_pairs_model
 from pyssa.util import enums, constants, exception, main_window_util
@@ -97,14 +97,17 @@ class InterfaceManager:
         self._advanced_prediction_configurations = advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
+        self.pymol_session_manager = pymol_session_manager.PymolSessionManager()
         self.job_manager = job_manager.JobManager()
         self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
-                                                                      self.main_tasks_manager,
-                                                                      None)
+                                                                      self.main_tasks_manager)
         self._settings_manager = settings_manager.SettingsManager()
         self.watcher = watcher.Watcher()
 
         self.documentation_window = None
+        self.job_entry_widgets = []
+
+        self.refresh_after_job_finished_signal = custom_signals.RefreshAfterJobFinishedSignal()
 
         # <editor-fold desc="Setup App Settings">
         # self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)
@@ -585,7 +588,7 @@ class InterfaceManager:
         """Checks which color the protein chain has and sets the index of the combobox accordingly."""
         tmp_protein = self.get_current_active_protein_object()
         tmp_chain = self.get_current_active_chain_object()
-        if the_pymol_session_manager.is_the_current_protein_in_session():
+        if the_pymol_session_manager.is_the_current_protein_in_session(self.get_current_active_protein_object().get_molecule_object()):
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             if tmp_chain.chain_type == "protein_chain":
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA"
@@ -602,7 +605,7 @@ class InterfaceManager:
     def set_repr_state_in_ui_for_protein_chain(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
         tmp_protein = self.get_current_active_protein_object()
         tmp_chain = self.get_current_active_chain_object()
-        if the_pymol_session_manager.is_the_current_protein_in_session():
+        if the_pymol_session_manager.is_the_current_protein_in_session(self.get_current_active_protein_object().get_molecule_object()):
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
             print(f"This is a chain type: {tmp_chain.chain_type}")
@@ -628,7 +631,7 @@ class InterfaceManager:
     def set_repr_state_in_ui_for_protein_pair_chain(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
-        if the_pymol_session_manager.is_the_current_protein_pair_in_session():
+        if the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name):
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
             if tmp_chain.chain_type == "protein_chain":
@@ -844,6 +847,7 @@ class InterfaceManager:
             self._main_view.ui.action_close_project.setEnabled(True)
             # Demo Projects
             self._main_view.ui.action_get_demo_projects.setEnabled(False)
+            # Sequence objects
             if len(self._current_project.sequences) > 0:
                 # A project has sequence(s)
                 self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
@@ -875,14 +879,13 @@ class InterfaceManager:
                     self._main_view.ui.menuPrediction.setEnabled(
                         False)  # the entire menu can be disabled because all sequences are predicted
                 # </editor-fold>
-
             else:
                 # A project has no sequence(s)
                 self._sequence_model = QtGui.QStandardItemModel()
                 self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
                 # It isn't possible to do a prediction
                 self._main_view.ui.menuPrediction.setEnabled(False)
-
+            # Protein objects
             if len(self._current_project.proteins) > 0:
                 # A project has protein(s)
                 self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
@@ -891,14 +894,18 @@ class InterfaceManager:
                 # Analysis
                 self._main_view.ui.menuAnalysis.setEnabled(True)
                 self._main_view.ui.action_distance_analysis.setEnabled(True)
-                # Image
-                self._main_view.ui.menuImage.setEnabled(True)
-                self._main_view.ui.action_preview_image.setEnabled(True)
-                self._main_view.ui.action_ray_tracing_image.setEnabled(True)
-                self._main_view.ui.action_simple_image.setEnabled(True)
-                # Hotspots
-                self._main_view.ui.menuHotspots.setEnabled(True)
-                self._main_view.ui.action_protein_regions.setEnabled(True)
+                # Image/ Hotspots
+                if self.pymol_session_manager.is_the_current_session_empty():
+                    self._main_view.ui.menuImage.setEnabled(False)
+                    self._main_view.ui.menuHotspots.setEnabled(False)
+                else:
+                    self._main_view.ui.menuImage.setEnabled(True)
+                    self._main_view.ui.action_preview_image.setEnabled(True)
+                    self._main_view.ui.action_ray_tracing_image.setEnabled(True)
+                    self._main_view.ui.action_simple_image.setEnabled(True)
+                    # Hotspots
+                    self._main_view.ui.menuHotspots.setEnabled(True)
+                    self._main_view.ui.action_protein_regions.setEnabled(True)
 
                 if len(self._current_project.protein_pairs) > 0:
                     # A project has protein pair(s)
@@ -919,6 +926,7 @@ class InterfaceManager:
                 self._main_view.ui.menuImage.setEnabled(False)
                 # Hotspots
                 self._main_view.ui.menuHotspots.setEnabled(False)
+        # No project open
         else:
             # Homepage view
             styles.set_stylesheet_homepage(self._main_view)
@@ -964,112 +972,112 @@ class InterfaceManager:
             self._main_view.ui.menuHotspots.setEnabled(False)
             self._main_view.ui.action_protein_regions.setEnabled(False)
 
-        # Menu bar view for prediction
-        if self.main_tasks_manager.prediction_task is not None:
-            if not self.main_tasks_manager.check_if_prediction_task_is_finished():
-                # A prediction is running.
-                self._main_view.ui.menuProject.setEnabled(False)
-                self._main_view.ui.action_predict_monomer.setEnabled(False)
-                self._main_view.ui.action_predict_multimer.setEnabled(False)
-                self._main_view.ui.action_abort_prediction.setEnabled(True)
-                self._main_view.ui.menuAnalysis.setEnabled(False)
-                self._main_view.ui.menuImage.setEnabled(False)
-                # Check for existing protein(s)
-                if len(self._current_project.proteins) > 0:
-                    self._main_view.ui.menuHotspots.setEnabled(True)
-                else:
-                    self._main_view.ui.menuHotspots.setEnabled(False)
-                # Check for existing results
-                if len(self._current_project.protein_pairs) > 0:
-                    self._main_view.ui.menuResults.setEnabled(True)
-                    self._main_view.ui.action_results_summary.setEnabled(True)
-                else:
-                    self._main_view.ui.menuResults.setEnabled(False)
-            else:
-                # A prediction is finished or not running.
-                pass
-
-        # Menu bar view for analysis
-        if self.main_tasks_manager.distance_analysis_task is not None:
-            if not self.main_tasks_manager.check_if_distance_analysis_task_is_finished():
-                # An analysis is running.
-                self._main_view.ui.menuProject.setEnabled(False)
-                self._main_view.ui.menuPrediction.setEnabled(False)
-                self._main_view.ui.menuAnalysis.setEnabled(False)
-                self._main_view.ui.menuImage.setEnabled(False)
-                self._main_view.ui.menuHotspots.setEnabled(False)
-                # Check for existing results
-                if len(self._current_project.protein_pairs) > 0:
-                    self._main_view.ui.menuResults.setEnabled(True)
-                    self._main_view.ui.action_results_summary.setEnabled(True)
-                else:
-                    self._main_view.ui.menuResults.setEnabled(False)
-            else:
-                # An analysis is finished or not running.
-                pass
-
-        # TODO: this could be not needed
-        #self._main_view.ui.project_tab_widget.setCurrentIndex(0)
-
-        # # Fixme: The following code below is for clicking on sequence, protein or protein pair with available options.
-        # # Fixme: Is this important with the code above?
-        # self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
-        # # Sequence
-        # if len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is not None:
-        #     # There are sequences in the project and there is also one selected
-        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
-        #     self.show_menu_options_with_seq()
-        # elif len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
-        #     # There are sequences in the project and there is NO one selected
-        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
-        #     self.show_menu_options_without_seq()
-        # else:
-        #     # There are no sequences in the project
-        #     self.show_menu_options_without_seq()
-        #     self._sequence_model = QtGui.QStandardItemModel()
-        #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        # # Menu bar view for prediction
+        # if self.main_tasks_manager.prediction_task is not None:
+        #     if not self.main_tasks_manager.check_if_prediction_task_is_finished():
+        #         # A prediction is running.
+        #         self._main_view.ui.menuProject.setEnabled(False)
+        #         self._main_view.ui.action_predict_monomer.setEnabled(False)
+        #         self._main_view.ui.action_predict_multimer.setEnabled(False)
+        #         self._main_view.ui.action_abort_prediction.setEnabled(True)
+        #         self._main_view.ui.menuAnalysis.setEnabled(False)
+        #         self._main_view.ui.menuImage.setEnabled(False)
+        #         # Check for existing protein(s)
+        #         if len(self._current_project.proteins) > 0:
+        #             self._main_view.ui.menuHotspots.setEnabled(True)
+        #         else:
+        #             self._main_view.ui.menuHotspots.setEnabled(False)
+        #         # Check for existing results
+        #         if len(self._current_project.protein_pairs) > 0:
+        #             self._main_view.ui.menuResults.setEnabled(True)
+        #             self._main_view.ui.action_results_summary.setEnabled(True)
+        #         else:
+        #             self._main_view.ui.menuResults.setEnabled(False)
+        #     else:
+        #         # A prediction is finished or not running.
+        #         pass
         #
-        # # Proteins Tab
-        # if len(self._current_project.proteins) > 0:
-        #     self.show_menu_options_with_protein()
-        # if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-        #     self.show_menu_options_without_protein()
+        # # Menu bar view for analysis
+        # if self.main_tasks_manager.distance_analysis_task is not None:
+        #     if not self.main_tasks_manager.check_if_distance_analysis_task_is_finished():
+        #         # An analysis is running.
+        #         self._main_view.ui.menuProject.setEnabled(False)
+        #         self._main_view.ui.menuPrediction.setEnabled(False)
+        #         self._main_view.ui.menuAnalysis.setEnabled(False)
+        #         self._main_view.ui.menuImage.setEnabled(False)
+        #         self._main_view.ui.menuHotspots.setEnabled(False)
+        #         # Check for existing results
+        #         if len(self._current_project.protein_pairs) > 0:
+        #             self._main_view.ui.menuResults.setEnabled(True)
+        #             self._main_view.ui.action_results_summary.setEnabled(True)
+        #         else:
+        #             self._main_view.ui.menuResults.setEnabled(False)
+        #     else:
+        #         # An analysis is finished or not running.
+        #         pass
         #
-        # # Protein Pairs Tab
-        # if len(self._current_project.protein_pairs) > 0:
-        #     self.show_menu_options_with_protein_pair()
-        # if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
-        #     self.show_menu_options_without_protein_pair()
-
-        # tmp_projects = self.get_workspace_projects_as_list()
-        # if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
-        #     self._main_view.ui.action_open_project.setEnabled(True)
-        #     self._main_view.ui.action_delete_project.setEnabled(True)
+        # # TODO: this could be not needed
+        # #self._main_view.ui.project_tab_widget.setCurrentIndex(0)
+        #
+        # # # Fixme: The following code below is for clicking on sequence, protein or protein pair with available options.
+        # # # Fixme: Is this important with the code above?
+        # # self._main_view.ui.project_tab_widget.setCurrentIndex(self.current_tab_index)
+        # # # Sequence
+        # # if len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is not None:
+        # #     # There are sequences in the project and there is also one selected
+        # #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        # #     self.show_menu_options_with_seq()
+        # # elif len(self._current_project.sequences) > 0 and self._main_view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole) is None:
+        # #     # There are sequences in the project and there is NO one selected
+        # #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        # #     self.show_menu_options_without_seq()
+        # # else:
+        # #     # There are no sequences in the project
+        # #     self.show_menu_options_without_seq()
+        # #     self._sequence_model = QtGui.QStandardItemModel()
+        # #     self._main_view.ui.seqs_list_view.setModel(self._sequence_model)
+        # #
+        # # # Proteins Tab
+        # # if len(self._current_project.proteins) > 0:
+        # #     self.show_menu_options_with_protein()
+        # # if len(self._current_project.proteins) == 0 or self._main_view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+        # #     self.show_menu_options_without_protein()
+        # #
+        # # # Protein Pairs Tab
+        # # if len(self._current_project.protein_pairs) > 0:
+        # #     self.show_menu_options_with_protein_pair()
+        # # if len(self._current_project.protein_pairs) == 0 or self._main_view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole) is None:
+        # #     self.show_menu_options_without_protein_pair()
+        #
+        # # tmp_projects = self.get_workspace_projects_as_list()
+        # # if len(tmp_projects) > 0 and not self._main_view.ui.lbl_logo.isHidden():
+        # #     self._main_view.ui.action_open_project.setEnabled(True)
+        # #     self._main_view.ui.action_delete_project.setEnabled(True)
+        # # else:
+        # #     self._main_view.ui.action_open_project.setEnabled(False)
+        # #     self._main_view.ui.action_delete_project.setEnabled(False)
+        #
+        # # Fixme: Is the text in statusbar and logger not enough?
+        # if self.main_tasks_manager.prediction_task is not None:
+        #     if not self.main_tasks_manager.check_if_prediction_task_is_finished():
+        #         logger.info("Running prediction in the background ...")
+        #         self._main_view.ui.action_abort_prediction.setEnabled(True)
+        #         self._main_view.ui.action_predict_monomer.setEnabled(False)
+        #         self._main_view.ui.action_predict_multimer.setEnabled(False)
+        #     else:
+        #         logger.info("Prediction finished.")
+        #         self._main_view.status_bar.setStyleSheet("""
+        #             QStatusBar {
+        #                 background-color: white;
+        #                 border-style: solid;
+        #                 border-width: 2px;
+        #                 border-radius: 4px;
+        #                 border-color: #DCDBE3;
+        #             }
+        #         """)
+        #         self._main_view.ui.action_abort_prediction.setEnabled(False)
         # else:
-        #     self._main_view.ui.action_open_project.setEnabled(False)
-        #     self._main_view.ui.action_delete_project.setEnabled(False)
-
-        # Fixme: Is the text in statusbar and logger not enough?
-        if self.main_tasks_manager.prediction_task is not None:
-            if not self.main_tasks_manager.check_if_prediction_task_is_finished():
-                logger.info("Running prediction in the background ...")
-                self._main_view.ui.action_abort_prediction.setEnabled(True)
-                self._main_view.ui.action_predict_monomer.setEnabled(False)
-                self._main_view.ui.action_predict_multimer.setEnabled(False)
-            else:
-                logger.info("Prediction finished.")
-                self._main_view.status_bar.setStyleSheet("""
-                    QStatusBar {
-                        background-color: white;
-                        border-style: solid;
-                        border-width: 2px;
-                        border-radius: 4px;
-                        border-color: #DCDBE3;
-                    }
-                """)
-                self._main_view.ui.action_abort_prediction.setEnabled(False)
-        else:
-            self._main_view.ui.action_abort_prediction.setEnabled(False)
+        #     self._main_view.ui.action_abort_prediction.setEnabled(False)
 
     def refresh_workspace_model(self):
         self._workspace_model.clear()
@@ -1262,7 +1270,7 @@ class InterfaceManager:
     ) -> None:
         self._main_view.ui.lbl_info_2.hide()
 
-        tmp_is_protein_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_in_session()
+        tmp_is_protein_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_in_session(self.get_current_active_protein_object().get_molecule_object())
         tmp_current_scene_name: str = the_pymol_session_manager.current_scene_name
 
         self._main_view.ui.btn_delete_protein.setEnabled(False)
@@ -1648,7 +1656,7 @@ class InterfaceManager:
                                        the_pymol_session_manager: pymol_session_manager.PymolSessionManager):
         self._main_view.ui.lbl_info_4.hide()
 
-        tmp_is_protein_pair_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_pair_in_session()
+        tmp_is_protein_pair_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name)
         tmp_current_scene_name: str = the_pymol_session_manager.current_scene_name
 
         if an_object_type == "protein_pair":
@@ -1776,7 +1784,7 @@ class InterfaceManager:
     ):
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
-        if the_pymol_session_manager.is_the_current_protein_pair_in_session():
+        if the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name):
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
             if tmp_chain.chain_type == "protein_chain":
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()} and name CA"
@@ -1964,10 +1972,80 @@ class InterfaceManager:
         QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self._main_view.disable_menu_bar()
         self._main_view.disable_tab_widget()
+        self._main_view.disable_job_panels()
 
     def stop_wait_cursor(self) -> None:
         """Stops the spinner."""
         QtWidgets.QApplication.restoreOverrideCursor()
+        self._main_view.enable_job_panels()
+
+    # <editor-fold desc="Job related methods">
+    def add_job_entry_to_job_overview_layout(self, a_job_entry_widget):
+        self.job_entry_widgets.append(a_job_entry_widget)
+        self._main_view.ui.job_overview_layout.insertWidget(self._main_view.ui.job_overview_layout.count() - 1,
+                                                            a_job_entry_widget)
+        self._main_view.lbl_job_overview.hide()
+
+    def update_job_entry(self, update_job_entry_signal_values):
+        """
+
+        Notes:
+            Gets signal from the classes of job.py with the signal "update_job_entry_signal"
+
+        """
+        _, a_description, a_value = update_job_entry_signal_values
+        a_job_entry_widget: "job_entry.JobEntryWidget" = update_job_entry_signal_values[0]  # Unpack of 0 because of type annotation need
+        a_job_entry_widget.progress_bar_job.setValue(a_value)
+        a_job_entry_widget.progress_bar_job.setFormat("")
+        if a_value == 100:
+            self._create_job_notification(a_job_entry_widget)
+        elif a_value == 0 or a_value == 25:
+            a_job_entry_widget.btn_cancel_job.setEnabled(True)
+        else:
+            a_job_entry_widget.btn_cancel_job.setEnabled(False)
+
+    def _create_job_notification(self, a_job_entry_widget: "job_entry.JobEntryWidget"):
+        """Helper function for setting up a job notification after a job finished."""
+        if a_job_entry_widget.job_base_information.project_name == self._current_project.get_project_name():
+            tmp_job_is_from_current_project = True
+        else:
+            tmp_job_is_from_current_project = False
+        tmp_job_notification_widget = job_entry.JobNotificationWidget(a_job_entry_widget.job_base_information,
+                                                                      tmp_job_is_from_current_project,
+                                                                      self.refresh_after_job_finished_signal)
+        # remove job entry widget
+        if a_job_entry_widget.parent():
+            a_job_entry_widget.setParent(None)
+        a_job_entry_widget.deleteLater()
+        # Add new notification widget to notification panel
+        self._main_view.ui.job_notification_layout.insertWidget(self._main_view.ui.job_notification_layout.count() - 1,
+                                                                tmp_job_notification_widget)
+        self._main_view.lbl_job_notification.hide()
+        if self._main_view.ui.job_overview_layout.count() == 2:
+            self._main_view.lbl_job_overview.show()
+
+    def remove_job_notification_widget(self, a_job_notification_widget):
+        """Removes a job notification after pressing open or refresh.
+
+        Notes:
+            This function is called from the main_view_controller.
+        """
+        self._main_view.ui.job_notification_layout.removeWidget(a_job_notification_widget)
+        if self._main_view.ui.job_notification_layout.count() == 2:
+            self._main_view.lbl_job_notification.show()
+
+    def close_job_notification_panel(self):
+        """Closes the job notification panel after pressing open or refresh.
+
+        Notes:
+            This function is called from the main_view_controller.
+        """
+        self._main_view.ui.frame_job_notification.hide()
+        self._main_view.btn_open_job_notification.setIcon(self._main_view.icon_job_overview_closed)
+
+    def close_job_overview_panel(self):
+        self._main_view.ui.frame_job_overview.hide()
+        self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_job_overview_closed)
 
     def cancel_job(self, signal_tuple):
         if signal_tuple[0] == enums.JobType.PREDICTION:
@@ -1986,3 +2064,4 @@ class InterfaceManager:
                 self.job_manager.stop_prediction_queue()
             else:
                 self.job_manager.pop_job_from_queue(signal_tuple[2])
+    # </editor-fold>

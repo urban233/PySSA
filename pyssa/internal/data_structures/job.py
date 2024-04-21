@@ -45,7 +45,7 @@ class Job(QtCore.QObject):
 class PredictionJob(Job):
     """Job for any type of structure prediction."""
 
-    update_status_bar_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
+    update_job_entry_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
     cancel_job_signal = QtCore.pyqtSignal(tuple)
 
     def __init__(self,
@@ -73,25 +73,25 @@ class PredictionJob(Job):
             self.prediction_configuration,
             self.frozen_project,
         )
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Creating temp directories ...", 5))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Creating temp directories ...", 5))
         structure_prediction_obj.create_tmp_directories()
         logger.info("Tmp directories were created.")
 
         # <editor-fold desc="Creates fasta files for prediction">
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Creating FASTA files ...", 10))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Creating FASTA files ...", 10))
         try:
             structure_prediction_obj.create_fasta_files_for_prediction()
         except exception.FastaFilesNotCreatedError:
             logger.error("Fasta files were not created.")
-            self.update_status_bar_signal.emit(self.job_entry_widget, ("Fasta files could not be created!"))
+            self.update_job_entry_signal.emit(self.job_entry_widget, ("Fasta files could not be created!"))
             return (exit_codes.ERROR_WRITING_FASTA_FILES[0], exit_codes.ERROR_WRITING_FASTA_FILES[1])
         except exception.FastaFilesNotFoundError:
             logger.error("Fasta files were not found.")
-            self.update_status_bar_signal.emit("Fasta files not found!")
+            self.update_job_entry_signal.emit("Fasta files not found!")
             return (exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
-            self.update_status_bar_signal.emit("Unexpected error occurred during Fasta file creation!")
+            self.update_job_entry_signal.emit("Unexpected error occurred during Fasta file creation!")
             return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
         else:
             logger.info("Fasta files were successfully created.")
@@ -99,7 +99,7 @@ class PredictionJob(Job):
         # </editor-fold>
 
         # <editor-fold desc="Runs structure prediction">
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 25))  # 25 must only be used for this exact step
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 25))  # 25 must only be used for this exact step
         try:
             structure_prediction_obj.run_prediction()
         except exception.PredictionEndedWithError:
@@ -111,7 +111,7 @@ class PredictionJob(Job):
         # </editor-fold>
 
         # <editor-fold desc="Saves predicted protein to project">
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Saving best prediction results ...", 85))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Saving best prediction results ...", 85))
         try:
             tmp_best_prediction_models = structure_prediction_obj.move_best_prediction_models()
             logger.info("Saved predicted pdb file into XML file.")
@@ -137,7 +137,7 @@ class PredictionJob(Job):
                                                              self.project_lock)
             subprocess.run(["wsl", "--shutdown"])
             logger.info("WSL gets shutdown.")
-            self.update_status_bar_signal.emit((self.job_entry_widget, "Prediction job finished.", 100))
+            self.update_job_entry_signal.emit((self.job_entry_widget, "Prediction job finished.", 100))
             return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
         # </editor-fold>
 
@@ -223,7 +223,7 @@ class PredictionJob(Job):
 class DistanceAnalysisJob(Job):
     """Job for a distance analysis."""
 
-    update_status_bar_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
+    update_job_entry_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
 
     def __init__(self,
                  a_project,
@@ -244,7 +244,7 @@ class DistanceAnalysisJob(Job):
     def run_job(self):
         logger.info("Running distance analysis in QThread using the Task class.")
         try:
-            self.update_status_bar_signal.emit((self.job_entry_widget, "Transforming input ...", 15))
+            self.update_job_entry_signal.emit((self.job_entry_widget, "Transforming input ...", 15))
             analysis_runs = structure_analysis.Analysis(self.frozen_project)
             analysis_runs.analysis_list = analysis_util.transform_gui_input_to_practical_data(
                 self.list_with_analysis_names,
@@ -253,10 +253,10 @@ class DistanceAnalysisJob(Job):
                 self.cycles,
             )
             logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
-            self.update_status_bar_signal.emit((self.job_entry_widget, "Running the distance analysis ...", 50))
+            self.update_job_entry_signal.emit((self.job_entry_widget, "Running the distance analysis ...", 50))
             analysis_runs.run_analysis("distance", False)
             logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
-            self.update_status_bar_signal.emit((self.job_entry_widget, "Saving results ...", 80))
+            self.update_job_entry_signal.emit((self.job_entry_widget, "Saving results ...", 80))
             for tmp_protein_pair in analysis_runs.analysis_list:
                 tmp_protein_pair.db_project_id = self.frozen_project.get_id()
                 copy_tmp_protein_pair = copy.deepcopy(tmp_protein_pair)
@@ -266,7 +266,7 @@ class DistanceAnalysisJob(Job):
                     db_manager.close_project_database()
                 # Protein pair gets added to "self.frozen_project" of this class
                 self.frozen_project.add_protein_pair(copy_tmp_protein_pair)
-            self.update_status_bar_signal.emit((self.job_entry_widget, "Distance analysis finished.", 100))
+            self.update_job_entry_signal.emit((self.job_entry_widget, "Distance analysis finished.", 100))
         except exception.UnableToSetupAnalysisError:
             logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
             return (
@@ -283,7 +283,7 @@ class DistanceAnalysisJob(Job):
 class PredictionAndDistanceAnalysisJob(Job):
     """Job for a prediction and distance analysis."""
 
-    update_status_bar_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
+    update_job_entry_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
 
     def __init__(self,
                  a_prediction_job,
@@ -295,18 +295,18 @@ class PredictionAndDistanceAnalysisJob(Job):
         self.job_entry_widget = None
 
     def run_job(self):
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 33))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 33))
         self.prediction_job.run_job()
         self.distance_analysis_job.frozen_project = self.prediction_job.frozen_project
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Running a distance analysis ...", 66))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Running a distance analysis ...", 66))
         self.distance_analysis_job.run_job()
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Prediction and distance analysis job finished.", 100))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Prediction and distance analysis job finished.", 100))
 
 
 class RayTracingJob(Job):
     """Job for any type of ray-tracing."""
 
-    update_status_bar_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
+    update_job_entry_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
 
     def __init__(self,
                  the_destination_image_filepath,
@@ -324,7 +324,7 @@ class RayTracingJob(Job):
         self.job_entry_widget = None
 
     def run_job(self):
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Starting rendering process ...", 33))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Starting rendering process ...", 33))
         auxiliary_pymol.AuxiliaryPyMOL.create_ray_traced_image(
             self.dest_image_filepath,
             self.cached_session_filepath,
@@ -332,4 +332,4 @@ class RayTracingJob(Job):
             self.image_ray_texture,
             self.image_renderer
         )
-        self.update_status_bar_signal.emit((self.job_entry_widget, "Rendering process finished.", 100))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "Rendering process finished.", 100))

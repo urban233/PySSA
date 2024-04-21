@@ -70,10 +70,10 @@ def check_version_number() -> None:
 
         if response.status_code == 503:
             constants.PYSSA_LOGGER.warning(
-                "The connection to the update servers failed. If could not determine if a new version is available.",
+                "The connection to the refresh servers failed. If could not determine if a new version is available.",
             )
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "The connection to the update servers failed. "
+                "The connection to the refresh servers failed. "
                 "It could not determine if a new version is available. You can start the PySSA now.",
                 "No Internet Connection",
                 custom_message_box.CustomMessageBoxIcons.INFORMATION.value

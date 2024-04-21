@@ -179,6 +179,18 @@ class JobManager:
         else:
             return None
 
+    def there_are_jobs_running(self) -> bool:
+        if self._is_prediction_queue_running:
+            return True
+        elif self._is_distance_analysis_queue_running:
+            return True
+        elif self._is_prediction_and_distance_analysis_queue_running:
+            return True
+        elif self._is_ray_tracing_queue_running:
+            return True
+        else:
+            return False
+
     # <editor-fold desc="Prediction job">
     def create_prediction_job(
             self,
@@ -197,12 +209,11 @@ class JobManager:
         tmp_protein_names = []
         for tmp_protein_info in the_prediction_protein_infos:
             tmp_protein_names.append(tmp_protein_info.name)
-        tmp_prediction_job.update_status_bar_signal.connect(the_interface_manager.status_bar_manager.update_job_entry)
-        tmp_prediction_job.job_entry_widget = job_entry.JobEntry(
+        tmp_prediction_job.update_job_entry_signal.connect(the_interface_manager.update_job_entry)
+
+        tmp_prediction_job.job_entry_widget = job_entry.JobEntryWidget(
             "Running ColabFold prediction",
-            a_project.get_project_name(),
-            tmp_protein_names,
-            []
+            job_summary.JobBaseInformation(tmp_prediction_job.type, a_project.get_project_name(), tmp_protein_names, [])
         )
         tmp_prediction_job.job_entry_widget.btn_cancel_job.clicked.connect(tmp_prediction_job.cancel_job)
         tmp_prediction_job.cancel_job_signal.connect(the_interface_manager.cancel_job)
@@ -269,10 +280,16 @@ class JobManager:
             a_cutoff,
             cycles
         )
-        tmp_distance_analysis_job.update_status_bar_signal.connect(
-            the_interface_manager.status_bar_manager.update_job_entry)
-        tmp_distance_analysis_job.job_entry_widget = job_entry.JobEntry(
-            "Running distance analysis", a_project.get_project_name()
+        tmp_protein_pair_names = []
+        for tmp_analysis_name in a_list_with_analysis_names:
+            tmp_protein_pair_name = tmp_analysis_name.replace(";", "_")
+            tmp_protein_pair_name = tmp_protein_pair_name.replace(",", "_")
+            tmp_protein_pair_names.append(tmp_protein_pair_name)
+        tmp_distance_analysis_job.update_job_entry_signal.connect(
+            the_interface_manager.update_job_entry)
+        tmp_distance_analysis_job.job_entry_widget = job_entry.JobEntryWidget(
+            "Running distance analysis",
+            job_summary.JobBaseInformation(tmp_distance_analysis_job.type, a_project.get_project_name(), [], tmp_protein_pair_names)
         )
         return tmp_distance_analysis_job, tmp_distance_analysis_job.job_entry_widget
 
@@ -320,7 +337,7 @@ class JobManager:
         self._distance_analysis_queue.put(None)
     # </editor-fold>
 
-    # <editor-fold desc="Distance analysis job">
+    # <editor-fold desc="Prediction and distance analysis job">
     def create_prediction_and_distance_analysis_job(
             self,
             a_prediction_job: "job.PredictionJob",
@@ -331,10 +348,16 @@ class JobManager:
             a_prediction_job,
             a_distance_analysis_job
         )
-        tmp_prediction_and_distance_analysis_job.update_status_bar_signal.connect(
-            the_interface_manager.status_bar_manager.update_job_entry)
-        tmp_prediction_and_distance_analysis_job.job_entry_widget = job_entry.JobEntry(
-            "Running ColabFold prediction + distance analysis", a_prediction_job.frozen_project.get_project_name()
+        tmp_prediction_and_distance_analysis_job.update_job_entry_signal.connect(
+            the_interface_manager.update_job_entry)
+        tmp_prediction_and_distance_analysis_job.job_entry_widget = job_entry.JobEntryWidget(
+            "Running ColabFold prediction + distance analysis",
+            job_summary.JobBaseInformation(
+                tmp_prediction_and_distance_analysis_job.type,
+                a_prediction_job.frozen_project.get_project_name(),
+                a_prediction_job.job_entry_widget.job_base_information.protein_names,
+                a_distance_analysis_job.job_entry_widget.job_base_information.protein_pair_names
+            )
         )
         return tmp_prediction_and_distance_analysis_job, tmp_prediction_and_distance_analysis_job.job_entry_widget
 
@@ -390,8 +413,8 @@ class JobManager:
             image_ray_texture,
             image_renderer
         )
-        tmp_ray_tracing_job.update_status_bar_signal.connect(the_interface_manager.status_bar_manager.update_job_entry)
-        tmp_ray_tracing_job.job_entry_widget = job_entry.JobEntry("Creating ray-traced image", a_project_name)
+        tmp_ray_tracing_job.update_job_entry_signal.connect(the_interface_manager.update_job_entry)
+        tmp_ray_tracing_job.job_entry_widget = job_entry.JobEntryWidget("Creating ray-traced image", a_project_name)
         return tmp_ray_tracing_job, tmp_ray_tracing_job.job_entry_widget
 
     def put_ray_tracing_job_into_queue(self, a_ray_tracing_job: "job.RayTracingJob"):

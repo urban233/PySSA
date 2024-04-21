@@ -2042,7 +2042,7 @@ if TYPE_CHECKING:
 #             f"{self._project_watcher.current_project.get_project_name()} is the current project.",
 #         )
 #         self._project_watcher.on_home_page = False
-#         # update gui
+#         # refresh gui
 #         self._project_watcher.show_valid_options(self.ui)
 #         self.ui.lbl_current_project_name.setText(new_project_name)
 #         self.status_bar.showMessage(f"Current project path: {self.workspace_path}/{new_project_name}")
@@ -2177,7 +2177,7 @@ if TYPE_CHECKING:
 #             if self.ui.txt_delete_selected_projects.text() == self.ui.lbl_current_project_name.text():
 #                 self.ui.lbl_current_project_name.clear()
 #             self.ui.txt_delete_selected_projects.clear()
-#             # update list
+#             # refresh list
 #             self.ui.list_delete_projects.clear()
 #             # pre-process
 #             self.status_bar.showMessage(self.workspace.text())
@@ -7425,7 +7425,7 @@ if TYPE_CHECKING:
 #     @staticmethod
 #     def update_scene() -> None:
 #         """Updates the current selected PyMOL scene."""
-#         cmd.scene(key="auto", action="update")
+#         cmd.scene(key="auto", action="refresh")
 #
 #     def save_scene(self) -> None:
 #         """Saves the current view as a new PyMOL scene."""
@@ -7686,9 +7686,8 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     styles.set_stylesheet(app)
     interfaceManager = interface_manager.InterfaceManager()
-    pymolSessionManager = pymol_session_manager.PymolSessionManager(interfaceManager)
     main_window = interfaceManager.get_main_view()
-    main_controller = main_view_controller.MainViewController(interfaceManager, pymolSessionManager)
+    main_controller = main_view_controller.MainViewController(interfaceManager)
     styles.set_stylesheet_homepage(main_window)
     main_window.show()
     sys.exit(app.exec_())

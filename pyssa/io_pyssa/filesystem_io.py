@@ -709,7 +709,7 @@ class ObjectDeserializer:
         """Deserializes the protein object from a JSON file."""
         if self.object_dict.get("export_data_dir") == "None":
             update = {"export_data_dir": None}
-            self.object_dict.update(update)
+            self.object_dict.refresh(update)
         tmp_protein = protein.Protein(
             molecule_object=self.object_dict.get("filename"),  # important for duplicated proteins
             proteins_dirname=self.object_dict.get("proteins_dirname"),

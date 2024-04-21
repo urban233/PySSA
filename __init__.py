@@ -91,9 +91,8 @@ def run_plugin_gui() -> None:
     if mainWindow is None:
         logger.info("Creating manager objects.")
         interfaceManager = interface_manager.InterfaceManager()
-        pymolSessionManager = pymol_session_manager.PymolSessionManager(interfaceManager)
         mainWindow = interfaceManager.get_main_view()
-        mainViewController = main_view_controller.MainViewController(interfaceManager, pymolSessionManager)
+        mainViewController = main_view_controller.MainViewController(interfaceManager)
         # # Open the qss styles file and read in the css-alike styling code
         # if sys.platform.startswith("linux"):
         #     with open(styles_path_list[0], "r", encoding="utf-8") as file:

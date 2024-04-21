@@ -22,6 +22,16 @@
 """Module contains job summary dataclasses."""
 from dataclasses import dataclass
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
+from pyssa.util import enums
+
+
+@dataclass
+class JobBaseInformation:
+    """Class which contains all general information about a job."""
+    job_type: "enums.JobType"
+    project_name: str
+    protein_names: list[str]
+    protein_pair_names: list[str]
 
 
 @dataclass

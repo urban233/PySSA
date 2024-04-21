@@ -47,7 +47,7 @@ class PymolSessionManager:
     frozen_protein_object: "protein.Protein"
     frozen_protein_pair_object: "protein_pair.ProteinPair"
 
-    def __init__(self, the_interface_manager: "interface_manager.InterfaceManager") -> None:
+    def __init__(self) -> None:
         self.session_name = ""
         self.session_object_type = ""
         self.session_objects = []
@@ -56,8 +56,6 @@ class PymolSessionManager:
 
         self.frozen_protein_object = None
         self.frozen_protein_pair_object = None
-
-        self._interface_manager: "interface_manager.InterfaceManager" = the_interface_manager
 
     def reinitialize_session(self) -> None:
         """Reinitialize the pymol session and class attributes."""
@@ -164,23 +162,16 @@ class PymolSessionManager:
         else:
             return False
 
-    def is_the_current_protein_in_session(self) -> bool:
+    def is_the_current_protein_in_session(self, the_name_of_the_selected_protein) -> bool:
         """Checks if the current protein is in the session."""
-        # if self._interface_manager.get_current_protein_tree_index_type() == "protein":
-        #     tmp_protein_name: str = self._interface_manager.get_current_active_protein_object().get_molecule_object()
-        # elif self._interface_manager.get_current_protein_tree_index_type() == "chain":
-        #     tmp_protein_name: str = self._interface_manager.get_parent_index_object_of_current_protein_tree_index().get_molecule_object()
-        # else:
-        #     raise ValueError("Unknown type!")
-
-        if self.session_object_type == "protein" and self.session_name == self._interface_manager.get_current_active_protein_object().get_molecule_object():
+        if self.session_object_type == "protein" and self.session_name == the_name_of_the_selected_protein:
             return True
         else:
             return False
 
-    def is_the_current_protein_pair_in_session(self) -> bool:
+    def is_the_current_protein_pair_in_session(self, the_name_of_the_selected_protein_pair) -> bool:
         """Checks if the current protein pair is in the session."""
-        if self.session_object_type == "protein_pair" and self.session_name == self._interface_manager.get_current_active_protein_pair_object().name:
+        if self.session_object_type == "protein_pair" and self.session_name == the_name_of_the_selected_protein_pair:
             return True
         else:
             return False

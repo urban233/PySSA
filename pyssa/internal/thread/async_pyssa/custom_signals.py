@@ -23,6 +23,8 @@
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
 
+from pyssa.internal.data_structures.data_classes import job_summary
+
 
 class ProgressSignal(QtCore.QObject):
     progress = pyqtSignal(tuple)
@@ -60,27 +62,12 @@ class AbortSignal(QtCore.QObject):
         self.abort.emit((True, a_source))
 
 
-class UpdateSignal(QtCore.QObject):
-    update = pyqtSignal(tuple)
+class RefreshAfterJobFinishedSignal(QtCore.QObject):
+    refresh = pyqtSignal(tuple)
 
     def emit_signal(self,
                     job_is_for_current_project_flag: bool,
-                    job_type,
-                    a_project_name,
-                    protein_names,
-                    protein_pair_names,
+                    a_job_base_information_object: "job_summary.JobBaseInformation",
                     the_widget):
-        """Emits the signal
-
-        Args:
-            a_source: the function or task where the signal is to be emitted
-
-        """
-        self.update.emit(
-            (job_is_for_current_project_flag,
-             job_type,
-             a_project_name,
-             protein_names,
-             protein_pair_names,
-             the_widget)
-        )
+        """Emits the signal."""
+        self.refresh.emit((job_is_for_current_project_flag, a_job_base_information_object, the_widget))
