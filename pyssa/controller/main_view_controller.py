@@ -618,7 +618,6 @@ class MainViewController:
         self._active_task.start()
 
     def _update_progress_bar(self, return_value):
-        print(return_value)
         self._interface_manager.status_bar_manager.update_progress_bar(return_value)
 
     # <editor-fold desc="Util methods">

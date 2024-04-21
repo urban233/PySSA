@@ -829,32 +829,31 @@ def open_project(
         the_watcher: "watcher.Watcher"
 ) -> tuple:
     the_custom_progress_signal.emit_signal("Opening database ...", 10)
-    try:
-        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
-            db_manager.open_project_database()
-            the_custom_progress_signal.emit_signal("Setting up project ...", 30)
-            tmp_project = db_manager.get_project_as_object(
-                tmp_project_name,
-                the_interface_manager.get_application_settings().workspace_path,
-                the_interface_manager.get_application_settings(),
-                the_custom_progress_signal
-            )
-            db_manager.close_project_database()
-        the_interface_manager.set_new_project(tmp_project)
-        the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 96)
-        the_pymol_session_manager.reinitialize_session()
-        the_watcher.setup_blacklists(
-            tmp_project,
-            the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
-            the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
-            the_interface_manager.job_manager.current_prediction_job,
-            the_interface_manager.job_manager.current_distance_analysis_job,
+    with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+        db_manager.open_project_database()
+        the_custom_progress_signal.emit_signal("Setting up project ...", 30)
+        tmp_project = db_manager.get_project_as_object(
+            tmp_project_name,
+            the_interface_manager.get_application_settings().workspace_path,
+            the_interface_manager.get_application_settings(),
+            the_custom_progress_signal
         )
-    except Exception as e:
-        logger.error(f"Unexpected error occurred. Exception: {e}")
-        return 1, 0, 0, 0
-    else:
-        return 0, tmp_project, the_interface_manager, the_watcher
+        db_manager.close_project_database()
+    the_interface_manager.set_new_project(tmp_project)
+    the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 96)
+    the_pymol_session_manager.reinitialize_session()
+    the_watcher.setup_blacklists(
+        tmp_project,
+        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+        the_interface_manager.job_manager.current_prediction_job,
+        the_interface_manager.job_manager.current_distance_analysis_job,
+    )
+    # except Exception as e:
+    #     logger.error(f"Unexpected error occurred. Exception: {e}")
+    #     return 1, 0, 0, 0
+    # else:
+    return 0, tmp_project, the_interface_manager, the_watcher
 
 
 def add_protein_from_pdb_to_project(tmp_protein_name,

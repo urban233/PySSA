@@ -27,7 +27,6 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
         #         auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session_multi, pool_information)
 
         tmp_root_item = self.invisibleRootItem()
-        i = 0
         for tmp_protein_pair in the_protein_pair_objects:
             tmp_protein_pair_item = QtGui.QStandardItem(tmp_protein_pair.name)
             tmp_protein_pair_item.setData(tmp_protein_pair, enums.ModelEnum.OBJECT_ROLE)
@@ -36,7 +35,7 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
             tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
             tmp_protein_pair_item.appendRow(tmp_scenes_item)
             tmp_all_scenes = auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session(tmp_protein_pair.pymol_session)
-            for tmp_scene in tmp_all_scenes[i]:
+            for tmp_scene in tmp_all_scenes:
                 tmp_scene_item = QtGui.QStandardItem(tmp_scene)
                 tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
                 tmp_scenes_item.appendRow(tmp_scene_item)
@@ -67,7 +66,6 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
             tmp_protein_pair_item.appendRow(tmp_protein_item_1)
             tmp_protein_pair_item.appendRow(tmp_protein_item_2)
             tmp_root_item.appendRow(tmp_protein_pair_item)
-            i += 1
 
     def add_scene(
             self,
