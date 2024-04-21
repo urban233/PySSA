@@ -215,7 +215,7 @@ class JobManager:
             "Running ColabFold prediction",
             job_summary.JobBaseInformation(tmp_prediction_job.type, a_project.get_project_name(), tmp_protein_names, [])
         )
-        tmp_prediction_job.job_entry_widget.btn_cancel_job.clicked.connect(tmp_prediction_job.cancel_job)
+        tmp_prediction_job.job_entry_widget.ui.btn_cancel_job.clicked.connect(tmp_prediction_job.cancel_job)
         tmp_prediction_job.cancel_job_signal.connect(the_interface_manager.cancel_job)
         return tmp_prediction_job, tmp_prediction_job.job_entry_widget
 

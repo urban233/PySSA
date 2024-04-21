@@ -1995,14 +1995,14 @@ class InterfaceManager:
         """
         _, a_description, a_value = update_job_entry_signal_values
         a_job_entry_widget: "job_entry.JobEntryWidget" = update_job_entry_signal_values[0]  # Unpack of 0 because of type annotation need
-        a_job_entry_widget.progress_bar_job.setValue(a_value)
-        a_job_entry_widget.progress_bar_job.setFormat("")
+        a_job_entry_widget.ui.progress_bar_job.setValue(a_value)
+        a_job_entry_widget.ui.progress_bar_job.setFormat("")
         if a_value == 100:
             self._create_job_notification(a_job_entry_widget)
         elif a_value == 0 or a_value == 25:
-            a_job_entry_widget.btn_cancel_job.setEnabled(True)
+            a_job_entry_widget.ui.btn_cancel_job.setEnabled(True)
         else:
-            a_job_entry_widget.btn_cancel_job.setEnabled(False)
+            a_job_entry_widget.ui.btn_cancel_job.setEnabled(False)
 
     def _create_job_notification(self, a_job_entry_widget: "job_entry.JobEntryWidget"):
         """Helper function for setting up a job notification after a job finished."""

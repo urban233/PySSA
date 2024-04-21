@@ -24,6 +24,8 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
+from pyssa.gui.ui.custom_widgets.auto import auto_job_entry_widget
+from pyssa.gui.ui.custom_widgets.auto import auto_job_notification_widget
 from pyssa.internal.data_structures.data_classes import job_summary
 from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.util import enums
@@ -33,19 +35,25 @@ class JobEntryWidget(QtWidgets.QWidget):
     """A widget for the job overview."""
     def __init__(self, a_job_description, a_job_base_information_object: "job_summary.JobBaseInformation"):
         super().__init__()
+        self.ui = auto_job_entry_widget.Ui_Form()
+        self.ui.setupUi(self)
         self.job_base_information: "job_summary.JobBaseInformation" = a_job_base_information_object
 
-        # <editor-fold desc="Widget setup">
-        self.lbl_job_description = QtWidgets.QLabel(f"{a_job_description} ({self.job_base_information.project_name})")
-        self.progress_bar_job = QtWidgets.QProgressBar()
-        self.btn_cancel_job = QtWidgets.QPushButton('Cancel')
+        self.ui.lbl_job_description.setText(f"{a_job_description} ({self.job_base_information.project_name})")
+
         tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.svg"))
-        tmp_cancel_job_icon.addPixmap(QtGui.QPixmap(":icons/cancel_disabled_w200.svg"),
-                                              mode=QtGui.QIcon.Mode.Disabled)
-        self.btn_cancel_job.setIcon(tmp_cancel_job_icon)
-        self.btn_cancel_job.setText("")
-        self.btn_cancel_job.setIconSize(tmp_cancel_job_icon.actualSize(QtCore.QSize(24, 24)))
-        self.progress_bar_job.setStyleSheet("""
+        tmp_cancel_job_icon.addPixmap(QtGui.QPixmap(":icons/cancel_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        self.ui.btn_cancel_job.setIcon(tmp_cancel_job_icon)
+        self.ui.btn_cancel_job.setText("")
+        self.ui.btn_cancel_job.setIconSize(tmp_cancel_job_icon.actualSize(QtCore.QSize(24, 24)))
+
+        self.ui.lbl_job_description.setStyleSheet("""
+        QLabel {
+            color: black;
+            border-style: none;
+        }
+        """)
+        self.ui.progress_bar_job.setStyleSheet("""
             QProgressBar {
                 border-style: solid;
                 border-width: 2px;
@@ -60,7 +68,7 @@ class JobEntryWidget(QtWidgets.QWidget):
                 width: 10px;
             }
         """)
-        self.btn_cancel_job.setStyleSheet("""
+        self.ui.btn_cancel_job.setStyleSheet("""
         QPushButton {
             background-color: rgba(220, 219, 227, 0.01);
             border: none;
@@ -79,13 +87,16 @@ class JobEntryWidget(QtWidgets.QWidget):
             max-height: 24px;
         }
         """)
-
-        self.main_layout = QtWidgets.QHBoxLayout()
-        self.main_layout.addWidget(self.lbl_job_description)
-        self.main_layout.addWidget(self.progress_bar_job)
-        self.main_layout.addWidget(self.btn_cancel_job)
-        self.setLayout(self.main_layout)
-        # </editor-fold>
+        self.ui.frame.setStyleSheet("""
+        QFrame {
+            border-style: solid;
+            border-width: 1px;
+            border-radius: 4px;
+            border-color: #DCDBE3;
+            background-color: #f2f2f2;
+            margin: 5px;
+        }
+        """)
 
 
 class JobNotificationWidget(QtWidgets.QWidget):
@@ -94,40 +105,56 @@ class JobNotificationWidget(QtWidgets.QWidget):
                  job_is_from_current_project: bool,
                  a_refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal"):
         super().__init__()
+        self.ui = auto_job_notification_widget.Ui_Form()
+        self.ui.setupUi(self)
+        
         self.job_base_information: "job_summary.JobBaseInformation" = a_job_base_information_object
         self._refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal" = a_refresh_after_job_finished_signal
 
         # <editor-fold desc="Widget setup">
         if self.job_base_information.job_type == enums.JobType.PREDICTION:
-            self.lbl_job_description = QtWidgets.QLabel(f"A structure prediction job finished. ({self.job_base_information.project_name})")
+            self.ui.lbl_job_description.setText(f"A structure prediction job finished. ({self.job_base_information.project_name})")
         elif self.job_base_information.job_type == enums.JobType.DISTANCE_ANALYSIS:
-            self.lbl_job_description = QtWidgets.QLabel(f"A distance analysis job finished. ({self.job_base_information.project_name})")
+            self.ui.lbl_job_description.setText(
+                f"A distance analysis job finished. ({self.job_base_information.project_name})")
         elif self.job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
-            self.lbl_job_description = QtWidgets.QLabel(f"A ColabFold prediction + distance analysis job finished. ({self.job_base_information.project_name})")
+            self.ui.lbl_job_description.setText(
+                f"A ColabFold prediction + distance analysis job finished. ({self.job_base_information.project_name})")
         elif self.job_base_information.job_type == enums.JobType.RAY_TRACING:
-            self.lbl_job_description = QtWidgets.QLabel(f"Create ray-tracing image job finished. ({self.job_base_information.project_name})")
+            self.ui.lbl_job_description.setText(
+                f"Create ray-tracing image job finished. ({self.job_base_information.project_name})")
         else:
-            self.lbl_job_description = QtWidgets.QLabel(f"Job finished. ({self.job_base_information.project_name})")
+            self.ui.lbl_job_description.setText(f"Job finished. ({self.job_base_information.project_name})")
 
-        self.btn_refresh = QtWidgets.QPushButton('Refresh')
-        self.btn_open = QtWidgets.QPushButton('Open')
+        self.ui.lbl_job_description.setStyleSheet("""
+            QLabel {
+                color: black;
+                background-color: #f2f2f2;
+                border-style: none;
+            }
+        """)
+        self.ui.frame.setStyleSheet("""
+                QFrame#frame {
+                    border-style: solid;
+                    border-width: 1px;
+                    border-radius: 4px;
+                    border-color: #DCDBE3;
+                    background-color: #f2f2f2;
+                    margin: 5px;
+                }
+                """)
 
-        self.main_layout = QtWidgets.QHBoxLayout()
-        self.main_layout.addWidget(self.lbl_job_description)
-        self.main_layout.addWidget(self.btn_refresh)
-        self.main_layout.addWidget(self.btn_open)
-        self.setLayout(self.main_layout)
         if job_is_from_current_project:
-            self.btn_refresh.show()
-            self.btn_open.hide()
+            self.ui.btn_refresh.show()
+            self.ui.btn_open.hide()
         else:
-            self.btn_refresh.hide()
-            self.btn_open.show()
+            self.ui.btn_refresh.hide()
+            self.ui.btn_open.show()
         # </editor-fold>
 
         # Connect signals
-        self.btn_open.clicked.connect(self._send_open_other_project_request)
-        self.btn_refresh.clicked.connect(self._send_update_main_view_request)
+        self.ui.btn_open.clicked.connect(self._send_open_other_project_request)
+        self.ui.btn_refresh.clicked.connect(self._send_update_main_view_request)
 
     def _send_open_other_project_request(self):
         self._refresh_after_job_finished_signal.emit_signal(False, self.job_base_information, self)
