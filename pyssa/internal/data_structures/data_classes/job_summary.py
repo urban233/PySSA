@@ -32,6 +32,7 @@ class JobBaseInformation:
     project_name: str
     protein_names: list[str]
     protein_pair_names: list[str]
+    job_progress: "enums.JobProgress"
 
 
 @dataclass

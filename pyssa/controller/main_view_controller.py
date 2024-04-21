@@ -3874,10 +3874,10 @@ class MainViewController:
         cmd.scene(key="auto", action="update")
         self._save_protein_pymol_session()
 
-    @staticmethod
-    def _update_scene() -> None:
+    def _update_scene(self) -> None:
         """Updates the current selected PyMOL scene."""
         cmd.scene(key="auto", action="update")
+        self.update_status("Scene updated.")
 
     def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""

@@ -1998,19 +1998,24 @@ class InterfaceManager:
         a_job_entry_widget.ui.progress_bar_job.setValue(a_value)
         a_job_entry_widget.ui.progress_bar_job.setFormat("")
         if a_value == 100:
-            self._create_job_notification(a_job_entry_widget)
+            tmp_type = a_job_entry_widget.job_base_information.job_type
+            tmp_progress = a_job_entry_widget.job_base_information.job_progress
+            if tmp_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS and tmp_progress == enums.JobProgress.RUNNING:
+                return
+            self._create_job_notification(a_job_entry_widget, a_description)
         elif a_value == 0 or a_value == 25:
             a_job_entry_widget.ui.btn_cancel_job.setEnabled(True)
         else:
             a_job_entry_widget.ui.btn_cancel_job.setEnabled(False)
 
-    def _create_job_notification(self, a_job_entry_widget: "job_entry.JobEntryWidget"):
+    def _create_job_notification(self, a_job_entry_widget: "job_entry.JobEntryWidget", a_description):
         """Helper function for setting up a job notification after a job finished."""
         if a_job_entry_widget.job_base_information.project_name == self._current_project.get_project_name():
             tmp_job_is_from_current_project = True
         else:
             tmp_job_is_from_current_project = False
-        tmp_job_notification_widget = job_entry.JobNotificationWidget(a_job_entry_widget.job_base_information,
+        tmp_job_notification_widget = job_entry.JobNotificationWidget(a_description,
+                                                                      a_job_entry_widget.job_base_information,
                                                                       tmp_job_is_from_current_project,
                                                                       self.refresh_after_job_finished_signal)
         # remove job entry widget

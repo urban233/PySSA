@@ -101,6 +101,7 @@ class JobEntryWidget(QtWidgets.QWidget):
 
 class JobNotificationWidget(QtWidgets.QWidget):
     def __init__(self,
+                 a_description,
                  a_job_base_information_object: "job_summary.JobBaseInformation",
                  job_is_from_current_project: bool,
                  a_refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal"):
@@ -112,19 +113,27 @@ class JobNotificationWidget(QtWidgets.QWidget):
         self._refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal" = a_refresh_after_job_finished_signal
 
         # <editor-fold desc="Widget setup">
-        if self.job_base_information.job_type == enums.JobType.PREDICTION:
-            self.ui.lbl_job_description.setText(f"A structure prediction job finished. ({self.job_base_information.project_name})")
-        elif self.job_base_information.job_type == enums.JobType.DISTANCE_ANALYSIS:
-            self.ui.lbl_job_description.setText(
-                f"A distance analysis job finished. ({self.job_base_information.project_name})")
-        elif self.job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
-            self.ui.lbl_job_description.setText(
-                f"A ColabFold prediction + distance analysis job finished. ({self.job_base_information.project_name})")
-        elif self.job_base_information.job_type == enums.JobType.RAY_TRACING:
-            self.ui.lbl_job_description.setText(
-                f"Create ray-tracing image job finished. ({self.job_base_information.project_name})")
+        self.ui.lbl_job_description.setText(f"{a_description} ({self.job_base_information.project_name})")
+        if self.job_base_information.job_progress == enums.JobProgress.FINISHED:
+            pass  # TODO: add info icon here!
+        elif self.job_base_information.job_progress == enums.JobProgress.FAILED:
+            pass  # TODO: add error icon here!
         else:
-            self.ui.lbl_job_description.setText(f"Job finished. ({self.job_base_information.project_name})")
+            pass  # TODO: add warning icon here!
+
+        # if self.job_base_information.job_type == enums.JobType.PREDICTION:
+        #     self.ui.lbl_job_description.setText(f"{a_description} ({self.job_base_information.project_name})")
+        # elif self.job_base_information.job_type == enums.JobType.DISTANCE_ANALYSIS:
+        #     self.ui.lbl_job_description.setText(
+        #         f"A distance analysis job finished. ({self.job_base_information.project_name})")
+        # elif self.job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
+        #     self.ui.lbl_job_description.setText(
+        #         f"A ColabFold prediction + distance analysis job finished. ({self.job_base_information.project_name})")
+        # elif self.job_base_information.job_type == enums.JobType.RAY_TRACING:
+        #     self.ui.lbl_job_description.setText(
+        #         f"Create ray-tracing image job finished. ({self.job_base_information.project_name})")
+        # else:
+        #     self.ui.lbl_job_description.setText(f"Job finished. ({self.job_base_information.project_name})")
 
         self.ui.lbl_job_description.setStyleSheet("""
             QLabel {

@@ -27,6 +27,7 @@ import subprocess
 from PyQt5 import QtCore
 
 from pyssa.controller import database_manager
+from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.internal.data_structures import project, structure_prediction, structure_analysis
 from pyssa.internal.portal import auxiliary_pymol
 from pyssa.logging_pyssa import log_handlers
@@ -64,7 +65,7 @@ class PredictionJob(Job):
         self.prediction_protein_infos = the_prediction_protein_infos
         self.prediction_configuration = the_prediction_configuration
         self.project_lock = the_project_lock
-        self.job_entry_widget = None
+        self.job_entry_widget: "job_entry.JobEntryWidget" = None
 
     def run_job(self):
         """Defines how the prediction will be run."""
@@ -82,17 +83,20 @@ class PredictionJob(Job):
         try:
             structure_prediction_obj.create_fasta_files_for_prediction()
         except exception.FastaFilesNotCreatedError:
-            logger.error("Fasta files were not created.")
-            self.update_job_entry_signal.emit(self.job_entry_widget, ("Fasta files could not be created!"))
-            return (exit_codes.ERROR_WRITING_FASTA_FILES[0], exit_codes.ERROR_WRITING_FASTA_FILES[1])
+            tmp_msg = "Fasta files were not created."
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         except exception.FastaFilesNotFoundError:
-            logger.error("Fasta files were not found.")
-            self.update_job_entry_signal.emit("Fasta files not found!")
-            return (exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0], exit_codes.ERROR_FASTA_FILES_NOT_FOUND[1])
+            tmp_msg = "Fasta files were not found."
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         except Exception as e:
-            logger.error(f"Unexpected error: {e}")
-            self.update_job_entry_signal.emit("Unexpected error occurred during Fasta file creation!")
-            return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+            tmp_msg = f"Unexpected error: {e}"
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         else:
             logger.info("Fasta files were successfully created.")
 
@@ -103,8 +107,10 @@ class PredictionJob(Job):
         try:
             structure_prediction_obj.run_prediction()
         except exception.PredictionEndedWithError:
-            logger.error("Prediction ended with error.")
-            return (exit_codes.ERROR_PREDICTION_FAILED[0], exit_codes.ERROR_PREDICTION_FAILED[1])
+            tmp_msg = "Prediction ended with error."
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         else:
             logger.info("Prediction process finished.")
 
@@ -114,31 +120,33 @@ class PredictionJob(Job):
         self.update_job_entry_signal.emit((self.job_entry_widget, "Saving best prediction results ...", 85))
         try:
             tmp_best_prediction_models = structure_prediction_obj.move_best_prediction_models()
-            logger.info("Saved predicted pdb file into XML file.")
         except exception.UnableToFindColabfoldModelError:
-            logger.error("Could not move rank 1 model, because it does not exists.")
-            return (
-                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
-                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
-            )
+            tmp_msg = "Could not move rank 1 model, because it does not exists."
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         except FileNotFoundError:
-            logger.error("Could not move rank 1 model, because it does not exists.")
-            return (
-                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[0],
-                exit_codes.ERROR_COLABFOLD_MODEL_NOT_FOUND[1],
-            )
+            tmp_msg = "Could not move rank 1 model, because it does not exists."
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
-            logger.error("Could not move rank 1 model, because it does not exists.")
-            return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+            tmp_msg = "Could not move rank 1 model, because it does not exists."
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         else:
             structure_prediction_obj.add_proteins_to_project(tmp_best_prediction_models,
                                                              self.frozen_project,
                                                              self.project_lock)
             subprocess.run(["wsl", "--shutdown"])
             logger.info("WSL gets shutdown.")
-            self.update_job_entry_signal.emit((self.job_entry_widget, "Prediction job finished.", 100))
-            return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
+            if self.job_entry_widget.job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
+                self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.RUNNING
+            else:
+                self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FINISHED
+            self.update_job_entry_signal.emit((self.job_entry_widget, "A structure prediction job finished.", 100))
         # </editor-fold>
 
         # self._interface_manager.status_bar_manager.hide_progress_bar()
@@ -239,10 +247,9 @@ class DistanceAnalysisJob(Job):
         self.cutoff = a_cutoff
         self.cycles = cycles
         self.project_lock = the_project_lock
-        self.job_entry_widget = None
+        self.job_entry_widget: "job_entry.JobEntryWidget" = None
 
     def run_job(self):
-        logger.info("Running distance analysis in QThread using the Task class.")
         try:
             self.update_job_entry_signal.emit((self.job_entry_widget, "Transforming input ...", 15))
             analysis_runs = structure_analysis.Analysis(self.frozen_project)
@@ -266,18 +273,22 @@ class DistanceAnalysisJob(Job):
                     db_manager.close_project_database()
                 # Protein pair gets added to "self.frozen_project" of this class
                 self.frozen_project.add_protein_pair(copy_tmp_protein_pair)
-            self.update_job_entry_signal.emit((self.job_entry_widget, "Distance analysis finished.", 100))
         except exception.UnableToSetupAnalysisError:
-            logger.error("Setting up the analysis runs failed therefore the distance analysis failed.")
-            return (
-                exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0],
-                exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[1],
-            )
+            tmp_msg = "Setting up the analysis runs failed therefore the distance analysis failed."
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         except Exception as e:
-            logger.error(f"Unknown error: {e}")
-            return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+            tmp_msg = f"Unknown error: {e}"
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         else:
-            return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1], analysis_runs.analysis_list)
+            if self.job_entry_widget.job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
+                self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.RUNNING
+            else:
+                self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FINISHED
+            self.update_job_entry_signal.emit((self.job_entry_widget, "A distance analysis job finished.", 100))
 
 
 class PredictionAndDistanceAnalysisJob(Job):
@@ -292,7 +303,7 @@ class PredictionAndDistanceAnalysisJob(Job):
         self.prediction_job: "PredictionJob" = a_prediction_job
         self.distance_analysis_job: "DistanceAnalysisJob" = a_distance_analysis_job
         self.type = enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS
-        self.job_entry_widget = None
+        self.job_entry_widget: "job_entry.JobEntryWidget" = None
 
     def run_job(self):
         self.update_job_entry_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 33))
@@ -300,7 +311,7 @@ class PredictionAndDistanceAnalysisJob(Job):
         self.distance_analysis_job.frozen_project = self.prediction_job.frozen_project
         self.update_job_entry_signal.emit((self.job_entry_widget, "Running a distance analysis ...", 66))
         self.distance_analysis_job.run_job()
-        self.update_job_entry_signal.emit((self.job_entry_widget, "Prediction and distance analysis job finished.", 100))
+        self.update_job_entry_signal.emit((self.job_entry_widget, "A ColabFold prediction and distance analysis job finished.", 100))
 
 
 class RayTracingJob(Job):
@@ -321,15 +332,23 @@ class RayTracingJob(Job):
         self.image_ray_trace_mode = image_ray_trace_mode
         self.image_ray_texture = image_ray_texture
         self.image_renderer = image_renderer
-        self.job_entry_widget = None
+        self.job_entry_widget: "job_entry.JobEntryWidget" = None
 
     def run_job(self):
         self.update_job_entry_signal.emit((self.job_entry_widget, "Starting rendering process ...", 33))
-        auxiliary_pymol.AuxiliaryPyMOL.create_ray_traced_image(
-            self.dest_image_filepath,
-            self.cached_session_filepath,
-            self.image_ray_trace_mode,
-            self.image_ray_texture,
-            self.image_renderer
-        )
-        self.update_job_entry_signal.emit((self.job_entry_widget, "Rendering process finished.", 100))
+        try:
+            auxiliary_pymol.AuxiliaryPyMOL.create_ray_traced_image(
+                self.dest_image_filepath,
+                self.cached_session_filepath,
+                self.image_ray_trace_mode,
+                self.image_ray_texture,
+                self.image_renderer
+            )
+        except Exception as e:
+            tmp_msg = f"Unknown error: {e}"
+            logger.error(tmp_msg)
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
+            self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
+        else:
+            self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FINISHED
+            self.update_job_entry_signal.emit((self.job_entry_widget, "Create ray-tracing image job finished.", 100))

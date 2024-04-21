@@ -109,8 +109,16 @@ class StatusMessages(enum.Enum):
 
 
 class JobType(enum.Enum):
-    """An enum for all status messages, displayed in the statusbar."""
+    """An enum for all job types."""
     PREDICTION = "structure prediction"
     DISTANCE_ANALYSIS = "distance analysis"
     PREDICTION_AND_DISTANCE_ANALYSIS = "prediction and distance analysis"
     RAY_TRACING = "ray-tracing"
+
+
+class JobProgress(enum.Enum):
+    """An enum for all job progress states."""
+    WAITING = "waiting"
+    RUNNING = "running"
+    FINISHED = "finished"
+    FAILED = "failed"

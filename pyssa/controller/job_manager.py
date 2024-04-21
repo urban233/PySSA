@@ -213,7 +213,13 @@ class JobManager:
 
         tmp_prediction_job.job_entry_widget = job_entry.JobEntryWidget(
             "Running ColabFold prediction",
-            job_summary.JobBaseInformation(tmp_prediction_job.type, a_project.get_project_name(), tmp_protein_names, [])
+            job_summary.JobBaseInformation(
+                tmp_prediction_job.type,
+                a_project.get_project_name(),
+                tmp_protein_names,
+                [],
+                enums.JobProgress.WAITING
+            )
         )
         tmp_prediction_job.job_entry_widget.ui.btn_cancel_job.clicked.connect(tmp_prediction_job.cancel_job)
         tmp_prediction_job.cancel_job_signal.connect(the_interface_manager.cancel_job)
@@ -289,7 +295,13 @@ class JobManager:
             the_interface_manager.update_job_entry)
         tmp_distance_analysis_job.job_entry_widget = job_entry.JobEntryWidget(
             "Running distance analysis",
-            job_summary.JobBaseInformation(tmp_distance_analysis_job.type, a_project.get_project_name(), [], tmp_protein_pair_names)
+            job_summary.JobBaseInformation(
+                tmp_distance_analysis_job.type,
+                a_project.get_project_name(),
+                [],
+                tmp_protein_pair_names,
+                enums.JobProgress.WAITING
+            )
         )
         return tmp_distance_analysis_job, tmp_distance_analysis_job.job_entry_widget
 
@@ -318,6 +330,7 @@ class JobManager:
             self.current_distance_analysis_job = job_summary.DistanceAnalysisJobSummary(
                 tmp_distance_analysis_job.list_with_analysis_names
             )
+            tmp_distance_analysis_job.job_entry_widget.job_base_information.job_progress = enums.JobProgress.RUNNING
             tmp_distance_analysis_job.run_job()
             if self._distance_analysis_queue.empty():
                 logger.info("The distance analysis queue is empty and will now end execution.")
@@ -350,15 +363,19 @@ class JobManager:
         )
         tmp_prediction_and_distance_analysis_job.update_job_entry_signal.connect(
             the_interface_manager.update_job_entry)
-        tmp_prediction_and_distance_analysis_job.job_entry_widget = job_entry.JobEntryWidget(
+        tmp_job_entry_widget = job_entry.JobEntryWidget(
             "Running ColabFold prediction + distance analysis",
             job_summary.JobBaseInformation(
                 tmp_prediction_and_distance_analysis_job.type,
                 a_prediction_job.frozen_project.get_project_name(),
                 a_prediction_job.job_entry_widget.job_base_information.protein_names,
-                a_distance_analysis_job.job_entry_widget.job_base_information.protein_pair_names
+                a_distance_analysis_job.job_entry_widget.job_base_information.protein_pair_names,
+                enums.JobProgress.WAITING
             )
         )
+        tmp_prediction_and_distance_analysis_job.job_entry_widget = tmp_job_entry_widget
+        tmp_prediction_and_distance_analysis_job.prediction_job.job_entry_widget.job_base_information.job_type = enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS
+        tmp_prediction_and_distance_analysis_job.distance_analysis_job.job_entry_widget.job_base_information.job_type = enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS
         return tmp_prediction_and_distance_analysis_job, tmp_prediction_and_distance_analysis_job.job_entry_widget
 
     def _execute_prediction_and_distance_analysis_job_queue(self, placeholder_1, placeholder_2):
@@ -369,7 +386,7 @@ class JobManager:
 
         while True:
             self._is_prediction_and_distance_analysis_queue_running = True
-            tmp_prediction_and_distance_analysis_job: "job.DistanceAnalysisJob" = self._prediction_and_distance_analysis_queue.get()
+            tmp_prediction_and_distance_analysis_job: "job.PredictionAndDistanceAnalysisJob" = self._prediction_and_distance_analysis_queue.get()
             if tmp_prediction_and_distance_analysis_job is None:
                 self._is_prediction_and_distance_analysis_queue_running = False
                 break
@@ -414,7 +431,16 @@ class JobManager:
             image_renderer
         )
         tmp_ray_tracing_job.update_job_entry_signal.connect(the_interface_manager.update_job_entry)
-        tmp_ray_tracing_job.job_entry_widget = job_entry.JobEntryWidget("Creating ray-traced image", a_project_name)
+        tmp_ray_tracing_job.job_entry_widget = job_entry.JobEntryWidget(
+            "Creating ray-traced image",
+            job_summary.JobBaseInformation(
+                enums.JobType.RAY_TRACING,
+                a_project_name,
+                [],
+                [],
+                enums.JobProgress.WAITING
+            )
+        )
         return tmp_ray_tracing_job, tmp_ray_tracing_job.job_entry_widget
 
     def put_ray_tracing_job_into_queue(self, a_ray_tracing_job: "job.RayTracingJob"):
