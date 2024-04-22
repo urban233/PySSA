@@ -1105,6 +1105,22 @@ class InterfaceManager:
             tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
             tmp_root_item.appendRow(tmp_project_item)
 
+    def disable_proteins_tab_buttons(self):
+        self._main_view.ui.btn_save_protein.setEnabled(False)
+        self._main_view.ui.btn_delete_protein.setEnabled(False)
+        self._main_view.ui.btn_open_protein_session.setEnabled(False)
+        self._main_view.ui.btn_create_protein_scene.setEnabled(False)
+        self._main_view.ui.btn_update_protein_scene.setEnabled(False)
+        self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
+
+    def disable_protein_pairs_tab_buttons(self):
+        self._main_view.ui.btn_save_protein_pair.setEnabled(False)
+        self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
+        self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
+        self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
+        self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
+        self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
+
     # </editor-fold>
 
     # <editor-fold desc="Progress bar methods">
@@ -1274,6 +1290,7 @@ class InterfaceManager:
         tmp_current_scene_name: str = the_pymol_session_manager.current_scene_name
 
         self._main_view.ui.btn_delete_protein.setEnabled(False)
+        self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
 
         if an_object_type == "protein":
             if not is_protein_in_pair:
@@ -1658,6 +1675,7 @@ class InterfaceManager:
 
         tmp_is_protein_pair_in_session_flag: bool = the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name)
         tmp_current_scene_name: str = the_pymol_session_manager.current_scene_name
+        self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
 
         if an_object_type == "protein_pair":
             self._main_view.ui.btn_delete_protein_pair.setEnabled(True)
@@ -1688,14 +1706,14 @@ class InterfaceManager:
             self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
             self.hide_protein_pair_pymol_scene_configuration()
 
-            # if tmp_is_protein_pair_in_session_flag and tmp_current_scene_name == "base":
-            #     self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
-            #     self._main_view.ui.lbl_info_3.setText("Please select a chain.")
-            # elif tmp_is_protein_pair_in_session_flag and tmp_current_scene_name != "base":
-            #     self._main_view.ui.btn_delete_protein_scene.setEnabled(True)
-            #     self._main_view.ui.lbl_info_3.setText("Please select a chain.")
-            # else:
-            #     self._main_view.ui.lbl_info_3.setText("Please load the PyMOL session of the \nselected protein pair.")
+            if tmp_is_protein_pair_in_session_flag and tmp_current_scene_name == "base":
+                self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
+                self._main_view.ui.lbl_info_3.setText("Please select a chain.")
+            elif tmp_is_protein_pair_in_session_flag and tmp_current_scene_name != "base":
+                self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(True)
+                self._main_view.ui.lbl_info_3.setText("Please select a chain.")
+            else:
+                self._main_view.ui.lbl_info_3.setText("Please load the PyMOL session of the \nselected protein pair.")
 
             if tmp_is_protein_pair_in_session_flag:
                 self._main_view.ui.lbl_info_3.setText("Please select a chain.")
@@ -1735,7 +1753,6 @@ class InterfaceManager:
         if tmp_is_protein_pair_in_session_flag:
             self._main_view.ui.btn_create_protein_pair_scene.setEnabled(True)
             self._main_view.ui.btn_update_protein_pair_scene.setEnabled(True)
-            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(True)
             self._main_view.ui.action_protein_regions.setEnabled(True)
         else:
             self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)

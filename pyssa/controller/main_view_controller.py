@@ -3905,6 +3905,10 @@ class MainViewController:
                 "Adding new scene to protein ...", False)
             self._interface_manager.start_wait_cursor()
             self._interface_manager.add_scene_to_proteins_model(tmp_scene_name)
+            self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
+            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
+                                                    self._view.ui.lbl_pymol_protein_scene)
+
         elif self._interface_manager.current_tab_index == 2:
             # The database thread cannot be used here because the session gets loaded again
             # before the new data is in the db
@@ -3921,6 +3925,9 @@ class MainViewController:
                 "Adding new scene to protein pair ...", False)
             self._interface_manager.start_wait_cursor()
             self._interface_manager.add_scene_to_protein_pairs_model(tmp_scene_name)
+            self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
+            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
+                                                    self._view.ui.lbl_pymol_protein_pair_scene)
         else:
             logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
             return
@@ -3959,6 +3966,7 @@ class MainViewController:
                 self._save_protein_pymol_session()
                 self._interface_manager.remove_scene_from_proteins_model(self._interface_manager.get_current_protein_tree_index())
                 self._interface_manager.refresh_main_view()
+                self._view.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Selected")
             elif self._interface_manager.current_tab_index == 2:
                 # The database thread cannot be used here because the session gets loaded again
                 # before the new data is in the db
@@ -3978,6 +3986,7 @@ class MainViewController:
                 self._interface_manager.remove_scene_from_protein_pairs_model(
                     self._interface_manager.get_current_protein_pair_tree_index()
                 )
+                self._view.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Selected")
             else:
                 logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
                 return
