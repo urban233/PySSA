@@ -2039,6 +2039,7 @@ class InterfaceManager:
         # Add new notification widget to notification panel
         self._main_view.ui.job_notification_layout.insertWidget(self._main_view.ui.job_notification_layout.count() - 1,
                                                                 tmp_job_notification_widget)
+        self._main_view.btn_open_job_notification.setIcon(self._main_view.icon_notify_unread)
         self._main_view.lbl_job_notification.hide()
         if self._main_view.ui.job_overview_layout.count() == 2:
             self._main_view.lbl_job_overview.show()

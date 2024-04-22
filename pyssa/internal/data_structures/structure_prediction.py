@@ -51,15 +51,15 @@ class StructurePrediction:
     """
     a list of tuples of protein name and sequence
     """
-    predictions: list[prediction_protein_info.PredictionProteinInfo]
+    predictions: list["prediction_protein_info.PredictionProteinInfo"]
     """
     the configuration settings for the prediction
     """
-    prediction_config: prediction_configuration.PredictionConfiguration
+    prediction_config: "prediction_configuration.PredictionConfiguration"
     """
     the current project in use
     """
-    current_project: project.Project
+    current_project: "project.Project"
 
     # </editor-fold>
 

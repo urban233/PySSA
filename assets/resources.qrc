@@ -29,7 +29,8 @@
         <file>icons/arrow_drop_up_w400.svg</file>
         <file>icons/arrow_right_w400.svg</file>
         <file>icons/done_round_edges_w200_g200.svg</file>
+        <file>icons/do_not_disturb_on_w200.svg</file>
         <file>icons/notifications_w200.svg</file>
-        <file>icons/notifications_w200.svg</file>
+        <file>icons/notifications_unread_w200.svg</file>
     </qresource>
 </RCC>

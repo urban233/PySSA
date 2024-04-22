@@ -23,6 +23,7 @@
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.custom_widgets.auto import auto_job_entry_widget
 from pyssa.gui.ui.custom_widgets.auto import auto_job_notification_widget
@@ -41,8 +42,7 @@ class JobEntryWidget(QtWidgets.QWidget):
 
         self.ui.lbl_job_description.setText(f"{a_job_description} ({self.job_base_information.project_name})")
 
-        tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.svg"))
-        tmp_cancel_job_icon.addPixmap(QtGui.QPixmap(":icons/cancel_disabled_w200.svg"), mode=QtGui.QIcon.Mode.Disabled)
+        tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/do_not_disturb_on_w200.svg"))
         self.ui.btn_cancel_job.setIcon(tmp_cancel_job_icon)
         self.ui.btn_cancel_job.setText("")
         self.ui.btn_cancel_job.setIconSize(tmp_cancel_job_icon.actualSize(QtCore.QSize(24, 24)))
@@ -113,14 +113,21 @@ class JobNotificationWidget(QtWidgets.QWidget):
         self._refresh_after_job_finished_signal: "custom_signals.RefreshAfterJobFinishedSignal" = a_refresh_after_job_finished_signal
 
         # <editor-fold desc="Widget setup">
+
         self.ui.lbl_job_description.setText(f"{a_description} ({self.job_base_information.project_name})")
         if self.job_base_information.job_progress == enums.JobProgress.FINISHED:
-            pass  # TODO: add info icon here!
+            pixmap = QtGui.QPixmap(":icons/info_w200.svg")
         elif self.job_base_information.job_progress == enums.JobProgress.FAILED:
-            pass  # TODO: add error icon here!
+            pixmap = QtGui.QPixmap(":icons/error_w200.svg")
         else:
-            pass  # TODO: add warning icon here!
+            pixmap = QtGui.QPixmap(":icons/warning_w200.svg")
 
+        # Set the scaled pixmap to the QLabel
+        scaled_pixmap = pixmap.scaled(26, 26,
+                                      aspectRatioMode=Qt.KeepAspectRatio,
+                                      transformMode=Qt.SmoothTransformation)
+        self.ui.lbl_icon.setPixmap(scaled_pixmap)
+        self.ui.lbl_icon.setAlignment(Qt.AlignCenter)
         # if self.job_base_information.job_type == enums.JobType.PREDICTION:
         #     self.ui.lbl_job_description.setText(f"{a_description} ({self.job_base_information.project_name})")
         # elif self.job_base_information.job_type == enums.JobType.DISTANCE_ANALYSIS:
@@ -136,6 +143,13 @@ class JobNotificationWidget(QtWidgets.QWidget):
         #     self.ui.lbl_job_description.setText(f"Job finished. ({self.job_base_information.project_name})")
 
         self.ui.lbl_job_description.setStyleSheet("""
+            QLabel {
+                color: black;
+                background-color: #f2f2f2;
+                border-style: none;
+            }
+        """)
+        self.ui.lbl_icon.setStyleSheet("""
             QLabel {
                 color: black;
                 background-color: #f2f2f2;

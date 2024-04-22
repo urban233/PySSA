@@ -975,19 +975,19 @@ class MainViewController:
             self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_closed)
         elif not self._view.ui.frame_job_overview.isVisible():
             self._view.ui.frame_job_notification.hide()
-            self._view.btn_open_job_notification.setIcon(self._view.icon_job_overview_closed)
+            self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
             self._view.ui.frame_job_overview.show()
             self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_open)
 
     def __slot_open_notification_panel(self):
         if self._view.ui.frame_job_notification.isVisible():
             self._view.ui.frame_job_notification.hide()
-            self._view.btn_open_job_notification.setIcon(self._view.icon_job_overview_closed)
+            self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
         elif not self._view.ui.frame_job_notification.isVisible():
             self._view.ui.frame_job_overview.hide()
             self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_closed)
             self._view.ui.frame_job_notification.show()
-            self._view.btn_open_job_notification.setIcon(self._view.icon_job_overview_open)
+            self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
     # </editor-fold>
 
     # <editor-fold desc="Project menu">
