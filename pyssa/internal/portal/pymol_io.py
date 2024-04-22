@@ -20,10 +20,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for in- and output processes in pymol."""
+import logging
 import pathlib
 import pymol
 import os
 from pymol import cmd
+
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import exception
 from pyssa.internal.data_structures import protein
 from pyssa.internal.portal import graphic_operations
@@ -31,6 +34,9 @@ from pyssa.io_pyssa import safeguard
 from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import path_util
 from pyssa.util import constants, tools
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
 
 
 def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
@@ -131,8 +137,10 @@ def load_pymol_session(pymol_session_filepath: pathlib.Path) -> None:
     """
     if not safeguard.Safeguard.check_filepath(pymol_session_filepath):
         raise FileNotFoundError
+    logger.debug("Starting to load pymol session ...")
     cmd.load(str(pymol_session_filepath))
-    graphic_operations.setup_default_session_graphic_settings()
+    logger.debug("Finished loading pymol session.")
+    #graphic_operations.setup_default_session_graphic_settings()
 
 
 def save_pymol_session_as_base64_string(pymol_molecule_object: str) -> pathlib.Path:

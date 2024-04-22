@@ -85,31 +85,29 @@ class MainView(QtWidgets.QMainWindow):
         self.lbl_job_notification = QtWidgets.QLabel("No new notifications.")
         self.icon_job_overview_closed = QtGui.QIcon(QtGui.QPixmap(":icons/arrow_right_w400.svg"))
         self.icon_job_overview_open = QtGui.QIcon(QtGui.QPixmap(":icons/arrow_drop_up_w400.svg"))
+        self.icon_jobs = QtGui.QIcon(QtGui.QPixmap(":icons/list_alt_w200.svg"))
         self.icon_notify = QtGui.QIcon(QtGui.QPixmap(":icons/notifications_w200.svg"))
         self.icon_notify_unread = QtGui.QIcon(QtGui.QPixmap(":icons/notifications_unread_w200.svg"))
-        self.btn_open_job_overview.setIcon(self.icon_job_overview_closed)
+        self.btn_open_job_overview.setIcon(self.icon_jobs)
         self.btn_open_job_overview.setText("")
-        self.btn_open_job_overview.setIconSize(self.icon_job_overview_closed.actualSize(QtCore.QSize(30, 30)))
+        self.btn_open_job_overview.setIconSize(self.icon_jobs.actualSize(QtCore.QSize(30, 30)))
         self.btn_open_job_overview.setStyleSheet("""
             QPushButton {
-                background-color: white;
+                background-color: rgba(220, 219, 227, 0.01);
                 border: none;
-                border-width: 2px;
-                border-radius: 10px;
-                padding: 2px;
+                border-radius: 4px;
                 min-width: 20px;
                 max-width: 20px;
                 min-height: 20px;
-                max-height: 20px
+                max-height: 20px;
             }
             QPushButton::hover {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                            stop: 0 #4B91F7, stop: 0.4 #367AF6,
-                                            stop: 0.5 #367AF6, stop: 1.0 #4B91F7);
-                background: white;
-                color: white;
-                color: #4B91F7;
-                border: 2px solid #DCDBE3;
+                background-color: rgba(220, 219, 227, 0.5);
+                border: none;
+                min-width: 24px;
+                max-width: 24px;
+                min-height: 24px;
+                max-height: 24px;
             }
         """)
         self.lbl_job_overview.setStyleSheet("""padding-top: 30px;""")

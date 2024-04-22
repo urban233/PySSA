@@ -40,7 +40,7 @@ from pyssa.internal.data_structures.data_classes import (
     prediction_configuration,
     current_session, database_operation,
 )
-from pyssa.internal.portal import pymol_io, graphic_operations, protein_operations
+from pyssa.internal.portal import pymol_io, graphic_operations, protein_operations, auxiliary_pymol
 from pyssa.internal.thread import database_thread
 from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.io_pyssa import path_util, filesystem_io, bio_data
@@ -744,6 +744,8 @@ def create_drawn_image(an_image_filepath: str, the_app_settings: "settings.Setti
 
 
 def load_protein_pymol_session(a_protein, the_pymol_session_manager, needs_to_be_reinitialized_flag: bool = False) -> tuple:
+
+    #return the_pymol_session_manager, True
     if needs_to_be_reinitialized_flag:
         logger.info("The current session is not empty. Reinitialize session now ...")
         the_pymol_session_manager.reinitialize_session()
@@ -751,15 +753,20 @@ def load_protein_pymol_session(a_protein, the_pymol_session_manager, needs_to_be
     try:
         logger.info(f"Loading session of {a_protein.get_molecule_object()}")
         the_pymol_session_manager.load_protein_session(a_protein)
+        the_pymol_session_manager.current_scene_name = "base"
+        the_pymol_session_manager.load_current_scene()
+        the_pymol_session_manager.set_all_scenes_for_current_session(
+            auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session(a_protein.pymol_session)
+        )
     except RuntimeError:
         logger.error("Loading the session failed due to a RuntimeError!")
-        return 0, False
+        return the_pymol_session_manager, False
     except Exception as e:
         logger.error(f"Loading the session failed because this error was raised: {e}")
-        return 0, False
+        return the_pymol_session_manager, False
     else:
         logger.info("Loading the session finished without errors.")
-        return 0, True
+        return the_pymol_session_manager, True
 
 
 def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, needs_to_be_reinitialized_flag: bool = False) -> tuple:

@@ -180,6 +180,10 @@ class PymolSessionManager:
         self.all_scenes.clear()
         self.all_scenes = cmd.get_scene_list()
 
+    def set_all_scenes_for_current_session(self, all_scenes):
+        self.all_scenes.clear()
+        self.all_scenes = all_scenes
+
     @staticmethod
     def _check_session_integrity(a_protein_name) -> bool:
         """Checks if the current session is consistent with the manager."""

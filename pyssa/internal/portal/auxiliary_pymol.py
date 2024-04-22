@@ -23,9 +23,11 @@
 import logging
 import os
 import pathlib
+import threading
+from multiprocessing import Process
 
 import pymol2
-import pymol
+#import pymol
 import numpy as np
 from pyssa.internal.data_structures import project, structure_prediction, job, protein, results, protein_pair
 from pyssa.internal.portal import pymol_io, graphic_operations
@@ -113,8 +115,10 @@ class AuxiliaryPyMOL:
                 auxiliary_pymol.cmd.set("max_threads", str(os.cpu_count() - 3))
                 auxiliary_pymol.cmd.ray(2400, 2400, renderer=int(an_image_renderer))
                 auxiliary_pymol.cmd.png(an_image_filepath, dpi=300)
-            except pymol.CmdException:
-                logger.warning("Unexpected exception.")
+            except Exception as e:
+                logger.warning(f"Unexpected exception. {e}")
+            # except pymol.CmdException:
+            #     logger.warning("Unexpected exception.")
 
     @staticmethod
     def do_distance_analysis(

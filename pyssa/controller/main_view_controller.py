@@ -972,12 +972,12 @@ class MainViewController:
     def __slot_open_job_overview_panel(self):
         if self._view.ui.frame_job_overview.isVisible():
             self._view.ui.frame_job_overview.hide()
-            self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_closed)
+            self._view.btn_open_job_overview.setIcon(self._view.icon_jobs)
         elif not self._view.ui.frame_job_overview.isVisible():
             self._view.ui.frame_job_notification.hide()
             self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
             self._view.ui.frame_job_overview.show()
-            self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_open)
+            self._view.btn_open_job_overview.setIcon(self._view.icon_jobs)
 
     def __slot_open_notification_panel(self):
         if self._view.ui.frame_job_notification.isVisible():
@@ -985,7 +985,7 @@ class MainViewController:
             self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
         elif not self._view.ui.frame_job_notification.isVisible():
             self._view.ui.frame_job_overview.hide()
-            self._view.btn_open_job_overview.setIcon(self._view.icon_job_overview_closed)
+            self._view.btn_open_job_overview.setIcon(self._view.icon_jobs)
             self._view.ui.frame_job_notification.show()
             self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
     # </editor-fold>
@@ -2729,6 +2729,13 @@ class MainViewController:
         # else:
         #     tmp_flag = False  # Session is empty
 
+        # self._interface_manager.pymol_session_manager.load_protein_session(tmp_protein)
+        # self._interface_manager.pymol_session_manager.current_scene_name = "base"
+        # self._interface_manager.pymol_session_manager.load_current_scene()
+        # self._interface_manager.pymol_session_manager.set_all_scenes_for_current_session(
+        #     auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session(a_protein.pymol_session)
+        # )
+
         tmp_flag = False
         self._active_task = tasks.Task(
             target=main_presenter_async.load_protein_pymol_session,
@@ -2745,9 +2752,14 @@ class MainViewController:
         self._interface_manager.status_bar_manager.show_temporary_message(
             f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...", False
         )
+        logger.debug("Returning to event loop ...")
+        # for i in range(100000):
+        #     print(i)
 
     def __await_open_protein_pymol_session(self, return_value: tuple):
-        _, exit_boolean = return_value
+        logger.debug("Returning from async function.")
+        tmp_pymol_session_manager, exit_boolean = return_value
+        self._interface_manager.pymol_session_manager = tmp_pymol_session_manager
         self._view.ui.action_protein_regions.setEnabled(False)
         if exit_boolean:
             self._view.cb_chain_color.setEnabled(True)
@@ -2757,10 +2769,7 @@ class MainViewController:
             self._view.ui.btn_update_protein_scene.setEnabled(True)
             self._view.ui.lbl_session_name.setText(f"Session Name: {self._interface_manager.pymol_session_manager.session_name}")
             self._view.ui.lbl_pymol_protein_scene.setText(f"PyMOL Scene: base")
-            self._interface_manager.pymol_session_manager.current_scene_name = "base"
-            self._interface_manager.pymol_session_manager.load_current_scene()
             self._view.ui.lbl_info.setText("Please select a chain.")
-            self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()
             logger.info("Successfully opened protein session.")
             self._interface_manager.status_bar_manager.show_temporary_message("Loading the PyMOL session was successful.")
         else:
