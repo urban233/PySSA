@@ -119,10 +119,10 @@ class StatusBarManager:
         else:
             self._view.status_bar.showMessage(a_message, 999999)
 
-    def show_temporary_message(self, a_temporary_message, a_with_timeout_flag: bool = True):
+    def show_temporary_message(self, a_temporary_message, a_with_timeout_flag: bool = True, a_timeout: int = constants.STATUS_MESSAGE_TIMEOUT):
         self._style_status_bar_for_normal_message()
         if a_with_timeout_flag:
-            self._view.status_bar.showMessage(a_temporary_message, constants.STATUS_MESSAGE_TIMEOUT)
+            self._view.status_bar.showMessage(a_temporary_message, a_timeout)
         else:
             self._view.status_bar.showMessage(a_temporary_message, 999999)
 

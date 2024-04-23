@@ -40,6 +40,7 @@ class AddSceneView(QtWidgets.QDialog):
 
         self.lbl_description = QtWidgets.QLabel("New PyMOL scene name")
         self.line_edit_scene_name = custom_line_edit.CustomLineEdit()
+        self.lbl_status = QtWidgets.QLabel("")
         self.btn_add_scene = QtWidgets.QPushButton("Add")
 
         self.layout_user_input = QtWidgets.QVBoxLayout()
@@ -47,6 +48,7 @@ class AddSceneView(QtWidgets.QDialog):
         self.layout_user_input.addWidget(self.line_edit_scene_name)
 
         self.layout_confirmation = QtWidgets.QHBoxLayout()  # Use QHBoxLayout for the button
+        self.layout_confirmation.addWidget(self.lbl_status)
         self.layout_confirmation.addStretch(1)  # Add stretchable space before the button
         self.layout_confirmation.addWidget(self.btn_add_scene)
 

@@ -41,6 +41,7 @@ class AddSceneViewController(QtCore.QObject):
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_add_scene_view()
         self._all_current_scenes = pymol_io.get_all_scenes_from_pymol_session()  # TODO: this can be optimized for more performance!
+        self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         self._connect_all_ui_elements_to_slot_functions()
 
     def restore_ui(self):
@@ -48,6 +49,7 @@ class AddSceneViewController(QtCore.QObject):
         self._view.line_edit_scene_name.setStyleSheet(
             """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
         )
+        self._view.lbl_status.setText("")
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.line_edit_scene_name.textChanged.connect(self._validate_scene_name)
@@ -64,13 +66,13 @@ class AddSceneViewController(QtCore.QObject):
         self._view.line_edit_scene_name.setText(new_text)
         if new_text in self._all_current_scenes:
             self._view.btn_add_scene.setEnabled(False)
-            self._view.line_edit_scene_name.setToolTip("This scene name already exists. Please enter another name.")
+            self._view.lbl_status.setText("This scene name already exists. Please enter another name.")
             self._view.line_edit_scene_name.setStyleSheet(
                 """QLineEdit {color: #ba1a1a; border-color: #ba1a1a;}"""
             )
         else:
             self._view.btn_add_scene.setEnabled(True)
-            self._view.line_edit_scene_name.setToolTip("")
+            self._view.lbl_status.setText("")
             self._view.line_edit_scene_name.setStyleSheet(
                 """QLineEdit {color: #000000; border-color: #DCDBE3;}"""
             )

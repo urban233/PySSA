@@ -634,7 +634,7 @@ class MainViewController:
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
         """Updates the status bar of the main view with a custom message."""
-        self._view.status_bar.showMessage(message)
+        self._interface_manager.status_bar_manager.show_temporary_message(message)
 
     def _update_tab(self):
         self._interface_manager.current_tab_index = self._view.ui.project_tab_widget.currentIndex()
@@ -3896,11 +3896,12 @@ class MainViewController:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
         cmd.scene(key="auto", action="update")
         self._save_protein_pymol_session()
+        self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
 
     def _update_scene(self) -> None:
         """Updates the current selected PyMOL scene."""
         cmd.scene(key="auto", action="update")
-        self.update_status("Scene updated.")
+        self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
 
     def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
@@ -4958,6 +4959,7 @@ class MainViewController:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
         cmd.scene(key="auto", action="update")
         self._save_protein_pair_pymol_session()
+        self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
 
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
