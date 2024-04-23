@@ -1189,6 +1189,7 @@ class MainViewController:
     def __await_use_project(self, return_value: tuple):
         _, tmp_project = return_value
         self._interface_manager.set_new_project(tmp_project)
+        self._interface_manager.add_project_to_workspace_model(tmp_project.get_project_name())
         self._interface_manager.refresh_main_view()
         self._interface_manager.pymol_session_manager.reinitialize_session()
         self._connect_sequence_selection_model()

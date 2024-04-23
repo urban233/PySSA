@@ -375,5 +375,5 @@ class UseProjectViewController(QtCore.QObject):
         tmp_proteins: list = []
         for tmp_row in range(self._view.ui.list_use_selected_protein_structures.count()):
             tmp_proteins.append(self._view.ui.list_use_selected_protein_structures.item(tmp_row).data(enums.ModelEnum.OBJECT_ROLE))
-        self._view.close()
         self.user_input.emit((self._view.ui.txt_use_project_name.text(), tmp_proteins))
+        self._view.close()

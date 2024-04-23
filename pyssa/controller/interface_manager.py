@@ -1112,6 +1112,13 @@ class InterfaceManager:
             tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
             tmp_root_item.appendRow(tmp_project_item)
 
+    def add_project_to_workspace_model(self, a_filename):
+        tmp_root_item = self._workspace_model.invisibleRootItem()
+        tmp_project_item = QtGui.QStandardItem(a_filename)
+        tmp_filepath = pathlib.Path(f"{self._settings_manager.settings.workspace_path}/{a_filename}.db")
+        tmp_project_item.setData(tmp_filepath, enums.ModelEnum.FILEPATH_ROLE)
+        tmp_root_item.appendRow(tmp_project_item)
+
     def disable_proteins_tab_buttons(self):
         self._main_view.ui.btn_save_protein.setEnabled(False)
         self._main_view.ui.btn_delete_protein.setEnabled(False)
