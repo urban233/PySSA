@@ -28,8 +28,7 @@ from PyQt5 import QtCore
 
 from pyssa.controller import database_manager
 from pyssa.gui.ui.custom_widgets import job_entry
-from pyssa.internal.data_structures import project, structure_prediction, structure_analysis
-from pyssa.internal.portal import auxiliary_pymol
+from pyssa.internal.data_structures import project, structure_prediction, structure_analysis, protein_pair
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import enums, exception, exit_codes, analysis_util
 
@@ -50,6 +49,8 @@ class PredictionJob(Job):
     cancel_job_signal = QtCore.pyqtSignal(tuple)
 
     def __init__(self,
+                 the_main_socket,
+                 a_socket,
                  a_project: "project.Project",
                  the_prediction_protein_infos,
                  the_prediction_configuration,
@@ -62,6 +63,8 @@ class PredictionJob(Job):
         super().__init__()
         self.frozen_project = copy.deepcopy(a_project)
         self.type = enums.JobType.PREDICTION
+        self._main_socket = the_main_socket
+        self._socket = a_socket
         self.prediction_protein_infos = the_prediction_protein_infos
         self.prediction_configuration = the_prediction_configuration
         self.project_lock = the_project_lock
@@ -137,9 +140,9 @@ class PredictionJob(Job):
             self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FAILED
             self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         else:
-            structure_prediction_obj.add_proteins_to_project(tmp_best_prediction_models,
-                                                             self.frozen_project,
-                                                             self.project_lock)
+            structure_prediction_obj.add_proteins_to_project(
+                self._main_socket, self._socket, tmp_best_prediction_models, self.frozen_project, self.project_lock
+            )
             subprocess.run(["wsl", "--shutdown"])
             logger.info("WSL gets shutdown.")
             if self.job_entry_widget.job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
@@ -234,6 +237,8 @@ class DistanceAnalysisJob(Job):
     update_job_entry_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
 
     def __init__(self,
+                 the_main_socket,
+                 a_socket,
                  a_project,
                  the_project_lock: QtCore.QMutex,
                  a_list_with_analysis_names,
@@ -241,8 +246,10 @@ class DistanceAnalysisJob(Job):
                  cycles: int
                  ):
         super().__init__()
-        self.frozen_project = copy.deepcopy(a_project)
         self.type = enums.JobType.DISTANCE_ANALYSIS
+        self._main_socket = the_main_socket
+        self._socket = a_socket
+        self.frozen_project = copy.deepcopy(a_project)
         self.list_with_analysis_names = a_list_with_analysis_names
         self.cutoff = a_cutoff
         self.cycles = cycles
@@ -261,12 +268,12 @@ class DistanceAnalysisJob(Job):
             )
             logger.debug(f"Analysis runs before actual analysis: {analysis_runs.analysis_list}")
             self.update_job_entry_signal.emit((self.job_entry_widget, "Running the distance analysis ...", 50))
-            analysis_runs.run_analysis("distance", False)
+            analysis_runs.run_analysis("distance", False, self._main_socket, self._socket)
             logger.debug(f"Analysis runs after actual analysis: {analysis_runs.analysis_list}")
             self.update_job_entry_signal.emit((self.job_entry_widget, "Saving results ...", 80))
             for tmp_protein_pair in analysis_runs.analysis_list:
                 tmp_protein_pair.db_project_id = self.frozen_project.get_id()
-                copy_tmp_protein_pair = copy.deepcopy(tmp_protein_pair)
+                copy_tmp_protein_pair: "protein_pair.ProteinPair" = copy.deepcopy(tmp_protein_pair)
                 with database_manager.DatabaseManager(str(self.frozen_project.get_database_filepath())) as db_manager:
                     db_manager.open_project_database()
                     copy_tmp_protein_pair.set_id(db_manager.insert_new_protein_pair(copy_tmp_protein_pair))
@@ -306,11 +313,13 @@ class PredictionAndDistanceAnalysisJob(Job):
         self.job_entry_widget: "job_entry.JobEntryWidget" = None
 
     def run_job(self):
+        self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.RUNNING
         self.update_job_entry_signal.emit((self.job_entry_widget, "Running ColabFold prediction ...", 33))
         self.prediction_job.run_job()
         self.distance_analysis_job.frozen_project = self.prediction_job.frozen_project
         self.update_job_entry_signal.emit((self.job_entry_widget, "Running a distance analysis ...", 66))
         self.distance_analysis_job.run_job()
+        self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FINISHED
         self.update_job_entry_signal.emit((self.job_entry_widget, "A ColabFold prediction and distance analysis job finished.", 100))
 
 
@@ -320,6 +329,8 @@ class RayTracingJob(Job):
     update_job_entry_signal = QtCore.pyqtSignal(tuple)  # (job entry widget, progress description, progress value)
 
     def __init__(self,
+                 the_main_socket,
+                 a_socket,
                  the_destination_image_filepath,
                  the_cached_session_filepath,
                  image_ray_trace_mode,
@@ -327,6 +338,8 @@ class RayTracingJob(Job):
                  image_renderer):
         super().__init__()
         self.type = enums.JobType.RAY_TRACING
+        self._main_socket = the_main_socket
+        self._socket = a_socket
         self.dest_image_filepath = the_destination_image_filepath
         self.cached_session_filepath = the_cached_session_filepath
         self.image_ray_trace_mode = image_ray_trace_mode
@@ -337,13 +350,25 @@ class RayTracingJob(Job):
     def run_job(self):
         self.update_job_entry_signal.emit((self.job_entry_widget, "Starting rendering process ...", 33))
         try:
-            auxiliary_pymol.AuxiliaryPyMOL.create_ray_traced_image(
-                self.dest_image_filepath,
-                self.cached_session_filepath,
-                self.image_ray_trace_mode,
-                self.image_ray_texture,
-                self.image_renderer
-            )
+            self._main_socket.send_string("Ray-tracing")
+            response = self._main_socket.recv_string()
+            print(f"Received response: {response}")
+            message = {
+                "job_type": "Ray-tracing",
+                "dest": str(self.dest_image_filepath),
+                "cached": str(self.cached_session_filepath),
+                "mode": self.image_ray_trace_mode,
+                "texture": self.image_ray_texture,
+                "renderer": self.image_renderer
+            }
+            self._main_socket.send_json(message)
+            response = self._main_socket.recv_string()
+            print(f"Received response: {response}")
+            # Wait for the response from the server
+            self._socket.send_json({"job_type": "Ray-tracing"})
+            response = self._socket.recv_json()
+            result = response["data"]
+            print(f"Received result from server: {result}")
         except Exception as e:
             tmp_msg = f"Unknown error: {e}"
             logger.error(tmp_msg)

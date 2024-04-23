@@ -448,6 +448,7 @@ class MainViewController:
         # Closes the documentation browser if it is still open
         if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
+        self._interface_manager.job_manager.stop_auxiliary_pymol()
         tmp_event.accept()
 
     def __slot_close_all(self):
@@ -538,6 +539,8 @@ class MainViewController:
     def _update_main_view_ui(self, refresh_after_job_finished_signal_values):
         tmp_job_is_for_current_project_flag, tmp_job_base_information, tmp_job_notification_widget = refresh_after_job_finished_signal_values
         self._interface_manager.remove_job_notification_widget(tmp_job_notification_widget)
+        if tmp_job_base_information.job_progress == enums.JobProgress.FAILED:
+            return
         if tmp_job_is_for_current_project_flag:
             if tmp_job_base_information.job_type == enums.JobType.PREDICTION:
                 # refresh protein model
@@ -567,6 +570,11 @@ class MainViewController:
                     post_func=self._post_update_project_and_model,
                 )
                 self._active_task.start()
+            elif tmp_job_base_information.job_type == enums.JobType.RAY_TRACING:
+                if not os.path.exists(tmp_job_base_information.get_image_filepath()):
+                    self._interface_manager.status_bar_manager.show_error_message("Could not find image file!")
+                os.startfile(tmp_job_base_information.get_image_filepath())
+                return
         else:
             # open other project
             tmp_a_project_is_open = self._view.ui.lbl_project_name.isVisible()
@@ -3717,7 +3725,9 @@ class MainViewController:
         tmp_dialog.exec_()
         response: bool = tmp_dialog.response
         if response:
-            tmp_protein: "protein.Protein" = self._view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE)
+            tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
+            if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein.get_molecule_object()):
+                self._interface_manager.pymol_session_manager.reinitialize_session()
             tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
                                                                           (0, tmp_protein.get_id()))
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
@@ -4103,7 +4113,9 @@ class MainViewController:
         tmp_dialog.exec_()
         response: bool = tmp_dialog.response
         if response:
-            tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_protein_pair_tree_index_object()
+            tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
+            if self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name):
+                self._interface_manager.pymol_session_manager.reinitialize_session()
             tmp_database_operation = database_operation.DatabaseOperation(
                 enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id())
             )

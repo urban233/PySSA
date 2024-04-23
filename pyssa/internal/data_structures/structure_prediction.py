@@ -32,12 +32,11 @@ from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_processing import data_transformer
-from pyssa.internal.portal import auxiliary_pymol
 from pyssa.internal.prediction_engines import colabbatch
 from pyssa.util import constants
 from pyssa.util import prediction_util
 from pyssa.util import exception
-from pyssa.io_pyssa import path_util
+from pyssa.io_pyssa import path_util, bio_data
 from pyssa.logging_pyssa import log_handlers
 
 logger = logging.getLogger(__file__)
@@ -190,16 +189,50 @@ class StructurePrediction:
             logger.debug(tmp_prediction[0].name)
             return best_prediction_models
 
-    def add_proteins_to_project(self, best_prediction_models, a_project, the_project_lock: QtCore.QMutex):
+    def add_proteins_to_project(self,
+                                the_main_socket,
+                                a_socket,
+                                best_prediction_models,
+                                a_project,
+                                the_project_lock: QtCore.QMutex):
         the_project_lock.lock()
         for tmp_prediction in best_prediction_models:
             tmp_protein = protein.Protein(tmp_prediction[0].name)
             tmp_protein.add_protein_structure_data_from_local_pdb_file(
                 pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
             )
-            tmp_protein.pymol_session = auxiliary_pymol.AuxiliaryPyMOL.create_pymol_session_for_protein(tmp_protein)
-            #tmp_protein.create_new_pymol_session()
-            #tmp_protein.save_pymol_session_as_base64_string()
+            pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein.get_molecule_object()}.pdb")
+            try:
+                bio_data.build_pdb_file(tmp_protein.get_pdb_data(), pdb_filepath)
+            except exception.IllegalArgumentError:
+                logger.error(f"The argument pdb data is not usable: {tmp_protein.get_pdb_data}.")
+                raise exception.UnableToCreatePdbFileError("")
+            except exception.DirectoryNotFoundError:
+                logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+                raise exception.UnableToCreatePdbFileError("")
+            except PermissionError:
+                logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+                raise exception.UnableToCreatePdbFileError("")
+            except exception.UnableToOpenFileError:
+                logger.error("pdb file could not be opened for writing.")
+                raise exception.UnableToOpenFileError("")
+
+            the_main_socket.send_string("Structure Prediction")
+            response = the_main_socket.recv_string()
+            print(f"Received response: {response}")
+            message = {
+                "job_type": "Structure Prediction",
+                "a_pdb_filepath": str(pdb_filepath),
+            }
+            the_main_socket.send_json(message)
+            response = the_main_socket.recv_string()
+            print(f"Received response: {response}")
+            # Wait for the response from the server
+            a_socket.send_json({"job_type": "Structure Prediction"})
+            response = a_socket.recv_json()
+            result = response["result"]
+            tmp_protein.pymol_session = response["data"][0]
+
             with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
                 logger.info(f"Inserting {tmp_protein.get_molecule_object()} into current project, from prediction thread.")
                 tmp_protein.db_project_id = a_project.get_id()

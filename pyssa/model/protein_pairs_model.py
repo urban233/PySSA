@@ -5,7 +5,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.protein import Protein
-from pyssa.internal.portal import pymol_io, auxiliary_pymol
+from pyssa.internal.portal import pymol_io
 from pyssa.util import enums
 
 
@@ -34,8 +34,8 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
             tmp_scenes_item = QtGui.QStandardItem("Scenes")
             tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
             tmp_protein_pair_item.appendRow(tmp_scenes_item)
-            tmp_all_scenes = auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session(tmp_protein_pair.pymol_session)
-            for tmp_scene in tmp_all_scenes:
+            tmp_protein_pair.load_pymol_session()
+            for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
                 tmp_scene_item = QtGui.QStandardItem(tmp_scene)
                 tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
                 tmp_scenes_item.appendRow(tmp_scene_item)

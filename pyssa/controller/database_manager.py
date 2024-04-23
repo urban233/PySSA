@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import sqlite3
+import struct
 import numpy as np
 from PyQt5 import QtCore
 from Bio import SeqRecord
@@ -529,10 +530,10 @@ class DatabaseManager:
             tmp_params = (
                 int(index[i]),
                 prot_1_chains[i],
-                prot_1_position[i],
+                int(prot_1_position[i]),
                 prot_1_residue[i],
                 prot_2_chains[i],
-                prot_2_position[i],
+                int(prot_2_position[i]),
                 prot_2_residue[i],
                 distances[i],
                 the_distance_analysis_results_id,
@@ -783,6 +784,7 @@ class DatabaseManager:
             distances = []
             for tmp_distance_data in self._get_distance_analysis_result_data(tmp_dist_analysis_results_id):
                 tmp_progress += 0.5
+                print(tmp_distance_data[2])
                 the_progress_signal.emit_signal(tmp_message, min(round(tmp_progress, 2), 90))
                 index.append(tmp_distance_data[0])
                 prot_1_chains.append(tmp_distance_data[1])
@@ -944,7 +946,7 @@ class DatabaseManager:
             prot_2_residue = []
             distances = []
             for tmp_distance_data in self._get_distance_analysis_result_data(tmp_dist_analysis_results_id):
-                index.append(tmp_distance_data[0])
+                index.append(int(tmp_distance_data[0]))
                 prot_1_chains.append(tmp_distance_data[1])
                 prot_1_position.append(tmp_distance_data[2])
                 prot_1_residue.append(tmp_distance_data[3])

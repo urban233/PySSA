@@ -162,6 +162,16 @@ class InterfaceManager:
         self.project_lock = QtCore.QMutex()
         self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
 
+        # TODO: comment this in if deployed correctly
+        self.job_manager.start_auxiliary_pymol()
+        # process = subprocess.Popen([r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe",
+        #                             f"{constants.PLUGIN_PATH}\\auxiliary_pymol\\main.py"])
+        #
+        # if process.poll() is None:
+        #     print("main.py started correctly.")
+        # else:
+        #     print("main.py failed to start.")
+
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
         self._sequence_model = QtGui.QStandardItemModel()
@@ -2028,6 +2038,7 @@ class InterfaceManager:
             tmp_job_is_from_current_project = True
         else:
             tmp_job_is_from_current_project = False
+
         tmp_job_notification_widget = job_entry.JobNotificationWidget(a_description,
                                                                       a_job_entry_widget.job_base_information,
                                                                       tmp_job_is_from_current_project,
@@ -2050,6 +2061,7 @@ class InterfaceManager:
         Notes:
             This function is called from the main_view_controller.
         """
+        print(a_job_notification_widget)
         self._main_view.ui.job_notification_layout.removeWidget(a_job_notification_widget)
         if self._main_view.ui.job_notification_layout.count() == 2:
             self._main_view.lbl_job_notification.show()
@@ -2061,11 +2073,11 @@ class InterfaceManager:
             This function is called from the main_view_controller.
         """
         self._main_view.ui.frame_job_notification.hide()
-        self._main_view.btn_open_job_notification.setIcon(self._main_view.icon_job_overview_closed)
+        self._main_view.btn_open_job_notification.setIcon(self._main_view.icon_notify)
 
     def close_job_overview_panel(self):
         self._main_view.ui.frame_job_overview.hide()
-        self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_job_overview_closed)
+        self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_jobs)
 
     def cancel_job(self, signal_tuple):
         if signal_tuple[0] == enums.JobType.PREDICTION:

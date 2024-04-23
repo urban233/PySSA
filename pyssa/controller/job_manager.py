@@ -34,7 +34,8 @@ from pyssa.internal.data_structures import project, structure_prediction, job
 from pyssa.internal.data_structures.data_classes import job_summary
 from pyssa.internal.thread import tasks
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import enums, exception, exit_codes
+from pyssa.util import enums, exception, exit_codes, constants
+import zmq
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -43,17 +44,57 @@ logger.addHandler(log_handlers.log_file_handler)
 class JobManager:
 
     def __init__(self):
+        context = zmq.Context()
+        self._main_socket = context.socket(zmq.REQ)
+        self._main_socket.connect("tcp://127.0.0.1:8070")
+
         self._prediction_queue: "queue.Queue" = queue.Queue()
         self._prediction_queue_lock = QtCore.QMutex()
         self._is_prediction_queue_running = False
         self.current_prediction_job: "job_summary.PredictionJobSummary" = None
+        self._prediction_socket = context.socket(zmq.REQ)
+        self._prediction_socket.connect("tcp://127.0.0.1:8071")
+
         self._distance_analysis_queue: "queue.Queue" = queue.Queue()
         self._is_distance_analysis_queue_running = False
         self.current_distance_analysis_job: "job_summary.DistanceAnalysisJobSummary" = None
+        self._distance_analysis_socket = context.socket(zmq.REQ)
+        self._distance_analysis_socket.connect("tcp://127.0.0.1:8072")  # Connecting to the server on port 5555
+
         self._is_prediction_and_distance_analysis_queue_running = False
         self._prediction_and_distance_analysis_queue = queue.Queue()
+
         self._ray_tracing_queue: "queue.Queue" = queue.Queue()
         self._is_ray_tracing_queue_running = False
+        self._ray_tracing_socket = context.socket(zmq.REQ)
+        self._ray_tracing_socket.connect("tcp://127.0.0.1:8074")  # Connecting to the server on port 5555
+        # poller = zmq.Poller()
+        # poller.register(self._ray_tracing_socket, zmq.POLLOUT)  # Register the socket for outgoing events
+        # # Check if the socket is ready for sending data
+        # socks = dict(poller.poll(timeout=1000))  # Timeout is in milliseconds
+        # if self._ray_tracing_socket in socks and socks[self._ray_tracing_socket] == zmq.POLLOUT:
+        #     print("Socket is ready for sending data")
+        # else:
+        #     print("Socket is not ready for sending data")
+
+    def stop_auxiliary_pymol(self):
+        self._main_socket.send_string("Abort")
+        response = self._main_socket.recv_string()
+        print(f"Received response: {response}")
+        message = {
+            "job_type": "Abort",
+        }
+        self._main_socket.send_json(message)
+        response = self._main_socket.recv_string()
+        print(f"Received response: {response}")
+
+    def start_auxiliary_pymol(self):
+        process = subprocess.Popen([r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe",
+                                    f"{constants.PLUGIN_PATH}\\auxiliary_pymol\\main.py"])
+        if process.poll() is None:
+            print("main.py started correctly.")
+        else:
+            print("main.py failed to start.")
 
     # general approach
     def put_job_into_queue(self, a_job: Union["job.PredictionJob", "job.DistanceAnalysisJob", "job.RayTracingJob"]):
@@ -201,6 +242,8 @@ class JobManager:
             the_interface_manager: "interface_manager.InterfaceManager",
     ):
         tmp_prediction_job = job.PredictionJob(
+            self._main_socket,
+            self._prediction_socket,
             a_project,
             the_prediction_protein_infos,
             the_prediction_configuration,
@@ -241,6 +284,10 @@ class JobManager:
 
     def _execute_prediction_job_queue(self, placeholder_1, placeholder_2):
         logger.debug("Starting prediction queue ...")
+
+        while self._is_prediction_and_distance_analysis_queue_running:
+            time.sleep(60)
+
         while True:
             self._is_prediction_queue_running = True
             self._prediction_queue_lock.lock()
@@ -280,6 +327,8 @@ class JobManager:
             cycles: int
     ):
         tmp_distance_analysis_job = job.DistanceAnalysisJob(
+            self._main_socket,
+            self._distance_analysis_socket,
             a_project,
             the_project_lock,
             a_list_with_analysis_names,
@@ -424,6 +473,8 @@ class JobManager:
             a_project_name: str
     ):
         tmp_ray_tracing_job = job.RayTracingJob(
+            self._main_socket,
+            self._ray_tracing_socket,
             the_destination_image_filepath,
             the_cached_session_filepath,
             image_ray_trace_mode,
@@ -441,6 +492,7 @@ class JobManager:
                 enums.JobProgress.WAITING
             )
         )
+        tmp_ray_tracing_job.job_entry_widget.job_base_information.add_image_filepath(the_destination_image_filepath)
         return tmp_ray_tracing_job, tmp_ray_tracing_job.job_entry_widget
 
     def put_ray_tracing_job_into_queue(self, a_ray_tracing_job: "job.RayTracingJob"):

@@ -34,6 +34,14 @@ class JobBaseInformation:
     protein_pair_names: list[str]
     job_progress: "enums.JobProgress"
 
+    def add_image_filepath(self, a_filepath: str):
+        self._filepath = a_filepath
+
+    def get_image_filepath(self):
+        if self._filepath is None:
+            return ""
+        return self._filepath
+
 
 @dataclass
 class PredictionJobSummary:

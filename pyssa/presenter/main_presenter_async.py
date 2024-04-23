@@ -40,7 +40,7 @@ from pyssa.internal.data_structures.data_classes import (
     prediction_configuration,
     current_session, database_operation,
 )
-from pyssa.internal.portal import pymol_io, graphic_operations, protein_operations, auxiliary_pymol
+from pyssa.internal.portal import pymol_io, graphic_operations, protein_operations
 from pyssa.internal.thread import database_thread
 from pyssa.internal.thread.async_pyssa import custom_signals
 from pyssa.io_pyssa import path_util, filesystem_io, bio_data
@@ -755,9 +755,7 @@ def load_protein_pymol_session(a_protein, the_pymol_session_manager, needs_to_be
         the_pymol_session_manager.load_protein_session(a_protein)
         the_pymol_session_manager.current_scene_name = "base"
         the_pymol_session_manager.load_current_scene()
-        the_pymol_session_manager.set_all_scenes_for_current_session(
-            auxiliary_pymol.AuxiliaryPyMOL.get_all_scenes_of_session(a_protein.pymol_session)
-        )
+        the_pymol_session_manager.get_all_scenes_in_current_session()
     except RuntimeError:
         logger.error("Loading the session failed due to a RuntimeError!")
         return the_pymol_session_manager, False
