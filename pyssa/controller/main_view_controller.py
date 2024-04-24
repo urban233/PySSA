@@ -600,7 +600,7 @@ class MainViewController:
         self._database_thread.start()
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._active_task = tasks.Task(
-            target=main_presenter_async.open_project,
+            target=project_async.open_project,
             args=(
                 tmp_project_name,
                 tmp_project_database_filepath,
@@ -984,7 +984,7 @@ class MainViewController:
         """Closes the current project"""
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Close' clicked.")
         self._active_task = tasks.Task(
-            target=main_presenter_async.close_project,
+            target=project_async.close_project,
             args=(self._database_thread, self._interface_manager.pymol_session_manager),
             post_func=self.__await_close_project,
         )
@@ -1025,7 +1025,7 @@ class MainViewController:
         self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
         self._database_thread.start()
         self._active_task = tasks.Task(
-            target=main_presenter_async.create_new_project,
+            target=project_async.create_new_project,
             args=(
                 tmp_project_name,
                 self._interface_manager.get_application_settings().get_workspace_path(),
@@ -1111,7 +1111,7 @@ class MainViewController:
         self._database_thread.start()
         self._database_manager.set_database_filepath(tmp_project_database_filepath)
         self._active_task = tasks.Task(
-            target=main_presenter_async.open_project,
+            target=project_async.open_project,
             args=(
                 tmp_project_name,
                 tmp_project_database_filepath,
@@ -1157,7 +1157,7 @@ class MainViewController:
             db_manager.close_project_database()
 
         self._active_task = tasks.Task(
-            target=main_presenter_async.create_use_project,
+            target=project_async.create_use_project,
             args=(
                 user_input[0],
                 self._interface_manager.get_application_settings().get_workspace_path(),
@@ -3654,7 +3654,7 @@ class MainViewController:
         tmp_protein_name, tmp_name_len = return_value
         if tmp_name_len == 4:
             self._active_task = tasks.Task(
-                target=main_presenter_async.add_protein_from_pdb_to_project,
+                target=project_async.add_protein_from_pdb_to_project,
                 args=(
                     tmp_protein_name,
                     self._interface_manager
@@ -3666,7 +3666,7 @@ class MainViewController:
         elif tmp_name_len > 0:
             # local pdb file as input
             self._active_task = tasks.Task(
-                target=main_presenter_async.add_protein_from_local_filesystem_to_project,
+                target=project_async.add_protein_from_local_filesystem_to_project,
                 args=(
                     tmp_protein_name,
                     self._interface_manager
