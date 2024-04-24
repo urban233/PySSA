@@ -30,8 +30,10 @@
         <file>icons/arrow_right_w400.svg</file>
         <file>icons/done_round_edges_w200_g200.svg</file>
         <file>icons/do_not_disturb_on_w200.svg</file>
-        <file>icons/notifications_w200.svg</file>
         <file>icons/notifications_unread_w200.svg</file>
         <file>icons/list_alt_w200.svg</file>
+        <file>icons/play_circle_w200.svg</file>
+        <file>icons/play_circle_run_w200_blue.svg</file>
+        <file>icons/play_circle_run_w200_green.svg</file>
     </qresource>
 </RCC>
