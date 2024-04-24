@@ -68,6 +68,10 @@ class JobManager:
         self._is_ray_tracing_queue_running = False
         self._ray_tracing_socket = context.socket(zmq.REQ)
         self._ray_tracing_socket.connect("tcp://127.0.0.1:8074")  # Connecting to the server on port 5555
+
+        self._general_purpose_socket = context.socket(zmq.REQ)
+        self._general_purpose_socket.connect("tcp://127.0.0.1:8075")  # Connecting to the server on port 5555
+
         # poller = zmq.Poller()
         # poller.register(self._ray_tracing_socket, zmq.POLLOUT)  # Register the socket for outgoing events
         # # Check if the socket is ready for sending data
@@ -90,11 +94,15 @@ class JobManager:
 
     def start_auxiliary_pymol(self):
         process = subprocess.Popen([r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe",
-                                    f"{constants.PLUGIN_PATH}\\auxiliary_pymol\\main.py"])
+                                    f"{constants.PLUGIN_PATH}\\auxiliary_pymol\\main.py"],
+                                   creationflags=subprocess.CREATE_NO_WINDOW)
         if process.poll() is None:
             print("main.py started correctly.")
         else:
             print("main.py failed to start.")
+
+    def get_general_purpose_socket_pair(self) -> tuple:
+        return self._main_socket, self._general_purpose_socket
 
     # general approach
     def put_job_into_queue(self, a_job: Union["job.PredictionJob", "job.DistanceAnalysisJob", "job.RayTracingJob"]):
@@ -244,6 +252,7 @@ class JobManager:
         tmp_prediction_job = job.PredictionJob(
             self._main_socket,
             self._prediction_socket,
+            self._general_purpose_socket,
             a_project,
             the_prediction_protein_infos,
             the_prediction_configuration,

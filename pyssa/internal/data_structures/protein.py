@@ -28,12 +28,14 @@ import pymol
 from Bio import PDB
 from PyQt5 import QtCore
 from pymol import cmd
+
+from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.controller import database_manager
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.portal import graphic_operations
-from pyssa.internal.data_structures import selection
+from pyssa.internal.data_structures import selection, job
 from pyssa.util import protein_util, enums
 from pyssa.util import exception
 from pyssa.io_pyssa.xml_pyssa import element_names
@@ -203,31 +205,41 @@ class Protein:
         # else:
         #     raise ValueError("Function has too many arguments.")
 
-    def add_protein_structure_data_from_pdb_db(self, a_pdb_id) -> None:
+    def add_protein_structure_data_from_pdb_db(self, a_pdb_id, the_main_socket, a_socket) -> None:
         """Adds protein structure data based on a protein from the PDB database."""
         tmp_pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb")
         bio_data.download_pdb_file(a_pdb_id, tmp_pdb_filepath)
         self.chains = protein_operations.get_protein_chains(
-            self._pymol_molecule_object,
-            tmp_pdb_filepath.parent,
-            tmp_pdb_filepath.name,
+            tmp_pdb_filepath, the_main_socket, a_socket
         )
-        self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
-        self.check_states_and_reduce_to_one_state_if_necessary()
+
+        tmp_job_description = job.GeneralPurposeJobDescription(
+            enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE
+        )
+        tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(tmp_pdb_filepath)})
+        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+            the_main_socket, a_socket, tmp_job_description
+        )
+        self._pdb_data = bio_data.parse_pdb_file(tmp_reply["data"])
+        #self.check_states_and_reduce_to_one_state_if_necessary()
         try:
             os.remove(str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{a_pdb_id}.pdb")))
         except Exception as e:
             logger.error(f"Could not delete pdb file! Ran into error: {e}")
 
-    def add_protein_structure_data_from_local_pdb_file(self, a_filepath: pathlib.Path) -> None:
+    def add_protein_structure_data_from_local_pdb_file(self, a_filepath: pathlib.Path, the_main_socket, a_socket) -> None:
         """Adds protein structure data based on a protein from the local filesystem."""
         self.chains = protein_operations.get_protein_chains(
-            self._pymol_molecule_object,
-            a_filepath.parent,
-            a_filepath.name,
+            a_filepath, the_main_socket, a_socket
         )
-        self._pdb_data = bio_data.parse_pdb_file(a_filepath)
-        self.check_states_and_reduce_to_one_state_if_necessary()
+        tmp_job_description = job.GeneralPurposeJobDescription(
+            enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE
+        )
+        tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(a_filepath)})
+        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+            the_main_socket, a_socket, tmp_job_description
+        )
+        self._pdb_data = bio_data.parse_pdb_file(tmp_reply["data"])
         try:
             os.remove(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))
         except Exception as e:
@@ -239,9 +251,9 @@ class Protein:
             tmp_chain.set_id(i)
             i += 1
 
-    def create_new_pymol_session(self) -> None:
+    def create_new_pymol_session(self, the_main_socket, the_general_purpose_socket) -> None:
         """Creates a new pymol session by loading the protein into pymol."""
-        self.load_protein_in_pymol()
+        self.load_protein_in_pymol(the_main_socket, the_general_purpose_socket)
 
     def save_pymol_session_as_base64_string(self) -> None:
         """Sets the active pymol session as base64 string into the protein object."""
@@ -388,7 +400,7 @@ class Protein:
                 return tmp_chain
         return chain.Chain("", "", "")
 
-    def load_protein_in_pymol(self) -> None:
+    def load_protein_in_pymol(self, the_main_socket, the_general_purpose_socket) -> None:
         """Load a protein in PyMOL.
 
         Raises:
@@ -421,13 +433,20 @@ class Protein:
             logger.error("pdb file could not be opened for writing.")
             raise exception.UnableToOpenFileError("")
 
-        try:
-            pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._pymol_molecule_object}.pdb", self._pymol_molecule_object)
-        except exception.UnableToLoadProteinError:
-            logger.error("Protein can not be loaded in PyMOL!")
-            raise exception.UnableToLoadProteinError
+        tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.CREATE_NEW_PROTEIN_PYMOL_SESSION)
+        tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))})
+        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+            the_main_socket, the_general_purpose_socket, tmp_job_description
+        )
+        self.pymol_session = tmp_reply["data"][0]
 
-        cmd.scene("base", action="append")
+        # try:
+        #     pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._pymol_molecule_object}.pdb", self._pymol_molecule_object)
+        # except exception.UnableToLoadProteinError:
+        #     logger.error("Protein can not be loaded in PyMOL!")
+        #     raise exception.UnableToLoadProteinError
+        #
+        # cmd.scene("base", action="append")
 
     def load_protein_pymol_session(self) -> None:
         """Loads the protein in the pymol session based on the base64 data."""

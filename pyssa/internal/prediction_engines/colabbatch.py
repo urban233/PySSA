@@ -121,7 +121,7 @@ class Colabbatch:
                 "rhel_user",
                 "/home/rhel_user/localcolabfold/colabfold-conda/bin/python3",
                 "/home/rhel_user/pyssa_colabfold/service.py",
-            ],
+            ], creationflags=subprocess.CREATE_NO_WINDOW
         )
 
         context = zmq.Context()

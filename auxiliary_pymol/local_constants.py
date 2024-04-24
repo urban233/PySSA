@@ -43,3 +43,29 @@ ARRAY_DISTANCE_PROT_2_CHAIN = "model_chain"
 ARRAY_DISTANCE_PROT_2_POSITION = "model_pos"
 ARRAY_DISTANCE_PROT_2_RESI = "model_resi"
 ARRAY_DISTANCE_DISTANCES = "distance"
+
+CHAIN_TYPE_PROTEIN = "protein_chain"
+CHAIN_TYPE_NON_PROTEIN = "non_protein_chain"
+
+AMINO_ACID_CODE = {
+    "CYS": "C",
+    "ASP": "D",
+    "SER": "S",
+    "GLN": "Q",
+    "LYS": "K",
+    "ILE": "I",
+    "PRO": "P",
+    "THR": "T",
+    "PHE": "F",
+    "ASN": "N",
+    "GLY": "G",
+    "HIS": "H",
+    "LEU": "L",
+    "ARG": "R",
+    "TRP": "W",
+    "ALA": "A",
+    "VAL": "V",
+    "GLU": "E",
+    "TYR": "Y",
+    "MET": "M",
+}

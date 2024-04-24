@@ -31,6 +31,7 @@ from pymol import cmd
 from typing import TYPE_CHECKING
 from PyQt5 import QtCore
 
+from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.controller import database_manager
 from pyssa.internal.portal import pymol_io
 from pyssa.io_pyssa import path_util, filesystem_helpers, bio_data
@@ -38,7 +39,7 @@ from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, distance_analysis_util, pyssa_keys, enums, constant_messages
 from pyssa.util import exception
-from pyssa.internal.data_structures import results
+from pyssa.internal.data_structures import results, job
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import project
@@ -113,12 +114,12 @@ class Analysis:
 
         for tmp_protein_pair in self.analysis_list:
             logger.info(f"The protein pair: {tmp_protein_pair.name} gets analyzed.")
-            try:
-                cmd.reinitialize()
-            except pymol.CmdException:
-                tmp_msg: str = "Unable to reinitialize the pymol session."
-                logger.error(tmp_msg)
-                raise exception.UnableToReinitializePymolSessionError(tmp_msg)
+            # try:
+            #     cmd.reinitialize()
+            # except pymol.CmdException:
+            #     tmp_msg: str = "Unable to reinitialize the pymol session."
+            #     logger.error(tmp_msg)
+            #     raise exception.UnableToReinitializePymolSessionError(tmp_msg)
             try:
                 # do distance analysis in PyMOL
                 if tmp_protein_pair is None:
@@ -145,28 +146,42 @@ class Analysis:
                 except Exception as e:
                     logger.error(f"PDB file could not be built. Error: {e}")
 
-                the_main_socket.send_string("Distance Analysis")
-                response = the_main_socket.recv_string()
-                print(f"Received response: {response}")
-                message = {
-                    "job_type": "Distance Analysis",
-                    "the_protein_pair_name": tmp_protein_pair.name,
-                    "a_protein_1_pdb_cache_filepath": str(tmp_protein_1_pdb_cache_filepath),
-                    "a_protein_2_pdb_cache_filepath":str(tmp_protein_2_pdb_cache_filepath),
-                    "a_protein_1_pymol_selection_string": tmp_protein_pair.protein_1.pymol_selection.selection_string,
-                    "a_protein_2_pymol_selection_string": tmp_protein_pair.protein_2.pymol_selection.selection_string,
-                    "a_cutoff": tmp_protein_pair.distance_analysis.cutoff,
-                    "the_cycles": tmp_protein_pair.distance_analysis.cycles,
-                }
-                the_main_socket.send_json(message)
-                response = the_main_socket.recv_string()
-                print(f"Received response: {response}")
-                # Wait for the response from the server
-                a_socket.send_json({"job_type": "Distance Analysis"})
-                response = a_socket.recv_json()
-                result = response["result"]
-                if response["data"] is not None:
-                    distance_analysis_results_object_values, base64_string = response["data"]
+                tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+                    the_main_socket,
+                    a_socket,
+                    job.DistanceAnalysisJobDescription(
+                        tmp_protein_pair.name,
+                        tmp_protein_1_pdb_cache_filepath,
+                        tmp_protein_2_pdb_cache_filepath,
+                        tmp_protein_pair.protein_1.pymol_selection.selection_string,
+                        tmp_protein_pair.protein_2.pymol_selection.selection_string,
+                        tmp_protein_pair.distance_analysis.cutoff,
+                        tmp_protein_pair.distance_analysis.cycles,
+                    )
+                )
+
+                # the_main_socket.send_string("Distance Analysis")
+                # response = the_main_socket.recv_string()
+                # print(f"Received response: {response}")
+                # message = {
+                #     "job_type": "Distance Analysis",
+                #     "the_protein_pair_name": tmp_protein_pair.name,
+                #     "a_protein_1_pdb_cache_filepath": str(tmp_protein_1_pdb_cache_filepath),
+                #     "a_protein_2_pdb_cache_filepath":str(tmp_protein_2_pdb_cache_filepath),
+                #     "a_protein_1_pymol_selection_string": tmp_protein_pair.protein_1.pymol_selection.selection_string,
+                #     "a_protein_2_pymol_selection_string": tmp_protein_pair.protein_2.pymol_selection.selection_string,
+                #     "a_cutoff": tmp_protein_pair.distance_analysis.cutoff,
+                #     "the_cycles": tmp_protein_pair.distance_analysis.cycles,
+                # }
+                # the_main_socket.send_json(message)
+                # response = the_main_socket.recv_string()
+                # print(f"Received response: {response}")
+                # # Wait for the response from the server
+                # a_socket.send_json({"job_type": "Distance Analysis"})
+
+                result = tmp_reply["result"]
+                if tmp_reply["data"] is not None:
+                    distance_analysis_results_object_values, base64_string = tmp_reply["data"]
                     distances, base64_string, rmsd, aligned_residues = distance_analysis_results_object_values
                     result_hashtable: dict[str, np.ndarry] = {
                         pyssa_keys.ARRAY_DISTANCE_INDEX: np.array(distances[pyssa_keys.ARRAY_DISTANCE_INDEX]),

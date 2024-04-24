@@ -113,20 +113,6 @@ class ProteinPair:
         self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
         self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self.name)
 
-    def load_protein_pair_in_pymol(self) -> None:
-        """Load a protein pair in PyMOL.
-
-        Raises:
-            UnableToLoadProteinPair: If the protein pair is unable to be loaded.
-        """
-        try:
-            self.protein_1.load_protein_in_pymol()
-            self.protein_2.load_protein_in_pymol()
-        except exception.UnableToLoadProteinPairError:
-            logger.error("Protein pair could not be loaded in PyMOL!")
-            raise exception.UnableToLoadProteinPairError("")
-        cmd.scene("base", action="append")
-
     def load_pymol_session(self) -> None:
         """This function loads the existing pymol session of the pair."""
         session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}_session.pse")

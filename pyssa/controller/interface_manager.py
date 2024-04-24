@@ -162,15 +162,7 @@ class InterfaceManager:
         self.project_lock = QtCore.QMutex()
         self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
 
-        # TODO: comment this in if deployed correctly
         self.job_manager.start_auxiliary_pymol()
-        # process = subprocess.Popen([r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe",
-        #                             f"{constants.PLUGIN_PATH}\\auxiliary_pymol\\main.py"])
-        #
-        # if process.poll() is None:
-        #     print("main.py started correctly.")
-        # else:
-        #     print("main.py failed to start.")
 
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
@@ -744,7 +736,10 @@ class InterfaceManager:
 
     def _build_proteins_model(self) -> None:
         if len(self._current_project.proteins) > 0:
-            self._protein_model.build_model_from_scratch(self._current_project.proteins)
+            tmp_main_socket, tmp_general_purpose_socket = self.job_manager.get_general_purpose_socket_pair()
+            self._protein_model.build_model_from_scratch(self._current_project.proteins,
+                                                         tmp_main_socket,
+                                                         tmp_general_purpose_socket)
             # tmp_root_item = self._protein_model.invisibleRootItem()
             # for tmp_protein in self._current_project.proteins:
             #     tmp_protein_item = QtGui.QStandardItem(tmp_protein.get_molecule_object())
@@ -770,7 +765,10 @@ class InterfaceManager:
 
     def _build_protein_pairs_model(self) -> None:
         if len(self._current_project.protein_pairs) > 0:
-            self._protein_pair_model.build_model_from_scratch(self._current_project.protein_pairs)
+            tmp_main_socket, tmp_general_purpose_socket = self.job_manager.get_general_purpose_socket_pair()
+            self._protein_pair_model.build_model_from_scratch(self._current_project.protein_pairs,
+                                                              tmp_main_socket,
+                                                              tmp_general_purpose_socket)
             # tmp_root_item = self._protein_pair_model.invisibleRootItem()
             # for tmp_protein_pair in self._current_project.protein_pairs:
             #     tmp_protein_pair_item = QtGui.QStandardItem(tmp_protein_pair.name)
@@ -2016,6 +2014,7 @@ class InterfaceManager:
         self._main_view.ui.job_overview_layout.insertWidget(self._main_view.ui.job_overview_layout.count() - 1,
                                                             a_job_entry_widget)
         self._main_view.lbl_job_overview.hide()
+        self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_jobs_running)
 
     def update_job_entry(self, update_job_entry_signal_values):
         """
@@ -2027,7 +2026,6 @@ class InterfaceManager:
         _, a_description, a_value = update_job_entry_signal_values
         a_job_entry_widget: "job_entry.JobEntryWidget" = update_job_entry_signal_values[0]  # Unpack of 0 because of type annotation need
         a_job_entry_widget.ui.progress_bar_job.setValue(a_value)
-        a_job_entry_widget.ui.progress_bar_job.setFormat("")
         if a_value == 100:
             tmp_type = a_job_entry_widget.job_base_information.job_type
             tmp_progress = a_job_entry_widget.job_base_information.job_progress
@@ -2061,6 +2059,7 @@ class InterfaceManager:
         self._main_view.lbl_job_notification.hide()
         if self._main_view.ui.job_overview_layout.count() == 2:
             self._main_view.lbl_job_overview.show()
+            self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_jobs)
 
     def remove_job_notification_widget(self, a_job_notification_widget):
         """Removes a job notification after pressing open or refresh.
@@ -2072,6 +2071,7 @@ class InterfaceManager:
         self._main_view.ui.job_notification_layout.removeWidget(a_job_notification_widget)
         if self._main_view.ui.job_notification_layout.count() == 2:
             self._main_view.lbl_job_notification.show()
+            self._main_view.btn_open_job_notification.setIcon(self._main_view.icon_notify)
 
     def close_job_notification_panel(self):
         """Closes the job notification panel after pressing open or refresh.
@@ -2080,11 +2080,9 @@ class InterfaceManager:
             This function is called from the main_view_controller.
         """
         self._main_view.ui.frame_job_notification.hide()
-        self._main_view.btn_open_job_notification.setIcon(self._main_view.icon_notify)
 
     def close_job_overview_panel(self):
         self._main_view.ui.frame_job_overview.hide()
-        self._main_view.btn_open_job_overview.setIcon(self._main_view.icon_jobs)
 
     def cancel_job(self, signal_tuple):
         if signal_tuple[0] == enums.JobType.PREDICTION:

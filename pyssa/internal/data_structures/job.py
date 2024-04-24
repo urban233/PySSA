@@ -26,6 +26,7 @@ import subprocess
 
 from PyQt5 import QtCore
 
+from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.controller import database_manager
 from pyssa.gui.ui.custom_widgets import job_entry
 from pyssa.internal.data_structures import project, structure_prediction, structure_analysis, protein_pair
@@ -51,6 +52,7 @@ class PredictionJob(Job):
     def __init__(self,
                  the_main_socket,
                  a_socket,
+                 the_general_purpose_socket,
                  a_project: "project.Project",
                  the_prediction_protein_infos,
                  the_prediction_configuration,
@@ -65,6 +67,7 @@ class PredictionJob(Job):
         self.type = enums.JobType.PREDICTION
         self._main_socket = the_main_socket
         self._socket = a_socket
+        self._general_purpose_socket = the_general_purpose_socket
         self.prediction_protein_infos = the_prediction_protein_infos
         self.prediction_configuration = the_prediction_configuration
         self.project_lock = the_project_lock
@@ -141,7 +144,7 @@ class PredictionJob(Job):
             self.update_job_entry_signal.emit((self.job_entry_widget, tmp_msg, 100))
         else:
             structure_prediction_obj.add_proteins_to_project(
-                self._main_socket, self._socket, tmp_best_prediction_models, self.frozen_project, self.project_lock
+                self._main_socket, self._socket, self._general_purpose_socket, tmp_best_prediction_models, self.frozen_project, self.project_lock
             )
             subprocess.run(["wsl", "--shutdown"])
             logger.info("WSL gets shutdown.")
@@ -350,25 +353,37 @@ class RayTracingJob(Job):
     def run_job(self):
         self.update_job_entry_signal.emit((self.job_entry_widget, "Starting rendering process ...", 33))
         try:
-            self._main_socket.send_string("Ray-tracing")
-            response = self._main_socket.recv_string()
-            print(f"Received response: {response}")
-            message = {
-                "job_type": "Ray-tracing",
-                "dest": str(self.dest_image_filepath),
-                "cached": str(self.cached_session_filepath),
-                "mode": self.image_ray_trace_mode,
-                "texture": self.image_ray_texture,
-                "renderer": self.image_renderer
-            }
-            self._main_socket.send_json(message)
-            response = self._main_socket.recv_string()
-            print(f"Received response: {response}")
-            # Wait for the response from the server
-            self._socket.send_json({"job_type": "Ray-tracing"})
-            response = self._socket.recv_json()
-            result = response["data"]
-            print(f"Received result from server: {result}")
+            auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+                self._main_socket,
+                self._socket,
+                RayTracingJobDescription(
+                    self.dest_image_filepath,
+                    self.cached_session_filepath,
+                    self.image_ray_trace_mode,
+                    self.image_ray_texture,
+                    self.image_renderer
+                )
+            )
+
+            # self._main_socket.send_string("Ray-tracing")
+            # response = self._main_socket.recv_string()
+            # print(f"Received response: {response}")
+            # message = {
+            #     "job_type": "Ray-tracing",
+            #     "dest": str(self.dest_image_filepath),
+            #     "cached": str(self.cached_session_filepath),
+            #     "mode": self.image_ray_trace_mode,
+            #     "texture": self.image_ray_texture,
+            #     "renderer": self.image_renderer
+            # }
+            # self._main_socket.send_json(message)
+            # response = self._main_socket.recv_string()
+            # print(f"Received response: {response}")
+            # # Wait for the response from the server
+            # self._socket.send_json({"job_type": "Ray-tracing"})
+            # response = self._socket.recv_json()
+            # result = response["data"]
+            # print(f"Received result from server: {result}")
         except Exception as e:
             tmp_msg = f"Unknown error: {e}"
             logger.error(tmp_msg)
@@ -377,3 +392,89 @@ class RayTracingJob(Job):
         else:
             self.job_entry_widget.job_base_information.job_progress = enums.JobProgress.FINISHED
             self.update_job_entry_signal.emit((self.job_entry_widget, "Create ray-tracing image job finished.", 100))
+
+
+class PredictionJobDescription:
+
+    def __init__(self, a_pdb_filepath):
+        self.type: "enums.JobType" = enums.JobType.PREDICTION
+        self.pdb_filepath: str = str(a_pdb_filepath)
+
+    def get_dict(self):
+        return {
+            enums.JobDescriptionKeys.JOB_TYPE.value: self.type.value,
+            enums.JobDescriptionKeys.PDB_FILEPATH.value: self.pdb_filepath,
+        }
+
+
+class DistanceAnalysisJobDescription:
+
+    def __init__(self,
+                 the_protein_pair_name,
+                 a_protein_1_pdb_cache_filepath,
+                 a_protein_2_pdb_cache_filepath,
+                 a_protein_1_pymol_selection_string,
+                 a_protein_2_pymol_selection_string,
+                 a_cutoff,
+                 the_cycles):
+        self.type: "enums.JobType" = enums.JobType.DISTANCE_ANALYSIS
+        self.the_protein_pair_name = the_protein_pair_name
+        self.a_protein_1_pdb_cache_filepath = str(a_protein_1_pdb_cache_filepath)
+        self.a_protein_2_pdb_cache_filepath = str(a_protein_2_pdb_cache_filepath)
+        self.a_protein_1_pymol_selection_string = a_protein_1_pymol_selection_string
+        self.a_protein_2_pymol_selection_string = a_protein_2_pymol_selection_string
+        self.cutoff = a_cutoff
+        self.cycles = the_cycles
+
+    def get_dict(self):
+        return {
+            enums.JobDescriptionKeys.JOB_TYPE.value: self.type.value,
+            enums.JobDescriptionKeys.PROTEIN_PAIR_NAME.value: self.the_protein_pair_name,
+            enums.JobDescriptionKeys.PROTEIN_1_PDB_CACHE_FILEPATH.value: self.a_protein_1_pdb_cache_filepath,
+            enums.JobDescriptionKeys.PROTEIN_2_PDB_CACHE_FILEPATH.value: self.a_protein_2_pdb_cache_filepath,
+            enums.JobDescriptionKeys.PROTEIN_1_PYMOL_SELECTION_STRING.value: self.a_protein_1_pymol_selection_string,
+            enums.JobDescriptionKeys.PROTEIN_2_PYMOL_SELECTION_STRING.value: self.a_protein_2_pymol_selection_string,
+            enums.JobDescriptionKeys.CUTOFF.value: self.cutoff,
+            enums.JobDescriptionKeys.CYCLES.value: self.cycles,
+        }
+
+
+class RayTracingJobDescription:
+
+    def __init__(self,
+                 a_destination_image_filepath,
+                 a_cached_session_filepath,
+                 an_image_ray_trace_mode,
+                 an_image_ray_texture,
+                 an_image_renderer):
+        self.type: "enums.JobType" = enums.JobType.RAY_TRACING
+        self.dest_image_filepath: str = str(a_destination_image_filepath)
+        self.cached_session_filepath: str = str(a_cached_session_filepath)
+        self.image_ray_trace_mode = an_image_ray_trace_mode
+        self.image_ray_texture = an_image_ray_texture
+        self.image_renderer = an_image_renderer
+
+    def get_dict(self):
+        return {
+            enums.JobDescriptionKeys.JOB_TYPE.value: self.type.value,
+            enums.JobDescriptionKeys.IMAGE_DESTINATION_FILEPATH.value: self.dest_image_filepath,
+            enums.JobDescriptionKeys.CACHED_SESSION_FILEPATH.value: self.cached_session_filepath,
+            enums.JobDescriptionKeys.RAY_TRACE_MODE.value: self.image_ray_trace_mode,
+            enums.JobDescriptionKeys.RAY_TEXTURE.value: self.image_ray_texture,
+            enums.JobDescriptionKeys.RAY_TRACING_RENDERER.value: self.image_renderer,
+        }
+
+
+class GeneralPurposeJobDescription:
+
+    def __init__(self, a_job_short_description: "enums.JobShortDescription"):
+        self.type: "enums.JobType" = enums.JobType.GENERAL_PURPOSE
+        self.job_short_description: "enums.JobShortDescription" = a_job_short_description
+        self.job_information = {enums.JobDescriptionKeys.JOB_TYPE.value: self.type.value,
+                                enums.JobDescriptionKeys.JOB_SHORT_DESCRIPTION.value: self.job_short_description.value}
+
+    def setup_dict(self, an_argument_dict: dict):
+        self.job_information.update(an_argument_dict)
+
+    def get_dict(self):
+        return self.job_information

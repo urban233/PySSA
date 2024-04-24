@@ -80,37 +80,37 @@ def create_new_project(
         tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
         db_manager.close_project_database()
 
-    if len(protein_source_information) == 4:
-        tmp_ref_protein = protein.Protein(protein_source_information.upper())
-        tmp_ref_protein.db_project_id = tmp_project.get_id()
-        tmp_ref_protein.add_protein_structure_data_from_pdb_db(protein_source_information.upper())
-        tmp_ref_protein.create_new_pymol_session()
-        tmp_ref_protein.save_pymol_session_as_base64_string()
-        tmp_project.add_existing_protein(tmp_ref_protein)
-        with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
-            db_manager.open_project_database()
-            tmp_project.set_id(db_manager.insert_new_protein(tmp_ref_protein))
-            db_manager.close_project_database()
-        constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
-    elif len(protein_source_information) > 0:
-        # local pdb file as input
-        pdb_filepath = pathlib.Path(protein_source_information)
-        graphic_operations.setup_default_session_graphic_settings()
-        tmp_ref_protein = protein.Protein(
-            pdb_filepath.name.replace(".pdb", "")
-        )
-        tmp_ref_protein.db_project_id = tmp_project.get_id()
-        tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(protein_source_information))
-        tmp_ref_protein.create_new_pymol_session()
-        tmp_ref_protein.save_pymol_session_as_base64_string()
-        tmp_project.add_existing_protein(tmp_ref_protein)
-        with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
-            db_manager.open_project_database()
-            tmp_project.set_id(db_manager.insert_new_protein(tmp_ref_protein))
-            db_manager.close_project_database()
-        constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
-    else:
-        constants.PYSSA_LOGGER.info("Create empty project finished.")
+    # if len(protein_source_information) == 4:
+    #     tmp_ref_protein = protein.Protein(protein_source_information.upper())
+    #     tmp_ref_protein.db_project_id = tmp_project.get_id()
+    #     tmp_ref_protein.add_protein_structure_data_from_pdb_db(protein_source_information.upper())
+    #     tmp_ref_protein.create_new_pymol_session()
+    #     tmp_ref_protein.save_pymol_session_as_base64_string()
+    #     tmp_project.add_existing_protein(tmp_ref_protein)
+    #     with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+    #         db_manager.open_project_database()
+    #         tmp_project.set_id(db_manager.insert_new_protein(tmp_ref_protein))
+    #         db_manager.close_project_database()
+    #     constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
+    # elif len(protein_source_information) > 0:
+    #     # local pdb file as input
+    #     pdb_filepath = pathlib.Path(protein_source_information)
+    #     graphic_operations.setup_default_session_graphic_settings()
+    #     tmp_ref_protein = protein.Protein(
+    #         pdb_filepath.name.replace(".pdb", "")
+    #     )
+    #     tmp_ref_protein.db_project_id = tmp_project.get_id()
+    #     tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(protein_source_information))
+    #     tmp_ref_protein.create_new_pymol_session()
+    #     tmp_ref_protein.save_pymol_session_as_base64_string()
+    #     tmp_project.add_existing_protein(tmp_ref_protein)
+    #     with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+    #         db_manager.open_project_database()
+    #         tmp_project.set_id(db_manager.insert_new_protein(tmp_ref_protein))
+    #         db_manager.close_project_database()
+    #     constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+    #else:
+    constants.PYSSA_LOGGER.info("Create empty project finished.")
     return ("result", tmp_project)
 
 
@@ -505,7 +505,7 @@ def load_results(a_project: "project.Project", a_results_name: str) -> tuple:
         image_type = constants.IMAGES_NONE
 
     cmd.reinitialize()
-    tmp_protein_pair.load_pymol_session()
+    #tmp_protein_pair.load_pymol_session()
     tmp_current_session = current_session.CurrentSession(
         "protein_pair",
         tmp_protein_pair.name,
@@ -566,7 +566,7 @@ def open_protein_for_hotspots(
     else:
         # protein pair is selected
         tmp_protein_pair = a_project.search_protein_pair(a_name)
-        tmp_protein_pair.load_pymol_session()
+        #tmp_protein_pair.load_pymol_session()
         the_current_session.name = tmp_protein_pair.name
         the_current_session.type = "protein_pair"
         the_current_session.session = tmp_protein_pair.pymol_session
@@ -862,16 +862,17 @@ def open_project(
 
 
 def add_protein_from_pdb_to_project(tmp_protein_name,
-                                    the_interface_manager) -> tuple:
+                                    the_interface_manager: "interface_manager.InterfaceManager") -> tuple:
+    the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()
     with database_manager.DatabaseManager(the_interface_manager.get_current_project().get_database_filepath()) as db_manager:
         db_manager.open_project_database()
         tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
         tmp_ref_protein.set_id(db_manager.get_latest_id_of_protein_table())
         tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
-        tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper())
+        tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper(), the_main_socket, the_general_purpose_socket)
         tmp_ref_protein.add_id_to_all_chains(db_manager.get_latest_id_of_a_specific_table("Chain"))
-    tmp_ref_protein.create_new_pymol_session()
-    tmp_ref_protein.save_pymol_session_as_base64_string()
+
+    tmp_ref_protein.create_new_pymol_session(the_main_socket, the_general_purpose_socket)
     the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
     return 0, tmp_ref_protein
 
@@ -879,7 +880,6 @@ def add_protein_from_pdb_to_project(tmp_protein_name,
 def add_protein_from_local_filesystem_to_project(tmp_protein_name,
                                                  the_interface_manager):
     pdb_filepath = pathlib.Path(tmp_protein_name)
-    graphic_operations.setup_default_session_graphic_settings()
     tmp_ref_protein = protein.Protein(
         pdb_filepath.name.replace(".pdb", "")
     )
@@ -887,8 +887,8 @@ def add_protein_from_local_filesystem_to_project(tmp_protein_name,
         db_manager.open_project_database()
         tmp_ref_protein.set_id(db_manager.get_latest_id_of_protein_table())
         tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
-    tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pathlib.Path(tmp_protein_name))
-    tmp_ref_protein.create_new_pymol_session()
-    tmp_ref_protein.save_pymol_session_as_base64_string()
+    the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()
+    tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pdb_filepath, the_main_socket, the_general_purpose_socket)
+    tmp_ref_protein.create_new_pymol_session(the_main_socket, the_general_purpose_socket)
     the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
     return 0, tmp_ref_protein

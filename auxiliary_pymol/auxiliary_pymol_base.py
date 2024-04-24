@@ -124,9 +124,17 @@ class AuxiliaryPyMOL:
                 prot_2_indices = []
                 for tmp_prot_atom in idx2resi:
                     if tmp_prot_atom[0] == tmp_protein_1_name:
-                        prot_1_indices.append((tmp_prot_atom[1], int(tmp_prot_atom[2]), tmp_prot_atom[3]))
+                        try:
+                            tmp_residue_number = int(tmp_prot_atom[2])
+                        except ValueError:
+                            tmp_residue_number = int(tmp_prot_atom[2][:-1])
+                        prot_1_indices.append((tmp_prot_atom[1], tmp_residue_number, tmp_prot_atom[3]))
                     if tmp_prot_atom[0] == tmp_protein_2_name:
-                        prot_2_indices.append((tmp_prot_atom[1], int(tmp_prot_atom[2]), tmp_prot_atom[3]))
+                        try:
+                            tmp_residue_number = int(tmp_prot_atom[2])
+                        except ValueError:
+                            tmp_residue_number = int(tmp_prot_atom[2][:-1])
+                        prot_2_indices.append((tmp_prot_atom[1], tmp_residue_number, tmp_prot_atom[3]))
                 # calculate the distance between the alpha-C atoms
                 for resi_no in range(len(prot_1_indices)):
                     atom1 = f"/{tmp_protein_1_name}//{prot_1_indices[resi_no][0]}/{prot_1_indices[resi_no][1]}/CA"
@@ -304,20 +312,90 @@ class AuxiliaryPyMOL:
             os.remove(session_filepath)
         return base64_string
 
-    
+    @staticmethod
+    def get_protein_chains(a_pdb_filepath: str) -> list[tuple]:
+        """This function divides the chains from a protein, into protein and non-protein chains.
 
-    
+        Args:
+            a_pdb_filepath:
+                a filepath to a .pdb file.
 
-    #
-    # @staticmethod
-    # def get_all_scenes_of_session(pymol_session):
-    #     session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
-    #     binary_data.write_binary_file_from_base64_string(session_filepath, pymol_session)
-    #     with pymol2.PyMOL() as auxiliary_pymol:
-    #         auxiliary_pymol.cmd.load(str(session_filepath))
-    #         tmp_all_scenes = auxiliary_pymol.cmd.get_scene_list()
-    #     os.remove(session_filepath)
-    #     return tmp_all_scenes
+        Returns:
+            a list of all chains (as tuples) from the protein, divided into protein and non-protein chains
+        """
+        with pymol2.PyMOL() as auxiliary_pymol:
+            auxiliary_pymol.cmd.load(
+                filename=str(a_pdb_filepath)
+            )
+            tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
+            tmp_chains: list[str] = auxiliary_pymol.cmd.get_chains()
+            i = 0
+            chains_of_protein: list[tuple] = []
+            for tmp_chain in tmp_chains:
+                sequence_of_chain = auxiliary_pymol.cmd.get_model(f"chain {tmp_chain}")
+                if sequence_of_chain.atom[0].resn in local_constants.AMINO_ACID_CODE:
+                    fasta_sequence_of_chain = auxiliary_pymol.cmd.get_fastastr(f"chain {tmp_chain}")
+                    fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[
+                                                             fasta_sequence_of_chain.find("\n"):]
+                    complete_sequence_of_chain = (
+                        tmp_protein_name,
+                        fasta_sequence_of_chain_without_header.replace("\n", ""),
+                    )
+                    chains_of_protein.append((tmp_chain, complete_sequence_of_chain, local_constants.CHAIN_TYPE_PROTEIN))
+                else:
+                    fasta_sequence_of_chain = auxiliary_pymol.cmd.get_fastastr(f"chain {tmp_chain}")
+                    fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[
+                                                             fasta_sequence_of_chain.find("\n"):]
+                    complete_sequence_of_chain = (
+                        tmp_protein_name,
+                        fasta_sequence_of_chain_without_header.replace("\n", ""),
+                    )
+                    chains_of_protein.append(
+                        (tmp_chain, complete_sequence_of_chain, local_constants.CHAIN_TYPE_NON_PROTEIN)
+                    )
+                i += 1
+            return chains_of_protein
+
+    @staticmethod
+    def consolidate_molecule_object_to_first_state(a_pdb_filepath):
+        with pymol2.PyMOL() as auxiliary_pymol:
+            auxiliary_pymol.cmd.load(filename=str(a_pdb_filepath))
+            tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
+
+            if auxiliary_pymol.cmd.count_states(tmp_protein_name) > 1:
+                try:
+                    # Create a new object with only the first state
+                    auxiliary_pymol.cmd.create("new_object", tmp_protein_name, 1, 1)
+                    # Delete the original molecule to keep only the new object
+                    auxiliary_pymol.cmd.delete(tmp_protein_name)
+                    # Rename the new object to the original name if needed
+                    auxiliary_pymol.cmd.set_name("new_object", tmp_protein_name)
+                    if auxiliary_pymol.cmd.count_states(tmp_protein_name) > 1:
+                        print("Molecule object has still more than one state.")
+                    if auxiliary_pymol.cmd.select(f"/{tmp_protein_name}//A/1/CA") > 1:
+                        print(f"Molecule object has still more than one state. {auxiliary_pymol.cmd.select(f'/{tmp_protein_name}//A/1/CA')}")
+
+                    tmp_pdb_cache_filepath = pathlib.Path(
+                        f"{local_constants.CACHE_PROTEIN_DIR}/{tmp_protein_name}.pdb",
+                    )
+                    auxiliary_pymol.cmd.save(tmp_pdb_cache_filepath)
+                except Exception as e:
+                    print(f"Protein states could not be consolidated! Ran into error: {e}")
+                    return a_pdb_filepath
+                else:
+                    return tmp_pdb_cache_filepath
+            else:
+                return a_pdb_filepath
+
+    @staticmethod
+    def get_all_scenes_of_session(pymol_session) -> list:
+        session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
+        utils.write_binary_file_from_base64_string(session_filepath, pymol_session)
+        with pymol2.PyMOL() as auxiliary_pymol:
+            auxiliary_pymol.cmd.load(str(session_filepath))
+            tmp_all_scenes = auxiliary_pymol.cmd.get_scene_list()
+        os.remove(session_filepath)
+        return tmp_all_scenes
     #
     # @staticmethod
     # def get_all_scenes_of_session_multi(pymol_session, a_name):

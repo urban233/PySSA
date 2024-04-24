@@ -40,60 +40,6 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def do_distance_analysis_in_pymol(tmp_protein_pair: "protein_pair.ProteinPair") -> "results.DistanceAnalysisResults":
-    """Does the distance analysis of the protein pair.
-
-    Raises:
-        IllegalArgumentError: If the protein pair is None.
-        UnableToDoAnalysisError: If the analysis fails in PyMOL.
-    """
-    if tmp_protein_pair is None:
-        logger.error(constant_messages.ARGUMENT_IS_ILLEGAL)
-        raise exception.IllegalArgumentError(constant_messages.ARGUMENT_IS_ILLEGAL)
-
-    logger.info("Start of do_distance_analysis_in_pymol() method.")
-    try:
-        tmp_protein_pair.load_protein_pair_in_pymol()
-        logger.info(f"Loaded protein pair: {tmp_protein_pair.name} in pymol session.")
-
-        tmp_protein_pair.color_protein_pair()
-        logger.info(f"Colored protein pair: {tmp_protein_pair.name} in pymol session.")
-
-        align_results = protein_pair_operations.align_protein_pair(
-            tmp_protein_pair.protein_1.pymol_selection.selection_string,
-            tmp_protein_pair.protein_2.pymol_selection.selection_string,
-            "aln",
-        )
-        logger.info(f"Aligned protein pair: {tmp_protein_pair.name} in pymol session.")
-
-        seq_len_protein_1 = protein_operations.get_protein_sequence_length_from_protein(tmp_protein_pair.protein_1)
-        rmsd_dict = {
-            "rmsd": str(round(align_results[0], 2)),
-            "aligned_residues": f"{str(align_results[1])} / {seq_len_protein_1}",
-        }
-
-        distances = protein_pair_util.calculate_distance_between_ca_atoms(
-            tmp_protein_pair.protein_1.get_molecule_object(),
-            tmp_protein_pair.protein_2.get_molecule_object(),
-        )
-        logger.info(f"Calculated distances of protein pair: {tmp_protein_pair.name}.")
-
-        analysis_results = results.DistanceAnalysisResults(
-            distances,
-            pymol_io.convert_pymol_session_to_base64_string(tmp_protein_pair.name),
-            float(rmsd_dict["rmsd"]),
-            rmsd_dict["aligned_residues"],
-        )
-    except Exception as e:
-        tmp_msg: str = f"The analysis in PyMOL failed with the error: {e}"
-        logger.error(tmp_msg)
-        raise exception.UnableToDoAnalysisError(tmp_msg)
-    logger.info(
-        f"Packed results into the DistanceAnalysisResults object for the protein pair: {tmp_protein_pair.name}.",
-    )
-    return analysis_results
-
-
 def create_scene_of_protein_pair(
     a_protein_pair: "protein_pair.ProteinPair",
     selection: str = "",

@@ -26,11 +26,12 @@ import pymol
 from typing import TYPE_CHECKING
 from pymol import cmd
 
+from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.internal.portal import pymol_safeguard
 from pyssa.internal.portal import pymol_io
-from pyssa.internal.data_structures import chain
+from pyssa.internal.data_structures import chain, job
 from pyssa.io_pyssa import safeguard
-from pyssa.util import constants
+from pyssa.util import constants, enums
 from pyssa.util import protein_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import sequence
@@ -62,65 +63,54 @@ def remove_organic_molecules_in_protein() -> None:
         print("No organic molecules needs to be removed.")
 
 
-def get_protein_chains(molecule_object: str, dirname: pathlib.Path, basename: str) -> list[chain.Chain]:
-    """This function divides the chains from a protein, into protein and non-protein chains.
-
-    Args:
-        molecule_object:
-            the name of the protein which is also used within pymol
-        dirname:
-             the filepath where the pdb file is stored
-        basename:
-             the name of the file with extension
+def get_protein_chains(a_pdb_filepath, the_main_socket, a_socket) -> list[chain.Chain]:
+    """Divides the chains from a protein, into protein and non-protein chains.
 
     Returns:
         a list of all chains from the protein, divided into protein and non-protein chains
     """
-    # <editor-fold desc="Checks">
-    safeguard.Safeguard.check_if_value_is_not_none(molecule_object, logger)
-    if molecule_object == "":
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
-    safeguard.Safeguard.check_if_value_is_not_none(dirname, logger)
-    if not safeguard.Safeguard.check_filepath(dirname):
-        logger.error("The directory does not exist.")
-        raise NotADirectoryError("The directory does not exist.")
-    safeguard.Safeguard.check_if_value_is_not_none(basename, logger)
-    if basename == "":
-        logger.error("An argument is illegal.")
-        raise ValueError("An argument is illegal.")
-
-    # </editor-fold>
-
-    cmd.reinitialize()
-    pymol_io.load_protein(dirname, basename, molecule_object)
-    tmp_chains: list[str] = cmd.get_chains()
-    i = 0
-    chains_of_protein: list[chain.Chain] = []
-    for tmp_chain in tmp_chains:
-        sequence_of_chain = cmd.get_model(f"chain {tmp_chain}")
-        if sequence_of_chain.atom[0].resn in constants.AMINO_ACID_CODE:
-            # TODO: can this be better?
-            fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
-            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
-            complete_sequence_of_chain = sequence.Sequence(
-                molecule_object,
-                fasta_sequence_of_chain_without_header.replace("\n", ""),
-            )
-            chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
-        else:
-            # TODO: this should produce a sequence with the non-protein atoms
-            fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
-            fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
-            complete_sequence_of_chain = sequence.Sequence(
-                molecule_object,
-                fasta_sequence_of_chain_without_header.replace("\n", ""),
-            )
-            chains_of_protein.append(
-                chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN),
-            )
-        i += 1
-    return chains_of_protein
+    tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.GET_ALL_CHAINS_OF_GIVEN_PROTEIN)
+    tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(a_pdb_filepath)})
+    tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+        the_main_socket, a_socket, tmp_job_description
+    )
+    print(tmp_reply)
+    tmp_data: list[tuple] = tmp_reply["data"]
+    tmp_chains_of_protein: list[chain.Chain] = []
+    for tmp_chain_object_values in tmp_data:
+        print(tmp_chain_object_values)
+        tmp_chain_letter, tmp_sequence_object_values, tmp_chain_type = tmp_chain_object_values
+        tmp_sequence = sequence.Sequence(tmp_sequence_object_values[0], tmp_sequence_object_values[1])
+        tmp_chains_of_protein.append(chain.Chain(tmp_chain_letter, tmp_sequence, tmp_chain_type))
+    # cmd.reinitialize()
+    # pymol_io.load_protein(dirname, basename, molecule_object)
+    # tmp_chains: list[str] = cmd.get_chains()
+    # i = 0
+    # chains_of_protein: list[chain.Chain] = []
+    # for tmp_chain in tmp_chains:
+    #     sequence_of_chain = cmd.get_model(f"chain {tmp_chain}")
+    #     if sequence_of_chain.atom[0].resn in constants.AMINO_ACID_CODE:
+    #         # TODO: can this be better?
+    #         fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
+    #         fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
+    #         complete_sequence_of_chain = sequence.Sequence(
+    #             molecule_object,
+    #             fasta_sequence_of_chain_without_header.replace("\n", ""),
+    #         )
+    #         chains_of_protein.append(chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_PROTEIN))
+    #     else:
+    #         # TODO: this should produce a sequence with the non-protein atoms
+    #         fasta_sequence_of_chain = cmd.get_fastastr(f"chain {tmp_chain}")
+    #         fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[fasta_sequence_of_chain.find("\n") :]
+    #         complete_sequence_of_chain = sequence.Sequence(
+    #             molecule_object,
+    #             fasta_sequence_of_chain_without_header.replace("\n", ""),
+    #         )
+    #         chains_of_protein.append(
+    #             chain.Chain(tmp_chain, complete_sequence_of_chain, constants.CHAIN_TYPE_NON_PROTEIN),
+    #         )
+    #     i += 1
+    return tmp_chains_of_protein
 
 
 def get_protein_sequences_from_protein(molecule_object: str, chains: list[chain.Chain]) -> list["sequence.Sequence"]:

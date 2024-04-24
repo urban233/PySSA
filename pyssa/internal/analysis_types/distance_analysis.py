@@ -189,59 +189,59 @@ class DistanceAnalysis:
         )
         return results[0], results[1]
 
-    def do_analysis_in_pymol(self) -> None:
-        """This function does the distance analysis of the protein pair.
-
-        Raises:
-            UnableToDoAnalysisError: If the analysis fails in PyMOL.
-        """
-        logger.info("Start of do_analysis_in_pymol() method.")
-        try:
-            self._protein_pair_for_analysis.load_protein_pair_in_pymol()
-            logger.info(f"Loaded protein pair: " f"{self._protein_pair_for_analysis.name} in pymol session.")
-            self._protein_pair_for_analysis.color_protein_pair()
-            logger.info(f"Colored protein pair: " f"{self._protein_pair_for_analysis.name} in pymol session.")
-
-            logger.debug(
-                f"Protein 1 selection string: "
-                f"{self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} "
-                f"{self._protein_pair_for_analysis.protein_1.pymol_selection}",
-            )
-            logger.debug(
-                f"Protein 2 selection string: "
-                f"{self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} "
-                f"{self._protein_pair_for_analysis.protein_2.pymol_selection}",
-            )
-
-            align_results = self.align_protein_pair_for_analysis()
-            logger.info(f"Aligned protein pair: " f"{self._protein_pair_for_analysis.name} in pymol session.")
-
-            fasta_prot_1 = cmd.get_fastastr(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string)
-            logger.debug(fasta_prot_1)
-            logger.debug(fasta_prot_1[fasta_prot_1.find("\n") :])
-            seq_length_prot_1 = len(fasta_prot_1[fasta_prot_1.find("\n") :])
-            logger.debug(seq_length_prot_1)
-            # Total no. of residues
-            self.rmsd_dict = {
-                "rmsd": str(round(align_results[0], 2)),
-                "aligned_residues": f"{str(align_results[1])} / {seq_length_prot_1}",
-            }
-
-            distances = protein_pair_util.calculate_distance_between_ca_atoms(
-                self._protein_pair_for_analysis.protein_1.get_molecule_object(),
-                self._protein_pair_for_analysis.protein_2.get_molecule_object(),
-            )
-            logger.info(f"Calculated distances of protein pair: " f"{self._protein_pair_for_analysis.name}.")
-            self.distance_analysis_data = distances
-            self.analysis_results = results.DistanceAnalysisResults(
-                self.distance_analysis_data,
-                pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
-                self.rmsd_dict["rmsd"],
-                self.rmsd_dict["aligned_residues"],
-            )
-        except exception.UnableToDoAnalysisError:
-            logger.error("The analysis in PyMOL failed!")
-            raise exception.UnableToDoAnalysisError
+    # def do_analysis_in_pymol(self) -> None:
+    #     """This function does the distance analysis of the protein pair.
+    #
+    #     Raises:
+    #         UnableToDoAnalysisError: If the analysis fails in PyMOL.
+    #     """
+    #     logger.info("Start of do_analysis_in_pymol() method.")
+    #     try:
+    #         self._protein_pair_for_analysis.load_protein_pair_in_pymol()
+    #         logger.info(f"Loaded protein pair: " f"{self._protein_pair_for_analysis.name} in pymol session.")
+    #         self._protein_pair_for_analysis.color_protein_pair()
+    #         logger.info(f"Colored protein pair: " f"{self._protein_pair_for_analysis.name} in pymol session.")
+    #
+    #         logger.debug(
+    #             f"Protein 1 selection string: "
+    #             f"{self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string} "
+    #             f"{self._protein_pair_for_analysis.protein_1.pymol_selection}",
+    #         )
+    #         logger.debug(
+    #             f"Protein 2 selection string: "
+    #             f"{self._protein_pair_for_analysis.protein_2.pymol_selection.selection_string} "
+    #             f"{self._protein_pair_for_analysis.protein_2.pymol_selection}",
+    #         )
+    #
+    #         align_results = self.align_protein_pair_for_analysis()
+    #         logger.info(f"Aligned protein pair: " f"{self._protein_pair_for_analysis.name} in pymol session.")
+    #
+    #         fasta_prot_1 = cmd.get_fastastr(self._protein_pair_for_analysis.protein_1.pymol_selection.selection_string)
+    #         logger.debug(fasta_prot_1)
+    #         logger.debug(fasta_prot_1[fasta_prot_1.find("\n") :])
+    #         seq_length_prot_1 = len(fasta_prot_1[fasta_prot_1.find("\n") :])
+    #         logger.debug(seq_length_prot_1)
+    #         # Total no. of residues
+    #         self.rmsd_dict = {
+    #             "rmsd": str(round(align_results[0], 2)),
+    #             "aligned_residues": f"{str(align_results[1])} / {seq_length_prot_1}",
+    #         }
+    #
+    #         distances = protein_pair_util.calculate_distance_between_ca_atoms(
+    #             self._protein_pair_for_analysis.protein_1.get_molecule_object(),
+    #             self._protein_pair_for_analysis.protein_2.get_molecule_object(),
+    #         )
+    #         logger.info(f"Calculated distances of protein pair: " f"{self._protein_pair_for_analysis.name}.")
+    #         self.distance_analysis_data = distances
+    #         self.analysis_results = results.DistanceAnalysisResults(
+    #             self.distance_analysis_data,
+    #             pymol_io.convert_pymol_session_to_base64_string(self._protein_pair_for_analysis.name),
+    #             self.rmsd_dict["rmsd"],
+    #             self.rmsd_dict["aligned_residues"],
+    #         )
+    #     except exception.UnableToDoAnalysisError:
+    #         logger.error("The analysis in PyMOL failed!")
+    #         raise exception.UnableToDoAnalysisError
 
     def take_image_of_protein_pair(
         self,

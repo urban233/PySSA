@@ -346,7 +346,7 @@ class BatchImageWorker(QObject):
                 self.list_analysis_for_image_creation_overview.item(i).text(),
             )
             cmd.reinitialize()
-            tmp_protein_pair.load_pymol_session()
+            #tmp_protein_pair.load_pymol_session()
             if not os.path.exists(constants.SCRATCH_DIR_IMAGES):
                 os.mkdir(constants.SCRATCH_DIR_IMAGES)
             if not os.path.exists(constants.SCRATCH_DIR_STRUCTURE_ALN_IMAGES_DIR):

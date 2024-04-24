@@ -26,9 +26,11 @@ import shutil
 import logging
 
 from PyQt5 import QtCore
+
+from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.controller import database_manager
 from pyssa.internal.data_structures.data_classes import prediction_protein_info
-from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures import protein, job
 from pyssa.internal.data_structures import project
 from pyssa.internal.data_structures.data_classes import prediction_configuration
 from pyssa.internal.data_processing import data_transformer
@@ -192,6 +194,7 @@ class StructurePrediction:
     def add_proteins_to_project(self,
                                 the_main_socket,
                                 a_socket,
+                                the_general_purpose_socket,
                                 best_prediction_models,
                                 a_project,
                                 the_project_lock: QtCore.QMutex):
@@ -199,7 +202,8 @@ class StructurePrediction:
         for tmp_prediction in best_prediction_models:
             tmp_protein = protein.Protein(tmp_prediction[0].name)
             tmp_protein.add_protein_structure_data_from_local_pdb_file(
-                pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb")
+                pathlib.Path(f"{pathlib.Path(constants.PREDICTION_PDB_DIR)}/{tmp_prediction[0].name}.pdb"),
+                the_main_socket, the_general_purpose_socket
             )
             pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{tmp_protein.get_molecule_object()}.pdb")
             try:
@@ -217,21 +221,27 @@ class StructurePrediction:
                 logger.error("pdb file could not be opened for writing.")
                 raise exception.UnableToOpenFileError("")
 
-            the_main_socket.send_string("Structure Prediction")
-            response = the_main_socket.recv_string()
-            print(f"Received response: {response}")
-            message = {
-                "job_type": "Structure Prediction",
-                "a_pdb_filepath": str(pdb_filepath),
-            }
-            the_main_socket.send_json(message)
-            response = the_main_socket.recv_string()
-            print(f"Received response: {response}")
-            # Wait for the response from the server
-            a_socket.send_json({"job_type": "Structure Prediction"})
-            response = a_socket.recv_json()
-            result = response["result"]
-            tmp_protein.pymol_session = response["data"][0]
+            tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+                the_main_socket,
+                a_socket,
+                job.PredictionJobDescription(pdb_filepath)
+            )
+
+            # the_main_socket.send_string("Structure Prediction")
+            # response = the_main_socket.recv_string()
+            # print(f"Received response: {response}")
+            # message = {
+            #     "job_type": "Structure Prediction",
+            #     "a_pdb_filepath": str(pdb_filepath),
+            # }
+            # the_main_socket.send_json(message)
+            # response = the_main_socket.recv_string()
+            # print(f"Received response: {response}")
+            # # Wait for the response from the server
+            # a_socket.send_json({"job_type": "Structure Prediction"})
+            # response = a_socket.recv_json()
+            # result = response["result"]
+            tmp_protein.pymol_session = tmp_reply["data"][0]
 
             with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
                 logger.info(f"Inserting {tmp_protein.get_molecule_object()} into current project, from prediction thread.")

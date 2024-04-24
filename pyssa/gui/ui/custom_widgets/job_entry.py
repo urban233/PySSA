@@ -98,6 +98,8 @@ class JobEntryWidget(QtWidgets.QWidget):
         }
         """)
 
+        self.ui.progress_bar_job.setFormat("")
+
 
 class JobNotificationWidget(QtWidgets.QWidget):
     def __init__(self,

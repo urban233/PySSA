@@ -70,16 +70,6 @@ class MainViewController:
     _view: "main_view.MainView"
 
     """
-    
-    """
-    _app_model: "application_model.ApplicationModel"
-
-    """
-    The path to the active workspace.
-    """
-    _workspace_path: pathlib.Path
-
-    """
     The application settings object.
     """
     _application_settings: "settings.Settings"
@@ -129,12 +119,7 @@ class MainViewController:
         self._database_manager = database_manager.DatabaseManager("")
         self._database_manager.set_application_settings(self._interface_manager.get_application_settings())
         self._database_thread: "database_thread.DatabaseThread" = database_thread.DatabaseThread("")
-        self._app_model: "application_model.ApplicationModel" = application_model.ApplicationModel(project.Project())
         self._external_view = None
-        self._protein_model = QtGui.QStandardItemModel()
-        self._workspace_path = constants.DEFAULT_WORKSPACE_PATH
-        self._workspace_status = f"Current workspace: {str(self._workspace_path)}"
-        self._workspace_label = QtWidgets.QLabel(f"Current Workspace: {self._workspace_path}")
         self.active_custom_message_box: "custom_message_box.CustomMessageBoxOk" = None
         self._main_view_state = main_view_state.MainViewState(
             self._view.ui.seqs_list_view,
@@ -980,12 +965,9 @@ class MainViewController:
     def __slot_open_job_overview_panel(self):
         if self._view.ui.frame_job_overview.isVisible():
             self._view.ui.frame_job_overview.hide()
-            self._view.btn_open_job_overview.setIcon(self._view.icon_jobs)
         elif not self._view.ui.frame_job_overview.isVisible():
             self._view.ui.frame_job_notification.hide()
-            self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
             self._view.ui.frame_job_overview.show()
-            self._view.btn_open_job_overview.setIcon(self._view.icon_jobs)
 
     def __slot_open_notification_panel(self):
         if self._view.ui.frame_job_notification.isVisible():
@@ -993,7 +975,6 @@ class MainViewController:
             self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
         elif not self._view.ui.frame_job_notification.isVisible():
             self._view.ui.frame_job_overview.hide()
-            self._view.btn_open_job_overview.setIcon(self._view.icon_jobs)
             self._view.ui.frame_job_notification.show()
             self._view.btn_open_job_notification.setIcon(self._view.icon_notify)
     # </editor-fold>

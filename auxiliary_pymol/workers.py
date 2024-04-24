@@ -1,5 +1,6 @@
 import queue
 import auxiliary_pymol_base
+import local_enums
 
 
 def handle_request(job_type, a_queue: queue.Queue, socket):
@@ -7,15 +8,14 @@ def handle_request(job_type, a_queue: queue.Queue, socket):
         print(f"Checking queue for job type {job_type}...")
         # Get a task from the queue
         data = a_queue.get()
-        print("Got data, start with rendering job.")
         try:
-            if job_type == "Structure Prediction":
+            if job_type == local_enums.JobType.PREDICTION.value:
                 base64_string = auxiliary_pymol_base.AuxiliaryPyMOL.create_pymol_session_for_protein(
-                    data["a_pdb_filepath"]
+                    data[local_enums.JobDescriptionKeys.PDB_FILEPATH.value]
                 )
                 print("Structure prediction finished.")
                 response = {"result": "", "data": (base64_string, )}
-            elif job_type == "Distance Analysis":
+            elif job_type == local_enums.JobType.DISTANCE_ANALYSIS.value:
                 print("Starting distance analysis ...")
                 distance_analysis_results_object_values, base64_string = auxiliary_pymol_base.AuxiliaryPyMOL.do_distance_analysis(
                     data["the_protein_pair_name"],
@@ -28,17 +28,43 @@ def handle_request(job_type, a_queue: queue.Queue, socket):
                 )
                 print("Distance analysis finished.")
                 response = {"result": "", "data": (distance_analysis_results_object_values, base64_string)}
-            elif job_type == "Structure Prediction and Distance Analysis":
+            elif job_type == local_enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS.value:
                 pass
-            elif job_type == "Ray-tracing":
+            elif job_type == local_enums.JobType.RAY_TRACING.value:
                 auxiliary_pymol_base.AuxiliaryPyMOL.create_ray_traced_image(
-                    data["dest"],
-                    data["cached"],
-                    data["mode"],
-                    data["texture"],
-                    data["renderer"]
+                    data[local_enums.JobDescriptionKeys.IMAGE_DESTINATION_FILEPATH.value],
+                    data[local_enums.JobDescriptionKeys.CACHED_SESSION_FILEPATH.value],
+                    data[local_enums.JobDescriptionKeys.RAY_TRACE_MODE.value],
+                    data[local_enums.JobDescriptionKeys.RAY_TEXTURE.value],
+                    data[local_enums.JobDescriptionKeys.RAY_TRACING_RENDERER.value],
                 )
-                response = {"result": "", "data": (data["dest"],)}
+                response = {"result": "", "data": (data[local_enums.JobDescriptionKeys.IMAGE_DESTINATION_FILEPATH.value],)}
+            elif job_type == local_enums.JobType.GENERAL_PURPOSE.value:
+                if data[local_enums.JobDescriptionKeys.JOB_SHORT_DESCRIPTION.value] == local_enums.JobShortDescription.CREATE_NEW_PROTEIN_PYMOL_SESSION.value:
+                    # Create a new protein pymol session
+                    base64_string = auxiliary_pymol_base.AuxiliaryPyMOL.create_pymol_session_for_protein(
+                        data[local_enums.JobDescriptionKeys.PDB_FILEPATH.value]
+                    )
+                    print("Create PyMOL protein session finished.")
+                    response = {"result": "", "data": (base64_string,)}
+                elif data[local_enums.JobDescriptionKeys.JOB_SHORT_DESCRIPTION.value] == local_enums.JobShortDescription.GET_ALL_CHAINS_OF_GIVEN_PROTEIN.value:
+                    tmp_chain_object_values = auxiliary_pymol_base.AuxiliaryPyMOL.get_protein_chains(
+                        data[local_enums.JobDescriptionKeys.PDB_FILEPATH.value]
+                    )
+                    print("Get all chains of protein finished.")
+                    response = {"result": "", "data": tmp_chain_object_values}
+                elif data[local_enums.JobDescriptionKeys.JOB_SHORT_DESCRIPTION.value] == local_enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE.value:
+                    tmp_new_pdb_filepath = auxiliary_pymol_base.AuxiliaryPyMOL.consolidate_molecule_object_to_first_state(
+                        data[local_enums.JobDescriptionKeys.PDB_FILEPATH.value]
+                    )
+                    print("Consolidation of molecule object states finished.")
+                    response = {"result": "", "data": tmp_new_pdb_filepath}
+                elif data[local_enums.JobDescriptionKeys.JOB_SHORT_DESCRIPTION.value] == local_enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION.value:
+                    tmp_all_scenes = auxiliary_pymol_base.AuxiliaryPyMOL.get_all_scenes_of_session(
+                        data[local_enums.JobDescriptionKeys.PYMOL_SESSION.value]
+                    )
+                    print("Get all scenes of pymol session finished.")
+                    response = {"result": "", "data": tmp_all_scenes}
         except Exception as e:
             response = {"result": str(e), "data": ""}
         # Indicate that the task is done
