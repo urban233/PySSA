@@ -1009,7 +1009,6 @@ class Ui_MainWindow(object):
         self.menuProject.addAction(self.action_exit_application)
         self.menuPrediction.addAction(self.action_predict_monomer)
         self.menuPrediction.addAction(self.action_predict_multimer)
-        self.menuPrediction.addSeparator()
         self.menuPrediction.addAction(self.action_abort_prediction)
         self.menuAnalysis.addAction(self.action_distance_analysis)
         self.menuResults.addAction(self.action_results_summary)

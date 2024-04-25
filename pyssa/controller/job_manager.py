@@ -349,8 +349,17 @@ class JobManager:
         )
         tmp_protein_pair_names = []
         for tmp_analysis_name in a_list_with_analysis_names:
-            tmp_protein_pair_name = tmp_analysis_name.replace(";", "_")
-            tmp_protein_pair_name = tmp_protein_pair_name.replace(",", "_")
+            tmp_protein_1_name, tmp_protein_2_name = self.get_protein_names(tmp_analysis_name)
+            print(tmp_protein_1_name)
+            print(tmp_protein_2_name)
+            if tmp_protein_1_name == tmp_protein_2_name:
+                print(f"This analysis run name contains two identical protein names: {tmp_analysis_name}")
+                tmp_protein_pair_name = tmp_analysis_name.replace(";", "_1_", 1)
+                tmp_protein_pair_name = tmp_protein_pair_name.replace(";", "_2_", 1)
+                tmp_protein_pair_name = tmp_protein_pair_name.replace(",", "_")
+            else:
+                tmp_protein_pair_name = tmp_analysis_name.replace(";", "_")
+                tmp_protein_pair_name = tmp_protein_pair_name.replace(",", "_")
             tmp_protein_pair_names.append(tmp_protein_pair_name)
         tmp_distance_analysis_job.update_job_entry_signal.connect(
             the_interface_manager.update_job_entry)
@@ -365,6 +374,26 @@ class JobManager:
             )
         )
         return tmp_distance_analysis_job, tmp_distance_analysis_job.job_entry_widget
+
+    @staticmethod
+    def get_protein_names(string):
+        """
+        Extracts protein names from a string separated by semicolon (;) delimiter.
+
+        Args:
+            string: The string containing protein names.
+
+        Returns:
+            A tuple containing the extracted protein names, or an empty tuple
+            if no protein names are found.
+        """
+        index_of_first_semicolon = string.find(";")
+        sub1 = string[:index_of_first_semicolon]
+        tmp_string = string.replace(";", "", 1)
+        sub2 = tmp_string[tmp_string.find("_vs_") + 4:]
+        index_of_second_semicolon = sub2.find(";")
+        sub3 = sub2[:index_of_second_semicolon]
+        return sub1, sub3
 
     def put_distance_analysis_job_into_queue(self, a_distance_analysis_job: "job.PredictionJob"):
         if self._is_distance_analysis_queue_running:

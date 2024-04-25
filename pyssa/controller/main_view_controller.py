@@ -1029,7 +1029,8 @@ class MainViewController:
             args=(
                 tmp_project_name,
                 self._interface_manager.get_application_settings().get_workspace_path(),
-                tmp_protein_name
+                self._interface_manager.watcher,
+                self._interface_manager
             ),
             post_func=self.__await_create_project,
         )
@@ -1078,7 +1079,7 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
             return
 
-        _, tmp_project = return_value
+        _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.refresh_workspace_model()
         self._interface_manager.refresh_main_view()
@@ -1168,7 +1169,7 @@ class MainViewController:
         self._active_task.start()
 
     def __await_use_project(self, return_value: tuple):
-        _, tmp_project = return_value
+        _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
         self._interface_manager.set_new_project(tmp_project)
         self._interface_manager.add_project_to_workspace_model(tmp_project.get_project_name())
         self._interface_manager.refresh_main_view()
@@ -3846,6 +3847,12 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("Cleaning protein failed!")
         else:
             self.update_status("Cleaning protein finished.")
+            if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
+                self._interface_manager.get_current_active_protein_object().get_molecule_object()
+            ):
+                self._interface_manager.pymol_session_manager.load_protein_session(
+                    self._interface_manager.get_current_active_protein_object()
+                )
         self._interface_manager.stop_wait_cursor()
         self._interface_manager.refresh_main_view()
 

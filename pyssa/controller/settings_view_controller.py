@@ -88,8 +88,6 @@ class SettingsViewController(QtCore.QObject):
     def restore_ui(self):
         """Restores the ui."""
         self._view.ui.tabWidget.setCurrentIndex(0)
-        self._view.ui.tabWidget.setTabVisible(4, False)
-        self._view.ui.tabWidget.setTabVisible(3, False)
 
     # </editor-fold>
     
@@ -127,18 +125,18 @@ class SettingsViewController(QtCore.QObject):
             "Toggle Buttons",
             "Checkboxes",
         ]
-        gui_utils.fill_combo_box(self._view.ui.box_proteins_tab_toggle_checkbox,
-                                 item_list_proteins_tab_representation_gui_elements)
-        gui_utils.fill_combo_box(self._view.ui.box_protein_pairs_tab_toggle_checkbox,
-                                 item_list_proteins_tab_representation_gui_elements)
-        item_list_proteins_tab_color_gui_elements = [
-            "Color Grid",
-            "Combobox",
-        ]
-        gui_utils.fill_combo_box(self._view.ui.box_proteins_tab_box_color,
-                                 item_list_proteins_tab_color_gui_elements)
-        gui_utils.fill_combo_box(self._view.ui.box_protein_pairs_tab_box_color,
-                                 item_list_proteins_tab_color_gui_elements)
+        # gui_utils.fill_combo_box(self._view.ui.box_proteins_tab_toggle_checkbox,
+        #                          item_list_proteins_tab_representation_gui_elements)
+        # gui_utils.fill_combo_box(self._view.ui.box_protein_pairs_tab_toggle_checkbox,
+        #                          item_list_proteins_tab_representation_gui_elements)
+        # item_list_proteins_tab_color_gui_elements = [
+        #     "Color Grid",
+        #     "Combobox",
+        # ]
+        # gui_utils.fill_combo_box(self._view.ui.box_proteins_tab_box_color,
+        #                          item_list_proteins_tab_color_gui_elements)
+        # gui_utils.fill_combo_box(self._view.ui.box_protein_pairs_tab_box_color,
+        #                          item_list_proteins_tab_color_gui_elements)
         # item_list = [
         #     "normal",
         #     "Red-green (green weak, deuteranopia)",
@@ -177,22 +175,22 @@ class SettingsViewController(QtCore.QObject):
         self._view.ui.box_ray_trace_mode.setCurrentIndex(self._settings_manager.settings.image_ray_trace_mode)
         self._view.ui.box_ray_texture.setCurrentIndex(self._settings_manager.settings.image_ray_texture)
 
-        if self._settings_manager.settings.proteins_tab_use_toggle == 1:
-            self._view.ui.box_proteins_tab_toggle_checkbox.setCurrentIndex(0)
-        else:
-            self._view.ui.box_proteins_tab_toggle_checkbox.setCurrentIndex(1)
-        if self._settings_manager.settings.proteins_tab_use_combobox_for_colors == 1:
-            self._view.ui.box_proteins_tab_box_color.setCurrentIndex(1)
-        else:
-            self._view.ui.box_proteins_tab_box_color.setCurrentIndex(0)
-        if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
-            self._view.ui.box_protein_pairs_tab_toggle_checkbox.setCurrentIndex(0)
-        else:
-            self._view.ui.box_protein_pairs_tab_toggle_checkbox.setCurrentIndex(1)
-        if self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors == 1:
-            self._view.ui.box_protein_pairs_tab_box_color.setCurrentIndex(1)
-        else:
-            self._view.ui.box_protein_pairs_tab_box_color.setCurrentIndex(0)
+        # if self._settings_manager.settings.proteins_tab_use_toggle == 1:
+        #     self._view.ui.box_proteins_tab_toggle_checkbox.setCurrentIndex(0)
+        # else:
+        #     self._view.ui.box_proteins_tab_toggle_checkbox.setCurrentIndex(1)
+        # if self._settings_manager.settings.proteins_tab_use_combobox_for_colors == 1:
+        #     self._view.ui.box_proteins_tab_box_color.setCurrentIndex(1)
+        # else:
+        #     self._view.ui.box_proteins_tab_box_color.setCurrentIndex(0)
+        # if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
+        #     self._view.ui.box_protein_pairs_tab_toggle_checkbox.setCurrentIndex(0)
+        # else:
+        #     self._view.ui.box_protein_pairs_tab_toggle_checkbox.setCurrentIndex(1)
+        # if self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors == 1:
+        #     self._view.ui.box_protein_pairs_tab_box_color.setCurrentIndex(1)
+        # else:
+        #     self._view.ui.box_protein_pairs_tab_box_color.setCurrentIndex(0)
     
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.btn_workspace_dir.clicked.connect(self.choose_workspace_dir)
@@ -223,22 +221,22 @@ class SettingsViewController(QtCore.QObject):
         self._settings_manager.settings.image_ray_trace_mode = self._view.ui.box_ray_trace_mode.currentIndex()
         self._settings_manager.settings.image_ray_texture = self._view.ui.box_ray_texture.currentIndex()
 
-        if self._view.ui.box_proteins_tab_box_color.currentIndex() == 0:
-            self._settings_manager.settings.proteins_tab_use_combobox_for_colors = 0
-        else:
-            self._settings_manager.settings.proteins_tab_use_combobox_for_colors = 1
-        if self._view.ui.box_proteins_tab_toggle_checkbox.currentIndex() == 0:
-            self._settings_manager.settings.proteins_tab_use_toggle = 1
-        else:
-            self._settings_manager.settings.proteins_tab_use_toggle = 0
-        if self._view.ui.box_protein_pairs_tab_box_color.currentIndex() == 0:
-            self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors = 0
-        else:
-            self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors = 1
-        if self._view.ui.box_protein_pairs_tab_toggle_checkbox.currentIndex() == 0:
-            self._settings_manager.settings.protein_pairs_tab_use_toggle = 1
-        else:
-            self._settings_manager.settings.protein_pairs_tab_use_toggle = 0
+        # if self._view.ui.box_proteins_tab_box_color.currentIndex() == 0:
+        #     self._settings_manager.settings.proteins_tab_use_combobox_for_colors = 0
+        # else:
+        #     self._settings_manager.settings.proteins_tab_use_combobox_for_colors = 1
+        # if self._view.ui.box_proteins_tab_toggle_checkbox.currentIndex() == 0:
+        #     self._settings_manager.settings.proteins_tab_use_toggle = 1
+        # else:
+        #     self._settings_manager.settings.proteins_tab_use_toggle = 0
+        # if self._view.ui.box_protein_pairs_tab_box_color.currentIndex() == 0:
+        #     self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors = 0
+        # else:
+        #     self._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors = 1
+        # if self._view.ui.box_protein_pairs_tab_toggle_checkbox.currentIndex() == 0:
+        #     self._settings_manager.settings.protein_pairs_tab_use_toggle = 1
+        # else:
+        #     self._settings_manager.settings.protein_pairs_tab_use_toggle = 0
 
         self._settings_manager.settings.serialize_settings()
         logging.info("Settings were successfully saved.")

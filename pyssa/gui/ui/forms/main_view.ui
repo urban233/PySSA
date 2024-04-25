@@ -2393,7 +2393,6 @@
     </property>
     <addaction name="action_predict_monomer"/>
     <addaction name="action_predict_multimer"/>
-    <addaction name="separator"/>
     <addaction name="action_abort_prediction"/>
    </widget>
    <widget class="QMenu" name="menuAnalysis">

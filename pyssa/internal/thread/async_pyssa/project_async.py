@@ -38,7 +38,8 @@ logger.addHandler(log_handlers.log_file_handler)
 def create_new_project(
     the_project_name: str,
     the_workspace_path: pathlib.Path,
-    protein_source_information: str = "",
+    the_watcher,
+    the_interface_manager,
 ) -> tuple:
     """Creates a new project object.
 
@@ -60,13 +61,22 @@ def create_new_project(
         tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
         db_manager.close_project_database()
     constants.PYSSA_LOGGER.info("Create empty project finished.")
-    return ("result", tmp_project)
+    the_watcher.setup_blacklists(
+        tmp_project,
+        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+        the_interface_manager.job_manager.current_prediction_job,
+        the_interface_manager.job_manager.current_distance_analysis_job,
+    )
+    return "result", tmp_project, the_watcher, the_interface_manager
 
 
 def create_use_project(
     the_project_name: str,
     the_workspace_path: pathlib.Path,
     the_proteins_to_add: list,
+    the_watcher,
+    the_interface_manager
 ) -> tuple:
     """Creates a new project object.
 
@@ -94,7 +104,14 @@ def create_use_project(
 
         db_manager.close_project_database()
     constants.PYSSA_LOGGER.info("Use project finished.")
-    return ("result", tmp_project)
+    the_watcher.setup_blacklists(
+        tmp_project,
+        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+        the_interface_manager.job_manager.current_prediction_job,
+        the_interface_manager.job_manager.current_distance_analysis_job,
+    )
+    return "result", tmp_project
 
 
 def open_project(

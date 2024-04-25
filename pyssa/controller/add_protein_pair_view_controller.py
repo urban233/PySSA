@@ -146,7 +146,12 @@ class AddProteinPairViewController(QtCore.QObject):
         prot_2_name, prot_2_chains = self._get_protein_name_and_chains(self._view.ui.tree_prot_2.selectedIndexes())
         prot_1_chains = ",".join([str(elem) for elem in prot_1_chains])
         prot_2_chains = ",".join([str(elem) for elem in prot_2_chains])
-        return f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        # if prot_1_name == prot_2_name:
+        #     # identical proteins getting compared and need therefore be indexed with _1 and _2
+        #     tmp_analysis_run_name = f"{prot_1_name}_1;{prot_1_chains}_vs_{prot_2_name}_2;{prot_2_chains}"
+        # else:
+        tmp_analysis_run_name = f"{prot_1_name};{prot_1_chains}_vs_{prot_2_name};{prot_2_chains}"
+        return tmp_analysis_run_name
 
     def _connect_all_ui_elements_to_slot_functions(self) -> None:
         self._view.ui.tree_prot_1.expanded.connect(self.__slot_collapse_all_tree_prot_1)

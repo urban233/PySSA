@@ -27,7 +27,7 @@ import pathlib
 from pathlib import Path
 from pyssa.util import globals, enums
 
-DEBUGGING = False
+DEBUGGING = True
 
 PLUGIN_NAME = "PySSA"
 PLUGIN_PATH = globals.g_plugin_path

@@ -384,7 +384,7 @@ class AuxiliaryPyMOL:
                     print(f"Protein states could not be consolidated! Ran into error: {e}")
                     return a_pdb_filepath
                 else:
-                    return tmp_pdb_cache_filepath
+                    return str(tmp_pdb_cache_filepath)
             else:
                 return a_pdb_filepath
 

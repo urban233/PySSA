@@ -167,11 +167,13 @@ def add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pa
             str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
         db_manager.open_project_database()
         for tmp_protein_pair_name in tmp_protein_pair_names:
+            print(tmp_protein_pair_name)
             tmp_protein_pair = db_manager.get_protein_pair_as_object(
                 tmp_protein_pair_name,
                 the_interface_manager.get_current_project(),
                 the_interface_manager.get_settings_manager().settings
             )
+            print(tmp_protein_pair)
             the_interface_manager.add_protein_pair_to_current_project(tmp_protein_pair)
             the_interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
         db_manager.close_project_database()
