@@ -109,32 +109,3 @@ def setup_app_settings(the_app_settings: "settings.Settings") -> "settings.Setti
         tools.restore_default_settings(the_app_settings)
         tmp_settings: "settings.Settings" = the_app_settings.deserialize_settings()
     return tmp_settings
-
-
-def add_protein_to_project(the_protein_information: tuple, a_project: "project.Project") -> "project.Project":
-    """Adds a protein based on the filepath/ PDB id to a project.
-
-    Args:
-        the_protein_information (tuple[str, int]): a pair of either filepath or id and the length of the first one.
-        a_project: a project where the protein should be added.
-
-    Note:
-        If a PDB id is used than the first element of the tuple contains the id and the second the length = 4.
-        If a filepath is used than the first element of the tuple contains the id and the second the length of
-        the entire filepath.
-    """
-    # TODO: checks are needed
-    if the_protein_information[1] == 4:
-        # PDB ID is used
-        tmp_protein = pymol_io.get_protein_from_pdb(the_protein_information[0])
-    else:
-        # Filepath is used
-        pdb_filepath: "path_util.FilePath" = path_util.FilePath(pathlib.Path(the_protein_information[0]))
-        graphic_operations.setup_default_session_graphic_settings()
-        tmp_protein_name: str = pdb_filepath.get_filename().replace(" ", "_")
-        tmp_protein = protein.Protein(
-            molecule_object=tmp_protein_name,
-            pdb_filepath=pdb_filepath,
-        )
-    a_project.add_existing_protein(tmp_protein)
-    return a_project

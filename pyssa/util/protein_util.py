@@ -97,7 +97,7 @@ def get_chains_as_list_of_tuples(chains: list["chain.Chain"]) -> list[tuple[str,
 
 
 def create_chains_from_list_of_tuples(
-    chains_as_list_of_tuples: list[tuple[str, "sequence.Sequence", str]],
+        chains_as_list_of_tuples: list[tuple[str, "sequence.Sequence", str]]
 ) -> list["chain.Chain"]:
     """Creates chain objects from a list of tuples containing the chain letter, sequence and type."""
     chains: list["chain.Chain"] = []

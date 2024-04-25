@@ -93,6 +93,9 @@ class JobManager:
         print(f"Received response: {response}")
 
     def start_auxiliary_pymol(self):
+        if constants.DEBUGGING:
+            print("Debugging activated.")
+            return
         process = subprocess.Popen([r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\python.exe",
                                     f"{constants.PLUGIN_PATH}\\auxiliary_pymol\\main.py"],
                                    creationflags=subprocess.CREATE_NO_WINDOW)

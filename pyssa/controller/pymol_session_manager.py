@@ -102,12 +102,25 @@ class PymolSessionManager:
             self.frozen_protein_pair_object = None
             self.frozen_scene_name = ""
 
+    def _load_pymol_session(self, a_pymol_session: str) -> None:
+        """Loads a pymol session based on the given base64 data."""
+        if self.session_name != "":
+            tmp_session_path = pathlib.Path(
+                f"{constants.CACHE_PYMOL_SESSION_DIR}/session_of_{self.session_name}.pse",
+            )
+        else:
+            tmp_session_path = pathlib.Path(
+                f"{constants.CACHE_PYMOL_SESSION_DIR}/temp_session_file.pse",
+            )
+        binary_data.write_binary_file_from_base64_string(tmp_session_path, a_pymol_session)
+        pymol_io.load_pymol_session(tmp_session_path)
+
     def load_protein_session(self, a_protein: "protein.Protein"):
         """Loads a pymol session of a single protein."""
         self.session_name = a_protein.get_molecule_object()
         self.session_object_type = "protein"
         self.session_objects = [a_protein]
-        a_protein.load_protein_pymol_session()
+        self._load_pymol_session(a_protein.pymol_session)
 
         # <editor-fold desc="Integrity check">
         if not self._check_session_integrity(self.session_name):
@@ -120,7 +133,7 @@ class PymolSessionManager:
         self.session_name = a_protein_pair.name
         self.session_object_type = "protein_pair"
         self.session_objects = [a_protein_pair]
-        a_protein_pair.load_pymol_session()
+        self._load_pymol_session(a_protein_pair.pymol_session)
 
         # <editor-fold desc="Integrity check">
         if a_protein_pair.protein_1.get_molecule_object() == a_protein_pair.protein_2.get_molecule_object():

@@ -108,40 +108,10 @@ class ProteinPair:
             logger.error(f"The argument 'protein_2' is illegal: {protein_2}!")
             raise exception.IllegalArgumentError("An argument is illegal.")
 
-        self.protein_1: protein.Protein = copy.deepcopy(protein_1)
-        self.protein_2: protein.Protein = copy.deepcopy(protein_2)
+        self.protein_1: "protein.Protein" = copy.deepcopy(protein_1)
+        self.protein_2: "protein.Protein" = copy.deepcopy(protein_2)
         self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
-        self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self.name)
-
-    def load_pymol_session(self) -> None:
-        """This function loads the existing pymol session of the pair."""
-        session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.name}_session.pse")
-        if not os.path.exists(constants.CACHE_PYMOL_SESSION_DIR):
-            os.mkdir(constants.CACHE_PYMOL_SESSION_DIR)
-        binary_data.write_binary_file_from_base64_string(filepath=session_filepath, base64_data=self.pymol_session)
-        pymol_io.load_pymol_session(session_filepath)
-
-    def color_protein_pair(self) -> None:
-        """This function colors both the reference and the model Protein.
-
-        Note:
-            Only the official colors from PyMOL are supported. These can be looked up under the `color values`_ page.
-
-        Args:
-            color_ref (str, optional): defines color for the reference Protein.
-            color_model (str, optional): defines color for the model Protein.
-
-        Raises:
-            pymol.CmdException: Exception is raised if one or both proteins does not exist as pymol objects.
-
-        """
-        try:
-            protein_pair_operations.color_protein_pair(
-                self.protein_1.get_molecule_object(),
-                self.protein_2.get_molecule_object(),
-            )
-        except pymol.CmdException:
-            pymol.CmdException("One Protein or both proteins does not exist as pymol objects.")
+        self.pymol_session = ""
 
     def save_session_of_protein_pair(self) -> None:
         """This function saves the pymol session of the Protein pair.
@@ -169,41 +139,6 @@ class ProteinPair:
             raise exception.IllegalArgumentError("")
         self.distance_analysis = a_value
 
-    def serialize(self, an_xml_writer: QtCore.QXmlStreamWriter):
-        an_xml_writer.writeStartElement("protein_pair")
-        an_xml_writer.writeAttribute("name", self.name)
-        # Proteins
-        an_xml_writer.writeStartElement("proteins_of_pair")
-        self.protein_1.write_protein_to_xml_structure(an_xml_writer)
-        self.protein_2.write_protein_to_xml_structure(an_xml_writer)
-        an_xml_writer.writeEndElement()
-        # Session data
-        an_xml_writer.writeStartElement("session_data")
-        an_xml_writer.writeAttribute("session", self.pymol_session)
-        an_xml_writer.writeEndElement()
-        self.distance_analysis.serialize_to_xml_structure(an_xml_writer)
-        an_xml_writer.writeEndElement()
-        an_xml_writer.writeEndElement()
-
-    def serialize_protein_pair(self, xml_protein_pairs_element: ElementTree.Element) -> None:
-        """This function serialize the protein pair object."""
-        tmp_protein_pair = ElementTree.SubElement(xml_protein_pairs_element, element_names.PROTEIN_PAIR)
-        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_NAME, str(self.name))
-        tmp_protein_pair.set(
-            attribute_names.PROTEIN_PAIR_PROT_1_MOLECULE_OBJECT,
-            str(self.protein_1.get_molecule_object()),
-        )
-        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_1_ID, str(self.protein_1.get_id()))
-        tmp_protein_pair.set(
-            attribute_names.PROTEIN_PAIR_PROT_2_MOLECULE_OBJECT,
-            str(self.protein_2.get_molecule_object()),
-        )
-        tmp_protein_pair.set(attribute_names.PROTEIN_PAIR_PROT_2_ID, str(self.protein_2.get_id()))
-        tmp_session_data = ElementTree.SubElement(tmp_protein_pair, element_names.PROTEIN_PAIR_SESSION)
-        tmp_session_data.set(attribute_names.PROTEIN_PAIR_SESSION, self.pymol_session)
-        if self.distance_analysis is not None:
-            self.distance_analysis.serialize_distance_analysis(tmp_protein_pair)
-
     def get_id(self):
         return self._id
 
@@ -212,24 +147,3 @@ class ProteinPair:
 
     def get_protein_name_without_chains(self) -> str:
         return f"{self.protein_1.get_molecule_object()}-{self.protein_2.get_molecule_object()}"
-
-    # def create_plain_text_memory_mirror(self) -> list[Union[str, list[tuple[str, "sequence.Sequence", str]]]]:
-    #     """Creates a plain text memory mirror of the current protein pair."""
-    #     return [
-    #         self.protein_1.get_molecule_object(),
-    #         str(self.protein_1.pdb_filepath.get_filepath()),
-    #         str(self.protein_1.export_dirname),
-    #         str(self.protein_1.pdb_filepath.get_filename()),
-    #         self.protein_1.pymol_selection.selection_string,
-    #         protein_util.get_chains_as_list_of_tuples(self.protein_1.chains),
-    #         self.protein_2.get_molecule_object(),
-    #         str(self.protein_2.pdb_filepath.get_filepath()),
-    #         str(self.protein_2.export_dirname),
-    #         str(self.protein_2.pdb_filepath.get_filename()),
-    #         self.protein_2.pymol_selection.selection_string,
-    #         protein_util.get_chains_as_list_of_tuples(self.protein_2.chains),
-    #         str(self.SCRATCH_DIR),
-    #         str(self.pymol_session_filepath.get_filepath()),
-    #         self.name,
-    #         str(self.protein_pair_subdirs.get(pyssa_keys.PROTEIN_PAIR_SUBDIR)),
-    #     ]

@@ -1663,7 +1663,8 @@ class InterfaceManager:
 
     # <editor-fold desc="Protein Pairs">
     def add_protein_pair_to_protein_pairs_model(self, a_protein_pair: "protein_pair.ProteinPair"):
-        self._protein_pair_model.add_protein_pair(a_protein_pair)
+        tmp_main_socket, the_general_purpose_socket = self.job_manager.get_general_purpose_socket_pair()
+        self._protein_pair_model.add_protein_pair(a_protein_pair, tmp_main_socket, the_general_purpose_socket)
 
     def remove_protein_pair_from_protein_pairs_model(self):
         self._protein_pair_model.remove_protein_pair(self.get_current_protein_pair_tree_index())

@@ -357,7 +357,8 @@ class AuxiliaryPyMOL:
             return chains_of_protein
 
     @staticmethod
-    def consolidate_molecule_object_to_first_state(a_pdb_filepath):
+    def consolidate_molecule_object_to_first_state(a_pdb_filepath) -> str:
+        print("Consolidate molecule object states ...")
         with pymol2.PyMOL() as auxiliary_pymol:
             auxiliary_pymol.cmd.load(filename=str(a_pdb_filepath))
             tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
@@ -388,14 +389,60 @@ class AuxiliaryPyMOL:
                 return a_pdb_filepath
 
     @staticmethod
-    def get_all_scenes_of_session(pymol_session) -> list:
-        session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
-        utils.write_binary_file_from_base64_string(session_filepath, pymol_session)
+    def get_all_scenes_of_session(a_pymol_session) -> list:
+        tmp_session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
+        utils.write_binary_file_from_base64_string(tmp_session_filepath, a_pymol_session)
         with pymol2.PyMOL() as auxiliary_pymol:
-            auxiliary_pymol.cmd.load(str(session_filepath))
+            auxiliary_pymol.cmd.load(str(tmp_session_filepath))
             tmp_all_scenes = auxiliary_pymol.cmd.get_scene_list()
-        os.remove(session_filepath)
+        os.remove(tmp_session_filepath)
         return tmp_all_scenes
+
+    @staticmethod
+    def clean_protein_update(a_pymol_session: str) -> tuple[str, str]:
+        """Cleans a protein from all sugar and solvent molecules.
+
+        Args:
+            a_pymol_session: a base64 pymol session string.
+
+        Returns:
+            a pymol session base64 string with the cleaned protein.
+        """
+        tmp_session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
+        utils.write_binary_file_from_base64_string(tmp_session_filepath, a_pymol_session)
+        with pymol2.PyMOL() as auxiliary_pymol:
+            auxiliary_pymol.cmd.load(str(tmp_session_filepath))
+            auxiliary_pymol.cmd.remove("solvent")
+            auxiliary_pymol.cmd.remove("organic")
+            tmp_export_session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/export_temp_session.pse")
+            tmp_export_pdb_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/export_temp_clean.pdb")
+            auxiliary_pymol.cmd.save(str(tmp_export_session_filepath))
+            auxiliary_pymol.cmd.save(str(tmp_export_pdb_filepath))
+            base64_string = utils.create_base64_string_from_file(str(tmp_export_session_filepath))
+            os.remove(tmp_export_session_filepath)
+        os.remove(tmp_session_filepath)
+        return base64_string, str(tmp_export_pdb_filepath)
+
+    @staticmethod
+    def clean_protein_new():
+        # fixme: Old code below that might be useful
+        # if new_protein is False:
+        #     try:
+        #         self.load_protein_pymol_session()
+        #         remove_solvent_molecules_in_protein()
+        #         remove_organic_molecules_in_protein()
+        #     except pymol.CmdException:
+        #         return  # noqa: RET502 #TODO: needs more thoughts
+        #     tmp_was_successful, tmp_pdb_filepath = pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR,
+        #                                                                              str(self._id))
+        #     if tmp_was_successful:
+        #         self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
+        #         logger.debug(self._pdb_data)
+        #     else:
+        #         logger.error("The protein could not be cleaned, because the new pdb file could not be found!")
+        #         raise RuntimeError("The protein could not be cleaned, because the new pdb file could not be found!")
+        raise NotImplementedError("Cleaning a protein that generates a new protein structure is not yet implemented!")
+
     #
     # @staticmethod
     # def get_all_scenes_of_session_multi(pymol_session, a_name):

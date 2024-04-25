@@ -38,7 +38,7 @@ from pyssa.gui.ui.views import results_view, plot_view
 from pyssa.internal.data_structures import protein_pair, selection
 from pyssa.internal.data_structures.data_classes import prediction_protein_info, prediction_configuration
 from pyssa.internal.thread import tasks
-from pyssa.internal.thread.async_pyssa import util_async
+from pyssa.internal.thread.async_pyssa import util_async, protein_pair_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
 from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums
@@ -231,7 +231,7 @@ class ResultsViewController(QtCore.QObject):
     def _color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
         self._active_task = tasks.Task(
-            target=main_presenter_async.color_protein_pair_by_rmsd_value,
+            target=protein_pair_async.color_protein_pair_by_rmsd_value,
             args=(
                 self._protein_pair,
                 0

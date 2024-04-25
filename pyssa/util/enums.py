@@ -164,5 +164,6 @@ class JobShortDescription(enum.Enum):
     CREATE_RAY_TRACED_IMAGE = "Create new ray traced image."
     CREATE_NEW_PROTEIN_PYMOL_SESSION = "Create new protein pymol session."
     GET_ALL_CHAINS_OF_GIVEN_PROTEIN = "Get all chains of a given protein."
-    CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE = "Consolidate molecule object to first state"
-    GET_ALL_SCENES_OF_SESSION = "Get all scenes of a given pymol session"
+    GET_ALL_SCENES_OF_SESSION = "Get all scenes of a given pymol session."
+    CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE = "Consolidate molecule object to first state."
+    CLEAN_PROTEIN_UPDATE_STRUCTURE = "Clean the existing protein structure."

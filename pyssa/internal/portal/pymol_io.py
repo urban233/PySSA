@@ -39,93 +39,6 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def load_protein(filepath: pathlib.Path, basename: str, molecule_object: str) -> None:
-    """Loads a protein in pymol through a protein object.
-
-    Args:
-        filepath: the filepath to the protein
-        basename: the name of the protein file
-        molecule_object: the name of the protein in PyMOL
-    """
-    if not safeguard.Safeguard.check_filepath(pathlib.Path(f"{filepath}/{basename}")):
-        raise FileNotFoundError
-    cmd.load(f"{filepath}/{basename}", object=molecule_object)
-    # fixme: this is code for the color vision feature
-    # if globals.g_settings.color_vision_mode == constants.CVM_NORMAL:
-    #     color_prot_1 = constants.CVM_NORMAL_PROT_1_COLOR
-    # elif globals.g_settings.color_vision_mode == constants.CVM_DEUTERANOPIA:
-    #     color_prot_1 = constants.CVM_DEUTERANOPIA_PROT_1_COLOR
-    # elif globals.g_settings.color_vision_mode == constants.CVM_PROTANOPIA:
-    #     color_prot_1 = constants.CVM_PROTANOPIA_PROT_1_COLOR
-    # elif globals.g_settings.color_vision_mode == constants.CVM_TRITANOPIA:
-    #     color_prot_1 = constants.CVM_TRITANOPIA_PROT_1_COLOR
-    # else:
-    #     color_prot_1 = "green"
-    color_prot_1 = "green"
-    graphic_operations.setup_default_session_graphic_settings()
-    cmd.color(color_prot_1, molecule_object)
-
-
-def fetch_protein_from_pdb(filepath: pathlib.Path, filename: str, molecule_object: str) -> None:
-    """This function fetches a protein in pymol from the PDB.
-
-    Args:
-        filepath: the filepath to the protein
-        filename: the name of the protein file with extension
-        molecule_object: the name of the protein in PyMOL
-    Raises:
-        FileNotFoundError: If file not found.
-        ValueError: If PDB ID couldn't be found in PDB.
-
-    """
-    if not safeguard.Safeguard.check_filepath(pathlib.Path(f"{filepath}/{filename}")):
-        raise FileNotFoundError
-    try:
-        cmd.fetch(code=molecule_object, type="pdb", path=filepath, file=filename)
-    except pymol.CmdException:
-        raise ValueError("PDB ID is invalid.")
-
-
-def get_protein_from_pdb(pdb_id: str) -> "protein.Protein":
-    """Fetches a protein from the PDB and creates a protein object."""
-    if len(pdb_id) != 4:
-        raise exception.IllegalArgumentError("PDB ID is invalid!")
-    try:
-        # PDB ID as input: the pdb file gets saved in a scratch directory where it gets deleted immediately
-        cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
-        graphic_operations.setup_default_session_graphic_settings()
-        tmp_protein = protein.Protein(
-            molecule_object=pdb_id,
-            pdb_filepath=path_util.FilePath(pathlib.Path(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")),
-        )
-        return tmp_protein  # noqa: RET504
-    except pymol.CmdException:
-        tools.clean_scratch_folder()
-        # TODO: add message that fetching the reference failed
-    except FileNotFoundError:
-        print("File could not be found.")
-
-
-def save_protein_to_pdb_file(export_filepath: pathlib.Path, molecule_object: str) -> tuple[bool, pathlib.Path]:
-    """Saves a protein from the current pymol session as a .pdb file.
-
-    Args:
-        export_filepath: the filepath to save the protein as pdb file.
-        molecule_object: the name of the protein in PyMOL.
-
-    Raises:
-        NotADirectoryError: If directory is not found.
-    """
-    if not safeguard.Safeguard.check_filepath(export_filepath.parent):
-        raise NotADirectoryError(f"The filepath {export_filepath.parent} does not exists.")
-    # save the pdb file under the path (export_data_dir)
-    tmp_filepath: pathlib.Path = pathlib.Path(f"{export_filepath.parent}/{molecule_object}.pdb")
-    cmd.save(str(tmp_filepath))
-    if os.path.exists(tmp_filepath):
-        return True, tmp_filepath
-    raise FileNotFoundError(f"The filepath {tmp_filepath} was not found!")
-
-
 def load_pymol_session(pymol_session_filepath: pathlib.Path) -> None:
     """This function loads a pymol session file into the current pymol session.
 
@@ -140,7 +53,6 @@ def load_pymol_session(pymol_session_filepath: pathlib.Path) -> None:
     logger.debug("Starting to load pymol session ...")
     cmd.load(str(pymol_session_filepath))
     logger.debug("Finished loading pymol session.")
-    #graphic_operations.setup_default_session_graphic_settings()
 
 
 def save_pymol_session_as_base64_string(pymol_molecule_object: str) -> pathlib.Path:
@@ -160,7 +72,6 @@ def convert_pymol_session_to_base64_string(pymol_molecule_object: str) -> str:
     os.remove(session_filepath)
     return base64_string
 
+
 def get_all_scenes_from_pymol_session() -> list[str]:
     return cmd.get_scene_list()
-
-

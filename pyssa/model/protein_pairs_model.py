@@ -122,8 +122,21 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
         tmp_scenes_item = tmp_scene_item.parent()
         tmp_scenes_item.removeRow(tmp_scene_item.row())
 
-    def add_protein_pair(self, a_protein_pair: "protein_pair.ProteinPair"):
+    def add_protein_pair(self,
+                         a_protein_pair: "protein_pair.ProteinPair",
+                         the_main_socket,
+                         a_socket):
         """Adds a protein pair to the model."""
+        tmp_job_description = job.GeneralPurposeJobDescription(
+            enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION
+        )
+        tmp_job_description.setup_dict(
+            {enums.JobDescriptionKeys.PYMOL_SESSION.value: str(a_protein_pair.pymol_session)})
+        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+            the_main_socket, a_socket, tmp_job_description
+        )
+        tmp_all_scenes = tmp_reply["data"]
+
         tmp_protein_pair_item = QtGui.QStandardItem(a_protein_pair.name)
         tmp_protein_pair_item.setData(a_protein_pair, enums.ModelEnum.OBJECT_ROLE)
         tmp_protein_pair_item.setData("protein_pair", enums.ModelEnum.TYPE_ROLE)
@@ -131,8 +144,7 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
         tmp_scenes_item = QtGui.QStandardItem("Scenes")
         tmp_scenes_item.setData("header", enums.ModelEnum.TYPE_ROLE)
         tmp_protein_pair_item.appendRow(tmp_scenes_item)
-        a_protein_pair.load_pymol_session()
-        for tmp_scene in pymol_io.get_all_scenes_from_pymol_session():
+        for tmp_scene in tmp_all_scenes:
             tmp_scene_item = QtGui.QStandardItem(tmp_scene)
             tmp_scene_item.setData("scene", enums.ModelEnum.TYPE_ROLE)
             tmp_scenes_item.appendRow(tmp_scene_item)

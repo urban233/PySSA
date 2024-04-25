@@ -19,24 +19,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for protein_pair operations in pymol."""
-import pymol
+"""Module for all asynchronous functions that are related to the image creation and preview for PyMOL."""
 import logging
+
 from pymol import cmd
-from pyssa.io_pyssa import safeguard
-from pyssa.io_pyssa import filesystem_io
-from pyssa.util import constants
 from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.portal import pymol_io
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def save_session_of_protein_pair(name_of_protein_pair: str) -> str:
-    """Saves the pymol session of the protein pair.
+def preview_image(a_placeholder_1: int, a_placeholder_2: int) -> tuple:
+    # TODO: the renderer should be changeable
+    try:
+        cmd.ray(2400, 2400, renderer=int(0))
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    return 0, ""
 
-    Args:
-        name_of_protein_pair (str): Name of the protein pair.
-    """
-    return pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
+
+def create_drawn_image(an_image_filepath: str, the_app_settings: "settings.Settings") -> tuple:
+    cmd.bg_color(the_app_settings.image_background_color)
+    try:
+        cmd.draw(2400, 2400)
+        cmd.png(an_image_filepath, dpi=300)
+    except pymol.CmdException:
+        logger.warning("Unexpected exception.")
+    cmd.bg_color("black")
+    return 0, ""

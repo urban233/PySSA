@@ -19,24 +19,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for protein_pair operations in pymol."""
-import pymol
-import logging
-from pymol import cmd
-from pyssa.io_pyssa import safeguard
-from pyssa.io_pyssa import filesystem_io
-from pyssa.util import constants
-from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.portal import pymol_io
-
-logger = logging.getLogger(__file__)
-logger.addHandler(log_handlers.log_file_handler)
+"""Module for all asynchronous functions that are related to the protein pair object."""
+from pyssa.internal.portal import graphic_operations
 
 
-def save_session_of_protein_pair(name_of_protein_pair: str) -> str:
-    """Saves the pymol session of the protein pair.
+def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair", placeholder: int) -> tuple:
+    """Colors a given protein pair by their rmsd value.
 
     Args:
-        name_of_protein_pair (str): Name of the protein pair.
+        a_project: a project object containing the protein pair.
+        a_results_name: the name of the protein pair.
+
+    Returns:
+        a tuple with ("result", an_existing_protein_pair_object)
     """
-    return pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
+    graphic_operations.color_protein_pair_by_rmsd(a_protein_pair)
+    return ("result", a_protein_pair)

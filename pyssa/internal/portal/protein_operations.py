@@ -43,26 +43,6 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def remove_solvent_molecules_in_protein() -> None:
-    """Removes solvent molecules in a protein."""
-    if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
-        raise pymol.CmdException("No protein is in pymol session.")
-    try:
-        cmd.remove("solvent")
-    except pymol.CmdException:
-        print("No solvent molecules needs to be removed.")
-
-
-def remove_organic_molecules_in_protein() -> None:
-    """Removes organic molecules in a protein."""
-    if not pymol_safeguard.PymolSafeguard.check_if_protein_in_session():
-        raise pymol.CmdException("No protein is in pymol session.")
-    try:
-        cmd.remove("organic")
-    except pymol.CmdException:
-        print("No organic molecules needs to be removed.")
-
-
 def get_protein_chains(a_pdb_filepath, the_main_socket, a_socket) -> list[chain.Chain]:
     """Divides the chains from a protein, into protein and non-protein chains.
 
@@ -74,7 +54,6 @@ def get_protein_chains(a_pdb_filepath, the_main_socket, a_socket) -> list[chain.
     tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
         the_main_socket, a_socket, tmp_job_description
     )
-    print(tmp_reply)
     tmp_data: list[tuple] = tmp_reply["data"]
     tmp_chains_of_protein: list[chain.Chain] = []
     for tmp_chain_object_values in tmp_data:
@@ -147,42 +126,3 @@ def get_protein_sequences_from_protein(molecule_object: str, chains: list[chain.
 def get_chain_letter_of_first_protein_sequence(chains: list[chain.Chain]):
     tmp_protein_chains = protein_util.filter_chains_for_protein_chains(chains)
     return tmp_protein_chains[0].chain_letter
-
-
-def get_protein_sequence_length_from_protein(a_protein: "protein.Protein") -> int:
-    """Gets the length of the protein sequence.
-
-    Args:
-        a_protein: a protein object of which the sequence length is calculated.
-    """
-    fasta_prot_1 = cmd.get_fastastr(a_protein.pymol_selection.selection_string)
-    return len(fasta_prot_1[fasta_prot_1.find("\n") :])
-
-
-def count_states_of_molecule_object(molecule_object: str) -> int:
-    """Counts the states of a given molecule object.
-
-    Args:
-        molecule_object: the name of the molecule object in pymol.
-    """
-    return cmd.count_states(molecule_object)
-
-
-def consolidate_molecule_object_to_first_state(molecule_object: str) -> None:
-    """Consolidates the given molecule object into a single state.
-
-    Args:
-        molecule_object: the name of the molecule object in pymol.
-    """
-    # Create a new object with only the first state
-    cmd.create("new_object", molecule_object, 1, 1)
-    # Delete the original molecule to keep only the new object
-    cmd.delete(molecule_object)
-    # Rename the new object to the original name if needed
-    cmd.set_name("new_object", molecule_object)
-    if count_states_of_molecule_object(molecule_object) > 1:
-        raise RuntimeError("Molecule object has still more than one state.")
-    if cmd.select(f"/{molecule_object}//A/1/CA") > 1:
-        raise RuntimeError(
-            f"Molecule object has still more than one state. {cmd.select(f'/{molecule_object}//A/1/CA')}",
-        )

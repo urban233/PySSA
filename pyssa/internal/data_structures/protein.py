@@ -217,9 +217,11 @@ class Protein:
             enums.JobShortDescription.CONSOLIDATE_MOLECULE_OBJECT_TO_FIRST_STATE
         )
         tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(tmp_pdb_filepath)})
+        print(tmp_job_description.job_information)
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
             the_main_socket, a_socket, tmp_job_description
         )
+        print(tmp_reply)
         self._pdb_data = bio_data.parse_pdb_file(tmp_reply["data"])
         #self.check_states_and_reduce_to_one_state_if_necessary()
         try:
@@ -252,31 +254,49 @@ class Protein:
             i += 1
 
     def create_new_pymol_session(self, the_main_socket, the_general_purpose_socket) -> None:
-        """Creates a new pymol session by loading the protein into pymol."""
-        self.load_protein_in_pymol(the_main_socket, the_general_purpose_socket)
+        """Creates a new pymol session by loading the protein into PyMOL.
+
+        Raises:
+            UnableToCreatePdbFileError:If the pdb file cannot be created.
+            UnableToOpenPdbFileError:If the pdb file cannot be opened.
+            UnableToLoadPdbFileError:If the pdb file cannot be loaded.
+        """
+        # <editor-fold desc="Checks">
+        pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb")
+        if not os.path.exists(constants.CACHE_PROTEIN_DIR):
+            os.mkdir(constants.CACHE_PROTEIN_DIR)
+        if len(self._pdb_data) == 0:
+            raise ValueError("No pdb data in current object!")
+        # </editor-fold>
+
+        try:
+            bio_data.build_pdb_file(self._pdb_data,
+                                    pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))
+        except exception.IllegalArgumentError:
+            logger.error(f"The argument pdb data is not usable: {self._pdb_data}.")
+            raise exception.UnableToCreatePdbFileError("")
+        except exception.DirectoryNotFoundError:
+            logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+            raise exception.UnableToCreatePdbFileError("")
+        except PermissionError:
+            logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
+            raise exception.UnableToCreatePdbFileError("")
+        except exception.UnableToOpenFileError:
+            logger.error("pdb file could not be opened for writing.")
+            raise exception.UnableToOpenFileError("")
+
+        tmp_job_description = job.GeneralPurposeJobDescription(
+            enums.JobShortDescription.CREATE_NEW_PROTEIN_PYMOL_SESSION)
+        tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(
+            pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))})
+        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+            the_main_socket, the_general_purpose_socket, tmp_job_description
+        )
+        self.pymol_session = tmp_reply["data"][0]
 
     def save_pymol_session_as_base64_string(self) -> None:
         """Sets the active pymol session as base64 string into the protein object."""
         self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
-
-    def check_states_and_reduce_to_one_state_if_necessary(self) -> None:
-        """Checks the state of the protein in pymol and deletes all states which are not the first if necessary."""
-        if protein_operations.count_states_of_molecule_object(self._pymol_molecule_object) > 1:
-            logger.info(f"Protein {self._pymol_molecule_object} has more than one state. Trying to consolidate to one state.")
-            try:
-                protein_operations.consolidate_molecule_object_to_first_state(self._pymol_molecule_object)
-                tmp_pdb_cache_filepath = pathlib.Path(
-                    f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb",
-                )
-                pymol_io.save_protein_to_pdb_file(
-                    tmp_pdb_cache_filepath,
-                    self._pymol_molecule_object,
-                )
-                self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_cache_filepath)
-            except Exception as e:
-                logger.error(f"Protein states could not be consolidated! Ran into error: {e}")
-            else:
-                logger.info(f"Consolidation of protein {self._pymol_molecule_object} finished without any errors.")
 
     def set_id(self, value):
         self._id = value
@@ -400,77 +420,6 @@ class Protein:
                 return tmp_chain
         return chain.Chain("", "", "")
 
-    def load_protein_in_pymol(self, the_main_socket, the_general_purpose_socket) -> None:
-        """Load a protein in PyMOL.
-
-        Raises:
-            UnableToCreatePdbFileError:If the pdb file cannot be created.
-            UnableToOpenPdbFileError:If the pdb file cannot be opened.
-            UnableToLoadPdbFileError:If the pdb file cannot be loaded.
-        """
-        # <editor-fold desc="Checks">
-        pdb_filepath = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb")
-        if not os.path.exists(constants.CACHE_PROTEIN_DIR):
-            os.mkdir(constants.CACHE_PROTEIN_DIR)
-
-        # </editor-fold>
-
-        if len(self._pdb_data) == 0:
-            raise ValueError("No pdb data in current object!")
-
-        try:
-            bio_data.build_pdb_file(self._pdb_data, pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))
-        except exception.IllegalArgumentError:
-            logger.error(f"The argument pdb data is not usable: {self._pdb_data}.")
-            raise exception.UnableToCreatePdbFileError("")
-        except exception.DirectoryNotFoundError:
-            logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
-            raise exception.UnableToCreatePdbFileError("")
-        except PermissionError:
-            logger.error(f"The argument pdb_filepath is illegal: {pdb_filepath}!")
-            raise exception.UnableToCreatePdbFileError("")
-        except exception.UnableToOpenFileError:
-            logger.error("pdb file could not be opened for writing.")
-            raise exception.UnableToOpenFileError("")
-
-        tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.CREATE_NEW_PROTEIN_PYMOL_SESSION)
-        tmp_job_description.setup_dict({enums.JobDescriptionKeys.PDB_FILEPATH.value: str(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))})
-        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
-            the_main_socket, the_general_purpose_socket, tmp_job_description
-        )
-        self.pymol_session = tmp_reply["data"][0]
-
-        # try:
-        #     pymol_io.load_protein(constants.CACHE_PROTEIN_DIR, f"{self._pymol_molecule_object}.pdb", self._pymol_molecule_object)
-        # except exception.UnableToLoadProteinError:
-        #     logger.error("Protein can not be loaded in PyMOL!")
-        #     raise exception.UnableToLoadProteinError
-        #
-        # cmd.scene("base", action="append")
-
-    def load_protein_pymol_session(self) -> None:
-        """Loads the protein in the pymol session based on the base64 data."""
-        tmp_session_path = pathlib.Path(
-            f"{constants.CACHE_PYMOL_SESSION_DIR}/{self._pymol_molecule_object}_session.pse",
-        )
-        binary_data.write_binary_file_from_base64_string(tmp_session_path, self.pymol_session)
-        pymol_io.load_pymol_session(tmp_session_path)
-
-    def color_protein_in_pymol(self, color: str, a_selection: str) -> None:
-        """This function colors the protein, in the given color.
-
-        Args:
-            color:
-                a PyMOL color string
-            a_selection:
-                a PyMOL conform selection string
-        Notes:
-            The correct selection string needs to be in a_protein before running this function!!!
-
-        """
-        self.pymol_selection.set_custom_selection(a_selection)
-        graphic_operations.color_protein(color, self.pymol_selection.selection_string)
-
     def set_selections_from_chains_ca(self) -> None:
         """Sets a selection based on the chains of the protein.
 
@@ -487,87 +436,15 @@ class Protein:
         """
         self.pymol_selection.set_selections_without_chains_ca()
 
-    def clean_pdb_file(self) -> None:
-        """This function cleans a pdb file from the PDB.
-
-        Raises:
-            AttributeError: If no export directory is given
-        """
-        # argument test
-        if self.export_dirname == "":
-            raise AttributeError("A export directory must be defined!")
-
-        pymol_io.fetch_protein_from_pdb(
-            self.pdb_filepath.get_dirname(),
-            self.pdb_filepath.get_filename(),
-            self._pymol_molecule_object,
+    def clean_protein(self, the_main_socket, the_general_purpose_socket):
+        tmp_job_description = job.GeneralPurposeJobDescription(
+            enums.JobShortDescription.CLEAN_PROTEIN_UPDATE_STRUCTURE)
+        tmp_job_description.setup_dict({enums.JobDescriptionKeys.PYMOL_SESSION.value: str(self.pymol_session)})
+        tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
+            the_main_socket, the_general_purpose_socket, tmp_job_description
         )
-        protein_operations.remove_solvent_molecules_in_protein()
-        protein_operations.remove_organic_molecules_in_protein()
-        # check if path exists where the data will be exported,
-        # if not the directory will be created
-        if not os.path.exists(f"{self.export_dirname}"):
-            os.mkdir(f"{self.export_dirname}")
-        # save the pdb file under the path (export_data_dir)
-        pymol_io.save_protein_to_pdb_file(self.export_dirname, self._pymol_molecule_object)
-
-    def clean_protein(self, new_protein: bool = False):  # noqa: ANN201 #TODO: needs to be redone
-        """Cleans the protein from all sugar and solvent molecules.
-
-        Args:
-            new_protein: a flag to determine whether to create a new protein object.
-        """
-        if new_protein is False:
-            try:
-                self.load_protein_pymol_session()
-                protein_operations.remove_solvent_molecules_in_protein()
-                protein_operations.remove_organic_molecules_in_protein()
-            except pymol.CmdException:
-                return  # noqa: RET502 #TODO: needs more thoughts
-            # tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._id}.pdb")
-            tmp_was_successful, tmp_pdb_filepath = pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(self._id))
-            if tmp_was_successful:
-                self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
-                logger.debug(self._pdb_data)
-            else:
-                logger.error("The protein could not be cleaned, because the new pdb file could not be found!")
-                raise RuntimeError("The protein could not be cleaned, because the new pdb file could not be found!")
-        else:
-            clean_prot = self.duplicate_protein()
-            # clean_prot.load_protein_in_pymol()
-            clean_prot.load_protein_pymol_session()
-            protein_operations.remove_solvent_molecules_in_protein()
-            protein_operations.remove_organic_molecules_in_protein()
-            clean_prot_molecule_object = f"{clean_prot.get_molecule_object()}_cleaned"
-            clean_prot.set_molecule_object(clean_prot_molecule_object)
-            tmp_full_pdb_path = pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{clean_prot.get_id()}.pdb")
-            pymol_io.save_protein_to_pdb_file(constants.CACHE_PROTEIN_DIR, str(clean_prot.get_id()))
-            cleaned_prot = Protein(
-                molecule_object=clean_prot_molecule_object,
-            )
-            return cleaned_prot  # noqa: RET504 #TODO: needs more thoughts
-
-    def show_resi_as_balls_and_sticks(self) -> None:
-        """Shows the residues of the selection as sticks representation."""
-        graphic_operations.show_protein_selection_as_balls_and_sticks(self.pymol_selection.selection_string)
-
-    def hide_resi_as_balls_and_sticks(self) -> None:
-        """Hides the residues of the selection as sticks representation."""
-        graphic_operations.hide_protein_selection_as_balls_and_sticks(self.pymol_selection.selection_string)
-
-    def zoom_resi_protein_position(self) -> None:
-        """Zoomes to the residues of the selection."""
-        graphic_operations.zoom_to_residue_in_protein_position(self.pymol_selection.selection_string)
-
-    def serialize_protein(self, xml_proteins_element: ElementTree.Element) -> None:
-        """Serializes the protein object."""
-        tmp_protein = ElementTree.SubElement(xml_proteins_element, element_names.PROTEIN)
-        tmp_protein.set(attribute_names.ID, str(self._id))
-        tmp_protein.set(attribute_names.PROTEIN_MOLECULE_OBJECT, self._pymol_molecule_object)
-        tmp_protein.set(attribute_names.PROTEIN_SELECTION, self.pymol_selection.selection_string)
-        tmp_protein.append(bio_data.convert_pdb_data_list_to_xml_string(self._pdb_data))
-        tmp_session_data = ElementTree.SubElement(tmp_protein, element_names.PROTEIN_SESSION)
-        tmp_session_data.set(attribute_names.PROTEIN_SESSION, self.pymol_session)
+        self.pymol_session, tmp_pdb_filepath = tmp_reply["data"]
+        self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
 
     def get_object_as_dict_for_database(self) -> dict:
         """Serializes the protein object to a dict which can be inserted into a database."""
@@ -576,29 +453,6 @@ class Protein:
             enums.DatabaseEnum.PROTEIN_PYMOL_SESSION.value: self.pymol_session,
             "project_id": self.db_project_id,
         }
-
-    def write_protein_to_xml_structure(self, an_xml_writer: QtCore.QXmlStreamWriter):
-        an_xml_writer.writeStartElement('protein')
-        an_xml_writer.writeAttribute('id', str(self._id))
-        an_xml_writer.writeAttribute('pymol_molecule_object', str(self._pymol_molecule_object))
-        an_xml_writer.writeAttribute('pymol_selection', str(self.pymol_selection.selection_string))
-        # Chains
-        an_xml_writer.writeStartElement('chains')
-        for tmp_chain in self.chains:
-            tmp_chain.serialize(an_xml_writer)
-        an_xml_writer.writeEndElement()
-        # PDB data
-        an_xml_writer.writeStartElement('pdb_data')
-        for tmp_atom in self._pdb_data:
-            an_xml_writer.writeStartElement('atom')
-            an_xml_writer.writeCharacters(tmp_atom)
-            an_xml_writer.writeEndElement()
-        an_xml_writer.writeEndElement()
-        # Session data
-        an_xml_writer.writeStartElement('session_data')
-        an_xml_writer.writeAttribute('session', self.pymol_session)
-        an_xml_writer.writeEndElement()
-        an_xml_writer.writeEndElement()
 
     def duplicate_protein(self):  # noqa: ANN201
         """Duplicates the protein object."""
@@ -619,26 +473,3 @@ class Protein:
         self.pymol_selection.selection_string = attrib_dict[attribute_names.PROTEIN_SELECTION]
         self._pdb_data = pdb_data
         self.pymol_session = pymol_session
-
-    # def create_plain_text_memory_mirror(self) -> list[Union[tuple[str, str], tuple[str, Any]]]:
-    #     """Creates a plain text memory mirror of the protein object."""
-    #     mirror = [
-    #         ("_id", str(self._id)),
-    #         ("_pymol_molecule_object", str(self._pymol_molecule_object)),
-    #         ("pymol_selection.molecule_object", str(self.pymol_selection.molecule_object)),
-    #         ("pymol_selection.selection_string", str(self.pymol_selection.selection_string)),
-    #     ]
-    #     for tmp_chain in self.chains:
-    #         mirror.append(("tmp_chain.chain", str(tmp_chain.chain_letter)))
-    #         mirror.append(("tmp_chain.chain_type", str(tmp_chain.chain_type)))
-    #         mirror.append(("tmp_chain.chain_sequence", str(tmp_chain.chain_sequence)))
-    #
-    #     for tmp_pdb_line in self._pdb_data:
-    #         mirror.append(("_pdb_data", tmp_pdb_line))
-    #
-    #     mirror.append(("pdb_filepath", str(self.pdb_filepath)))
-    #     mirror.append(("fasta_filepath", str(self.fasta_filepath)))
-    #     mirror.append(("export_dirname", str(self.export_dirname)))
-    #     mirror.append(("pymol_session_filepath", str(self.pymol_session_filepath)))
-    #     mirror.append(("pymol_session", str(self.pymol_session)))
-    #     return mirror
