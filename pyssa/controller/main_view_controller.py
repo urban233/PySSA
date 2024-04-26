@@ -2262,7 +2262,7 @@ class MainViewController:
             tmp_dialog.exec_()
         else:
             logger.debug("Started script to arrange window ...")
-            subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH])
+            subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH], creationflags=subprocess.CREATE_NO_WINDOW)
             logger.debug("Script to arrange windows finished.")
 
     def __slot_open_logs(self) -> None:

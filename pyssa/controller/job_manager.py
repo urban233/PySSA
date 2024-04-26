@@ -378,14 +378,13 @@ class JobManager:
     @staticmethod
     def get_protein_names(string):
         """
-        Extracts protein names from a string separated by semicolon (;) delimiter.
+        Extracts protein names from an analysis run name.
 
         Args:
-            string: The string containing protein names.
+            string: An analysis run name.
 
         Returns:
-            A tuple containing the extracted protein names, or an empty tuple
-            if no protein names are found.
+            A tuple containing the extracted protein names
         """
         index_of_first_semicolon = string.find(";")
         sub1 = string[:index_of_first_semicolon]

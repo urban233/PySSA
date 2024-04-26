@@ -15,7 +15,10 @@ This document describes the steps that are needed for the Windows offline deploy
 IMPORTANT: The conda env must have all packages but no PyMOL installed! (-> use pyssa_wo_pymol_env.yaml and build new yaml file if something in the env changes.)
 1. Check if env with name pyssa_wo_pymol exists (if one exists, delete it first!)
 2. conda env create -f pyssa_wo_pymol_env.yaml --name pyssa_wo_pymol
-3. conda pack -n pyssa_wo_pymol
+3. Activate environment
+4. Install additional packages
+5. Export env (conda env export > pyssa_wo_pymol_env_002.yml)
+6. conda pack -n pyssa_wo_pymol
 
 ** PySSA-(CLI)-Installer C# install routine
 1. Create folder for conda env

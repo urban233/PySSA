@@ -54,8 +54,10 @@ def open_documentation_on_certain_page(
         logger.info("Trying to run the mkdocs serve command ...")
         try:
             os.chdir(constants.PLUGIN_DOCS_PATH)
-            subprocess.Popen(['C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Scripts\mkdocs.exe', 'serve', '-a', '127.0.0.1:7018'])
-            subprocess.Popen([r"C:\ProgramData\pyssa\extra_tools\browser.exe"])
+            subprocess.Popen([r'C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Scripts\mkdocs.exe', 'serve', '-a', '127.0.0.1:7018'],
+                             creationflags=subprocess.CREATE_NO_WINDOW)
+            subprocess.Popen([r"C:\ProgramData\pyssa\extra_tools\browser.exe"],
+                             creationflags=subprocess.CREATE_NO_WINDOW)
         except subprocess.CalledProcessError as e:
             logger.error(f"Error starting mkdocs serve: {e}")
             tmp_docs_window = None
@@ -97,8 +99,10 @@ def start_documentation_server(
     logger.info("Trying to run the mkdocs serve command ...")
     try:
         os.chdir(constants.PLUGIN_DOCS_PATH)
-        subprocess.Popen(['C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Scripts\mkdocs.exe', 'serve', '-a', '127.0.0.1:7018'])
-        subprocess.Popen([r"C:\ProgramData\pyssa\extra_tools\browser.exe"])
+        subprocess.Popen([r'C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Scripts\mkdocs.exe', 'serve', '-a', '127.0.0.1:7018'],
+                         creationflags=subprocess.CREATE_NO_WINDOW)
+        subprocess.Popen([r"C:\ProgramData\pyssa\extra_tools\browser.exe"],
+                         creationflags=subprocess.CREATE_NO_WINDOW)
     except subprocess.CalledProcessError as e:
         logger.error(f"Error starting mkdocs serve: {e}")
     else:
