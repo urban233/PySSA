@@ -248,7 +248,7 @@ class Protein:
             logger.error(f"Could not delete pdb file! Ran into error: {e}")
 
     def add_id_to_all_chains(self, the_last_chain_id: int) -> None:
-        i = the_last_chain_id + 1
+        i = the_last_chain_id
         for tmp_chain in self.chains:
             tmp_chain.set_id(i)
             i += 1

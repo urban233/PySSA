@@ -61,6 +61,7 @@ if __name__ == "__main__":
         )
         ray_tracing_thread.daemon = True
         ray_tracing_thread.start()
+
         general_purpose_queue = queue.Queue()
         general_purpose_socket = context.socket(zmq.REP)
         general_purpose_socket.bind("tcp://127.0.0.1:8075")

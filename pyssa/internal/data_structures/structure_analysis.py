@@ -67,7 +67,6 @@ class Analysis:
 
     def _fetch_pdb_atoms_for_all_proteins(self):
         with database_manager.DatabaseManager(str(self.app_project.get_database_filepath())) as db_manager:
-            db_manager.open_project_database()
             for tmp_protein_pair in self.analysis_list:
                 tmp_pdb_atom_db_data_1 = db_manager.get_pdb_atoms_of_protein(tmp_protein_pair.protein_1.get_id())
                 tmp_pdb_atom_db_data_2 = db_manager.get_pdb_atoms_of_protein(tmp_protein_pair.protein_2.get_id())
@@ -77,7 +76,6 @@ class Analysis:
                                    tmp_pdb_atom_db_data_2]
                 tmp_protein_pair.protein_1.set_pdb_data(pdb_atom_dict_1)
                 tmp_protein_pair.protein_2.set_pdb_data(pdb_atom_dict_2)
-            db_manager.close_project_database()
 
     def _get_last_id_of_protein_pairs(self) -> int:
         if len(self.app_project.protein_pairs) == 0:

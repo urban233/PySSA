@@ -246,7 +246,7 @@ class StructurePrediction:
             with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
                 logger.info(f"Inserting {tmp_protein.get_molecule_object()} into current project, from prediction thread.")
                 tmp_protein.db_project_id = a_project.get_id()
-                tmp_protein.add_id_to_all_chains(db_manager.get_latest_id_of_a_specific_table("Chain"))
+                tmp_protein.add_id_to_all_chains(db_manager.get_next_id_of_chain_table())
                 tmp_protein.set_id(db_manager.insert_new_protein(tmp_protein))
             a_project.add_existing_protein(
                 tmp_protein

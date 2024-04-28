@@ -207,7 +207,6 @@ class ResultsViewController(QtCore.QObject):
     def _get_color_configuration_of_protein_pair(self):
         tmp_database_filepath: str = str(self._interface_manager.get_current_project().get_database_filepath())
         with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
-            db_manager.open_project_database()
             for tmp_chain in self._protein_pair.protein_1.chains:
                 self._color_configuration_protein_pair[0].append(
                     db_manager.get_pymol_parameter_for_certain_protein_chain_in_protein_pair(
@@ -226,7 +225,6 @@ class ResultsViewController(QtCore.QObject):
                         enums.PymolParameterEnum.COLOR.value
                     )[0]  # the [0] is needed because the db return the color as tuple e.g. ('green',)
                 )
-            db_manager.close_project_database()
 
     def _color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""

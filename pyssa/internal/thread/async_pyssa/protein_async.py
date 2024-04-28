@@ -77,9 +77,7 @@ def clean_protein_update(a_protein: "protein.Protein",
         return ("result", None)
 
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
-        db_manager.open_project_database()
         db_manager.update_protein_pdb_atom_data(a_protein.get_id(), a_protein.get_pdb_data())
-        db_manager.close_project_database()
         a_protein.set_pdb_data([])
     constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", a_protein.get_molecule_object())
     return ("result", a_protein)
@@ -92,11 +90,9 @@ def save_selected_protein_structure_as_pdb_file(
 ) -> tuple:
     """Saves a given protein structure to a pdb file."""
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
-        db_manager.open_project_database()
         tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
         tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
         a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
-        db_manager.close_project_database()
     try:
         bio_data.build_pdb_file(a_protein.get_pdb_data(), a_filepath)
         # reset pdb data to reduce memory space
@@ -136,9 +132,7 @@ def rename_selected_protein_structure(
         raise RuntimeError("Renaming the protein in PyMOL failed. Maybe it is not opened in a session?")
     # Update in database
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
-        db_manager.open_project_database()
         db_manager.update_protein_name(
             the_new_protein_name, tmp_old_protein_name, a_protein.get_id()
         )
-        db_manager.close_project_database()
     return ("result", a_protein)

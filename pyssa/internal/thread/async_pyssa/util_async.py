@@ -148,12 +148,10 @@ def add_proteins_to_project_and_model(the_interface_manager, tmp_protein_names):
     the_interface_manager.project_lock.lock()
     with database_manager.DatabaseManager(
             str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
-        db_manager.open_project_database()
         for tmp_protein_name in tmp_protein_names:
             tmp_protein = db_manager.get_protein_as_object(tmp_protein_name)
             the_interface_manager.add_protein_to_current_project(tmp_protein)
             the_interface_manager.add_protein_to_proteins_model(tmp_protein)
-        db_manager.close_project_database()
     the_interface_manager.project_lock.unlock()
     the_interface_manager.watcher.setup_blacklists(
         the_interface_manager.get_current_project(),
@@ -169,7 +167,6 @@ def add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pa
     the_interface_manager.project_lock.lock()
     with database_manager.DatabaseManager(
             str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
-        db_manager.open_project_database()
         for tmp_protein_pair_name in tmp_protein_pair_names:
             print(tmp_protein_pair_name)
             tmp_protein_pair = db_manager.get_protein_pair_as_object(
@@ -180,7 +177,6 @@ def add_protein_pairs_to_project_and_model(the_interface_manager, tmp_protein_pa
             print(tmp_protein_pair)
             the_interface_manager.add_protein_pair_to_current_project(tmp_protein_pair)
             the_interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
-        db_manager.close_project_database()
     the_interface_manager.project_lock.unlock()
     the_interface_manager.watcher.setup_blacklists(
         the_interface_manager.get_current_project(),

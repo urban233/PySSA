@@ -72,6 +72,197 @@ class SQLQueryType(enum.Enum):
     UPDATE_SEQUENCE_NAME = 'update_sequence_name'
 
 
+class SQLQueryStatement(enum.Enum):
+    """An enum for all possible sql query statements."""
+    # <editor-fold desc="Util statements">
+    GET_LAST_INSERT_ROW_ID = """SELECT last_insert_rowid();"""
+    GET_LATEST_ID_OF_PROTEIN_TABLE = """SELECT MAX(id) FROM Protein"""
+    GET_LATEST_ID_OF_CHAIN_TABLE = """SELECT MAX(id) FROM Chain"""
+    # </editor-fold>
+
+    # <editor-fold desc="Project statements">
+    INSERT_NEW_PROJECT = """   
+        INSERT INTO Project(name, os)
+        VALUES(?, ?)
+    """
+    GET_PROJECT_ID = """
+        SELECT id 
+        FROM Project 
+        WHERE name = ?
+    """
+    UPDATE_PROJECT_NAME = """   
+        UPDATE Project 
+        SET name = ?
+        WHERE id = ?
+    """
+    # </editor-fold>
+
+    # <editor-fold desc="Sequence statements">
+    INSERT_SEQUENCE = """
+        INSERT INTO SeqRecord(seq_id, seq, name, project_id)
+        VALUES (?, ?, ?, ?)
+    """
+    DELETE_SEQUENCE = """
+        DELETE FROM SeqRecord
+        WHERE name = ?
+    """
+    GET_SEQUENCES = """SELECT seq_id, seq, name FROM SeqRecord WHERE project_id = ?"""
+    UPDATE_SEQUENCE_NAME = """   
+        UPDATE SeqRecord 
+        SET name = ?
+        WHERE name = ? and seq = ?
+    """
+    # </editor-fold>
+
+    # <editor-fold desc="Protein statements">
+    INSERT_PROTEIN = """   
+        INSERT INTO Protein(pymol_molecule_object, pymol_session, project_id)
+        VALUES (?, ?, ?)
+    """
+    INSERT_CHAIN = """   
+        INSERT INTO Chain(protein_id, chain_identifier, chain_type, chain_sequence)
+        VALUES (?, ?, ?, ?)
+    """
+    INSERT_PYMOL_PARAMETER = """   
+        INSERT INTO PyMOLParameter(color, representation, chain_id)
+        VALUES (?, ?, ?)
+    """
+    INSERT_PYMOL_SELECTION = """   
+        INSERT INTO PyMOLSelection(selection_string, protein_id)
+        VALUES (?, ?)
+    """
+    INSERT_PDB_ATOM = """   INSERT INTO PdbAtom(record_type, atom_number, atom_name, alternate_location_indicator, residue_name,
+        chain_identifier, residue_sequence_number, code_for_insertions_of_residues,
+        x_coord, y_coord, z_coord, occupancy, temperature_factor, segment_identifier, element_symbol,
+        charge, protein_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+    DELETE_PROTEIN = """   
+        DELETE FROM Protein
+        WHERE id = ?
+    """
+    DELETE_CHAINS = """   
+        DELETE FROM Chain
+        WHERE protein_id = ?
+    """
+    DELETE_PYMOL_PARAMETER = """   
+        DELETE FROM PyMOLParameter
+        WHERE chain_id = ?
+    """
+    DELETE_PYMOL_SELECTION = """   
+        DELETE FROM PyMOLSelection
+        WHERE protein_id = ?
+    """
+    DELETE_PDB_ATOM = """   
+        DELETE FROM PdbAtom
+        WHERE protein_id = ?
+    """
+    GET_PROTEINS = """SELECT id, pymol_molecule_object, pymol_session FROM Protein WHERE project_id = ?"""
+    GET_PYMOL_SELECTIONS = """SELECT selection_string FROM PyMOLSelection WHERE protein_id = ?"""
+    GET_CHAINS = """SELECT id, chain_identifier, chain_type, chain_sequence FROM Chain WHERE protein_id = ?"""
+    GET_PYMOL_PARAMETERS = """SELECT color, representation FROM PyMOLParameter WHERE chain_id = ?"""
+    GET_PROTEIN_NAME_BY_ID = """SELECT pymol_molecule_object FROM Protein WHERE id = ?"""
+    GET_PDB_ATOMS_OF_PROTEIN = """   
+        SELECT record_type, atom_number, atom_name, alternate_location_indicator, residue_name,
+        chain_identifier, residue_sequence_number, code_for_insertions_of_residues,
+        x_coord, y_coord, z_coord, occupancy, temperature_factor, segment_identifier, element_symbol,
+        charge, protein_id 
+        FROM PdbAtom 
+        WHERE protein_id = ?
+    """
+    GET_PROTEIN_BY_NAME = """SELECT id, pymol_molecule_object, pymol_session FROM Protein WHERE pymol_molecule_object = ?"""
+    UPDATE_PROTEIN_CHAIN_COLOR = """
+        UPDATE PyMOLParameter 
+        SET color = ?
+        WHERE chain_id = ?
+    """
+    UPDATE_PROTEIN_CHAIN_REPRESENTATION = """
+        UPDATE PyMOLParameter 
+        SET representation = ?
+        WHERE chain_id = ?
+    """
+    UPDATE_PROTEIN_NAME = """
+        UPDATE Protein 
+        SET pymol_molecule_object = ?
+        WHERE pymol_molecule_object = ? and id = ?
+    """
+    UPDATE_PYMOL_SESSION_OF_PROTEIN = """   
+        UPDATE Protein 
+        SET pymol_session = ?
+        WHERE id = ?
+    """
+    # </editor-fold>
+
+    # <editor-fold desc="Protein pair statements">
+    INSERT_PROTEIN_PAIR = """   
+        INSERT INTO ProteinPair(protein_1_id, protein_2_id, pymol_session, project_id, name)
+        VALUES (?, ?, ?, ?, ?)
+    """
+    INSERT_PYMOL_PARAMETER_PROTEIN_PAIR = """   
+        INSERT INTO PyMOLParameterProteinPair(protein_id, chain_letter, parameter_name, parameter_value, protein_pair_id)
+        VALUES (?, ?, ?, ?, ?)
+    """
+    INSERT_DISTANCE_ANALYSIS = """   
+        INSERT INTO DistanceAnalysis(name, cutoff, cycles, protein_pair_id, figure_size_x, figure_size_y)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """
+    INSERT_DISTANCE_ANALYSIS_RESULTS = """   
+        INSERT INTO DistanceAnalysisResults(pymol_session, rmsd, aligned_aa, distance_analysis_id)
+        VALUES (?, ?, ?, ?)
+    """
+    INSERT_DISTANCE_DATA_RECORDS = """   
+        INSERT INTO DistanceAnalysisResultData(my_index, protein_1_chain, protein_1_position, protein_1_residue,
+                                               protein_2_chain, protein_2_position, protein_2_residue, 
+                                               distances, distance_analysis_results_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """
+    DELETE_PROTEIN_PAIR = """   
+        DELETE FROM ProteinPair
+        WHERE id = ?
+    """
+    DELETE_PYMOL_PARAMETERS_PROTEIN_PAIR = """   
+        DELETE FROM PyMOLParameterProteinPair
+        WHERE protein_pair_id = ?
+    """
+    DELETE_DISTANCE_ANALYSIS = """   
+        DELETE FROM DistanceAnalysis
+        WHERE protein_pair_id = ?
+    """
+    DELETE_DISTANCE_ANALYSIS_RESULTS = """   
+        DELETE FROM DistanceAnalysisResults
+        WHERE distance_analysis_id = ?
+    """
+    DELETE_DISTANCE_ANALYSIS_RESULT_DATA = """   
+        DELETE FROM DistanceAnalysisResultData
+        WHERE distance_analysis_results_id = ?
+    """
+    GET_PROTEIN_PAIRS = """SELECT id, protein_1_id, protein_2_id, pymol_session, name FROM ProteinPair WHERE project_id = ?"""
+    GET_PROTEIN_PAIR_BY_NAME = """SELECT id, protein_1_id, protein_2_id, pymol_session, name FROM ProteinPair WHERE name = ?"""
+    GET_DISTANCE_ANALYSIS = """SELECT id, name, cutoff, cycles, figure_size_x, figure_size_y FROM DistanceAnalysis WHERE protein_pair_id = ?"""
+    GET_DISTANCE_ANALYSIS_RESULTS = """SELECT id, pymol_session, rmsd, aligned_aa FROM DistanceAnalysisResults WHERE distance_analysis_id = ?"""
+    GET_DISTANCE_ANALYSIS_RESULT_DATA = """   
+        SELECT my_index, protein_1_chain, protein_1_position, protein_1_residue,
+               protein_2_chain, protein_2_position, protein_2_residue, distances
+        FROM DistanceAnalysisResultData WHERE distance_analysis_results_id = ?
+    """
+    GET_PYMOL_PARAMETER_FOR_PROTEIN_CHAIN_IN_PROTEIN_PAIR = """   
+        SELECT parameter_value
+        FROM PyMOLParameterProteinPair WHERE protein_id = ? and chain_letter = ? and protein_pair_id = ? and parameter_name = ?
+    """
+    UPDATE_PYMOL_PARAMETER_FOR_PROTEIN_CHAIN_IN_PROTEIN_PAIR = """   
+        UPDATE PyMOLParameterProteinPair 
+        SET parameter_value = ?
+        WHERE protein_id = ? and chain_letter = ? and protein_pair_id = ? and parameter_name = ?
+    """
+    UPDATE_PYMOL_SESSION_OF_PROTEIN_PAIR = """   
+        UPDATE ProteinPair 
+        SET pymol_session = ?
+        WHERE id = ?
+    """
+
+    # </editor-fold>
+
+
 class HistogramPropertiesEnum(enum.Enum):
     """An enum for all possible histogram properties."""
     X_AXIS_UNITS = 'x_axis_units'

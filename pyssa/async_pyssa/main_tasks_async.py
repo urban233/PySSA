@@ -169,9 +169,7 @@ def run_distance_analysis(
             tmp_protein_pair.db_project_id = a_project.get_id()
             copy_tmp_protein_pair = copy.deepcopy(tmp_protein_pair)
             with database_manager.DatabaseManager(str(a_project.get_database_filepath())) as db_manager:
-                db_manager.open_project_database()
                 copy_tmp_protein_pair.set_id(db_manager.insert_new_protein_pair(copy_tmp_protein_pair))
-                db_manager.close_project_database()
             # Protein pair gets added to "a_project" argument of this function
             a_project.add_protein_pair(copy_tmp_protein_pair)
 

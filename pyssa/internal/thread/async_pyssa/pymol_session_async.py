@@ -73,14 +73,12 @@ def save_protein_pymol_session_to_database(
     try:
         with database_manager.DatabaseManager(
                 str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
-            db_manager.open_project_database()
             tmp_protein = the_interface_manager.get_current_active_protein_object()
             tmp_protein.save_pymol_session_as_base64_string()
             db_manager.update_pymol_session_of_protein(
                 tmp_protein.get_id(),
                 tmp_protein.pymol_session
             )
-            db_manager.close_project_database()
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
         return 0, False
@@ -94,14 +92,12 @@ def save_protein_pair_pymol_session_to_database(
     try:
         with database_manager.DatabaseManager(
                 str(the_interface_manager.get_current_project().get_database_filepath())) as db_manager:
-            db_manager.open_project_database()
             tmp_protein_pair = the_interface_manager.get_current_active_protein_pair_object()
             tmp_protein_pair.save_session_of_protein_pair()
             db_manager.update_pymol_session_of_protein_pair(
                 tmp_protein_pair.get_id(),
                 tmp_protein_pair.pymol_session
             )
-            db_manager.close_project_database()
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
         return 0, False

@@ -1021,7 +1021,6 @@ class MainViewController:
             pathlib.Path(f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"))
         with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
             db_manager.build_new_database()
-            db_manager.close_project_database()
         self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
         self._database_thread.start()
         self._active_task = tasks.Task(
@@ -1222,7 +1221,7 @@ class MainViewController:
             self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
             self._database_thread.start()
             self._database_manager.set_database_filepath(tmp_project_database_filepath)
-            self._database_manager.open_project_database()
+            #self._database_manager.open_project_database()
             self._database_manager.update_project_name(tmp_new_project_name)
             tmp_project = self._database_manager.get_project_as_object(
                 tmp_new_project_name,
@@ -2890,9 +2889,7 @@ class MainViewController:
                 tmp_chain.pymol_parameters["chain_color"] = tmp_color
                 # Update pymol parameter in database
                 with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                    db_manager.open_project_database()
                     db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
-                    db_manager.close_project_database()
                 self._update_scene()
                 self._save_protein_pymol_session()
         else:
@@ -3679,84 +3676,80 @@ class MainViewController:
 
     def _post_import_protein_structure(self, return_value: tuple):
         try:
-            tmp_database_operation = self._interface_manager.pymol_session_manager.freeze_current_protein_pymol_session(
-                self._interface_manager.get_current_active_protein_object()
-            )
-            if tmp_database_operation is None:
-                tmp_database_operation = self._interface_manager.pymol_session_manager.freeze_current_protein_pair_pymol_session(
-                    self._interface_manager.get_current_active_protein_pair_object()
+            tmp_protein_name, tmp_name_len = return_value
+            if tmp_name_len == 4:
+                self._active_task = tasks.Task(
+                    target=project_async.add_protein_from_pdb_to_project,
+                    args=(
+                        tmp_protein_name,
+                        self._interface_manager
+                    ),
+                    post_func=self.__await_post_import_protein_structure,
                 )
-            if tmp_database_operation is not None:
-                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-        except ValueError:
-            logger.info("There is no pymol session to freeze.")
-
-        tmp_protein_name, tmp_name_len = return_value
-        if tmp_name_len == 4:
-            self._active_task = tasks.Task(
-                target=project_async.add_protein_from_pdb_to_project,
-                args=(
-                    tmp_protein_name,
-                    self._interface_manager
-                ),
-                post_func=self.__await_post_import_protein_structure,
+                self._active_task.start()
+                constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
+            elif tmp_name_len > 0:
+                # local pdb file as input
+                self._active_task = tasks.Task(
+                    target=project_async.add_protein_from_local_filesystem_to_project,
+                    args=(
+                        tmp_protein_name,
+                        self._interface_manager
+                    ),
+                    post_func=self.__await_post_import_protein_structure,
+                )
+                self._active_task.start()
+                constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
+            else:
+                logger.warning("No protein object was created.")
+                return
+            self._interface_manager.status_bar_manager.show_temporary_message(
+                "Importing protein structure ...", False
             )
-            self._active_task.start()
-            constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
-        elif tmp_name_len > 0:
-            # local pdb file as input
-            self._active_task = tasks.Task(
-                target=project_async.add_protein_from_local_filesystem_to_project,
-                args=(
-                    tmp_protein_name,
-                    self._interface_manager
-                ),
-                post_func=self.__await_post_import_protein_structure,
-            )
-            self._active_task.start()
-            constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
-        else:
-            logger.warning("No protein object was created.")
-            return
-        self._interface_manager.status_bar_manager.show_temporary_message(
-            "Importing protein structure ...", False
-        )
-        self._interface_manager.start_wait_cursor()
+            self._interface_manager.start_wait_cursor()
+        except Exception as e:
+            logger.error(e)
 
     def __await_post_import_protein_structure(self, return_value: tuple):
-        tmp_protein: "protein.Protein" = return_value[1]
-        self._interface_manager.get_current_project().add_existing_protein(tmp_protein)
-        self._interface_manager.watcher.add_protein(tmp_protein.get_molecule_object())
-        self._database_thread.put_database_operation_into_queue(
-            database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
-                                                 (0, tmp_protein)))
-        self._interface_manager.refresh_main_view()
-        self._interface_manager.pymol_session_manager.reinitialize_session()
-        self._interface_manager.pymol_session_manager.unfreeze_current_protein_pymol_session()
-        self._interface_manager.pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
-        self._main_view_state.restore_main_view_state()
-        self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")
-        self._interface_manager.stop_wait_cursor()
+        try:
+            tmp_protein: "protein.Protein" = return_value[1]
+            self._interface_manager.get_current_project().add_existing_protein(tmp_protein)
+            self._interface_manager.watcher.add_protein(tmp_protein.get_molecule_object())
+            self._database_thread.put_database_operation_into_queue(
+                database_operation.DatabaseOperation(enums.SQLQueryType.INSERT_NEW_PROTEIN,
+                                                     (0, tmp_protein)))
+            self._interface_manager.refresh_main_view()
+            #self._interface_manager.pymol_session_manager.reinitialize_session()
+            #self._interface_manager.pymol_session_manager.unfreeze_current_protein_pymol_session()
+            #self._interface_manager.pymol_session_manager.unfreeze_current_protein_pair_pymol_session()
+            #self._main_view_state.restore_main_view_state()
+            self._interface_manager.status_bar_manager.show_temporary_message("Importing protein structure finished.")
+            self._interface_manager.stop_wait_cursor()
+        except Exception as e:
+            logger.error(e)
 
     def __slot_delete_protein(self):
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein' button on the 'Proteins Tab' was clicked.")
-        tmp_dialog = custom_message_box.CustomMessageBoxDelete(
-            "Are you sure you want to delete this protein?", "Delete Protein",
-            custom_message_box.CustomMessageBoxIcons.WARNING.value
-        )
-        tmp_dialog.exec_()
-        response: bool = tmp_dialog.response
-        if response:
-            tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
-            if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein.get_molecule_object()):
-                self._interface_manager.pymol_session_manager.reinitialize_session()
-            tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
-                                                                          (0, tmp_protein.get_id()))
-            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-            self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
-            self._interface_manager.watcher.remove_protein(tmp_protein.get_molecule_object())
-            self._interface_manager.remove_protein_from_proteins_model()
-            self._interface_manager.refresh_main_view()
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein' button on the 'Proteins Tab' was clicked.")
+            tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+                "Are you sure you want to delete this protein?", "Delete Protein",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value
+            )
+            tmp_dialog.exec_()
+            response: bool = tmp_dialog.response
+            if response:
+                tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
+                if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein.get_molecule_object()):
+                    self._interface_manager.pymol_session_manager.reinitialize_session()
+                tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
+                                                                              (0, tmp_protein.get_id()))
+                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+                self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
+                self._interface_manager.watcher.remove_protein(tmp_protein.get_molecule_object())
+                self._interface_manager.remove_protein_from_proteins_model()
+                self._interface_manager.refresh_main_view()
+        except Exception as e:
+            logger.error(e)
 
     def __slot_save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
