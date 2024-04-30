@@ -71,7 +71,7 @@ def handle_request(job_type, a_queue: queue.Queue, socket):
 
                 elif data[local_enums.JobDescriptionKeys.JOB_SHORT_DESCRIPTION.value] == local_enums.JobShortDescription.CLEAN_PROTEIN_UPDATE_STRUCTURE.value:
                     tmp_pymol_session, tmp_new_pdb_filepath = auxiliary_pymol_base.AuxiliaryPyMOL.clean_protein_update(
-                        data[local_enums.JobDescriptionKeys.PYMOL_SESSION.value]
+                        data[local_enums.JobDescriptionKeys.PYMOL_SESSION.value], data[local_enums.JobDescriptionKeys.PROTEIN_NAME.value]
                     )
                     print("Cleaning given protein finished.")
                     response = {"result": "", "data": (tmp_pymol_session, tmp_new_pdb_filepath)}

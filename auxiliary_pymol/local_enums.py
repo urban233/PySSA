@@ -44,6 +44,7 @@ class JobDescriptionKeys(enum.Enum):
     # General purpose
     JOB_SHORT_DESCRIPTION = "job_short_description"
     PYMOL_SESSION = "pymol_session"
+    PROTEIN_NAME = "protein_name"
 
 
 class JobShortDescription(enum.Enum):

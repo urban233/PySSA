@@ -24,10 +24,12 @@ import copy
 import logging
 import pathlib
 import platform
+import time
 
 from pyssa.controller import database_manager
 from pyssa.internal.data_structures import project, protein
 from pyssa.internal.data_structures.data_classes import database_operation
+from pyssa.internal.thread import database_thread
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, enums
 
@@ -143,11 +145,14 @@ def open_project(
     return 0, tmp_project, the_interface_manager, the_watcher
 
 
-def close_project(the_database_thread, the_pymol_session_manager) -> tuple:
+def close_project(the_database_thread: "database_thread.DatabaseThread", the_pymol_session_manager) -> tuple:
     try:
         the_database_thread.put_database_operation_into_queue(database_operation.DatabaseOperation(
             enums.SQLQueryType.CLOSE_PROJECT, (0, ""))
         )
+        print(the_database_thread.queue_is_running())
+        while the_database_thread.queue_is_running():
+            time.sleep(0.5)
         the_pymol_session_manager.reinitialize_session()
     except Exception as e:
         logger.error(f"Unknown error occurred while waiting for the database thread to finish: {e}.")

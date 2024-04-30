@@ -30,7 +30,6 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
-from pymol import cmd
 import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
 
@@ -897,8 +896,9 @@ class PlotView(QtWidgets.QDialog):
         tmp_id, tmp_chain_1, tmp_pos_1, tmp_residue_1, _, _, _ = self.search_point_by_id(the_current_id)
         tmp_pymol_selection = selection.Selection(tmp_prot_1_name)
         tmp_pymol_selection.set_single_selection("", tmp_chain_1, tmp_residue_1, "")
-        cmd.zoom(tmp_pymol_selection.selection_string)
-        cmd.show("sticks", tmp_pymol_selection.selection_string)
+        # TODO: this needs to be changed to new architecture
+        # cmd.zoom(tmp_pymol_selection.selection_string)
+        # cmd.show("sticks", tmp_pymol_selection.selection_string)
 
     # <editor-fold desc="Distance table related methods for show and hide colums">
     def __action_hide_residue_pair_no(self):

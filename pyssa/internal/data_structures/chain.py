@@ -23,6 +23,7 @@
 import logging
 from PyQt5 import QtCore
 
+from pyssa.controller import pymol_session_manager
 from pyssa.internal.portal import graphic_operations
 from pyssa.util import enums
 from pyssa.logging_pyssa import log_handlers
@@ -85,8 +86,8 @@ class Chain:
     def set_id(self, value):
         self._id = value
 
-    def get_color(self, a_selection_string) -> tuple[str, bool]:
-        self.pymol_parameters[enums.PymolParameterEnum.COLOR.value], _, tmp_is_colored_by_elements = graphic_operations.get_chain_color(a_selection_string, self.chain_letter)
+    def get_color(self, a_selection_string, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple[str, bool]:
+        self.pymol_parameters[enums.PymolParameterEnum.COLOR.value], _, tmp_is_colored_by_elements = the_pymol_session_manager.get_chain_color(a_selection_string, self.chain_letter)
         return self.pymol_parameters[enums.PymolParameterEnum.COLOR.value], tmp_is_colored_by_elements
 
     def get_representation_state(self, a_selection_string) -> dict:

@@ -19,24 +19,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for protein_pair operations in pymol."""
-import pymol
-import logging
-from pymol import cmd
-from pyssa.io_pyssa import safeguard
-from pyssa.io_pyssa import filesystem_io
-from pyssa.util import constants
-from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.portal import pymol_io
+"""Module contains the CurrentSession dataclass."""
+from dataclasses import dataclass
 
-logger = logging.getLogger(__file__)
-logger.addHandler(log_handlers.log_file_handler)
+from pyssa_pymol import pymol_enums
 
 
-def save_session_of_protein_pair(name_of_protein_pair: str) -> str:
-    """Saves the pymol session of the protein pair.
+@dataclass
+class PyMOLCommand:
+    """Class which holds information about a pymol command.
 
-    Args:
-        name_of_protein_pair (str): Name of the protein pair.
+    This is a dataclass with:
+        command (pymol_enums.CommandEnum)
+        arguments (tuple)
     """
-    return pymol_io.convert_pymol_session_to_base64_string(name_of_protein_pair)
+
+    command: "pymol_enums.CommandEnum"
+    arguments: tuple
+
+    def get_command(self):
+        return {
+            "command": self.command.value,
+            "arguments": self.arguments
+        }

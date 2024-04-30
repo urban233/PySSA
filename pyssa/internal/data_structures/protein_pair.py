@@ -28,10 +28,7 @@ import pymol
 from PyQt5 import QtCore
 from xml.etree import ElementTree
 from typing import TYPE_CHECKING, Union
-from pymol import cmd
 from pyssa.logging_pyssa import log_handlers
-from pyssa.internal.portal import pymol_io
-from pyssa.internal.portal import protein_pair_operations
 from pyssa.io_pyssa import path_util
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
@@ -112,18 +109,6 @@ class ProteinPair:
         self.protein_2: "protein.Protein" = copy.deepcopy(protein_2)
         self.name = f"{self.protein_1.get_molecule_object()}_with_{self.protein_2.get_molecule_object()}"
         self.pymol_session = ""
-
-    def save_session_of_protein_pair(self) -> None:
-        """This function saves the pymol session of the Protein pair.
-
-        Note:
-            The pse file will be saved under the relative path
-            (if export_data_dir = "data/results"):
-            ``data/results/sessions``
-
-            The file name (filename) MUST NOT have the file extension .pse!
-        """
-        self.pymol_session = protein_pair_operations.save_session_of_protein_pair(self.name)
 
     def set_distance_analysis(self, a_value: "distance_analysis.DistanceAnalysis") -> None:
         """Sets the distance analysis object.

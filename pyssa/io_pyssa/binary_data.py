@@ -29,13 +29,13 @@ if typing.TYPE_CHECKING:
     from pyssa.io_pyssa import path_util
 
 
-def create_base64_string_from_file(filepath: "path_util.FilePath") -> str:
+def create_base64_string_from_file(filepath: pathlib.Path) -> str:
     """Creates a base64 string from a binary file.
 
     Args:
         filepath: a filepath to a binary file.
     """
-    with open(filepath.get_filepath(), "rb") as binary_file:
+    with open(filepath, "rb") as binary_file:
         binary_data = binary_file.read()
         binary_file.close()
     # Encode binary data to base64 and decode to utf-8 string

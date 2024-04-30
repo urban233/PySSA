@@ -21,21 +21,13 @@
 #
 """Module for structure analysis class."""
 import logging
-import os.path
 import pathlib
-from xml.etree import ElementTree
-
-import pymol
 import numpy as np
-from pymol import cmd
 from typing import TYPE_CHECKING
-from PyQt5 import QtCore
 
 from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.controller import database_manager
-from pyssa.internal.portal import pymol_io
 from pyssa.io_pyssa import path_util, filesystem_helpers, bio_data
-from pyssa.io_pyssa.xml_pyssa import element_names, attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, distance_analysis_util, pyssa_keys, enums, constant_messages
 from pyssa.util import exception
@@ -334,70 +326,3 @@ class DistanceAnalysis:
         self.cutoff: float = the_app_settings.cutoff
         self.cycles: int = the_app_settings.cycles
         self.figure_size: tuple[float, float] = (11.0, 6.0)
-
-    def serialize_to_xml_structure(self, an_xml_writer: QtCore.QXmlStreamWriter):
-        an_xml_writer.writeStartElement("distance_analysis")
-        an_xml_writer.writeAttribute("name", self.name)
-        an_xml_writer.writeAttribute("cutoff", str(self.cutoff))
-        an_xml_writer.writeAttribute("cycles", str(self.cycles))
-        # Result
-        an_xml_writer.writeStartElement("result")
-        an_xml_writer.writeAttribute("rmsd", str(self.analysis_results.rmsd))
-        an_xml_writer.writeAttribute("aligned_amino_acids", str(self.analysis_results.aligned_aa))
-        # Create index_data element
-        an_xml_writer.writeStartElement('index')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_INDEX]))
-        an_xml_writer.writeEndElement()  # End index_data element
-        # Create protein_1_chain_data element
-        an_xml_writer.writeStartElement('protein_1_chain')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_CHAIN]))
-        an_xml_writer.writeEndElement()  # End protein_1_chain_data element
-        # Create protein_1_position_data element
-        an_xml_writer.writeStartElement('protein_1_position')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_POSITION]))
-        an_xml_writer.writeEndElement()  # End protein_1_position_data element
-        # Create protein_1_residue_data element
-        an_xml_writer.writeStartElement('protein_1_residue')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_1_RESI]))
-        an_xml_writer.writeEndElement()  # End protein_1_residue_data element
-        # Create protein_2_chain_data element
-        an_xml_writer.writeStartElement('protein_2_chain')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_CHAIN]))
-        an_xml_writer.writeEndElement()  # End protein_2_chain_data element
-        # Create protein_2_position_data element
-        an_xml_writer.writeStartElement('protein_2_position')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_POSITION]))
-        an_xml_writer.writeEndElement()  # End protein_2_position_data element
-        # Create protein_2_residue_data element
-        an_xml_writer.writeStartElement('protein_2_residue')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_PROT_2_RESI]))
-        an_xml_writer.writeEndElement()  # End protein_2_residue_data element
-        # Create distances_data element
-        an_xml_writer.writeStartElement('distances')
-        an_xml_writer.writeCharacters(str(self.analysis_results.distance_data[pyssa_keys.ARRAY_DISTANCE_DISTANCES]))
-        an_xml_writer.writeEndElement()  # End distances_data element
-        # Session data
-        an_xml_writer.writeStartElement("session_data")
-        an_xml_writer.writeAttribute("session", self.analysis_results.pymol_session)
-        an_xml_writer.writeEndElement()
-        an_xml_writer.writeEndElement()  # End result
-
-    def serialize_distance_analysis(self, xml_distance_analysis_element) -> None:  # noqa: ANN001
-        """This function serialize the protein pair object."""
-        tmp_distance_analysis = ElementTree.SubElement(
-            xml_distance_analysis_element,
-            element_names.DISTANCE_ANALYSIS,
-        )
-        tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_NAME, str(self.name))
-        tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CUTOFF, str(self.cutoff))
-        tmp_distance_analysis.set(attribute_names.DISTANCE_ANALYSIS_CYCLES, str(self.cycles))
-
-        self.analysis_results.serialize_distance_analysis_results(tmp_distance_analysis)
-        tmp_session_data = ElementTree.SubElement(
-            tmp_distance_analysis,
-            element_names.DISTANCE_ANALYSIS_SESSION,
-        )
-        tmp_session_data.set(
-            attribute_names.PROTEIN_PAIR_SESSION,
-            pymol_io.convert_pymol_session_to_base64_string(self.name),
-        )

@@ -20,17 +20,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the add proteins dialog."""
-import os
-import pymol
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
-from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.forms.auto_generated import auto_import_sequence_view
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, tools, gui_utils
+from pyssa.util import constants
 
 global_var_add_model = ("", False)
 

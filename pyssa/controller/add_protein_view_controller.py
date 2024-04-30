@@ -22,14 +22,11 @@
 """Module for the Open Dialog."""
 import logging
 import os
-import pymol
-from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.internal.portal import pymol_io
 from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import validate_async
 from pyssa.io_pyssa import bio_data

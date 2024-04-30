@@ -21,20 +21,12 @@
 #
 """Module for the FastaFileImportPreviewView Dialog."""
 import logging
-import os
 from collections import defaultdict
-import pymol
-from pymol import cmd
 from Bio.SeqRecord import SeqRecord
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from pyssa.controller import interface_manager, fasta_file_import_preview_view_controller
 from pyssa.internal.data_structures.data_classes import basic_seq_info
-from pyssa.internal.portal import pymol_io
-from pyssa.internal.thread import tasks
-from pyssa.internal.thread.async_pyssa import validate_async
-from pyssa.io_pyssa import bio_data
-from pyssa.util import constants
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)

@@ -20,15 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the add proteins dialog."""
-import os
-import pymol
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import Qt
-from pymol import cmd
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
-from pyqtspinner import spinner
 
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.custom_dialogs import custom_message_box

@@ -26,19 +26,12 @@ import os
 import requests
 from typing import TYPE_CHECKING
 
-from PyQt5 import QtWidgets
-
 from pyssa.gui.ui.custom_dialogs import custom_message_box
-from pyssa.gui.ui.dialogs import dialog_settings_global
-from pyssa.internal.portal import pymol_io, graphic_operations
-from pyssa.internal.data_structures import protein
-from pyssa.io_pyssa import path_util
 from pyssa.util import constants, gui_utils, tools
 from pyssa.util import globals
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import settings
-    from pyssa.internal.data_structures import project
 
 
 def check_operating_system() -> None:

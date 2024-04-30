@@ -19,25 +19,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for safeguards in pymol."""
-from pymol import cmd
+"""Init file for PyMOL interface."""
+from pyssa_pymol import interface
+
+# This global reference is needed to avoid garbage collection due to reference counting
+mainInterface = None
 
 
-class PymolSafeguard:
-    """This class is used to collect all safeguard functions in one place for pymol."""
+def start_pymol_interface():
+    """Function to start the PyMOL interface, by instantiating the Interface class."""
+    global mainInterface
+    mainInterface = interface.Interface()
 
-    def __init__(self) -> None:
-        """Empty Constructor."""
-        pass
 
-    @staticmethod
-    def check_if_protein_in_session() -> bool:
-        """This function checks if the protein exists in current pymol session or not.
-
-        Returns:
-            True: if protein exists
-            False: if protein does NOT exist
-        """
-        if len(cmd.get_chains()) == 0:
-            return False
-        return True
+# Starting the actual interface
+start_pymol_interface()

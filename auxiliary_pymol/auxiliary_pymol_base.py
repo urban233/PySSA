@@ -399,7 +399,7 @@ class AuxiliaryPyMOL:
         return tmp_all_scenes
 
     @staticmethod
-    def clean_protein_update(a_pymol_session: str) -> tuple[str, str]:
+    def clean_protein_update(a_pymol_session: str, a_protein_name: str) -> tuple[str, str]:
         """Cleans a protein from all sugar and solvent molecules.
 
         Args:
@@ -412,6 +412,11 @@ class AuxiliaryPyMOL:
         utils.write_binary_file_from_base64_string(tmp_session_filepath, a_pymol_session)
         with pymol2.PyMOL() as auxiliary_pymol:
             auxiliary_pymol.cmd.load(str(tmp_session_filepath))
+            tmp_all_object_names = auxiliary_pymol.cmd.get_names()
+            if len(tmp_all_object_names) == 0:
+                return "ERROR: No proteins found", f"Value of tmp_all_object_names: {tmp_all_object_names}"
+            if a_protein_name not in tmp_all_object_names:
+                return f"ERROR: Protein with the name {a_protein_name} not found!", f"Value of tmp_all_object_names: {tmp_all_object_names}"
             auxiliary_pymol.cmd.remove("solvent")
             auxiliary_pymol.cmd.remove("organic")
             tmp_export_session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/export_temp_session.pse")
@@ -419,7 +424,7 @@ class AuxiliaryPyMOL:
             auxiliary_pymol.cmd.save(str(tmp_export_session_filepath))
             auxiliary_pymol.cmd.save(str(tmp_export_pdb_filepath))
             base64_string = utils.create_base64_string_from_file(str(tmp_export_session_filepath))
-            os.remove(tmp_export_session_filepath)
+            #os.remove(tmp_export_session_filepath)
         os.remove(tmp_session_filepath)
         return base64_string, str(tmp_export_pdb_filepath)
 

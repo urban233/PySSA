@@ -20,10 +20,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all asynchronous functions that are related to the protein pair object."""
+from pyssa.controller import pymol_session_manager
 from pyssa.internal.portal import graphic_operations
 
 
-def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair", placeholder: int) -> tuple:
+def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair",
+                                     the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple:
     """Colors a given protein pair by their rmsd value.
 
     Args:
@@ -33,5 +35,5 @@ def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair",
     Returns:
         a tuple with ("result", an_existing_protein_pair_object)
     """
-    graphic_operations.color_protein_pair_by_rmsd(a_protein_pair)
+    the_pymol_session_manager.color_protein_pair_by_rmsd(a_protein_pair)
     return ("result", a_protein_pair)

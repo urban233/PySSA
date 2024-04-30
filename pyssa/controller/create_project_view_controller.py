@@ -27,9 +27,7 @@ import os
 import subprocess
 
 import pygetwindow
-import pymol
 from PyQt5 import QtCore, QtWidgets
-from pymol import cmd
 from PyQt5.QtCore import Qt
 from pyssa.controller import interface_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
@@ -169,26 +167,26 @@ class CreateProjectViewController(QtCore.QObject):
             self._view.ui.btn_new_create_project.setEnabled(False)
             self._view.ui.lbl_new_status_choose_reference.setText("")
         # checks if a pdb id was entered
-        elif len(self._view.ui.txt_new_choose_reference.text()) == 4:
-            pdb_id = self._view.ui.txt_new_choose_reference.text().upper()
-            try:
-                # the pdb file gets saved in a scratch directory where it gets deleted immediately
-                # Fixme: Here is the PDB problem!!!
-                cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
-                os.remove(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
-                cmd.reinitialize()
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
-                self._view.ui.btn_new_create_project.setEnabled(True)
-
-            # if the id does not exist an exception gets raised
-            except pymol.CmdException:
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                return
-            except FileNotFoundError:
-                self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
-                self._view.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
-                self._view.ui.btn_new_create_project.setEnabled(False)
-                return
+        # elif len(self._view.ui.txt_new_choose_reference.text()) == 4:
+        #     pdb_id = self._view.ui.txt_new_choose_reference.text().upper()
+        #     try:
+        #         # the pdb file gets saved in a scratch directory where it gets deleted immediately
+        #         # Fixme: Here is the PDB problem!!!
+        #         cmd.fetch(pdb_id, type="pdb", path=constants.SCRATCH_DIR)
+        #         os.remove(f"{constants.SCRATCH_DIR}/{pdb_id}.pdb")
+        #         cmd.reinitialize()
+        #         self._view.ui.txt_new_choose_reference.setStyleSheet("color: #000000")
+        #         self._view.ui.btn_new_create_project.setEnabled(True)
+        #
+        #     # if the id does not exist an exception gets raised
+        #     except pymol.CmdException:
+        #         self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+        #         return
+        #     except FileNotFoundError:
+        #         self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")
+        #         self._view.ui.lbl_new_status_choose_reference.setText("Invalid PDB ID.")
+        #         self._view.ui.btn_new_create_project.setEnabled(False)
+        #         return
         else:
             if self._view.ui.txt_new_choose_reference.text().find("/") == -1:
                 self._view.ui.txt_new_choose_reference.setStyleSheet("color: #FC5457")

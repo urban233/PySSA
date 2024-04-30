@@ -1,14 +1,9 @@
-import concurrent
-import multiprocessing
-
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.internal.data_structures import protein, job
-from pyssa.internal.data_structures.protein import Protein
-from pyssa.internal.portal import pymol_io
 from pyssa.util import enums
 
 

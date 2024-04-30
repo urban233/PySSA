@@ -28,8 +28,6 @@ import pygetwindow
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
-from pymol import cmd
 from pyssa.controller import interface_manager, database_manager, pymol_session_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.dialogs import dialog_advanced_prediction_configurations
@@ -252,14 +250,20 @@ class ResultsViewController(QtCore.QObject):
         tmp_protein_1_colors: list = self._color_configuration_protein_pair[0]
         for tmp_chain in self._protein_pair.protein_1.chains:
             self._protein_pair.protein_1.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-            self._protein_pair.protein_1.pymol_selection.color_selection(tmp_protein_1_colors[i])
+            self._interface_manager.pymol_session_manager.color_protein(
+                tmp_protein_1_colors[i], self._protein_pair.protein_1.pymol_selection.selection_string
+            )
+            #self._protein_pair.protein_1.pymol_selection.color_selection(tmp_protein_1_colors[i])
             i += 1
 
         i = 0
         tmp_protein_2_colors: list = self._color_configuration_protein_pair[1]
         for tmp_chain in self._protein_pair.protein_2.chains:
             self._protein_pair.protein_2.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-            self._protein_pair.protein_2.pymol_selection.color_selection(tmp_protein_2_colors[i])
+            self._interface_manager.pymol_session_manager.color_protein(
+                tmp_protein_2_colors[i], self._protein_pair.protein_2.pymol_selection.selection_string
+            )
+            #self._protein_pair.protein_2.pymol_selection.color_selection(tmp_protein_2_colors[i])
             i += 1
 
     # </editor-fold>

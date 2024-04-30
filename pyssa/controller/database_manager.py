@@ -36,7 +36,6 @@ class PyssaDatabaseInterface:
         try:
             if not self.db.open():
                 # Handle connection error
-                print("Error connecting to database!")
                 logger.error("Error connecting to database!")
                 return False
             return True
@@ -60,15 +59,12 @@ class PyssaDatabaseInterface:
         self.mutex.lock()
         try:
             i = 0
-            print(params)
             for tmp_param in params:
                 a_qsql_query.bindValue(i, tmp_param)
-                print(i)
                 i += 1
             if not a_qsql_query.exec():
                 # Handle query execution error
-                print("Error executing query:", a_qsql_query.lastError().text())
-                #print(f"These are the bound values: {a_qsql_query.boundValues()}")
+                logger.error("Error executing query:", a_qsql_query.lastError().text())
         except Exception as e:
             logger.error(e)
         finally:

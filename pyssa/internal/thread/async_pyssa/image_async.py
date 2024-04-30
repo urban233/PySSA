@@ -23,27 +23,21 @@
 import logging
 
 from pymol import cmd
+
+from pyssa.controller import pymol_session_manager
 from pyssa.logging_pyssa import log_handlers
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-def preview_image(a_placeholder_1: int, a_placeholder_2: int) -> tuple:
+def preview_image(the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", a_placeholder_2: int) -> tuple:
     # TODO: the renderer should be changeable
-    try:
-        cmd.ray(2400, 2400, renderer=int(0))
-    except pymol.CmdException:
-        logger.warning("Unexpected exception.")
+    the_pymol_session_manager.pymol_interface.ray(a_width=2400, a_height=2400, a_renderer=int(0))
     return 0, ""
 
 
-def create_drawn_image(an_image_filepath: str, the_app_settings: "settings.Settings") -> tuple:
-    cmd.bg_color(the_app_settings.image_background_color)
-    try:
-        cmd.draw(2400, 2400)
-        cmd.png(an_image_filepath, dpi=300)
-    except pymol.CmdException:
-        logger.warning("Unexpected exception.")
-    cmd.bg_color("black")
+def create_drawn_image(an_image_filepath: str, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple:
+    the_pymol_session_manager.pymol_interface.draw(a_width=2400, a_height=2400, an_antialias_value=2)
+    the_pymol_session_manager.pymol_interface.png(an_image_filepath, a_dpi_value=300)
     return 0, ""

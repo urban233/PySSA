@@ -22,8 +22,6 @@
 """Module that implements a safeguard in form of static methods."""
 import os
 import pathlib
-
-from pymol import cmd
 from pyssa.util import exception
 
 
@@ -58,13 +56,6 @@ class Safeguard:
             False: if number is negative
         """
         if value >= 0:
-            return True
-        return False
-
-    @staticmethod
-    def check_if_protein_is_in_pymol(molecule_object: str) -> bool:
-        """Checks if a protein is loaded into pymol."""
-        if cmd.get_model(molecule_object) is not None:
             return True
         return False
 

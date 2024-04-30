@@ -21,23 +21,15 @@
 #
 """Module for protein operations in pymol."""
 import logging
-import pathlib
-import pymol
 from typing import TYPE_CHECKING
-from pymol import cmd
 
 from auxiliary_pymol import auxiliary_pymol_client
-from pyssa.internal.portal import pymol_safeguard
-from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_structures import chain, job
 from pyssa.io_pyssa import safeguard
 from pyssa.util import constants, enums
 from pyssa.util import protein_util
 from pyssa.logging_pyssa import log_handlers
 from pyssa.internal.data_structures import sequence
-
-if TYPE_CHECKING:
-    from pyssa.internal.data_structures import protein
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)

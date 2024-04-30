@@ -26,15 +26,11 @@ import pathlib
 from typing import TYPE_CHECKING
 from xml.etree import ElementTree
 import numpy as np
-from pymol import cmd
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import protein_pair_util
-from pyssa.internal.portal import protein_pair_operations
 from pyssa.io_pyssa import path_util
-from pyssa.internal.portal import pymol_io
-from pyssa.internal.portal import graphic_operations
 from pyssa.util import constants
 from pyssa.util import exception
 from pyssa.internal.data_structures import results

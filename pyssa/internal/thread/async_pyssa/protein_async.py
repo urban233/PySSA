@@ -21,7 +21,6 @@
 #
 """Module for all asynchronous functions that are related to the protein object."""
 import logging
-from pymol import cmd
 from pyssa.controller import database_manager
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_handlers
@@ -125,11 +124,12 @@ def rename_selected_protein_structure(
     a_protein.set_molecule_object(the_new_protein_name)
 
     # Update in pymol
-    try:
-        cmd.set_name(tmp_old_protein_name, a_protein.get_molecule_object())
-    except Exception as e:
-        logger.error(f"Renaming the protein in PyMOL failed. {e}")
-        raise RuntimeError("Renaming the protein in PyMOL failed. Maybe it is not opened in a session?")
+    # TODO: this needs to be reimplemented using the new PyMOLInterface class (through the pymol_session_manager!)
+    # try:
+    #     cmd.set_name(tmp_old_protein_name, a_protein.get_molecule_object())
+    # except Exception as e:
+    #     logger.error(f"Renaming the protein in PyMOL failed. {e}")
+    #     raise RuntimeError("Renaming the protein in PyMOL failed. Maybe it is not opened in a session?")
     # Update in database
     with database_manager.DatabaseManager(the_database_filepath) as db_manager:
         db_manager.update_protein_name(

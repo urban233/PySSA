@@ -26,23 +26,15 @@ import shutil
 import logging
 import fnmatch
 import socket
-
-import zmq
-import pygetwindow
-import subprocess
 from typing import TYPE_CHECKING
 from urllib.error import URLError
 from urllib.request import urlopen
-
-from PyQt5.QtWidgets import QMessageBox
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from pyssa.internal.data_structures.data_classes import current_session
-from pyssa.internal.portal import pymol_io
 from pyssa.internal.data_structures import settings
 from pyssa.internal.data_structures.data_classes import basic_protein_info
-from pyssa.gui.ui.styles import styles
 from pyssa.io_pyssa import filesystem_io
 from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names

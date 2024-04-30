@@ -23,30 +23,19 @@
 import os
 import pathlib
 import logging
-import uuid
-import pymol
-from Bio import PDB
-from PyQt5 import QtCore
-from pymol import cmd
 
 from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.controller import database_manager
 from pyssa.io_pyssa import safeguard
-from pyssa.internal.portal import pymol_io
 from pyssa.internal.portal import protein_operations
-from pyssa.internal.portal import graphic_operations
 from pyssa.internal.data_structures import selection, job
 from pyssa.util import protein_util, enums
 from pyssa.util import exception
-from pyssa.io_pyssa.xml_pyssa import element_names
 from pyssa.io_pyssa.xml_pyssa import attribute_names
-from pyssa.io_pyssa import binary_data
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
-from pyssa.io_pyssa import path_util
 from typing import TYPE_CHECKING, TextIO, Union, Any
-from xml.etree import ElementTree
 from pyssa.internal.data_structures import chain
 
 
@@ -294,10 +283,6 @@ class Protein:
         )
         self.pymol_session = tmp_reply["data"][0]
 
-    def save_pymol_session_as_base64_string(self) -> None:
-        """Sets the active pymol session as base64 string into the protein object."""
-        self.pymol_session = pymol_io.convert_pymol_session_to_base64_string(self._pymol_molecule_object)
-
     def set_id(self, value):
         self._id = value
 
@@ -439,12 +424,21 @@ class Protein:
     def clean_protein(self, the_main_socket, the_general_purpose_socket):
         tmp_job_description = job.GeneralPurposeJobDescription(
             enums.JobShortDescription.CLEAN_PROTEIN_UPDATE_STRUCTURE)
-        tmp_job_description.setup_dict({enums.JobDescriptionKeys.PYMOL_SESSION.value: str(self.pymol_session)})
+        tmp_job_description.setup_dict(
+            {
+                enums.JobDescriptionKeys.PYMOL_SESSION.value: str(self.pymol_session),
+                enums.JobDescriptionKeys.PROTEIN_NAME.value: str(self._pymol_molecule_object)
+            }
+        )
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
             the_main_socket, the_general_purpose_socket, tmp_job_description
         )
+        if tmp_reply["data"][0].find("ERROR") != -1:
+            raise ValueError(f"{tmp_reply['data'][0]}; {tmp_reply['data'][1]}")
+
         self.pymol_session, tmp_pdb_filepath = tmp_reply["data"]
-        self._pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
+        tmp_pdb_data = bio_data.parse_pdb_file(tmp_pdb_filepath)
+        self._pdb_data = tmp_pdb_data
 
     def get_object_as_dict_for_database(self) -> dict:
         """Serializes the protein object to a dict which can be inserted into a database."""

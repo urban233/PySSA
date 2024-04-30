@@ -30,7 +30,6 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from matplotlib.backends.backend_qt import NavigationToolbar2QT
-from pymol import cmd
 import pyssa.gui.ui.styles.styles as custom_pyssa_styles
 from PyQt5 import QtCore
 from pyssa.internal.data_structures import protein_pair
@@ -530,12 +529,13 @@ class DialogDistancePlot(QtWidgets.QDialog):
             from_aa: the index of the first residue of the selection.
             to_aa: the index of the last residue of the selection.
         """
-        zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
-        cmd.select("zoom_sele", zoom_selection)
-        cmd.show("spheres", "zoom_sele")
-        cmd.alter("zoom_sele", "vdw=0.7")
-        cmd.rebuild()
-        cmd.zoom("zoom_sele")
+        pass
+        # zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
+        # cmd.select("zoom_sele", zoom_selection)
+        # cmd.show("spheres", "zoom_sele")
+        # cmd.alter("zoom_sele", "vdw=0.7")
+        # cmd.rebuild()
+        # cmd.zoom("zoom_sele")
 
     def hide_highlight_selection_in_pymol(self, from_aa: int, to_aa: int) -> None:
         """Hides the selection in PyMOL.
@@ -544,9 +544,10 @@ class DialogDistancePlot(QtWidgets.QDialog):
             from_aa: the index of the first residue of the selection.
             to_aa: the index of the last residue of the selection.
         """
-        zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
-        cmd.select("zoom_sele", zoom_selection)
-        cmd.hide("spheres", "zoom_sele")
+        pass
+        # zoom_selection = f"/{self.protein_pair_for_analysis.protein_1.get_molecule_object()}///{from_aa}-{to_aa}/CA"
+        # cmd.select("zoom_sele", zoom_selection)
+        # cmd.hide("spheres", "zoom_sele")
 
     def reset_distance_plot(self) -> None:
         """Resets the view of the distance plot."""

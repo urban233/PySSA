@@ -163,6 +163,7 @@ class InterfaceManager:
         self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
 
         self.job_manager.start_auxiliary_pymol()
+        self.start_pymol()
 
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
@@ -170,6 +171,14 @@ class InterfaceManager:
         self._protein_model: "proteins_model.ProteinsModel" = proteins_model.ProteinsModel()
         self._protein_pair_model: "protein_pairs_model.ProteinPairsModel" = protein_pairs_model.ProteinPairsModel()
         self._build_workspace_model()
+
+    def start_pymol(self):
+        process = subprocess.Popen([r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pymol.bat"],
+                                   creationflags=subprocess.CREATE_NO_WINDOW)
+        if process.poll() is None:
+            print("PyMOL started correctly.")
+        else:
+            print("PyMOL failed to start.")
 
     # <editor-fold desc="Getter Methods">
     # <editor-fold desc="Settings">
@@ -593,7 +602,7 @@ class InterfaceManager:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA"
             else:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string))
+            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
         if self.get_protein_repr_toggle_flag() == 1:
             self._main_view.ui.lbl_protein_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
         else:
@@ -610,7 +619,9 @@ class InterfaceManager:
             print(f"This is a chain type: {tmp_chain.chain_type}")
             if tmp_chain.chain_type == "protein_chain":
                 self._main_view.ui.frame_protein_repr.setEnabled(True)
-                tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
+                tmp_repr_state = self.pymol_session_manager.get_chain_repr_state(tmp_protein.pymol_selection.selection_string,
+                                                                                 tmp_chain.chain_letter)
+                #tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
                 if self._settings_manager.settings.proteins_tab_use_toggle == 1:
                     self.manage_toggle_state_of_protein_repr(tmp_repr_state)
                 else:
@@ -635,7 +646,9 @@ class InterfaceManager:
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
             if tmp_chain.chain_type == "protein_chain":
                 self._main_view.ui.frame_protein_pair_repr.setEnabled(True)
-                tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
+                tmp_repr_state = self.pymol_session_manager.get_chain_repr_state(tmp_protein.pymol_selection.selection_string,
+                                                                                 tmp_chain.chain_letter)
+                #tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
                 if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
                     self.manage_toggle_state_of_protein_pair_repr(tmp_repr_state)
                 else:
@@ -1820,7 +1833,7 @@ class InterfaceManager:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()} and name CA"
             else:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string))
+            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
         self._main_view.ui.box_protein_pair_color.setCurrentIndex(
             self._main_view.ui.box_protein_pair_color.findText(tmp_chain.pymol_parameters["chain_color"])
         )

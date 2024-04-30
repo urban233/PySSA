@@ -25,7 +25,6 @@ import logging
 from PyQt5 import QtCore
 
 from pyssa.controller import interface_manager
-from pyssa.internal.portal import pymol_io
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
@@ -40,7 +39,7 @@ class AddSceneViewController(QtCore.QObject):
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_add_scene_view()
-        self._all_current_scenes = pymol_io.get_all_scenes_from_pymol_session()  # TODO: this can be optimized for more performance!
+        self._all_current_scenes = self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()  # TODO: this can be optimized for more performance!
         self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         self._connect_all_ui_elements_to_slot_functions()
 
