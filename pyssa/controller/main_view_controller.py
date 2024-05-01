@@ -220,8 +220,9 @@ class MainViewController:
         self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
         self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
         # representation
-        self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
-        self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
+        # self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
+        # self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
+        self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_chain_with_hydrogens)
         self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
         self._view.tg_protein_ribbon.toggleChanged.connect(self.__slot_protein_chain_as_ribbon)
@@ -321,8 +322,9 @@ class MainViewController:
         self._view.ui.cb_protein_pair_mesh.stateChanged.connect(self.__slot_protein_pair_chain_as_mesh)
         self._view.ui.cb_protein_pair_surface.stateChanged.connect(self.__slot_protein_pair_chain_as_surface)
         # toggle representation
-        self._view.ui.btn_protein_pair_show_hydrogens.clicked.connect(self.__slot_show_protein_pair_chain_with_hydrogens)
-        self._view.ui.btn_protein_pair_hide_hydrogens.clicked.connect(self.__slot_hide_protein_pair_chain_with_hydrogens)
+        # self._view.ui.btn_protein_pair_show_hydrogens.clicked.connect(self.__slot_show_protein_pair_chain_with_hydrogens)
+        # self._view.ui.btn_protein_pair_hide_hydrogens.clicked.connect(self.__slot_hide_protein_pair_chain_with_hydrogens)
+        self._view.tg_protein_pair_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_pair_chain_with_hydrogens)
         self._view.tg_protein_pair_cartoon.toggleChanged.connect(self.__slot_protein_pair_chain_as_cartoon)
         self._view.tg_protein_pair_sticks.toggleChanged.connect(self.__slot_protein_pair_chain_as_sticks)
         self._view.tg_protein_pair_ribbon.toggleChanged.connect(self.__slot_protein_pair_chain_as_ribbon)
@@ -2833,7 +2835,7 @@ class MainViewController:
         )
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("grey70    ")
-        self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_grey_70.setIconSize(
             self._view.color_grid_proteins.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -2947,7 +2949,7 @@ class MainViewController:
         self.reset_icon_for_last_color_in_proteins_tab()
         self._view.ui.lbl_protein_current_color.setText("red    ")
         self._view.color_grid_proteins.last_clicked_color = "red"
-        self._view.color_grid_proteins.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_red.setIconSize(self._view.color_grid_proteins.c_red.icon().actualSize(QtCore.QSize(14, 14)))
         self.__slot_change_chain_color_proteins()
 
@@ -2956,7 +2958,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("tv_red    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_red"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_tv_red.setIconSize(self._view.color_grid_proteins.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_salmon_in_proteins_tab(self):
@@ -2964,7 +2966,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("salmon    ")
         self._view.color_grid_proteins.last_clicked_color = "salmon"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_salomon.setIconSize(self._view.color_grid_proteins.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_raspberry_in_proteins_tab(self):
@@ -2972,7 +2974,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("raspberry    ")
         self._view.color_grid_proteins.last_clicked_color = "raspberry"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_raspberry.setIconSize(self._view.color_grid_proteins.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_green_in_proteins_tab(self):
@@ -2980,7 +2982,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("green    ")
         self._view.color_grid_proteins.last_clicked_color = "green"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_green.setIconSize(
             self._view.color_grid_proteins.c_green.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -2989,7 +2991,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("tv_green    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_green"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_tv_green.setIconSize(
             self._view.color_grid_proteins.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -2998,7 +3000,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("palegreen    ")
         self._view.color_grid_proteins.last_clicked_color = "palegreen"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_palegreen.setIconSize(
             self._view.color_grid_proteins.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3007,7 +3009,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("forest    ")
         self._view.color_grid_proteins.last_clicked_color = "forest"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_forest.setIconSize(
             self._view.color_grid_proteins.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3017,7 +3019,7 @@ class MainViewController:
         self._view.color_grid_proteins.last_clicked_color = "blue"
         self.__slot_change_chain_color_proteins()
         self._view.color_grid_proteins.c_blue.setIcon(QtGui.QIcon(
-            ":icons/done_round_edges_w200_g200.svg"))
+            ":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_blue.setIconSize(self._view.color_grid_proteins.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_blue_in_proteins_tab(self):
@@ -3025,7 +3027,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("tv_blue    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_blue"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_tv_blue.setIconSize(
             self._view.color_grid_proteins.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3034,7 +3036,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("lightblue    ")
         self._view.color_grid_proteins.last_clicked_color = "lightblue"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_lightblue.setIconSize(
             self._view.color_grid_proteins.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3043,7 +3045,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("skyblue    ")
         self._view.color_grid_proteins.last_clicked_color = "skyblue"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_skyblue.setIconSize(
             self._view.color_grid_proteins.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3052,7 +3054,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("yellow    ")
         self._view.color_grid_proteins.last_clicked_color = "yellow"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_yellow.setIconSize(
             self._view.color_grid_proteins.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3061,7 +3063,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("tv_yellow    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_yellow"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_tv_yellow.setIconSize(
             self._view.color_grid_proteins.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3070,7 +3072,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("paleyellow    ")
         self._view.color_grid_proteins.last_clicked_color = "paleyellow"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_paleyellow.setIconSize(
             self._view.color_grid_proteins.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3079,7 +3081,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("sand    ")
         self._view.color_grid_proteins.last_clicked_color = "sand"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_sand.setIconSize(
             self._view.color_grid_proteins.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3088,7 +3090,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("magenta    ")
         self._view.color_grid_proteins.last_clicked_color = "magenta"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_magenta.setIconSize(
             self._view.color_grid_proteins.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3097,7 +3099,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("purple    ")
         self._view.color_grid_proteins.last_clicked_color = "purple"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_purple.setIconSize(
             self._view.color_grid_proteins.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3106,7 +3108,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("pink    ")
         self._view.color_grid_proteins.last_clicked_color = "pink"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_pink.setIconSize(
             self._view.color_grid_proteins.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3115,7 +3117,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("hotpink    ")
         self._view.color_grid_proteins.last_clicked_color = "hotpink"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_hotpink.setIconSize(
             self._view.color_grid_proteins.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3124,7 +3126,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("cyan    ")
         self._view.color_grid_proteins.last_clicked_color = "cyan"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_cyan.setIconSize(
             self._view.color_grid_proteins.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3133,7 +3135,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("aquamarine    ")
         self._view.color_grid_proteins.last_clicked_color = "aquamarine"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_aquamarine.setIconSize(
             self._view.color_grid_proteins.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3142,7 +3144,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("palecyan    ")
         self._view.color_grid_proteins.last_clicked_color = "palecyan"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_palecyan.setIconSize(
             self._view.color_grid_proteins.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3151,7 +3153,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("teal    ")
         self._view.color_grid_proteins.last_clicked_color = "teal"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_teal.setIconSize(
             self._view.color_grid_proteins.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3160,7 +3162,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("orange    ")
         self._view.color_grid_proteins.last_clicked_color = "orange"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_orange.setIconSize(
             self._view.color_grid_proteins.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3169,7 +3171,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("tv_orange    ")
         self._view.color_grid_proteins.last_clicked_color = "tv_orange"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_tv_orange.setIconSize(
             self._view.color_grid_proteins.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3178,7 +3180,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("lightorange    ")
         self._view.color_grid_proteins.last_clicked_color = "lightorange"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_lightorange.setIconSize(
             self._view.color_grid_proteins.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3187,7 +3189,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("olive    ")
         self._view.color_grid_proteins.last_clicked_color = "olive"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_olive.setIconSize(
             self._view.color_grid_proteins.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3196,7 +3198,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("white    ")
         self._view.color_grid_proteins.last_clicked_color = "white"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_white.setIconSize(
             self._view.color_grid_proteins.c_white.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3213,7 +3215,7 @@ class MainViewController:
             self.__slot_change_chain_color_proteins_atoms()
         else:
             self._view.color_grid_proteins.last_clicked_color = "grey70"
-        self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_grey_70.setIconSize(
             self._view.color_grid_proteins.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3222,7 +3224,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("grey30    ")
         self._view.color_grid_proteins.last_clicked_color = "grey30"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_grey_30.setIconSize(
             self._view.color_grid_proteins.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -3231,7 +3233,7 @@ class MainViewController:
         self._view.ui.lbl_protein_current_color.setText("black    ")
         self._view.color_grid_proteins.last_clicked_color = "black"
         self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_proteins.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_proteins.c_black.setIconSize(
             self._view.color_grid_proteins.c_black.icon().actualSize(QtCore.QSize(14, 14)))
     # </editor-fold>
@@ -3369,6 +3371,11 @@ class MainViewController:
 
     # <editor-fold desc="Representations">
     # hydrogens
+    def __slot_protein_chain_with_hydrogens(self):
+        pass
+
+
+
     def __slot_show_protein_chain_with_hydrogens(self):
         try:
             tmp_protein = self._interface_manager.get_current_active_protein_object()
@@ -3459,7 +3466,6 @@ class MainViewController:
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
@@ -4396,7 +4402,7 @@ class MainViewController:
             )
             self.reset_icon_for_last_color_in_protein_pairs_tab()
             self._view.ui.lbl_protein_pair_current_color.setText("grey70    ")
-            self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+            self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
             self._view.color_grid_protein_pairs.c_grey_70.setIconSize(
                 self._view.color_grid_protein_pairs.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
         except Exception as e:
@@ -4526,7 +4532,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("red    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "red"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_red.setIconSize(self._view.color_grid_protein_pairs.c_red.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_red_in_protein_pairs_tab(self):
@@ -4534,7 +4540,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("tv_red    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_red"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_tv_red.setIconSize(self._view.color_grid_protein_pairs.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_salmon_in_protein_pairs_tab(self):
@@ -4542,7 +4548,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("salmon    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "salmon"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_salomon.setIconSize(self._view.color_grid_protein_pairs.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_raspberry_in_protein_pairs_tab(self):
@@ -4550,7 +4556,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("raspberry    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "raspberry"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_raspberry.setIconSize(self._view.color_grid_protein_pairs.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_green_in_protein_pairs_tab(self):
@@ -4558,7 +4564,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("green    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "green"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_green.setIconSize(
             self._view.color_grid_protein_pairs.c_green.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4567,7 +4573,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("tv_green    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_green"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_tv_green.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4576,7 +4582,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("palegreen    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "palegreen"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_palegreen.setIconSize(
             self._view.color_grid_protein_pairs.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4585,7 +4591,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("forest    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "forest"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_forest.setIconSize(
             self._view.color_grid_protein_pairs.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4595,7 +4601,7 @@ class MainViewController:
         self._view.color_grid_protein_pairs.last_clicked_color = "blue"
         self.__slot_change_chain_color_protein_pairs()
         self._view.color_grid_protein_pairs.c_blue.setIcon(QtGui.QIcon(
-            ":icons/done_round_edges_w200_g200.svg"))
+            ":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_blue.setIconSize(self._view.color_grid_protein_pairs.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_tv_blue_in_protein_pairs_tab(self):
@@ -4603,7 +4609,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("tv_blue    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_blue"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_tv_blue.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4612,7 +4618,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("lightblue    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "lightblue"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_lightblue.setIconSize(
             self._view.color_grid_protein_pairs.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4621,7 +4627,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("skyblue    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "skyblue"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_skyblue.setIconSize(
             self._view.color_grid_protein_pairs.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4630,7 +4636,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("yellow    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "yellow"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_yellow.setIconSize(
             self._view.color_grid_protein_pairs.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4639,7 +4645,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("tv_yellow    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_yellow"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_tv_yellow.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4648,7 +4654,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("paleyellow    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "paleyellow"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_paleyellow.setIconSize(
             self._view.color_grid_protein_pairs.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4657,7 +4663,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("sand    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "sand"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_sand.setIconSize(
             self._view.color_grid_protein_pairs.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4666,7 +4672,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("magenta    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "magenta"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_magenta.setIconSize(
             self._view.color_grid_protein_pairs.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4675,7 +4681,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("purple    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "purple"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_purple.setIconSize(
             self._view.color_grid_protein_pairs.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4684,7 +4690,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("pink    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "pink"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_pink.setIconSize(
             self._view.color_grid_protein_pairs.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4693,7 +4699,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("hotpink    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "hotpink"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_hotpink.setIconSize(
             self._view.color_grid_protein_pairs.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4702,7 +4708,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("cyan    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "cyan"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_cyan.setIconSize(
             self._view.color_grid_protein_pairs.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4711,7 +4717,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("aquamarine    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "aquamarine"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_aquamarine.setIconSize(
             self._view.color_grid_protein_pairs.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4720,7 +4726,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("palecyan    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "palecyan"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_palecyan.setIconSize(
             self._view.color_grid_protein_pairs.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4729,7 +4735,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("teal    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "teal"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_teal.setIconSize(
             self._view.color_grid_protein_pairs.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4738,7 +4744,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("orange    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "orange"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_orange.setIconSize(
             self._view.color_grid_protein_pairs.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4747,7 +4753,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("tv_orange    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "tv_orange"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_tv_orange.setIconSize(
             self._view.color_grid_protein_pairs.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4756,7 +4762,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("lightorange    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "lightorange"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_lightorange.setIconSize(
             self._view.color_grid_protein_pairs.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4765,7 +4771,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("olive    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "olive"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_olive.setIconSize(
             self._view.color_grid_protein_pairs.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4774,7 +4780,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("white    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "white"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_white.setIconSize(
             self._view.color_grid_protein_pairs.c_white.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4791,7 +4797,7 @@ class MainViewController:
             self.__slot_change_chain_color_protein_pairs_atoms()
         else:
             self._view.color_grid_protein_pairs.last_clicked_color = "grey70"
-        self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_grey_70.setIconSize(
             self._view.color_grid_protein_pairs.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4800,7 +4806,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("grey30    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "grey30"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_grey_30.setIconSize(
             self._view.color_grid_protein_pairs.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
 
@@ -4809,7 +4815,7 @@ class MainViewController:
         self._view.ui.lbl_protein_pair_current_color.setText("black    ")
         self._view.color_grid_protein_pairs.last_clicked_color = "black"
         self.__slot_change_chain_color_protein_pairs()
-        self._view.color_grid_protein_pairs.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.svg"))
+        self._view.color_grid_protein_pairs.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
         self._view.color_grid_protein_pairs.c_black.setIconSize(
             self._view.color_grid_protein_pairs.c_black.icon().actualSize(QtCore.QSize(14, 14)))
     # </editor-fold>
@@ -4947,6 +4953,10 @@ class MainViewController:
 
     # <editor-fold desc="Representations">
     # hydrogens
+    def __slot_protein_pair_chain_with_hydrogens(self):
+        pass
+
+
     def __slot_show_protein_pair_chain_with_hydrogens(self):
         try:
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
