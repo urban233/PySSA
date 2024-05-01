@@ -1,0 +1,3 @@
+\.git\
+\testing_area\
+\docs\api-reference\
