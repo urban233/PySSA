@@ -221,8 +221,9 @@ class MainViewController:
         self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
         self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
         # representation
-        self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
-        self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
+        # self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
+        # self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
+        self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_chain_with_hydrogens)
         self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
         self._view.tg_protein_ribbon.toggleChanged.connect(self.__slot_protein_chain_as_ribbon)
@@ -322,8 +323,9 @@ class MainViewController:
         self._view.ui.cb_protein_pair_mesh.stateChanged.connect(self.__slot_protein_pair_chain_as_mesh)
         self._view.ui.cb_protein_pair_surface.stateChanged.connect(self.__slot_protein_pair_chain_as_surface)
         # toggle representation
-        self._view.ui.btn_protein_pair_show_hydrogens.clicked.connect(self.__slot_show_protein_pair_chain_with_hydrogens)
-        self._view.ui.btn_protein_pair_hide_hydrogens.clicked.connect(self.__slot_hide_protein_pair_chain_with_hydrogens)
+        # self._view.ui.btn_protein_pair_show_hydrogens.clicked.connect(self.__slot_show_protein_pair_chain_with_hydrogens)
+        # self._view.ui.btn_protein_pair_hide_hydrogens.clicked.connect(self.__slot_hide_protein_pair_chain_with_hydrogens)
+        self._view.tg_protein_pair_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_pair_chain_with_hydrogens)
         self._view.tg_protein_pair_cartoon.toggleChanged.connect(self.__slot_protein_pair_chain_as_cartoon)
         self._view.tg_protein_pair_sticks.toggleChanged.connect(self.__slot_protein_pair_chain_as_sticks)
         self._view.tg_protein_pair_ribbon.toggleChanged.connect(self.__slot_protein_pair_chain_as_ribbon)
@@ -3369,6 +3371,11 @@ class MainViewController:
 
     # <editor-fold desc="Representations">
     # hydrogens
+    def __slot_protein_chain_with_hydrogens(self):
+        pass
+
+
+
     def __slot_show_protein_chain_with_hydrogens(self):
         try:
             tmp_protein = self._interface_manager.get_current_active_protein_object()
@@ -3459,7 +3466,6 @@ class MainViewController:
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
@@ -4947,6 +4953,10 @@ class MainViewController:
 
     # <editor-fold desc="Representations">
     # hydrogens
+    def __slot_protein_pair_chain_with_hydrogens(self):
+        pass
+
+
     def __slot_show_protein_pair_chain_with_hydrogens(self):
         try:
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()

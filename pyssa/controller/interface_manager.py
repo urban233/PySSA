@@ -173,7 +173,8 @@ class InterfaceManager:
         self._build_workspace_model()
 
     def start_pymol(self):
-        process = subprocess.Popen([r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pymol.bat"],
+        # TODO: Fix filepath!!!
+        process = subprocess.Popen([r"C:\Users\hannah\github_repos\PySSA\scripts\batch\start_pymol.bat"],
                                    creationflags=subprocess.CREATE_NO_WINDOW)
         if process.poll() is None:
             print("PyMOL started correctly.")
