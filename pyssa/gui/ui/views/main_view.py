@@ -590,7 +590,8 @@ class MainView(QtWidgets.QMainWindow):
 
         # delete scene
         delete_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.png"))
-        delete_protein_pair_session_icon.addPixmap(QtGui.QPixmap(":icons/cancel_disabled_w200.png"),
+        delete_protein_pair_session_icon.addPixmap(QtGui.QPixmap(":icons/cancel_disabled_w200.png"
+                                                                 ""),
                                       mode=QtGui.QIcon.Mode.Disabled)
         self.ui.btn_delete_protein_pair_scene.setIcon(delete_protein_pair_session_icon)
         self.ui.btn_delete_protein_pair_scene.setText("")
