@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import pygetwindow
 import requests
-import pymol
 from io import BytesIO
 from Bio import SeqRecord
 from Bio.Seq import Seq
@@ -15,7 +14,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
-
+from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
     sequence_list_context_menu
 from pyssa.gui.ui.custom_dialogs import custom_message_box
@@ -415,6 +414,7 @@ class MainViewController:
         if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) == 1:
             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
         self._interface_manager.job_manager.stop_auxiliary_pymol()
+        self._interface_manager.app_process_manager.close_manager()
         tmp_event.accept()
 
     def __slot_close_all(self):

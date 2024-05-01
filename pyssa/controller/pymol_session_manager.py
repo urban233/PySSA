@@ -23,6 +23,7 @@
 import os.path
 import pathlib
 
+from application_process import application_process_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.io_pyssa import binary_data, path_util
@@ -38,13 +39,14 @@ class PymolSessionManager:
     current_scene_name: str
     all_scenes: list[str]
 
-    def __init__(self) -> None:
+    def __init__(self, the_app_process_manager: "application_process_manager.ApplicationProcessManager") -> None:
         self.pymol_interface: "pymol_interface.PyMOLInterface" = pymol_interface.PyMOLInterface()
         self.session_name = ""
         self.session_object_type = ""
         self.session_objects = []
         self.current_scene_name: str = ""
         self.all_scenes: list[str] = []
+        self._app_process_manager = the_app_process_manager
 
     # <editor-fold desc="Private methods">
     def _check_session_integrity(self, a_protein_name) -> bool:
@@ -70,13 +72,15 @@ class PymolSessionManager:
                 f"{constants.CACHE_PYMOL_SESSION_DIR}/temp_session_file.pse",
             )
         binary_data.write_binary_file_from_base64_string(tmp_session_path, a_pymol_session)
-
-        tmp_result = self.pymol_interface.load_pymol_session(tmp_session_path)
-        if tmp_result["success"]:
-            print("Session loaded.")
+        if self._app_process_manager.pymol_crashed() is True:
+            pass
         else:
-            print(tmp_result["message"])
-            print("Session loaded failed!")
+            tmp_result = self.pymol_interface.load_pymol_session(tmp_session_path)
+            if tmp_result["success"]:
+                print("Session loaded.")
+            else:
+                print(tmp_result["message"])
+                print("Session loaded failed!")
 
     def _convert_pymol_session_to_base64_string(self, pymol_molecule_object: str) -> str:
         """This function converts a pymol session file into a base64 string.

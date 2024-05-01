@@ -27,7 +27,6 @@ from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
-from pyqtspinner import spinner
 from pyssa.gui.ui.custom_widgets import custom_line_edit, toggle_button, color_grid, custom_label
 from pyssa.gui.ui.forms.auto_generated import auto_main_view
 from pyssa.gui.ui.styles import styles
@@ -41,7 +40,7 @@ class MainView(QtWidgets.QMainWindow):
     """
     The spinner that shows up if something runs as Task
     """
-    wait_spinner: spinner.WaitingSpinner
+    # wait_spinner: spinner.WaitingSpinner
 
     def __init__(self) -> None:
         """Constructor."""
@@ -53,20 +52,20 @@ class MainView(QtWidgets.QMainWindow):
         self.progress_bar = QtWidgets.QProgressBar()
         self.status_bar.addWidget(self.progress_bar)
         self.progress_bar.hide()
-        self.wait_spinner = spinner.WaitingSpinner(
-            parent=self,
-            center_on_parent=True,
-            disable_parent_when_spinning=True,
-            modality=Qt.ApplicationModal,
-            roundness=100.0,
-            fade=45.0,
-            radius=14,
-            lines=8,
-            line_length=17,
-            line_width=10,
-            speed=1.25,
-            color=QtGui.QColor(75, 145, 247),
-        )
+        # self.wait_spinner = spinner.WaitingSpinner(
+        #     parent=self,
+        #     center_on_parent=True,
+        #     disable_parent_when_spinning=True,
+        #     modality=Qt.ApplicationModal,
+        #     roundness=100.0,
+        #     fade=45.0,
+        #     radius=14,
+        #     lines=8,
+        #     line_length=17,
+        #     line_width=10,
+        #     speed=1.25,
+        #     color=QtGui.QColor(75, 145, 247),
+        # )
         self.add_custom_widgets()
         self.initialize_ui()
         self.add_custom_job_panels()
@@ -85,8 +84,10 @@ class MainView(QtWidgets.QMainWindow):
         self.lbl_job_notification = QtWidgets.QLabel("No new notifications.")
         self.icon_jobs = QtGui.QIcon(QtGui.QPixmap(":icons/play_circle_w200.svg"))
         self.icon_jobs_running = QtGui.QIcon(QtGui.QPixmap(":icons/play_circle_run_w200_blue.svg"))
-        self.icon_notify = QtGui.QIcon(QtGui.QPixmap(":icons/notifications_w200.svg"))
-        self.icon_notify_unread = QtGui.QIcon(QtGui.QPixmap(":icons/notifications_unread_w200.svg"))
+        #self.icon_notify = QtGui.QIcon(QtGui.QPixmap(":icons/notifications_w200.svg"))
+        self.icon_notify = QtGui.QIcon(QtGui.QPixmap(r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\icons\notifications_w200.png"))
+        #self.icon_notify_unread = QtGui.QIcon(QtGui.QPixmap(":icons/notifications_unread_w200.svg"))
+        self.icon_notify_unread = QtGui.QIcon(QtGui.QPixmap(f"{constants.PLUGIN_PATH}\\assets\\icons\\notifications_unread_w200.svg"))
         self.btn_open_job_overview.setIcon(self.icon_jobs)
         self.btn_open_job_overview.setText("")
         self.btn_open_job_overview.setIconSize(self.icon_jobs.actualSize(QtCore.QSize(30, 30)))
@@ -112,7 +113,7 @@ class MainView(QtWidgets.QMainWindow):
         self.lbl_job_overview.setStyleSheet("""padding-top: 30px;""")
         self.btn_open_job_notification.setIcon(self.icon_notify)
         self.btn_open_job_notification.setText("")
-        self.btn_open_job_notification.setIconSize(self.icon_notify.actualSize(QtCore.QSize(30, 30)))
+        self.btn_open_job_notification.setIconSize(self.icon_notify.actualSize(QtCore.QSize(24, 24)))
         self.btn_open_job_notification.setStyleSheet("""
             QPushButton {
                 background-color: rgba(220, 219, 227, 0.01);

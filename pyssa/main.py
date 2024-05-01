@@ -20,8 +20,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module that is only used in PyCharm for development purposes."""
+import subprocess
 import sys
 from PyQt5 import QtWidgets
+
+sys.path.append("C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA")
+sys.path.append("C:\\ProgramData\\pyssa\\mambaforge_pyssa\\pyssa-mamba-env\\Lib\\site-packages\\pymol\\pymol_path\\data\\startup\\PySSA\\pyssa")
+
 from pyssa.gui.ui.styles import styles
 from pyssa.controller import main_view_controller
 from pyssa.controller import interface_manager

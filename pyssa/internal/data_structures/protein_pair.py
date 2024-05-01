@@ -24,7 +24,6 @@ import copy
 import os
 import pathlib
 import logging
-import pymol
 from PyQt5 import QtCore
 from xml.etree import ElementTree
 from typing import TYPE_CHECKING, Union

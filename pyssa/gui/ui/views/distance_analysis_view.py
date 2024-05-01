@@ -28,7 +28,6 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
-from pyqtspinner import spinner
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.forms.auto_generated import auto_distance_analysis_view
 from pyssa.gui.ui.styles import styles

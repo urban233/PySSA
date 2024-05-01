@@ -9,6 +9,8 @@ from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
+from application_process import application_process_manager
+from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.controller import pymol_session_manager, settings_manager, main_tasks_manager, \
     status_bar_manager, job_manager, watcher
 from pyssa.controller.database_manager import logger
@@ -23,6 +25,7 @@ from pyssa.gui.ui.views import hotspots_protein_regions_view
 from pyssa.gui.ui.styles import styles
 from pyssa.internal.data_structures import project, settings, chain, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import current_session
+from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import locks, custom_signals
 from pyssa.io_pyssa import filesystem_io
 from pyssa.model import proteins_model, protein_pairs_model
@@ -94,11 +97,13 @@ class InterfaceManager:
         self._advanced_prediction_configurations = advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
-        self.pymol_session_manager = pymol_session_manager.PymolSessionManager()
+        self.app_process_manager = application_process_manager.ApplicationProcessManager()
+        self.pymol_session_manager = pymol_session_manager.PymolSessionManager(self.app_process_manager)
         self.job_manager = job_manager.JobManager()
         self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
                                                                       self.main_tasks_manager)
         self._settings_manager = settings_manager.SettingsManager()
+
         self.watcher = watcher.Watcher()
 
         self.documentation_window = None
@@ -163,7 +168,8 @@ class InterfaceManager:
         self.pymol_lock: "locks.PyMOL_LOCK" = locks.PyMOL_LOCK()
 
         self.job_manager.start_auxiliary_pymol()
-        self.start_pymol()
+        self.start_app_process_manager()
+        #self.start_pymol()
 
         # Model definitions
         self._workspace_model = QtGui.QStandardItemModel()
@@ -172,11 +178,22 @@ class InterfaceManager:
         self._protein_pair_model: "protein_pairs_model.ProteinPairsModel" = protein_pairs_model.ProteinPairsModel()
         self._build_workspace_model()
 
+    def start_app_process_manager(self):
+        self._app_process_manager_thread = tasks.Task(
+            target=self.app_process_manager.check_process,
+            args=(0, 0),
+            post_func=self._closed_app_process_manager
+        )
+        self._app_process_manager_thread.start()
+
+    def _closed_app_process_manager(self):
+        logger.info("Application process manager closed.")
+
     def start_pymol(self):
-        process = subprocess.Popen([r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pymol.bat"],
+        process = subprocess.Popen([f"{constants.PLUGIN_PATH}\\scripts\\batch\\start_pymol.bat"],  # r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pymol.bat"
                                    creationflags=subprocess.CREATE_NO_WINDOW)
         if process.poll() is None:
-            print("PyMOL started correctly.")
+            print("PyMOL from interface manager started correctly.")
         else:
             print("PyMOL failed to start.")
 

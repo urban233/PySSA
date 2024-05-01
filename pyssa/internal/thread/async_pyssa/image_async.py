@@ -22,8 +22,6 @@
 """Module for all asynchronous functions that are related to the image creation and preview for PyMOL."""
 import logging
 
-from pymol import cmd
-
 from pyssa.controller import pymol_session_manager
 from pyssa.logging_pyssa import log_handlers
 
