@@ -243,7 +243,7 @@ PYMOL_COLORS = [
     "magenta", "purple", "pink", "hotpink",
     "cyan", "aquamarine", "palecyan", "teal",
     "orange", "tv_orange", "lightorange", "olive",
-    "white", "grey70", "grey30", "black", "By RMSD"
+    "white", "grey70", "grey30", "black", "By RMSD", "atomic"
 ]
 
 PYMOL_COLORS_WITH_INDICES = {
