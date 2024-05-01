@@ -440,6 +440,9 @@ class MainViewController:
             elif tmp_number_of_help_windows > 1:
                 for tmp_window_index in range(tmp_number_of_help_windows):
                     pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[tmp_window_index].close()
+
+            self._interface_manager.app_process_manager.close_manager()
+
             # PyMOL windows
             if tmp_number_of_pymol_windows == 1:
                 logger.info("PyMOL will be closed now.")
@@ -453,6 +456,22 @@ class MainViewController:
                 if tmp_dialog.response:
                     for tmp_window_index in range(tmp_number_of_help_windows + 1):
                         pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[tmp_window_index].close()
+
+            # PySSA windows
+            if tmp_number_of_pymol_windows == 1:
+                logger.info("PySSA will be closed now.")
+                pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[0].close()
+            elif tmp_number_of_pymol_windows > 1:
+                tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                    "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
+                    "Close PySSA",
+                    custom_message_box.CustomMessageBoxIcons.WARNING.value
+                )
+                tmp_dialog.exec_()
+                if tmp_dialog.response:
+                    for tmp_window_index in range(tmp_number_of_help_windows + 1):
+                        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+                            tmp_window_index].close()
 
     def _abort_task(self, return_value):
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
