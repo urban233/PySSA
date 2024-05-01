@@ -52,3 +52,11 @@ class IllegalReturnValueError(Exception):
     def __init__(self) -> None:
         """Constructor."""
         super().__init__("A return value is illegal!")
+
+
+class PyMOLNotRespondingError(Exception):
+    """Class for an illegal return value exception type."""
+
+    def __init__(self) -> None:
+        """Constructor."""
+        super().__init__("The PyMOL application is not responding to the send message!")
