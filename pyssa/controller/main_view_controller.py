@@ -2017,56 +2017,65 @@ class MainViewController:
 
     # <editor-fold desc="Hotspots">
     def __slot_hotspots_protein_regions(self) -> None:
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
-        if (self._interface_manager.current_tab_index == 1 and self._interface_manager.pymol_session_manager.session_object_type == "protein" and
-                self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object())):
-            # Proteins tab
-            if self._view.ui.lbl_protein_protein_regions.isVisible():
-                self._view.ui.lbl_protein_protein_regions.hide()
-                self._view.ui.frame_protein_protein_regions.hide()
-                self._interface_manager.pymol_session_manager.hide_sequence_view()
-            else:
-                self._view.ui.lbl_protein_protein_regions.show()
-                self._view.ui.frame_protein_protein_regions.show()
-                self._interface_manager.pymol_session_manager.show_sequence_view()
-        elif (self._interface_manager.current_tab_index == 2 and self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and
-              self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name)):
-            if self._view.ui.lbl_protein_pair_protein_regions.isVisible():
-                # Protein Pairs tab
-                self._view.ui.lbl_protein_pair_protein_regions.hide()
-                self._view.ui.frame_protein_pair_protein_regions.hide()
-                self._interface_manager.pymol_session_manager.hide_sequence_view()
-            else:
-                self._view.ui.lbl_protein_pair_protein_regions.show()
-                self._view.ui.frame_protein_pair_protein_regions.show()
-                self._interface_manager.pymol_session_manager.show_sequence_view()
-
-
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
+            if (self._interface_manager.current_tab_index == 1 and self._interface_manager.pymol_session_manager.session_object_type == "protein" and
+                    self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object())):
+                # Proteins tab
+                if self._view.ui.lbl_protein_protein_regions.isVisible():
+                    self._view.ui.lbl_protein_protein_regions.hide()
+                    self._view.ui.frame_protein_protein_regions.hide()
+                    self._interface_manager.pymol_session_manager.hide_sequence_view()
+                else:
+                    self._view.ui.lbl_protein_protein_regions.show()
+                    self._view.ui.frame_protein_protein_regions.show()
+                    self._interface_manager.pymol_session_manager.show_sequence_view()
+            elif (self._interface_manager.current_tab_index == 2 and self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and
+                  self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name)):
+                if self._view.ui.lbl_protein_pair_protein_regions.isVisible():
+                    # Protein Pairs tab
+                    self._view.ui.lbl_protein_pair_protein_regions.hide()
+                    self._view.ui.frame_protein_pair_protein_regions.hide()
+                    self._interface_manager.pymol_session_manager.hide_sequence_view()
+                else:
+                    self._view.ui.lbl_protein_pair_protein_regions.show()
+                    self._view.ui.frame_protein_pair_protein_regions.show()
+                    self._interface_manager.pymol_session_manager.show_sequence_view()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def post_hotspots_protein_regions(self) -> None:
-        self._interface_manager.pymol_session_manager.hide_sequence_view()
-        self._interface_manager.pymol_session_manager.pymol_interface.select(
-            "", "none"
-        )
+        try:
+            self._interface_manager.pymol_session_manager.hide_sequence_view()
+            self._interface_manager.pymol_session_manager.pymol_interface.select(
+                "", "none"
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_show_protein_regions_resi_sticks(self) -> None:
         """Shows the pymol selection as sticks."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
-        if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
-            return
-        self._interface_manager.pymol_session_manager.hide_specific_representation(
-            "sticks", "sele and not hydrogens"
-        )
-        self._interface_manager.pymol_session_manager.pymol_interface.select(
-            "sele", "sele and not hydrogens"
-        )
-        self._interface_manager.pymol_session_manager.color_protein(
-            "atomic", "disulfides and not elem C"
-        )
-        self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
-            "valence", 0
-        )
-
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
+            if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
+                return
+            self._interface_manager.pymol_session_manager.hide_specific_representation(
+                "sticks", "sele and not hydrogens"
+            )
+            self._interface_manager.pymol_session_manager.pymol_interface.select(
+                "sele", "sele and not hydrogens"
+            )
+            self._interface_manager.pymol_session_manager.color_protein(
+                "atomic", "disulfides and not elem C"
+            )
+            self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
+                "valence", 0
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_hide_protein_regions_resi_sticks(self) -> None:
         """Hides the balls and sticks representation of the pymol selection."""
@@ -2094,9 +2103,9 @@ class MainViewController:
                     self._interface_manager.pymol_session_manager.pymol_interface.select(
                         "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
                     )
-                    self._interface_manager.pymol_session_manager.color_protein(
-                        "atomic", "disulfides and not elem C"
-                    )
+                    # self._interface_manager.pymol_session_manager.color_protein(
+                    #     "atomic", "disulfides and not elem C"
+                    # )
                     self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
                         "valence", 0
                     )
