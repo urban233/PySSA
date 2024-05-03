@@ -2103,9 +2103,11 @@ class MainViewController:
                     self._interface_manager.pymol_session_manager.pymol_interface.select(
                         "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
                     )
-                    # self._interface_manager.pymol_session_manager.color_protein(
-                    #     "atomic", "disulfides and not elem C"
-                    # )
+                    if self._interface_manager.pymol_session_manager.check_if_specific_selection_is_empty("disulfides"):
+                        raise RuntimeError("'disulfides' selection could not be found!")
+                    self._interface_manager.pymol_session_manager.color_protein(
+                        "atomic", "disulfides and not elem C"
+                    )
                     self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
                         "valence", 0
                     )

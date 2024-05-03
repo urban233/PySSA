@@ -452,4 +452,19 @@ class PymolSessionManager:
             tmp_dialog.exec_()
             return True
         return False
+
+    def check_if_specific_selection_is_empty(self, a_selection_string: str) -> bool:
+        """Checks if a selection is empty."""
+        tmp_result = self.pymol_interface.get_model(a_selection_string)
+        if tmp_result["success"]:
+            tmp_selection = tmp_result["data"]
+        else:
+            # gets thrown if no sele object exists in pymol
+            return True
+        try:
+            tmp_selection.atom[0].resi
+        except IndexError:
+            # gets thrown if sele object is empty
+            return True
+        return False
     # </editor-fold>
