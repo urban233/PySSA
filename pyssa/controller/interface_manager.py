@@ -866,9 +866,9 @@ class InterfaceManager:
         self._main_view.ui.frame_protein_pair_protein_regions.hide()
 
         self._main_view.ui.menuProject.setEnabled(True)
+        # A project is open
         if self._current_project.get_project_name() != "":
             styles.set_stylesheet(self._main_view)
-            # A project is open
             self._main_view.ui.lbl_project_name.show()
             self._main_view.ui.lbl_project_name.setText(f"Project Name: {self._current_project.get_project_name()}")
             self._main_view.ui.lbl_session_name.show()
@@ -951,10 +951,23 @@ class InterfaceManager:
                     self._main_view.ui.menuResults.setEnabled(True)
                 else:
                     # A project has no protein pair(s)
+                    # Protein Pairs tab
+                    self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
+                    self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
+                    self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
+                    self._main_view.ui.btn_update_protein_pair_scene.setEnabled(False)
+                    self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
                     # It isn't possible to view results
                     self._main_view.ui.menuResults.setEnabled(False)
             else:
                 # A project has no protein(s)
+                # Proteins tab
+                self._main_view.ui.btn_delete_protein.setEnabled(False)
+                self._main_view.ui.btn_save_protein.setEnabled(False)
+                self._main_view.ui.btn_open_protein_session.setEnabled(False)
+                self._main_view.ui.btn_create_protein_scene.setEnabled(False)
+                self._main_view.ui.btn_update_protein_scene.setEnabled(False)
+                self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
                 # It isn't possible to do an analysis, image and hotspots
                 # Analysis
                 self._main_view.ui.menuAnalysis.setEnabled(False)
