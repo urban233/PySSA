@@ -2079,12 +2079,16 @@ class MainViewController:
 
     def __slot_hide_protein_regions_resi_sticks(self) -> None:
         """Hides the balls and sticks representation of the pymol selection."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
-        if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
-            return
-        self._interface_manager.pymol_session_manager.hide_specific_representation(
-            "sticks", "sele"
-        )
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
+            if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
+                return
+            self._interface_manager.pymol_session_manager.hide_specific_representation(
+                "sticks", "sele"
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_show_protein_regions_disulfide_bonds(self) -> None:
         """Shows all disulfid bonds within the pymol session."""
@@ -2123,29 +2127,37 @@ class MainViewController:
 
     def __slot_hide_protein_regions_disulfide_bonds(self) -> None:
         """Hides all disulfid bonds within the pymol session."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
 
-        if self._interface_manager.current_tab_index == 1:
-            tmp_protein_names: tuple = self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
-        elif self._interface_manager.current_tab_index == 2:
-            tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
-            tmp_protein_names = (tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object())
-        else:
-            return
-        tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
-        for tmp_protein_name in tmp_protein_names:
-            if tmp_protein_name != 0:
-                self._interface_manager.pymol_session_manager.pymol_interface.select(
-                    "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
-                )
-                self._interface_manager.pymol_session_manager.hide_specific_representation("sticks", "disulfides")
+            if self._interface_manager.current_tab_index == 1:
+                tmp_protein_names: tuple = self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
+            elif self._interface_manager.current_tab_index == 2:
+                tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
+                tmp_protein_names = (tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object())
+            else:
+                return
+            tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+            for tmp_protein_name in tmp_protein_names:
+                if tmp_protein_name != 0:
+                    self._interface_manager.pymol_session_manager.pymol_interface.select(
+                        "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
+                    )
+                    self._interface_manager.pymol_session_manager.hide_specific_representation("sticks", "disulfides")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_zoom_protein_regions_resi_position(self) -> None:
         """Zooms to the pymol selection."""
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
-        if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
-            return
-        self._interface_manager.pymol_session_manager.zoom_to_residue_in_protein_position("sele")
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
+            if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
+                return
+            self._interface_manager.pymol_session_manager.zoom_to_residue_in_protein_position("sele")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     # </editor-fold>
 
