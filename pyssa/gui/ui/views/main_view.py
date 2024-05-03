@@ -349,7 +349,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.cb_protein_pair_mesh.hide()
         self.ui.cb_protein_pair_surface.hide()
         # toggle buttons
-        self.tg_protein_pair_color_atoms.hide()
+        #self.tg_protein_pair_color_atoms.hide()
         self.tg_protein_pair_cartoon.hide()
         self.tg_protein_pair_sticks.hide()
         self.tg_protein_pair_ribbon.hide()

@@ -222,6 +222,7 @@ class MainViewController:
         # representation
         # self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
         # self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
+        self._view.tg_protein_color_atoms.toggleChanged.connect(self.__slot_color_protein_atoms_by_element)
         self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_chain_with_hydrogens)
         self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
@@ -306,6 +307,7 @@ class MainViewController:
         self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self.__slot_change_chain_color_protein_pairs)
         self._view.ui.btn_protein_pair_color_atoms.clicked.connect(self.__slot_change_chain_color_protein_pairs_atoms)
         self._view.ui.btn_protein_pair_reset_atoms.clicked.connect(self.__slot_change_chain_reset_protein_pairs_atoms)
+        self._view.tg_protein_pair_color_atoms.toggleChanged.connect(self.__slot_color_protein_pair_atoms_by_element)
         self._view.tg_protein_pair_white_bg.toggleChanged.connect(self.__slot_protein_pair_change_background_color)
         # self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
         # self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
@@ -2192,7 +2194,7 @@ class MainViewController:
         #     self._view.ui.cb_protein_atoms.setChecked(False)
 
         if tmp_type == "chain":
-            self._interface_manager.set_index_of_protein_color_combo_box(self._interface_manager.pymol_session_manager)
+            self._interface_manager.set_current_chain_color_for_ui_for_proteins(self._interface_manager.pymol_session_manager)
             self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._interface_manager.pymol_session_manager)
             self._interface_manager.show_protein_pymol_scene_configuration()
 
@@ -2817,9 +2819,16 @@ class MainViewController:
                     f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
                 )
                 if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
-                    self.set_icon_for_current_color_in_proteins_tab()
-                    self._interface_manager.set_index_of_protein_color_combo_box(self._interface_manager.pymol_session_manager)
-                    self._interface_manager.set_repr_state_in_ui_for_protein_chain(self._interface_manager.pymol_session_manager)
+                    if self._view.ui.lbl_protein_current_color.text() != "By Element    ":
+                        self.reset_icon_for_last_color_in_proteins_tab()
+                    self._interface_manager.set_current_chain_color_for_ui_for_proteins(
+                        self._interface_manager.pymol_session_manager
+                    )
+                    if self._view.ui.lbl_protein_current_color.text() != "By Element    ":
+                        self.set_icon_for_current_color_in_proteins_tab()
+                    self._interface_manager.set_repr_state_in_ui_for_protein_chain(
+                        self._interface_manager.pymol_session_manager
+                    )
                     self._main_view_state.selected_chain_proteins = self._interface_manager.get_current_protein_tree_index()
 
             elif tmp_type == "header":
@@ -2867,10 +2876,12 @@ class MainViewController:
                 db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
             self._update_scene()
             self._save_protein_pymol_session()
+            self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
         else:
             logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
 
     def __slot_change_chain_color_proteins_atoms(self):
+        return
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Color atoms by element' button on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
         tmp_selection.set_selection_for_a_single_chain(
@@ -2888,6 +2899,7 @@ class MainViewController:
             self._view.color_grid_proteins.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
 
     def __slot_change_chain_reset_proteins_atoms(self):
+        return
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                    "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
@@ -2897,6 +2909,30 @@ class MainViewController:
             self._view.color_grid_proteins.last_clicked_color, f"{tmp_selection.selection_string}"
         )
         self.set_icon_for_current_color_in_proteins_tab()
+
+    def __slot_color_protein_atoms_by_element(self):
+        if self._view.tg_protein_color_atoms.toggle_button.isChecked():
+            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+            tmp_selection.set_selection_for_a_single_chain(
+                self._interface_manager.get_current_active_chain_object().chain_letter)
+            self._interface_manager.pymol_session_manager.color_protein(
+                "atomic", f"{tmp_selection.selection_string} and not elem C"
+            )
+            self._interface_manager.pymol_session_manager.color_protein(
+                "grey70", f"{tmp_selection.selection_string} and elem C"
+            )
+            self.reset_icon_for_last_color_in_proteins_tab()
+            self._view.ui.lbl_protein_current_color.setText("By Element    ")
+        else:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                       "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
+            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+            tmp_selection.set_selection_for_a_single_chain(
+                self._interface_manager.get_current_active_chain_object().chain_letter)
+            self._interface_manager.pymol_session_manager.color_protein(
+                self._view.color_grid_proteins.last_clicked_color, f"{tmp_selection.selection_string}"
+            )
+            self.set_icon_for_current_color_in_proteins_tab()
 
     def __slot_protein_change_background_color(self):
         try:
@@ -2955,6 +2991,8 @@ class MainViewController:
     def reset_icon_for_last_color_in_proteins_tab(self):
         tmp_color_name = self._view.ui.lbl_protein_current_color.text()
         if tmp_color_name == "":
+            return
+        elif tmp_color_name.strip() == "By Element":
             return
         color_index_functions = {
             "red": self.reset_icon_for_red_in_proteins_tab,
@@ -3969,7 +4007,6 @@ class MainViewController:
             self._interface_manager.stop_wait_cursor()
             self._interface_manager.refresh_main_view()
 
-
     def __await_clean_protein_update(self, return_value: tuple) -> None:
         try:
             if return_value[1] is None:
@@ -4363,16 +4400,29 @@ class MainViewController:
 
             elif tmp_type == "chain":
                 tmp_chain_letter = self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
-                tmp_protein_name = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
-                tmp_protein_pair_name = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().parent().data(Qt.DisplayRole)
+                tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
+                    enums.ModelEnum.OBJECT_ROLE
+                )
+                tmp_protein_pair = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().parent().data(
+                    enums.ModelEnum.OBJECT_ROLE
+                )
+                tmp_protein_pair_name = tmp_protein_pair.name
+                tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein, tmp_protein_pair)
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                     f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
                 )
                 if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
-                    self.set_icon_for_current_color_in_protein_pairs_tab()
-                    self._interface_manager.show_chain_pymol_parameter_for_protein_pairs(self._interface_manager.pymol_session_manager)
-                    self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(self._interface_manager.pymol_session_manager)
+                    if self._view.ui.lbl_protein_pair_current_color.text() != "By Element    ":
+                        self.reset_icon_for_last_color_in_protein_pairs_tab()
+                    self._interface_manager.set_current_chain_color_for_ui_for_protein_pairs(
+                        tmp_protein_name, self._interface_manager.pymol_session_manager
+                    )
+                    if self._view.ui.lbl_protein_pair_current_color.text() != "By Element    ":
+                        self.set_icon_for_current_color_in_protein_pairs_tab()
+                    self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(
+                        tmp_protein_name, self._interface_manager.pymol_session_manager
+                    )
                     self._main_view_state.selected_chain_protein_pairs = self._interface_manager.get_current_protein_pair_tree_index()
 
             elif tmp_type == "header":
@@ -4387,6 +4437,24 @@ class MainViewController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def _get_protein_name_of_a_protein_from_a_protein_pair(self, a_protein, a_protein_pair):
+        """Helper function to get the correct protein name even if the protein pair consists of two identical protein names."""
+        tmp_result = self._interface_manager.pymol_session_manager.pymol_interface.get_all_object_names()
+        tmp_protein_name = a_protein.get_molecule_object()
+        if tmp_result["success"]:
+            tmp_sub_string_prot_1 = tmp_result["data"][0][len(tmp_result["data"][0]) - 2: len(tmp_result["data"][0])]
+            tmp_sub_string_prot_2 = tmp_result["data"][1][len(tmp_result["data"][1]) - 2: len(tmp_result["data"][1])]
+            if tmp_sub_string_prot_1 == "_1" and tmp_sub_string_prot_2 == "_2":
+                if a_protein == a_protein_pair.protein_1:
+                    tmp_protein_name = f"{tmp_protein_name}_1"
+                elif a_protein == a_protein_pair.protein_2:
+                    tmp_protein_name = f"{tmp_protein_name}_2"
+                else:
+                    raise ValueError("Protein object not found in protein pair!")
+        else:
+            raise RuntimeError("PyMOL command failed!")
+        return tmp_protein_name
 
     def __slot_color_protein_pair_by_rmsd(self) -> None:
         """Colors the residues in 5 colors depending on their distance to the reference."""
@@ -4418,17 +4486,17 @@ class MainViewController:
             tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
             tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            if self._interface_manager._settings_manager.settings.protein_pairs_tab_use_combobox_for_colors == 1:
-                tmp_color = self._view.ui.box_protein_pair_color.currentText()
-            else:
-                tmp_color = self._view.ui.lbl_protein_pair_current_color.text().strip()
+            tmp_color = self._view.ui.lbl_protein_pair_current_color.text().strip()
             if self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.pymol_session_manager.session_name == tmp_protein_pair.name:
                 # Update pymol parameter in PyMOL
-                tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+                tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+                                                                                           tmp_protein_pair)
+                tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
                 self._interface_manager.pymol_session_manager.color_protein(tmp_color,
                                                                             tmp_protein.pymol_selection.selection_string)
                 self._update_scene()
                 self._save_protein_pair_pymol_session()
+                self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
             else:
                 logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
         except Exception as e:
@@ -4436,6 +4504,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_change_chain_color_protein_pairs_atoms(self):
+        return
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
@@ -4458,6 +4527,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_change_chain_reset_protein_pairs_atoms(self):
+        return
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Reset color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
@@ -4471,6 +4541,34 @@ class MainViewController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __slot_color_protein_pair_atoms_by_element(self):
+        tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+        if self._view.tg_protein_pair_color_atoms.toggle_button.isChecked():
+            tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+            tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+                                                                                       tmp_protein_pair)
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+            self._interface_manager.pymol_session_manager.color_protein(
+                "atomic", f"{tmp_selection.selection_string} and not elem C"
+            )
+            self._interface_manager.pymol_session_manager.color_protein(
+                "grey70", f"{tmp_selection.selection_string} and elem C"
+            )
+            self.reset_icon_for_last_color_in_protein_pairs_tab()
+            self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
+        else:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                       "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
+            tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+                                                                                       tmp_protein_pair)
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+            self._interface_manager.pymol_session_manager.color_protein(
+                self._view.color_grid_protein_pairs.last_clicked_color, tmp_protein.pymol_selection.selection_string
+            )
+            self.set_icon_for_current_color_in_protein_pairs_tab()
 
     def __slot_protein_pair_change_background_color(self):
         try:
@@ -4521,7 +4619,10 @@ class MainViewController:
             }
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
             tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+            tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+                                                                                       tmp_protein_pair)
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
             color_index_functions[
                 tmp_chain.get_color(tmp_protein.pymol_selection.selection_string,
                                     self._interface_manager.pymol_session_manager)[0]
@@ -5046,13 +5147,20 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     # cartoon
+    def _create_selection_string_for_representations(self):
+        tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+        tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+                                                                                   tmp_protein_pair)
+        return f"/{tmp_protein_name}//{tmp_chain.chain_letter}"
+
     def __slot_protein_pair_chain_as_cartoon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Cartoon' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_cartoon.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(
@@ -5082,8 +5190,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Sticks' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_sticks.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(
@@ -5113,8 +5220,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Ribbon' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_ribbon.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(
@@ -5144,8 +5250,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Lines' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_lines.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(
@@ -5175,8 +5280,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Spheres' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_spheres.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(
@@ -5206,8 +5310,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Dots' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_dots.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(
@@ -5237,8 +5340,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Mesh' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_mesh.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(
@@ -5268,8 +5370,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Surface' toggle on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_surface.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
                 #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
                 self._interface_manager.pymol_session_manager.show_specific_representation(

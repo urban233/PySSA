@@ -54,7 +54,7 @@ def get_model(a_selection_string):
 
 def select(a_name, a_selection_string):
     try:
-        cmd.select(name=a_name, selection=a_selection_string)
+        print(cmd.select(name=a_name, selection=a_selection_string))
     except CmdException as e:
         return False, e
     else:
@@ -126,6 +126,21 @@ def get_chain_color(a_selection_string, chain_letter):
                 tmp_is_colored_by_elements = True
     tmp_chain_color = list(set(tmp_ca_atom_colors))[0]
     return True, "", (tmp_chain_color, tmp_ca_atom_colors, tmp_is_colored_by_elements)
+
+
+def get_residue_color_config(a_selection_string, chain_letter):
+    """Gets the colors of C-, N-, and O-atoms for the first residue of the given selection."""
+    pymol.stored.colors = []
+    cmd.iterate(a_selection_string, "stored.colors.append((chain, resi, name, color, elem))")
+    tmp_residue_element_colors = ["", "", ""]
+    for chain, resi, name, color_index, element in pymol.stored.colors:
+        if chain == chain_letter and element == "C":  # C atom
+            tmp_residue_element_colors[0] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
+        elif chain == chain_letter and element == "N":  # N atom
+            tmp_residue_element_colors[1] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
+        elif chain == chain_letter and element == "O":  # O atom
+            tmp_residue_element_colors[2] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
+    return True, "", tmp_residue_element_colors
 
 
 def get_chain_repr_state(a_selection_string, chain_letter):

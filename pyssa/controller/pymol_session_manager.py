@@ -26,6 +26,7 @@ import pathlib
 from application_process import application_process_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.data_structures import protein, protein_pair
+from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.io_pyssa import binary_data, path_util
 from pyssa.util import constants, exception, protein_pair_util
 from pyssa_pymol import pymol_interface
@@ -236,6 +237,15 @@ class PymolSessionManager:
         if tmp_result["success"]:
             return tmp_result["data"]
         return None
+
+    def get_residue_color_config(self,
+                                 a_selection_string: str,
+                                 chain_letter: str) -> "residue_color_config.ResidueColorConfig":
+        tmp_result = self.pymol_interface.get_residue_color_config(a_selection_string, chain_letter)
+        if tmp_result["success"]:
+            tmp_color_config: list = tmp_result["data"]
+            return residue_color_config.ResidueColorConfig(tmp_color_config[0], tmp_color_config[1], tmp_color_config[2])
+        return residue_color_config.ResidueColorConfig("", "", "")
 
     def get_chain_repr_state(self, a_selection_string: str, chain_letter: str) -> dict:
         tmp_result = self.pymol_interface.get_chain_repr_state(a_selection_string, chain_letter)

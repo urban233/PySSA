@@ -109,6 +109,12 @@ class Interface(QtCore.QObject):
                     main_socket.send_json(
                         {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]}
                     )
+                elif data["command"] == pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG.value:
+                    tmp_selection_string, tmp_chain_letter = data["arguments"]
+                    tmp_result: tuple[bool, str] = commands.get_residue_color_config(tmp_selection_string, tmp_chain_letter)
+                    main_socket.send_json(
+                        {"success": tmp_result[0], "message": str(tmp_result[1]), "data": tmp_result[2]}
+                    )
                 elif data["command"] == pymol_enums.CommandEnum.GET_CHAIN_REPR_STATE.value:
                     tmp_selection_string, tmp_chain_letter = data["arguments"]
                     tmp_result: tuple[bool, str] = commands.get_chain_repr_state(tmp_selection_string, tmp_chain_letter)
@@ -160,7 +166,7 @@ class Interface(QtCore.QObject):
                     )
                 elif data["command"] == pymol_enums.CommandEnum.SELECT.value:
                     a_name, a_selection_string = data["arguments"]
-                    tmp_result: tuple[bool, str] = commands.scene(a_name, a_selection_string)
+                    tmp_result: tuple[bool, str] = commands.select(a_name, a_selection_string)
                     main_socket.send_json(
                         {"success": tmp_result[0], "message": str(tmp_result[1])}
                     )

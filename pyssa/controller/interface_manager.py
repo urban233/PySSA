@@ -606,7 +606,7 @@ class InterfaceManager:
         self._current_pymol_session.object_type = an_object_name
 
     # <editor-fold desc="Protein">
-    def set_index_of_protein_color_combo_box(
+    def set_current_chain_color_for_ui_for_proteins(
             self,
             the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
     ) -> None:
@@ -619,13 +619,14 @@ class InterfaceManager:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA"
             else:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
-        if self.get_protein_repr_toggle_flag() == 1:
-            self._main_view.ui.lbl_protein_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
-        else:
-            self._main_view.ui.box_protein_color.setCurrentIndex(
-                self._main_view.ui.box_protein_color.findText(tmp_chain.pymol_parameters["chain_color"])
-            )
+            if self.pymol_session_manager.get_residue_color_config(f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter}",
+                                                                   tmp_chain.chain_letter).atoms_are_colored_by_elements():
+                self._main_view.ui.lbl_protein_current_color.setText("By Element    ")
+                self._main_view.tg_protein_color_atoms.toggle_button.setChecked(True)
+            else:
+                rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
+                self._main_view.ui.lbl_protein_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
+                self._main_view.tg_protein_color_atoms.toggle_button.setChecked(False)
 
     def set_repr_state_in_ui_for_protein_chain(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
         tmp_protein = self.get_current_active_protein_object()
@@ -638,7 +639,6 @@ class InterfaceManager:
                 self._main_view.ui.frame_protein_repr.setEnabled(True)
                 tmp_repr_state = self.pymol_session_manager.get_chain_repr_state(tmp_protein.pymol_selection.selection_string,
                                                                                  tmp_chain.chain_letter)
-                #tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
                 if self._settings_manager.settings.proteins_tab_use_toggle == 1:
                     self.manage_toggle_state_of_protein_repr(tmp_repr_state)
                 else:
@@ -655,17 +655,18 @@ class InterfaceManager:
                 self._main_view.tg_protein_surface.toggle_button.setChecked(False)
     # </editor-fold>
 
-    def set_repr_state_in_ui_for_protein_pair_chain(self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
+    def set_repr_state_in_ui_for_protein_pair_chain(self,
+                                                    a_protein_name: str,
+                                                    the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"):
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
         if the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name):
             # fixme: This can easily be bypassed by a power user if the first residue color is changed
-            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
+            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {a_protein_name}"
             if tmp_chain.chain_type == "protein_chain":
                 self._main_view.ui.frame_protein_pair_repr.setEnabled(True)
                 tmp_repr_state = self.pymol_session_manager.get_chain_repr_state(tmp_protein.pymol_selection.selection_string,
                                                                                  tmp_chain.chain_letter)
-                #tmp_repr_state = tmp_chain.get_representation_state(tmp_protein.pymol_selection.selection_string)
                 if self._settings_manager.settings.protein_pairs_tab_use_toggle == 1:
                     self.manage_toggle_state_of_protein_pair_repr(tmp_repr_state)
                 else:
@@ -1404,11 +1405,13 @@ class InterfaceManager:
                     or self._main_view.tg_protein_dots.toggle_button.isChecked()
                     or self._main_view.tg_protein_mesh.toggle_button.isChecked()
                     or self._main_view.tg_protein_surface.toggle_button.isChecked()):
-                self._main_view.ui.btn_protein_color_atoms.setEnabled(True)
-                self._main_view.ui.btn_protein_reset_atoms.setEnabled(True)
+                # self._main_view.ui.btn_protein_color_atoms.setEnabled(True)
+                # self._main_view.ui.btn_protein_reset_atoms.setEnabled(True)
+                self._main_view.tg_protein_color_atoms.setEnabled(True)
             else:
-                self._main_view.ui.btn_protein_color_atoms.setEnabled(False)
-                self._main_view.ui.btn_protein_reset_atoms.setEnabled(False)
+                # self._main_view.ui.btn_protein_color_atoms.setEnabled(False)
+                # self._main_view.ui.btn_protein_reset_atoms.setEnabled(False)
+                self._main_view.tg_protein_color_atoms.setEnabled(False)
         else:
             if (self._main_view.ui.cb_protein_sticks.isChecked()
                     or self._main_view.ui.cb_protein_lines.isChecked()
@@ -1592,8 +1595,6 @@ class InterfaceManager:
         self._main_view.ui.lbl_protein_color.show()
         self._main_view.ui.lbl_protein_all_representations.show()
         self._main_view.ui.btn_protein_hide_all_representations.show()
-        self._main_view.ui.btn_protein_color_atoms.show()
-        self._main_view.ui.btn_protein_reset_atoms.show()
         self._main_view.ui.lbl_info.hide()
         self._main_view.ui.lbl_info_2.hide()
 
@@ -1652,7 +1653,6 @@ class InterfaceManager:
             self._main_view.ui.lbl_protein_dots.hide()
             self._main_view.ui.lbl_protein_mesh.hide()
             self._main_view.ui.lbl_protein_surface.hide()
-            self._main_view.tg_protein_color_atoms.hide()
             self._main_view.tg_protein_cartoon.hide()
             self._main_view.tg_protein_sticks.hide()
             self._main_view.tg_protein_ribbon.hide()
@@ -1811,11 +1811,13 @@ class InterfaceManager:
                     or self._main_view.tg_protein_pair_dots.toggle_button.isChecked()
                     or self._main_view.tg_protein_pair_mesh.toggle_button.isChecked()
                     or self._main_view.tg_protein_pair_surface.toggle_button.isChecked()):
-                self._main_view.ui.btn_protein_pair_color_atoms.setEnabled(True)
-                self._main_view.ui.btn_protein_pair_reset_atoms.setEnabled(True)
+                # self._main_view.ui.btn_protein_pair_color_atoms.setEnabled(True)
+                # self._main_view.ui.btn_protein_pair_reset_atoms.setEnabled(True)
+                self._main_view.tg_protein_pair_color_atoms.setEnabled(True)
             else:
-                self._main_view.ui.btn_protein_pair_color_atoms.setEnabled(False)
-                self._main_view.ui.btn_protein_pair_reset_atoms.setEnabled(False)
+                # self._main_view.ui.btn_protein_pair_color_atoms.setEnabled(False)
+                # self._main_view.ui.btn_protein_pair_reset_atoms.setEnabled(False)
+                self._main_view.tg_protein_pair_color_atoms.setEnabled(False)
         else:
             if (self._main_view.ui.cb_protein_pair_sticks.isChecked()
                     or self._main_view.ui.cb_protein_pair_lines.isChecked()
@@ -1839,22 +1841,36 @@ class InterfaceManager:
             self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(False)
             self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(False)
 
-    def show_chain_pymol_parameter_for_protein_pairs(
-            self, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+    def set_current_chain_color_for_ui_for_protein_pairs(
+            self,
+            a_protein_name: str,
+            the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
     ):
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
         if the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name):
-            # fixme: This can easily be bypassed by a power user if the first residue color is changed
             if tmp_chain.chain_type == "protein_chain":
-                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()} and name CA"
+                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA and {a_protein_name}"
             else:
-                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-            rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
-        self._main_view.ui.box_protein_pair_color.setCurrentIndex(
-            self._main_view.ui.box_protein_pair_color.findText(tmp_chain.pymol_parameters["chain_color"])
-        )
-        self._main_view.ui.lbl_protein_pair_current_color.setText(tmp_chain.pymol_parameters["chain_color"])
+                tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
+            if self.pymol_session_manager.get_residue_color_config(f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter} and {a_protein_name}",
+                                                                   tmp_chain.chain_letter).atoms_are_colored_by_elements():
+                self._main_view.ui.lbl_protein_pair_current_color.setText("By Element    ")
+                self._main_view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
+            else:
+                rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
+                self._main_view.ui.lbl_protein_pair_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
+                self._main_view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+
+
+
+        #     # fixme: This can easily be bypassed by a power user if the first residue color is changed
+        #     if tmp_chain.chain_type == "protein_chain":
+        #         tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {a_protein_name} and name CA"
+        #     else:
+        #         tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {a_protein_name}"
+        #     rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
+        # self._main_view.ui.lbl_protein_pair_current_color.setText(tmp_chain.pymol_parameters["chain_color"])
 
     # <editor-fold desc="Scene">
     def add_scene_to_protein_pairs_model(
@@ -1949,8 +1965,6 @@ class InterfaceManager:
         self._main_view.ui.lbl_protein_pair_color.show()
         self._main_view.ui.lbl_protein_pair_all_representations.show()
         self._main_view.ui.btn_protein_pair_hide_all_representations.show()
-        self._main_view.ui.btn_protein_pair_color_atoms.show()
-        self._main_view.ui.btn_protein_pair_reset_atoms.show()
         self._main_view.ui.lbl_info_3.hide()
         self._main_view.ui.lbl_info_4.hide()
 

@@ -279,25 +279,9 @@ PYMOL_COLORS_WITH_INDICES = {
     124: "grey70",
     84: "grey30",
     1: "black",
-    "By RMSD": "By RMSD"
-}
-
-PYMOL_COLORS_WITH_INDICES_2 = {
-    4: "red",
-    3: "green",
-    15: "limegreen",
-    2: "blue",
-    5277: "skyblue",
-    6: "yellow",
-    5276: "limon",
-    8: "magenta",
-    12: "hotpink",
-    53: "violet",
-    5: "cyan",
-    5275: "greencyan",
-    13: "orange",
-    5264: "lightorange",
-    0: "white",
+    "By RMSD": "By RMSD",
+    27: "N-blue",
+    28: "O-red"
 }
 
 AMINO_ACID_CODE = {

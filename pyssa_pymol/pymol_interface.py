@@ -102,6 +102,13 @@ class PyMOLInterface:
         )
         return send_command_to_pymol(self._main_socket, tmp_pymol_command, self._poller)
 
+    def get_residue_color_config(self, a_selection_string, a_chain_letter):
+        tmp_pymol_command = pymol_command.PyMOLCommand(
+            pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG,
+            (a_selection_string, a_chain_letter)
+        )
+        return send_command_to_pymol(self._main_socket, tmp_pymol_command, self._poller)
+
     def get_chain_repr_state(self, a_selection_string, a_chain_letter):
         tmp_pymol_command = pymol_command.PyMOLCommand(
             pymol_enums.CommandEnum.GET_CHAIN_REPR_STATE,

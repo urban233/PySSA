@@ -24,6 +24,7 @@ class CommandEnum(enum.Enum):
     GET_RESIDUE_COLORS = "get_residue_colors"
     GET_CHAIN_COLOR = "get_chain_color"
     GET_CHAIN_REPR_STATE = "get_chain_repr_state"
+    GET_RESIDUE_COLOR_CONFIG = "get_residue_color_config"
 
     COLOR_SELECTION = "color_selection"
 
