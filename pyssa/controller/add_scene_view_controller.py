@@ -39,7 +39,8 @@ class AddSceneViewController(QtCore.QObject):
         super().__init__()
         self._interface_manager = the_interface_manager
         self._view = the_interface_manager.get_add_scene_view()
-        self._all_current_scenes = self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()  # TODO: this can be optimized for more performance!
+        self._interface_manager.pymol_session_manager.get_all_scenes_in_current_session()
+        self._all_current_scenes = self._interface_manager.pymol_session_manager.all_scenes
         self._view.lbl_status.setStyleSheet("color: #ba1a1a; font-size: 11px;")
         self._connect_all_ui_elements_to_slot_functions()
 

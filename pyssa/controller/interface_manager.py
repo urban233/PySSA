@@ -102,7 +102,6 @@ class InterfaceManager:
         self.job_manager = job_manager.JobManager()
         self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
                                                                       self.main_tasks_manager)
-        self._settings_manager = settings_manager.SettingsManager()
 
         self.watcher = watcher.Watcher()
 
@@ -110,6 +109,8 @@ class InterfaceManager:
         self.job_entry_widgets = []
 
         self.refresh_after_job_finished_signal = custom_signals.RefreshAfterJobFinishedSignal()
+
+        self._settings_manager = settings_manager.SettingsManager()
 
         # <editor-fold desc="Setup App Settings">
         # self._application_settings = settings.Settings(constants.SETTINGS_DIR, constants.SETTINGS_FILENAME)

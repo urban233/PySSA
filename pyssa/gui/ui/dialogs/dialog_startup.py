@@ -28,6 +28,7 @@ import PyQt5.QtWidgets
 from urllib import request
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
+from PyQt5 import QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 from pyssa.util import constants
@@ -71,8 +72,11 @@ class DialogStartup(QtWidgets.QDialog):
         elif sys.platform.startswith("win32"):
             # Windows path
             self.ui.txt_workspace.setText(str(constants.DEFAULT_WORKSPACE_PATH))
+
+        self.ui.lbl_description.setText("PySSA uses the workspace directory to store all projects")
         self.setWindowFlag(QtCore.Qt.WindowCloseButtonHint, True)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("PySSA Launch")
 
     # @SLOT
