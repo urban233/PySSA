@@ -360,8 +360,14 @@ class AuxiliaryPyMOL:
     def consolidate_molecule_object_to_first_state(a_pdb_filepath) -> str:
         print("Consolidate molecule object states ...")
         with pymol2.PyMOL() as auxiliary_pymol:
-            auxiliary_pymol.cmd.load(filename=str(a_pdb_filepath))
-            tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
+            try:
+                auxiliary_pymol.cmd.load(filename=str(a_pdb_filepath))
+                tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
+                tmp_protein_name = tmp_protein_name.replace(" ", "_")
+            except Exception as e:
+                tmp_message = f"Protein states could not be consolidated! Ran into error: {e}"
+                print(tmp_message)
+                return tmp_message
 
             if auxiliary_pymol.cmd.count_states(tmp_protein_name) > 1:
                 try:
@@ -381,8 +387,9 @@ class AuxiliaryPyMOL:
                     )
                     auxiliary_pymol.cmd.save(tmp_pdb_cache_filepath)
                 except Exception as e:
-                    print(f"Protein states could not be consolidated! Ran into error: {e}")
-                    return a_pdb_filepath
+                    tmp_message = f"Protein states could not be consolidated! Ran into error: {e}"
+                    print(tmp_message)
+                    return tmp_message
                 else:
                     return str(tmp_pdb_cache_filepath)
             else:

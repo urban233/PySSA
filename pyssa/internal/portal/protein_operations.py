@@ -49,7 +49,6 @@ def get_protein_chains(a_pdb_filepath, the_main_socket, a_socket) -> list[chain.
     tmp_data: list[tuple] = tmp_reply["data"]
     tmp_chains_of_protein: list[chain.Chain] = []
     for tmp_chain_object_values in tmp_data:
-        print(tmp_chain_object_values)
         tmp_chain_letter, tmp_sequence_object_values, tmp_chain_type = tmp_chain_object_values
         tmp_sequence = sequence.Sequence(tmp_sequence_object_values[0], tmp_sequence_object_values[1])
         tmp_chains_of_protein.append(chain.Chain(tmp_chain_letter, tmp_sequence, tmp_chain_type))

@@ -230,6 +230,9 @@ class Protein:
         tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
             the_main_socket, a_socket, tmp_job_description
         )
+        if tmp_reply["data"] == "":
+            logger.error(f"Could not find pdb file! Ran into error: {tmp_reply}")
+            raise FileNotFoundError()
         self._pdb_data = bio_data.parse_pdb_file(tmp_reply["data"])
         try:
             os.remove(pathlib.Path(f"{constants.CACHE_PROTEIN_DIR}/{self._pymol_molecule_object}.pdb"))
