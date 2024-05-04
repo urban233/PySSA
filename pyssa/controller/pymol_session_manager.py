@@ -439,29 +439,39 @@ class PymolSessionManager:
     def check_if_sele_is_empty(self) -> bool:
         """Checks if a selection is empty."""
         tmp_result = self.pymol_interface.get_model("sele")
-        if tmp_result["success"]:
-            tmp_selection = tmp_result["data"]
+        if tmp_result["success"] and tmp_result["data"] is None:
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "Please select at least one residue from the sequence view.",
+                "PyMOL Selection",
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+            )
+            tmp_dialog.exec_()
+            return True
+        elif tmp_result["success"] and tmp_result["data"] is not None:
+            return False
         else:
-            # gets thrown if no sele object exists in pymol
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Please select at least one residue from the sequence view.",
-                "PyMOL Selection",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            tmp_dialog.exec_()
             return True
-        try:
-            tmp_selection.atom[0].resi
-        except IndexError:
-            # gets thrown if sele object is empty
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "Please select at least one residue from the sequence view.",
-                "PyMOL Selection",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-            )
-            tmp_dialog.exec_()
-            return True
-        return False
+        # else:
+        #     # gets thrown if no sele object exists in pymol
+        #     tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        #         "Please select at least one residue from the sequence view.",
+        #         "PyMOL Selection",
+        #         custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        #     )
+        #     tmp_dialog.exec_()
+        #     return True
+        # try:
+        #     tmp_selection.atom[0].resi
+        # except IndexError:
+        #     # gets thrown if sele object is empty
+        #     tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        #         "Please select at least one residue from the sequence view.",
+        #         "PyMOL Selection",
+        #         custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+        #     )
+        #     tmp_dialog.exec_()
+        #     return True
+        # return False
 
     def check_if_specific_selection_is_empty(self, a_selection_string: str) -> bool:
         """Checks if a selection is empty."""

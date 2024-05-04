@@ -46,10 +46,13 @@ def get_all_object_names():
 def get_model(a_selection_string):
     try:
         tmp_model = cmd.get_model(a_selection_string)
+        tmp_resi = tmp_model.atom[0].resi
     except CmdException as e:
-        return False, e, None
+        return True, e, None
+    except IndexError as e:
+        return True, e, None
     else:
-        return True, "", tmp_model
+        return True, "", 0
 
 
 def select(a_name, a_selection_string):

@@ -2063,14 +2063,21 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
             if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
                 return
-            self._interface_manager.pymol_session_manager.hide_specific_representation(
-                "sticks", "sele and not hydrogens"
-            )
+            if self._interface_manager.current_tab_index == 1 and self._view.tg_protein_sticks.toggle_button.isChecked():
+                self._view.tg_protein_sticks.toggle_button.setChecked(False)
+                self.__slot_protein_chain_as_sticks()
+            elif self._interface_manager.current_tab_index == 2 and self._view.tg_protein_pair_sticks.toggle_button.isChecked():
+                self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
+                self.__slot_protein_pair_chain_as_sticks()
+
             self._interface_manager.pymol_session_manager.pymol_interface.select(
                 "sele", "sele and not hydrogens"
             )
-            self._interface_manager.pymol_session_manager.color_protein(
-                "atomic", "disulfides and not elem C"
+            self._interface_manager.pymol_session_manager.hide_specific_representation(
+                "sticks", "not sele"
+            )
+            self._interface_manager.pymol_session_manager.show_specific_representation(
+                "sticks", "sele and not hydrogens"
             )
             self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
                 "valence", 0
