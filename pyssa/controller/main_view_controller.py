@@ -3464,7 +3464,25 @@ class MainViewController:
     # hydrogens
     def __slot_protein_chain_with_hydrogens(self):
         pass
-
+        if self._view.tg_protein_hydrogen_atoms.toggle_button.isChecked():
+            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+            tmp_selection.set_selection_for_a_single_chain(
+                self._interface_manager.get_current_active_chain_object().chain_letter)
+            self._interface_manager.pymol_session_manager.color_protein(
+                "h.", f"{tmp_selection.selection_string} and not elem C"
+            )
+            self.reset_icon_for_last_color_in_proteins_tab()
+            self._view.ui.lbl_protein_current_color.setText("By Element    ")
+        else:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                       "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
+            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+            tmp_selection.set_selection_for_a_single_chain(
+                self._interface_manager.get_current_active_chain_object().chain_letter)
+            self._interface_manager.pymol_session_manager.color_protein(
+                self._view.color_grid_proteins.last_clicked_color, f"{tmp_selection.selection_string}"
+            )
+            self.set_icon_for_current_color_in_proteins_tab()
 
 
     def __slot_show_protein_chain_with_hydrogens(self):

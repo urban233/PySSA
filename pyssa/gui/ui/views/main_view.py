@@ -274,6 +274,8 @@ class MainView(QtWidgets.QMainWindow):
         # old
         self.ui.btn_protein_color_atoms.hide()
         self.ui.btn_protein_reset_atoms.hide()
+        self.ui.btn_protein_show_hydrogens.hide()
+        self.ui.btn_protein_hide_hydrogens.hide()
         self.ui.btn_protein_show_cartoon.hide()
         self.ui.btn_protein_hide_cartoon.hide()
         self.ui.btn_protein_show_sticks.hide()
@@ -332,6 +334,8 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.box_protein_pair_color.hide()
         self.ui.btn_protein_pair_color_atoms.hide()
         self.ui.btn_protein_pair_reset_atoms.hide()
+        self.ui.btn_protein_pair_show_hydrogens.hide()
+        self.ui.btn_protein_pair_hide_hydrogens.hide()
         self.ui.btn_protein_pair_show_cartoon.hide()
         self.ui.btn_protein_pair_hide_cartoon.hide()
         self.ui.btn_protein_pair_show_sticks.hide()

@@ -1443,11 +1443,13 @@ class InterfaceManager:
         if (self._main_view.tg_protein_sticks.toggle_button.isChecked()
                     or self._main_view.tg_protein_lines.toggle_button.isChecked()
                     or self._main_view.tg_protein_spheres.toggle_button.isChecked()):
-            self._main_view.ui.btn_protein_show_hydrogens.setEnabled(True)
-            self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(True)
+            # self._main_view.ui.btn_protein_show_hydrogens.setEnabled(True)
+            # self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(True)
+            self._main_view.tg_protein_hydrogen_atoms.setEnabled(True)
         else:
-            self._main_view.ui.btn_protein_show_hydrogens.setEnabled(False)
-            self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(False)
+            # self._main_view.ui.btn_protein_show_hydrogens.setEnabled(False)
+            # self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(False)
+            self._main_view.tg_protein_hydrogen_atoms.setEnabled(False)
 
     def manage_toggle_state_of_protein_repr(self, tmp_repr_state):
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
@@ -1849,11 +1851,13 @@ class InterfaceManager:
         if (self._main_view.tg_protein_pair_sticks.toggle_button.isChecked()
                     or self._main_view.tg_protein_pair_lines.toggle_button.isChecked()
                     or self._main_view.tg_protein_pair_spheres.toggle_button.isChecked()):
-            self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(True)
-            self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(True)
+            # self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(True)
+            # self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(True)
+            self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(True)
         else:
-            self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(False)
-            self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(False)
+            # self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(False)
+            # self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(False)
+            self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(False)
 
     def set_current_chain_color_for_ui_for_protein_pairs(
             self,
