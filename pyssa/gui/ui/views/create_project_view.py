@@ -53,7 +53,7 @@ class CreateProjectView(QtWidgets.QDialog):
         self.ui.txt_new_choose_reference.hide()
         self.ui.lbl_new_status_project_name.setText("")
         self.ui.list_create_projects_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         self.ui.btn_new_create_project.setEnabled(False)

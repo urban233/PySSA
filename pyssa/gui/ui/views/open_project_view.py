@@ -52,7 +52,7 @@ class OpenProjectView(QtWidgets.QDialog):
         """Initialize the UI elements."""
         self.ui.lbl_open_status_search.setText("")
         self.ui.projects_list_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         styles.set_stylesheet(self)

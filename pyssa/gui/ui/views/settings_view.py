@@ -47,7 +47,7 @@ class SettingsView(QtWidgets.QDialog):
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         styles.color_bottom_frame_button(self.ui.btn_ok)

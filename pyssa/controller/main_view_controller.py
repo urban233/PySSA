@@ -2309,8 +2309,7 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    @staticmethod
-    def __slot_open_tutorial() -> None:
+    def __slot_open_tutorial(self) -> None:
         """Opens the official tutorial pdf file."""
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Tutorials' clicked.")
@@ -2320,8 +2319,7 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    @staticmethod
-    def open_documentation() -> None:
+    def open_documentation(self) -> None:
         """Opens the official plugin documentation as PDF."""
         try:
             os.startfile(constants.DOCS_PATH)
@@ -2329,8 +2327,7 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    @staticmethod
-    def __slot_open_about() -> None:
+    def __slot_open_about(self) -> None:
         """Opens the About dialog."""
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/About' clicked.")
@@ -2806,15 +2803,18 @@ class MainViewController:
             tmp_protein = self._interface_manager.get_current_active_protein_object()
         except ValueError:
             tmp_is_protein_in_any_pair_flag = True
+            tmp_is_protein_in_session_flag = False
         else:
             tmp_is_protein_in_any_pair_flag = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
                 tmp_protein.get_molecule_object()
             )
+            tmp_is_protein_in_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
+                self._interface_manager.get_current_active_protein_object().get_molecule_object())
         tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
             self._view.ui.proteins_tree_view.selectedIndexes(),
             self._interface_manager.get_current_protein_tree_index_type(),
             tmp_is_protein_in_any_pair_flag,
-            self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object())
+            tmp_is_protein_in_session_flag
         )
         tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
@@ -4397,9 +4397,15 @@ class MainViewController:
 
     # <editor-fold desc="Protein Pairs tab methods">
     def open_context_menu_for_protein_pairs(self, position):
+        try:
+            tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+        except ValueError:
+            tmp_is_protein_pair_in_current_session_flag = False
+        else:
+            tmp_is_protein_pair_in_current_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name)
         tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
             self._view.ui.protein_pairs_tree_view.selectedIndexes(),
-            self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name)
+            tmp_is_protein_pair_in_current_session_flag
         )
         tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
 

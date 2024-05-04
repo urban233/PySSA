@@ -74,7 +74,7 @@ class DialogSettingsGlobal(QtWidgets.QDialog):
         self._interface_manager = the_interface_manager
 
         # <editor-fold desc="Info button changes">
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
 

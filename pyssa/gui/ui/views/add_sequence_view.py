@@ -53,7 +53,7 @@ class AddSequenceView(QtWidgets.QDialog):
 
         self._initalize_ui()
 
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         self.setWindowTitle("Add Protein Sequence")
