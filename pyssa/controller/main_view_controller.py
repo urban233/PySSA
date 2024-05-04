@@ -2093,7 +2093,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_show_protein_regions_disulfide_bonds(self) -> None:
-        """Shows all disulfid bonds within the pymol session."""
+        """Shows all disulfide bonds within the pymol session."""
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' disulfide bonds button was clicked.")
             if self._interface_manager.current_tab_index == 1:
@@ -2109,8 +2109,6 @@ class MainViewController:
                     self._interface_manager.pymol_session_manager.pymol_interface.select(
                         "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
                     )
-                    if self._interface_manager.pymol_session_manager.check_if_specific_selection_is_empty("disulfides"):
-                        raise RuntimeError("'disulfides' selection could not be found!")
                     self._interface_manager.pymol_session_manager.color_protein(
                         "atomic", "disulfides and not elem C"
                     )
@@ -2128,7 +2126,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_hide_protein_regions_disulfide_bonds(self) -> None:
-        """Hides all disulfid bonds within the pymol session."""
+        """Hides all disulfide bonds within the pymol session."""
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
 
