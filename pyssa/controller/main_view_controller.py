@@ -3079,7 +3079,7 @@ class MainViewController:
         }
         tmp_protein = self._interface_manager.get_current_active_protein_object()
         tmp_chain = self._interface_manager.get_current_active_chain_object()
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+        tmp_protein.pymol_selection.set_selection_for_first_ca_atom_in_a_given_chain(tmp_chain.chain_letter)
         color_index_functions[
             tmp_chain.get_color(tmp_protein.pymol_selection.selection_string,
                                 self._interface_manager.pymol_session_manager)[0]

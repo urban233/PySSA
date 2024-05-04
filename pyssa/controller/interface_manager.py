@@ -97,7 +97,7 @@ class InterfaceManager:
         self._advanced_prediction_configurations = advanced_prediction_configurations.AdvancedPredictionConfigurationsView()
 
         self.main_tasks_manager = main_tasks_manager.MainTasksManager()
-        self.app_process_manager = application_process_manager.ApplicationProcessManager()
+        self.app_process_manager = application_process_manager.ApplicationProcessManager(self._reset_pymol_session)
         self.pymol_session_manager = pymol_session_manager.PymolSessionManager(self.app_process_manager)
         self.job_manager = job_manager.JobManager()
         self.status_bar_manager = status_bar_manager.StatusBarManager(self._main_view,
@@ -197,6 +197,20 @@ class InterfaceManager:
             print("PyMOL from interface manager started correctly.")
         else:
             print("PyMOL failed to start.")
+
+    def _reset_pymol_session(self):
+        """Resets the pymol session like it was before the User PyMOL crash.
+
+        Notes:
+            This function gets executed in the check_process() function of the application process manager!
+        """
+        if self.pymol_session_manager.session_object_type == "protein":
+            self.pymol_session_manager.load_protein_session(self.pymol_session_manager.session_objects[0])
+        elif self.pymol_session_manager.session_object_type == "protein_pair":
+            self.pymol_session_manager.load_protein_pair_session(self.pymol_session_manager.session_objects[0])
+        else:
+            return
+        self.pymol_session_manager.load_current_scene()
 
     # <editor-fold desc="Getter Methods">
     # <editor-fold desc="Settings">
