@@ -1060,7 +1060,6 @@ class MainViewController:
         #     constants.PYSSA_LOGGER.info("Create empty project finished.")
 
     def __await_create_project(self, return_value: tuple):
-        # fixme: this function could also be used if the create dialog gets closed, be aware!
         if return_value[0] == "":
             self._interface_manager.status_bar_manager.show_error_message("Creating the project failed!")
             self._interface_manager.refresh_main_view()
