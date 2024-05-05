@@ -108,7 +108,7 @@ def create_use_project(
         the_interface_manager.job_manager.current_prediction_job,
         the_interface_manager.job_manager.current_distance_analysis_job,
     )
-    return "result", tmp_project
+    return "result", tmp_project, the_watcher, the_interface_manager
 
 
 def open_project(

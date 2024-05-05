@@ -192,7 +192,7 @@ class DeleteProjectViewController(QtCore.QObject):
         if response is True:
             for tmp_filepath, tmp_row in tmp_filepaths_with_row_numbers:
                 try:
-                    os.remove(tmp_filepath)  # TODO: throws permission error
+                    os.remove(tmp_filepath)  # TODO: throws permission error, throws FileNotFound if more than one project gets deleted and afterwards selected
                 except PermissionError:
                     tmp_dialog = custom_message_box.CustomMessageBoxOk(
                         "The project cannot be deleted, due to a permission error. Restart the application and try again.",

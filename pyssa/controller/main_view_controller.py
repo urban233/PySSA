@@ -1140,32 +1140,44 @@ class MainViewController:
         self._interface_manager.get_use_project_view().show()
 
     def _post_use_project(self, user_input: tuple) -> None:
-        self._interface_manager.start_wait_cursor()
-        tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
-        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
-            db_manager.build_new_database()
-            db_manager.close_project_database()
+        try:
+            tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
+            with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+                db_manager.build_new_database()
 
-        self._active_task = tasks.Task(
-            target=project_async.create_use_project,
-            args=(
-                user_input[0],
-                self._interface_manager.get_application_settings().get_workspace_path(),
-                user_input[1]
-            ),
-            post_func=self.__await_use_project,
-        )
-        self._active_task.start()
+            self._active_task = tasks.Task(
+                target=project_async.create_use_project,
+                args=(
+                    user_input[0],
+                    self._interface_manager.get_application_settings().get_workspace_path(),
+                    user_input[1],
+                    self._interface_manager.watcher,
+                    self._interface_manager
+                ),
+                post_func=self.__await_use_project,
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __await_use_project(self, return_value: tuple):
-        _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
-        self._interface_manager.set_new_project(tmp_project)
-        self._interface_manager.add_project_to_workspace_model(tmp_project.get_project_name())
-        self._interface_manager.refresh_main_view()
-        self._interface_manager.pymol_session_manager.reinitialize_session()
-        self._connect_sequence_selection_model()
-        self._interface_manager.stop_wait_cursor()
-        self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
+        try:
+            _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
+            self._interface_manager.set_new_project(tmp_project)
+            self._interface_manager.add_project_to_workspace_model(tmp_project.get_project_name())
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._connect_sequence_selection_model()
+            self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
+        finally:
+            self._interface_manager.pymol_session_manager.reinitialize_session()
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
 
     def __slot_delete_project(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Delete' clicked.")
