@@ -19,7 +19,7 @@
   * [Tutorial](#Tutorial)
   * [Images](#Images)
 * [Installation](#Installation)
-    * [Application](#Application)
+    * [Windows](#Windows)
     * [Source code](#Source-code)
 * [Dependencies](#Dependencies)
 * [Citation](#Citation)
