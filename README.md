@@ -9,7 +9,7 @@
 [![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
 
 
-![PySSA_logo](https://github.com/zielesny/PySSA/blob/main/assets/images/graphical_abstract_pyssa.png)
+![PySSA_logo](https://github.com/urban233/PySSA/blob/main/assets/images/graphical_abstract_pyssa.png)
 # Python plugin for protein Sequence to Structure Analysis (PySSA)
 
 ## Contents of this document
@@ -51,7 +51,7 @@ There are five different Python packages that contain functionality for specific
 - _auxiliary_pymol_ 
   - The package contains Python modules for the communication and integration of _Auxiliary PyMOL_.
 - _pyssa_colabfold_
-  - The package contains the [_batch.py_](https://github.com/sokrypton/ColabFold/blob/main/colabfold/batch.py) module of the [ColabFold library](https://github.com/sokrypton/ColabFold). Moreover, the package contains the colabfold_run.py  and the service.py module for managing the ColabFold microservice.
+  - The package contains a modified version of the [_batch.py_](https://github.com/sokrypton/ColabFold/blob/main/colabfold/batch.py) module of the [ColabFold library](https://github.com/sokrypton/ColabFold). Moreover, the package contains the colabfold_run.py  and the service.py module for managing the ColabFold microservice.
 - _pyssa_pymol_
   - The package contains Python modules for the communication and integration of _User PyMOL_.
 
@@ -124,7 +124,7 @@ Pandas, Matplotlib, Biopython and the open-source version of PyMOL.
   * License: [Public Domain](https://www.sqlite.org/copyright.html)
 
 ## Architecture
-TODO: Add architecture figure here.
+![PySSA_logo](https://github.com/urban233/PySSA/blob/main/assets/images/architecture_figure.png)
 
 ## Citation
 TODO: Add citation here.
