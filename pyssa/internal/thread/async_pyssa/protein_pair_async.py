@@ -34,5 +34,9 @@ def color_protein_pair_by_rmsd_value(a_protein_pair: "protein_pair.ProteinPair",
     Returns:
         a tuple with ("result", an_existing_protein_pair_object)
     """
-    the_pymol_session_manager.color_protein_pair_by_rmsd(a_protein_pair)
-    return ("result", a_protein_pair)
+    try:
+        the_pymol_session_manager.color_protein_pair_by_rmsd(a_protein_pair)
+    except Exception:
+        return "", None
+    else:
+        return "result", a_protein_pair

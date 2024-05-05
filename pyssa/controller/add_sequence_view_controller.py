@@ -63,17 +63,28 @@ class AddSequenceViewController(QtCore.QObject):
         Args:
             a_page_name (str): a name of a documentation page to display
         """
-        self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
-        if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
-            self._interface_manager.documentation_window = None
-        self._active_task = tasks.Task(
-            target=util_async.open_documentation_on_certain_page,
-            args=(a_page_name, self._interface_manager.documentation_window),
-            post_func=self.__await_open_help,
-        )
-        self._active_task.start()
+        try:
+            self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
+            if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
+                self._interface_manager.documentation_window = None
+            self._active_task = tasks.Task(
+                target=util_async.open_documentation_on_certain_page,
+                args=(a_page_name, self._interface_manager.documentation_window),
+                post_func=self.__await_open_help,
+            )
+        except Exception as e:
+            logger.error(f"Error while opening help center: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
+        else:
+            self._active_task.start()
 
     def __await_open_help(self, return_value):
+        # <editor-fold desc="Checks">
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message("Opening help center failed!")
+            return
+        # </editor-fold>
+
         self._interface_manager.documentation_window = return_value[2]
         if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
             tmp_dialog = custom_message_box.CustomMessageBoxOk(

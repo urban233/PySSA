@@ -52,11 +52,11 @@ def load_protein_pymol_session(a_protein, the_pymol_session_manager, needs_to_be
 
 
 def load_protein_pair_pymol_session(a_protein_pair, the_pymol_session_manager, needs_to_be_reinitialized_flag: bool = False) -> tuple:
-    if needs_to_be_reinitialized_flag:
-        logger.info("The current session is not empty. Reinitialize session now ...")
-        the_pymol_session_manager.reinitialize_session()
-        logger.info("Reinitializing session finished.")
     try:
+        if needs_to_be_reinitialized_flag:
+            logger.info("The current session is not empty. Reinitialize session now ...")
+            the_pymol_session_manager.reinitialize_session()
+            logger.info("Reinitializing session finished.")
         logger.info(f"Loading session of {a_protein_pair.name}")
         the_pymol_session_manager.load_protein_pair_session(a_protein_pair)
     except Exception as e:
