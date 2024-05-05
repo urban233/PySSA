@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the delete project view."""
-
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -43,6 +42,7 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self._initialize_ui()
         self.resize(450, 600)
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setModal(True)
 
     def _initialize_ui(self) -> None:
@@ -59,8 +59,3 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Delete Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
-    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
-        """Closes the dialog."""
-        self.dialogClosed.emit()
-        event.accept()

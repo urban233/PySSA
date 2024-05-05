@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the histogram properties view."""
-
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -46,6 +45,7 @@ class HistogramPropertiesView(QtWidgets.QDialog):
         self._fill_combo_box()
         self._set_current_properties_in_ui_elements(the_current_properties)
         self._connect_all_signals()
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setModal(True)
 
     def _initialize_ui(self) -> None:

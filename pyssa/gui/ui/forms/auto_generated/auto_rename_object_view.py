@@ -52,6 +52,9 @@ class Ui_Dialog(object):
         self.btn_rename = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_rename.setObjectName("btn_rename")
         self.horizontalLayout.addWidget(self.btn_rename)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout.addWidget(self.btn_cancel)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.verticalLayout_4.addWidget(self.frame_bottom)
 
@@ -64,3 +67,4 @@ class Ui_Dialog(object):
         self.lbl_description.setText(_translate("Dialog", "Enter a new name"))
         self.lbl_status.setText(_translate("Dialog", "Status"))
         self.btn_rename.setText(_translate("Dialog", "Rename"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

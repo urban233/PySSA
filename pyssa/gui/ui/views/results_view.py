@@ -46,6 +46,7 @@ class ResultsView(QtWidgets.QDialog):
         self.ui = auto_results_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
+        self.ui.btn_cancel.clicked.connect(self.close)
 
     def _initialize_ui(self) -> None:
         """Initialize the UI elements."""

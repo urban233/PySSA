@@ -42,6 +42,7 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
         self.ui = auto_hotspots_protein_regions_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setModal(False)
 
     def _initialize_ui(self) -> None:
@@ -53,8 +54,3 @@ class HotspotsProteinRegionsView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Protein Regions")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
-    def closeEvent(self, event):
-        # Emit the custom signal when the window is closed
-        self.dialogClosed.emit(("", False))
-        event.accept()

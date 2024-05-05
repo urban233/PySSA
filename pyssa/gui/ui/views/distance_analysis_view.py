@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the distance analysis view."""
-
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -47,6 +46,7 @@ class DistanceAnalysisView(QtWidgets.QDialog):
         self.ui = auto_distance_analysis_view.Ui_Dialog()
         self.ui.setupUi(self)
         self._initialize_ui()
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setModal(True)
 
     def _initialize_ui(self) -> None:

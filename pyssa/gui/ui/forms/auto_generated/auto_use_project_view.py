@@ -133,6 +133,9 @@ class Ui_Dialog(object):
         self.btn_use_create_new_project = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_use_create_new_project.setObjectName("btn_use_create_new_project")
         self.horizontalLayout_2.addWidget(self.btn_use_create_new_project)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout_2.addWidget(self.btn_cancel)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
         self.verticalLayout_4.addWidget(self.frame_bottom)
 
@@ -156,3 +159,4 @@ class Ui_Dialog(object):
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_use_back.setText(_translate("Dialog", "Back"))
         self.btn_use_create_new_project.setText(_translate("Dialog", "Create"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(602, 503)
+        Dialog.resize(520, 503)
         Dialog.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         self.verticalLayout_8 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
@@ -164,6 +164,9 @@ class Ui_Dialog(object):
         self.btn_ok = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_ok.setObjectName("btn_ok")
         self.horizontalLayout_3.addWidget(self.btn_ok)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout_3.addWidget(self.btn_cancel)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
         self.verticalLayout_8.addWidget(self.frame_bottom)
 
@@ -190,3 +193,4 @@ class Ui_Dialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.image_tab), _translate("Dialog", "Image"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_ok.setText(_translate("Dialog", "OK"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(319, 449)
+        Dialog.resize(375, 449)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -55,6 +55,9 @@ class Ui_Dialog(object):
         self.btn_export_data = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_export_data.setObjectName("btn_export_data")
         self.horizontalLayout.addWidget(self.btn_export_data)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout.addWidget(self.btn_cancel)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
         self.verticalLayout_4.addWidget(self.frame_bottom)
 
@@ -68,3 +71,4 @@ class Ui_Dialog(object):
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_view_plots.setText(_translate("Dialog", "View Plots"))
         self.btn_export_data.setText(_translate("Dialog", "Export Data"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

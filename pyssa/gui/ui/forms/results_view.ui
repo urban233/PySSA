@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>319</width>
+    <width>375</width>
     <height>449</height>
    </rect>
   </property>
@@ -94,6 +94,13 @@
          <widget class="QPushButton" name="btn_export_data">
           <property name="text">
            <string>Export Data</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_cancel">
+          <property name="text">
+           <string>Cancel</string>
           </property>
          </widget>
         </item>

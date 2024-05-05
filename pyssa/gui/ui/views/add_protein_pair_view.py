@@ -43,13 +43,9 @@ class AddProteinPairView(QtWidgets.QDialog):
         styles.color_bottom_frame_button(self.ui.btn_add)
         self.resize(550, 650)
 
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setWindowTitle("Add Protein Pair")
         self.setModal(True)
-
-    def closeEvent(self, event):
-        # Emit the custom signal when the window is closed
-        self.dialogClosed.emit(("", False))
-        event.accept()

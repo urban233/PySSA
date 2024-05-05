@@ -156,12 +156,9 @@ class MainViewController:
 
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self.__slot_create_project)
-        self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
         self._view.ui.action_open_project.triggered.connect(self.__slot_open_project)
-        self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
         self._view.ui.action_use_project.triggered.connect(self.__slot_use_project)
         self._view.ui.action_delete_project.triggered.connect(self.__slot_delete_project)
-        self._interface_manager.get_delete_view().dialogClosed.connect(self._post_delete_project)
         self._view.ui.action_import_project.triggered.connect(self.__slot_import_project)
         self._view.ui.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._view.ui.action_close_project.triggered.connect(self.__slot_close_project)
@@ -172,7 +169,6 @@ class MainViewController:
         self._view.ui.action_ray_tracing_image.triggered.connect(self.__slot_create_ray_traced_image)
         self._view.ui.action_simple_image.triggered.connect(self.__slot_create_drawn_image)
         self._view.ui.action_protein_regions.triggered.connect(self.__slot_hotspots_protein_regions)
-        self._interface_manager.get_hotspots_protein_regions_view().dialogClosed.connect(self.post_hotspots_protein_regions)
 
         self._view.ui.action_edit_settings.triggered.connect(self.__slot_open_settings_global)
         self._view.ui.action_restore_settings.triggered.connect(self.__slot_restore_settings)
@@ -1064,8 +1060,11 @@ class MainViewController:
         #     constants.PYSSA_LOGGER.info("Create empty project finished.")
 
     def __await_create_project(self, return_value: tuple):
-        if return_value[1] is False:
+        # fixme: this function could also be used if the create dialog gets closed, be aware!
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message("Creating the project failed!")
             self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
             return
 
         _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
@@ -1116,21 +1115,23 @@ class MainViewController:
 
     def __await_open_project(self, return_value: tuple):
         self._interface_manager.status_bar_manager.hide_progress_bar()
-        exit_code, tmp_project, tmp_interface_manager, tmp_watcher = return_value
-        if exit_code == 0:
-            self._interface_manager = tmp_interface_manager
-            self._interface_manager.watcher = tmp_watcher
-            self._interface_manager.refresh_main_view()
-            self._interface_manager.hide_progress_bar()
-            self._interface_manager.status_bar_manager.show_temporary_message(
-                enums.StatusMessages.OPENING_PROJECT_FINISHED.value
-            )
-            self._connect_sequence_selection_model()
-        else:
+        if return_value[0] == "":
             self._interface_manager.status_bar_manager.show_error_message(
                 enums.StatusMessages.OPENING_PROJECT_FAILED.value,
             )
             self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+
+        _, tmp_project, tmp_interface_manager, tmp_watcher = return_value
+        self._interface_manager = tmp_interface_manager
+        self._interface_manager.watcher = tmp_watcher
+        self._interface_manager.refresh_main_view()
+        self._interface_manager.hide_progress_bar()
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            enums.StatusMessages.OPENING_PROJECT_FINISHED.value
+        )
+        self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_cursor()
 
     def __slot_use_project(self) -> None:
@@ -1164,6 +1165,12 @@ class MainViewController:
             self._active_task.start()
 
     def __await_use_project(self, return_value: tuple):
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message("Using the project failed!")
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+
         try:
             _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
             self._interface_manager.set_new_project(tmp_project)
@@ -2378,6 +2385,8 @@ class MainViewController:
                 "Getting demo projects ...", False)
             import zipfile
             download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
+            if os.path.exists(download_dest):
+                os.remove(download_dest)
             if not os.path.exists(download_dest):
                 # download demo projects
                 url = f'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'

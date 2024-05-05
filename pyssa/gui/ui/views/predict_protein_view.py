@@ -50,6 +50,7 @@ class PredictProteinView(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self.ui.tab_widget.setTabEnabled(1, False)
         self._initialize_ui()
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setModal(True)
 
     def _initialize_ui(self) -> None:

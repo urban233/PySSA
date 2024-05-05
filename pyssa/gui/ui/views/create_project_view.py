@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the create project view."""
-
 from PyQt5 import QtWidgets
 from PyQt5 import QtGui
 from PyQt5 import QtCore
@@ -43,6 +42,7 @@ class CreateProjectView(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self._initialize_ui()
         self.resize(450, 600)
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setModal(True)
 
     def _initialize_ui(self) -> None:
@@ -62,9 +62,3 @@ class CreateProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Create Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
-
-
-    def closeEvent(self, event):
-        # Emit the custom signal when the window is closed
-        self.dialogClosed.emit(("", False))
-        event.accept()
