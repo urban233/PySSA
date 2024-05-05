@@ -1581,18 +1581,21 @@ class DatabaseManager:
             a_protein_id: int,
             a_chain_letter: str,
             a_parameter_name: str) -> tuple:
-        tmp_sql_query = PyssaSqlQuery.create_sql_query(
-            self._pyssa_database_interface.db,
-            enums.SQLQueryStatement.GET_PYMOL_PARAMETER_FOR_PROTEIN_CHAIN_IN_PROTEIN_PAIR
-        )
-        self._pyssa_database_interface.execute_query(
-            tmp_sql_query, params=(
-                a_protein_id, a_chain_letter, a_protein_pair_id, a_parameter_name
+        if self._pyssa_database_interface.connect():
+            tmp_sql_query = PyssaSqlQuery.create_sql_query(
+                self._pyssa_database_interface.db,
+                enums.SQLQueryStatement.GET_PYMOL_PARAMETER_FOR_PROTEIN_CHAIN_IN_PROTEIN_PAIR
             )
-        )
-        # for protein pairs
-        tmp_sql_query.next()
-        return tmp_sql_query.value(0)
+            self._pyssa_database_interface.execute_query(
+                tmp_sql_query, params=(
+                    a_protein_id, a_chain_letter, a_protein_pair_id, a_parameter_name
+                )
+            )
+            # for protein pairs
+            tmp_sql_query.next()
+            tmp_query_result = tmp_sql_query.value(0)
+            self._pyssa_database_interface.disconnect()
+            return tmp_query_result
 
     def update_pymol_session_of_protein_pair(self, the_protein_pair_id: int, the_new_pymol_session: str):
         if self._pyssa_database_interface.connect():

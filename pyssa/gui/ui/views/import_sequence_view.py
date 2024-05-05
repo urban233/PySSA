@@ -58,7 +58,7 @@ class ImportSequenceView(QtWidgets.QDialog):
         self.setWindowTitle("Import Protein Sequence")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden

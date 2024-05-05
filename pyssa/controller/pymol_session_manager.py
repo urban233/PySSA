@@ -41,13 +41,15 @@ class PymolSessionManager:
     all_scenes: list[str]
 
     def __init__(self, the_app_process_manager: "application_process_manager.ApplicationProcessManager") -> None:
-        self.pymol_interface: "pymol_interface.PyMOLInterface" = pymol_interface.PyMOLInterface()
         self.session_name = ""
         self.session_object_type = ""
         self.session_objects = []
         self.current_scene_name: str = ""
         self.all_scenes: list[str] = []
         self._app_process_manager = the_app_process_manager
+        self.pymol_interface: "pymol_interface.PyMOLInterface" = pymol_interface.PyMOLInterface(
+            self._app_process_manager
+        )
 
     # <editor-fold desc="Private methods">
     def _check_session_integrity(self, a_protein_name) -> bool:

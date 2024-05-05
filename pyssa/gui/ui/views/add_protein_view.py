@@ -57,7 +57,7 @@ class AddProteinView(QtWidgets.QDialog):
         self.ui.lbl_status.setStyleSheet("""color: #ba1a1a; font-size: 11px;""")
         styles.color_bottom_frame_button(self.ui.btn_add_protein)
         self.ui.btn_choose_protein.setToolTip("Click to add a .pdb file")
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         self.setWindowTitle("Import Protein Structure")

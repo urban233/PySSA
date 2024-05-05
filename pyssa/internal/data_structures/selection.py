@@ -110,6 +110,9 @@ class Selection:
         """Sets a selection for a single chain."""
         self.selection_string = f"/{self.molecule_object}//{a_chain_letter}"
 
+    def set_selection_for_first_ca_atom_in_a_given_chain(self, a_chain_letter: str):
+        self.selection_string = f"first chain {a_chain_letter} and name CA"
+
     def set_custom_selection(self, a_sele_string: str) -> None:
         """Sets a custom selection as selection string.
 

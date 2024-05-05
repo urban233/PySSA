@@ -37,7 +37,6 @@ class Interface(QtCore.QObject):
             exit(1)
         else:
             print("Binding socket was successful.")
-            pass
         # </editor-fold>
 
         print("Entering while loop ...")

@@ -103,6 +103,7 @@ class ResultsViewController(QtCore.QObject):
         self.open_help("help/results/summary/")
 
     def _connect_all_ui_elements_to_slot_functions(self):
+        self._view.ui.btn_help.clicked.connect(self._open_help_for_dialog)
         self._view.ui.btn_view_plots.clicked.connect(self._open_plot_view)
         self.cb_protein_pair_color.currentIndexChanged.connect(self.__slot_color_protein_pair)
         self._view.ui.btn_export_data.clicked.connect(self.__slot_export_data)

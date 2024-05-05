@@ -20,13 +20,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the application process manager class."""
+import os
 import subprocess
 import time
+from PyQt5 import QtWidgets
+from PyQt5 import QtGui
+from pyssa.gui.ui.custom_dialogs import custom_message_box
+from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
 
 
 class ApplicationProcessManager:
-    def __init__(self):
+    def __init__(self, the_reset_pymol_session_func):
+        self._reset_pymol_session_func = the_reset_pymol_session_func
         self.pymol_process = None
         self._should_exit = False
         self._is_crashed = False
@@ -51,6 +57,7 @@ class ApplicationProcessManager:
             print("PyMOL from ApplicationProcessManager class started correctly.")
         else:
             print("PyMOL failed to start.")
+            self._is_crashed = True
 
     def close_manager(self):
         self._should_exit = True
@@ -65,63 +72,21 @@ class ApplicationProcessManager:
                 print("PyMOL crashed!")
                 self._is_crashed = True
                 self.start_pymol()
+                self._arrange_windows()
+                time.sleep(4)
+                self._is_crashed = False
+                self._reset_pymol_session_func()
             time.sleep(2)
-            if self._should_exit == True:
+            if self._should_exit:
                 break
 
-    # @staticmethod
-    # def is_process_running(pid):
-    #     """
-    #     Checks if a process with the given PID is running using os.kill.
-    #
-    #     Args:
-    #         pid: The process ID to check.
-    #
-    #     Returns:
-    #         True if the process is running, False otherwise (or on exception).
-    #     """
-    #     try:
-    #         os.kill(pid, 0)
-    #     except OSError as e:
-    #         if e.errno == os.errno.ESRCH:  # Process not found
-    #             return False
-    #         # Handle other potential errors (e.g., permission issues)
-    #         return None
-    #     else:
-    #         return True
-    #
-    # # def watch_status(self):
-    # #     while True:
-    # #         print("Checking process status ...")
-    # #         if not self.is_process_running(self.pyssa_process_pid):
-    # #             print("PySSA crashed!")
-    # #         if self.pymol_process.poll() is not None:
-    # #             print("PyMOL crashed!")
-    # #             self.start_pymol()
-    # #         #time.sleep(1)
-    # #
-    # # def check_status(self):
-    # #     self._thread = tasks.Task(
-    # #         target=self._check_process_status,
-    # #         args=(0, 0),
-    # #         post_func=self.check_finished
-    # #     )
-    # #     self._thread.start()
-    # #
-    # # def _check_process_status(self):
-    # #     while True:
-    # #         print("Checking process status ...")
-    # #         if not self.is_process_running(self.pyssa_process_pid):
-    # #             print("PySSA crashed!")
-    # #         if self.pymol_process.poll() is not None:
-    # #             print("PyMOL crashed!")
-    # #             self.start_pymol()
-    # #
-    # # def check_finished(self):
-    # #     print("Checking process finished.")
-    #
-    # def wait_for_event(self):
-    #     self.new_event = False
-    #     while True:
-    #         if self.new_event:
-    #             print("There is a new event.")
+    def _arrange_windows(self):
+        if not os.path.exists(constants.ARRANGE_WINDOWS_EXE_FILEPATH):
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "The script for arranging the windows could not be found!", "Arrange Windows",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
+        else:
+            subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH],
+                             creationflags=subprocess.CREATE_NO_WINDOW)

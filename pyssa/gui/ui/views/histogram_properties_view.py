@@ -54,7 +54,7 @@ class HistogramPropertiesView(QtWidgets.QDialog):
         #self.ui.le_units_x_axis = custom_line_edit.CustomLineEditForEnteringNumbers()
         self.ui.cb_distance_interval.setStyleSheet("""QComboBox {min-width: 55px; max-width: 55px;}""")
 
-        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.svg"))
+        self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
         styles.color_bottom_frame_button(self.ui.btn_save)
