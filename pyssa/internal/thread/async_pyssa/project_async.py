@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -55,20 +55,25 @@ def create_new_project(
         a tuple with ("results", a_new_project_obj)
     """
     # TODO: checks are needed
-    tmp_project = project.Project(the_project_name, the_workspace_path)
+    try:
+        tmp_project = project.Project(the_project_name, the_workspace_path)
 
-    tmp_database_filepath = str(pathlib.Path(f"{the_workspace_path}/{the_project_name}.db"))
-    with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
-        tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
-    constants.PYSSA_LOGGER.info("Create empty project finished.")
-    the_watcher.setup_blacklists(
-        tmp_project,
-        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
-        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
-        the_interface_manager.job_manager.current_prediction_job,
-        the_interface_manager.job_manager.current_distance_analysis_job,
-    )
-    return "result", tmp_project, the_watcher, the_interface_manager
+        tmp_database_filepath = str(pathlib.Path(f"{the_workspace_path}/{the_project_name}.db"))
+        with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+            tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
+        constants.PYSSA_LOGGER.info("Create empty project finished.")
+        the_watcher.setup_blacklists(
+            tmp_project,
+            the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+            the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+            the_interface_manager.job_manager.current_prediction_job,
+            the_interface_manager.job_manager.current_distance_analysis_job,
+        )
+    except Exception as e:
+        logger.error(e)
+        return "", None, None, None
+    else:
+        return "result", tmp_project, the_watcher, the_interface_manager
 
 
 def create_use_project(
@@ -89,26 +94,31 @@ def create_use_project(
         a tuple with ("results", a_new_project_obj)
     """
     # TODO: checks are needed
-    tmp_project = project.Project(the_project_name, the_workspace_path)
+    try:
+        tmp_project = project.Project(the_project_name, the_workspace_path)
 
-    tmp_database_filepath = str(pathlib.Path(f"{the_workspace_path}/{the_project_name}.db"))
-    with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
-        tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
-        for tmp_protein in the_proteins_to_add:
-            tmp_protein_copy = copy.deepcopy(tmp_protein)
-            tmp_protein_copy.db_project_id = tmp_project.get_id()
-            tmp_project.add_existing_protein(tmp_protein_copy)
-            tmp_protein_copy.set_id(db_manager.insert_new_protein(tmp_protein_copy))
+        tmp_database_filepath = str(pathlib.Path(f"{the_workspace_path}/{the_project_name}.db"))
+        with database_manager.DatabaseManager(tmp_database_filepath) as db_manager:
+            tmp_project.set_id(db_manager.insert_new_project(tmp_project.get_project_name(), platform.system()))
+            for tmp_protein in the_proteins_to_add:
+                tmp_protein_copy = copy.deepcopy(tmp_protein)
+                tmp_protein_copy.db_project_id = tmp_project.get_id()
+                tmp_project.add_existing_protein(tmp_protein_copy)
+                tmp_protein_copy.set_id(db_manager.insert_new_protein(tmp_protein_copy))
 
-    constants.PYSSA_LOGGER.info("Use project finished.")
-    the_watcher.setup_blacklists(
-        tmp_project,
-        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
-        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
-        the_interface_manager.job_manager.current_prediction_job,
-        the_interface_manager.job_manager.current_distance_analysis_job,
-    )
-    return "result", tmp_project
+        constants.PYSSA_LOGGER.info("Use project finished.")
+        the_watcher.setup_blacklists(
+            tmp_project,
+            the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+            the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+            the_interface_manager.job_manager.current_prediction_job,
+            the_interface_manager.job_manager.current_distance_analysis_job,
+        )
+    except Exception as e:
+        logger.error(e)
+        return "", None, None, None
+    else:
+        return "result", tmp_project, the_watcher, the_interface_manager
 
 
 def open_project(
@@ -119,30 +129,30 @@ def open_project(
         the_custom_progress_signal: "custom_signals.ProgressSignal",
         the_watcher: "watcher.Watcher"
 ) -> tuple:
-    the_custom_progress_signal.emit_signal("Opening database ...", 10)
-    with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
-        the_custom_progress_signal.emit_signal("Setting up project ...", 30)
-        tmp_project = db_manager.get_project_as_object(
-            tmp_project_name,
-            the_interface_manager.get_application_settings().workspace_path,
-            the_interface_manager.get_application_settings(),
-            the_custom_progress_signal
+    try:
+        the_custom_progress_signal.emit_signal("Opening database ...", 10)
+        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+            the_custom_progress_signal.emit_signal("Setting up project ...", 30)
+            tmp_project = db_manager.get_project_as_object(
+                tmp_project_name,
+                the_interface_manager.get_application_settings().workspace_path,
+                the_interface_manager.get_application_settings(),
+                the_custom_progress_signal
+            )
+        the_interface_manager.set_new_project(tmp_project)
+        the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 96)
+        the_pymol_session_manager.reinitialize_session()
+        the_watcher.setup_blacklists(
+            tmp_project,
+            the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
+            the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
+            the_interface_manager.job_manager.current_prediction_job,
+            the_interface_manager.job_manager.current_distance_analysis_job,
         )
-    the_interface_manager.set_new_project(tmp_project)
-    the_custom_progress_signal.emit_signal("Reinitializing PyMOL session ...", 96)
-    the_pymol_session_manager.reinitialize_session()
-    the_watcher.setup_blacklists(
-        tmp_project,
-        the_interface_manager.job_manager.get_queue(enums.JobType.PREDICTION),
-        the_interface_manager.job_manager.get_queue(enums.JobType.DISTANCE_ANALYSIS),
-        the_interface_manager.job_manager.current_prediction_job,
-        the_interface_manager.job_manager.current_distance_analysis_job,
-    )
-    # except Exception as e:
-    #     logger.error(f"Unexpected error occurred. Exception: {e}")
-    #     return 1, 0, 0, 0
-    # else:
-    return 0, tmp_project, the_interface_manager, the_watcher
+    except Exception as e:
+        logger.error(e)
+    else:
+        return "result", tmp_project, the_interface_manager, the_watcher
 
 
 def close_project(the_database_thread: "database_thread.DatabaseThread", the_pymol_session_manager) -> tuple:

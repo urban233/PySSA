@@ -111,6 +111,9 @@ class Ui_Dialog(object):
         self.btn_save = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_save.setObjectName("btn_save")
         self.horizontalLayout_3.addWidget(self.btn_save)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout_3.addWidget(self.btn_cancel)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.verticalLayout_7.addWidget(self.frame_bottom)
 
@@ -128,3 +131,4 @@ class Ui_Dialog(object):
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.tab), _translate("Dialog", "Plot"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_save.setText(_translate("Dialog", "Save"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

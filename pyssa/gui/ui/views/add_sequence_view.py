@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the add proteins dialog."""
+"""Module for the add sequence view."""
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -56,10 +56,11 @@ class AddSequenceView(QtWidgets.QDialog):
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
-        self.setWindowTitle("Add Protein Sequence")
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+        self.setWindowTitle("Add Protein Sequence")
         self.setModal(True)
 
     def _initalize_ui(self):

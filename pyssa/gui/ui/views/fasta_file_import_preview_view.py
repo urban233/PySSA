@@ -1,5 +1,26 @@
-import sys
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QPushButton, QHBoxLayout, QLabel
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2024
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/zielesny/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Module for the fasta file import preview view."""
+from PyQt5.QtWidgets import QDialog
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5 import QtGui
@@ -25,6 +46,7 @@ class FastaFileImportPreviewView(QDialog):
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setWindowTitle("FASTA File Import Preview")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)

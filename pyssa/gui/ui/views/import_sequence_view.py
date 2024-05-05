@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the add proteins dialog."""
+"""Module for the import sequence view."""
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtWidgets
 from PyQt5 import QtCore
@@ -55,24 +55,13 @@ class ImportSequenceView(QtWidgets.QDialog):
         styles.color_bottom_frame_button(self.ui.btn_import_sequence)
         self.ui.lbl_status.setText("")
         self.ui.btn_choose_fasta_file.setToolTip("Click to add a .fasta file")
-        self.setWindowTitle("Import Protein Sequence")
-        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
+        self.ui.btn_cancel.clicked.connect(self.close)
+        self.setWindowTitle("Import Protein Sequence")
+        self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         # fixme: this flag needs to be set if the WhatsThat icon in the window bar should be hidden
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
         self.setModal(True)
-        # # check internet connectivity
-        # if not tools.check_internet_connectivity():
-        #     gui_utils.no_internet_dialog_with_custom_msg(
-        #         "You do not have a working internet connection which is "
-        #         "necessary for connecting to the PDB!\n"
-        #         "However you can add a protein structure from "
-        #         "your local filesystem.",
-        #     )
-        #     self.ui.txt_import_sequence.setEnabled(False)
-        #     self.ui.lbl_status.setText("You cannot enter a PDB ID (no internet).")
-
-

@@ -152,6 +152,9 @@ class Ui_Dialog(object):
         self.btn_distance_analysis_start = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_distance_analysis_start.setObjectName("btn_distance_analysis_start")
         self.horizontalLayout.addWidget(self.btn_distance_analysis_start)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout.addWidget(self.btn_cancel)
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         self.verticalLayout_2.addWidget(self.frame_bottom)
 
@@ -177,3 +180,4 @@ class Ui_Dialog(object):
         self.btn_distance_analysis_next_3.setText(_translate("Dialog", "Next"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_distance_analysis_start.setText(_translate("Dialog", "Start"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

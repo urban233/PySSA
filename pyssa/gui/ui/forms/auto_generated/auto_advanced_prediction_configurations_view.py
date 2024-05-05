@@ -62,6 +62,9 @@ class Ui_Dialog(object):
         self.btn_ok = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_ok.setObjectName("btn_ok")
         self.horizontalLayout_3.addWidget(self.btn_ok)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout_3.addWidget(self.btn_cancel)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.verticalLayout_3.addWidget(self.frame_bottom)
 
@@ -75,3 +78,4 @@ class Ui_Dialog(object):
         self.lbl_template.setText(_translate("Dialog", "Choose template mode"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_ok.setText(_translate("Dialog", "OK"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

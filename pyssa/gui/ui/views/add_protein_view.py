@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,17 +19,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the add proteins dialog."""
+"""Module for the add protein view."""
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
-from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.forms.auto_generated.auto_dialog_add_model import Ui_Dialog
 from pyssa.gui.ui.styles import styles
-from pyssa.util import constants, tools, gui_utils
+from pyssa.util import constants
 
 global_var_add_model = ("", False)
 
@@ -60,6 +59,7 @@ class AddProteinView(QtWidgets.QDialog):
         self.ui.btn_help.setIcon(QtGui.QIcon(":/icons/help_w200.png"))
         self.ui.btn_help.setIconSize(self.ui.btn_help.icon().actualSize(QtCore.QSize(30, 30)))
         self.ui.btn_help.setText("")
+        self.ui.btn_cancel.clicked.connect(self.close)
         self.setWindowTitle("Import Protein Structure")
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         styles.set_stylesheet(self)

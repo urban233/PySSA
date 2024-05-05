@@ -66,6 +66,9 @@ class Ui_Dialog(object):
         self.btn_import_sequence = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_import_sequence.setObjectName("btn_import_sequence")
         self.horizontalLayout_2.addWidget(self.btn_import_sequence)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout_2.addWidget(self.btn_cancel)
         self.verticalLayout_2.addLayout(self.horizontalLayout_2)
         self.verticalLayout_4.addWidget(self.frame_bottom)
 
@@ -81,3 +84,4 @@ class Ui_Dialog(object):
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_preview.setText(_translate("Dialog", "Preview"))
         self.btn_import_sequence.setText(_translate("Dialog", "Import"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

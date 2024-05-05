@@ -77,6 +77,9 @@ class Ui_Dialog(object):
         self.btn_open_project = QtWidgets.QPushButton(self.frame_bottom)
         self.btn_open_project.setObjectName("btn_open_project")
         self.horizontalLayout.addWidget(self.btn_open_project)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout.addWidget(self.btn_cancel)
         self.verticalLayout_4.addLayout(self.horizontalLayout)
         self.verticalLayout_5.addWidget(self.frame_bottom)
 
@@ -92,3 +95,4 @@ class Ui_Dialog(object):
         self.label_30.setText(_translate("Dialog", "Selected project"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_open_project.setText(_translate("Dialog", "Open"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

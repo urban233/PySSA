@@ -89,6 +89,9 @@ class Ui_Dialog(object):
         self.btn_new_create_project.setMinimumSize(QtCore.QSize(131, 0))
         self.btn_new_create_project.setObjectName("btn_new_create_project")
         self.horizontalLayout.addWidget(self.btn_new_create_project)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout.addWidget(self.btn_cancel)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
         self.verticalLayout_4.addWidget(self.frame_bottom)
 
@@ -107,3 +110,4 @@ class Ui_Dialog(object):
         self.lbl_new_status_choose_reference.setText(_translate("Dialog", "TextLabel"))
         self.btn_help.setText(_translate("Dialog", "Help"))
         self.btn_new_create_project.setText(_translate("Dialog", "Create"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

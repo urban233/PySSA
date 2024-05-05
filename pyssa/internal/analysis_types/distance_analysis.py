@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,20 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""This module contains the distance analysis class."""
-import os
+"""Module contains the distance analysis class."""
 import logging
 import pathlib
 from typing import TYPE_CHECKING
-from xml.etree import ElementTree
 import numpy as np
-from pyssa.io_pyssa.xml_pyssa import element_names
-from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import protein_pair_util
 from pyssa.io_pyssa import path_util
-from pyssa.util import constants
-from pyssa.util import exception
 from pyssa.internal.data_structures import results
 
 if TYPE_CHECKING:

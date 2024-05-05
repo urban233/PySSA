@@ -1,3 +1,25 @@
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2024
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/zielesny/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Module for the main view controller."""
 import copy
 import logging
 import os
@@ -21,7 +43,7 @@ from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread.async_pyssa import util_async, custom_signals, project_async, image_async, \
     pymol_session_async, protein_async, sequence_async, protein_pair_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
-    pymol_session_manager, predict_multimer_view_controller, \
+    pymol_session_manager, \
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
     predict_protein_view_controller, import_sequence_view_controller, rename_sequence_view_controller, watcher
 from pyssa.internal.data_structures import chain
@@ -34,7 +56,7 @@ from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.util import constants, enums, exit_codes, tools, ui_util
 from pyssa.gui.ui.views import main_view
-from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
+from pyssa.controller import interface_manager, distance_analysis_view_controller, \
     delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
 from pyssa.util import globals
 
@@ -134,12 +156,9 @@ class MainViewController:
 
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self.__slot_create_project)
-        self._interface_manager.get_create_view().dialogClosed.connect(self.__await_create_project)
         self._view.ui.action_open_project.triggered.connect(self.__slot_open_project)
-        self._interface_manager.get_open_view().dialogClosed.connect(self._post_open_project)
         self._view.ui.action_use_project.triggered.connect(self.__slot_use_project)
         self._view.ui.action_delete_project.triggered.connect(self.__slot_delete_project)
-        self._interface_manager.get_delete_view().dialogClosed.connect(self._post_delete_project)
         self._view.ui.action_import_project.triggered.connect(self.__slot_import_project)
         self._view.ui.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._view.ui.action_close_project.triggered.connect(self.__slot_close_project)
@@ -150,7 +169,6 @@ class MainViewController:
         self._view.ui.action_ray_tracing_image.triggered.connect(self.__slot_create_ray_traced_image)
         self._view.ui.action_simple_image.triggered.connect(self.__slot_create_drawn_image)
         self._view.ui.action_protein_regions.triggered.connect(self.__slot_hotspots_protein_regions)
-        self._interface_manager.get_hotspots_protein_regions_view().dialogClosed.connect(self.post_hotspots_protein_regions)
 
         self._view.ui.action_edit_settings.triggered.connect(self.__slot_open_settings_global)
         self._view.ui.action_restore_settings.triggered.connect(self.__slot_restore_settings)
@@ -1042,8 +1060,10 @@ class MainViewController:
         #     constants.PYSSA_LOGGER.info("Create empty project finished.")
 
     def __await_create_project(self, return_value: tuple):
-        if return_value[1] is False:
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message("Creating the project failed!")
             self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
             return
 
         _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
@@ -1094,21 +1114,23 @@ class MainViewController:
 
     def __await_open_project(self, return_value: tuple):
         self._interface_manager.status_bar_manager.hide_progress_bar()
-        exit_code, tmp_project, tmp_interface_manager, tmp_watcher = return_value
-        if exit_code == 0:
-            self._interface_manager = tmp_interface_manager
-            self._interface_manager.watcher = tmp_watcher
-            self._interface_manager.refresh_main_view()
-            self._interface_manager.hide_progress_bar()
-            self._interface_manager.status_bar_manager.show_temporary_message(
-                enums.StatusMessages.OPENING_PROJECT_FINISHED.value
-            )
-            self._connect_sequence_selection_model()
-        else:
+        if return_value[0] == "":
             self._interface_manager.status_bar_manager.show_error_message(
                 enums.StatusMessages.OPENING_PROJECT_FAILED.value,
             )
             self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+
+        _, tmp_project, tmp_interface_manager, tmp_watcher = return_value
+        self._interface_manager = tmp_interface_manager
+        self._interface_manager.watcher = tmp_watcher
+        self._interface_manager.refresh_main_view()
+        self._interface_manager.hide_progress_bar()
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            enums.StatusMessages.OPENING_PROJECT_FINISHED.value
+        )
+        self._connect_sequence_selection_model()
         self._interface_manager.stop_wait_cursor()
 
     def __slot_use_project(self) -> None:
@@ -1118,32 +1140,50 @@ class MainViewController:
         self._interface_manager.get_use_project_view().show()
 
     def _post_use_project(self, user_input: tuple) -> None:
-        self._interface_manager.start_wait_cursor()
-        tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
-        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
-            db_manager.build_new_database()
-            db_manager.close_project_database()
+        try:
+            tmp_project_database_filepath = str(pathlib.Path(f"{self._interface_manager.get_application_settings().get_workspace_path()}/{user_input[0]}.db"))
+            with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+                db_manager.build_new_database()
 
-        self._active_task = tasks.Task(
-            target=project_async.create_use_project,
-            args=(
-                user_input[0],
-                self._interface_manager.get_application_settings().get_workspace_path(),
-                user_input[1]
-            ),
-            post_func=self.__await_use_project,
-        )
-        self._active_task.start()
+            self._active_task = tasks.Task(
+                target=project_async.create_use_project,
+                args=(
+                    user_input[0],
+                    self._interface_manager.get_application_settings().get_workspace_path(),
+                    user_input[1],
+                    self._interface_manager.watcher,
+                    self._interface_manager
+                ),
+                post_func=self.__await_use_project,
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __await_use_project(self, return_value: tuple):
-        _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
-        self._interface_manager.set_new_project(tmp_project)
-        self._interface_manager.add_project_to_workspace_model(tmp_project.get_project_name())
-        self._interface_manager.refresh_main_view()
-        self._interface_manager.pymol_session_manager.reinitialize_session()
-        self._connect_sequence_selection_model()
-        self._interface_manager.stop_wait_cursor()
-        self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
+        if return_value[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message("Using the project failed!")
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            return
+
+        try:
+            _, tmp_project, self._interface_manager.watcher, self._interface_manager = return_value
+            self._interface_manager.set_new_project(tmp_project)
+            self._interface_manager.add_project_to_workspace_model(tmp_project.get_project_name())
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._connect_sequence_selection_model()
+            self._interface_manager.status_bar_manager.show_temporary_message("Use process finished.")
+        finally:
+            self._interface_manager.pymol_session_manager.reinitialize_session()
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
 
     def __slot_delete_project(self) -> None:
         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Delete' clicked.")
@@ -2344,6 +2384,8 @@ class MainViewController:
                 "Getting demo projects ...", False)
             import zipfile
             download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
+            if os.path.exists(download_dest):
+                os.remove(download_dest)
             if not os.path.exists(download_dest):
                 # download demo projects
                 url = f'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'

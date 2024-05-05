@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the Delete Dialog."""
+"""Module for the delete project view controller."""
 
 import logging
 import os
@@ -192,7 +192,7 @@ class DeleteProjectViewController(QtCore.QObject):
         if response is True:
             for tmp_filepath, tmp_row in tmp_filepaths_with_row_numbers:
                 try:
-                    os.remove(tmp_filepath)  # TODO: throws permission error
+                    os.remove(tmp_filepath)  # TODO: throws permission error, throws FileNotFound if more than one project gets deleted and afterwards selected
                 except PermissionError:
                     tmp_dialog = custom_message_box.CustomMessageBoxOk(
                         "The project cannot be deleted, due to a permission error. Restart the application and try again.",

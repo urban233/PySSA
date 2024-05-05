@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,11 +31,17 @@ logger.addHandler(log_handlers.log_file_handler)
 
 def preview_image(the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", a_placeholder_2: int) -> tuple:
     # TODO: the renderer should be changeable
-    the_pymol_session_manager.pymol_interface.ray(a_width=2400, a_height=2400, a_renderer=int(0))
+    try:
+        the_pymol_session_manager.pymol_interface.ray(a_width=2400, a_height=2400, a_renderer=int(0))
+    except Exception as e:
+        logger.error(e)
     return 0, ""
 
 
 def create_drawn_image(an_image_filepath: str, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple:
-    the_pymol_session_manager.pymol_interface.draw(a_width=2400, a_height=2400, an_antialias_value=2)
-    the_pymol_session_manager.pymol_interface.png(an_image_filepath, a_dpi_value=300)
+    try:
+        the_pymol_session_manager.pymol_interface.draw(a_width=2400, a_height=2400, an_antialias_value=2)
+        the_pymol_session_manager.pymol_interface.png(an_image_filepath, a_dpi_value=300)
+    except Exception as e:
+        logger.error(e)
     return 0, ""

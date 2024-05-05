@@ -79,6 +79,9 @@ class Ui_Dialog(object):
         self.horizontalLayout_2.addWidget(self.btn_help)
         spacerItem4 = QtWidgets.QSpacerItem(628, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem4)
+        self.btn_cancel = QtWidgets.QPushButton(self.frame_bottom)
+        self.btn_cancel.setObjectName("btn_cancel")
+        self.horizontalLayout_2.addWidget(self.btn_cancel)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.verticalLayout_3.addWidget(self.frame_bottom)
 
@@ -97,3 +100,4 @@ class Ui_Dialog(object):
         self.label_3.setText(_translate("Dialog", "Region"))
         self.btn_position_zoom.setText(_translate("Dialog", "Zoom"))
         self.btn_help.setText(_translate("Dialog", "Help"))
+        self.btn_cancel.setText(_translate("Dialog", "Cancel"))

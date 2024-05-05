@@ -1,10 +1,10 @@
 #
 # PySSA - Python-Plugin for Sequence-to-Structure Analysis
-# Copyright (C) 2022
+# Copyright (C) 2024
 # Martin Urban (martin.urban@studmail.w-hs.de)
 # Hannah Kullik (hannah.kullik@studmail.w-hs.de)
 #
-# Source code is available at <https://github.com/urban233/PySSA>
+# Source code is available at <https://github.com/zielesny/PySSA>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import pathlib
 import logging
 
 from auxiliary_pymol import auxiliary_pymol_client
-from pyssa.controller import database_manager
 from pyssa.io_pyssa import safeguard
 from pyssa.internal.portal import protein_operations
 from pyssa.internal.data_structures import selection, job
@@ -35,7 +34,7 @@ from pyssa.io_pyssa.xml_pyssa import attribute_names
 from pyssa.io_pyssa import bio_data
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
-from typing import TYPE_CHECKING, TextIO, Union, Any
+from typing import TYPE_CHECKING, TextIO
 from pyssa.internal.data_structures import chain
 
 
