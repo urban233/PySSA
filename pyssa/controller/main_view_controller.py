@@ -1,3 +1,25 @@
+#
+# PySSA - Python-Plugin for Sequence-to-Structure Analysis
+# Copyright (C) 2024
+# Martin Urban (martin.urban@studmail.w-hs.de)
+# Hannah Kullik (hannah.kullik@studmail.w-hs.de)
+#
+# Source code is available at <https://github.com/zielesny/PySSA>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+"""Module for the main view controller."""
 import copy
 import logging
 import os
@@ -21,7 +43,7 @@ from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.thread.async_pyssa import util_async, custom_signals, project_async, image_async, \
     pymol_session_async, protein_async, sequence_async, protein_pair_async
 from pyssa.controller import results_view_controller, rename_protein_view_controller, use_project_view_controller, \
-    pymol_session_manager, predict_multimer_view_controller, \
+    pymol_session_manager, \
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
     predict_protein_view_controller, import_sequence_view_controller, rename_sequence_view_controller, watcher
 from pyssa.internal.data_structures import chain
@@ -34,7 +56,7 @@ from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.util import constants, enums, exit_codes, tools, ui_util
 from pyssa.gui.ui.views import main_view
-from pyssa.controller import interface_manager, distance_analysis_view_controller, predict_monomer_view_controller, \
+from pyssa.controller import interface_manager, distance_analysis_view_controller, \
     delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
 from pyssa.util import globals
 
