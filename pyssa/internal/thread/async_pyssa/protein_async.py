@@ -69,17 +69,21 @@ def clean_protein_update(a_protein: "protein.Protein",
         a tuple with ("result", a_updates_project_object)
     """
     # TODO: needs checks
-    # TODO: needs tests!
-    a_protein.clean_protein(the_main_socket, the_general_purpose_socket)
-    if len(a_protein.get_pdb_data()) == 0:
-        logger.error("No PDB data found after cleaning process!")
-        return ("result", None)
+    try:
+        a_protein.clean_protein(the_main_socket, the_general_purpose_socket)
+        if len(a_protein.get_pdb_data()) == 0:
+            logger.error("No PDB data found after cleaning process!")
+            return "", None
 
-    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
-        db_manager.update_protein_pdb_atom_data(a_protein.get_id(), a_protein.get_pdb_data())
-        a_protein.set_pdb_data([])
-    constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", a_protein.get_molecule_object())
-    return ("result", a_protein)
+        with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+            db_manager.update_protein_pdb_atom_data(a_protein.get_id(), a_protein.get_pdb_data())
+            a_protein.set_pdb_data([])
+        constants.PYSSA_LOGGER.info("The protein %s has been cleaned.", a_protein.get_molecule_object())
+    except Exception as e:
+        logger.error(e)
+        return "", None
+    else:
+        return "result", a_protein
 
 
 def save_selected_protein_structure_as_pdb_file(
@@ -88,20 +92,19 @@ def save_selected_protein_structure_as_pdb_file(
     the_database_filepath: str,
 ) -> tuple:
     """Saves a given protein structure to a pdb file."""
-    with database_manager.DatabaseManager(the_database_filepath) as db_manager:
-        tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
-        tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
-        a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
     try:
-        bio_data.build_pdb_file(a_protein.get_pdb_data(), a_filepath)
-        # reset pdb data to reduce memory space
-        a_protein.set_pdb_data([])
+        with database_manager.DatabaseManager(the_database_filepath) as db_manager:
+            tmp_pdb_atom_data = db_manager.get_pdb_atoms_of_protein(a_protein.get_id())
+            tmp_pdb_atom_dict_1 = [{key.value: value for key, value in zip(enums.PdbAtomEnum, t)} for t in tmp_pdb_atom_data]
+            a_protein.set_pdb_data(tmp_pdb_atom_dict_1)
+            bio_data.build_pdb_file(a_protein.get_pdb_data(), a_filepath)
+            # reset pdb data to reduce memory space
+            a_protein.set_pdb_data([])
     except Exception as e:
-        logger.error(f"Saving protein to pdb file ended with error: {e}")
-        return (exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0], exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[1])
+        logger.error(e)
+        return "",
     else:
-        return (exit_codes.EXIT_CODE_ZERO[0], exit_codes.EXIT_CODE_ZERO[1])
-
+        return "result",
 
 def rename_selected_protein_structure(
     a_protein: "protein.Protein",

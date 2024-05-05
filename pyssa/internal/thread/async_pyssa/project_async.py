@@ -151,6 +151,7 @@ def open_project(
         )
     except Exception as e:
         logger.error(e)
+        return "", None, None, None
     else:
         return "result", tmp_project, the_interface_manager, the_watcher
 
@@ -166,10 +167,10 @@ def close_project(the_database_thread: "database_thread.DatabaseThread", the_pym
         the_pymol_session_manager.reinitialize_session()
     except Exception as e:
         logger.error(f"Unknown error occurred while waiting for the database thread to finish: {e}.")
-        return False, "Waiting for database thread queue failed!"
+        return "", "Waiting for database thread queue failed!"
     else:
         logger.info("Waiting for database thread queue finished.")
-        return True, "Waiting for database thread queue finished."
+        return "result", "Waiting for database thread queue finished."
 
 
 def search_for_not_matching_proteins(the_main_view_state, the_proteins) -> tuple:
@@ -179,31 +180,40 @@ def search_for_not_matching_proteins(the_main_view_state, the_proteins) -> tuple
 
 def add_protein_from_pdb_to_project(tmp_protein_name,
                                     the_interface_manager: "interface_manager.InterfaceManager") -> tuple:
-    the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()
-    with database_manager.DatabaseManager(the_interface_manager.get_current_project().get_database_filepath()) as db_manager:
-        tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
-        tmp_ref_protein.set_id(db_manager.get_next_id_of_protein_table())
-        tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
-        tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper(), the_main_socket, the_general_purpose_socket)
-        tmp_ref_protein.add_id_to_all_chains(db_manager.get_next_id_of_chain_table())
-
-    tmp_ref_protein.create_new_pymol_session(the_main_socket, the_general_purpose_socket)
-    the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
-    return 0, tmp_ref_protein
+    try:
+        the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()
+        with database_manager.DatabaseManager(the_interface_manager.get_current_project().get_database_filepath()) as db_manager:
+            tmp_ref_protein = protein.Protein(tmp_protein_name.upper())
+            tmp_ref_protein.set_id(db_manager.get_next_id_of_protein_table())
+            tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
+            tmp_ref_protein.add_protein_structure_data_from_pdb_db(tmp_protein_name.upper(), the_main_socket, the_general_purpose_socket)
+            tmp_ref_protein.add_id_to_all_chains(db_manager.get_next_id_of_chain_table())
+        tmp_ref_protein.create_new_pymol_session(the_main_socket, the_general_purpose_socket)
+        the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
+    except Exception as e:
+        logger.error(e)
+        return "", None
+    else:
+        return "result", tmp_ref_protein
 
 
 def add_protein_from_local_filesystem_to_project(tmp_protein_name,
                                                  the_interface_manager):
-    pdb_filepath = pathlib.Path(tmp_protein_name)
-    tmp_ref_protein = protein.Protein(
-        pdb_filepath.name.replace(".pdb", "")
-    )
-    with database_manager.DatabaseManager(the_interface_manager.get_current_project().get_database_filepath()) as db_manager:
-        tmp_ref_protein.set_id(db_manager.get_next_id_of_protein_table())
-        tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
-        the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()
-        tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pdb_filepath, the_main_socket, the_general_purpose_socket)
-        tmp_ref_protein.add_id_to_all_chains(db_manager.get_next_id_of_chain_table())
-    tmp_ref_protein.create_new_pymol_session(the_main_socket, the_general_purpose_socket)
-    the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
-    return 0, tmp_ref_protein
+    try:
+        pdb_filepath = pathlib.Path(tmp_protein_name)
+        tmp_ref_protein = protein.Protein(
+            pdb_filepath.name.replace(".pdb", "")
+        )
+        with database_manager.DatabaseManager(the_interface_manager.get_current_project().get_database_filepath()) as db_manager:
+            tmp_ref_protein.set_id(db_manager.get_next_id_of_protein_table())
+            tmp_ref_protein.db_project_id = the_interface_manager.get_current_project().get_id()
+            the_main_socket, the_general_purpose_socket = the_interface_manager.job_manager.get_general_purpose_socket_pair()
+            tmp_ref_protein.add_protein_structure_data_from_local_pdb_file(pdb_filepath, the_main_socket, the_general_purpose_socket)
+            tmp_ref_protein.add_id_to_all_chains(db_manager.get_next_id_of_chain_table())
+        tmp_ref_protein.create_new_pymol_session(the_main_socket, the_general_purpose_socket)
+        the_interface_manager.add_protein_to_proteins_model(tmp_ref_protein)
+    except Exception as e:
+        logger.error(e)
+        return "", None
+    else:
+        return "result", tmp_ref_protein

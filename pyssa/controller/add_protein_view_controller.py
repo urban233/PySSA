@@ -146,6 +146,10 @@ class AddProteinViewController(QtCore.QObject):
         #         self._view.ui.btn_add_protein.setEnabled(False)
 
     def __await__slot_validate_input(self, return_value: tuple):
+        if return_value[0] == -1:
+            QtWidgets.QApplication.restoreOverrideCursor()
+            return
+
         tmp_type: int = return_value[0]
         tmp_is_valid: bool = return_value[1]
         tmp_name: str = return_value[2]
