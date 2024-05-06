@@ -42,7 +42,7 @@ class JobEntryWidget(QtWidgets.QWidget):
 
         self.ui.lbl_job_description.setText(f"{a_job_description} ({self.job_base_information.project_name})")
 
-        tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/do_not_disturb_on_w200.svg"))
+        tmp_cancel_job_icon = QtGui.QIcon(QtGui.QPixmap(":icons/do_not_disturb_on_w200.png"))
         self.ui.btn_cancel_job.setIcon(tmp_cancel_job_icon)
         self.ui.btn_cancel_job.setText("")
         self.ui.btn_cancel_job.setIconSize(tmp_cancel_job_icon.actualSize(QtCore.QSize(24, 24)))
@@ -117,7 +117,7 @@ class JobNotificationWidget(QtWidgets.QWidget):
         # <editor-fold desc="Widget setup">
         self.ui.lbl_job_description.setText(f"{a_description} ({self.job_base_information.project_name})")
         if self.job_base_information.job_progress == enums.JobProgress.FINISHED:
-            pixmap = QtGui.QPixmap(":icons/info_w200.svg")
+            pixmap = QtGui.QPixmap(":icons/info_w200.png")
             if job_is_from_current_project:
                 self.ui.btn_refresh.show()
                 self.ui.btn_open.hide()
@@ -135,13 +135,13 @@ class JobNotificationWidget(QtWidgets.QWidget):
                 self.ui.btn_open_image.show()
                 self.ui.btn_open_image.setText("Show")
         elif self.job_base_information.job_progress == enums.JobProgress.FAILED:
-            pixmap = QtGui.QPixmap(":icons/error_w200.svg")
+            pixmap = QtGui.QPixmap(":icons/error_w200.png")
             self.ui.btn_refresh.hide()
             self.ui.btn_open.hide()
             self.ui.btn_open_image.hide()
             self.ui.btn_clear.show()
         else:
-            pixmap = QtGui.QPixmap(":icons/warning_w200.svg")
+            pixmap = QtGui.QPixmap(":icons/warning_w200.png")
             self.ui.btn_refresh.hide()
             self.ui.btn_open.hide()
             self.ui.btn_open_image.hide()

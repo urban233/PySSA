@@ -1577,7 +1577,7 @@ class MainViewController:
                 tmp_job, tmp_job_widget = self._setup_prediction_and_analysis_job(result)
             else:
                 constants.PYSSA_LOGGER.info("Running prediction without subsequent analysis.")
-                tmp_job, tmp_job_widget = self._setup_prediction_and_analysis_job(result)
+                tmp_job, tmp_job_widget = self._setup_prediction_job(result)
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")

@@ -34,10 +34,10 @@ from pyssa.util import constants
 
 class CustomMessageBoxIcons(enum.Enum):
     """Enumeration of custom message box icons."""
-    INFORMATION = ":/icons/info_w200.svg"
-    WARNING = ":/icons/warning_w200.svg"
-    ERROR = ":/icons/error_w200.svg"
-    DANGEROUS = ":/icons/dangerous_w200.svg"
+    INFORMATION = ":/icons/info_w200.png"
+    WARNING = ":/icons/warning_w200.png"
+    ERROR = ":/icons/error_w200.png"
+    DANGEROUS = ":/icons/dangerous_w200.png"
 
 
 class CustomMessageBox(QtWidgets.QDialog):
