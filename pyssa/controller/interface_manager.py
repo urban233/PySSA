@@ -980,12 +980,23 @@ class InterfaceManager:
                     self._main_view.ui.menuHotspots.setEnabled(True)
                     self._main_view.ui.action_protein_regions.setEnabled(True)
 
+                try:
+                    if self.get_current_active_scene_name() == "base":
+                        self._main_view.ui.btn_delete_protein_scene.setEnabled(False)
+                except ValueError:
+                    pass  # Is necessary because tree view selection might be something else than a scene.
+
                 if len(self._current_project.protein_pairs) > 0:
                     # A project has protein pair(s)
                     self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
                     self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
                     # It is possible to view results
                     self._main_view.ui.menuResults.setEnabled(True)
+                    try:
+                        if self.get_current_active_scene_name_of_protein_pair() == "base":
+                            self._main_view.ui.btn_delete_protein_pair_scene.setEnabled(False)
+                    except ValueError:
+                        pass  # Is necessary because tree view selection might be something else than a scene.
                 else:
                     # A project has no protein pair(s)
                     # Protein Pairs tab

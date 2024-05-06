@@ -4421,8 +4421,8 @@ class MainViewController:
                 if self._interface_manager.current_tab_index == 1:
                     self._save_protein_pymol_session()
                     self._interface_manager.remove_scene_from_proteins_model(self._interface_manager.get_current_protein_tree_index())
-                    self._interface_manager.refresh_main_view()
                     self._view.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Selected")
+                    self.__await_delete_current_scene((0, True))
                 elif self._interface_manager.current_tab_index == 2:
                     # The database thread cannot be used here because the session gets loaded again
                     # before the new data is in the db
