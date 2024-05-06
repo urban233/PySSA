@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>666</width>
-    <height>932</height>
+    <width>804</width>
+    <height>1023</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -686,8 +686,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>295</width>
-                        <height>285</height>
+                        <width>365</width>
+                        <height>302</height>
                        </rect>
                       </property>
                       <property name="styleSheet">
@@ -727,7 +727,7 @@
                             <enum>Qt::Horizontal</enum>
                            </property>
                            <property name="sizeType">
-                            <enum>QSizePolicy::Minimum</enum>
+                            <enum>QSizePolicy::Expanding</enum>
                            </property>
                            <property name="sizeHint" stdset="0">
                             <size>
@@ -736,20 +736,6 @@
                             </size>
                            </property>
                           </spacer>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="btn_protein_show_hydrogens">
-                           <property name="text">
-                            <string>Show</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="btn_protein_hide_hydrogens">
-                           <property name="text">
-                            <string>Hide</string>
-                           </property>
-                          </widget>
                          </item>
                         </layout>
                        </item>
@@ -1646,8 +1632,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>295</width>
-                        <height>285</height>
+                        <width>365</width>
+                        <height>314</height>
                        </rect>
                       </property>
                       <property name="sizePolicy">
@@ -1681,7 +1667,7 @@
                             <enum>Qt::Horizontal</enum>
                            </property>
                            <property name="sizeType">
-                            <enum>QSizePolicy::Minimum</enum>
+                            <enum>QSizePolicy::Expanding</enum>
                            </property>
                            <property name="sizeHint" stdset="0">
                             <size>
@@ -2220,7 +2206,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>662</width>
+            <width>800</width>
             <height>196</height>
            </rect>
           </property>
@@ -2318,7 +2304,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>662</width>
+            <width>800</width>
             <height>196</height>
            </rect>
           </property>
@@ -2368,8 +2354,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>666</width>
-     <height>21</height>
+     <width>804</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">

@@ -20,7 +20,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the main view controller."""
-import copy
 import logging
 import os
 import pathlib
@@ -36,6 +35,7 @@ from PyQt5 import QtWidgets
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
+
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
 from pyssa.gui.ui.custom_context_menus import protein_tree_context_menu, protein_pair_tree_context_menu, \
     sequence_list_context_menu
@@ -51,7 +51,7 @@ from pyssa.internal.data_structures.data_classes import main_view_state
 from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import database_operation
-from pyssa.internal.thread import tasks, task_workers, database_thread
+from pyssa.internal.thread import tasks, database_thread
 from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.util import constants, enums, exit_codes, tools, ui_util
@@ -241,7 +241,7 @@ class MainViewController:
         # self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
         # self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
         self._view.tg_protein_color_atoms.toggleChanged.connect(self.__slot_color_protein_atoms_by_element)
-        self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_chain_with_hydrogens)
+        self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_chain_protein_with_hydrogens)
         self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
         self._view.tg_protein_ribbon.toggleChanged.connect(self.__slot_protein_chain_as_ribbon)
@@ -2999,6 +2999,7 @@ class MainViewController:
                     self._interface_manager.set_repr_state_in_ui_for_protein_chain(
                         self._interface_manager.pymol_session_manager
                     )
+                    self._view.tg_protein_hydrogen_atoms.toggle_button.setChecked(False)
                     self._main_view_state.selected_chain_proteins = self._interface_manager.get_current_protein_tree_index()
 
             elif tmp_type == "header":
@@ -3630,70 +3631,44 @@ class MainViewController:
 
     # <editor-fold desc="Representations">
     # hydrogens
-    def __slot_protein_chain_with_hydrogens(self):
-        pass
-        if self._view.tg_protein_hydrogen_atoms.toggle_button.isChecked():
-            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object().chain_letter)
-            self._interface_manager.pymol_session_manager.color_protein(
-                "h.", f"{tmp_selection.selection_string} and not elem C"
-            )
-            self.reset_icon_for_last_color_in_proteins_tab()
-            self._view.ui.lbl_protein_current_color.setText("By Element    ")
-        else:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
-            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object().chain_letter)
-            self._interface_manager.pymol_session_manager.color_protein(
-                self._view.color_grid_proteins.last_clicked_color, f"{tmp_selection.selection_string}"
-            )
-            self.set_icon_for_current_color_in_proteins_tab()
-
-
-    def __slot_show_protein_chain_with_hydrogens(self):
+    def __slot_chain_protein_with_hydrogens(self):
         try:
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
-            tmp_chain = self._interface_manager.get_current_active_chain_object()
-            if self._view.tg_protein_sticks.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    "sticks", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_lines.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    "lines", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_spheres.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    "spheres", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
+            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+            tmp_selection.set_selection_for_a_single_chain(
+                self._interface_manager.get_current_active_chain_object().chain_letter)
+            tmp_pymol_selection: str = f"h. and {tmp_selection.selection_string}"
+
+            if self._view.tg_protein_hydrogen_atoms.toggle_button.isChecked():
+                if self._view.tg_protein_sticks.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
+                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_lines.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
+                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_spheres.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
+                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
+                    )
+            else:
+                if self._view.tg_protein_sticks.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
+                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_lines.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
+                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_spheres.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
+                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
+                    )
+
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def __slot_hide_protein_chain_with_hydrogens(self):
-        try:
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
-            tmp_chain = self._interface_manager.get_current_active_chain_object()
-            if self._view.tg_protein_sticks.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    "sticks", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_lines.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    "lines", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_spheres.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    "spheres", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    # cartoon
     def __slot_protein_chain_as_cartoon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3746,6 +3721,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
+            self.__slot_chain_protein_with_hydrogens()
             self._update_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -3808,6 +3784,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
                 )
+            self.__slot_chain_protein_with_hydrogens()
             self._update_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -3839,6 +3816,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
                 )
+            self.__slot_chain_protein_with_hydrogens()
             self._update_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -4674,6 +4652,7 @@ class MainViewController:
                     self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(
                         tmp_protein_name, self._interface_manager.pymol_session_manager
                     )
+                    self._view.tg_protein_pair_hydrogen_atoms.toggle_button.setChecked(False)
                     self._main_view_state.selected_chain_protein_pairs = self._interface_manager.get_current_protein_pair_tree_index()
 
             elif tmp_type == "header":
@@ -5355,50 +5334,43 @@ class MainViewController:
     # <editor-fold desc="Representations">
     # hydrogens
     def __slot_protein_pair_chain_with_hydrogens(self):
-        pass
-
-
-    def __slot_show_protein_pair_chain_with_hydrogens(self):
         try:
-            tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-            tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    "sticks", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_pair_lines.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    "lines", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    "spheres", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
+            tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+            tmp_selection.set_selection_for_a_single_chain(
+                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
+            tmp_pymol_selection: str = f"h. and {tmp_selection.selection_string}"
+
+            if self._view.tg_protein_pair_hydrogen_atoms.toggle_button.isChecked():
+                if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
+                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_pair_lines.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
+                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
+                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
+                    )
+            else:
+                if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
+                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_pair_lines.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
+                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
+                    )
+                if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
+                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
+                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
+                    )
+
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def __slot_hide_protein_pair_chain_with_hydrogens(self):
-        try:
-            tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-            tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    "sticks", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_pair_lines.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    "lines", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-            if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    "spheres", f"h. and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-                )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    # cartoon
     def _create_selection_string_for_representations(self):
         tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
@@ -5407,6 +5379,7 @@ class MainViewController:
                                                                                    tmp_protein_pair)
         return f"/{tmp_protein_name}//{tmp_chain.chain_letter}"
 
+    # cartoon
     def __slot_protein_pair_chain_as_cartoon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -5458,6 +5431,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
+            self.__slot_protein_pair_chain_with_hydrogens()
             self._update_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
@@ -5501,6 +5475,7 @@ class MainViewController:
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Lines' toggle on the 'Protein Pairs Tab' was clicked.")
+            self.__slot_protein_pair_chain_with_hydrogens()
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_lines.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
@@ -5548,6 +5523,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
                 )
+            self.__slot_protein_pair_chain_with_hydrogens()
             self._update_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()

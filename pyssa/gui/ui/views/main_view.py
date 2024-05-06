@@ -274,8 +274,6 @@ class MainView(QtWidgets.QMainWindow):
         # old
         self.ui.btn_protein_color_atoms.hide()
         self.ui.btn_protein_reset_atoms.hide()
-        self.ui.btn_protein_show_hydrogens.hide()
-        self.ui.btn_protein_hide_hydrogens.hide()
         self.ui.btn_protein_show_cartoon.hide()
         self.ui.btn_protein_hide_cartoon.hide()
         self.ui.btn_protein_show_sticks.hide()
