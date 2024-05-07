@@ -656,8 +656,8 @@ class InterfaceManager:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA"
             else:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            if self.pymol_session_manager.get_residue_color_config(f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter}",
-                                                                   tmp_chain.chain_letter).atoms_are_colored_by_elements():
+            if self.pymol_session_manager.get_residue_color_config_of_a_given_selection(f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter}",
+                                                                                        tmp_chain.chain_letter).atoms_are_colored_by_elements():
                 self._main_view.ui.lbl_protein_current_color.setText("By Element    ")
                 self._main_view.tg_protein_color_atoms.toggle_button.setChecked(True)
             else:
@@ -1918,16 +1918,14 @@ class InterfaceManager:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and name CA and {a_protein_name}"
             else:
                 tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            if self.pymol_session_manager.get_residue_color_config(f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter} and {a_protein_name}",
-                                                                   tmp_chain.chain_letter).atoms_are_colored_by_elements():
+            if self.pymol_session_manager.get_residue_color_config_of_a_given_selection(f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter} and {a_protein_name}",
+                                                                                        tmp_chain.chain_letter).atoms_are_colored_by_elements():
                 self._main_view.ui.lbl_protein_pair_current_color.setText("By Element    ")
                 self._main_view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
             else:
                 rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
                 self._main_view.ui.lbl_protein_pair_current_color.setText(f"{tmp_chain.pymol_parameters['chain_color']}    ")
                 self._main_view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
-
-
 
         #     # fixme: This can easily be bypassed by a power user if the first residue color is changed
         #     if tmp_chain.chain_type == "protein_chain":
