@@ -1260,16 +1260,15 @@ class MainViewController:
                 # Open db and create project
                 self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
                 #self._database_thread.start()
-                self._database_manager.set_database_filepath(tmp_project_database_filepath)
-                #self._database_manager.open_project_database()
-                self._database_manager.update_project_name(tmp_new_project_name)
-                tmp_project = self._database_manager.get_project_as_object(
-                    tmp_new_project_name,
-                    self._interface_manager.get_application_settings().workspace_path,
-                    self._interface_manager.get_application_settings()
-                )
+                with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+                    db_manager.update_project_name(tmp_new_project_name)
+                    tmp_project = db_manager.get_project_as_object(
+                        tmp_new_project_name,
+                        self._interface_manager.get_application_settings().workspace_path,
+                        self._interface_manager.get_application_settings()
+                    )
                 self._interface_manager.set_new_project(tmp_project)
-
+                self._interface_manager.refresh_workspace_model()
                 self._interface_manager.refresh_main_view()
                 self._interface_manager.pymol_session_manager.reinitialize_session()
                 self._interface_manager.stop_wait_cursor()
@@ -4642,13 +4641,13 @@ class MainViewController:
                     f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
                 )
                 if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
-                    if self._view.ui.lbl_protein_pair_current_color.text() != "By Element    ":
-                        self.reset_icon_for_last_color_in_protein_pairs_tab()
-                    self._interface_manager.set_current_chain_color_for_ui_for_protein_pairs(
+                    self.reset_icon_for_last_color_in_protein_pairs_tab()
+                    self._interface_manager.get_current_chain_color_of_current_protein_pair_pymol_session(
                         tmp_protein_name, self._interface_manager.pymol_session_manager
                     )
-                    if self._view.ui.lbl_protein_pair_current_color.text() != "By Element    ":
-                        self.set_icon_for_current_color_in_protein_pairs_tab()
+                    self.set_icon_for_current_color_in_protein_pairs_tab()
+                    #if self._view.ui.lbl_protein_pair_current_color.text() != "By Element    ":
+
                     self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(
                         tmp_protein_name, self._interface_manager.pymol_session_manager
                     )
@@ -4851,7 +4850,10 @@ class MainViewController:
                 "white": self.set_color_name_in_label_white_in_protein_pairs_tab,
                 "grey70": self.set_color_name_in_label_grey_70_in_protein_pairs_tab,
                 "grey30": self.set_color_name_in_label_grey_30_in_protein_pairs_tab,
-                "black": self.set_color_name_in_label_black_in_protein_pairs_tab
+                "black": self.set_color_name_in_label_black_in_protein_pairs_tab,
+                "N-blue": self.set_color_name_in_label_by_elements_in_protein_pairs_tab,
+                "O-red": self.set_color_name_in_label_by_elements_in_protein_pairs_tab,
+                "By Element": self.set_color_name_in_label_by_elements_in_protein_pairs_tab,
             }
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
             tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
@@ -4904,7 +4906,10 @@ class MainViewController:
                 "white": self.reset_icon_for_white_in_protein_pairs_tab,
                 "grey70": self.reset_icon_for_grey_70_in_protein_pairs_tab,
                 "grey30": self.reset_icon_for_grey_30_in_protein_pairs_tab,
-                "black": self.reset_icon_for_black_in_protein_pairs_tab
+                "black": self.reset_icon_for_black_in_protein_pairs_tab,
+                "N-blue": self.reset_icon_for_by_elements_in_protein_pairs_tab,
+                "O-red": self.reset_icon_for_by_elements_in_protein_pairs_tab,
+                "By Element": self.reset_icon_for_by_elements_in_protein_pairs_tab,
             }
             color_index_functions[tmp_color_name.strip()]()
         except Exception as e:
@@ -4912,6 +4917,16 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     # <editor-fold desc="Set color and icon">
+    def set_color_in_protein_pairs_color_grid(self):
+        pass
+
+
+    def set_color_name_in_label_by_elements_in_protein_pairs_tab(self):
+        self.reset_icon_for_last_color_in_protein_pairs_tab()
+        self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
+        self._view.color_grid_protein_pairs.last_clicked_color = "By Element"
+        self.__slot_change_chain_color_protein_pairs()
+
     def set_color_name_in_label_red_in_protein_pairs_tab(self):
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("red    ")
@@ -5170,9 +5185,6 @@ class MainViewController:
             self._view.color_grid_protein_pairs.c_white.icon().actualSize(QtCore.QSize(14, 14)))
 
     def set_color_name_in_label_grey_70_in_protein_pairs_tab(self):
-        tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-        tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
         self.reset_icon_for_last_color_in_protein_pairs_tab()
         self._view.ui.lbl_protein_pair_current_color.setText("grey70    ")
         self.__slot_change_chain_color_protein_pairs()
@@ -5201,6 +5213,9 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Reset Icon">
+    def reset_icon_for_by_elements_in_protein_pairs_tab(self):
+        self._view.ui.lbl_protein_pair_current_color.setText("By Element")
+
     def reset_icon_for_red_in_protein_pairs_tab(self):
         self._view.ui.lbl_protein_pair_current_color.setText("red")
         self._view.color_grid_protein_pairs.c_red.setIcon(QtGui.QIcon())

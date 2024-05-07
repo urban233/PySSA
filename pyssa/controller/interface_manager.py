@@ -1906,7 +1906,7 @@ class InterfaceManager:
             # self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(False)
             self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(False)
 
-    def set_current_chain_color_for_ui_for_protein_pairs(
+    def get_current_chain_color_of_current_protein_pair_pymol_session(
             self,
             a_protein_name: str,
             the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"

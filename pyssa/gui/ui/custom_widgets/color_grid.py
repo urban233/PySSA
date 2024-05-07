@@ -221,3 +221,9 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         self.c_grey_70.setToolTip("grey70")
         self.c_grey_30.setToolTip("grey30")
         self.c_black.setToolTip("black")
+
+    def get_all_color_buttons(self) -> dict:
+        return {
+            "red": self.c_red,
+            # TODO: add remaining buttons
+        }
