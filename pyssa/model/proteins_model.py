@@ -82,6 +82,10 @@ class ProteinsModel(QtGui.QStandardItemModel):
                 tmp_chain_item = QtGui.QStandardItem(tmp_chain.chain_letter)
                 tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
                 tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
+                tmp_chain_item.setData(
+                    tmp_chain.pymol_parameters[enums.PymolParameterEnum.COLOR.value],
+                    enums.ModelEnum.CHAIN_COLOR_ROLE
+                )
                 tmp_chains_item.appendRow(tmp_chain_item)
             i += 1
 

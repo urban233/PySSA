@@ -206,10 +206,10 @@ class PyMOLInterface:
         else:
             return tmp_reply
 
-    def get_residue_color_config(self, a_selection_string, a_chain_letter):
+    def get_residue_color_config(self, a_protein_name, a_chain_letter):
         tmp_pymol_command = pymol_command.PyMOLCommand(
             pymol_enums.CommandEnum.GET_RESIDUE_COLOR_CONFIG,
-            (a_selection_string, a_chain_letter)
+            (a_protein_name, a_chain_letter)
         )
         try:
             tmp_reply = send_command_to_pymol(self._main_socket, tmp_pymol_command, self._poller, self._app_process_manager)

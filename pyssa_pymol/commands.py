@@ -153,18 +153,24 @@ def get_chain_color(a_selection_string, chain_letter):
     return True, "", (tmp_chain_color, tmp_ca_atom_colors, tmp_is_colored_by_elements)
 
 
-def get_residue_color_config(a_selection_string, chain_letter):
+def get_residue_color_config(a_protein_name, chain_letter):
     """Gets the colors of C-, N-, and O-atoms for the first residue of the given selection."""
     pymol.stored.colors = []
-    cmd.iterate(a_selection_string, "stored.colors.append((chain, resi, name, color, elem))")
+    tmp_selections = [
+        f"first e. N and chain {chain_letter} and {a_protein_name}",
+        f"first e. O and chain {chain_letter} and {a_protein_name}",
+        f"first e. C and chain {chain_letter} and {a_protein_name}",
+    ]  # example
     tmp_residue_element_colors = ["", "", ""]
-    for chain, resi, name, color_index, element in pymol.stored.colors:
-        if chain == chain_letter and element == "C":  # C atom
-            tmp_residue_element_colors[0] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
-        elif chain == chain_letter and element == "N":  # N atom
-            tmp_residue_element_colors[1] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
-        elif chain == chain_letter and element == "O":  # O atom
-            tmp_residue_element_colors[2] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
+    for tmp_selection in tmp_selections:
+        cmd.iterate(tmp_selection, "stored.colors.append((chain, resi, name, color, elem))")
+        for chain, resi, name, color_index, element in pymol.stored.colors:
+            if chain == chain_letter and element == "C":  # C atom
+                tmp_residue_element_colors[0] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
+            elif chain == chain_letter and element == "N":  # N atom
+                tmp_residue_element_colors[1] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
+            elif chain == chain_letter and element == "O":  # O atom
+                tmp_residue_element_colors[2] = constants.PYMOL_COLORS_WITH_INDICES[color_index]
     return True, "", tmp_residue_element_colors
 
 

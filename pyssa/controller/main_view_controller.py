@@ -47,7 +47,7 @@ from pyssa.controller import results_view_controller, rename_protein_view_contro
     add_sequence_view_controller, add_scene_view_controller, add_protein_view_controller, settings_view_controller, \
     predict_protein_view_controller, import_sequence_view_controller, rename_sequence_view_controller, watcher
 from pyssa.internal.data_structures import chain
-from pyssa.internal.data_structures.data_classes import main_view_state
+from pyssa.internal.data_structures.data_classes import main_view_state, residue_color_config
 from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import database_operation
@@ -255,45 +255,45 @@ class MainViewController:
         self._view.ui.btn_help_2.clicked.connect(self.__slot_open_proteins_tab_help)
 
         # <editor-fold desc="Color Grid">
-        self._view.color_grid_proteins.c_red.clicked.connect(self.set_color_name_in_label_red_in_proteins_tab)
-        self._view.color_grid_proteins.c_tv_red.clicked.connect(self.set_color_name_in_label_tv_red_in_proteins_tab)
-        self._view.color_grid_proteins.c_salomon.clicked.connect(self.set_color_name_in_label_salmon_in_proteins_tab)
-        self._view.color_grid_proteins.c_raspberry.clicked.connect(self.set_color_name_in_label_raspberry_in_proteins_tab)
+        self._view.color_grid_proteins.c_red.clicked.connect(lambda: self.__slot_change_chain_color_proteins("red"))
+        self._view.color_grid_proteins.c_tv_red.clicked.connect(lambda: self.__slot_change_chain_color_proteins("tv_red"))
+        self._view.color_grid_proteins.c_salomon.clicked.connect(lambda: self.__slot_change_chain_color_proteins("salmon"))
+        self._view.color_grid_proteins.c_raspberry.clicked.connect(lambda: self.__slot_change_chain_color_proteins("raspberry"))
 
-        self._view.color_grid_proteins.c_green.clicked.connect(self.set_color_name_in_label_green_in_proteins_tab)
-        self._view.color_grid_proteins.c_tv_green.clicked.connect(self.set_color_name_in_label_tv_green_in_proteins_tab)
-        self._view.color_grid_proteins.c_palegreen.clicked.connect(self.set_color_name_in_label_palegreen_in_proteins_tab)
-        self._view.color_grid_proteins.c_forest.clicked.connect(self.set_color_name_in_label_forest_in_proteins_tab)
+        self._view.color_grid_proteins.c_green.clicked.connect(lambda: self.__slot_change_chain_color_proteins("green"))
+        self._view.color_grid_proteins.c_tv_green.clicked.connect(lambda: self.__slot_change_chain_color_proteins("tv_green"))
+        self._view.color_grid_proteins.c_palegreen.clicked.connect(lambda: self.__slot_change_chain_color_proteins("palegreen"))
+        self._view.color_grid_proteins.c_forest.clicked.connect(lambda: self.__slot_change_chain_color_proteins("forest"))
 
-        self._view.color_grid_proteins.c_blue.clicked.connect(self.set_color_name_in_label_blue_in_proteins_tab)
-        self._view.color_grid_proteins.c_tv_blue.clicked.connect(self.set_color_name_in_label_tv_blue_in_proteins_tab)
-        self._view.color_grid_proteins.c_lightblue.clicked.connect(self.set_color_name_in_label_lightblue_in_proteins_tab)
-        self._view.color_grid_proteins.c_skyblue.clicked.connect(self.set_color_name_in_label_skyblue_in_proteins_tab)
+        self._view.color_grid_proteins.c_blue.clicked.connect(lambda: self.__slot_change_chain_color_proteins("blue"))
+        self._view.color_grid_proteins.c_tv_blue.clicked.connect(lambda: self.__slot_change_chain_color_proteins("tv_blue"))
+        self._view.color_grid_proteins.c_lightblue.clicked.connect(lambda: self.__slot_change_chain_color_proteins("lightblue"))
+        self._view.color_grid_proteins.c_skyblue.clicked.connect(lambda: self.__slot_change_chain_color_proteins("skyblue"))
 
-        self._view.color_grid_proteins.c_yellow.clicked.connect(self.set_color_name_in_label_yellow_in_proteins_tab)
-        self._view.color_grid_proteins.c_tv_yellow.clicked.connect(self.set_color_name_in_label_tv_yellow_in_proteins_tab)
-        self._view.color_grid_proteins.c_paleyellow.clicked.connect(self.set_color_name_in_label_paleyellow_in_proteins_tab)
-        self._view.color_grid_proteins.c_sand.clicked.connect(self.set_color_name_in_label_sand_in_proteins_tab)
+        self._view.color_grid_proteins.c_yellow.clicked.connect(lambda: self.__slot_change_chain_color_proteins("yellow"))
+        self._view.color_grid_proteins.c_tv_yellow.clicked.connect(lambda: self.__slot_change_chain_color_proteins("tv_yellow"))
+        self._view.color_grid_proteins.c_paleyellow.clicked.connect(lambda: self.__slot_change_chain_color_proteins("paleyellow"))
+        self._view.color_grid_proteins.c_sand.clicked.connect(lambda: self.__slot_change_chain_color_proteins("sand"))
 
-        self._view.color_grid_proteins.c_magenta.clicked.connect(self.set_color_name_in_label_magenta_in_proteins_tab)
-        self._view.color_grid_proteins.c_purple.clicked.connect(self.set_color_name_in_label_purple_in_proteins_tab)
-        self._view.color_grid_proteins.c_pink.clicked.connect(self.set_color_name_in_label_pink_in_proteins_tab)
-        self._view.color_grid_proteins.c_hotpink.clicked.connect(self.set_color_name_in_label_hotpink_in_proteins_tab)
+        self._view.color_grid_proteins.c_magenta.clicked.connect(lambda: self.__slot_change_chain_color_proteins("magenta"))
+        self._view.color_grid_proteins.c_purple.clicked.connect(lambda: self.__slot_change_chain_color_proteins("purple"))
+        self._view.color_grid_proteins.c_pink.clicked.connect(lambda: self.__slot_change_chain_color_proteins("pink"))
+        self._view.color_grid_proteins.c_hotpink.clicked.connect(lambda: self.__slot_change_chain_color_proteins("hotpink"))
 
-        self._view.color_grid_proteins.c_cyan.clicked.connect(self.set_color_name_in_label_cyan_in_proteins_tab)
-        self._view.color_grid_proteins.c_aquamarine.clicked.connect(self.set_color_name_in_label_aquamarine_in_proteins_tab)
-        self._view.color_grid_proteins.c_palecyan.clicked.connect(self.set_color_name_in_label_palecyan_in_proteins_tab)
-        self._view.color_grid_proteins.c_teal.clicked.connect(self.set_color_name_in_label_teal_in_proteins_tab)
+        self._view.color_grid_proteins.c_cyan.clicked.connect(lambda: self.__slot_change_chain_color_proteins("cyan"))
+        self._view.color_grid_proteins.c_aquamarine.clicked.connect(lambda: self.__slot_change_chain_color_proteins("aquamarine"))
+        self._view.color_grid_proteins.c_palecyan.clicked.connect(lambda: self.__slot_change_chain_color_proteins("palecyan"))
+        self._view.color_grid_proteins.c_teal.clicked.connect(lambda: self.__slot_change_chain_color_proteins("teal"))
 
-        self._view.color_grid_proteins.c_orange.clicked.connect(self.set_color_name_in_label_orange_in_proteins_tab)
-        self._view.color_grid_proteins.c_tv_orange.clicked.connect(self.set_color_name_in_label_tv_orange_in_proteins_tab)
-        self._view.color_grid_proteins.c_lightorange.clicked.connect(self.set_color_name_in_label_lightorange_in_proteins_tab)
-        self._view.color_grid_proteins.c_olive.clicked.connect(self.set_color_name_in_label_olive_in_proteins_tab)
+        self._view.color_grid_proteins.c_orange.clicked.connect(lambda: self.__slot_change_chain_color_proteins("orange"))
+        self._view.color_grid_proteins.c_tv_orange.clicked.connect(lambda: self.__slot_change_chain_color_proteins("tv_orange"))
+        self._view.color_grid_proteins.c_lightorange.clicked.connect(lambda: self.__slot_change_chain_color_proteins("lightorange"))
+        self._view.color_grid_proteins.c_olive.clicked.connect(lambda: self.__slot_change_chain_color_proteins("olive"))
 
-        self._view.color_grid_proteins.c_white.clicked.connect(self.set_color_name_in_label_white_in_proteins_tab)
-        self._view.color_grid_proteins.c_grey_70.clicked.connect(self.set_color_name_in_label_grey_70_in_proteins_tab)
-        self._view.color_grid_proteins.c_grey_30.clicked.connect(self.set_color_name_in_label_grey_30_in_proteins_tab)
-        self._view.color_grid_proteins.c_black.clicked.connect(self.set_color_name_in_label_black_in_proteins_tab)
+        self._view.color_grid_proteins.c_white.clicked.connect(lambda: self.__slot_change_chain_color_proteins("white"))
+        self._view.color_grid_proteins.c_grey_70.clicked.connect(lambda: self.__slot_change_chain_color_proteins("grey_70"))
+        self._view.color_grid_proteins.c_grey_30.clicked.connect(lambda: self.__slot_change_chain_color_proteins("grey_30"))
+        self._view.color_grid_proteins.c_black.clicked.connect(lambda: self.__slot_change_chain_color_proteins("black"))
         # </editor-fold>
 
         # <editor-fold desc="Protein tree context menu">
@@ -2988,13 +2988,8 @@ class MainViewController:
                     f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
                 )
                 if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
-                    if self._view.ui.lbl_protein_current_color.text() != "By Element    ":
-                        self.reset_icon_for_last_color_in_proteins_tab()
-                    self._interface_manager.set_current_chain_color_for_ui_for_proteins(
-                        self._interface_manager.pymol_session_manager
-                    )
-                    if self._view.ui.lbl_protein_current_color.text() != "By Element    ":
-                        self.set_icon_for_current_color_in_proteins_tab()
+
+                    self.set_color_in_proteins_color_grid()
                     self._interface_manager.set_repr_state_in_ui_for_protein_chain(
                         self._interface_manager.pymol_session_manager
                     )
@@ -3022,13 +3017,15 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def __slot_change_chain_color_proteins(self) -> None:
+    def __slot_change_chain_color_proteins(self, a_color) -> None:
         try:
+
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "The 'Color' attribute of a protein chain on the 'Proteins Tab' changed.")
             tmp_protein = self._interface_manager.get_current_active_protein_object()
             tmp_chain = self._interface_manager.get_current_active_chain_object()
-            tmp_color = self._view.ui.lbl_protein_current_color.text().strip()
+            #tmp_color = self._view.ui.lbl_protein_current_color.text().strip()
+            tmp_color = a_color
             # fixme : below is legacy code!
             # if self._interface_manager.get_settings_manager().settings.proteins_tab_use_combobox_for_colors == 1:
             #     tmp_color = self._view.ui.box_protein_color.currentText()
@@ -3041,10 +3038,14 @@ class MainViewController:
                     tmp_color, tmp_protein.pymol_selection.selection_string
                 )
                 # Update pymol parameter in memory
-                tmp_chain.pymol_parameters["chain_color"] = tmp_color
-                # Update pymol parameter in database
-                with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                    db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
+                self.reset_color_in_proteins_color_grid()
+                if tmp_color != "By Element":
+                    tmp_chain.pymol_parameters["chain_color"] = tmp_color
+                    self._interface_manager.set_current_active_chain_color_of_protein(tmp_color)
+                    # Update pymol parameter in database
+                    with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                        db_manager.update_protein_chain_color(tmp_chain.get_id(), tmp_color)
+                self.set_color_in_proteins_color_grid()
                 self._update_scene()
                 self._save_protein_pymol_session()
                 self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
@@ -3096,7 +3097,8 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.color_protein(
                     "grey70", f"{tmp_selection.selection_string} and elem C"
                 )
-                self.reset_icon_for_last_color_in_proteins_tab()
+                self.reset_color_in_proteins_color_grid()
+                self.set_color_in_proteins_color_grid()
                 self._view.ui.lbl_protein_current_color.setText("By Element    ")
             else:
                 logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3104,10 +3106,12 @@ class MainViewController:
                 tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
                 tmp_selection.set_selection_for_a_single_chain(
                     self._interface_manager.get_current_active_chain_object().chain_letter)
+                tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
                 self._interface_manager.pymol_session_manager.color_protein(
-                    self._view.color_grid_proteins.last_clicked_color, f"{tmp_selection.selection_string}"
+                    tmp_chain_color, f"{tmp_selection.selection_string}"
                 )
-                self.set_icon_for_current_color_in_proteins_tab()
+                self.reset_color_in_proteins_color_grid()
+                self.set_color_in_proteins_color_grid()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
@@ -3123,6 +3127,43 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     # <editor-fold desc="Color Grid slot methods">
+    def reset_all_colors_in_proteins_color_grid(self):
+        # TODO: create function that loops through color rolrs
+
+    def reset_color_in_proteins_color_grid(self):
+        tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
+        # tmp_protein = self._interface_manager.get_current_active_protein_object()
+        # tmp_chain = self._interface_manager.get_current_active_chain_object()
+        tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
+        if tmp_chain_color != "" and tmp_chain_color != "By Element":
+            tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_chain_color]
+            tmp_last_color_grid_button.setIcon(QtGui.QIcon())
+
+    def set_color_in_proteins_color_grid(self):
+        tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
+        # get color from protein chain
+        tmp_protein = self._interface_manager.get_current_active_protein_object()
+        tmp_chain = self._interface_manager.get_current_active_chain_object()
+        tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
+
+        tmp_residue_config: residue_color_config.ResidueColorConfig = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
+            tmp_protein.get_molecule_object(), tmp_chain.chain_letter
+        )
+        # if tmp_chain_color != "" and tmp_chain_color != "By Element":
+        #     tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_chain_color]
+        #     tmp_last_color_grid_button.setIcon(QtGui.QIcon())
+        if tmp_residue_config.atoms_are_colored_by_elements():
+            # chain is colored by elements
+            self._view.ui.lbl_protein_current_color.setText("By Element    ")
+            self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
+        else:
+            self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
+            self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+            tmp_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_residue_config.carbon_color]
+            tmp_color_grid_button.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+            tmp_color_grid_button.setIconSize(tmp_color_grid_button.icon().actualSize(QtCore.QSize(14, 14)))
+        self._view.color_grid_proteins.last_clicked_color = self._view.ui.lbl_protein_current_color.text().strip()
+
     def set_icon_for_current_color_in_proteins_tab(self):
         color_index_functions = {
             "red": self.set_color_name_in_label_red_in_proteins_tab,
@@ -4641,13 +4682,13 @@ class MainViewController:
                     f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
                 )
                 if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
-                    self.reset_icon_for_last_color_in_protein_pairs_tab()
-                    self._interface_manager.get_current_chain_color_of_current_protein_pair_pymol_session(
-                        tmp_protein_name, self._interface_manager.pymol_session_manager
-                    )
-                    self.set_icon_for_current_color_in_protein_pairs_tab()
+                    # self.reset_icon_for_last_color_in_protein_pairs_tab()
+                    # self._interface_manager.get_current_chain_color_of_current_protein_pair_pymol_session(
+                    #     tmp_protein_name, self._interface_manager.pymol_session_manager
+                    # )
+                    # self.set_icon_for_current_color_in_protein_pairs_tab()
                     #if self._view.ui.lbl_protein_pair_current_color.text() != "By Element    ":
-
+                    self.set_color_in_protein_pairs_color_grid()
                     self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(
                         tmp_protein_name, self._interface_manager.pymol_session_manager
                     )
@@ -4922,18 +4963,23 @@ class MainViewController:
         # get color from protein chain
         tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-        tmp_pymol_selection = f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-        tmp_residue_config: "residue_color_config.ResidueColorConfig" = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
-            tmp_pymol_selection, tmp_chain.chain_letter
+        tmp_residue_config: residue_color_config.ResidueColorConfig = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
+            tmp_protein.get_molecule_object(), tmp_chain.chain_letter
         )
+        if self._view.color_grid_protein_pairs.last_clicked_color != "":
+            tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[self._view.color_grid_protein_pairs.last_clicked_color]
+            tmp_last_color_grid_button.setIcon(QtGui.QIcon())
         if tmp_residue_config.atoms_are_colored_by_elements():
-            pass
-        # set color label
-
-        # reset icon
-
-        # set icon
-
+            # chain is colored by elements
+            self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
+            self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
+        else:
+            self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
+            self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+            tmp_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_residue_config.carbon_color]
+            tmp_color_grid_button.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+            tmp_color_grid_button.setIconSize(tmp_color_grid_button.icon().actualSize(QtCore.QSize(14, 14)))
+        self._view.color_grid_protein_pairs.last_clicked_color = self._view.ui.lbl_protein_pair_current_color.text().strip()
 
     def set_color_name_in_label_by_elements_in_protein_pairs_tab(self):
         self.reset_icon_for_last_color_in_protein_pairs_tab()

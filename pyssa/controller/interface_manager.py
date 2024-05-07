@@ -432,6 +432,42 @@ class InterfaceManager:
         else:
             raise ValueError("Unknown type!")
 
+    def get_current_active_chain_color_of_protein(self) -> str:
+        """Returns the chain color of the current active branch.
+
+        Returns:
+            a chain color
+        """
+        tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
+        if tmp_type == "protein":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "header":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "scene":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "chain":
+            return self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.CHAIN_COLOR_ROLE)
+        else:
+            raise ValueError("Unknown type!")
+
+    def set_current_active_chain_color_of_protein(self, a_color) -> None:
+        """
+        """
+        tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
+        if tmp_type == "protein":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "header":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "scene":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "chain":
+            self._main_view.ui.proteins_tree_view.model().setData(
+                self._main_view.ui.proteins_tree_view.currentIndex(), a_color, enums.ModelEnum.CHAIN_COLOR_ROLE
+            )
+            #self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.CHAIN_COLOR_ROLE)
+        else:
+            raise ValueError("Unknown type!")
+
     def get_protein_repr_toggle_flag(self) -> int:
         return self._settings_manager.settings.proteins_tab_use_toggle
 
@@ -1911,6 +1947,7 @@ class InterfaceManager:
             a_protein_name: str,
             the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
     ):
+        """This method should not be used anymore!"""
         tmp_protein = self.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self.get_current_active_chain_object_of_protein_pair()
         if the_pymol_session_manager.is_the_current_protein_pair_in_session(self.get_current_active_protein_pair_object().name):

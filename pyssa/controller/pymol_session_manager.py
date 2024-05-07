@@ -241,9 +241,9 @@ class PymolSessionManager:
         return None
 
     def get_residue_color_config_of_a_given_selection(self,
-                                                      a_selection_string: str,
+                                                      a_protein_name: str,
                                                       chain_letter: str) -> "residue_color_config.ResidueColorConfig":
-        tmp_result = self.pymol_interface.get_residue_color_config(a_selection_string, chain_letter)
+        tmp_result = self.pymol_interface.get_residue_color_config(a_protein_name, chain_letter)
         if tmp_result["success"]:
             tmp_color_config: list = tmp_result["data"]
             return residue_color_config.ResidueColorConfig(tmp_color_config[0], tmp_color_config[1], tmp_color_config[2])

@@ -33,6 +33,7 @@ class ModelEnum(enum.IntEnum):
     OBJECT_ROLE = 1003
     TYPE_ROLE = 1004
     FILEPATH_ROLE = 1005
+    CHAIN_COLOR_ROLE = 1006
 
 
 class ModelTypeEnum(enum.Enum):
