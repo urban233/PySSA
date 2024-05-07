@@ -1528,11 +1528,13 @@ class InterfaceManager:
                     or self._main_view.tg_protein_spheres.toggle_button.isChecked()):
             # self._main_view.ui.btn_protein_show_hydrogens.setEnabled(True)
             # self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(True)
-            self._main_view.tg_protein_hydrogen_atoms.setEnabled(True)
+            #self._main_view.tg_protein_hydrogen_atoms.setEnabled(True)
+            pass
         else:
             # self._main_view.ui.btn_protein_show_hydrogens.setEnabled(False)
             # self._main_view.ui.btn_protein_hide_hydrogens.setEnabled(False)
-            self._main_view.tg_protein_hydrogen_atoms.setEnabled(False)
+            #self._main_view.tg_protein_hydrogen_atoms.setEnabled(False)
+            pass
 
     def manage_toggle_state_of_protein_repr(self, tmp_repr_state):
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
@@ -1601,6 +1603,44 @@ class InterfaceManager:
             self._main_view.ui.cb_protein_surface.setChecked(False)
         else:
             self._main_view.ui.cb_protein_surface.setChecked(True)
+
+    def get_current_protein_representation_states(self) -> list[tuple[enums.PyMOLRepresentation, bool]]:
+        """Gets the representation toggle states of a protein chain on the Proteins tab."""
+        tmp_representation_states: list[tuple[enums.PyMOLRepresentation, bool]] = []
+        if self._main_view.tg_protein_cartoon.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.CARTOON, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.CARTOON, False))
+        if self._main_view.tg_protein_sticks.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.STICKS, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.STICKS, False))
+        if self._main_view.tg_protein_ribbon.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.RIBBON, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.RIBBON, False))
+        if self._main_view.tg_protein_lines.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.LINES, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.LINES, False))
+        if self._main_view.tg_protein_spheres.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.SPHERES, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.SPHERES, False))
+        if self._main_view.tg_protein_dots.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.DOTS, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.DOTS, False))
+        if self._main_view.tg_protein_mesh.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.MESH, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.MESH, False))
+        if self._main_view.tg_protein_surface.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.SURFACE, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.SURFACE, False))
+        return tmp_representation_states
+
 
     # <editor-fold desc="Scene">
     def add_scene_to_proteins_model(
@@ -1971,6 +2011,43 @@ class InterfaceManager:
         #         tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {a_protein_name}"
         #     rvoid(tmp_chain.get_color(tmp_protein.pymol_selection.selection_string, self.pymol_session_manager))
         # self._main_view.ui.lbl_protein_pair_current_color.setText(tmp_chain.pymol_parameters["chain_color"])
+
+    def get_current_protein_pair_representation_states(self) -> list[tuple[enums.PyMOLRepresentation, bool]]:
+        """Gets the representation toggle states of a protein chain on the Protein Pairs tab."""
+        tmp_representation_states: list[tuple[enums.PyMOLRepresentation, bool]] = []
+        if self._main_view.tg_protein_pair_cartoon.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.CARTOON, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.CARTOON, False))
+        if self._main_view.tg_protein_pair_sticks.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.STICKS, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.STICKS, False))
+        if self._main_view.tg_protein_pair_ribbon.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.RIBBON, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.RIBBON, False))
+        if self._main_view.tg_protein_pair_lines.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.LINES, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.LINES, False))
+        if self._main_view.tg_protein_pair_spheres.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.SPHERES, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.SPHERES, False))
+        if self._main_view.tg_protein_pair_dots.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.DOTS, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.DOTS, False))
+        if self._main_view.tg_protein_pair_mesh.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.MESH, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.MESH, False))
+        if self._main_view.tg_protein_pair_surface.toggle_button.isChecked():
+            tmp_representation_states.append((enums.PyMOLRepresentation.SURFACE, True))
+        else:
+            tmp_representation_states.append((enums.PyMOLRepresentation.SURFACE, False))
+        return tmp_representation_states
 
     # <editor-fold desc="Scene">
     def add_scene_to_protein_pairs_model(

@@ -80,6 +80,7 @@ class PymolSessionManager:
         else:
             tmp_result = self.pymol_interface.load_pymol_session(tmp_session_path)
             if tmp_result["success"]:
+                self.show_sequence_view()
                 print("Session loaded.")
             else:
                 print(tmp_result["message"])

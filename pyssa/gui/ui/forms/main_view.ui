@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>804</width>
-    <height>1023</height>
+    <width>666</width>
+    <height>932</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -686,8 +686,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>365</width>
-                        <height>302</height>
+                        <width>295</width>
+                        <height>258</height>
                        </rect>
                       </property>
                       <property name="styleSheet">
@@ -709,36 +709,6 @@
                        <property name="bottomMargin">
                         <number>9</number>
                        </property>
-                       <item>
-                        <layout class="QHBoxLayout" name="protein_hydrogen_layout">
-                         <property name="spacing">
-                          <number>6</number>
-                         </property>
-                         <item>
-                          <widget class="QLabel" name="label_3">
-                           <property name="text">
-                            <string>Hydrogens</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <spacer name="horizontalSpacer_15">
-                           <property name="orientation">
-                            <enum>Qt::Horizontal</enum>
-                           </property>
-                           <property name="sizeType">
-                            <enum>QSizePolicy::Expanding</enum>
-                           </property>
-                           <property name="sizeHint" stdset="0">
-                            <size>
-                             <width>30</width>
-                             <height>20</height>
-                            </size>
-                           </property>
-                          </spacer>
-                         </item>
-                        </layout>
-                       </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_cartoon_layout">
                          <item>
@@ -1632,8 +1602,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>365</width>
-                        <height>314</height>
+                        <width>295</width>
+                        <height>258</height>
                        </rect>
                       </property>
                       <property name="sizePolicy">
@@ -1649,50 +1619,6 @@
                        <property name="spacing">
                         <number>2</number>
                        </property>
-                       <item>
-                        <layout class="QHBoxLayout" name="protein_pair_hydrogen_layout">
-                         <property name="spacing">
-                          <number>6</number>
-                         </property>
-                         <item>
-                          <widget class="QLabel" name="label_7">
-                           <property name="text">
-                            <string>Hydrogens</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <spacer name="horizontalSpacer_36">
-                           <property name="orientation">
-                            <enum>Qt::Horizontal</enum>
-                           </property>
-                           <property name="sizeType">
-                            <enum>QSizePolicy::Expanding</enum>
-                           </property>
-                           <property name="sizeHint" stdset="0">
-                            <size>
-                             <width>30</width>
-                             <height>20</height>
-                            </size>
-                           </property>
-                          </spacer>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="btn_protein_pair_show_hydrogens">
-                           <property name="text">
-                            <string>Show</string>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QPushButton" name="btn_protein_pair_hide_hydrogens">
-                           <property name="text">
-                            <string>Hide</string>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
-                       </item>
                        <item>
                         <layout class="QHBoxLayout" name="protein_pair_cartoon_layout">
                          <item>
@@ -2206,7 +2132,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>800</width>
+            <width>662</width>
             <height>196</height>
            </rect>
           </property>
@@ -2304,7 +2230,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>800</width>
+            <width>662</width>
             <height>196</height>
            </rect>
           </property>
@@ -2354,8 +2280,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>804</width>
-     <height>26</height>
+     <width>666</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuProject">

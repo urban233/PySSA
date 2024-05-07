@@ -22,6 +22,8 @@
 """Module for the custom color gird widget."""
 from PyQt5 import QtWidgets
 
+from pyssa.internal.data_structures import chain
+
 
 class PyMOLColorGrid(QtWidgets.QWidget):
 
@@ -29,6 +31,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         super().__init__()
 
         self.last_clicked_color = ""
+        self.last_selected_chain: "chain.Chain" = None
 
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)

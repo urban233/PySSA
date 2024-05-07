@@ -238,10 +238,8 @@ class MainViewController:
         self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
         self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
         # representation
-        # self._view.ui.btn_protein_show_hydrogens.clicked.connect(self.__slot_show_protein_chain_with_hydrogens)
-        # self._view.ui.btn_protein_hide_hydrogens.clicked.connect(self.__slot_hide_protein_chain_with_hydrogens)
         self._view.tg_protein_color_atoms.toggleChanged.connect(self.__slot_color_protein_atoms_by_element)
-        self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_chain_protein_with_hydrogens)
+        # self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_chain_protein_with_hydrogens)  # this could be useful
         self._view.tg_protein_cartoon.toggleChanged.connect(self.__slot_protein_chain_as_cartoon)
         self._view.tg_protein_sticks.toggleChanged.connect(self.__slot_protein_chain_as_sticks)
         self._view.tg_protein_ribbon.toggleChanged.connect(self.__slot_protein_chain_as_ribbon)
@@ -255,6 +253,7 @@ class MainViewController:
         self._view.ui.btn_help_2.clicked.connect(self.__slot_open_proteins_tab_help)
 
         # <editor-fold desc="Color Grid">
+        # It needs to be checked if the lambda function usage is problematic in this context.
         self._view.color_grid_proteins.c_red.clicked.connect(lambda: self.__slot_change_chain_color_proteins("red"))
         self._view.color_grid_proteins.c_tv_red.clicked.connect(lambda: self.__slot_change_chain_color_proteins("tv_red"))
         self._view.color_grid_proteins.c_salomon.clicked.connect(lambda: self.__slot_change_chain_color_proteins("salmon"))
@@ -303,13 +302,13 @@ class MainViewController:
         self._protein_tree_context_menu.connect_help_action(self.__slot_open_proteins_tab_help)
         # </editor-fold>
 
-        self._view.ui.btn_protein_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
-        self._view.ui.btn_protein_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
-        self._view.ui.btn_protein_disulfide_bonds_show.clicked.connect(
-            self.__slot_show_protein_regions_disulfide_bonds)
-        self._view.ui.btn_protein_disulfide_bonds_hide.clicked.connect(
-            self.__slot_hide_protein_regions_disulfide_bonds)
-        self._view.ui.btn_protein_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
+        # self._view.ui.btn_protein_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
+        # self._view.ui.btn_protein_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
+        # self._view.ui.btn_protein_disulfide_bonds_show.clicked.connect(
+        #     self.__slot_show_protein_regions_disulfide_bonds)
+        # self._view.ui.btn_protein_disulfide_bonds_hide.clicked.connect(
+        #     self.__slot_hide_protein_regions_disulfide_bonds)
+        # self._view.ui.btn_protein_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
 
         # </editor-fold>
 
@@ -323,16 +322,8 @@ class MainViewController:
         self._view.ui.btn_delete_protein_pair_scene.clicked.connect(self.__slot_delete_current_scene)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self._check_for_results)
         self._view.ui.box_protein_pair_color.currentIndexChanged.connect(self.__slot_change_chain_color_protein_pairs)
-        #self._view.ui.btn_protein_pair_color_atoms.clicked.connect(self.__slot_change_chain_color_protein_pairs_atoms)
-        #self._view.ui.btn_protein_pair_reset_atoms.clicked.connect(self.__slot_change_chain_reset_protein_pairs_atoms)
         self._view.tg_protein_pair_color_atoms.toggleChanged.connect(self.__slot_color_protein_pair_atoms_by_element)
         self._view.tg_protein_pair_white_bg.toggleChanged.connect(self.__slot_protein_pair_change_background_color)
-        # self._view.ui.btn_protein_pair_show_cartoon.clicked.connect(self.__slot_show_protein_pair_chain_as_cartoon)
-        # self._view.ui.btn_protein_pair_hide_cartoon.clicked.connect(self.__slot_hide_protein_pair_chain_as_cartoon)
-        # self._view.ui.btn_protein_pair_show_sticks.clicked.connect(self.__slot_show_protein_pair_chain_as_sticks)
-        # self._view.ui.btn_protein_pair_hide_sticks.clicked.connect(self.__slot_hide_protein_pair_chain_as_sticks)
-        # self._view.ui.btn_protein_pair_show_ribbon.clicked.connect(self.__slot_show_protein_pair_chain_as_ribbon)
-        # self._view.ui.btn_protein_pair_hide_ribbon.clicked.connect(self.__slot_hide_protein_pair_chain_as_ribbon)
         self._view.ui.cb_protein_pair_cartoon.stateChanged.connect(self.__slot_protein_pair_chain_as_cartoon)
         self._view.ui.cb_protein_pair_sticks.stateChanged.connect(self.__slot_protein_pair_chain_as_sticks)
         self._view.ui.cb_protein_pair_ribbon.stateChanged.connect(self.__slot_protein_pair_chain_as_ribbon)
@@ -342,9 +333,7 @@ class MainViewController:
         self._view.ui.cb_protein_pair_mesh.stateChanged.connect(self.__slot_protein_pair_chain_as_mesh)
         self._view.ui.cb_protein_pair_surface.stateChanged.connect(self.__slot_protein_pair_chain_as_surface)
         # toggle representation
-        # self._view.ui.btn_protein_pair_show_hydrogens.clicked.connect(self.__slot_show_protein_pair_chain_with_hydrogens)
-        # self._view.ui.btn_protein_pair_hide_hydrogens.clicked.connect(self.__slot_hide_protein_pair_chain_with_hydrogens)
-        self._view.tg_protein_pair_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_pair_chain_with_hydrogens)
+        # self._view.tg_protein_pair_hydrogen_atoms.toggleChanged.connect(self.__slot_protein_pair_chain_with_hydrogens) # this could be useful
         self._view.tg_protein_pair_cartoon.toggleChanged.connect(self.__slot_protein_pair_chain_as_cartoon)
         self._view.tg_protein_pair_sticks.toggleChanged.connect(self.__slot_protein_pair_chain_as_sticks)
         self._view.tg_protein_pair_ribbon.toggleChanged.connect(self.__slot_protein_pair_chain_as_ribbon)
@@ -406,13 +395,13 @@ class MainViewController:
         self._protein_pair_tree_context_menu.connect_help_action(self._open_protein_pairs_tab_help)
         # </editor-fold>
 
-        self._view.ui.btn_protein_pair_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
-        self._view.ui.btn_protein_pair_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
-        self._view.ui.btn_protein_pair_disulfide_bonds_show.clicked.connect(
-            self.__slot_show_protein_regions_disulfide_bonds)
-        self._view.ui.btn_protein_pair_disulfide_bonds_hide.clicked.connect(
-            self.__slot_hide_protein_regions_disulfide_bonds)
-        self._view.ui.btn_protein_pair_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
+        # self._view.ui.btn_protein_pair_sticks_show.clicked.connect(self.__slot_show_protein_regions_resi_sticks)
+        # self._view.ui.btn_protein_pair_sticks_hide.clicked.connect(self.__slot_hide_protein_regions_resi_sticks)
+        # self._view.ui.btn_protein_pair_disulfide_bonds_show.clicked.connect(
+        #     self.__slot_show_protein_regions_disulfide_bonds)
+        # self._view.ui.btn_protein_pair_disulfide_bonds_hide.clicked.connect(
+        #     self.__slot_hide_protein_regions_disulfide_bonds)
+        # self._view.ui.btn_protein_pair_position_zoom.clicked.connect(self.__slot_zoom_protein_regions_resi_position)
 
         # </editor-fold>
 
@@ -2116,152 +2105,193 @@ class MainViewController:
 
     # <editor-fold desc="Hotspots">
     def __slot_hotspots_protein_regions(self) -> None:
-        try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
-            if (self._interface_manager.current_tab_index == 1 and self._interface_manager.pymol_session_manager.session_object_type == "protein" and
-                    self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object())):
-                # Proteins tab
-                if self._view.ui.lbl_protein_protein_regions.isVisible():
-                    self._view.ui.lbl_protein_protein_regions.hide()
-                    self._view.ui.frame_protein_protein_regions.hide()
-                    self._interface_manager.pymol_session_manager.hide_sequence_view()
-                else:
-                    self._view.ui.lbl_protein_protein_regions.show()
-                    self._view.ui.frame_protein_protein_regions.show()
-                    self._interface_manager.pymol_session_manager.show_sequence_view()
-            elif (self._interface_manager.current_tab_index == 2 and self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and
-                  self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name)):
-                if self._view.ui.lbl_protein_pair_protein_regions.isVisible():
-                    # Protein Pairs tab
-                    self._view.ui.lbl_protein_pair_protein_regions.hide()
-                    self._view.ui.frame_protein_pair_protein_regions.hide()
-                    self._interface_manager.pymol_session_manager.hide_sequence_view()
-                else:
-                    self._view.ui.lbl_protein_pair_protein_regions.show()
-                    self._view.ui.frame_protein_pair_protein_regions.show()
-                    self._interface_manager.pymol_session_manager.show_sequence_view()
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Highlight Region' menu entry was clicked.")
+        self._highlight_protein_region()
 
-    def post_hotspots_protein_regions(self) -> None:
-        try:
-            self._interface_manager.pymol_session_manager.hide_sequence_view()
-            self._interface_manager.pymol_session_manager.pymol_interface.select(
-                "", "none"
-            )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        # try:
+        #     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Hotspots/Protein Regions' clicked.")
+        #     if (self._interface_manager.current_tab_index == 1 and self._interface_manager.pymol_session_manager.session_object_type == "protein" and
+        #             self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object())):
+        #         # Proteins tab
+        #         if self._view.ui.lbl_protein_protein_regions.isVisible():
+        #             self._view.ui.lbl_protein_protein_regions.hide()
+        #             self._view.ui.frame_protein_protein_regions.hide()
+        #             self._interface_manager.pymol_session_manager.hide_sequence_view()
+        #         else:
+        #             self._view.ui.lbl_protein_protein_regions.show()
+        #             self._view.ui.frame_protein_protein_regions.show()
+        #             self._interface_manager.pymol_session_manager.show_sequence_view()
+        #     elif (self._interface_manager.current_tab_index == 2 and self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and
+        #           self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name)):
+        #         if self._view.ui.lbl_protein_pair_protein_regions.isVisible():
+        #             # Protein Pairs tab
+        #             self._view.ui.lbl_protein_pair_protein_regions.hide()
+        #             self._view.ui.frame_protein_pair_protein_regions.hide()
+        #             self._interface_manager.pymol_session_manager.hide_sequence_view()
+        #         else:
+        #             self._view.ui.lbl_protein_pair_protein_regions.show()
+        #             self._view.ui.frame_protein_pair_protein_regions.show()
+        #             self._interface_manager.pymol_session_manager.show_sequence_view()
+        # except Exception as e:
+        #     logger.error(f"An error occurred: {e}")
+        #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def __slot_show_protein_regions_resi_sticks(self) -> None:
-        """Shows the pymol selection as sticks."""
+    # def post_hotspots_protein_regions(self) -> None:
+    #     try:
+    #         self._interface_manager.pymol_session_manager.hide_sequence_view()
+    #         self._interface_manager.pymol_session_manager.pymol_interface.select(
+    #             "", "none"
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def _highlight_protein_region(self):
         try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
             if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
                 return
-            if self._interface_manager.current_tab_index == 1 and self._view.tg_protein_sticks.toggle_button.isChecked():
-                self._view.tg_protein_sticks.toggle_button.setChecked(False)
-                self.__slot_protein_chain_as_sticks()
-            elif self._interface_manager.current_tab_index == 2 and self._view.tg_protein_pair_sticks.toggle_button.isChecked():
-                self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
-                self.__slot_protein_pair_chain_as_sticks()
 
-            self._interface_manager.pymol_session_manager.pymol_interface.select(
-                "sele", "sele and not hydrogens"
-            )
-            self._interface_manager.pymol_session_manager.hide_specific_representation(
-                "sticks", "not sele"
-            )
-            self._interface_manager.pymol_session_manager.show_specific_representation(
-                "sticks", "sele and not hydrogens"
-            )
+            if self._interface_manager.current_tab_index == 1:
+                self._cut_representation_to_selected_protein_region(
+                    self._interface_manager.get_current_protein_representation_states()
+                )
+            elif self._interface_manager.current_tab_index == 2:
+                self._cut_representation_to_selected_protein_region(
+                    self._interface_manager.get_current_protein_pair_representation_states()
+                )
             self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
                 "valence", 0
             )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    def __slot_hide_protein_regions_resi_sticks(self) -> None:
-        """Hides the balls and sticks representation of the pymol selection."""
-        try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
-            if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
-                return
-            self._interface_manager.pymol_session_manager.hide_specific_representation(
-                "sticks", "sele"
-            )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    def __slot_show_protein_regions_disulfide_bonds(self) -> None:
-        """Shows all disulfide bonds within the pymol session."""
-        try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' disulfide bonds button was clicked.")
-            if self._interface_manager.current_tab_index == 1:
-                tmp_protein_names: tuple = self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
-            elif self._interface_manager.current_tab_index == 2:
-                tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
-                tmp_protein_names = (tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object())
-            else:
-                return
-            tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
-            for tmp_protein_name in tmp_protein_names:
-                if tmp_protein_name != 0:
-                    self._interface_manager.pymol_session_manager.pymol_interface.select(
-                        "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
-                    )
-                    self._interface_manager.pymol_session_manager.color_protein(
-                        "atomic", "disulfides and not elem C"
-                    )
-                    self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
-                        "valence", 0
-                    )
-                    self._interface_manager.pymol_session_manager.show_specific_representation(
-                        "sticks", "disulfides"
-                    )
-                    self._interface_manager.pymol_session_manager.hide_specific_representation(
-                        "sticks", "elem H"
-                    )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    def __slot_hide_protein_regions_disulfide_bonds(self) -> None:
-        """Hides all disulfide bonds within the pymol session."""
-        try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
-
-            if self._interface_manager.current_tab_index == 1:
-                tmp_protein_names: tuple = self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
-            elif self._interface_manager.current_tab_index == 2:
-                tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
-                tmp_protein_names = (tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object())
-            else:
-                return
-            tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
-            for tmp_protein_name in tmp_protein_names:
-                if tmp_protein_name != 0:
-                    self._interface_manager.pymol_session_manager.pymol_interface.select(
-                        "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
-                    )
-                    self._interface_manager.pymol_session_manager.hide_specific_representation("sticks", "disulfides")
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    def __slot_zoom_protein_regions_resi_position(self) -> None:
-        """Zooms to the pymol selection."""
-        try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
-            if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
-                return
             self._interface_manager.pymol_session_manager.zoom_to_residue_in_protein_position("sele")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def _cut_representation_to_selected_protein_region(
+            self,
+            all_representation_toggle_states: list[tuple[enums.PyMOLRepresentation, bool]]
+    ):
+        self._interface_manager.pymol_session_manager.pymol_interface.select(
+            "sele", "sele and not hydrogens"
+        )
+        for tmp_toggle_state in all_representation_toggle_states:
+            tmp_representation, tmp_toggle_check_state = tmp_toggle_state
+            if tmp_toggle_check_state:
+                self._interface_manager.pymol_session_manager.hide_specific_representation(
+                    tmp_representation.value, "not sele"
+                )
+                self._interface_manager.pymol_session_manager.show_specific_representation(
+                    tmp_representation.value, "sele and not hydrogens"
+                )
+
+    # def __slot_show_protein_regions_resi_sticks(self) -> None:
+    #     """Shows the pymol selection as sticks."""
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' sticks button was clicked.")
+    #         if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
+    #             return
+    #         if self._interface_manager.current_tab_index == 1 and self._view.tg_protein_sticks.toggle_button.isChecked():
+    #             self._view.tg_protein_sticks.toggle_button.setChecked(False)
+    #             self.__slot_protein_chain_as_sticks()
+    #         elif self._interface_manager.current_tab_index == 2 and self._view.tg_protein_pair_sticks.toggle_button.isChecked():
+    #             self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
+    #             self.__slot_protein_pair_chain_as_sticks()
+    #
+    #         self._interface_manager.pymol_session_manager.pymol_interface.select(
+    #             "sele", "sele and not hydrogens"
+    #         )
+    #         self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #             "sticks", "not sele"
+    #         )
+    #         self._interface_manager.pymol_session_manager.show_specific_representation(
+    #             "sticks", "sele and not hydrogens"
+    #         )
+    #         self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
+    #             "valence", 0
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_hide_protein_regions_resi_sticks(self) -> None:
+    #     """Hides the balls and sticks representation of the pymol selection."""
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' sticks button was clicked.")
+    #         if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
+    #             return
+    #         self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #             "sticks", "sele"
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_show_protein_regions_disulfide_bonds(self) -> None:
+    #     """Shows all disulfide bonds within the pymol session."""
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show' disulfide bonds button was clicked.")
+    #         if self._interface_manager.current_tab_index == 1:
+    #             tmp_protein_names: tuple = self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
+    #         elif self._interface_manager.current_tab_index == 2:
+    #             tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
+    #             tmp_protein_names = (tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object())
+    #         else:
+    #             return
+    #         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+    #         for tmp_protein_name in tmp_protein_names:
+    #             if tmp_protein_name != 0:
+    #                 self._interface_manager.pymol_session_manager.pymol_interface.select(
+    #                     "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
+    #                 )
+    #                 self._interface_manager.pymol_session_manager.color_protein(
+    #                     "atomic", "disulfides and not elem C"
+    #                 )
+    #                 self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
+    #                     "valence", 0
+    #                 )
+    #                 self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                     "sticks", "disulfides"
+    #                 )
+    #                 self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                     "sticks", "elem H"
+    #                 )
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_hide_protein_regions_disulfide_bonds(self) -> None:
+    #     """Hides all disulfide bonds within the pymol session."""
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Hide' disulfide bonds button was clicked.")
+    #
+    #         if self._interface_manager.current_tab_index == 1:
+    #             tmp_protein_names: tuple = self._interface_manager.get_current_active_protein_object().get_molecule_object(), 0
+    #         elif self._interface_manager.current_tab_index == 2:
+    #             tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
+    #             tmp_protein_names = (tmp_protein_pair.protein_1.get_molecule_object(), tmp_protein_pair.protein_2.get_molecule_object())
+    #         else:
+    #             return
+    #         tmp_pymol_selection_option: str = "byres (resn CYS and name SG) within 2 of (resn CYS and name SG)"
+    #         for tmp_protein_name in tmp_protein_names:
+    #             if tmp_protein_name != 0:
+    #                 self._interface_manager.pymol_session_manager.pymol_interface.select(
+    #                     "disulfides", f"{tmp_protein_name} & {tmp_pymol_selection_option}"
+    #                 )
+    #                 self._interface_manager.pymol_session_manager.hide_specific_representation("sticks", "disulfides")
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_zoom_protein_regions_resi_position(self) -> None:
+    #     """Zooms to the pymol selection."""
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Zoom' button was clicked.")
+    #         if self._interface_manager.pymol_session_manager.check_if_sele_is_empty():
+    #             return
+    #         self._interface_manager.pymol_session_manager.zoom_to_residue_in_protein_position("sele")
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     # </editor-fold>
 
@@ -2993,7 +3023,6 @@ class MainViewController:
                     self._interface_manager.set_repr_state_in_ui_for_protein_chain(
                         self._interface_manager.pymol_session_manager
                     )
-                    self._view.tg_protein_hydrogen_atoms.toggle_button.setChecked(False)
                     self._main_view_state.selected_chain_proteins = self._interface_manager.get_current_protein_tree_index()
 
             elif tmp_type == "header":
@@ -3127,13 +3156,8 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     # <editor-fold desc="Color Grid slot methods">
-    def reset_all_colors_in_proteins_color_grid(self):
-        # TODO: create function that loops through color rolrs
-
     def reset_color_in_proteins_color_grid(self):
         tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
-        # tmp_protein = self._interface_manager.get_current_active_protein_object()
-        # tmp_chain = self._interface_manager.get_current_active_chain_object()
         tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
         if tmp_chain_color != "" and tmp_chain_color != "By Element":
             tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_chain_color]
@@ -3144,14 +3168,10 @@ class MainViewController:
         # get color from protein chain
         tmp_protein = self._interface_manager.get_current_active_protein_object()
         tmp_chain = self._interface_manager.get_current_active_chain_object()
-        tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
 
         tmp_residue_config: residue_color_config.ResidueColorConfig = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
             tmp_protein.get_molecule_object(), tmp_chain.chain_letter
         )
-        # if tmp_chain_color != "" and tmp_chain_color != "By Element":
-        #     tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_chain_color]
-        #     tmp_last_color_grid_button.setIcon(QtGui.QIcon())
         if tmp_residue_config.atoms_are_colored_by_elements():
             # chain is colored by elements
             self._view.ui.lbl_protein_current_color.setText("By Element    ")
@@ -3162,553 +3182,522 @@ class MainViewController:
             tmp_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_residue_config.carbon_color]
             tmp_color_grid_button.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
             tmp_color_grid_button.setIconSize(tmp_color_grid_button.icon().actualSize(QtCore.QSize(14, 14)))
-        self._view.color_grid_proteins.last_clicked_color = self._view.ui.lbl_protein_current_color.text().strip()
 
-    def set_icon_for_current_color_in_proteins_tab(self):
-        color_index_functions = {
-            "red": self.set_color_name_in_label_red_in_proteins_tab,
-            "tv_red": self.set_color_name_in_label_tv_red_in_proteins_tab,
-            "salmon": self.set_color_name_in_label_salmon_in_proteins_tab,
-            "raspberry": self.set_color_name_in_label_raspberry_in_proteins_tab,
-            "green": self.set_color_name_in_label_green_in_proteins_tab,
-            "tv_green": self.set_color_name_in_label_tv_green_in_proteins_tab,
-            "palegreen": self.set_color_name_in_label_palegreen_in_proteins_tab,
-            "forest": self.set_color_name_in_label_forest_in_proteins_tab,
-            "blue": self.set_color_name_in_label_blue_in_proteins_tab,
-            "tv_blue": self.set_color_name_in_label_tv_blue_in_proteins_tab,
-            "lightblue": self.set_color_name_in_label_lightblue_in_proteins_tab,
-            "skyblue": self.set_color_name_in_label_skyblue_in_proteins_tab,
-            "yellow": self.set_color_name_in_label_yellow_in_proteins_tab,
-            "tv_yellow": self.set_color_name_in_label_tv_yellow_in_proteins_tab,
-            "paleyellow": self.set_color_name_in_label_paleyellow_in_proteins_tab,
-            "sand": self.set_color_name_in_label_sand_in_proteins_tab,
-            "magenta": self.set_color_name_in_label_magenta_in_proteins_tab,
-            "purple": self.set_color_name_in_label_purple_in_proteins_tab,
-            "pink": self.set_color_name_in_label_pink_in_proteins_tab,
-            "hotpink": self.set_color_name_in_label_hotpink_in_proteins_tab,
-            "cyan": self.set_color_name_in_label_cyan_in_proteins_tab,
-            "aquamarine": self.set_color_name_in_label_aquamarine_in_proteins_tab,
-            "palecyan": self.set_color_name_in_label_palecyan_in_proteins_tab,
-            "teal": self.set_color_name_in_label_teal_in_proteins_tab,
-            "orange": self.set_color_name_in_label_orange_in_proteins_tab,
-            "tv_orange": self.set_color_name_in_label_tv_orange_in_proteins_tab,
-            "lightorange": self.set_color_name_in_label_lightorange_in_proteins_tab,
-            "olive": self.set_color_name_in_label_olive_in_proteins_tab,
-            "white": self.set_color_name_in_label_white_in_proteins_tab,
-            "grey70": self.set_color_name_in_label_grey_70_in_proteins_tab,
-            "grey30": self.set_color_name_in_label_grey_30_in_proteins_tab,
-            "black": self.set_color_name_in_label_black_in_proteins_tab,
-        }
-        tmp_protein = self._interface_manager.get_current_active_protein_object()
-        tmp_chain = self._interface_manager.get_current_active_chain_object()
-        tmp_protein.pymol_selection.set_selection_for_first_ca_atom_in_a_given_chain(tmp_chain.chain_letter)
-        color_index_functions[
-            tmp_chain.get_color(tmp_protein.pymol_selection.selection_string,
-                                self._interface_manager.pymol_session_manager)[0]
-        ]()
+        if self._view.color_grid_proteins.last_selected_chain is not None and self._view.color_grid_proteins.last_selected_chain is not tmp_chain:
+            tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
+            tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[
+                self._view.color_grid_proteins.last_selected_chain.pymol_parameters[
+                    enums.PymolParameterEnum.COLOR.value]
+            ]
+            tmp_last_color_grid_button.setIcon(QtGui.QIcon())
+        self._view.color_grid_proteins.last_selected_chain = tmp_chain
 
-    def reset_icon_for_last_color_in_proteins_tab(self):
-        tmp_color_name = self._view.ui.lbl_protein_current_color.text()
-        if tmp_color_name == "":
-            return
-        elif tmp_color_name.strip() == "By Element":
-            return
-        color_index_functions = {
-            "red": self.reset_icon_for_red_in_proteins_tab,
-            "tv_red": self.reset_icon_for_tv_red_in_proteins_tab,
-            "salmon": self.reset_icon_for_salmon_in_proteins_tab,
-            "raspberry": self.reset_icon_for_raspberry_in_proteins_tab,
-            "green": self.reset_icon_for_green_in_proteins_tab,
-            "tv_green": self.reset_icon_for_tv_green_in_proteins_tab,
-            "palegreen": self.reset_icon_for_palegreen_in_proteins_tab,
-            "forest": self.reset_icon_for_forest_in_proteins_tab,
-            "blue": self.reset_icon_for_blue_in_proteins_tab,
-            "tv_blue": self.reset_icon_for_tv_blue_in_proteins_tab,
-            "lightblue": self.reset_icon_for_lightblue_in_proteins_tab,
-            "skyblue": self.reset_icon_for_skyblue_in_proteins_tab,
-            "yellow": self.reset_icon_for_yellow_in_proteins_tab,
-            "tv_yellow": self.reset_icon_for_tv_yellow_in_proteins_tab,
-            "paleyellow": self.reset_icon_for_paleyellow_in_proteins_tab,
-            "sand": self.reset_icon_for_sand_in_proteins_tab,
-            "magenta": self.reset_icon_for_magenta_in_proteins_tab,
-            "purple": self.reset_icon_for_purple_in_proteins_tab,
-            "pink": self.reset_icon_for_pink_in_proteins_tab,
-            "hotpink": self.reset_icon_for_hotpink_in_proteins_tab,
-            "cyan": self.reset_icon_for_cyan_in_proteins_tab,
-            "aquamarine": self.reset_icon_for_aquamarine_in_proteins_tab,
-            "palecyan": self.reset_icon_for_palecyan_in_proteins_tab,
-            "teal": self.reset_icon_for_teal_in_proteins_tab,
-            "orange": self.reset_icon_for_orange_in_proteins_tab,
-            "tv_orange": self.reset_icon_for_tv_orange_in_proteins_tab,
-            "lightorange": self.reset_icon_for_lightorange_in_proteins_tab,
-            "olive": self.reset_icon_for_olive_in_proteins_tab,
-            "white": self.reset_icon_for_white_in_proteins_tab,
-            "grey70": self.reset_icon_for_grey_70_in_proteins_tab,
-            "grey30": self.reset_icon_for_grey_30_in_proteins_tab,
-            "black": self.reset_icon_for_black_in_proteins_tab
-        }
-        color_index_functions[tmp_color_name.strip()]()
+    # def set_icon_for_current_color_in_proteins_tab(self):
+    #     color_index_functions = {
+    #         "red": self.set_color_name_in_label_red_in_proteins_tab,
+    #         "tv_red": self.set_color_name_in_label_tv_red_in_proteins_tab,
+    #         "salmon": self.set_color_name_in_label_salmon_in_proteins_tab,
+    #         "raspberry": self.set_color_name_in_label_raspberry_in_proteins_tab,
+    #         "green": self.set_color_name_in_label_green_in_proteins_tab,
+    #         "tv_green": self.set_color_name_in_label_tv_green_in_proteins_tab,
+    #         "palegreen": self.set_color_name_in_label_palegreen_in_proteins_tab,
+    #         "forest": self.set_color_name_in_label_forest_in_proteins_tab,
+    #         "blue": self.set_color_name_in_label_blue_in_proteins_tab,
+    #         "tv_blue": self.set_color_name_in_label_tv_blue_in_proteins_tab,
+    #         "lightblue": self.set_color_name_in_label_lightblue_in_proteins_tab,
+    #         "skyblue": self.set_color_name_in_label_skyblue_in_proteins_tab,
+    #         "yellow": self.set_color_name_in_label_yellow_in_proteins_tab,
+    #         "tv_yellow": self.set_color_name_in_label_tv_yellow_in_proteins_tab,
+    #         "paleyellow": self.set_color_name_in_label_paleyellow_in_proteins_tab,
+    #         "sand": self.set_color_name_in_label_sand_in_proteins_tab,
+    #         "magenta": self.set_color_name_in_label_magenta_in_proteins_tab,
+    #         "purple": self.set_color_name_in_label_purple_in_proteins_tab,
+    #         "pink": self.set_color_name_in_label_pink_in_proteins_tab,
+    #         "hotpink": self.set_color_name_in_label_hotpink_in_proteins_tab,
+    #         "cyan": self.set_color_name_in_label_cyan_in_proteins_tab,
+    #         "aquamarine": self.set_color_name_in_label_aquamarine_in_proteins_tab,
+    #         "palecyan": self.set_color_name_in_label_palecyan_in_proteins_tab,
+    #         "teal": self.set_color_name_in_label_teal_in_proteins_tab,
+    #         "orange": self.set_color_name_in_label_orange_in_proteins_tab,
+    #         "tv_orange": self.set_color_name_in_label_tv_orange_in_proteins_tab,
+    #         "lightorange": self.set_color_name_in_label_lightorange_in_proteins_tab,
+    #         "olive": self.set_color_name_in_label_olive_in_proteins_tab,
+    #         "white": self.set_color_name_in_label_white_in_proteins_tab,
+    #         "grey70": self.set_color_name_in_label_grey_70_in_proteins_tab,
+    #         "grey30": self.set_color_name_in_label_grey_30_in_proteins_tab,
+    #         "black": self.set_color_name_in_label_black_in_proteins_tab,
+    #     }
+    #     tmp_protein = self._interface_manager.get_current_active_protein_object()
+    #     tmp_chain = self._interface_manager.get_current_active_chain_object()
+    #     tmp_protein.pymol_selection.set_selection_for_first_ca_atom_in_a_given_chain(tmp_chain.chain_letter)
+    #     color_index_functions[
+    #         tmp_chain.get_color(tmp_protein.pymol_selection.selection_string,
+    #                             self._interface_manager.pymol_session_manager)[0]
+    #     ]()
+
+    # def reset_icon_for_last_color_in_proteins_tab(self):
+    #     tmp_color_name = self._view.ui.lbl_protein_current_color.text()
+    #     if tmp_color_name == "":
+    #         return
+    #     elif tmp_color_name.strip() == "By Element":
+    #         return
+    #     color_index_functions = {
+    #         "red": self.reset_icon_for_red_in_proteins_tab,
+    #         "tv_red": self.reset_icon_for_tv_red_in_proteins_tab,
+    #         "salmon": self.reset_icon_for_salmon_in_proteins_tab,
+    #         "raspberry": self.reset_icon_for_raspberry_in_proteins_tab,
+    #         "green": self.reset_icon_for_green_in_proteins_tab,
+    #         "tv_green": self.reset_icon_for_tv_green_in_proteins_tab,
+    #         "palegreen": self.reset_icon_for_palegreen_in_proteins_tab,
+    #         "forest": self.reset_icon_for_forest_in_proteins_tab,
+    #         "blue": self.reset_icon_for_blue_in_proteins_tab,
+    #         "tv_blue": self.reset_icon_for_tv_blue_in_proteins_tab,
+    #         "lightblue": self.reset_icon_for_lightblue_in_proteins_tab,
+    #         "skyblue": self.reset_icon_for_skyblue_in_proteins_tab,
+    #         "yellow": self.reset_icon_for_yellow_in_proteins_tab,
+    #         "tv_yellow": self.reset_icon_for_tv_yellow_in_proteins_tab,
+    #         "paleyellow": self.reset_icon_for_paleyellow_in_proteins_tab,
+    #         "sand": self.reset_icon_for_sand_in_proteins_tab,
+    #         "magenta": self.reset_icon_for_magenta_in_proteins_tab,
+    #         "purple": self.reset_icon_for_purple_in_proteins_tab,
+    #         "pink": self.reset_icon_for_pink_in_proteins_tab,
+    #         "hotpink": self.reset_icon_for_hotpink_in_proteins_tab,
+    #         "cyan": self.reset_icon_for_cyan_in_proteins_tab,
+    #         "aquamarine": self.reset_icon_for_aquamarine_in_proteins_tab,
+    #         "palecyan": self.reset_icon_for_palecyan_in_proteins_tab,
+    #         "teal": self.reset_icon_for_teal_in_proteins_tab,
+    #         "orange": self.reset_icon_for_orange_in_proteins_tab,
+    #         "tv_orange": self.reset_icon_for_tv_orange_in_proteins_tab,
+    #         "lightorange": self.reset_icon_for_lightorange_in_proteins_tab,
+    #         "olive": self.reset_icon_for_olive_in_proteins_tab,
+    #         "white": self.reset_icon_for_white_in_proteins_tab,
+    #         "grey70": self.reset_icon_for_grey_70_in_proteins_tab,
+    #         "grey30": self.reset_icon_for_grey_30_in_proteins_tab,
+    #         "black": self.reset_icon_for_black_in_proteins_tab
+    #     }
+    #     color_index_functions[tmp_color_name.strip()]()
 
     # <editor-fold desc="Set color and icon">
-    def set_color_name_in_label_red_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("red    ")
-        self._view.color_grid_proteins.last_clicked_color = "red"
-        self._view.color_grid_proteins.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_red.setIconSize(self._view.color_grid_proteins.c_red.icon().actualSize(QtCore.QSize(14, 14)))
-        self.__slot_change_chain_color_proteins()
-
-    def set_color_name_in_label_tv_red_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("tv_red    ")
-        self._view.color_grid_proteins.last_clicked_color = "tv_red"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_tv_red.setIconSize(self._view.color_grid_proteins.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_salmon_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("salmon    ")
-        self._view.color_grid_proteins.last_clicked_color = "salmon"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_salomon.setIconSize(self._view.color_grid_proteins.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_raspberry_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("raspberry    ")
-        self._view.color_grid_proteins.last_clicked_color = "raspberry"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_raspberry.setIconSize(self._view.color_grid_proteins.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_green_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("green    ")
-        self._view.color_grid_proteins.last_clicked_color = "green"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_green.setIconSize(
-            self._view.color_grid_proteins.c_green.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_tv_green_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("tv_green    ")
-        self._view.color_grid_proteins.last_clicked_color = "tv_green"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_tv_green.setIconSize(
-            self._view.color_grid_proteins.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_palegreen_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("palegreen    ")
-        self._view.color_grid_proteins.last_clicked_color = "palegreen"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_palegreen.setIconSize(
-            self._view.color_grid_proteins.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_forest_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("forest    ")
-        self._view.color_grid_proteins.last_clicked_color = "forest"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_forest.setIconSize(
-            self._view.color_grid_proteins.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_blue_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("blue    ")
-        self._view.color_grid_proteins.last_clicked_color = "blue"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_blue.setIcon(QtGui.QIcon(
-            ":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_blue.setIconSize(self._view.color_grid_proteins.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_tv_blue_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("tv_blue    ")
-        self._view.color_grid_proteins.last_clicked_color = "tv_blue"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_tv_blue.setIconSize(
-            self._view.color_grid_proteins.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_lightblue_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("lightblue    ")
-        self._view.color_grid_proteins.last_clicked_color = "lightblue"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_lightblue.setIconSize(
-            self._view.color_grid_proteins.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_skyblue_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("skyblue    ")
-        self._view.color_grid_proteins.last_clicked_color = "skyblue"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_skyblue.setIconSize(
-            self._view.color_grid_proteins.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_yellow_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("yellow    ")
-        self._view.color_grid_proteins.last_clicked_color = "yellow"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_yellow.setIconSize(
-            self._view.color_grid_proteins.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_tv_yellow_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("tv_yellow    ")
-        self._view.color_grid_proteins.last_clicked_color = "tv_yellow"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_tv_yellow.setIconSize(
-            self._view.color_grid_proteins.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_paleyellow_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("paleyellow    ")
-        self._view.color_grid_proteins.last_clicked_color = "paleyellow"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_paleyellow.setIconSize(
-            self._view.color_grid_proteins.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_sand_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("sand    ")
-        self._view.color_grid_proteins.last_clicked_color = "sand"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_sand.setIconSize(
-            self._view.color_grid_proteins.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_magenta_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("magenta    ")
-        self._view.color_grid_proteins.last_clicked_color = "magenta"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_magenta.setIconSize(
-            self._view.color_grid_proteins.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_purple_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("purple    ")
-        self._view.color_grid_proteins.last_clicked_color = "purple"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_purple.setIconSize(
-            self._view.color_grid_proteins.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_pink_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("pink    ")
-        self._view.color_grid_proteins.last_clicked_color = "pink"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_pink.setIconSize(
-            self._view.color_grid_proteins.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_hotpink_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("hotpink    ")
-        self._view.color_grid_proteins.last_clicked_color = "hotpink"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_hotpink.setIconSize(
-            self._view.color_grid_proteins.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_cyan_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("cyan    ")
-        self._view.color_grid_proteins.last_clicked_color = "cyan"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_cyan.setIconSize(
-            self._view.color_grid_proteins.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_aquamarine_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("aquamarine    ")
-        self._view.color_grid_proteins.last_clicked_color = "aquamarine"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_aquamarine.setIconSize(
-            self._view.color_grid_proteins.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_palecyan_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("palecyan    ")
-        self._view.color_grid_proteins.last_clicked_color = "palecyan"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_palecyan.setIconSize(
-            self._view.color_grid_proteins.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_teal_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("teal    ")
-        self._view.color_grid_proteins.last_clicked_color = "teal"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_teal.setIconSize(
-            self._view.color_grid_proteins.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_orange_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("orange    ")
-        self._view.color_grid_proteins.last_clicked_color = "orange"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_orange.setIconSize(
-            self._view.color_grid_proteins.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_tv_orange_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("tv_orange    ")
-        self._view.color_grid_proteins.last_clicked_color = "tv_orange"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_tv_orange.setIconSize(
-            self._view.color_grid_proteins.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_lightorange_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("lightorange    ")
-        self._view.color_grid_proteins.last_clicked_color = "lightorange"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_lightorange.setIconSize(
-            self._view.color_grid_proteins.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_olive_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("olive    ")
-        self._view.color_grid_proteins.last_clicked_color = "olive"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_olive.setIconSize(
-            self._view.color_grid_proteins.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_white_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("white    ")
-        self._view.color_grid_proteins.last_clicked_color = "white"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_white.setIconSize(
-            self._view.color_grid_proteins.c_white.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_grey_70_in_proteins_tab(self):
-        tmp_protein = self._interface_manager.get_current_active_protein_object()
-        tmp_chain = self._interface_manager.get_current_active_chain_object()
-        tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("grey70    ")
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.last_clicked_color = "grey70"
-        self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_grey_70.setIconSize(
-            self._view.color_grid_proteins.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_grey_30_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("grey30    ")
-        self._view.color_grid_proteins.last_clicked_color = "grey30"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_grey_30.setIconSize(
-            self._view.color_grid_proteins.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
-
-    def set_color_name_in_label_black_in_proteins_tab(self):
-        self.reset_icon_for_last_color_in_proteins_tab()
-        self._view.ui.lbl_protein_current_color.setText("black    ")
-        self._view.color_grid_proteins.last_clicked_color = "black"
-        self.__slot_change_chain_color_proteins()
-        self._view.color_grid_proteins.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-        self._view.color_grid_proteins.c_black.setIconSize(
-            self._view.color_grid_proteins.c_black.icon().actualSize(QtCore.QSize(14, 14)))
+    # def set_color_name_in_label_red_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("red    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "red"
+    #     self._view.color_grid_proteins.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_red.setIconSize(self._view.color_grid_proteins.c_red.icon().actualSize(QtCore.QSize(14, 14)))
+    #     self.__slot_change_chain_color_proteins()
+    #
+    # def set_color_name_in_label_tv_red_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("tv_red    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "tv_red"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_tv_red.setIconSize(self._view.color_grid_proteins.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_salmon_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("salmon    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "salmon"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_salomon.setIconSize(self._view.color_grid_proteins.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_raspberry_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("raspberry    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "raspberry"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_raspberry.setIconSize(self._view.color_grid_proteins.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_green_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("green    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "green"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_green.setIconSize(
+    #         self._view.color_grid_proteins.c_green.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_tv_green_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("tv_green    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "tv_green"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_tv_green.setIconSize(
+    #         self._view.color_grid_proteins.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_palegreen_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("palegreen    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "palegreen"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_palegreen.setIconSize(
+    #         self._view.color_grid_proteins.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_forest_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("forest    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "forest"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_forest.setIconSize(
+    #         self._view.color_grid_proteins.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_blue_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("blue    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "blue"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_blue.setIcon(QtGui.QIcon(
+    #         ":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_blue.setIconSize(self._view.color_grid_proteins.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_tv_blue_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("tv_blue    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "tv_blue"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_tv_blue.setIconSize(
+    #         self._view.color_grid_proteins.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_lightblue_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("lightblue    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "lightblue"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_lightblue.setIconSize(
+    #         self._view.color_grid_proteins.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_skyblue_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("skyblue    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "skyblue"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_skyblue.setIconSize(
+    #         self._view.color_grid_proteins.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_yellow_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("yellow    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "yellow"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_yellow.setIconSize(
+    #         self._view.color_grid_proteins.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_tv_yellow_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("tv_yellow    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "tv_yellow"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_tv_yellow.setIconSize(
+    #         self._view.color_grid_proteins.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_paleyellow_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("paleyellow    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "paleyellow"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_paleyellow.setIconSize(
+    #         self._view.color_grid_proteins.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_sand_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("sand    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "sand"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_sand.setIconSize(
+    #         self._view.color_grid_proteins.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_magenta_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("magenta    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "magenta"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_magenta.setIconSize(
+    #         self._view.color_grid_proteins.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_purple_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("purple    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "purple"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_purple.setIconSize(
+    #         self._view.color_grid_proteins.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_pink_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("pink    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "pink"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_pink.setIconSize(
+    #         self._view.color_grid_proteins.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_hotpink_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("hotpink    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "hotpink"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_hotpink.setIconSize(
+    #         self._view.color_grid_proteins.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_cyan_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("cyan    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "cyan"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_cyan.setIconSize(
+    #         self._view.color_grid_proteins.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_aquamarine_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("aquamarine    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "aquamarine"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_aquamarine.setIconSize(
+    #         self._view.color_grid_proteins.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_palecyan_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("palecyan    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "palecyan"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_palecyan.setIconSize(
+    #         self._view.color_grid_proteins.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_teal_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("teal    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "teal"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_teal.setIconSize(
+    #         self._view.color_grid_proteins.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_orange_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("orange    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "orange"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_orange.setIconSize(
+    #         self._view.color_grid_proteins.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_tv_orange_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("tv_orange    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "tv_orange"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_tv_orange.setIconSize(
+    #         self._view.color_grid_proteins.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_lightorange_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("lightorange    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "lightorange"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_lightorange.setIconSize(
+    #         self._view.color_grid_proteins.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_olive_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("olive    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "olive"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_olive.setIconSize(
+    #         self._view.color_grid_proteins.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_white_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("white    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "white"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_white.setIconSize(
+    #         self._view.color_grid_proteins.c_white.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_grey_70_in_proteins_tab(self):
+    #     tmp_protein = self._interface_manager.get_current_active_protein_object()
+    #     tmp_chain = self._interface_manager.get_current_active_chain_object()
+    #     tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("grey70    ")
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.last_clicked_color = "grey70"
+    #     self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_grey_70.setIconSize(
+    #         self._view.color_grid_proteins.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_grey_30_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("grey30    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "grey30"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_grey_30.setIconSize(
+    #         self._view.color_grid_proteins.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
+    #
+    # def set_color_name_in_label_black_in_proteins_tab(self):
+    #     self.reset_icon_for_last_color_in_proteins_tab()
+    #     self._view.ui.lbl_protein_current_color.setText("black    ")
+    #     self._view.color_grid_proteins.last_clicked_color = "black"
+    #     self.__slot_change_chain_color_proteins()
+    #     self._view.color_grid_proteins.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+    #     self._view.color_grid_proteins.c_black.setIconSize(
+    #         self._view.color_grid_proteins.c_black.icon().actualSize(QtCore.QSize(14, 14)))
     # </editor-fold>
 
     # <editor-fold desc="Reset Icon">
-    def reset_icon_for_red_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("red")
-        self._view.color_grid_proteins.c_red.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_tv_red_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("tv_red")
-        self._view.color_grid_proteins.c_tv_red.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_salmon_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("salmon")
-        self._view.color_grid_proteins.c_salomon.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_raspberry_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("raspberry")
-        self._view.color_grid_proteins.c_raspberry.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_green_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("green")
-        self._view.color_grid_proteins.c_green.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_tv_green_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("tv_green")
-        self._view.color_grid_proteins.c_tv_green.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_palegreen_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("palegreen")
-        self._view.color_grid_proteins.c_palegreen.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_forest_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("forest")
-        self._view.color_grid_proteins.c_forest.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_blue_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("blue")
-        self._view.color_grid_proteins.c_blue.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_tv_blue_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("tv_blue")
-        self._view.color_grid_proteins.c_tv_blue.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_lightblue_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("lightblue")
-        self._view.color_grid_proteins.c_lightblue.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_skyblue_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("skyblue")
-        self._view.color_grid_proteins.c_skyblue.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_yellow_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("yellow")
-        self._view.color_grid_proteins.c_yellow.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_tv_yellow_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("tv_yellow")
-        self._view.color_grid_proteins.c_tv_yellow.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_paleyellow_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("paleyellow")
-        self._view.color_grid_proteins.c_paleyellow.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_sand_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("sand")
-        self._view.color_grid_proteins.c_sand.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_magenta_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("magenta")
-        self._view.color_grid_proteins.c_magenta.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_purple_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("purple")
-        self._view.color_grid_proteins.c_purple.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_pink_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("pink")
-        self._view.color_grid_proteins.c_pink.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_hotpink_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("hotpink")
-        self._view.color_grid_proteins.c_hotpink.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_cyan_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("cyan")
-        self._view.color_grid_proteins.c_cyan.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_aquamarine_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("aquamarine")
-        self._view.color_grid_proteins.c_aquamarine.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_palecyan_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("palecyan")
-        self._view.color_grid_proteins.c_palecyan.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_teal_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("teal")
-        self._view.color_grid_proteins.c_teal.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_orange_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("orange")
-        self._view.color_grid_proteins.c_orange.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_tv_orange_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("tv_orange")
-        self._view.color_grid_proteins.c_tv_orange.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_lightorange_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("lightorange")
-        self._view.color_grid_proteins.c_lightorange.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_olive_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("olive")
-        self._view.color_grid_proteins.c_olive.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_white_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("white")
-        self._view.color_grid_proteins.c_white.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_grey_70_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("grey70")
-        self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_grey_30_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("grey30")
-        self._view.color_grid_proteins.c_grey_30.setIcon(QtGui.QIcon())
-
-    def reset_icon_for_black_in_proteins_tab(self):
-        self._view.ui.lbl_protein_current_color.setText("black")
-        self._view.color_grid_proteins.c_black.setIcon(QtGui.QIcon())
+    # def reset_icon_for_red_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("red")
+    #     self._view.color_grid_proteins.c_red.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_tv_red_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("tv_red")
+    #     self._view.color_grid_proteins.c_tv_red.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_salmon_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("salmon")
+    #     self._view.color_grid_proteins.c_salomon.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_raspberry_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("raspberry")
+    #     self._view.color_grid_proteins.c_raspberry.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_green_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("green")
+    #     self._view.color_grid_proteins.c_green.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_tv_green_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("tv_green")
+    #     self._view.color_grid_proteins.c_tv_green.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_palegreen_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("palegreen")
+    #     self._view.color_grid_proteins.c_palegreen.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_forest_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("forest")
+    #     self._view.color_grid_proteins.c_forest.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_blue_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("blue")
+    #     self._view.color_grid_proteins.c_blue.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_tv_blue_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("tv_blue")
+    #     self._view.color_grid_proteins.c_tv_blue.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_lightblue_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("lightblue")
+    #     self._view.color_grid_proteins.c_lightblue.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_skyblue_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("skyblue")
+    #     self._view.color_grid_proteins.c_skyblue.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_yellow_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("yellow")
+    #     self._view.color_grid_proteins.c_yellow.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_tv_yellow_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("tv_yellow")
+    #     self._view.color_grid_proteins.c_tv_yellow.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_paleyellow_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("paleyellow")
+    #     self._view.color_grid_proteins.c_paleyellow.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_sand_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("sand")
+    #     self._view.color_grid_proteins.c_sand.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_magenta_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("magenta")
+    #     self._view.color_grid_proteins.c_magenta.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_purple_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("purple")
+    #     self._view.color_grid_proteins.c_purple.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_pink_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("pink")
+    #     self._view.color_grid_proteins.c_pink.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_hotpink_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("hotpink")
+    #     self._view.color_grid_proteins.c_hotpink.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_cyan_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("cyan")
+    #     self._view.color_grid_proteins.c_cyan.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_aquamarine_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("aquamarine")
+    #     self._view.color_grid_proteins.c_aquamarine.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_palecyan_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("palecyan")
+    #     self._view.color_grid_proteins.c_palecyan.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_teal_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("teal")
+    #     self._view.color_grid_proteins.c_teal.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_orange_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("orange")
+    #     self._view.color_grid_proteins.c_orange.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_tv_orange_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("tv_orange")
+    #     self._view.color_grid_proteins.c_tv_orange.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_lightorange_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("lightorange")
+    #     self._view.color_grid_proteins.c_lightorange.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_olive_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("olive")
+    #     self._view.color_grid_proteins.c_olive.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_white_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("white")
+    #     self._view.color_grid_proteins.c_white.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_grey_70_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("grey70")
+    #     self._view.color_grid_proteins.c_grey_70.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_grey_30_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("grey30")
+    #     self._view.color_grid_proteins.c_grey_30.setIcon(QtGui.QIcon())
+    #
+    # def reset_icon_for_black_in_proteins_tab(self):
+    #     self._view.ui.lbl_protein_current_color.setText("black")
+    #     self._view.color_grid_proteins.c_black.setIcon(QtGui.QIcon())
     # </editor-fold>
     # </editor-fold>
 
     # <editor-fold desc="Representations">
-    # hydrogens
-    def __slot_chain_protein_with_hydrogens(self):
-        try:
-            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object().chain_letter)
-            tmp_pymol_selection: str = f"h. and {tmp_selection.selection_string}"
-
-            if self._view.tg_protein_hydrogen_atoms.toggle_button.isChecked():
-                if self._view.tg_protein_sticks.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
-                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_lines.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
-                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_spheres.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
-                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
-                    )
-            else:
-                if self._view.tg_protein_sticks.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
-                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_lines.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
-                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_spheres.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
-                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
-                    )
-
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
     def __slot_protein_chain_as_cartoon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3761,7 +3750,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
-            self.__slot_chain_protein_with_hydrogens()
+            #self.__slot_chain_protein_with_hydrogens()
             self._update_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -3824,7 +3813,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
                 )
-            self.__slot_chain_protein_with_hydrogens()
+            #self.__slot_chain_protein_with_hydrogens()
             self._update_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -3856,7 +3845,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
                 )
-            self.__slot_chain_protein_with_hydrogens()
+            #self.__slot_chain_protein_with_hydrogens()
             self._update_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -4052,10 +4041,7 @@ class MainViewController:
                     ),
                     post_func=self.__await_post_import_protein_structure,
                 )
-                self._active_task.start()
-                constants.PYSSA_LOGGER.info("Create project finished with protein from the PDB.")
             elif tmp_name_len > 0:
-                # local pdb file as input
                 self._active_task = tasks.Task(
                     target=project_async.add_protein_from_local_filesystem_to_project,
                     args=(
@@ -4064,8 +4050,6 @@ class MainViewController:
                     ),
                     post_func=self.__await_post_import_protein_structure,
                 )
-                self._active_task.start()
-                constants.PYSSA_LOGGER.info("Create project finished with protein from local filesystem.")
             else:
                 logger.warning("No protein object was created.")
                 return
@@ -4076,6 +4060,7 @@ class MainViewController:
             logger.error(f"An error occurred during the protein import: {e}")
             self._interface_manager.status_bar_manager.show_error_message("Protein import failed!")
         else:
+            self._active_task.start()
             self._interface_manager.start_wait_cursor()
 
     def __await_post_import_protein_structure(self, return_value: tuple):
@@ -4541,10 +4526,6 @@ class MainViewController:
                        "'Open protein pair pymol session' button on the 'Protein Pairs Tab' was clicked.")
             self._view.tg_protein_pair_white_bg.toggle_button.setCheckState(False)
             tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
-            print(tmp_protein_pair.protein_1.get_molecule_object())
-            print(tmp_protein_pair.protein_1)
-            print(tmp_protein_pair.protein_2.get_molecule_object())
-            print(tmp_protein_pair.protein_2)
             # fixme: I am no sure if the code below is needed
             # if not self._interface_manager.pymol_session_manager.is_the_current_session_empty():
             #     tmp_flag = True  # Session is NOT empty and needs reinitialization
@@ -4692,7 +4673,6 @@ class MainViewController:
                     self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(
                         tmp_protein_name, self._interface_manager.pymol_session_manager
                     )
-                    self._view.tg_protein_pair_hydrogen_atoms.toggle_button.setChecked(False)
                     self._main_view_state.selected_chain_protein_pairs = self._interface_manager.get_current_protein_pair_tree_index()
 
             elif tmp_type == "header":
@@ -5506,7 +5486,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
-            self.__slot_protein_pair_chain_with_hydrogens()
+            # self.__slot_protein_pair_chain_with_hydrogens()
             self._update_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
@@ -5550,7 +5530,7 @@ class MainViewController:
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Lines' toggle on the 'Protein Pairs Tab' was clicked.")
-            self.__slot_protein_pair_chain_with_hydrogens()
+            # self.__slot_protein_pair_chain_with_hydrogens()
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.ui.cb_protein_pair_lines.isChecked() and self._interface_manager.get_protein_pair_repr_toggle_flag() == 0:
@@ -5598,7 +5578,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
                 )
-            self.__slot_protein_pair_chain_with_hydrogens()
+            # self.__slot_protein_pair_chain_with_hydrogens()
             self._update_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()

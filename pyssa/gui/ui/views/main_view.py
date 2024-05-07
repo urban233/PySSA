@@ -164,8 +164,9 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.protein_white_bg_layout.addWidget(self.tg_protein_white_bg)
         self.tg_protein_color_atoms = toggle_button.ToggleWidget()
         self.ui.protein_atoms_layout.addWidget(self.tg_protein_color_atoms)
-        self.tg_protein_hydrogen_atoms = toggle_button.ToggleWidget()
-        self.ui.protein_hydrogen_layout.addWidget(self.tg_protein_hydrogen_atoms)
+        # fixme: this code could become useful
+        # self.tg_protein_hydrogen_atoms = toggle_button.ToggleWidget()
+        # self.ui.protein_hydrogen_layout.addWidget(self.tg_protein_hydrogen_atoms)
         # representations
         self.tg_protein_cartoon = toggle_button.ToggleWidget()
         self.ui.protein_cartoon_layout.addWidget(self.tg_protein_cartoon)
@@ -192,8 +193,9 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.protein_pair_white_bg_layout.addWidget(self.tg_protein_pair_white_bg)
         self.tg_protein_pair_color_atoms = toggle_button.ToggleWidget()
         self.ui.protein_pair_atoms_layout.addWidget(self.tg_protein_pair_color_atoms)
-        self.tg_protein_pair_hydrogen_atoms = toggle_button.ToggleWidget()
-        self.ui.protein_pair_hydrogen_layout.addWidget(self.tg_protein_pair_hydrogen_atoms)
+        # fixme: this code could become useful
+        # self.tg_protein_pair_hydrogen_atoms = toggle_button.ToggleWidget()
+        # self.ui.protein_pair_hydrogen_layout.addWidget(self.tg_protein_pair_hydrogen_atoms)
         # representations
         self.tg_protein_pair_cartoon = toggle_button.ToggleWidget()
         self.ui.protein_pair_cartoon_layout.addWidget(self.tg_protein_pair_cartoon)
@@ -332,8 +334,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.box_protein_pair_color.hide()
         self.ui.btn_protein_pair_color_atoms.hide()
         self.ui.btn_protein_pair_reset_atoms.hide()
-        self.ui.btn_protein_pair_show_hydrogens.hide()
-        self.ui.btn_protein_pair_hide_hydrogens.hide()
         self.ui.btn_protein_pair_show_cartoon.hide()
         self.ui.btn_protein_pair_hide_cartoon.hide()
         self.ui.btn_protein_pair_show_sticks.hide()
