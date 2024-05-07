@@ -4918,7 +4918,21 @@ class MainViewController:
 
     # <editor-fold desc="Set color and icon">
     def set_color_in_protein_pairs_color_grid(self):
-        pass
+        tmp_color_grid_buttons = self._view.color_grid_protein_pairs.get_all_color_buttons()
+        # get color from protein chain
+        tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        tmp_pymol_selection = f"(first elem N, first elem C, first elem O) and chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
+        tmp_residue_config: "residue_color_config.ResidueColorConfig" = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
+            tmp_pymol_selection, tmp_chain.chain_letter
+        )
+        if tmp_residue_config.atoms_are_colored_by_elements():
+            pass
+        # set color label
+
+        # reset icon
+
+        # set icon
 
 
     def set_color_name_in_label_by_elements_in_protein_pairs_tab(self):
