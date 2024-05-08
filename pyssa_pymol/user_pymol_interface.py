@@ -28,11 +28,11 @@ from pyssa.internal.thread import tasks
 from pyssa_pymol import pymol_enums, commands
 
 
-class Interface(QtCore.QObject):
-    """Functions as interface to connect PySSA to PyMOL.
+class UserPyMOLInterface(QtCore.QObject):
+    """Functions as interface to connect PySSA to User PyMOL.
 
     Notes:
-        This class is used to receive command requests form PySSA and send it to PyMOL.
+        This class is used to receive command requests form PySSA and send it to User PyMOL.
     """
     def __init__(self):
         super().__init__()
@@ -61,10 +61,10 @@ class Interface(QtCore.QObject):
             print("Binding socket was successful.")
         # </editor-fold>
 
-        print("Entering while loop ...")
-        while True:
-            # Wait for a request from the client
-            try:
+        tmp_user_pymol_should_be_closed = False
+        try:
+            while tmp_user_pymol_should_be_closed is False:
+                # Wait for a request from the client
                 print("Waiting to receive message ...")
                 message = main_socket.recv_string()
                 print("Received message: ", message)
@@ -72,8 +72,10 @@ class Interface(QtCore.QObject):
                 print("Waiting for data from the client ...")
                 data = main_socket.recv_json()
                 print(data)
-
-                if data["command"] == pymol_enums.CommandEnum.REINITIALIZE_SESSION.value:
+                if data["command"] == pymol_enums.CommandEnum.CLOSE_USER_PYMOL.value:
+                    print("Set boolean to close user pymol ...")
+                    tmp_user_pymol_should_be_closed = True
+                elif data["command"] == pymol_enums.CommandEnum.REINITIALIZE_SESSION.value:
                     tmp_result: tuple[bool, str] = commands.reinitialize_session()
                     main_socket.send_json(
                         {"success": tmp_result[0], "message": str(tmp_result[1])}
@@ -209,8 +211,8 @@ class Interface(QtCore.QObject):
                     main_socket.send_json(
                         {"success": tmp_result[0], "message": str(tmp_result[1])}
                     )
-            except Exception as e:
-                main_socket.send_json({"success": False, "message": str(e)})
+        except Exception as e:
+            main_socket.send_json({"success": False, "message": str(e)})
 
     def finished_main_loop(self):
         print("Finished main loop")

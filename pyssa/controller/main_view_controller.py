@@ -2077,7 +2077,7 @@ class MainViewController:
                 self._cut_representation_to_selected_protein_region(
                     self._interface_manager.get_current_protein_pair_representation_states()
                 )
-            self._interface_manager.pymol_session_manager.pymol_interface.set_custom_setting(
+            self._interface_manager.pymol_session_manager.user_pymol_connector.set_custom_setting(
                 "valence", 0
             )
             self._interface_manager.pymol_session_manager.zoom_to_residue_in_protein_position("sele")
@@ -2089,7 +2089,7 @@ class MainViewController:
             self,
             all_representation_toggle_states: list[tuple[enums.PyMOLRepresentation, bool]]
     ) -> None:
-        self._interface_manager.pymol_session_manager.pymol_interface.select(
+        self._interface_manager.pymol_session_manager.user_pymol_connector.select(
             "sele", "sele and not hydrogens"
         )
         for tmp_toggle_state in all_representation_toggle_states:
@@ -2889,9 +2889,9 @@ class MainViewController:
     def __slot_protein_change_background_color(self):
         try:
             if self._view.tg_protein_white_bg.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.pymol_interface.set_background_color("white")
+                self._interface_manager.pymol_session_manager.user_pymol_connector.set_background_color("white")
             else:
-                self._interface_manager.pymol_session_manager.pymol_interface.set_background_color("black")
+                self._interface_manager.pymol_session_manager.user_pymol_connector.set_background_color("black")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
@@ -3551,7 +3551,7 @@ class MainViewController:
     def __slot_update_protein_scene(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
-            self._interface_manager.pymol_session_manager.pymol_interface.scene(a_key="auto", an_action="update")
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(a_key="auto", an_action="update")
             self._save_protein_pymol_session()
             self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
         except Exception as e:
@@ -3560,7 +3560,7 @@ class MainViewController:
 
     def _update_scene(self) -> None:
         """Updates the current selected PyMOL scene."""
-        self._interface_manager.pymol_session_manager.pymol_interface.scene(
+        self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
             a_key="auto", an_action="update"
         )
         self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
@@ -3580,7 +3580,7 @@ class MainViewController:
     def post_save_scene(self, return_value: tuple):
         try:
             tmp_scene_name, _ = return_value
-            self._interface_manager.pymol_session_manager.pymol_interface.scene(
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
                 a_key=tmp_scene_name, an_action="append"
             )
             if self._interface_manager.current_tab_index == 1:
@@ -3676,7 +3676,7 @@ class MainViewController:
             tmp_dialog.exec_()
             response: bool = tmp_dialog.response
             if response:
-                self._interface_manager.pymol_session_manager.pymol_interface.scene(
+                self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
                     a_key=self._interface_manager.pymol_session_manager.current_scene_name, an_action="clear"
                 )
                 if self._interface_manager.current_tab_index == 1:
@@ -3926,7 +3926,7 @@ class MainViewController:
 
     def _get_protein_name_of_a_protein_from_a_protein_pair(self, a_protein, a_protein_pair):
         """Helper function to get the correct protein name even if the protein pair consists of two identical protein names."""
-        tmp_result = self._interface_manager.pymol_session_manager.pymol_interface.get_all_object_names()
+        tmp_result = self._interface_manager.pymol_session_manager.user_pymol_connector.get_all_object_names()
         tmp_protein_name = a_protein.get_molecule_object()
         if tmp_result["success"]:
             tmp_sub_string_prot_1 = tmp_result["data"][0][len(tmp_result["data"][0]) - 2: len(tmp_result["data"][0])]
@@ -4065,9 +4065,9 @@ class MainViewController:
     def __slot_protein_pair_change_background_color(self):
         try:
             if self._view.tg_protein_pair_white_bg.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.pymol_interface.set_background_color("white")
+                self._interface_manager.pymol_session_manager.user_pymol_connector.set_background_color("white")
             else:
-                self._interface_manager.pymol_session_manager.pymol_interface.set_background_color("black")
+                self._interface_manager.pymol_session_manager.user_pymol_connector.set_background_color("black")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
@@ -4623,45 +4623,6 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Representations">
-    # hydrogens
-    def __slot_protein_pair_chain_with_hydrogens(self):
-        try:
-            tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            tmp_selection.set_selection_for_a_single_chain(
-                self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-            tmp_pymol_selection: str = f"h. and {tmp_selection.selection_string}"
-
-            if self._view.tg_protein_pair_hydrogen_atoms.toggle_button.isChecked():
-                if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
-                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_pair_lines.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
-                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.show_custom_representation(
-                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
-                    )
-            else:
-                if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
-                        enums.PyMOLRepresentation.STICKS.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_pair_lines.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
-                        enums.PyMOLRepresentation.LINES.value, tmp_pymol_selection
-                    )
-                if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
-                    self._interface_manager.pymol_session_manager.pymol_interface.hide_custom_representation(
-                        enums.PyMOLRepresentation.SPHERES.value, tmp_pymol_selection
-                    )
-
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
     def _create_selection_string_for_representations(self):
         tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
         tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
@@ -4954,7 +4915,7 @@ class MainViewController:
     def __slot_update_protein_pair_scene(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
-            self._interface_manager.pymol_session_manager.pymol_interface.scene("auto", "update")
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene("auto", "update")
             self._save_protein_pair_pymol_session()
             self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
         except Exception as e:

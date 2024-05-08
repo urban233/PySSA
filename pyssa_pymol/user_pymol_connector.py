@@ -35,8 +35,8 @@ logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 
-class PyMOLInterface:
-    """Functions as interface to connect PySSA to PyMOL.
+class UserPyMOLConnector:
+    """Functions as connector to connect PySSA to PyMOL.
 
     Notes:
         This class is used within PySSA to communicate PyMOL commands.
@@ -358,19 +358,17 @@ def send_command_to_pymol(
         a_timeout=3000,
 ) -> dict:
     """Sends a job request to the auxiliary pymol process."""
-    # First check if main socket can receive messages (fixme: There is a better way to test this)
     the_main_socket.send_string("Check availability ...")
     the_main_socket.recv_string()
     the_main_socket.send_json(a_pymol_command.get_command())
     tmp_reply_is_ready = False
-    while True:
+    while tmp_reply_is_ready is False:
         tmp_events = the_poller.poll(a_timeout)
         if tmp_events:
             tmp_reply_is_ready = True
-            break
         if the_app_process_manager.pymol_crashed():
-            break
+            raise pyssa_exception.PyMOLNotRespondingError()
     if tmp_reply_is_ready:
         return the_main_socket.recv_json()
-    else:
-        raise pyssa_exception.PyMOLNotRespondingError()
+    # else:
+    #     raise pyssa_exception.PyMOLNotRespondingError()

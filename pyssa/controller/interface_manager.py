@@ -26,6 +26,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import time
 
 from PyQt5 import QtGui, QtCore
 from PyQt5 import QtWidgets
@@ -210,7 +211,25 @@ class InterfaceManager:
         self._app_process_manager_thread.start()
 
     def _closed_app_process_manager(self):
-        logger.info("Application process manager closed.")
+        logger.warning("Check process method of application process manager closed (likely due to a User PyMOL crash).")
+        self._app_process_manager_thread = tasks.Task(
+            target=self._recover_user_pymol,
+            args=(0, 0),
+            post_func=self.__await_recover_user_pymol
+        )
+        self._app_process_manager_thread.start()
+
+    def _recover_user_pymol(self):
+        logger.info("Starting recovery process ...")
+        self.app_process_manager.start_pymol()
+        self.app_process_manager.arrange_windows()
+        time.sleep(10)
+        self._reset_pymol_session()
+
+    def __await_recover_user_pymol(self):
+        logger.info("Finished recovery process.")
+        logger.info("Restarting check process routine of application process manager.")
+        self.start_app_process_manager()
 
     def start_pymol(self):
         process = subprocess.Popen([f"{constants.PLUGIN_PATH}\\scripts\\batch\\start_pymol.bat"],  # r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pymol.bat"
@@ -1976,11 +1995,13 @@ class InterfaceManager:
                     or self._main_view.tg_protein_pair_spheres.toggle_button.isChecked()):
             # self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(True)
             # self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(True)
-            self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(True)
+            #self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(True)
+            pass
         else:
             # self._main_view.ui.btn_protein_pair_show_hydrogens.setEnabled(False)
             # self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(False)
-            self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(False)
+            #self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(False)
+            pass
 
     def get_current_chain_color_of_current_protein_pair_pymol_session(
             self,

@@ -24,6 +24,8 @@ import enum
 
 
 class CommandEnum(enum.Enum):
+    CLOSE_USER_PYMOL = "close_user_pymol"
+
     REINITIALIZE_SESSION = "reinitialize_session"
     GET_ALL_OBJECT_NAMES = "get_all_object_names"
     GET_MODEL = "get_model"

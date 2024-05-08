@@ -106,24 +106,15 @@ if __name__ == "__main__":
         }
         sockets = [prediction_socket, distance_analysis_socket, prediction_and_distance_analysis_socket, ray_tracing_socket, general_purpose_socket]
         threads = [prediction_thread, distance_analysis_thread, prediction_and_distance_analysis_thread, ray_tracing_thread, general_purpose_thread]
-        # Bind sockets
-        # i = 0
-        # for tmp_socket in sockets:
-        #     port = 7071 + i
-        #     tmp_socket.bind(f"tcp://127.0.0.1:{port}")
-        #     i += 1
-        # for tmp_thread in threads:
-        #     tmp_thread.daemon = True
-        #     tmp_thread.start()
     except Exception as e:
         print("Exception raised during startup!")
         print(e)
         exit(1)
 
-    print("Entering while loop ...")
-    while True:
-        # Wait for a request from the client
-        try:
+    tmp_auxiliary_pymol_should_be_closed = False
+    try:
+        while tmp_auxiliary_pymol_should_be_closed is False:
+            # Wait for a request from the client
             print("Waiting to receive message ...")
             message = main_socket.recv_string()
             print("Received message: ", message)
@@ -135,42 +126,11 @@ if __name__ == "__main__":
             print(task_type)
             if task_type == "Abort":
                 main_socket.send_string("Auxiliary PyMOL will now exit.")
-                exit(0)
+                tmp_auxiliary_pymol_should_be_closed = True
             else:
                 queues[task_type].put(data)
                 main_socket.send_string("Received data and added job to queue.")
-        except Exception as e:
-            response = {"result": str(e)}
-            main_socket.send_json(response)  # Send JSON-encoded response
-
-
-    # while True:
-    #     # Wait for a request from the client
-    #     message = socket.recv_string()
-    #     socket.send_string("I am ready to receive data.")
-    #     try:
-    #         data = socket.recv_json()  # Receive JSON-encoded data
-    #         """
-    #         message = {
-    #             "message": "Ray-tracing",
-    #             "dest": str(self.dest_image_filepath),
-    #             "cached": str(self.cached_session_filepath),
-    #             "mode": self.image_ray_trace_mode,
-    #             "texture": self.image_ray_texture,
-    #             "renderer": self.image_renderer
-    #         }
-    #         """
-    #         if data["message"] == "Ray-tracing":
-    #             auxiliary_pymol_base.AuxiliaryPyMOL.create_ray_traced_image(
-    #                 data["dest"],
-    #                 data["cached"],
-    #                 data["mode"],
-    #                 data["texture"],
-    #                 data["renderer"]
-    #             )
-    #         # Process the arguments (here, just echoing them back)
-    #         response = {"result": ""}
-    #     except Exception as e:
-    #         response = {"result": e}
-    #     # Send the response back to the client
-    #     socket.send_json(response)  # Send JSON-encoded response
+    except Exception as e:
+        response = {"result": str(e)}
+        main_socket.send_json(response)  # Send JSON-encoded response
+    exit(0)

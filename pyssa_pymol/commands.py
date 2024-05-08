@@ -79,7 +79,7 @@ def get_model(a_selection_string):
 
 def select(a_name, a_selection_string):
     try:
-        print(cmd.select(name=a_name, selection=a_selection_string))
+        cmd.select(name=a_name, selection=a_selection_string)
     except CmdException as e:
         return False, e
     else:

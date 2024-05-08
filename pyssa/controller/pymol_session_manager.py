@@ -29,7 +29,7 @@ from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.io_pyssa import binary_data, path_util
 from pyssa.util import constants, exception, protein_pair_util
-from pyssa_pymol import pymol_interface
+from pyssa_pymol import user_pymol_connector
 
 
 class PymolSessionManager:
@@ -47,14 +47,14 @@ class PymolSessionManager:
         self.current_scene_name: str = ""
         self.all_scenes: list[str] = []
         self._app_process_manager = the_app_process_manager
-        self.pymol_interface: "pymol_interface.PyMOLInterface" = pymol_interface.PyMOLInterface(
+        self.user_pymol_connector: "user_pymol_connector.UserPyMOLConnector" = user_pymol_connector.UserPyMOLConnector(
             self._app_process_manager
         )
 
     # <editor-fold desc="Private methods">
     def _check_session_integrity(self, a_protein_name) -> bool:
         """Checks if the current session is consistent with the manager."""
-        tmp_result = self.pymol_interface.get_all_object_names()
+        tmp_result = self.user_pymol_connector.get_all_object_names()
         if tmp_result["success"]:
             if a_protein_name in tmp_result["data"]:
                 return True
@@ -78,7 +78,7 @@ class PymolSessionManager:
         if self._app_process_manager.pymol_crashed() is True:
             pass
         else:
-            tmp_result = self.pymol_interface.load_pymol_session(tmp_session_path)
+            tmp_result = self.user_pymol_connector.load_pymol_session(tmp_session_path)
             if tmp_result["success"]:
                 self.show_sequence_view()
                 print("Session loaded.")
@@ -93,7 +93,7 @@ class PymolSessionManager:
             pymol_molecule_object (str): PyMOL molecule object to be converted.
         """
         session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{pymol_molecule_object}_session.pse")
-        tmp_result = self.pymol_interface.save_pymol_session(session_filepath)
+        tmp_result = self.user_pymol_connector.save_pymol_session(session_filepath)
         if tmp_result["success"]:
             base64_string = binary_data.create_base64_string_from_file(session_filepath)
             os.remove(session_filepath)
@@ -135,7 +135,7 @@ class PymolSessionManager:
         self.session_object_type = ""
         self.session_objects: list = []
         # reset actual pymol session
-        self.pymol_interface.reinitialize_session()
+        self.user_pymol_connector.reinitialize_session()
 
     def load_protein_session(self, a_protein: "protein.Protein"):
         """Loads a pymol session of a single protein."""
@@ -174,11 +174,11 @@ class PymolSessionManager:
         # </editor-fold>
 
     def load_scene(self, a_scene_name):
-        tmp_result = self.pymol_interface.load_scene(a_scene_name)
+        tmp_result = self.user_pymol_connector.load_scene(a_scene_name)
         return tmp_result["success"]
 
     def load_current_scene(self):
-        tmp_result = self.pymol_interface.load_scene(self.current_scene_name)
+        tmp_result = self.user_pymol_connector.load_scene(self.current_scene_name)
         return tmp_result["success"]
 
     def save_current_pymol_session_as_pse_cache_file(self):
@@ -205,7 +205,7 @@ class PymolSessionManager:
 
     def get_all_scenes_in_current_session(self):
         self.all_scenes.clear()
-        tmp_result = self.pymol_interface.get_scene_list()
+        tmp_result = self.user_pymol_connector.get_scene_list()
         if tmp_result["success"]:
             self.all_scenes = tmp_result["data"]
         else:
@@ -216,26 +216,26 @@ class PymolSessionManager:
         self.all_scenes = all_scenes
 
     def show_sequence_view(self) -> None:
-        self.pymol_interface.set_custom_setting("seq_view", 1)
+        self.user_pymol_connector.set_custom_setting("seq_view", 1)
 
     def hide_sequence_view(self) -> None:
-        self.pymol_interface.set_custom_setting("seq_view", 0)
+        self.user_pymol_connector.set_custom_setting("seq_view", 0)
     # </editor-fold>
 
     def show_specific_representation(self, a_representation, a_selection_string):
-        self.pymol_interface.show_custom_representation(a_representation, a_selection_string)
+        self.user_pymol_connector.show_custom_representation(a_representation, a_selection_string)
 
     def hide_specific_representation(self, a_representation, a_selection_string):
-        self.pymol_interface.hide_custom_representation(a_representation, a_selection_string)
+        self.user_pymol_connector.hide_custom_representation(a_representation, a_selection_string)
 
     def get_residue_colors(self, a_selection_string: str):
-        tmp_result = self.pymol_interface.get_residue_colors(a_selection_string)
+        tmp_result = self.user_pymol_connector.get_residue_colors(a_selection_string)
         if tmp_result["success"]:
             return tmp_result["data"]
         return None
 
     def get_chain_color(self, a_selection_string: str, chain_letter: str):
-        tmp_result = self.pymol_interface.get_chain_color(a_selection_string, chain_letter)
+        tmp_result = self.user_pymol_connector.get_chain_color(a_selection_string, chain_letter)
         print(tmp_result)
         if tmp_result["success"]:
             return tmp_result["data"]
@@ -244,26 +244,26 @@ class PymolSessionManager:
     def get_residue_color_config_of_a_given_selection(self,
                                                       a_protein_name: str,
                                                       chain_letter: str) -> "residue_color_config.ResidueColorConfig":
-        tmp_result = self.pymol_interface.get_residue_color_config(a_protein_name, chain_letter)
+        tmp_result = self.user_pymol_connector.get_residue_color_config(a_protein_name, chain_letter)
         if tmp_result["success"]:
             tmp_color_config: list = tmp_result["data"]
             return residue_color_config.ResidueColorConfig(tmp_color_config[0], tmp_color_config[1], tmp_color_config[2])
         return residue_color_config.ResidueColorConfig("", "", "")
 
     def get_chain_repr_state(self, a_selection_string: str, chain_letter: str) -> dict:
-        tmp_result = self.pymol_interface.get_chain_repr_state(a_selection_string, chain_letter)
+        tmp_result = self.user_pymol_connector.get_chain_repr_state(a_selection_string, chain_letter)
         if tmp_result["success"]:
             return tmp_result["data"]
         return None
 
     def show_protein_selection_as_balls_and_sticks(self, selection: str) -> None:
-        self.pymol_interface.show_custom_representation("sticks", selection)
+        self.user_pymol_connector.show_custom_representation("sticks", selection)
 
     def hide_protein_selection_as_balls_and_sticks(self, selection: str) -> None:
-        self.pymol_interface.hide_custom_representation("sticks", selection)
+        self.user_pymol_connector.hide_custom_representation("sticks", selection)
 
     def zoom_to_residue_in_protein_position(self, selection: str) -> None:
-        self.pymol_interface.zoom_with_custom_parameters(selection)
+        self.user_pymol_connector.zoom_with_custom_parameters(selection)
 
     def color_protein(self, pymol_color: str, a_selection_string: str) -> None:
         """Colors a specific protein selection with a given PyMOL color.
@@ -277,7 +277,7 @@ class PymolSessionManager:
             return
         if pymol_color not in constants.PYMOL_COLORS:
             raise ValueError(f"An illegal color argument. {pymol_color}")
-        self.pymol_interface.color_selection(pymol_color, a_selection_string)
+        self.user_pymol_connector.color_selection(pymol_color, a_selection_string)
 
     def color_protein_pair_by_rmsd(self, a_protein_pair: "protein_pair.ProteinPair") -> None:
         """Colors a specific protein pair based on their rmsd value.
@@ -298,7 +298,7 @@ class PymolSessionManager:
         color_5 = "br8"
         color_6 = "red"
 
-        self.pymol_interface.color_selection("hydrogen", a_protein_pair.protein_2.get_molecule_object())
+        self.user_pymol_connector.color_selection("hydrogen", a_protein_pair.protein_2.get_molecule_object())
 
         i: int = 0
         for distance_value in a_protein_pair.distance_analysis.analysis_results.distance_data.get("distance"):
@@ -315,8 +315,8 @@ class PymolSessionManager:
                     f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
                 )
                 # coloring
-                self.pymol_interface.color_selection(color_1, atom1)
-                self.pymol_interface.color_selection(color_1, atom2)
+                self.user_pymol_connector.color_selection(color_1, atom1)
+                self.user_pymol_connector.color_selection(color_1, atom2)
                 i += 1
 
             elif distance_value <= cutoff_2:
@@ -332,8 +332,8 @@ class PymolSessionManager:
                     f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
                 )
                 # coloring
-                self.pymol_interface.color_selection(color_2, atom1)
-                self.pymol_interface.color_selection(color_2, atom2)
+                self.user_pymol_connector.color_selection(color_2, atom1)
+                self.user_pymol_connector.color_selection(color_2, atom2)
                 i += 1
 
             elif distance_value <= cutoff_3:
@@ -351,8 +351,8 @@ class PymolSessionManager:
                     f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}/CA"
                 )
                 # coloring
-                self.pymol_interface.color_selection(color_3, atom1)
-                self.pymol_interface.color_selection(color_3, atom2)
+                self.user_pymol_connector.color_selection(color_3, atom1)
+                self.user_pymol_connector.color_selection(color_3, atom2)
                 i += 1
 
             elif distance_value <= cutoff_4:
@@ -368,8 +368,8 @@ class PymolSessionManager:
                     f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
                 )
                 # coloring
-                self.pymol_interface.color_selection(color_4, atom1)
-                self.pymol_interface.color_selection(color_4, atom2)
+                self.user_pymol_connector.color_selection(color_4, atom1)
+                self.user_pymol_connector.color_selection(color_4, atom2)
                 i += 1
 
             elif distance_value <= cutoff_5:
@@ -385,8 +385,8 @@ class PymolSessionManager:
                     f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
                 )
                 # coloring
-                self.pymol_interface.color_selection(color_5, atom1)
-                self.pymol_interface.color_selection(color_5, atom2)
+                self.user_pymol_connector.color_selection(color_5, atom1)
+                self.user_pymol_connector.color_selection(color_5, atom2)
                 i += 1
 
             elif distance_value > cutoff_5:
@@ -402,14 +402,14 @@ class PymolSessionManager:
                     f"/{a_protein_pair.protein_2.get_molecule_object()}//" f"{atom_info[3]}/{atom_info[5]}`{atom_info[4]}"
                 )
                 # coloring
-                self.pymol_interface.color_selection(color_6, f"({atom1})")
-                self.pymol_interface.color_selection(color_6, f"({atom2})")
+                self.user_pymol_connector.color_selection(color_6, f"({atom1})")
+                self.user_pymol_connector.color_selection(color_6, f"({atom2})")
                 i += 1
 
     def setup_default_session_graphic_settings(self) -> None:
         """This functions modifies the pymol session to look fancy."""
-        self.pymol_interface.set_background_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
-        self.pymol_interface.set_default_graphic_settings()
+        self.user_pymol_connector.set_background_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+        self.user_pymol_connector.set_default_graphic_settings()
 
     def setup_default_image_graphic_settings(self, ray_shadows: bool, opaque_background: int = 0) -> None:
         """Sets up the default image graphic settings for PyMOL.
@@ -422,26 +422,26 @@ class PymolSessionManager:
             opt_ray_shadows: str = "off"
         else:
             opt_ray_shadows: str = "on"
-        self.pymol_interface.set_background_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
-        self.pymol_interface.set_custom_setting("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
-        self.pymol_interface.set_custom_setting("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
-        self.pymol_interface.set_custom_setting("ray_shadows", opt_ray_shadows)
-        self.pymol_interface.set_custom_setting("ray_opaque_background", opaque_background)
+        self.user_pymol_connector.set_background_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+        self.user_pymol_connector.set_custom_setting("ray_trace_mode", constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
+        self.user_pymol_connector.set_custom_setting("antialias", constants.PYMOL_DEFAULT_ANTIALIAS)
+        self.user_pymol_connector.set_custom_setting("ray_shadows", opt_ray_shadows)
+        self.user_pymol_connector.set_custom_setting("ray_opaque_background", opaque_background)
 
     def setup_default_graphic_settings_for_interesting_regions(self) -> None:
         """Sets up the default graphic settings for interesting regions."""
-        self.pymol_interface.set_background_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
-        self.pymol_interface.set_custom_setting("label_size", 14)
-        self.pymol_interface.set_custom_setting("label_font_id", 13)
-        self.pymol_interface.set_custom_setting("label_color", "hotpink")
-        self.pymol_interface.set_custom_setting("depth_cue", 0)
+        self.user_pymol_connector.set_background_color(constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+        self.user_pymol_connector.set_custom_setting("label_size", 14)
+        self.user_pymol_connector.set_custom_setting("label_font_id", 13)
+        self.user_pymol_connector.set_custom_setting("label_color", "hotpink")
+        self.user_pymol_connector.set_custom_setting("depth_cue", 0)
         # interacts directly with molecule objects in the session
-        self.pymol_interface.hide_custom_representation("cartoon", "all")
-        self.pymol_interface.show_custom_representation("ribbon", "all")
+        self.user_pymol_connector.hide_custom_representation("cartoon", "all")
+        self.user_pymol_connector.show_custom_representation("ribbon", "all")
 
     def check_if_sele_is_empty(self) -> bool:
         """Checks if a selection is empty."""
-        tmp_result = self.pymol_interface.get_model("sele")
+        tmp_result = self.user_pymol_connector.get_model("sele")
         if tmp_result["success"] and tmp_result["data"] is None:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Please select at least one residue from the sequence view.",
@@ -478,7 +478,7 @@ class PymolSessionManager:
 
     def check_if_specific_selection_is_empty(self, a_selection_string: str) -> bool:
         """Checks if a selection is empty."""
-        tmp_result = self.pymol_interface.get_model(a_selection_string)
+        tmp_result = self.user_pymol_connector.get_model(a_selection_string)
         if tmp_result["success"]:
             tmp_selection = tmp_result["data"]
         else:

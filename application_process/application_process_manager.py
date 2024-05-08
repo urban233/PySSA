@@ -34,6 +34,17 @@ class ApplicationProcessManager:
         self._should_exit = False
         self._is_crashed = False
 
+    def arrange_windows(self):
+        if not os.path.exists(constants.ARRANGE_WINDOWS_EXE_FILEPATH):
+            tmp_dialog = custom_message_box.CustomMessageBoxOk(
+                "The script for arranging the windows could not be found!", "Arrange Windows",
+                custom_message_box.CustomMessageBoxIcons.ERROR.value
+            )
+            tmp_dialog.exec_()
+        else:
+            subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH],
+                             creationflags=subprocess.CREATE_NO_WINDOW)
+
     def start_pyssa(self):
         self.pymol_process = subprocess.Popen(
             [r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pyssa.bat"],
@@ -64,26 +75,10 @@ class ApplicationProcessManager:
 
     def check_process(self, placeholder_1, placeholder_2):
         self.start_pymol()
-        while True:
+        while self._should_exit is False and self._is_crashed is False:
             if self.pymol_process.poll() is not None:
                 print("PyMOL crashed!")
                 self._is_crashed = True
-                self.start_pymol()
-                self._arrange_windows()
-                time.sleep(4)
-                self._is_crashed = False
-                self._reset_pymol_session_func()
-            time.sleep(2)
-            if self._should_exit:
-                break
-
-    def _arrange_windows(self):
-        if not os.path.exists(constants.ARRANGE_WINDOWS_EXE_FILEPATH):
-            tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "The script for arranging the windows could not be found!", "Arrange Windows",
-                custom_message_box.CustomMessageBoxIcons.ERROR.value
-            )
-            tmp_dialog.exec_()
-        else:
-            subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH],
-                             creationflags=subprocess.CREATE_NO_WINDOW)
+            else:
+                time.sleep(2)
+        print("Closing check_process method.")

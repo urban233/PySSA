@@ -20,17 +20,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Init file for PyMOL interface."""
-from pyssa_pymol import interface
+from pyssa_pymol import user_pymol_interface
 
 # This global reference is needed to avoid garbage collection due to reference counting
 mainInterface = None
 
 
-def start_pymol_interface():
+def start_user_pymol_interface():
     """Function to start the PyMOL interface, by instantiating the Interface class."""
     global mainInterface
-    mainInterface = interface.Interface()
+    mainInterface = user_pymol_interface.UserPyMOLInterface()
 
 
 # Starting the actual interface
-start_pymol_interface()
+start_user_pymol_interface()
