@@ -1041,6 +1041,8 @@ class InterfaceManager:
                     # A project has protein pair(s)
                     self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
                     self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+                    self._main_view.ui.btn_protein_pairs_view_expand.setEnabled(True)
+                    self._main_view.ui.btn_protein_pairs_view_collapse.setEnabled(True)
                     # It is possible to view results
                     self._main_view.ui.menuResults.setEnabled(True)
                     try:
@@ -1051,6 +1053,8 @@ class InterfaceManager:
                 else:
                     # A project has no protein pair(s)
                     # Protein Pairs tab
+                    self._main_view.ui.btn_protein_pairs_view_expand.setEnabled(False)
+                    self._main_view.ui.btn_protein_pairs_view_collapse.setEnabled(False)
                     self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
                     self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
                     self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)

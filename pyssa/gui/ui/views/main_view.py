@@ -456,7 +456,6 @@ class MainView(QtWidgets.QMainWindow):
         # </editor-fold>
 
         # <editor-fold desc="Proteins Tab">
-        # TODO: change QSize to 18
         # expand all
         expand_all_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/expand_all_w200.png"))
         self.ui.btn_protein_tree_view_expand.setIcon(expand_all_protein_icon)
@@ -529,7 +528,7 @@ class MainView(QtWidgets.QMainWindow):
 
         # <editor-fold desc="Protein Pairs Tab">
         # expand all
-        expand_all_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/expand_all_protein_w200.png"))
+        expand_all_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/expand_all_w200.png"))
         self.ui.btn_protein_pair_tree_view_expand.setIcon(expand_all_protein_pair_icon)
         self.ui.btn_protein_pair_tree_view_expand.setText("")
         self.ui.btn_protein_pair_tree_view_expand.setIconSize(
@@ -537,7 +536,7 @@ class MainView(QtWidgets.QMainWindow):
         )
 
         # collapse all
-        collapse_all_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/collapse_all_protein_w200.png"))
+        collapse_all_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/collapse_all_w200.png"))
         self.ui.btn_protein_pair_tree_view_collapse.setIcon(collapse_all_protein_pair_icon)
         self.ui.btn_protein_pair_tree_view_collapse.setText("")
         self.ui.btn_protein_pair_tree_view_collapse.setIconSize(
