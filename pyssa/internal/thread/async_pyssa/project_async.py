@@ -25,6 +25,9 @@ import logging
 import pathlib
 import platform
 import time
+import shutil
+from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 
 from pyssa.controller import database_manager
 from pyssa.internal.data_structures import project, protein
@@ -119,6 +122,30 @@ def create_use_project(
         return "", None, None, None
     else:
         return "result", tmp_project, the_watcher, the_interface_manager
+
+
+def import_project(a_project_name, a_filepath, the_interface_manager):
+    try:
+        tmp_project_database_filepath = str(
+            pathlib.Path(
+                f"{the_interface_manager.get_application_settings().workspace_path}/{a_project_name}.db"
+            )
+        )
+        shutil.copyfile(a_filepath, tmp_project_database_filepath)
+        with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
+            db_manager.update_project_name(a_project_name)
+            tmp_project = db_manager.get_project_as_object(
+                a_project_name,
+                the_interface_manager.get_application_settings().workspace_path,
+                the_interface_manager.get_application_settings()
+            )
+        the_interface_manager.set_new_project(tmp_project)
+        the_interface_manager.refresh_workspace_model()
+        the_interface_manager.pymol_session_manager.reinitialize_session()
+    except Exception as e:
+        logger.error(e)
+        return "", None
+    return "result", tmp_project_database_filepath
 
 
 def open_project(
