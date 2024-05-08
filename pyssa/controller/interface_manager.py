@@ -1012,6 +1012,8 @@ class InterfaceManager:
                 # A project has protein(s)
                 self._main_view.ui.proteins_tree_view.setModel(self._protein_model)
                 self._main_view.ui.proteins_tree_view.setHeaderHidden(True)
+                self._main_view.ui.btn_protein_tree_view_expand.setEnabled(True)
+                self._main_view.ui.btn_protein_tree_view_collapse.setEnabled(True)
                 # It is possible to do an analysis, image and hotspots
                 # Analysis
                 self._main_view.ui.menuAnalysis.setEnabled(True)
@@ -1059,6 +1061,8 @@ class InterfaceManager:
             else:
                 # A project has no protein(s)
                 # Proteins tab
+                self._main_view.ui.btn_protein_tree_view_expand.setEnabled(False)
+                self._main_view.ui.btn_protein_tree_view_collapse.setEnabled(False)
                 self._main_view.ui.btn_delete_protein.setEnabled(False)
                 self._main_view.ui.btn_save_protein.setEnabled(False)
                 self._main_view.ui.btn_open_protein_session.setEnabled(False)
