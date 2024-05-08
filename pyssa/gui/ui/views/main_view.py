@@ -251,6 +251,8 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.seqs_list_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         # Proteins tab
+        self.ui.btn_protein_tree_view_expand.setEnabled(False)
+        self.ui.btn_protein_tree_view_collapse.setEnabled(False)
         self.ui.btn_save_protein.setEnabled(False)
         self.ui.btn_delete_protein.setEnabled(False)
         self.ui.btn_open_protein_session.setEnabled(False)
@@ -307,6 +309,8 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.lbl_info_2.hide()
 
         # Protein Pairs tab
+        self.ui.btn_protein_pair_tree_view_expand.setEnabled(False)
+        self.ui.btn_protein_pair_tree_view_collapse.setEnabled(False)
         self.ui.btn_delete_protein_pair.setEnabled(False)
         self.ui.btn_open_protein_pair_session.setEnabled(False)
         self.ui.btn_create_protein_pair_scene.setEnabled(False)
@@ -451,7 +455,20 @@ class MainView(QtWidgets.QMainWindow):
         # self.ui.btn_delete_sequence.setIconSize(self.ui.btn_delete_sequence.icon().actualSize(QtCore.QSize(30, 30)))
         # </editor-fold>
 
-        # <editor-fold desc="Protein">
+        # <editor-fold desc="Proteins Tab">
+        # TODO: change QSize to 18
+        # expand all
+        expand_all_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/expand_all_w200.png"))
+        self.ui.btn_protein_tree_view_expand.setIcon(expand_all_protein_icon)
+        self.ui.btn_protein_tree_view_expand.setText("")
+        self.ui.btn_protein_tree_view_expand.setIconSize(expand_all_protein_icon.actualSize(QtCore.QSize(14, 14)))
+
+        # collapse all
+        collapse_all_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/collapse_all_w200.png"))
+        self.ui.btn_protein_tree_view_collapse.setIcon(collapse_all_protein_icon)
+        self.ui.btn_protein_tree_view_collapse.setText("")
+        self.ui.btn_protein_tree_view_collapse.setIconSize(collapse_all_protein_icon.actualSize(QtCore.QSize(18, 18)))
+
         # import
         import_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/upload_file_w200.png"))
         import_protein_icon.addPixmap(QtGui.QPixmap(":icons/upload_file_disabled_w200.png"),
@@ -459,11 +476,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_import_protein.setIcon(import_protein_icon)
         self.ui.btn_import_protein.setText("")
         self.ui.btn_import_protein.setIconSize(import_protein_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_import_protein.setIcon(
-        #     QtGui.QIcon(":/icons/upload_file_w200.png")
-        # )
-        # self.ui.btn_import_protein.setText("")
-        # self.ui.btn_import_protein.setIconSize(self.ui.btn_import_protein.icon().actualSize(QtCore.QSize(30, 30)))
 
         # save
         save_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/file_save_w200.png"))
@@ -471,11 +483,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_save_protein.setIcon(save_protein_icon)
         self.ui.btn_save_protein.setText("")
         self.ui.btn_save_protein.setIconSize(save_protein_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_save_protein.setIcon(
-        #     QtGui.QIcon(":/icons/file_save_w200.png")
-        # )
-        # self.ui.btn_save_protein.setText("")
-        # self.ui.btn_save_protein.setIconSize(self.ui.btn_save_protein.icon().actualSize(QtCore.QSize(30, 30)))
 
         # delete
         delete_protein_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.png"))
@@ -483,11 +490,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein.setIcon(delete_protein_icon)
         self.ui.btn_delete_protein.setText("")
         self.ui.btn_delete_protein.setIconSize(delete_protein_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_delete_protein.setIcon(
-        #     QtGui.QIcon(":/icons/scan_delete_w200.png"))
-        # self.ui.btn_delete_protein.setText("")
-        # self.ui.btn_delete_protein.setIconSize(
-        #     self.ui.btn_delete_protein.icon().actualSize(QtCore.QSize(30, 30)))
+
         # </editor-fold>
 
         # <editor-fold desc="Protein Session">
@@ -498,11 +501,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_open_protein_session.setIcon(open_protein_session_icon)
         self.ui.btn_open_protein_session.setText("")
         self.ui.btn_open_protein_session.setIconSize(open_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_open_protein_session.setIcon(
-        #     QtGui.QIcon(":/icons/open_in_new_w200.png"))
-        # self.ui.btn_open_protein_session.setText("")
-        # self.ui.btn_open_protein_session.setIconSize(
-        #     self.ui.btn_open_protein_session.icon().actualSize(QtCore.QSize(30, 30)))
 
         # create
         create_protein_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/add_circle_w200.png"))
@@ -511,10 +509,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_create_protein_scene.setIcon(create_protein_session_icon)
         self.ui.btn_create_protein_scene.setText("")
         self.ui.btn_create_protein_scene.setIconSize(create_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_create_protein_scene.setIcon(QtGui.QIcon(":/icons/add_circle_w200.png"))
-        # self.ui.btn_create_protein_scene.setText("")
-        # self.ui.btn_create_protein_scene.setIconSize(
-        #     self.ui.btn_create_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
         # refresh
         update_protein_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/change_circle_w200.png"))
@@ -523,11 +517,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_scene.setIcon(update_protein_session_icon)
         self.ui.btn_update_protein_scene.setText("")
         self.ui.btn_update_protein_scene.setIconSize(update_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_update_protein_scene.setIcon(
-        #     QtGui.QIcon(":/icons/change_circle_w200.png"))
-        # self.ui.btn_update_protein_scene.setText("")
-        # self.ui.btn_update_protein_scene.setIconSize(
-        #     self.ui.btn_update_protein_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
         # delete scene
         delete_protein_session_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.png"))
@@ -538,6 +527,24 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein_scene.setIconSize(delete_protein_session_icon.actualSize(QtCore.QSize(30, 30)))
         # </editor-fold>
 
+        # <editor-fold desc="Protein Pairs Tab">
+        # expand all
+        expand_all_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/expand_all_protein_w200.png"))
+        self.ui.btn_protein_pair_tree_view_expand.setIcon(expand_all_protein_pair_icon)
+        self.ui.btn_protein_pair_tree_view_expand.setText("")
+        self.ui.btn_protein_pair_tree_view_expand.setIconSize(
+            expand_all_protein_pair_icon.actualSize(QtCore.QSize(14, 14))
+        )
+
+        # collapse all
+        collapse_all_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/collapse_all_protein_w200.png"))
+        self.ui.btn_protein_pair_tree_view_collapse.setIcon(collapse_all_protein_pair_icon)
+        self.ui.btn_protein_pair_tree_view_collapse.setText("")
+        self.ui.btn_protein_pair_tree_view_collapse.setIconSize(
+            collapse_all_protein_pair_icon.actualSize(QtCore.QSize(18, 18))
+        )
+        # </editor-fold>
+
         # <editor-fold desc="Protein Pair Session">
         # open
         open_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/open_in_new_w200.png"))
@@ -546,11 +553,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_open_protein_pair_session.setIcon(open_protein_pair_session_icon)
         self.ui.btn_open_protein_pair_session.setText("")
         self.ui.btn_open_protein_pair_session.setIconSize(open_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_open_protein_pair_session.setIcon(
-        #     QtGui.QIcon(":/icons/open_in_new_w200.png"))
-        # self.ui.btn_open_protein_pair_session.setText("")
-        # self.ui.btn_open_protein_pair_session.setIconSize(
-        #     self.ui.btn_open_protein_pair_session.icon().actualSize(QtCore.QSize(30, 30)))
 
         # create
         create_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/add_circle_w200.png"))
@@ -559,11 +561,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_create_protein_pair_scene.setIcon(create_protein_pair_session_icon)
         self.ui.btn_create_protein_pair_scene.setText("")
         self.ui.btn_create_protein_pair_scene.setIconSize(create_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_create_protein_pair_scene.setIcon(
-        #     QtGui.QIcon(":/icons/add_circle_w200.png"))
-        # self.ui.btn_create_protein_pair_scene.setText("")
-        # self.ui.btn_create_protein_pair_scene.setIconSize(
-        #     self.ui.btn_create_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
         # refresh
         update_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":/icons/change_circle_w200.png"))
@@ -572,11 +569,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_pair_scene.setIcon(update_protein_pair_session_icon)
         self.ui.btn_update_protein_pair_scene.setText("")
         self.ui.btn_update_protein_pair_scene.setIconSize(update_protein_pair_session_icon.actualSize(QtCore.QSize(30, 30)))
-        # self.ui.btn_update_protein_pair_scene.setIcon(
-        #     QtGui.QIcon(":/icons/change_circle_w200.png"))
-        # self.ui.btn_update_protein_pair_scene.setText("")
-        # self.ui.btn_update_protein_pair_scene.setIconSize(
-        #     self.ui.btn_update_protein_pair_scene.icon().actualSize(QtCore.QSize(30, 30)))
 
         # delete
         delete_protein_pair_icon = QtGui.QIcon(QtGui.QPixmap(":icons/scan_delete_w200.png"))
@@ -584,11 +576,6 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_delete_protein_pair.setIcon(delete_protein_pair_icon)
         self.ui.btn_delete_protein_pair.setText("")
         self.ui.btn_delete_protein_pair.setIconSize(delete_protein_pair_icon.actualSize(QtCore.QSize(40, 40)))
-        # self.ui.btn_delete_protein_pair.setIcon(
-        #     QtGui.QIcon(":/icons/scan_deletew200.png"))
-        # self.ui.btn_delete_protein_pair.setText("")
-        # self.ui.btn_delete_protein_pair.setIconSize(
-        #     self.ui.btn_delete_protein_pair.icon().actualSize(QtCore.QSize(30, 30)))
 
         # delete scene
         delete_protein_pair_session_icon = QtGui.QIcon(QtGui.QPixmap(":icons/cancel_w200.png"))
@@ -687,6 +674,7 @@ class MainView(QtWidgets.QMainWindow):
 
     def _create_all_tooltips(self) -> None:
         """Creates all tooltips for the gui elements."""
+        # Sequence Tab
         # self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
         self.ui.seqs_table_widget.setToolTip("A table with additional information about the selected sequence")
         self.ui.btn_import_seq.setToolTip("Import an existing .fasta file")
@@ -694,10 +682,13 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_save_sequence.setToolTip("Export the selected sequence as .fasta file")
         self.ui.btn_delete_sequence.setToolTip("Delete the selected sequence from the project")
 
+        # Proteins Tab
         # self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
         # self.ui.proteins_table_widget.setToolTip(
         #     "A table with changeable PyMOL parameters for the currently active session"
         # )
+        self.ui.btn_protein_tree_view_expand.setToolTip("Expand All")
+        self.ui.btn_protein_tree_view_collapse.setToolTip("Collapse All")
         self.ui.btn_import_protein.setToolTip("Import an existing .pdb file")
         self.ui.btn_save_protein.setToolTip("Export the selected protein as .pdb file")
         self.ui.btn_delete_protein.setToolTip("Delete the selected protein from the project")
@@ -706,10 +697,13 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_scene.setToolTip("Update the current scene in PyMOL")
         self.ui.btn_delete_protein_scene.setToolTip("Delete the current scene in PyMOL")
 
+        # Protein Pairs Tab
         # self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
         # self.ui.protein_pairs_table_widget.setToolTip(
         #     "A table with changeable PyMOL parameters for the currently active session"
         # )
+        self.ui.btn_protein_pair_tree_view_expand.setToolTip("Expand All")
+        self.ui.btn_protein_pair_tree_view_collapse.setToolTip("Collapse All")
         self.ui.btn_delete_protein_pair.setToolTip("Delete the selected protein pair from the project")
         self.ui.btn_open_protein_pair_session.setToolTip("Open protein pair PyMOL session")
         self.ui.btn_create_protein_pair_scene.setToolTip("Create a new PyMOL scene")

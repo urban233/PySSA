@@ -156,9 +156,12 @@ class MainViewController:
 
         # <editor-fold desc="Menu">
         self._view.ui.action_new_project.triggered.connect(self.__slot_create_project)
+        self._interface_manager.get_create_view().dialogClosed.connect(self.__slot_refresh_main_view)
         self._view.ui.action_open_project.triggered.connect(self.__slot_open_project)
+        self._interface_manager.get_open_view().dialogClosed.connect(self.__slot_refresh_main_view)
         self._view.ui.action_use_project.triggered.connect(self.__slot_use_project)
         self._view.ui.action_delete_project.triggered.connect(self.__slot_delete_project)
+        self._interface_manager.get_delete_view().dialogClosed.connect(self.__slot_refresh_main_view)
         self._view.ui.action_import_project.triggered.connect(self.__slot_import_project)
         self._view.ui.action_export_project.triggered.connect(self.__slot_export_current_project)
         self._view.ui.action_close_project.triggered.connect(self.__slot_close_project)
@@ -614,6 +617,9 @@ class MainViewController:
     def _setup_statusbar(self) -> None:
         """Sets up the status bar and fills it with the current workspace."""
         self._interface_manager.get_main_view().setStatusBar(self._interface_manager.get_main_view().status_bar)
+
+    def __slot_refresh_main_view(self) -> None:
+        self._interface_manager.refresh_main_view()
 
     # <editor-fold desc="Help related methods">
     def _start_documentation_server(self):
@@ -3254,6 +3260,7 @@ class MainViewController:
 
     # </editor-fold>
 
+    # <editor-fold desc="Import protein structure">
     def __slot_import_protein_structure(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Import protein' button on the 'Proteins Tab' was clicked.")
@@ -3322,6 +3329,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("Protein import failed!")
         finally:
             self._interface_manager.stop_wait_cursor()
+    # </editor-fold>
 
     def __slot_delete_protein(self):
         try:
