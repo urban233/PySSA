@@ -93,11 +93,25 @@ QListView {
     border-color: #DCDBE3;
 }
 
+QListView#seqs_list_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
+
 QTableView {
     border-style: solid;
     border-width: 2px;
     border-radius: 4px;
     border-color: #DCDBE3;
+}
+
+QTableWidget {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
 }
 
 QTreeView {
@@ -107,7 +121,53 @@ QTreeView {
     border-color: #DCDBE3;
 }
 
+QTreeView#proteins_tree_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
+
+QTreeView#protein_pairs_tree_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: white;
+}
+
 QFrame#frame_protein_protein_regions {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
+}
+
+QFrame#frame_seq_list_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
+}
+
+QFrame#frame_seq_table_widget {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
+}
+
+QFrame#frame_proteins_tree_view {
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 4px;
+    border-color: #DCDBE3;
+    background-color: white;
+}
+
+QFrame#frame_protein_pairs_tree_view {
     border-style: solid;
     border-width: 2px;
     border-radius: 4px;
@@ -318,6 +378,78 @@ QPushButton::hover#btn_delete_sequence {
     max-width: 40px;
     min-height: 40px;
     max-height: 40px;
+}
+
+QPushButton#btn_protein_tree_view_expand {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+}
+QPushButton::hover#btn_protein_tree_view_expand {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    /*min-width: 40px;*/
+    /*max-width: 40px;*/
+    /*min-height: 40px;*/
+    /*max-height: 40px;*/
+}
+
+QPushButton#btn_protein_tree_view_collapse {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+}
+QPushButton::hover#btn_protein_tree_view_collapse {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    /*min-width: 40px;*/
+    /*max-width: 40px;*/
+    /*min-height: 40px;*/
+    /*max-height: 40px;*/
+}
+
+QPushButton#btn_protein_pair_tree_view_expand {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+}
+QPushButton::hover#btn_protein_pair_tree_view_expand {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    /*min-width: 40px;*/
+    /*max-width: 40px;*/
+    /*min-height: 40px;*/
+    /*max-height: 40px;*/
+}
+
+QPushButton#btn_protein_pair_tree_view_collapse {
+    background-color: rgba(220, 219, 227, 0.01);
+    border: none;
+    border-radius: 4px;
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+}
+QPushButton::hover#btn_protein_pair_tree_view_collapse {
+    background-color: rgba(220, 219, 227, 0.5);
+    border: none;
+    /*min-width: 40px;*/
+    /*max-width: 40px;*/
+    /*min-height: 40px;*/
+    /*max-height: 40px;*/
 }
 
 QPushButton#btn_import_protein {
