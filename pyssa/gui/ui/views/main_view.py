@@ -687,6 +687,7 @@ class MainView(QtWidgets.QMainWindow):
 
     def _create_all_tooltips(self) -> None:
         """Creates all tooltips for the gui elements."""
+        # Sequence Tab
         # self.ui.seqs_list_view.setToolTip("A list of all sequences in the project")
         self.ui.seqs_table_widget.setToolTip("A table with additional information about the selected sequence")
         self.ui.btn_import_seq.setToolTip("Import an existing .fasta file")
@@ -694,6 +695,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_save_sequence.setToolTip("Export the selected sequence as .fasta file")
         self.ui.btn_delete_sequence.setToolTip("Delete the selected sequence from the project")
 
+        # Proteins Tab
         # self.ui.proteins_tree_view.setToolTip("A tree of all proteins in the project")
         # self.ui.proteins_table_widget.setToolTip(
         #     "A table with changeable PyMOL parameters for the currently active session"
@@ -706,6 +708,7 @@ class MainView(QtWidgets.QMainWindow):
         self.ui.btn_update_protein_scene.setToolTip("Update the current scene in PyMOL")
         self.ui.btn_delete_protein_scene.setToolTip("Delete the current scene in PyMOL")
 
+        # Protein Pairs Tab
         # self.ui.protein_pairs_tree_view.setToolTip("A tree of all protein pairs in the project")
         # self.ui.protein_pairs_table_widget.setToolTip(
         #     "A table with changeable PyMOL parameters for the currently active session"

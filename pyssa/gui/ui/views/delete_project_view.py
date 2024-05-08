@@ -42,7 +42,7 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.ui.setupUi(self)
         self._initialize_ui()
         self.resize(450, 600)
-        self.ui.btn_cancel.clicked.connect(self.close)
+        self.ui.btn_cancel.clicked.connect(self._close_dialog)
         self.setModal(True)
 
     def _initialize_ui(self) -> None:
@@ -59,3 +59,11 @@ class DeleteProjectView(QtWidgets.QDialog):
         self.setWindowIcon(QtGui.QIcon(constants.PLUGIN_LOGO_FILEPATH))
         self.setWindowTitle("Delete Project")
         self.setWindowFlags(self.windowFlags() ^ QtCore.Qt.WindowContextHelpButtonHint)
+
+    def closeEvent(self, event):
+        event.accept()
+        self.dialogClosed.emit()
+
+    def _close_dialog(self):
+        self.close()
+        self.dialogClosed.emit()
