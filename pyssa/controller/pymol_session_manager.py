@@ -105,6 +105,11 @@ class PymolSessionManager:
 
     # <editor-fold desc="Public methods">
     # <editor-fold desc="Non-cmd methods">
+    def is_the_current_pymol_scene_base(self) -> bool:
+        if self.current_scene_name == "base":
+            return True
+        return False
+
     def is_the_current_session_empty(self) -> bool:
         """Checks if the manager is in an empty session state."""
         if self.session_name == "" and self.session_object_type == "" and self.session_objects == []:

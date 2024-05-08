@@ -225,6 +225,7 @@ class InterfaceManager:
         self.app_process_manager.arrange_windows()
         time.sleep(10)
         self._reset_pymol_session()
+        return "", ""  # These two empty strings are needed for the task class
 
     def __await_recover_user_pymol(self):
         logger.info("Finished recovery process.")

@@ -3560,10 +3560,19 @@ class MainViewController:
 
     def _update_scene(self) -> None:
         """Updates the current selected PyMOL scene."""
-        self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
-            a_key="auto", an_action="update"
-        )
-        self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
+        if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+                a_key="auto", an_action="update"
+            )
+            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
+        else:
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+                a_key="_scratch_", an_action="update"
+            )
+            self._interface_manager.pymol_session_manager.current_scene_name = "_scratch_"
+            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
+                                                    self._view.ui.lbl_pymol_protein_scene)
+            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
 
     def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""

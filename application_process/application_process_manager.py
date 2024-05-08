@@ -82,3 +82,4 @@ class ApplicationProcessManager:
             else:
                 time.sleep(2)
         print("Closing check_process method.")
+        return "", ""  # These two empty strings are needed for the task class
