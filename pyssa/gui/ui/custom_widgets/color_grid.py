@@ -19,23 +19,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module for the custom color gird widget."""
-from PyQt5 import QtWidgets
+"""Module for the custom color grid widget."""
+from PyQt5 import QtWidgets, QtGui
+from PyQt5.QtWidgets import QWidget, QPushButton
 
 from pyssa.internal.data_structures import chain
 
 
 class PyMOLColorGrid(QtWidgets.QWidget):
+    """Class representing the color grid of PySSA."""
+    """
+    Button with selected color for color grid widget
+    """
+    btn_selected_color: QtWidgets.QPushButton
 
     def __init__(self):
         super().__init__()
 
-        self.last_clicked_color = ""
-        self.last_selected_chain: "chain.Chain" = None
-
+        self.btn_selected_color: QtWidgets.QPushButton = QtWidgets.QPushButton()
+        self.last_clicked_color = ""  # TODO: This attribute is outdated and needs to be remove
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
         tmp_basic_stylesheet = """min-width: 30px; max-width: 30px; min-height: 30px; max-height: 30px;"""
+
+        # <editor-fold desc="Colors">
         # Colors - Reds
         self.c_red = QtWidgets.QPushButton()
         self.c_tv_red = QtWidgets.QPushButton()
@@ -51,6 +58,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_tv_red, 1, 0)
         grid.addWidget(self.c_salomon, 2, 0)
         grid.addWidget(self.c_raspberry, 3, 0)
+
         # Colors - Greens
         self.c_green = QtWidgets.QPushButton()
         self.c_tv_green = QtWidgets.QPushButton()
@@ -66,6 +74,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_tv_green, 1, 1)
         grid.addWidget(self.c_palegreen, 2, 1)
         grid.addWidget(self.c_forest, 3, 1)
+
         # Colors - Blues
         self.c_blue = QtWidgets.QPushButton()
         self.c_tv_blue = QtWidgets.QPushButton()
@@ -81,6 +90,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_tv_blue, 1, 2)
         grid.addWidget(self.c_lightblue, 2, 2)
         grid.addWidget(self.c_skyblue, 3, 2)
+
         # Colors - Yellows
         self.c_yellow = QtWidgets.QPushButton()
         self.c_tv_yellow = QtWidgets.QPushButton()
@@ -96,6 +106,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_tv_yellow, 1, 3)
         grid.addWidget(self.c_paleyellow, 2, 3)
         grid.addWidget(self.c_sand, 3, 3)
+
         # Colors - Magentas
         self.c_magenta = QtWidgets.QPushButton()
         self.c_purple = QtWidgets.QPushButton()
@@ -111,6 +122,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_purple, 1, 4)
         grid.addWidget(self.c_pink, 2, 4)
         grid.addWidget(self.c_hotpink, 3, 4)
+
         # Colors - Cyan
         self.c_cyan = QtWidgets.QPushButton()
         self.c_aquamarine = QtWidgets.QPushButton()
@@ -126,6 +138,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_aquamarine, 1, 5)
         grid.addWidget(self.c_palecyan, 2, 5)
         grid.addWidget(self.c_teal, 3, 5)
+
         # Colors - Orange
         self.c_orange = QtWidgets.QPushButton()
         self.c_tv_orange = QtWidgets.QPushButton()
@@ -141,6 +154,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_tv_orange, 1, 6)
         grid.addWidget(self.c_lightorange, 2, 6)
         grid.addWidget(self.c_olive, 3, 6)
+
         # Colors - Grays
         self.c_white = QtWidgets.QPushButton()
         self.c_grey_70 = QtWidgets.QPushButton()
@@ -156,6 +170,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
         grid.addWidget(self.c_grey_70, 1, 7)
         grid.addWidget(self.c_grey_30, 2, 7)
         grid.addWidget(self.c_black, 3, 7)
+        # </editor-fold>
 
         self.set_all_tooltips()
         self.setGeometry(100, 100, self.minimumWidth(), self.minimumHeight())
@@ -244,6 +259,7 @@ class PyMOLColorGrid(QtWidgets.QWidget):
             "paleyellow": self.c_paleyellow,
             "sand": self.c_sand,
             "magenta": self.c_magenta,
+            "purple": self.c_purple,
             "pink": self.c_pink,
             "hotpink": self.c_hotpink,
             "cyan": self.c_cyan,
@@ -259,3 +275,10 @@ class PyMOLColorGrid(QtWidgets.QWidget):
             "grey30": self.c_grey_30,
             "black": self.c_black
         }
+
+    def set_icon_for_selected_color(self, a_color):
+        self.btn_selected_color = self.get_all_color_buttons()[a_color]
+        self.btn_selected_color.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
+
+    def reset_icon_for_selected_color(self):
+        self.btn_selected_color.setIcon(QtGui.QIcon())

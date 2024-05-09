@@ -1185,6 +1185,23 @@ class DatabaseManager:
             self._pyssa_database_interface.disconnect()
             return tmp_structure_infos
 
+    def get_color_for_certain_protein_chain_in_protein(
+            self,
+            a_chain_id) -> tuple:
+        if self._pyssa_database_interface.connect():
+            tmp_sql_query = PyssaSqlQuery.create_sql_query(
+                self._pyssa_database_interface.db,
+                enums.SQLQueryStatement.GET_PYMOL_PARAMETERS
+            )
+            self._pyssa_database_interface.execute_query(
+                tmp_sql_query, params=(a_chain_id, )
+            )
+            # for protein
+            tmp_sql_query.next()
+            tmp_query_result = tmp_sql_query.value(0)
+            self._pyssa_database_interface.disconnect()
+            return tmp_query_result
+
     def update_protein_chain_color(self, a_chain_id: int, a_color: str):
         if self._pyssa_database_interface.connect():
             tmp_sql_query = PyssaSqlQuery.create_sql_query(self._pyssa_database_interface.db,
@@ -1625,6 +1642,20 @@ class DatabaseManager:
             )
             self._pyssa_database_interface.disconnect()
 
+    def update_protein_chain_color_of_protein_pair(self,
+                                                   a_protein_id: int,
+                                                   a_chain_letter: str,
+                                                   a_protein_pair_id: int,
+                                                   a_color: str):
+        if self._pyssa_database_interface.connect():
+            tmp_sql_query = PyssaSqlQuery.create_sql_query(self._pyssa_database_interface.db,
+                                                           enums.SQLQueryStatement.UPDATE_PYMOL_PARAMETER_FOR_PROTEIN_CHAIN_IN_PROTEIN_PAIR)
+            self._pyssa_database_interface.execute_query(
+                tmp_sql_query, params=(
+                    a_color, a_protein_id, a_chain_letter, a_protein_pair_id, enums.PymolParameterEnum.COLOR.value
+                )
+            )
+            self._pyssa_database_interface.disconnect()
 
     # </editor-fold>
     # </editor-fold>
