@@ -471,8 +471,6 @@ class InterfaceManager:
             raise ValueError("Unknown type!")
 
     def set_current_active_chain_color_of_protein(self, a_color) -> None:
-        """
-        """
         tmp_type = self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
         if tmp_type == "protein":
             raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
@@ -484,7 +482,6 @@ class InterfaceManager:
             self._main_view.ui.proteins_tree_view.model().setData(
                 self._main_view.ui.proteins_tree_view.currentIndex(), a_color, enums.ModelEnum.CHAIN_COLOR_ROLE
             )
-            #self._main_view.ui.proteins_tree_view.currentIndex().data(enums.ModelEnum.CHAIN_COLOR_ROLE)
         else:
             raise ValueError("Unknown type!")
 
@@ -1042,6 +1039,8 @@ class InterfaceManager:
                     # A project has protein pair(s)
                     self._main_view.ui.protein_pairs_tree_view.setModel(self._protein_pair_model)
                     self._main_view.ui.protein_pairs_tree_view.setHeaderHidden(True)
+                    self._main_view.ui.btn_protein_pair_tree_view_expand.setEnabled(True)
+                    self._main_view.ui.btn_protein_pair_tree_view_collapse.setEnabled(True)
                     # It is possible to view results
                     self._main_view.ui.menuResults.setEnabled(True)
                     try:
@@ -1052,6 +1051,8 @@ class InterfaceManager:
                 else:
                     # A project has no protein pair(s)
                     # Protein Pairs tab
+                    self._main_view.ui.btn_protein_pair_tree_view_expand.setEnabled(False)
+                    self._main_view.ui.btn_protein_pair_tree_view_collapse.setEnabled(False)
                     self._main_view.ui.btn_delete_protein_pair.setEnabled(False)
                     self._main_view.ui.btn_open_protein_pair_session.setEnabled(False)
                     self._main_view.ui.btn_create_protein_pair_scene.setEnabled(False)
@@ -2013,6 +2014,43 @@ class InterfaceManager:
             # self._main_view.ui.btn_protein_pair_hide_hydrogens.setEnabled(False)
             #self._main_view.tg_protein_pair_hydrogen_atoms.setEnabled(False)
             pass
+
+    def set_current_active_chain_color_of_protein_pair(self, a_color) -> None:
+        tmp_type = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
+        if tmp_type == "protein_pair":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "protein":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "header":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "scene":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "chain":
+            self._main_view.ui.protein_pairs_tree_view.model().setData(
+                self._main_view.ui.protein_pairs_tree_view.currentIndex(), a_color, enums.ModelEnum.CHAIN_COLOR_ROLE
+            )
+        else:
+            raise ValueError("Unknown type!")
+
+    def get_current_active_chain_color_of_protein_pair(self) -> str:
+        """Returns the chain color of the current active branch.
+
+        Returns:
+            a chain color
+        """
+        tmp_type = self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.TYPE_ROLE)
+        if tmp_type == "protein_pair":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "protein":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "header":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "scene":
+            raise ValueError(f"Cannot get a chain object if the type is: {tmp_type}!")
+        elif tmp_type == "chain":
+            return self._main_view.ui.protein_pairs_tree_view.currentIndex().data(enums.ModelEnum.CHAIN_COLOR_ROLE)
+        else:
+            raise ValueError("Unknown type!")
 
     def get_current_chain_color_of_current_protein_pair_pymol_session(
             self,
