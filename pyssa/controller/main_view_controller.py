@@ -301,6 +301,8 @@ class MainViewController:
         # </editor-fold>
 
         # <editor-fold desc="Protein tree context menu">
+        self._protein_tree_context_menu.connect_expand_protein_action(self.__slot_expand_protein)
+        self._protein_tree_context_menu.connect_collapse_protein_action(self.__slot_collapse_protein)
         self._protein_tree_context_menu.connect_clean_protein_action(self.__slot_clean_protein_update)
         self._protein_tree_context_menu.connect_rename_protein_action(self.__slot_rename_selected_protein_structure)
         self._protein_tree_context_menu.connect_show_sequence_action(self.__slot_show_protein_chain_sequence)
@@ -2727,6 +2729,12 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Proteins tab methods">
+    def __slot_expand_protein(self):
+        pass
+
+    def __slot_collapse_protein(self):
+        pass
+
     def __slot_expand_all_proteins(self):
         self._view.ui.proteins_tree_view.expandAll()
 

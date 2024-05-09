@@ -28,22 +28,37 @@ class ProteinTreeContextMenu:
 
     def __init__(self):
         self._context_menu = QtWidgets.QMenu()
+        self._expand_protein_action = QtWidgets.QAction("Expand protein")
+        self._collapse_protein_action = QtWidgets.QAction("Collapse protein")
         self._clean_protein_action = QtWidgets.QAction("Clean Selected Protein")
         self._rename_protein_action = QtWidgets.QAction("Rename Selected Protein")
         self._show_sequence_action = QtWidgets.QAction("Show Sequence")
         self._help_action = QtWidgets.QAction("Get Help")
-        
+
+        self._context_menu.addAction(self._expand_protein_action)
+        self._context_menu.addAction(self._collapse_protein_action)
+        self._context_menu.addSeparator()
         self._context_menu.addAction(self._clean_protein_action)
         self._context_menu.addAction(self._rename_protein_action)
         self._context_menu.addAction(self._show_sequence_action)
         self._context_menu.addAction(self._help_action)
 
+        self._expand_protein_action.triggered.connect(self._generic_action)
+        self._collapse_protein_action.triggered.connect(self._generic_action)
         self._clean_protein_action.triggered.connect(self._generic_action)
         self._rename_protein_action.triggered.connect(self._generic_action)
         self._show_sequence_action.triggered.connect(self._generic_action)
         self._help_action.triggered.connect(self._generic_action)
 
     # <editor-fold desc="Connect actions from outside">
+    def connect_expand_protein_action(self, the_function_to_connect):
+        self._expand_protein_action.triggered.disconnect()
+        self._expand_protein_action.triggered.connect(the_function_to_connect)
+
+    def connect_collapse_protein_action(self, the_function_to_connect):
+        self._collapse_protein_action.triggered.disconnect()
+        self._collapse_protein_action.triggered.connect(the_function_to_connect)
+
     def connect_clean_protein_action(self, the_function_to_connect):
         self._clean_protein_action.triggered.disconnect()
         self._clean_protein_action.triggered.connect(the_function_to_connect)
@@ -78,12 +93,15 @@ class ProteinTreeContextMenu:
                 level += 1
         else:
             self._help_action.setVisible(True)
+            self._expand_protein_action.setVisible(False)
+            self._collapse_protein_action.setVisible(False)
             self._clean_protein_action.setVisible(False)
             self._rename_protein_action.setVisible(False)
             self._show_sequence_action.setVisible(False)
             return self._context_menu
         # </editor-fold>
 
+        # Manage of context menu
         self._help_action.setVisible(False)
         if level == 0:
             # A protein is selected
