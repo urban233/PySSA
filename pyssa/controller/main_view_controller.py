@@ -212,6 +212,8 @@ class MainViewController:
         # <editor-fold desc="Proteins Tab">
         self._view.ui.proteins_tree_view.customContextMenuRequested.connect(self._open_context_menu_for_proteins)
         self._view.ui.proteins_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_branch)
+        self._view.ui.btn_protein_tree_view_expand.clicked.connect(self.__slot_expand_all_proteins)
+        self._view.ui.btn_protein_tree_view_collapse.clicked.connect(self.__slot_collapse_all_proteins)
         self._view.ui.btn_save_protein.clicked.connect(self.__slot_save_selected_protein_structure_as_pdb_file)
         # import
         self._view.ui.btn_import_protein.clicked.connect(self.__slot_import_protein_structure)
@@ -318,6 +320,8 @@ class MainViewController:
         # <editor-fold desc="Proteins Pair Tab">
         self._view.ui.protein_pairs_tree_view.customContextMenuRequested.connect(self.open_context_menu_for_protein_pairs)
         self._view.ui.protein_pairs_tree_view.clicked.connect(self.__slot_get_information_about_selected_object_in_protein_pair_branch)
+        self._view.ui.btn_protein_pair_tree_view_expand.clicked.connect(self.__slot_expand_all_protein_pairs)
+        self._view.ui.btn_protein_pair_tree_view_collapse.clicked.connect(self.__slot_collapse_all_protein_pairs)
         self._view.ui.btn_delete_protein_pair.clicked.connect(self.__slot_delete_protein_pair_from_project)
         self._view.ui.btn_open_protein_pair_session.clicked.connect(self.__slot_open_protein_pair_pymol_session)
         self._view.ui.btn_create_protein_pair_scene.clicked.connect(self.__slot_save_scene)
@@ -2723,6 +2727,12 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Proteins tab methods">
+    def __slot_expand_all_proteins(self):
+        self._view.ui.proteins_tree_view.expandAll()
+
+    def __slot_collapse_all_proteins(self):
+        self._view.ui.proteins_tree_view.collapseAll()
+
     def _open_context_menu_for_proteins(self, position):
         try:
             tmp_protein = self._interface_manager.get_current_active_protein_object()
@@ -3768,6 +3778,12 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs tab methods">
+    def __slot_expand_all_protein_pairs(self):
+        self._view.ui.protein_pairs_tree_view.expandAll()
+
+    def __slot_collapse_all_protein_pairs(self):
+        self._view.ui.protein_pairs_tree_view.collapseAll()
+
     def open_context_menu_for_protein_pairs(self, position):
         try:
             tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
