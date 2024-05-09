@@ -99,6 +99,36 @@ class ProteinPairsModel(QtGui.QStandardItemModel):
             tmp_protein_pair_item.appendRow(tmp_protein_item_2)
             tmp_root_item.appendRow(tmp_protein_pair_item)
 
+    def check_if_scratch_scene_exists(self,
+                                      a_model_index: QtCore.QModelIndex) -> bool:
+        """Checks if the scratch scene exists."""
+        tmp_type = a_model_index.data(enums.ModelEnum.TYPE_ROLE)
+        # on protein pair node
+        if tmp_type == "protein_pair":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).child(0, 0)
+        # on protein node
+        elif tmp_type == "protein":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent().child(0, 0)
+        # on header node (Scenes)
+        elif tmp_type == "header" and a_model_index.data(Qt.DisplayRole) == "Scenes":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index)
+        # on scene node
+        elif tmp_type == "scene":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent()
+        # on header node (Chains)
+        elif tmp_type == "header" and a_model_index.data(Qt.DisplayRole) == "Chains":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent().parent().child(0, 0)
+        # on chain node
+        elif tmp_type == "chain":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent().parent().parent().child(0, 0)
+        else:
+            raise ValueError("Wrong type!")
+        for i in range(tmp_scenes_header_item.rowCount()):
+            if tmp_scenes_header_item.child(i, 0).data(Qt.DisplayRole) == "_scratch_":
+                return True
+            i += 1
+        return False
+
     def add_scene(
             self,
             a_model_index: QtCore.QModelIndex,

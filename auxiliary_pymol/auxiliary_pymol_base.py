@@ -29,22 +29,60 @@ import numpy as np
 import local_constants
 import utils
 
+__docformat__ = "google"
+
 
 class AuxiliaryPyMOL:
-
-    def __init__(self):
-        pass
+    """A container for static methods that use an independent pymol instance, for each static method."""
 
     @staticmethod
     def do_distance_analysis(
-            the_protein_pair_name: str,
-            a_protein_1_pdb_cache_filepath: str,
-            a_protein_2_pdb_cache_filepath: str,
-            a_protein_1_pymol_selection_string: str,
-            a_protein_2_pymol_selection_string: str,
-            a_cutoff: float,
-            the_cycles: int
+        the_protein_pair_name: str,
+        a_protein_1_pdb_cache_filepath: str,
+        a_protein_2_pdb_cache_filepath: str,
+        a_protein_1_pymol_selection_string: str,
+        a_protein_2_pymol_selection_string: str,
+        a_cutoff: float,
+        the_cycles: int,
     ) -> tuple[tuple, str]:
+        """
+        Does the actual distance analysis in pymol.
+
+        Args:
+            the_protein_pair_name (str): The name of the protein pair.
+            a_protein_1_pdb_cache_filepath (str): The filepath of the PDB cache file for protein 1.
+            a_protein_2_pdb_cache_filepath (str): The filepath of the PDB cache file for protein 2.
+            a_protein_1_pymol_selection_string (str): The PyMOL selection string for protein 1.
+            a_protein_2_pymol_selection_string (str): The PyMOL selection string for protein 2.
+            a_cutoff (float): The distance cutoff value.
+            the_cycles (int): The number of cycles to perform for alignment.
+
+        Returns:
+            A tuple containing:
+                A tuple of distance analysis results including the index, protein chain, position, residue label,
+                  and distance values between the C-alpha atoms of the proteins.
+                A string representing the alignment results including the RMSD value and aligned residue count.
+        """
+        # <editor-fold desc="Checks">
+        if the_protein_pair_name is None or the_protein_pair_name == "":
+            raise ValueError("the_protein_pair_name is either None or empty.")
+        if a_protein_1_pdb_cache_filepath is None or a_protein_1_pdb_cache_filepath == "":
+            raise ValueError("a_protein_1_pdb_cache_filepath is either None or empty.")
+        if not os.path.exists(a_protein_1_pdb_cache_filepath):
+            raise FileNotFoundError("a_protein_1_pdb_cache_filepath could not be found.")
+        if a_protein_2_pdb_cache_filepath is None or a_protein_2_pdb_cache_filepath == "":
+            raise ValueError("a_protein_2_pdb_cache_filepath is either None or empty.")
+        if not os.path.exists(a_protein_2_pdb_cache_filepath):
+            raise FileNotFoundError("a_protein_2_pdb_cache_filepath could not be found.")
+        if a_protein_1_pymol_selection_string is None:
+            raise ValueError("a_protein_1_pymol_selection_string is None.")
+        if a_cutoff is None or a_cutoff < 0:
+            raise ValueError("a_cutoff is either None or less than 0.")
+        if the_cycles is None or the_cycles < 0:
+            raise ValueError("the_cycles is either None or less than 0.")
+
+        # </editor-fold>
+
         try:
             tmp_protein_1_name = pathlib.Path(a_protein_1_pdb_cache_filepath).name.replace(".pdb", "")
             tmp_protein_2_name = pathlib.Path(a_protein_2_pdb_cache_filepath).name.replace(".pdb", "")
@@ -53,14 +91,8 @@ class AuxiliaryPyMOL:
                 # <editor-fold desc="Prepare session">
 
                 # Load both proteins in a new session
-                auxiliary_pymol.cmd.load(
-                    filename=str(a_protein_1_pdb_cache_filepath),
-                    object=tmp_protein_1_name
-                )
-                auxiliary_pymol.cmd.load(
-                    filename=str(a_protein_2_pdb_cache_filepath),
-                    object=tmp_protein_2_name
-                )
+                auxiliary_pymol.cmd.load(filename=str(a_protein_1_pdb_cache_filepath), object=tmp_protein_1_name)
+                auxiliary_pymol.cmd.load(filename=str(a_protein_2_pdb_cache_filepath), object=tmp_protein_2_name)
 
                 auxiliary_pymol.cmd.color(local_constants.DEFAULT_COLOR_PROTEIN_1, tmp_protein_1_name)
                 auxiliary_pymol.cmd.color(local_constants.DEFAULT_COLOR_PROTEIN_2, tmp_protein_2_name)
@@ -74,17 +106,21 @@ class AuxiliaryPyMOL:
                 auxiliary_pymol.cmd.set("antialias", local_constants.PYMOL_DEFAULT_ANTIALIAS)
                 auxiliary_pymol.cmd.set("ambient", local_constants.PYMOL_DEFAULT_AMBIENT)
                 auxiliary_pymol.cmd.set("cartoon_fancy_helices", local_constants.PYMOL_DEFAULT_FANCY_HELICES)
-                auxiliary_pymol.cmd.set("cartoon_discrete_colors",
-                                        local_constants.PYMOL_DEFAULT_CARTOON_DISCRETE_COLORS)
+                auxiliary_pymol.cmd.set(
+                    "cartoon_discrete_colors", local_constants.PYMOL_DEFAULT_CARTOON_DISCRETE_COLORS
+                )
                 auxiliary_pymol.cmd.set("cartoon_sampling", local_constants.PYMOL_DEFAULT_CARTOON_SAMPLING)
                 auxiliary_pymol.cmd.set("spec_power", local_constants.PYMOL_DEFAULT_SPEC_POWER)
                 auxiliary_pymol.cmd.set("spec_reflect", local_constants.PYMOL_DEFAULT_SPEC_REFLECT)
-                auxiliary_pymol.cmd.set("ray_transparency_contrast",
-                                        local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_CONTRAST)
-                auxiliary_pymol.cmd.set("ray_transparency_oblique",
-                                        local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_OBLIQUE)  # noqa: E501
-                auxiliary_pymol.cmd.set("ray_transparency_oblique_power",
-                                        local_constants.PYMOL_DEFAULT_RAY_OBLIQUE_POWER)
+                auxiliary_pymol.cmd.set(
+                    "ray_transparency_contrast", local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_CONTRAST
+                )
+                auxiliary_pymol.cmd.set(
+                    "ray_transparency_oblique", local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_OBLIQUE
+                )  # noqa: E501
+                auxiliary_pymol.cmd.set(
+                    "ray_transparency_oblique_power", local_constants.PYMOL_DEFAULT_RAY_OBLIQUE_POWER
+                )
                 auxiliary_pymol.cmd.set("ray_trace_color", local_constants.PYMOL_DEFAULT_RAY_COLOR)
                 auxiliary_pymol.cmd.unset("depth_cue")
                 # </editor-fold>
@@ -100,7 +136,7 @@ class AuxiliaryPyMOL:
                 )
 
                 fasta_prot_1 = auxiliary_pymol.cmd.get_fastastr(a_protein_1_pymol_selection_string)
-                seq_len_protein_1 = len(fasta_prot_1[fasta_prot_1.find("\n"):])
+                seq_len_protein_1 = len(fasta_prot_1[fasta_prot_1.find("\n") :])
                 rmsd_dict = {
                     "rmsd": str(round(tmp_align_results[0], 2)),
                     "aligned_residues": f"{str(tmp_align_results[1])} / {seq_len_protein_1}",
@@ -118,8 +154,9 @@ class AuxiliaryPyMOL:
                 distance_list = []
 
                 idx2resi = []
-                auxiliary_pymol.cmd.iterate("aln", "idx2resi.append((model, chain, resi, resn))",
-                                            space={"idx2resi": idx2resi})
+                auxiliary_pymol.cmd.iterate(
+                    "aln", "idx2resi.append((model, chain, resi, resn))", space={"idx2resi": idx2resi}
+                )
                 prot_1_indices = []
                 prot_2_indices = []
                 for tmp_prot_atom in idx2resi:
@@ -227,8 +264,7 @@ class AuxiliaryPyMOL:
                 # </editor-fold>
 
                 # <editor-fold desc="Save session">
-                session_filepath = pathlib.Path(
-                    f"{local_constants.SCRATCH_DIR}/{the_protein_pair_name}_session.pse")
+                session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/{the_protein_pair_name}_session.pse")
                 auxiliary_pymol.cmd.save(session_filepath)
                 base64_string = utils.create_base64_string_from_file(str(session_filepath))
                 os.remove(session_filepath)
@@ -255,119 +291,211 @@ class AuxiliaryPyMOL:
             tmp_msg: str = f"The analysis in PyMOL failed with the error: {e}"
             print(tmp_msg)
         return distance_analysis_results_object_values, base64_string
-    
+
     @staticmethod
     def create_ray_traced_image(
-            an_image_filepath,
-            the_cached_session,
-            an_image_ray_trace_mode,
-            an_image_ray_texture,
-            an_image_renderer
-    ):
-        with pymol2.PyMOL() as auxiliary_pymol:
-            auxiliary_pymol.cmd.load(the_cached_session)
-            auxiliary_pymol.cmd.set("ray_trace_mode", an_image_ray_trace_mode)
-            auxiliary_pymol.cmd.set("ray_texture", an_image_ray_texture)
-            try:
+        an_image_filepath: str,
+        the_cached_session: str,
+        an_image_ray_trace_mode: str,
+        an_image_ray_texture: str,
+        an_image_renderer: int,
+    ) -> None:
+        """
+        Creates a ray traced image using PyMOL.
+
+        Args:
+            an_image_filepath: The file path to save the image.
+            the_cached_session: The path to the cached session.
+            an_image_ray_trace_mode: The ray trace mode for the image.
+            an_image_ray_texture: The ray texture for the image.
+            an_image_renderer: The renderer for the image.
+
+        Raises:
+            Exception: If any unexpected exception occurs during the process.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if an_image_filepath is None or an_image_filepath == "":
+            raise ValueError("an_image_filepath is either None or empty.")
+        if the_cached_session is None or the_cached_session == "":
+            raise ValueError("the_cached_session is either None or empty.")
+        if an_image_ray_trace_mode is None or an_image_ray_trace_mode == "":
+            raise ValueError("an_image_ray_trace_mode is either None or empty.")
+        if an_image_ray_texture is None or an_image_ray_texture == "":
+            raise ValueError("an_image_ray_texture is either None or empty.")
+        if an_image_renderer is None:
+            raise ValueError("an_image_renderer is None.")
+
+        # </editor-fold>
+
+        try:
+            with pymol2.PyMOL() as auxiliary_pymol:
+                auxiliary_pymol.cmd.load(the_cached_session)
+                auxiliary_pymol.cmd.set("ray_trace_mode", an_image_ray_trace_mode)
+                auxiliary_pymol.cmd.set("ray_texture", an_image_ray_texture)
                 auxiliary_pymol.cmd.set("max_threads", str(os.cpu_count() - 3))
                 auxiliary_pymol.cmd.ray(2400, 2400, renderer=int(an_image_renderer))
                 auxiliary_pymol.cmd.png(an_image_filepath, dpi=300)
-            except Exception as e:
-                print(f"Unexpected exception. {e}")
-    
+        except Exception as e:
+            print(f"Unexpected exception. {e}")
+
     @staticmethod
     def create_pymol_session_for_protein(a_pdb_filepath: str) -> str:
+        """
+        Creates a new pymol session for a given protein.
+
+        Args:
+            a_pdb_filepath (str): The file path of the protein PDB file.
+
+        Returns:
+            A base64 encoded string representation of the PyMOL session for the protein
+            or an empty string if the argument is illegal or an error was caught.
+
+        Note:
+            This method creates a PyMOL session for the given protein PDB file. It loads the PDB file into PyMOL,
+            sets various PyMOL settings to customize the visualization, saves the session, converts it to a
+            base64 encoded string, and finally returns the string representation of the PyMOL session.
+        """
         # <editor-fold desc="Checks">
+        if a_pdb_filepath is None or a_pdb_filepath == "":
+            return ""
         if not os.path.exists(a_pdb_filepath):
             return ""
-        # </editor-fold>
-        
-        tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
 
-        with pymol2.PyMOL() as auxiliary_pymol:
-            auxiliary_pymol.cmd.load(
-                filename=str(a_pdb_filepath), object=tmp_protein_name
-            )
-            auxiliary_pymol.cmd.bg_color(local_constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
-            auxiliary_pymol.cmd.set("valence", 0)
-            auxiliary_pymol.cmd.set("scene_buttons", 0)
-            auxiliary_pymol.cmd.set("ray_trace_mode", local_constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
-            auxiliary_pymol.cmd.set("antialias", local_constants.PYMOL_DEFAULT_ANTIALIAS)
-            auxiliary_pymol.cmd.set("ambient", local_constants.PYMOL_DEFAULT_AMBIENT)
-            auxiliary_pymol.cmd.set("cartoon_fancy_helices", local_constants.PYMOL_DEFAULT_FANCY_HELICES)
-            auxiliary_pymol.cmd.set("cartoon_discrete_colors", local_constants.PYMOL_DEFAULT_CARTOON_DISCRETE_COLORS)
-            auxiliary_pymol.cmd.set("cartoon_sampling", local_constants.PYMOL_DEFAULT_CARTOON_SAMPLING)
-            auxiliary_pymol.cmd.set("spec_power", local_constants.PYMOL_DEFAULT_SPEC_POWER)
-            auxiliary_pymol.cmd.set("spec_reflect", local_constants.PYMOL_DEFAULT_SPEC_REFLECT)
-            auxiliary_pymol.cmd.set("ray_transparency_contrast", local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_CONTRAST)
-            auxiliary_pymol.cmd.set("ray_transparency_oblique", local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_OBLIQUE)  # noqa: E501
-            auxiliary_pymol.cmd.set("ray_transparency_oblique_power", local_constants.PYMOL_DEFAULT_RAY_OBLIQUE_POWER)
-            auxiliary_pymol.cmd.set("ray_trace_color", local_constants.PYMOL_DEFAULT_RAY_COLOR)
-            auxiliary_pymol.cmd.unset("depth_cue")
-            auxiliary_pymol.cmd.color("green", tmp_protein_name)
-            auxiliary_pymol.cmd.scene("base", action="store")
-            session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/{tmp_protein_name}_session.pse")
-            auxiliary_pymol.cmd.save(session_filepath)
-            base64_string = utils.create_base64_string_from_file(str(session_filepath))
-            os.remove(session_filepath)
-        return base64_string
+        # </editor-fold>
+
+        try:
+            tmp_protein_name: str = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
+
+            with pymol2.PyMOL() as auxiliary_pymol:
+                auxiliary_pymol.cmd.load(filename=str(a_pdb_filepath), object=tmp_protein_name)
+                auxiliary_pymol.cmd.bg_color(local_constants.PYMOL_DEFAULT_BACKGROUND_COLOR)
+                auxiliary_pymol.cmd.set("valence", 0)
+                auxiliary_pymol.cmd.set("scene_buttons", 0)
+                auxiliary_pymol.cmd.set("ray_trace_mode", local_constants.PYMOL_DEFAULT_RAY_TRACE_MODE)
+                auxiliary_pymol.cmd.set("antialias", local_constants.PYMOL_DEFAULT_ANTIALIAS)
+                auxiliary_pymol.cmd.set("ambient", local_constants.PYMOL_DEFAULT_AMBIENT)
+                auxiliary_pymol.cmd.set("cartoon_fancy_helices", local_constants.PYMOL_DEFAULT_FANCY_HELICES)
+                auxiliary_pymol.cmd.set(
+                    "cartoon_discrete_colors", local_constants.PYMOL_DEFAULT_CARTOON_DISCRETE_COLORS
+                )
+                auxiliary_pymol.cmd.set("cartoon_sampling", local_constants.PYMOL_DEFAULT_CARTOON_SAMPLING)
+                auxiliary_pymol.cmd.set("spec_power", local_constants.PYMOL_DEFAULT_SPEC_POWER)
+                auxiliary_pymol.cmd.set("spec_reflect", local_constants.PYMOL_DEFAULT_SPEC_REFLECT)
+                auxiliary_pymol.cmd.set(
+                    "ray_transparency_contrast", local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_CONTRAST
+                )
+                auxiliary_pymol.cmd.set(
+                    "ray_transparency_oblique", local_constants.PYMOL_DEFAULT_RAY_TRANSPARENCY_OBLIQUE
+                )  # noqa: E501
+                auxiliary_pymol.cmd.set(
+                    "ray_transparency_oblique_power", local_constants.PYMOL_DEFAULT_RAY_OBLIQUE_POWER
+                )
+                auxiliary_pymol.cmd.set("ray_trace_color", local_constants.PYMOL_DEFAULT_RAY_COLOR)
+                auxiliary_pymol.cmd.unset("depth_cue")
+                auxiliary_pymol.cmd.color("green", tmp_protein_name)
+                auxiliary_pymol.cmd.scene("base", action="store")
+                session_filepath: pathlib.Path = pathlib.Path(
+                    f"{local_constants.SCRATCH_DIR}/{tmp_protein_name}_session.pse"
+                )
+                auxiliary_pymol.cmd.save(session_filepath)
+                base64_string: str = utils.create_base64_string_from_file(str(session_filepath))
+                os.remove(session_filepath)
+        except Exception as e:
+            return ""
+        else:
+            return base64_string
 
     @staticmethod
     def get_protein_chains(a_pdb_filepath: str) -> list[tuple]:
-        """This function divides the chains from a protein, into protein and non-protein chains.
+        """Divides the chains from a protein, into protein and non-protein chains.
 
         Args:
-            a_pdb_filepath:
-                a filepath to a .pdb file.
+            a_pdb_filepath: A file path to a .pdb file.
 
         Returns:
             a list of all chains (as tuples) from the protein, divided into protein and non-protein chains
+            or an empty list if the argument is illegal or an error was caught.
         """
-        with pymol2.PyMOL() as auxiliary_pymol:
-            auxiliary_pymol.cmd.load(
-                filename=str(a_pdb_filepath)
-            )
-            tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
-            tmp_chains: list[str] = auxiliary_pymol.cmd.get_chains()
-            i = 0
-            chains_of_protein: list[tuple] = []
-            for tmp_chain in tmp_chains:
-                sequence_of_chain = auxiliary_pymol.cmd.get_model(f"chain {tmp_chain}")
-                if sequence_of_chain.atom[0].resn in local_constants.AMINO_ACID_CODE:
-                    fasta_sequence_of_chain = auxiliary_pymol.cmd.get_fastastr(f"chain {tmp_chain}")
-                    fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[
-                                                             fasta_sequence_of_chain.find("\n"):]
-                    complete_sequence_of_chain = (
-                        tmp_protein_name,
-                        fasta_sequence_of_chain_without_header.replace("\n", ""),
-                    )
-                    chains_of_protein.append((tmp_chain, complete_sequence_of_chain, local_constants.CHAIN_TYPE_PROTEIN))
-                else:
-                    fasta_sequence_of_chain = auxiliary_pymol.cmd.get_fastastr(f"chain {tmp_chain}")
-                    fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[
-                                                             fasta_sequence_of_chain.find("\n"):]
-                    complete_sequence_of_chain = (
-                        tmp_protein_name,
-                        fasta_sequence_of_chain_without_header.replace("\n", ""),
-                    )
-                    chains_of_protein.append(
-                        (tmp_chain, complete_sequence_of_chain, local_constants.CHAIN_TYPE_NON_PROTEIN)
-                    )
-                i += 1
+        # <editor-fold desc="Checks">
+        if a_pdb_filepath is None or a_pdb_filepath == "":
+            return []
+        if not os.path.exists(a_pdb_filepath):
+            return []
+
+        # </editor-fold>
+
+        try:
+            with pymol2.PyMOL() as auxiliary_pymol:
+                auxiliary_pymol.cmd.load(filename=str(a_pdb_filepath))
+                tmp_protein_name: str = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
+                tmp_chains: list[str] = auxiliary_pymol.cmd.get_chains()
+                i: int = 0
+                chains_of_protein: list[tuple] = []
+                for tmp_chain in tmp_chains:
+                    sequence_of_chain = auxiliary_pymol.cmd.get_model(f"chain {tmp_chain}")
+                    if sequence_of_chain.atom[0].resn in local_constants.AMINO_ACID_CODE:
+                        fasta_sequence_of_chain = auxiliary_pymol.cmd.get_fastastr(f"chain {tmp_chain}")
+                        fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[
+                            fasta_sequence_of_chain.find("\n") :
+                        ]
+                        complete_sequence_of_chain = (
+                            tmp_protein_name,
+                            fasta_sequence_of_chain_without_header.replace("\n", ""),
+                        )
+                        chains_of_protein.append(
+                            (tmp_chain, complete_sequence_of_chain, local_constants.CHAIN_TYPE_PROTEIN)
+                        )
+                    else:
+                        fasta_sequence_of_chain = auxiliary_pymol.cmd.get_fastastr(f"chain {tmp_chain}")
+                        fasta_sequence_of_chain_without_header = fasta_sequence_of_chain[
+                            fasta_sequence_of_chain.find("\n") :
+                        ]
+                        complete_sequence_of_chain = (
+                            tmp_protein_name,
+                            fasta_sequence_of_chain_without_header.replace("\n", ""),
+                        )
+                        chains_of_protein.append(
+                            (tmp_chain, complete_sequence_of_chain, local_constants.CHAIN_TYPE_NON_PROTEIN)
+                        )
+                    i += 1
+        except Exception as e:
+            return []
+        else:
             return chains_of_protein
 
     @staticmethod
-    def consolidate_molecule_object_to_first_state(a_pdb_filepath) -> str:
-        print("Consolidate molecule object states ...")
+    def consolidate_molecule_object_to_first_state(a_pdb_filepath: str) -> str:
+        """
+        Consolidate molecule object states.
+
+        This method takes a PDB file path as input and consolidates the molecule object states to the first state.
+        It uses PyMOL to perform the consolidation.
+
+        Args:
+            a_pdb_filepath (str): The file path of the PDB file.
+
+        Returns:
+            str: The file path of the consolidated PDB file if successful, or an empty string if an error occurred.
+        """
+        # <editor-fold desc="Checks">
+        if a_pdb_filepath is None or a_pdb_filepath == "":
+            return ""
+        if not os.path.exists(a_pdb_filepath):
+            return ""
+
+        # </editor-fold>
+
         with pymol2.PyMOL() as auxiliary_pymol:
             try:
                 auxiliary_pymol.cmd.load(filename=str(a_pdb_filepath))
                 tmp_protein_name = pathlib.Path(a_pdb_filepath).name.replace(".pdb", "")
                 tmp_protein_name = tmp_protein_name.replace(" ", "_")
             except Exception as e:
-                tmp_message = f"Protein states could not be consolidated! Ran into error: {e}"
-                print(tmp_message)
-                return tmp_message
+                print(f"Protein states could not be consolidated! Ran into error: {e}")
+                return ""
 
             if auxiliary_pymol.cmd.count_states(tmp_protein_name) > 1:
                 try:
@@ -380,63 +508,115 @@ class AuxiliaryPyMOL:
                     if auxiliary_pymol.cmd.count_states(tmp_protein_name) > 1:
                         print("Molecule object has still more than one state.")
                     if auxiliary_pymol.cmd.select(f"/{tmp_protein_name}//A/1/CA") > 1:
-                        print(f"Molecule object has still more than one state. {auxiliary_pymol.cmd.select(f'/{tmp_protein_name}//A/1/CA')}")
+                        print(
+                            f"Molecule object has still more than one state. {auxiliary_pymol.cmd.select(f'/{tmp_protein_name}//A/1/CA')}"
+                        )
 
                     tmp_pdb_cache_filepath = pathlib.Path(
                         f"{local_constants.CACHE_PROTEIN_DIR}/{tmp_protein_name}.pdb",
                     )
                     auxiliary_pymol.cmd.save(tmp_pdb_cache_filepath)
                 except Exception as e:
-                    tmp_message = f"Protein states could not be consolidated! Ran into error: {e}"
-                    print(tmp_message)
-                    return tmp_message
+                    print(f"Protein states could not be consolidated! Ran into error: {e}")
+                    return ""
                 else:
                     return str(tmp_pdb_cache_filepath)
             else:
                 return a_pdb_filepath
 
     @staticmethod
-    def get_all_scenes_of_session(a_pymol_session) -> list:
-        tmp_session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
-        utils.write_binary_file_from_base64_string(tmp_session_filepath, a_pymol_session)
-        with pymol2.PyMOL() as auxiliary_pymol:
-            auxiliary_pymol.cmd.load(str(tmp_session_filepath))
-            tmp_all_scenes = auxiliary_pymol.cmd.get_scene_list()
-        os.remove(tmp_session_filepath)
-        return tmp_all_scenes
+    def get_all_scenes_of_session(a_pymol_session: str) -> list:
+        """
+        Gets all scenes from a given pymol session.
+
+        Args:
+            a_pymol_session: A base64 string representing the PyMOL session data.
+
+        Returns:
+            A list of all scenes in the PyMOL session or an empty list if the argument is illegal
+            or an error was caught.
+        """
+        # <editor-fold desc="Checks">
+        if a_pymol_session == "":
+            return []
+
+        # </editor-fold>
+
+        try:
+            tmp_session_filepath: pathlib.Path = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
+            utils.write_binary_file_from_base64_string(tmp_session_filepath, a_pymol_session)
+            with pymol2.PyMOL() as auxiliary_pymol:
+                auxiliary_pymol.cmd.load(str(tmp_session_filepath))
+                tmp_all_scenes: list = auxiliary_pymol.cmd.get_scene_list()
+            os.remove(tmp_session_filepath)
+        except Exception as e:
+            return []
+        else:
+            return tmp_all_scenes
 
     @staticmethod
     def clean_protein_update(a_pymol_session: str, a_protein_name: str) -> tuple[str, str]:
         """Cleans a protein from all sugar and solvent molecules.
 
         Args:
-            a_pymol_session: a base64 pymol session string.
+            a_pymol_session: A base64 pymol session string.
+            a_protein_name: A name of a protein.
 
         Returns:
-            a pymol session base64 string with the cleaned protein.
+            a pymol session base64 string with the cleaned protein or a tuple with two empty strings if
+            an argument is illegal or an error was caught.
         """
-        tmp_session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
-        utils.write_binary_file_from_base64_string(tmp_session_filepath, a_pymol_session)
-        with pymol2.PyMOL() as auxiliary_pymol:
-            auxiliary_pymol.cmd.load(str(tmp_session_filepath))
-            tmp_all_object_names = auxiliary_pymol.cmd.get_names()
-            if len(tmp_all_object_names) == 0:
-                return "ERROR: No proteins found", f"Value of tmp_all_object_names: {tmp_all_object_names}"
-            if a_protein_name not in tmp_all_object_names:
-                return f"ERROR: Protein with the name {a_protein_name} not found!", f"Value of tmp_all_object_names: {tmp_all_object_names}"
-            auxiliary_pymol.cmd.remove("solvent")
-            auxiliary_pymol.cmd.remove("organic")
-            tmp_export_session_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/export_temp_session.pse")
-            tmp_export_pdb_filepath = pathlib.Path(f"{local_constants.SCRATCH_DIR}/export_temp_clean.pdb")
-            auxiliary_pymol.cmd.save(str(tmp_export_session_filepath))
-            auxiliary_pymol.cmd.save(str(tmp_export_pdb_filepath))
-            base64_string = utils.create_base64_string_from_file(str(tmp_export_session_filepath))
-            #os.remove(tmp_export_session_filepath)
-        os.remove(tmp_session_filepath)
-        return base64_string, str(tmp_export_pdb_filepath)
+        # <editor-fold desc="Checks">
+        if a_pymol_session == "":
+            return "", ""
+        if a_protein_name == "":
+            return "", ""
+
+        # </editor-fold>
+
+        try:
+            tmp_session_filepath: pathlib.Path = pathlib.Path(f"{local_constants.SCRATCH_DIR}/temp_session.pse")
+            utils.write_binary_file_from_base64_string(tmp_session_filepath, a_pymol_session)
+            with pymol2.PyMOL() as auxiliary_pymol:
+                auxiliary_pymol.cmd.load(str(tmp_session_filepath))
+                tmp_all_object_names = auxiliary_pymol.cmd.get_names()
+                if len(tmp_all_object_names) == 0:
+                    # return "ERROR: No proteins found", f"Value of tmp_all_object_names: {tmp_all_object_names}"
+                    return "", ""
+                if a_protein_name not in tmp_all_object_names:
+                    # return f"ERROR: Protein with the name {a_protein_name} not found!", f"Value of tmp_all_object_names: {tmp_all_object_names}"
+                    return "", ""
+                auxiliary_pymol.cmd.remove("solvent")
+                auxiliary_pymol.cmd.remove("organic")
+                tmp_export_session_filepath: pathlib.Path = pathlib.Path(
+                    f"{local_constants.SCRATCH_DIR}/export_temp_session.pse"
+                )
+                tmp_export_pdb_filepath: pathlib.Path = pathlib.Path(
+                    f"{local_constants.SCRATCH_DIR}/export_temp_clean.pdb"
+                )
+                auxiliary_pymol.cmd.save(str(tmp_export_session_filepath))
+                auxiliary_pymol.cmd.save(str(tmp_export_pdb_filepath))
+                base64_string: str = utils.create_base64_string_from_file(str(tmp_export_session_filepath))
+                # os.remove(tmp_export_session_filepath)
+            os.remove(tmp_session_filepath)
+        except Exception as e:
+            return "", ""
+        else:
+            return base64_string, str(tmp_export_pdb_filepath)
 
     @staticmethod
     def clean_protein_new():
+        """
+        clean_protein_new method is used to clean a protein by removing solvent molecules and organic molecules.
+        However, this method is not yet fully implemented and currently raises a NotImplementedError.
+
+        Returns:
+            None
+
+        Raises:
+            NotImplementedError: If cleaning a protein that generates a new protein structure is attempted, this exception is raised.
+
+        """
         # fixme: Old code below that might be useful
         # if new_protein is False:
         #     try:

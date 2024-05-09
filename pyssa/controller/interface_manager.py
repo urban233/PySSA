@@ -219,7 +219,7 @@ class InterfaceManager:
         )
         self._app_process_manager_thread.start()
 
-    def _recover_user_pymol(self):
+    def _recover_user_pymol(self, a_placeholder_1, a_placeholder_2):
         logger.info("Starting recovery process ...")
         self.app_process_manager.start_pymol()
         self.app_process_manager.arrange_windows()
@@ -1406,6 +1406,12 @@ class InterfaceManager:
     # </editor-fold>
 
     # <editor-fold desc="Proteins">
+    def check_if_scratch_scene_exists_in_protein_model(self) -> bool:
+        return self._protein_model.check_if_scratch_scene_exists(self.get_current_protein_tree_index())
+
+    def add_scratch_scene_to_protein_model(self):
+        self.add_scene_to_proteins_model("_scratch_")
+
     def add_protein_to_proteins_model(self, a_protein):
         self._protein_model.add_protein(a_protein)
 
@@ -1849,6 +1855,12 @@ class InterfaceManager:
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs">
+    def check_if_scratch_scene_exists_in_protein_pair_model(self) -> bool:
+        return self._protein_pair_model.check_if_scratch_scene_exists(self.get_current_protein_pair_tree_index())
+
+    def add_scratch_scene_to_protein_pair_model(self):
+        self.add_scene_to_protein_pairs_model("_scratch_")
+
     def add_protein_pair_to_protein_pairs_model(self, a_protein_pair: "protein_pair.ProteinPair"):
         tmp_main_socket, the_general_purpose_socket = self.job_manager.get_general_purpose_socket_pair()
         self._protein_pair_model.add_protein_pair(a_protein_pair, tmp_main_socket, the_general_purpose_socket)

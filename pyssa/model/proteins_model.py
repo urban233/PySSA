@@ -28,17 +28,36 @@ from auxiliary_pymol import auxiliary_pymol_client
 from pyssa.internal.data_structures import protein, job
 from pyssa.util import enums
 
+__docformat__ = "google"
+
 
 class ProteinsModel(QtGui.QStandardItemModel):
 
     def __init__(self):
         super().__init__()
 
-    def build_model_from_scratch(self,
-                                 the_protein_objects: list["protein.Protein"],
-                                 the_main_socket,
-                                 a_socket):
-        """Builds the model from scratch."""
+    def build_model_from_scratch(self, the_protein_objects: list["protein.Protein"], the_main_socket, a_socket):
+        """
+        Builds a model from scratch using the given protein objects.
+
+        Args:
+            the_protein_objects (list["protein.Protein"]): A list of protein objects.
+            the_main_socket: The main socket used for communication.
+            a_socket: A socket used for communication.
+
+        Example:
+            protein_objects = [protein1, protein2, protein3]
+            main_socket = "main_socket"
+            a_socket = "a_socket"
+            build_model_from_scratch(protein_objects, main_socket, a_socket)
+
+        Note:
+            This method builds a model by creating items for each protein, scenes, and chains. It retrieves the scenes of
+            each protein using the given sockets and adds them as child items to the corresponding protein item. It also adds
+            chains as child items to the corresponding protein item.
+
+            The model is built using QStandardItem objects.
+        """
         # TODO: multiprocessing code does not work (gets blocked if a prediction is running) and it is not really faster
         # pool_information = []
         # for tmp_protein in the_protein_objects:
@@ -51,10 +70,10 @@ class ProteinsModel(QtGui.QStandardItemModel):
         tmp_root_item = self.invisibleRootItem()
         i = 0
         for tmp_protein in the_protein_objects:
-            tmp_job_description = job.GeneralPurposeJobDescription(
-                enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION
+            tmp_job_description = job.GeneralPurposeJobDescription(enums.JobShortDescription.GET_ALL_SCENES_OF_SESSION)
+            tmp_job_description.setup_dict(
+                {enums.JobDescriptionKeys.PYMOL_SESSION.value: str(tmp_protein.pymol_session)}
             )
-            tmp_job_description.setup_dict({enums.JobDescriptionKeys.PYMOL_SESSION.value: str(tmp_protein.pymol_session)})
             tmp_reply = auxiliary_pymol_client.send_request_to_auxiliary_pymol(
                 the_main_socket, a_socket, tmp_job_description
             )
@@ -83,18 +102,62 @@ class ProteinsModel(QtGui.QStandardItemModel):
                 tmp_chain_item.setData(tmp_chain, enums.ModelEnum.OBJECT_ROLE)
                 tmp_chain_item.setData("chain", enums.ModelEnum.TYPE_ROLE)
                 tmp_chain_item.setData(
-                    tmp_chain.pymol_parameters[enums.PymolParameterEnum.COLOR.value],
-                    enums.ModelEnum.CHAIN_COLOR_ROLE
+                    tmp_chain.pymol_parameters[enums.PymolParameterEnum.COLOR.value], enums.ModelEnum.CHAIN_COLOR_ROLE
                 )
                 tmp_chains_item.appendRow(tmp_chain_item)
             i += 1
 
-    def add_scene(
-            self,
-            a_model_index: QtCore.QModelIndex,
-            the_scene_item_to_add: QtGui.QStandardItem
-    ) -> None:
-        """Adds a scene to the model."""
+    def check_if_scratch_scene_exists(self, a_model_index: QtCore.QModelIndex) -> bool:
+        """
+        Check if a scratch scene exists for the given model index.
+
+        Args:
+            a_model_index (QtCore.QModelIndex): The model index.
+
+        Returns:
+            bool: True if a scratch scene exists, False otherwise.
+
+        Raises:
+            ValueError: If the model index has an invalid type.
+        """
+        tmp_type = a_model_index.data(enums.ModelEnum.TYPE_ROLE)
+        # on protein node
+        if tmp_type == "protein":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).child(0, 0)
+        # on header node (Scenes)
+        elif tmp_type == "header" and a_model_index.data(Qt.DisplayRole) == "Scenes":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index)
+        # on scene node
+        elif tmp_type == "scene":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent()
+        # on header node (Chains)
+        elif tmp_type == "header" and a_model_index.data(Qt.DisplayRole) == "Chains":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent().child(0, 0)
+        # on chain node
+        elif tmp_type == "chain":
+            tmp_scenes_header_item = self.itemFromIndex(a_model_index).parent().parent().child(0, 0)
+        else:
+            raise ValueError("Wrong type!")
+        for i in range(tmp_scenes_header_item.rowCount()):
+            if tmp_scenes_header_item.child(i, 0).data(Qt.DisplayRole) == "_scratch_":
+                return True
+            i += 1
+        return False
+
+    def add_scene(self, a_model_index: QtCore.QModelIndex, the_scene_item_to_add: QtGui.QStandardItem) -> None:
+        """
+        Add a scene item to the tree model.
+
+        Args:
+            a_model_index: The index of the tree model where the scene item should be added.
+            the_scene_item_to_add: The scene item to be added.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If the type of the model index is invalid.
+        """
         tmp_type = a_model_index.data(enums.ModelEnum.TYPE_ROLE)
         # on protein node
         if tmp_type == "protein":
@@ -116,7 +179,19 @@ class ProteinsModel(QtGui.QStandardItemModel):
         tmp_scenes_header_item.appendRow(the_scene_item_to_add)
 
     def remove_scene(self, the_model_index_of_the_scene: QtCore.QModelIndex) -> None:
-        """Removes a scene from the model."""
+        """
+        Removes a scene from the model.
+
+        Args:
+            the_model_index_of_the_scene: The index of the scene to be removed.
+
+        Returns:
+            None
+
+        Raises:
+            ValueError: If the type of the item at the given index is not "scene".
+
+        """
         # <editor-fold desc="Checks">
         if self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE) != "scene":
             raise ValueError("Wrong type!")
@@ -128,6 +203,15 @@ class ProteinsModel(QtGui.QStandardItemModel):
         tmp_scenes_item.removeRow(tmp_scene_item.row())
 
     def add_protein(self, a_protein: "protein.Protein") -> None:
+        """
+        Add a protein to the data model.
+
+        Args:
+            a_protein (protein.Protein): The protein to add.
+
+        Returns:
+            None
+        """
         tmp_protein_item = QtGui.QStandardItem(a_protein.get_molecule_object())
         tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
         tmp_protein_item.setData(a_protein, enums.ModelEnum.OBJECT_ROLE)
@@ -158,7 +242,15 @@ class ProteinsModel(QtGui.QStandardItemModel):
             tmp_chains_item.appendRow(tmp_chain_item)
 
     def remove_protein(self, the_model_index_of_the_scene: QtCore.QModelIndex):
-        """Removes a protein from the model."""
+        """
+        Removes a protein from the scene.
+
+        Args:
+            the_model_index_of_the_scene (QtCore.QModelIndex): The index of the protein in the scene.
+
+        Raises:
+            ValueError: If the type of the item at the given index is not "protein".
+        """
         # <editor-fold desc="Checks">
         if self.data(the_model_index_of_the_scene, enums.ModelEnum.TYPE_ROLE) != "protein":
             raise ValueError("Wrong type!")
@@ -175,6 +267,13 @@ class TemporaryProteinsModel(ProteinsModel):
         super().__init__()
 
     def build_model_from_scratch(self, the_protein_objects: list["protein.Protein"]):
+        """
+        Builds a model from scratch using the given protein objects.
+
+        Args:
+            the_protein_objects (list[protein.Protein]): A list of protein objects.
+
+        """
         tmp_root_item = self.invisibleRootItem()
         for tmp_protein in the_protein_objects:
             # protein node (type = protein)
@@ -204,6 +303,15 @@ class TemporaryProteinsModel(ProteinsModel):
                 tmp_chains_item.appendRow(tmp_chain_item)
 
     def add_temporary_protein(self, a_protein: "protein.Protein"):
+        """
+        Adds a temporary protein to the model.
+
+        Args:
+            a_protein: An object of type Protein.
+
+        Returns:
+            None
+        """
         tmp_protein_item = QtGui.QStandardItem(a_protein.get_molecule_object())
         tmp_protein_item.setData("protein", enums.ModelEnum.TYPE_ROLE)
         tmp_protein_item.setData(a_protein, enums.ModelEnum.OBJECT_ROLE)

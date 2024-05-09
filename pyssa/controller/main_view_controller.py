@@ -2912,12 +2912,12 @@ class MainViewController:
 
             if self._interface_manager.pymol_session_manager.session_object_type == "protein" and self._interface_manager.pymol_session_manager.session_name == tmp_protein.get_molecule_object():
                 # Update pymol parameter in PyMOL
+                self._reset_color_in_proteins_color_grid()
                 tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
                 self._interface_manager.pymol_session_manager.color_protein(
                     a_color, tmp_protein.pymol_selection.selection_string
                 )
                 # Update pymol parameter in memory
-                self._reset_color_in_proteins_color_grid()
                 if a_color != "By Element":
                     tmp_chain.pymol_parameters["chain_color"] = a_color
                     self._interface_manager.set_current_active_chain_color_of_protein(a_color)
@@ -2925,7 +2925,7 @@ class MainViewController:
                     with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
                         db_manager.update_protein_chain_color(tmp_chain.get_id(), a_color)
                 self._set_color_in_proteins_color_grid()
-                self._update_scene()
+                self._update_protein_scene()
                 self._save_protein_pymol_session()
                 self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
             else:
@@ -2933,6 +2933,9 @@ class MainViewController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def _reset_color_grid_icon(self, a_color_grid_button):
+        a_color_grid_button.setIcon(QtGui.QIcon())
 
     def _reset_color_in_proteins_color_grid(self):
         tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
@@ -2995,7 +2998,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.CARTOON.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3026,7 +3029,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
             #self.__slot_chain_protein_with_hydrogens()
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3057,7 +3060,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3089,7 +3092,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
                 )
             #self.__slot_chain_protein_with_hydrogens()
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3121,7 +3124,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
                 )
             #self.__slot_chain_protein_with_hydrogens()
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3152,7 +3155,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3183,7 +3186,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3214,7 +3217,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -3251,7 +3254,7 @@ class MainViewController:
             self.__slot_protein_chain_as_dots()
             self.__slot_protein_chain_as_mesh()
             self.__slot_protein_chain_as_surface()
-            self._update_scene()
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
         except Exception as e:
@@ -3559,14 +3562,14 @@ class MainViewController:
     def __slot_update_protein_scene(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
-            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(a_key="auto", an_action="update")
+            self._update_protein_scene()
             self._save_protein_pymol_session()
             self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def _update_scene(self) -> None:
+    def _update_protein_scene(self) -> None:
         """Updates the current selected PyMOL scene."""
         if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
             self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
@@ -3574,6 +3577,8 @@ class MainViewController:
             )
             self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
         else:
+            if not self._interface_manager.check_if_scratch_scene_exists_in_protein_model():
+                self._interface_manager.add_scratch_scene_to_protein_model()
             self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
                 a_key="_scratch_", an_action="update"
             )
@@ -3999,7 +4004,7 @@ class MainViewController:
                 tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
                 self._interface_manager.pymol_session_manager.color_protein(tmp_color,
                                                                             tmp_protein.pymol_selection.selection_string)
-                self._update_scene()
+                self._update_protein_pair_scene()
                 self._save_protein_pair_pymol_session()
                 self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
             else:
@@ -4007,6 +4012,24 @@ class MainViewController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def _update_protein_pair_scene(self) -> None:
+        """Updates the current selected PyMOL scene."""
+        if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+                a_key="auto", an_action="update"
+            )
+            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
+        else:
+            if not self._interface_manager.check_if_scratch_scene_exists_in_protein_pair_model():
+                self._interface_manager.add_scratch_scene_to_protein_pair_model()
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+                a_key="_scratch_", an_action="update"
+            )
+            self._interface_manager.pymol_session_manager.current_scene_name = "_scratch_"
+            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
+                                                    self._view.ui.lbl_pymol_protein_pair_scene)
+            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
 
     # def __slot_change_chain_color_protein_pairs_atoms(self):
     #     return
@@ -4670,7 +4693,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.CARTOON.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4701,7 +4724,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
             # self.__slot_protein_pair_chain_with_hydrogens()
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4731,7 +4754,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4762,7 +4785,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4793,7 +4816,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
                 )
             # self.__slot_protein_pair_chain_with_hydrogens()
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4823,7 +4846,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4853,7 +4876,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4883,7 +4906,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
                 )
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_pair_chain()
@@ -4920,7 +4943,7 @@ class MainViewController:
             self.__slot_protein_pair_chain_as_dots()
             self.__slot_protein_pair_chain_as_mesh()
             self.__slot_protein_pair_chain_as_surface()
-            self._update_scene()
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()
         except Exception as e:
@@ -4932,7 +4955,7 @@ class MainViewController:
     def __slot_update_protein_pair_scene(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
-            self._interface_manager.pymol_session_manager.user_pymol_connector.scene("auto", "update")
+            self._update_protein_pair_scene()
             self._save_protein_pair_pymol_session()
             self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
         except Exception as e:
