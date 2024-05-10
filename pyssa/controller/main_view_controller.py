@@ -62,6 +62,7 @@ from pyssa.util import globals
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class MainViewController:
@@ -293,8 +294,8 @@ class MainViewController:
         self._view.color_grid_proteins.c_olive.clicked.connect(lambda: self.__slot_change_chain_color_proteins("olive"))
 
         self._view.color_grid_proteins.c_white.clicked.connect(lambda: self.__slot_change_chain_color_proteins("white"))
-        self._view.color_grid_proteins.c_grey_70.clicked.connect(lambda: self.__slot_change_chain_color_proteins("grey_70"))
-        self._view.color_grid_proteins.c_grey_30.clicked.connect(lambda: self.__slot_change_chain_color_proteins("grey_30"))
+        self._view.color_grid_proteins.c_grey_70.clicked.connect(lambda: self.__slot_change_chain_color_proteins("grey70"))
+        self._view.color_grid_proteins.c_grey_30.clicked.connect(lambda: self.__slot_change_chain_color_proteins("grey30"))
         self._view.color_grid_proteins.c_black.clicked.connect(lambda: self.__slot_change_chain_color_proteins("black"))
         # </editor-fold>
 
@@ -2835,17 +2836,18 @@ class MainViewController:
                 if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
                     # Set icon for color grid
                     self._view.color_grid_proteins.reset_icon_for_selected_color()
-                    with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                        tmp_color = db_manager.get_color_for_certain_protein_chain_in_protein(
-                            self._interface_manager.get_current_active_chain_object().get_id()
-                        )
-                    if tmp_color == "By Element":
+                    tmp_protein = self._interface_manager.get_current_active_protein_object()
+                    tmp_chain = self._interface_manager.get_current_active_chain_object()
+                    tmp_residue_config: "residue_color_config.ResidueColorConfig" = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
+                        tmp_protein.get_molecule_object(), tmp_chain.chain_letter
+                    )
+                    if tmp_residue_config.atoms_are_colored_by_elements():
                         self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
+                        self._view.ui.lbl_protein_current_color.setText("By Element    ")
                     else:
                         self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
-                        self._view.color_grid_proteins.set_icon_for_selected_color(tmp_color)
-                    # Set color name in label
-                    self._view.ui.lbl_protein_current_color.setText(f"{tmp_color}    ")
+                        self._view.color_grid_proteins.set_icon_for_selected_color(tmp_residue_config.carbon_color)
+                        self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
                     # Set representation toggle states for selected chain
                     self._interface_manager.set_repr_state_in_ui_for_protein_chain(
                         self._interface_manager.pymol_session_manager
@@ -2872,41 +2874,241 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def __slot_color_protein_atoms_by_element(self):
+    def __slot_change_chain_color_proteins(self, a_color: str) -> None:
+        """
+        Changes the 'Color' attribute of a protein chain on the 'Proteins Tab' and colors the protein in User PyMOL.
+
+        Args:
+            a_color (str): The new color for the protein chain.
+
+        Notes:
+            This slot method is used if a button of the color grid is clicked.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if a_color is None or a_color == "":
+            logger.error("a_color is either None or an empty string!")
+            self._interface_manager.status_bar_manager.show_error_message("a_color is either None or an empty string!")
+            return
+        if a_color not in constants.PYMOL_COLORS_WITH_INDICES.values():
+            logger.error("a_color is not part of the PYMOL_COLORS_WITH_INDICES dict!")
+            self._interface_manager.status_bar_manager.show_error_message("a_color is not part of the PYMOL_COLORS_WITH_INDICES dict!")
+            return
+
+        # </editor-fold>
+
         try:
-            if self._view.tg_protein_color_atoms.toggle_button.isChecked():
-                tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-                tmp_selection.set_selection_for_a_single_chain(
-                    self._interface_manager.get_current_active_chain_object().chain_letter)
-                self._interface_manager.pymol_session_manager.color_protein(
-                    "atomic", f"{tmp_selection.selection_string} and not elem C"
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                       "The 'Color' attribute of a protein chain on the 'Proteins Tab' changed.")
+            tmp_protein = self._interface_manager.get_current_active_protein_object()
+            if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein.get_molecule_object()):
+                logger.warning(f"Protein {tmp_protein.get_molecule_object()} is not in the current session.")
+                self._interface_manager.status_bar_manager.show_error_message(
+                    f"Protein {tmp_protein.get_molecule_object()} is not in the current session."
                 )
-                self._interface_manager.pymol_session_manager.color_protein(
-                    "grey70", f"{tmp_selection.selection_string} and elem C"
-                )
-                with database_manager.DatabaseManager(
-                        str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                    db_manager.update_protein_chain_color(self._interface_manager.get_current_active_chain_object().get_id(), "By Element")
-                self._view.color_grid_proteins.reset_icon_for_selected_color()
-                self._view.ui.lbl_protein_current_color.setText("By Element    ")
-            else:
-                logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                           "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
-                tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
-                tmp_selection.set_selection_for_a_single_chain(
-                    self._interface_manager.get_current_active_chain_object().chain_letter)
-                tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
-                if tmp_chain_color == "By Element":
-                    tmp_chain_color = "green"
-                self._interface_manager.pymol_session_manager.color_protein(
-                    tmp_chain_color, f"{tmp_selection.selection_string}"
-                )
-                self._view.color_grid_proteins.reset_icon_for_selected_color()
-                self._view.color_grid_proteins.set_icon_for_selected_color(tmp_chain_color)
-                self._view.ui.lbl_protein_current_color.setText(f"{tmp_chain_color}    ")
+                return
+
+            tmp_chain = self._interface_manager.get_current_active_chain_object()
+            tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
+            # Color protein in User PyMOL
+            self._active_task = tasks.Task(
+                target=pymol_session_async.color_protein_chain_for_protein,
+                args=(
+                    a_color,
+                    tmp_protein.pymol_selection.selection_string,
+                    self._interface_manager.pymol_session_manager
+                ),
+                post_func=self.__await_color_protein_chain_for_protein
+            )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._active_task.start()
+            self._interface_manager.start_wait_cursor()  # fixme: This blocks the entire UI which leads to quick flashes. This might be a problem.
+
+    def __await_color_protein_chain_for_protein(self, return_value: tuple[bool, str]) -> None:
+        """
+        Updates the color of the protein chain based on the return value provided in the object and data model.
+
+        Args:
+            return_value: A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None or len(return_value) == 0:
+            logger.error("return_value is either None or has a length of 0.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "return_value is either None or has a length of 0.")
+            return
+        if return_value[1] == "":
+            logger.error("return_value[1] is an empty string.")
+            self._interface_manager.status_bar_manager.show_error_message("return_value[1] is an empty string.")
+
+        # </editor-fold>
+
+        try:
+            tmp_success_flag, tmp_chain_color = return_value
+            if tmp_success_flag:
+                tmp_chain = self._interface_manager.get_current_active_chain_object()
+
+                # <editor-fold desc="Setup color grid icon">
+                self._view.color_grid_proteins.reset_icon_for_selected_color()
+                if tmp_chain_color != "By Element":
+                    tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
+                    self._interface_manager.set_current_active_chain_color_of_protein(tmp_chain_color)
+                    self._view.color_grid_proteins.set_icon_for_selected_color(tmp_chain_color)
+                    self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+
+                # </editor-fold>
+
+                self._view.ui.lbl_protein_current_color.setText(f"{tmp_chain_color}    ")
+                self._update_protein_scene()
+                self._save_protein_pymol_session()
+            else:
+                logger.error("The operation failed!")
+                self._interface_manager.status_bar_manager.show_error_message("The operation failed!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+
+    def __slot_color_protein_atoms_by_element(self):
+        """
+        Color protein atoms by element.
+
+        Notes:
+            This method is used to color the protein atoms based on their element.
+            If the toggle button is checked, the method will color the atoms based on their element:
+            grey70 for carbon atoms and atomic color for non-carbon atoms.
+            It will also update the protein chain color in the database.
+            If the toggle button is not checked, the method will reset the color to the chain color
+            or green if the chain color is set to "By Element".
+
+        """
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Toggle 'By Elements' button on the 'Proteins Tab' was clicked.")
+        try:
+            # Create selection for atom coloring
+            tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+            tmp_selection.set_selection_for_a_single_chain(
+                self._interface_manager.get_current_active_chain_object().chain_letter)
+
+            if self._view.tg_protein_color_atoms.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.color_protein_chain_atoms_by_element_for_protein,
+                    args=(tmp_selection.selection_string, self._interface_manager.pymol_session_manager),
+                    post_func=self.__await_color_protein_chain_atoms_by_element_for_protein
+                )
+            else:
+                tmp_protein = self._interface_manager.get_current_active_protein_object()
+                tmp_chain = self._interface_manager.get_current_active_chain_object()
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.reset_color_protein_chain_atoms_by_element_for_protein,
+                    args=(
+                        tmp_protein.get_molecule_object(),
+                        tmp_chain.chain_letter,
+                        self._interface_manager.get_current_active_chain_color_of_protein(),
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_reset_color_protein_chain_atoms_by_element_for_protein
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    def __await_color_protein_chain_atoms_by_element_for_protein(self, return_value: tuple) -> None:
+        """
+        Await method for the coloring of atom by their element.
+
+        Args:
+            return_value: A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None or len(return_value) == 0:
+            logger.error("return_value is either None or has a length of 0.")
+            self._interface_manager.status_bar_manager.show_error_message("return_value is either None or has a length of 0.")
+            return
+
+        # </editor-fold>
+
+        try:
+            if return_value[0]:
+                self._view.color_grid_proteins.reset_icon_for_selected_color()
+                self._view.ui.lbl_protein_current_color.setText("By Element    ")
+                self._update_protein_scene()
+                self._save_protein_pymol_session()
+            else:
+                logger.error("The operation failed!")
+                self._interface_manager.status_bar_manager.show_error_message("The operation failed!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+
+    def __await_reset_color_protein_chain_atoms_by_element_for_protein(self, return_value: tuple):
+        """
+        Await method for the reset coloring of atom by their element.
+
+        Args:
+            return_value: A tuple containing the result of the operation and the chain color.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None or len(return_value) == 0:
+            logger.error("return_value is either None or has a length of 0.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "return_value is either None or has a length of 0.")
+            return
+        if return_value[1] == "":
+            logger.error("return_value[1] is an empty string.")
+            self._interface_manager.status_bar_manager.show_error_message("return_value[1] is an empty string.")
+
+        # </editor-fold>
+
+        tmp_success_flag, tmp_chain_color = return_value
+        try:
+            if tmp_success_flag:
+                self._view.color_grid_proteins.reset_icon_for_selected_color()
+
+                # <editor-fold desc="Update chain color">
+                # Updates chain color in chain object and data model
+                tmp_chain = self._interface_manager.get_current_active_chain_object()
+                tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
+                self._interface_manager.set_current_active_chain_color_of_protein(tmp_chain_color)
+
+                # </editor-fold>
+
+                self._view.color_grid_proteins.set_icon_for_selected_color(tmp_chain_color)
+                self._view.ui.lbl_protein_current_color.setText(f"{tmp_chain_color}    ")
+
+                self._update_protein_scene()
+                self._save_protein_pymol_session()
+            else:
+                logger.error("The operation failed!")
+                self._interface_manager.status_bar_manager.show_error_message("The operation failed!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
 
     def __slot_protein_change_background_color(self):
         try:
@@ -2917,78 +3119,6 @@ class MainViewController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    def __slot_change_chain_color_proteins(self, a_color) -> None:
-        try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "The 'Color' attribute of a protein chain on the 'Proteins Tab' changed.")
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
-            tmp_chain = self._interface_manager.get_current_active_chain_object()
-
-            if self._interface_manager.pymol_session_manager.session_object_type == "protein" and self._interface_manager.pymol_session_manager.session_name == tmp_protein.get_molecule_object():
-                # Update pymol parameter in PyMOL
-                self._reset_color_in_proteins_color_grid()
-                tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
-                self._interface_manager.pymol_session_manager.color_protein(
-                    a_color, tmp_protein.pymol_selection.selection_string
-                )
-                # Update pymol parameter in memory
-                self._view.color_grid_proteins.reset_icon_for_selected_color()
-                if a_color != "By Element":
-                    tmp_chain.pymol_parameters["chain_color"] = a_color
-                    self._interface_manager.set_current_active_chain_color_of_protein(a_color)
-                    # Update pymol parameter in database
-                    with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                        db_manager.update_protein_chain_color(tmp_chain.get_id(), a_color)
-                self._view.color_grid_proteins.set_icon_for_selected_color(a_color)
-                self._view.ui.lbl_protein_current_color.setText(f"{a_color}    ")
-                self._update_protein_scene()
-                self._save_protein_pymol_session()
-                self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
-            else:
-                logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    # <editor-fold desc="Color Grid methods">
-    def _reset_color_in_proteins_color_grid(self):
-        tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
-        tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
-        if tmp_chain_color != "" and tmp_chain_color != "By Element":
-            tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_chain_color]
-            tmp_last_color_grid_button.setIcon(QtGui.QIcon())
-
-    def _set_color_in_proteins_color_grid(self):
-        tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
-        # get color from protein chain
-        tmp_protein = self._interface_manager.get_current_active_protein_object()
-        tmp_chain = self._interface_manager.get_current_active_chain_object()
-
-        tmp_residue_config: "residue_color_config.ResidueColorConfig" = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
-            tmp_protein.get_molecule_object(), tmp_chain.chain_letter
-        )
-        if tmp_residue_config.atoms_are_colored_by_elements():
-            # chain is colored by elements
-            self._view.ui.lbl_protein_current_color.setText("By Element    ")
-            self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
-        else:
-            self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
-            self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
-            tmp_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_residue_config.carbon_color]
-            tmp_color_grid_button.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-            tmp_color_grid_button.setIconSize(tmp_color_grid_button.icon().actualSize(QtCore.QSize(14, 14)))
-
-        # if self._view.color_grid_proteins.last_selected_chain is not None and self._view.color_grid_proteins.last_selected_chain is not tmp_chain:
-        #     tmp_color_grid_buttons = self._view.color_grid_proteins.get_all_color_buttons()
-        #     tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[
-        #         self._view.color_grid_proteins.last_selected_chain.pymol_parameters[
-        #             enums.PymolParameterEnum.COLOR.value]
-        #     ]
-        #     tmp_last_color_grid_button.setIcon(QtGui.QIcon())
-        # self._view.color_grid_proteins.last_selected_chain = tmp_chain
-
-    # </editor-fold>
 
     # <editor-fold desc="Representations">
     def __slot_protein_chain_as_cartoon(self):

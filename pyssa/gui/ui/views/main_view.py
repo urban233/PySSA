@@ -601,8 +601,15 @@ class MainView(QtWidgets.QMainWindow):
         constants.PYSSA_LOGGER.info(f"PySSA started with version {constants.VERSION_NUMBER}.")
         constants.PYSSA_LOGGER.info("Successful initialization of basic UI.")
 
-    def disable_menu_bar(self):
-        self.ui.menuProject.setEnabled(False)
+    def disable_menu_bar_without_exit_application(self):
+        self.ui.menuProject.setEnabled(True)
+        self.ui.action_new_project.setEnabled(False)
+        self.ui.action_open_project.setEnabled(False)
+        self.ui.action_close_project.setEnabled(False)
+        self.ui.action_use_project.setEnabled(False)
+        self.ui.action_delete_project.setEnabled(False)
+        self.ui.action_export_project.setEnabled(False)
+        self.ui.action_import_project.setEnabled(False)
         self.ui.menuPrediction.setEnabled(False)
         self.ui.menuAnalysis.setEnabled(False)
         self.ui.menuResults.setEnabled(False)

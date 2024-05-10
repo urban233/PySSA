@@ -24,7 +24,7 @@ from PyQt5 import QtWidgets
 
 
 class ProteinTreeContextMenu:
-    """A custom context menu wrapper for the protein tree view of the main dialog."""
+    """A custom context menu wrapper for the protein tree view of the main view window."""
 
     def __init__(self):
         self._context_menu = QtWidgets.QMenu()

@@ -281,7 +281,8 @@ PYMOL_COLORS_WITH_INDICES = {
     1: "black",
     "By RMSD": "By RMSD",
     27: "N-blue",
-    28: "O-red"
+    28: "O-red",
+    "By Element": "By Element"
 }
 
 AMINO_ACID_CODE = {
