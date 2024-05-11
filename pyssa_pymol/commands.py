@@ -667,7 +667,7 @@ def color_selection(a_pymol_color: str, a_selection_string: str) -> tuple[bool, 
     if a_pymol_color is None or a_pymol_color == "":
         logger.error("a_pymol_color is either None or an empty string.")
         return False, "a_pymol_color is either None or an empty string."
-    if a_pymol_color not in constants.PYMOL_COLORS_WITH_INDICES.values():
+    if a_pymol_color not in constants.PYMOL_COLORS_WITH_INDICES.values() and a_pymol_color != "atomic":
         logger.error("a_pymol_color could not be found in the PYMOL_COLORS_WITH_INDICES dict.")
         return False, "a_pymol_color could not be found in the PYMOL_COLORS_WITH_INDICES dict."
     if a_selection_string is None or a_selection_string == "":
