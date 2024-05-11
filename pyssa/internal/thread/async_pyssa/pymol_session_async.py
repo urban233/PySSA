@@ -108,7 +108,7 @@ def save_protein_pair_pymol_session_to_database(
         return 0, True
 
 
-def color_protein_chain_for_protein(
+def color_pymol_selection(
         a_color: str,
         a_pymol_selection: str,
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
@@ -152,7 +152,7 @@ def color_protein_chain_for_protein(
         return True, a_color
 
 
-def reset_color_protein_chain_atoms_by_element_for_protein(
+def reset_color_pymol_selection_atoms_by_element(
         a_protein_name: str,
         a_chain_letter: str,
         the_current_active_chain_color_of_protein: str,
@@ -212,7 +212,7 @@ def reset_color_protein_chain_atoms_by_element_for_protein(
         return True, tmp_chain_color
 
 
-def color_protein_chain_atoms_by_element_for_protein(
+def color_pymol_selection_atoms_by_element(
         a_pymol_selection: str,
         the_pymol_session_manager: "pymol_session_manager.PyMolSessionManager"
 ) -> tuple:

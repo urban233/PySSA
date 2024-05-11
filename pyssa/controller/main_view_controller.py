@@ -784,7 +784,7 @@ class MainViewController:
         self.open_help("help/sequences/sequence_delete/")
 
     def __slot_open_proteins_tab_help(self):
-        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,"'Help' button on the 'Proteins Tab' was clicked.")
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Help' button on the 'Proteins Tab' was clicked.")
         self.open_help("help/proteins/proteins_tab/")
 
     def _open_protein_import_help(self):
@@ -1563,507 +1563,6 @@ class MainViewController:
 
     # </editor-fold>
 
-    # <editor-fold desc="Old code">
-    # def _post_predict_monomer(self, result: tuple) -> None:
-    #     """Sets up the worker for the prediction of the proteins."""
-    #
-    #     # <editor-fold desc="Check if WSL2 and ColabFold are installed">
-    #     if globals.g_os == "win32":
-    #         constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
-    #         if not dialog_settings_global.is_wsl2_installed():
-    #             constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
-    #             self._interface_manager.get_application_settings().wsl_install = 0
-    #             tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #                 "Prediction failed because the WSL2 environment is not installed!",
-    #                 "Structure Prediction",
-    #                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #             )
-    #             tmp_dialog.exec_()
-    #             return
-    #         constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
-    #         if not dialog_settings_global.is_local_colabfold_installed():
-    #             constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
-    #             self._interface_manager.get_application_settings().local_colabfold = 0
-    #             tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #                 "Prediction failed because the ColabFold is not installed!",
-    #                 "Structure Prediction",
-    #                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #             )
-    #             tmp_dialog.exec_()
-    #             return
-    #
-    #     # </editor-fold>
-    #
-    #     self.prediction_type = constants.PREDICTION_TYPE_PRED_MONO_ANALYSIS
-    #     constants.PYSSA_LOGGER.info("Begin prediction process.")
-    #     if result[3] is True:
-    #         constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
-    #         # --- New job approach
-    #         _, tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
-    #         self._interface_manager.watcher.add_proteins_from_new_job(tmp_prediction_protein_infos)
-    #         tmp_prediction_job, _ = self._interface_manager.job_manager.create_prediction_job(
-    #             self._interface_manager.get_current_project(),
-    #             tmp_prediction_protein_infos,
-    #             tmp_prediction_configuration,
-    #             self._interface_manager.project_lock,
-    #             self._interface_manager
-    #         )
-    #         tmp_raw_analysis_run_names: list = []
-    #         for row_no in range(self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.count()):
-    #             tmp_raw_analysis_run_names.append(
-    #                 self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.item(row_no).text())
-    #
-    #         self._interface_manager.watcher.add_protein_pairs_from_new_job(tmp_raw_analysis_run_names)
-    #         tmp_distance_analysis_job, _ = self._interface_manager.job_manager.create_distance_analysis_job(
-    #             self._interface_manager.get_current_project(),
-    #             self._interface_manager.project_lock,
-    #             self._interface_manager,
-    #             tmp_raw_analysis_run_names,
-    #             self._interface_manager.get_settings_manager().settings.cutoff,
-    #             self._interface_manager.get_settings_manager().settings.cycles
-    #         )
-    #         tmp_job = self._interface_manager.job_manager.create_prediction_and_distance_analysis_job(
-    #             tmp_prediction_job,
-    #             tmp_distance_analysis_job,
-    #             self._interface_manager
-    #         )
-    #         tmp_prediction_and_distance_analysis_job = tmp_job[0]
-    #         tmp_prediction_and_distance_analysis_job_entry_widget = tmp_job[1]
-    #         self._interface_manager.job_manager.put_job_into_queue(tmp_prediction_and_distance_analysis_job)
-    #         self._interface_manager.add_job_entry_to_job_overview_layout(tmp_prediction_and_distance_analysis_job_entry_widget)
-    #     else:
-    #         constants.PYSSA_LOGGER.info("Running prediction without subsequent analysis.")
-    #         # --- New job approach
-    #         _, tmp_prediction_protein_infos, tmp_prediction_configuration, _ = result
-    #         self._interface_manager.watcher.add_proteins_from_new_job(tmp_prediction_protein_infos)
-    #         tmp_prediction_job, tmp_prediction_entry_widget = self._interface_manager.job_manager.create_prediction_job(
-    #             self._interface_manager.get_current_project(),
-    #             tmp_prediction_protein_infos,
-    #             tmp_prediction_configuration,
-    #             self._interface_manager.project_lock,
-    #             self._interface_manager
-    #         )
-    #         self._interface_manager.job_manager.put_job_into_queue(tmp_prediction_job)
-    #         self._interface_manager.add_job_entry_to_job_overview_layout(tmp_prediction_entry_widget)
-    #     #     tmp_prediction_task = tasks.Task(
-    #     #         target=main_tasks_async.predict_protein_with_colabfold,
-    #     #         args=(
-    #     #             result[1],
-    #     #             result[2],
-    #     #             self._interface_manager.get_current_project(),
-    #     #             self.custom_progress_signal,
-    #     #             self._interface_manager.pymol_lock,
-    #     #             self.disable_pymol_signal
-    #     #         ),
-    #     #         post_func=self.__await_predict_protein_with_colabfold,
-    #     #     )
-    #     # self._interface_manager.main_tasks_manager.start_prediction_task(tmp_prediction_task)
-    #     self._main_view_state.set_proteins_list(self._interface_manager.get_current_project().proteins)
-    #     self._main_view_state.set_protein_pairs_list(self._interface_manager.get_current_project().protein_pairs)
-    #     self._interface_manager.refresh_main_view()
-
-
-    # def __await_monomer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
-    #     print(result)
-    #     tmp_exit_code, tmp_exit_code_description = result
-    #     self._interface_manager.stop_wait_cursor()
-    #     if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
-    #         if self.active_custom_message_box is not None:
-    #             self.active_custom_message_box.close()
-    #         # Prediction was successful
-    #         constants.PYSSA_LOGGER.info("All structure predictions are done.")
-    #         self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
-    #         constants.PYSSA_LOGGER.info("Begin analysis process.")
-    #
-    #         # <editor-fold desc="Analysis preperations">
-    #         tmp_raw_analysis_run_names: list = []
-    #         for row_no in range(self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.count()):
-    #             tmp_raw_analysis_run_names.append(
-    #                 self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.item(row_no).text())
-    #
-    #         if os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
-    #             shutil.rmtree(constants.SCRATCH_DIR_ANALYSIS)
-    #             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-    #         else:
-    #             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-    #         # </editor-fold>
-    #
-    #         self._add_new_proteins_to_protein_model()
-    #
-    #         tmp_distance_analysis_task = tasks.Task(
-    #             target=main_tasks_async.run_distance_analysis,
-    #             args=(
-    #                 tmp_raw_analysis_run_names,
-    #                 self._interface_manager.get_current_project(),
-    #                 self._interface_manager.get_application_settings(),
-    #                 False,
-    #                                     self.custom_progress_signal,
-    #                 self._interface_manager.pymol_lock,
-    #                 self.disable_pymol_signal
-    #             ),
-    #             post_func=self.__await_run_distance_analysis_after_prediction,
-    #         )
-    #         self._interface_manager.main_tasks_manager.start_distance_analysis_task(tmp_distance_analysis_task)
-    #         self._interface_manager.status_bar_manager.show_permanent_message(
-    #             enums.StatusMessages.DISTANCE_ANALYSIS_IS_RUNNING.value
-    #         )
-    #     elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because there was an error writing the fasta file(s)!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message("Prediction failed because there was an error writing the fasta file(s)!")
-    #     elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because the fasta file(s) could not be found!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because the fasta file(s) could not be found!")
-    #     elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because a subprocess failed!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because a subprocess failed!")
-    #     elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because of an unknown error!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because of an unknown error!")
-    #     self._interface_manager.refresh_main_view()
-    #
-    # def __await_run_distance_analysis_after_prediction(self, an_exit_code: tuple[int, str, list]) -> None:
-    #     """Post process after the analysis thread finished."""
-    #     self._interface_manager.status_bar_manager.hide_progress_bar()
-    #     constants.PYSSA_LOGGER.debug("__await_run_distance_analysis() started ...")
-    #     if an_exit_code[0] == exit_codes.EXIT_CODE_ZERO[0]:
-    #         # Analysis was successful
-    #         self._add_new_protein_pairs_to_protein_pair_model()
-    #         self._active_task = tasks.Task(
-    #             target=util_async.unfreeze_pymol_session,
-    #             args=(
-    #                 self._interface_manager.pymol_session_manager, 0
-    #             ),
-    #             post_func=self.__await_unfreeze_pymol_session_after_prediction_and_analysis,
-    #         )
-    #         self._active_task.start()
-    #     elif an_exit_code[0] == exit_codes.ERROR_DISTANCE_ANALYSIS_FAILED[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Distance analysis failed because there was an error during the analysis!",
-    #         #     "Distance Analysis",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Distance analysis failed!")
-    #     elif an_exit_code[0] == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Distance analysis failed because of an unknown error!",
-    #         #     "Distance Analysis",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Distance analysis ended with exit code {an_exit_code[0]}: {an_exit_code[1]}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Distance analysis failed because of an unknown error!")
-    #
-    # def __await_unfreeze_pymol_session_after_prediction_and_analysis(self):
-    #     self._interface_manager.main_tasks_manager.prediction_task = None
-    #     self._interface_manager.main_tasks_manager.distance_analysis_task = None
-    #     self._interface_manager.refresh_main_view()
-    #     self._main_view_state.restore_main_view_state()
-    #
-    #     # self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
-    #     #     "All structure analysis' are done. \nGo to the Protein Pairs tab to view the new results.",
-    #     #     "Distance Analysis",
-    #     #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-    #     # )
-    #     # self.active_custom_message_box.exec_()
-    #     constants.PYSSA_LOGGER.info("All structure analysis' are done.")
-    #     self._interface_manager.status_bar_manager.show_temporary_message("All structure analysis' are done.")
-    #     self._interface_manager.stop_wait_cursor()
-    #
-    # def __await_predict_protein_with_colabfold(self, result: tuple) -> None:
-    #     """Process which runs after each prediction job."""
-    #     print(result)
-    #     self._interface_manager.status_bar_manager.hide_progress_bar()
-    #     tmp_exit_code = result[0]
-    #     tmp_exit_code_description = result[1]
-    #     if tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-    #
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because there was an error writing the fasta file(s)!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because there was an error writing the fasta file(s)!")
-    #     elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because the fasta file(s) could not be found!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because the fasta file(s) could not be found!")
-    #     elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because a subprocess failed!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because a subprocess failed!")
-    #     elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because of an unknown error!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message("Prediction failed because of an unknown error!")
-    #     elif tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
-    #         # Prediction was successful
-    #         self._add_new_proteins_to_protein_model()
-    #         self._active_task = tasks.Task(
-    #             target=util_async.unfreeze_pymol_session,
-    #             args=(
-    #                 self._interface_manager.pymol_session_manager, 0
-    #             ),
-    #             post_func=self.__await_unfreeze_pymol_session_after_prediction,
-    #         )
-    #         self._active_task.start()
-    #     else:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because of an unknown case!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         self._interface_manager.status_bar_manager.show_error_message("Prediction failed because of an unknown case!")
-    #
-    # def __await_unfreeze_pymol_session_after_prediction(self):
-    #     self._interface_manager.main_tasks_manager.prediction_task = None
-    #     self._interface_manager.refresh_main_view()
-    #
-    #     if self.active_custom_message_box is not None:
-    #         self.active_custom_message_box.close()
-    #
-    #     self._main_view_state.restore_main_view_state()
-    #
-    #     # self.active_custom_message_box = custom_message_box.CustomMessageBoxOk(
-    #     #     "All structure predictions are done.\nGo to the Proteins tab to see the new protein(s).",
-    #     #     "Structure Prediction",
-    #     #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-    #     # )
-    #     # self.active_custom_message_box.exec_()
-    #     constants.PYSSA_LOGGER.info("All structure predictions are done.")
-    #     self._interface_manager.status_bar_manager.show_temporary_message("All structure predictions are done.")
-    #     self._interface_manager.stop_wait_cursor()
-
-    # def _add_new_proteins_to_protein_model(self):
-    #     """Adds the new predicted proteins to the interface manager's protein model."""
-    #     tmp_proteins_to_add = self._main_view_state.get_not_matching_proteins(
-    #         self._interface_manager.get_current_project().proteins
-    #     )
-    #     for tmp_protein in tmp_proteins_to_add:
-    #         self._interface_manager.add_protein_to_proteins_model(tmp_protein)
-
-    # <editor-fold desc="Multimer">
-
-
-    # def _post_predict_multimer(self, result: tuple):
-    #
-    #     # <editor-fold desc="Check if WSL2 and ColabFold are installed">
-    #     if globals.g_os == "win32":
-    #         constants.PYSSA_LOGGER.info("Checking if WSL2 is installed ...")
-    #         if not dialog_settings_global.is_wsl2_installed():
-    #             constants.PYSSA_LOGGER.warning("WSL2 is NOT installed.")
-    #             self._interface_manager.get_application_settings().wsl_install = 0
-    #             tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #                 "Prediction failed because the WSL2 environment is not installed!",
-    #                 "Structure Prediction",
-    #                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #             )
-    #             tmp_dialog.exec_()
-    #             return
-    #         constants.PYSSA_LOGGER.info("Checking if Local Colabfold is installed ...")
-    #         if not dialog_settings_global.is_local_colabfold_installed():
-    #             constants.PYSSA_LOGGER.warning("Local Colabfold is NOT installed.")
-    #             self._interface_manager.get_application_settings().local_colabfold = 0
-    #             tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #                 "Prediction failed because the ColabFold is not installed!",
-    #                 "Structure Prediction",
-    #                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #             )
-    #             tmp_dialog.exec_()
-    #             return
-    #
-    #     # </editor-fold>
-    #
-    #     self.prediction_type = constants.PREDICTION_TYPE_PRED_MULTI_ANALYSIS
-    #     constants.PYSSA_LOGGER.info("Begin prediction process.")
-    #     if result[3] is True:
-    #         constants.PYSSA_LOGGER.info("Running prediction with subsequent analysis.")
-    #         # Analysis should be run after the prediction
-    #         self._active_task = tasks.Task(
-    #             target=main_tasks_async.predict_protein_with_colabfold,
-    #             args=(
-    #                 result[1],
-    #                 result[2],
-    #                 self._interface_manager.get_current_project(),
-    #                 self.custom_progress_signal,
-    #                 self._interface_manager.pymol_lock,
-    #                 self.disable_pymol_signal
-    #             ),
-    #             post_func=self.__await_monomer_prediction_for_subsequent_analysis,
-    #         )
-    #         self._active_task.start()
-    #     else:
-    #         constants.PYSSA_LOGGER.info("Running only a prediction.")
-    #         # No analysis after prediction
-    #         self._active_task = tasks.Task(
-    #             target=main_tasks_async.predict_protein_with_colabfold,
-    #             args=(
-    #                 result[1],
-    #                 result[2],
-    #                 self._interface_manager.get_current_project(),
-    #                 self.custom_progress_signal,
-    #                 self._interface_manager.pymol_lock,
-    #                 self.disable_pymol_signal
-    #             ),
-    #             post_func=self.__await_predict_protein_with_colabfold,
-    #         )
-    #         self._active_task.start()
-    #
-    # def __await_multimer_prediction_for_subsequent_analysis(self, result: tuple) -> None:
-    #     tmp_exit_code = result[0]
-    #     tmp_exit_code_description = [1]
-    #     self._interface_manager.stop_wait_cursor()
-    #     if tmp_exit_code == exit_codes.EXIT_CODE_ZERO[0]:
-    #         # Prediction was successful
-    #         constants.PYSSA_LOGGER.info("All structure predictions are done.")
-    #         self.update_status("All structure predictions are done.")
-    #         constants.PYSSA_LOGGER.info("Begin analysis process.")
-    #         self.update_status("Begin analysis process ...")
-    #         tmp_raw_analysis_run_names: list = []
-    #         for row_no in range(self._view.ui.list_pred_analysis_multi_overview.count()):
-    #             tmp_raw_analysis_run_names.append(self._view.ui.list_pred_analysis_multi_overview.item(row_no).text())
-    #
-    #         self._active_task = tasks.Task(
-    #             target=main_tasks_async.run_distance_analysis,
-    #             args=(
-    #                 tmp_raw_analysis_run_names,
-    #                 self._interface_manager.get_current_project(),
-    #                 self._interface_manager.get_application_settings(),
-    #                 False,
-    #                 self.custom_progress_signal,
-    #                 self._interface_manager.pymol_lock,
-    #                 self.disable_pymol_signal
-    #             ),
-    #             post_func=self.__await_run_distance_analysis,
-    #         )
-    #         self._active_task.start()
-    #
-    #         if not os.path.exists(constants.SCRATCH_DIR_ANALYSIS):
-    #             os.mkdir(constants.SCRATCH_DIR_ANALYSIS)
-    #
-    #     elif tmp_exit_code == exit_codes.ERROR_WRITING_FASTA_FILES[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because there was an error writing the fasta file(s)!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because there was an error writing the fasta file(s)!")
-    #     elif tmp_exit_code == exit_codes.ERROR_FASTA_FILES_NOT_FOUND[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because the fasta file(s) could not be found!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because the fasta file(s) could not be found!")
-    #     elif tmp_exit_code == exit_codes.ERROR_PREDICTION_FAILED[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because a subprocess failed!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because a subprocess failed!")
-    #     elif tmp_exit_code == exit_codes.EXIT_CODE_ONE_UNKNOWN_ERROR[0]:
-    #         # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-    #         #     "Prediction failed because of an unknown error!",
-    #         #     "Structure Prediction",
-    #         #     custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-    #         # )
-    #         # tmp_dialog.exec_()
-    #         constants.PYSSA_LOGGER.error(
-    #             f"Prediction ended with exit code {tmp_exit_code}: {tmp_exit_code_description}",
-    #         )
-    #         self._interface_manager.status_bar_manager.show_error_message(
-    #             "Prediction failed because of an unknown error!")
-    #     self._interface_manager.refresh_main_view()
-
-    # </editor-fold>
-    # </editor-fold>
     # </editor-fold>
 
     # <editor-fold desc="Hotspots">
@@ -2744,6 +2243,7 @@ class MainViewController:
         )
         tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
 
+    # <editor-fold desc="PyMOL session">
     def __slot_open_protein_pymol_session(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Open protein pymol session' button on the 'Proteins Tab' was clicked.")
@@ -2801,6 +2301,22 @@ class MainViewController:
         finally:
             self._interface_manager.refresh_main_view()
             self._interface_manager.stop_wait_cursor()
+
+    def _save_protein_pymol_session(self):
+        """Saves the session as base64 string and updates the database"""
+        try:
+            tmp_protein = self._interface_manager.get_current_active_protein_object()
+            tmp_protein.pymol_session = self._interface_manager.pymol_session_manager.save_current_session_as_base64()
+            tmp_database_operation = database_operation.DatabaseOperation(
+                enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
+                (0, self._interface_manager.get_current_active_protein_object())
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+    # </editor-fold>
 
     def __slot_get_information_about_selected_object_in_protein_branch(self) -> None:
         try:
@@ -2914,13 +2430,13 @@ class MainViewController:
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             # Color protein in User PyMOL
             self._active_task = tasks.Task(
-                target=pymol_session_async.color_protein_chain_for_protein,
+                target=pymol_session_async.color_pymol_selection,
                 args=(
                     a_color,
                     tmp_protein.pymol_selection.selection_string,
                     self._interface_manager.pymol_session_manager
                 ),
-                post_func=self.__await_color_protein_chain_for_protein
+                post_func=self.__await_color_pymol_selection_for_protein
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2929,7 +2445,7 @@ class MainViewController:
             self._active_task.start()
             self._interface_manager.start_wait_cursor()  # fixme: This blocks the entire UI which leads to quick flashes. This might be a problem.
 
-    def __await_color_protein_chain_for_protein(self, return_value: tuple[bool, str]) -> None:
+    def __await_color_pymol_selection_for_protein(self, return_value: tuple[bool, str]) -> None:
         """
         Updates the color of the protein chain based on the return value provided in the object and data model.
 
@@ -3001,23 +2517,28 @@ class MainViewController:
 
             if self._view.tg_protein_color_atoms.toggle_button.isChecked():
                 self._active_task = tasks.Task(
-                    target=pymol_session_async.color_protein_chain_atoms_by_element_for_protein,
+                    target=pymol_session_async.color_pymol_selection_atoms_by_element,
                     args=(tmp_selection.selection_string, self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_color_protein_chain_atoms_by_element_for_protein
+                    post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein
                 )
             else:
+                if self._interface_manager.get_current_active_chain_color_of_protein() is None:
+                    tmp_current_active_chain_color = "By Element"
+                else:
+                    tmp_current_active_chain_color = self._interface_manager.get_current_active_chain_color_of_protein()
+
                 tmp_protein = self._interface_manager.get_current_active_protein_object()
                 tmp_chain = self._interface_manager.get_current_active_chain_object()
                 self._active_task = tasks.Task(
-                    target=pymol_session_async.reset_color_protein_chain_atoms_by_element_for_protein,
+                    target=pymol_session_async.reset_color_pymol_selection_atoms_by_element,
                     args=(
                         tmp_protein.get_molecule_object(),
                         tmp_chain.chain_letter,
-                        self._interface_manager.get_current_active_chain_color_of_protein(),
+                        tmp_current_active_chain_color,
                         tmp_selection.selection_string,
                         self._interface_manager.pymol_session_manager
                     ),
-                    post_func=self.__await_reset_color_protein_chain_atoms_by_element_for_protein
+                    post_func=self.__await_reset_color_pymol_selection_atoms_by_element_for_protein
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3026,7 +2547,7 @@ class MainViewController:
             self._interface_manager.start_wait_cursor()
             self._active_task.start()
 
-    def __await_color_protein_chain_atoms_by_element_for_protein(self, return_value: tuple) -> None:
+    def __await_color_pymol_selection_atoms_by_element_for_protein(self, return_value: tuple) -> None:
         """
         Await method for the coloring of atom by their element.
 
@@ -3060,7 +2581,7 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
             self._interface_manager.stop_wait_cursor()
 
-    def __await_reset_color_protein_chain_atoms_by_element_for_protein(self, return_value: tuple):
+    def __await_reset_color_pymol_selection_atoms_by_element_for_protein(self, return_value: tuple):
         """
         Await method for the reset coloring of atom by their element.
 
@@ -3151,7 +2672,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # sticks
     def __slot_protein_chain_as_sticks(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3182,7 +2702,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # ribbon
     def __slot_protein_chain_as_ribbon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3213,7 +2732,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # lines
     def __slot_protein_chain_as_lines(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3245,7 +2763,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # spheres
     def __slot_protein_chain_as_spheres(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3277,7 +2794,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # dots
     def __slot_protein_chain_as_dots(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3308,7 +2824,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # mesh
     def __slot_protein_chain_as_mesh(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3339,7 +2854,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # surface
     def __slot_protein_chain_as_surface(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3370,7 +2884,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # all
     def __slot_hide_protein_chain_all(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3892,21 +3405,6 @@ class MainViewController:
         finally:
             self._interface_manager.stop_wait_cursor()
 
-    def _save_protein_pymol_session(self):
-        """Saves the session as base64 string and updates the database"""
-        try:
-            tmp_protein = self._interface_manager.get_current_active_protein_object()
-            tmp_protein.pymol_session = self._interface_manager.pymol_session_manager.save_current_session_as_base64()
-            tmp_database_operation = database_operation.DatabaseOperation(
-                enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
-                (0, self._interface_manager.get_current_active_protein_object())
-            )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-        else:
-            self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs tab methods">
@@ -3923,6 +3421,25 @@ class MainViewController:
         )
         tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
 
+    def _get_protein_name_of_a_protein_from_a_protein_pair(self, a_protein, a_protein_pair):
+        """Helper function to get the correct protein name even if the protein pair consists of two identical protein names."""
+        tmp_result = self._interface_manager.pymol_session_manager.user_pymol_connector.get_all_object_names()
+        tmp_protein_name = a_protein.get_molecule_object()
+        if tmp_result["success"]:
+            tmp_sub_string_prot_1 = tmp_result["data"][0][len(tmp_result["data"][0]) - 2: len(tmp_result["data"][0])]
+            tmp_sub_string_prot_2 = tmp_result["data"][1][len(tmp_result["data"][1]) - 2: len(tmp_result["data"][1])]
+            if tmp_sub_string_prot_1 == "_1" and tmp_sub_string_prot_2 == "_2":
+                if a_protein == a_protein_pair.protein_1:
+                    tmp_protein_name = f"{tmp_protein_name}_1"
+                elif a_protein == a_protein_pair.protein_2:
+                    tmp_protein_name = f"{tmp_protein_name}_2"
+                else:
+                    raise ValueError("Protein object not found in protein pair!")
+        else:
+            raise RuntimeError("PyMOL command failed!")
+        return tmp_protein_name
+
+    # <editor-fold desc="PyMOL session">
     def __slot_open_protein_pair_pymol_session(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3997,31 +3514,7 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         else:
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-
-    def __slot_delete_protein_pair_from_project(self):
-        try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein pair' button on the 'Protein Pairs Tab' was clicked.")
-            tmp_dialog = custom_message_box.CustomMessageBoxDelete(
-                "Are you sure you want to delete this protein pair?","Delete Protein Pair",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
-            )
-            tmp_dialog.exec_()
-            response: bool = tmp_dialog.response
-            if response:
-                tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
-                if self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name):
-                    self._interface_manager.pymol_session_manager.reinitialize_session()
-                tmp_database_operation = database_operation.DatabaseOperation(
-                    enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id())
-                )
-                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
-                self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
-                self._interface_manager.watcher.remove_protein_pair(tmp_protein_pair.name)
-                self._interface_manager.remove_protein_pair_from_protein_pairs_model()
-                self._interface_manager.refresh_main_view()
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    # </editor-fold>
 
     def __slot_get_information_about_selected_object_in_protein_pair_branch(self):
         try:
@@ -4062,23 +3555,39 @@ class MainViewController:
                 )
                 if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
                         self._interface_manager.get_current_active_protein_pair_object().name):
+                    # # Set icon for color grid
+                    # self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
+                    # with database_manager.DatabaseManager(
+                    #         str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+                    #     tmp_color = db_manager.get_pymol_parameter_for_certain_protein_chain_in_protein_pair(
+                    #         self._interface_manager.get_current_active_protein_pair_object().get_id(),
+                    #         self._interface_manager.get_current_active_protein_object_of_protein_pair().get_id(),
+                    #         tmp_chain_letter,
+                    #         enums.PymolParameterEnum.COLOR.value
+                    #     )
+                    # if tmp_color == "By Element":
+                    #     self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
+                    # else:
+                    #     self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+                    #     self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_color)
+                    # # Set color name in label
+                    # self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_color}    ")
+                    # Set representation toggle states for selected chain
+                    # TODO: the code below for the color needs to be in an async function
                     # Set icon for color grid
                     self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
-                    with database_manager.DatabaseManager(
-                            str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                        tmp_color = db_manager.get_pymol_parameter_for_certain_protein_chain_in_protein_pair(
-                            self._interface_manager.get_current_active_protein_pair_object().get_id(),
-                            self._interface_manager.get_current_active_protein_object_of_protein_pair().get_id(),
-                            tmp_chain_letter,
-                            enums.PymolParameterEnum.COLOR.value
-                        )
-                    if tmp_color == "By Element":
+                    tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+                    tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+                    tmp_residue_config: "residue_color_config.ResidueColorConfig" = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
+                        tmp_protein.get_molecule_object(), tmp_chain.chain_letter
+                    )
+                    if tmp_residue_config.atoms_are_colored_by_elements():
                         self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
+                        self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
                     else:
                         self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
-                        self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_color)
-                    # Set color name in label
-                    self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_color}    ")
+                        self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_residue_config.carbon_color)
+                        self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
                     # Set representation toggle states for selected chain
                     self._interface_manager.set_repr_state_in_ui_for_protein_pair_chain(
                         self._get_protein_name_of_a_protein_from_a_protein_pair(
@@ -4101,212 +3610,359 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def _get_protein_name_of_a_protein_from_a_protein_pair(self, a_protein, a_protein_pair):
-        """Helper function to get the correct protein name even if the protein pair consists of two identical protein names."""
-        tmp_result = self._interface_manager.pymol_session_manager.user_pymol_connector.get_all_object_names()
-        tmp_protein_name = a_protein.get_molecule_object()
-        if tmp_result["success"]:
-            tmp_sub_string_prot_1 = tmp_result["data"][0][len(tmp_result["data"][0]) - 2: len(tmp_result["data"][0])]
-            tmp_sub_string_prot_2 = tmp_result["data"][1][len(tmp_result["data"][1]) - 2: len(tmp_result["data"][1])]
-            if tmp_sub_string_prot_1 == "_1" and tmp_sub_string_prot_2 == "_2":
-                if a_protein == a_protein_pair.protein_1:
-                    tmp_protein_name = f"{tmp_protein_name}_1"
-                elif a_protein == a_protein_pair.protein_2:
-                    tmp_protein_name = f"{tmp_protein_name}_2"
-                else:
-                    raise ValueError("Protein object not found in protein pair!")
-        else:
-            raise RuntimeError("PyMOL command failed!")
-        return tmp_protein_name
+    def __slot_change_chain_color_protein_pairs(self, a_color) -> None:
+        """
+        Changes the 'Color' attribute of a protein chain on the 'Protein Pairs Tab' and colors the protein in User PyMOL.
 
-    def __slot_color_protein_pair_by_rmsd(self) -> None:
-        """Colors the residues in 5 colors depending on their distance to the reference."""
+        Args:
+            a_color (str): The new color for the protein chain.
+
+        Notes:
+            This slot method is used if a button of the color grid is clicked.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if a_color is None or a_color == "":
+            logger.error("a_color is either None or an empty string!")
+            self._interface_manager.status_bar_manager.show_error_message("a_color is either None or an empty string!")
+            return
+        if a_color not in constants.PYMOL_COLORS_WITH_INDICES.values():
+            logger.error("a_color is not part of the PYMOL_COLORS_WITH_INDICES dict!")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "a_color is not part of the PYMOL_COLORS_WITH_INDICES dict!")
+            return
+
+        # </editor-fold>
+
         try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Color protein pair by rmsd' context menu action was clicked.")
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                       "The 'Color' attribute of a protein chain on the 'Protein Pairs Tab' changed.")
+            tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+            if not self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name):
+                logger.warning(f"Protein pair {tmp_protein_pair.name} is not in the current session.")
+                self._interface_manager.status_bar_manager.show_error_message(
+                    f"Protein pair {tmp_protein_pair.name} is not in the current session."
+                )
+                return
+
+            tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+            tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+            tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+                                                                                       tmp_protein_pair)
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+            # Color protein in User PyMOL
             self._active_task = tasks.Task(
-                target=protein_pair_async.color_protein_pair_by_rmsd_value,
+                target=pymol_session_async.color_pymol_selection,
                 args=(
-                    self._interface_manager.get_current_protein_pair_tree_index_object(),
+                    a_color,
+                    tmp_protein.pymol_selection.selection_string,
                     self._interface_manager.pymol_session_manager
                 ),
-                post_func=self.__await_color_protein_pair_by_rmsd,
+                post_func=self.__await_color_pymol_selection_for_protein_pair
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         else:
             self._active_task.start()
-            self._interface_manager.start_wait_cursor()
+            self._interface_manager.start_wait_cursor()  # fixme: This blocks the entire UI which leads to quick flashes. This might be a problem.
 
-    def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
-        if result[0] == "":
-            self._interface_manager.status_bar_manager.show_error_message("Coloring the protein pair failed!")
-        self._interface_manager.stop_wait_cursor()
-        self._interface_manager.refresh_main_view()
+        # try:
+        #     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        #                "The 'Color' attribute of a protein chain on the 'Protein Pairs Tab' changed.")
+        #     tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+        #     tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        #     tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        #     # tmp_color = self._view.ui.lbl_protein_pair_current_color.text().strip()
+        #
+        #     if self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.pymol_session_manager.session_name == tmp_protein_pair.name:
+        #         # Update pymol parameter in PyMOL
+        #         tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+        #                                                                                    tmp_protein_pair)
+        #         tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+        #         self._interface_manager.pymol_session_manager.color_protein(
+        #             a_color, tmp_protein.pymol_selection.selection_string
+        #         )
+        #         # Update pymol parameter in memory
+        #         self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
+        #         if a_color != "By Element":
+        #             tmp_chain.pymol_parameters["chain_color"] = a_color
+        #             self._interface_manager.set_current_active_chain_color_of_protein_pair(a_color)
+        #             # Update pymol parameter in database
+        #             with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+        #                 db_manager.update_protein_chain_color_of_protein_pair(
+        #                     tmp_protein.get_id(), tmp_chain.chain_letter, tmp_protein_pair.get_id(), a_color
+        #                 )
+        #         self._view.color_grid_protein_pairs.set_icon_for_selected_color(a_color)
+        #         self._view.ui.lbl_protein_pair_current_color.setText(f"{a_color}    ")
+        #         self._update_protein_pair_scene()
+        #         self._save_protein_pair_pymol_session()
+        #         self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+        #     else:
+        #         logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
+        # except Exception as e:
+        #     logger.error(f"An error occurred: {e}")
+        #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def __slot_change_chain_color_protein_pairs(self, a_color) -> None:
+    def __await_color_pymol_selection_for_protein_pair(self, return_value: tuple[bool, str]) -> None:
+        """
+        Updates the color of the protein chain based on the return value provided in the object and data model.
+
+        Args:
+            return_value: A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None or len(return_value) == 0:
+            logger.error("return_value is either None or has a length of 0.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "return_value is either None or has a length of 0.")
+            return
+        if return_value[1] == "":
+            logger.error("return_value[1] is an empty string.")
+            self._interface_manager.status_bar_manager.show_error_message("return_value[1] is an empty string.")
+
+        # </editor-fold>
+
         try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "The 'Color' attribute of a protein chain on the 'Protein Pairs Tab' changed.")
-            tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
-            tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-            tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            # tmp_color = self._view.ui.lbl_protein_pair_current_color.text().strip()
+            tmp_success_flag, tmp_chain_color = return_value
+            if tmp_success_flag:
+                tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
 
-            if self._interface_manager.pymol_session_manager.session_object_type == "protein_pair" and self._interface_manager.pymol_session_manager.session_name == tmp_protein_pair.name:
-                # Update pymol parameter in PyMOL
-                tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
-                                                                                           tmp_protein_pair)
-                tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
-                self._interface_manager.pymol_session_manager.color_protein(
-                    a_color, tmp_protein.pymol_selection.selection_string
-                )
-                # Update pymol parameter in memory
+                # <editor-fold desc="Setup color grid icon">
                 self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
-                if a_color != "By Element":
-                    tmp_chain.pymol_parameters["chain_color"] = a_color
-                    self._interface_manager.set_current_active_chain_color_of_protein_pair(a_color)
-                    # Update pymol parameter in database
-                    with database_manager.DatabaseManager(str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                        db_manager.update_protein_chain_color_of_protein_pair(
-                            tmp_protein.get_id(), tmp_chain.chain_letter, tmp_protein_pair.get_id(), a_color
-                        )
-                self._view.color_grid_protein_pairs.set_icon_for_selected_color(a_color)
-                self._view.ui.lbl_protein_pair_current_color.setText(f"{a_color}    ")
+                if tmp_chain_color != "By Element":
+                    tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
+                    self._interface_manager.set_current_active_chain_color_of_protein_pair(tmp_chain_color)
+                    self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_chain_color)
+                    self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+
+                # </editor-fold>
+
+                self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_chain_color}    ")
                 self._update_protein_pair_scene()
                 self._save_protein_pair_pymol_session()
-                self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
             else:
-                logger.warning("The color of a protein chain could not be changed. This can be due to UI setup reasons.")
+                logger.error("The operation failed!")
+                self._interface_manager.status_bar_manager.show_error_message("The operation failed!")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    def _update_protein_pair_scene(self) -> None:
-        """Updates the current selected PyMOL scene."""
-        if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
-            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
-                a_key="auto", an_action="update"
-            )
-            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
-        else:
-            if not self._interface_manager.check_if_scratch_scene_exists_in_protein_pair_model():
-                self._interface_manager.add_scratch_scene_to_protein_pair_model()
-            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
-                a_key="_scratch_", an_action="update"
-            )
-            self._interface_manager.pymol_session_manager.current_scene_name = "_scratch_"
-            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
-                                                    self._view.ui.lbl_pymol_protein_pair_scene)
-            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
-
-    # def __slot_change_chain_color_protein_pairs_atoms(self):
-    #     return
-    #     try:
-    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-    #                    "'Color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
-    #         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-    #         tmp_selection.set_selection_for_a_single_chain(
-    #             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-    #         self._interface_manager.pymol_session_manager.color_protein(
-    #             'atomic', f"{tmp_selection.selection_string} and not elem C"
-    #         )
-    #         self._interface_manager.pymol_session_manager.color_protein(
-    #             'grey70', f"{tmp_selection.selection_string} and elem C"
-    #         )
-    #         self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #         self._view.ui.lbl_protein_pair_current_color.setText("grey70    ")
-    #         self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #         self._view.color_grid_protein_pairs.c_grey_70.setIconSize(
-    #             self._view.color_grid_protein_pairs.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
-    #     except Exception as e:
-    #         logger.error(f"An error occurred: {e}")
-    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-    #
-    # def __slot_change_chain_reset_protein_pairs_atoms(self):
-    #     return
-    #     try:
-    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-    #                    "'Reset color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
-    #         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-    #         tmp_selection.set_selection_for_a_single_chain(
-    #             self._interface_manager.get_current_active_chain_object_of_protein_pair().chain_letter)
-    #         self._interface_manager.pymol_session_manager.color_protein(
-    #             self._view.color_grid_protein_pairs.last_clicked_color, f"{tmp_selection.selection_string}"
-    #         )
-    #         self.set_icon_for_current_color_in_protein_pairs_tab()
-    #     except Exception as e:
-    #         logger.error(f"An error occurred: {e}")
-    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
 
     def __slot_color_protein_pair_atoms_by_element(self):
+        """
+        Color protein atoms by element.
+
+        Notes:
+            This method is used to color the protein atoms based on their element.
+            If the toggle button is checked, the method will color the atoms based on their element:
+            grey70 for carbon atoms and atomic color for non-carbon atoms.
+            It will also update the protein chain color in the database.
+            If the toggle button is not checked, the method will reset the color to the chain color
+            or green if the chain color is set to "By Element".
+
+        """
+        logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                   "Toggle 'By Elements' button on the 'Protein Pairs Tab' was clicked.")
         try:
+            # Create selection for atom coloring
+            tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
             tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+            tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+                                                                                       tmp_protein_pair)
+            tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+
             if self._view.tg_protein_pair_color_atoms.toggle_button.isChecked():
-                tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-                tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
-                                                                                           tmp_protein_pair)
-                tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
-                self._interface_manager.pymol_session_manager.color_protein(
-                    "atomic", f"{tmp_selection.selection_string} and not elem C"
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.color_pymol_selection_atoms_by_element,
+                    args=(tmp_protein.pymol_selection.selection_string, self._interface_manager.pymol_session_manager),
+                    post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein_pair
                 )
-                self._interface_manager.pymol_session_manager.color_protein(
-                    "grey70", f"{tmp_selection.selection_string} and elem C"
-                )
-                with database_manager.DatabaseManager(
-                        str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
-                    db_manager.update_protein_chain_color_of_protein_pair(
-                        tmp_protein.get_id(), tmp_chain.chain_letter, tmp_protein_pair.get_id(), "By Element"
-                    )
-                self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
-                self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
             else:
-                logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                           "'Reset color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
-                tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-                tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
-                                                                                           tmp_protein_pair)
-                tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
-                tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein_pair()
-                if tmp_chain_color == "By Element":
-                    tmp_chain_color = "green"
-                self._interface_manager.pymol_session_manager.color_protein(
-                    tmp_chain_color, f"{tmp_selection.selection_string}"
+                if self._interface_manager.get_current_active_chain_color_of_protein_pair() is None:
+                    tmp_current_active_chain_color = "By Element"
+                else:
+                    tmp_current_active_chain_color = self._interface_manager.get_current_active_chain_color_of_protein_pair()
+
+                tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+                tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.reset_color_pymol_selection_atoms_by_element,
+                    args=(
+                        tmp_protein.get_molecule_object(),
+                        tmp_chain.chain_letter,
+                        tmp_current_active_chain_color,
+                        tmp_protein.pymol_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_reset_color_pymol_selection_atoms_by_element_for_protein_pair
                 )
-                self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
-                self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_chain_color)
-                self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_chain_color}    ")
-            # tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-            # tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            # tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
-            # if self._view.tg_protein_pair_color_atoms.toggle_button.isChecked():
-            #     tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
-            #     tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
-            #                                                                                tmp_protein_pair)
-            #     tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
-            #     self._interface_manager.pymol_session_manager.color_protein(
-            #         "atomic", f"{tmp_selection.selection_string} and not elem C"
-            #     )
-            #     self._interface_manager.pymol_session_manager.color_protein(
-            #         "grey70", f"{tmp_selection.selection_string} and elem C"
-            #     )
-            #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-            #     self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
-            # else:
-            #     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-            #                "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
-            #     tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
-            #                                                                                tmp_protein_pair)
-            #     tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
-            #     self._interface_manager.pymol_session_manager.color_protein(
-            #         self._view.color_grid_protein_pairs.last_clicked_color, tmp_protein.pymol_selection.selection_string
-            #     )
-            #     self.set_icon_for_current_color_in_protein_pairs_tab()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+        # try:
+        #     tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        #     tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        #     tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+        #     if self._view.tg_protein_pair_color_atoms.toggle_button.isChecked():
+        #         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        #         tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+        #                                                                                    tmp_protein_pair)
+        #         tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+        #         self._interface_manager.pymol_session_manager.color_protein(
+        #             "atomic", f"{tmp_selection.selection_string} and not elem C"
+        #         )
+        #         self._interface_manager.pymol_session_manager.color_protein(
+        #             "grey70", f"{tmp_selection.selection_string} and elem C"
+        #         )
+        #         with database_manager.DatabaseManager(
+        #                 str(self._interface_manager.get_current_project().get_database_filepath())) as db_manager:
+        #             db_manager.update_protein_chain_color_of_protein_pair(
+        #                 tmp_protein.get_id(), tmp_chain.chain_letter, tmp_protein_pair.get_id(), "By Element"
+        #             )
+        #         self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
+        #         self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
+        #     else:
+        #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        #                    "'Reset color atoms by element' button on the 'Protein Pairs Tab' was clicked.")
+        #         tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        #         tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+        #                                                                                    tmp_protein_pair)
+        #         tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+        #         tmp_chain_color = self._interface_manager.get_current_active_chain_color_of_protein_pair()
+        #         if tmp_chain_color == "By Element":
+        #             tmp_chain_color = "green"
+        #         self._interface_manager.pymol_session_manager.color_protein(
+        #             tmp_chain_color, f"{tmp_selection.selection_string}"
+        #         )
+        #         self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
+        #         self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_chain_color)
+        #         self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_chain_color}    ")
+        #     # tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
+        #     # tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+        #     # tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
+        #     # if self._view.tg_protein_pair_color_atoms.toggle_button.isChecked():
+        #     #     tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
+        #     #     tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+        #     #                                                                                tmp_protein_pair)
+        #     #     tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+        #     #     self._interface_manager.pymol_session_manager.color_protein(
+        #     #         "atomic", f"{tmp_selection.selection_string} and not elem C"
+        #     #     )
+        #     #     self._interface_manager.pymol_session_manager.color_protein(
+        #     #         "grey70", f"{tmp_selection.selection_string} and elem C"
+        #     #     )
+        #     #     self.reset_icon_for_last_color_in_protein_pairs_tab()
+        #     #     self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
+        #     # else:
+        #     #     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+        #     #                "'Reset color atoms by element' button on the 'Proteins Tab' was clicked.")
+        #     #     tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
+        #     #                                                                                tmp_protein_pair)
+        #     #     tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
+        #     #     self._interface_manager.pymol_session_manager.color_protein(
+        #     #         self._view.color_grid_protein_pairs.last_clicked_color, tmp_protein.pymol_selection.selection_string
+        #     #     )
+        #     #     self.set_icon_for_current_color_in_protein_pairs_tab()
+        # except Exception as e:
+        #     logger.error(f"An error occurred: {e}")
+        #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __await_color_pymol_selection_atoms_by_element_for_protein_pair(self, return_value: tuple) -> None:
+        """
+        Await method for the coloring of atom by their element.
+
+        Args:
+            return_value: A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None or len(return_value) == 0:
+            logger.error("return_value is either None or has a length of 0.")
+            self._interface_manager.status_bar_manager.show_error_message("return_value is either None or has a length of 0.")
+            return
+
+        # </editor-fold>
+
+        try:
+            if return_value[0]:
+                self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
+                self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
+                self._update_protein_pair_scene()
+                self._save_protein_pair_pymol_session()
+            else:
+                logger.error("The operation failed!")
+                self._interface_manager.status_bar_manager.show_error_message("The operation failed!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+
+    def __await_reset_color_pymol_selection_atoms_by_element_for_protein_pair(self, return_value: tuple):
+        """
+        Await method for the reset coloring of atom by their element.
+
+        Args:
+            return_value: A tuple containing the result of the operation and the chain color.
+
+        Returns:
+            None
+        """
+        # <editor-fold desc="Checks">
+        if return_value is None or len(return_value) == 0:
+            logger.error("return_value is either None or has a length of 0.")
+            self._interface_manager.status_bar_manager.show_error_message(
+                "return_value is either None or has a length of 0.")
+            return
+        if return_value[1] == "":
+            logger.error("return_value[1] is an empty string.")
+            self._interface_manager.status_bar_manager.show_error_message("return_value[1] is an empty string.")
+
+        # </editor-fold>
+
+        tmp_success_flag, tmp_chain_color = return_value
+        try:
+            if tmp_success_flag:
+                self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
+
+                # <editor-fold desc="Update chain color">
+                # Updates chain color in chain object and data model
+                tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
+                tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
+                self._interface_manager.set_current_active_chain_color_of_protein_pair(tmp_chain_color)
+
+                # </editor-fold>
+
+                self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_chain_color)
+                self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_chain_color}    ")
+
+                self._update_protein_pair_scene()
+                self._save_protein_pair_pymol_session()
+            else:
+                logger.error("The operation failed!")
+                self._interface_manager.status_bar_manager.show_error_message("The operation failed!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
 
     def __slot_protein_pair_change_background_color(self):
         try:
@@ -4318,575 +3974,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # <editor-fold desc="Color Grid slot methods">
-    # def set_icon_for_current_color_in_protein_pairs_tab(self):
-    #     try:
-    #         color_index_functions = {
-    #             "red": self.set_color_name_in_label_red_in_protein_pairs_tab,
-    #             "tv_red": self.set_color_name_in_label_tv_red_in_protein_pairs_tab,
-    #             "salmon": self.set_color_name_in_label_salmon_in_protein_pairs_tab,
-    #             "raspberry": self.set_color_name_in_label_raspberry_in_protein_pairs_tab,
-    #             "green": self.set_color_name_in_label_green_in_protein_pairs_tab,
-    #             "tv_green": self.set_color_name_in_label_tv_green_in_protein_pairs_tab,
-    #             "palegreen": self.set_color_name_in_label_palegreen_in_protein_pairs_tab,
-    #             "forest": self.set_color_name_in_label_forest_in_protein_pairs_tab,
-    #             "blue": self.set_color_name_in_label_blue_in_protein_pairs_tab,
-    #             "tv_blue": self.set_color_name_in_label_tv_blue_in_protein_pairs_tab,
-    #             "lightblue": self.set_color_name_in_label_lightblue_in_protein_pairs_tab,
-    #             "skyblue": self.set_color_name_in_label_skyblue_in_protein_pairs_tab,
-    #             "yellow": self.set_color_name_in_label_yellow_in_protein_pairs_tab,
-    #             "tv_yellow": self.set_color_name_in_label_tv_yellow_in_protein_pairs_tab,
-    #             "paleyellow": self.set_color_name_in_label_paleyellow_in_protein_pairs_tab,
-    #             "sand": self.set_color_name_in_label_sand_in_protein_pairs_tab,
-    #             "magenta": self.set_color_name_in_label_magenta_in_protein_pairs_tab,
-    #             "purple": self.set_color_name_in_label_purple_in_protein_pairs_tab,
-    #             "pink": self.set_color_name_in_label_pink_in_protein_pairs_tab,
-    #             "hotpink": self.set_color_name_in_label_hotpink_in_protein_pairs_tab,
-    #             "cyan": self.set_color_name_in_label_cyan_in_protein_pairs_tab,
-    #             "aquamarine": self.set_color_name_in_label_aquamarine_in_protein_pairs_tab,
-    #             "palecyan": self.set_color_name_in_label_palecyan_in_protein_pairs_tab,
-    #             "teal": self.set_color_name_in_label_teal_in_protein_pairs_tab,
-    #             "orange": self.set_color_name_in_label_orange_in_protein_pairs_tab,
-    #             "tv_orange": self.set_color_name_in_label_tv_orange_in_protein_pairs_tab,
-    #             "lightorange": self.set_color_name_in_label_lightorange_in_protein_pairs_tab,
-    #             "olive": self.set_color_name_in_label_olive_in_protein_pairs_tab,
-    #             "white": self.set_color_name_in_label_white_in_protein_pairs_tab,
-    #             "grey70": self.set_color_name_in_label_grey_70_in_protein_pairs_tab,
-    #             "grey30": self.set_color_name_in_label_grey_30_in_protein_pairs_tab,
-    #             "black": self.set_color_name_in_label_black_in_protein_pairs_tab,
-    #             "N-blue": self.set_color_name_in_label_by_elements_in_protein_pairs_tab,
-    #             "O-red": self.set_color_name_in_label_by_elements_in_protein_pairs_tab,
-    #             "By Element": self.set_color_name_in_label_by_elements_in_protein_pairs_tab,
-    #         }
-    #         tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-    #         tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-    #         tmp_protein_pair = self._interface_manager.get_current_active_protein_pair_object()
-    #         tmp_protein_name = self._get_protein_name_of_a_protein_from_a_protein_pair(tmp_protein,
-    #                                                                                    tmp_protein_pair)
-    #         tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
-    #         color_index_functions[
-    #             tmp_chain.get_color(tmp_protein.pymol_selection.selection_string,
-    #                                 self._interface_manager.pymol_session_manager)[0]
-    #         ]()
-    #     except Exception as e:
-    #         logger.error(f"An error occurred: {e}")
-    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-    #
-    # def reset_icon_for_last_color_in_protein_pairs_tab(self):
-    #     try:
-    #         tmp_color_name = self._view.ui.lbl_protein_pair_current_color.text()
-    #         if tmp_color_name == "":
-    #             return
-    #         color_index_functions = {
-    #             "red": self.reset_icon_for_red_in_protein_pairs_tab,
-    #             "tv_red": self.reset_icon_for_tv_red_in_protein_pairs_tab,
-    #             "salmon": self.reset_icon_for_salmon_in_protein_pairs_tab,
-    #             "raspberry": self.reset_icon_for_raspberry_in_protein_pairs_tab,
-    #             "green": self.reset_icon_for_green_in_protein_pairs_tab,
-    #             "tv_green": self.reset_icon_for_tv_green_in_protein_pairs_tab,
-    #             "palegreen": self.reset_icon_for_palegreen_in_protein_pairs_tab,
-    #             "forest": self.reset_icon_for_forest_in_protein_pairs_tab,
-    #             "blue": self.reset_icon_for_blue_in_protein_pairs_tab,
-    #             "tv_blue": self.reset_icon_for_tv_blue_in_protein_pairs_tab,
-    #             "lightblue": self.reset_icon_for_lightblue_in_protein_pairs_tab,
-    #             "skyblue": self.reset_icon_for_skyblue_in_protein_pairs_tab,
-    #             "yellow": self.reset_icon_for_yellow_in_protein_pairs_tab,
-    #             "tv_yellow": self.reset_icon_for_tv_yellow_in_protein_pairs_tab,
-    #             "paleyellow": self.reset_icon_for_paleyellow_in_protein_pairs_tab,
-    #             "sand": self.reset_icon_for_sand_in_protein_pairs_tab,
-    #             "magenta": self.reset_icon_for_magenta_in_protein_pairs_tab,
-    #             "purple": self.reset_icon_for_purple_in_protein_pairs_tab,
-    #             "pink": self.reset_icon_for_pink_in_protein_pairs_tab,
-    #             "hotpink": self.reset_icon_for_hotpink_in_protein_pairs_tab,
-    #             "cyan": self.reset_icon_for_cyan_in_protein_pairs_tab,
-    #             "aquamarine": self.reset_icon_for_aquamarine_in_protein_pairs_tab,
-    #             "palecyan": self.reset_icon_for_palecyan_in_protein_pairs_tab,
-    #             "teal": self.reset_icon_for_teal_in_protein_pairs_tab,
-    #             "orange": self.reset_icon_for_orange_in_protein_pairs_tab,
-    #             "tv_orange": self.reset_icon_for_tv_orange_in_protein_pairs_tab,
-    #             "lightorange": self.reset_icon_for_lightorange_in_protein_pairs_tab,
-    #             "olive": self.reset_icon_for_olive_in_protein_pairs_tab,
-    #             "white": self.reset_icon_for_white_in_protein_pairs_tab,
-    #             "grey70": self.reset_icon_for_grey_70_in_protein_pairs_tab,
-    #             "grey30": self.reset_icon_for_grey_30_in_protein_pairs_tab,
-    #             "black": self.reset_icon_for_black_in_protein_pairs_tab,
-    #             "N-blue": self.reset_icon_for_by_elements_in_protein_pairs_tab,
-    #             "O-red": self.reset_icon_for_by_elements_in_protein_pairs_tab,
-    #             "By Element": self.reset_icon_for_by_elements_in_protein_pairs_tab,
-    #         }
-    #         color_index_functions[tmp_color_name.strip()]()
-    #     except Exception as e:
-    #         logger.error(f"An error occurred: {e}")
-    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    # # <editor-fold desc="Set color and icon">
-    # def set_color_in_protein_pairs_color_grid(self):
-    #     tmp_color_grid_buttons = self._view.color_grid_protein_pairs.get_all_color_buttons()
-    #     # get color from protein chain
-    #     tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-    #     tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-    #
-    #     tmp_residue_config: "residue_color_config.ResidueColorConfig" = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
-    #         tmp_protein.get_molecule_object(), tmp_chain.chain_letter
-    #     )
-    #     if tmp_residue_config.atoms_are_colored_by_elements():
-    #         # chain is colored by elements
-    #         self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
-    #         self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
-    #     else:
-    #         self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
-    #         self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
-    #         tmp_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_residue_config.carbon_color]
-    #         tmp_color_grid_button.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #         tmp_color_grid_button.setIconSize(tmp_color_grid_button.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    #     # tmp_color_grid_buttons = self._view.color_grid_protein_pairs.get_all_color_buttons()
-    #     # # get color from protein chain
-    #     # tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
-    #     # tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-    #     # tmp_residue_config: residue_color_config.ResidueColorConfig = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
-    #     #     tmp_protein.get_molecule_object(), tmp_chain.chain_letter
-    #     # )
-    #     # if self._view.color_grid_protein_pairs.last_clicked_color != "":
-    #     #     tmp_last_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[self._view.color_grid_protein_pairs.last_clicked_color]
-    #     #     tmp_last_color_grid_button.setIcon(QtGui.QIcon())
-    #     # if tmp_residue_config.atoms_are_colored_by_elements():
-    #     #     # chain is colored by elements
-    #     #     self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
-    #     #     self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
-    #     # else:
-    #     #     self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
-    #     #     self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
-    #     #     tmp_color_grid_button: QtWidgets.QPushButton = tmp_color_grid_buttons[tmp_residue_config.carbon_color]
-    #     #     tmp_color_grid_button.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     #     tmp_color_grid_button.setIconSize(tmp_color_grid_button.icon().actualSize(QtCore.QSize(14, 14)))
-    #     # self._view.color_grid_protein_pairs.last_clicked_color = self._view.ui.lbl_protein_pair_current_color.text().strip()
-    #
-    # def set_color_name_in_label_by_elements_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "By Element"
-    #     #self.__slot_change_chain_color_protein_pairs()
-    #
-    # def set_color_name_in_label_red_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("red    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "red"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_red.setIconSize(self._view.color_grid_protein_pairs.c_red.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_tv_red_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_red    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "tv_red"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_tv_red.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_tv_red.setIconSize(self._view.color_grid_protein_pairs.c_tv_red.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_salmon_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("salmon    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "salmon"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_salomon.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_salomon.setIconSize(self._view.color_grid_protein_pairs.c_salomon.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_raspberry_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("raspberry    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "raspberry"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_raspberry.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_raspberry.setIconSize(self._view.color_grid_protein_pairs.c_raspberry.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_green_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("green    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "green"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_green.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_green.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_tv_green_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_green    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "tv_green"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_tv_green.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_tv_green.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_tv_green.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_palegreen_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("palegreen    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "palegreen"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_palegreen.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_palegreen.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_palegreen.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_forest_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("forest    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "forest"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_forest.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_forest.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_forest.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_blue_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("blue    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "blue"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_blue.setIcon(QtGui.QIcon(
-    #         ":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_blue.setIconSize(self._view.color_grid_protein_pairs.c_blue.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_tv_blue_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_blue    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "tv_blue"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_tv_blue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_tv_blue.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_tv_blue.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_lightblue_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("lightblue    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "lightblue"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_lightblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_lightblue.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_lightblue.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_skyblue_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("skyblue    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "skyblue"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_skyblue.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_skyblue.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_skyblue.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_yellow_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("yellow    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "yellow"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_yellow.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_yellow.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_tv_yellow_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_yellow    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "tv_yellow"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_tv_yellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_tv_yellow.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_tv_yellow.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_paleyellow_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("paleyellow    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "paleyellow"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_paleyellow.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_paleyellow.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_paleyellow.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_sand_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("sand    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "sand"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_sand.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_sand.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_sand.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_magenta_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("magenta    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "magenta"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_magenta.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_magenta.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_magenta.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_purple_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("purple    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "purple"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_purple.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_purple.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_purple.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_pink_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("pink    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "pink"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_pink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_pink.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_pink.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_hotpink_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("hotpink    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "hotpink"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_hotpink.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_hotpink.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_hotpink.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_cyan_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("cyan    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "cyan"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_cyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_cyan.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_cyan.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_aquamarine_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("aquamarine    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "aquamarine"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_aquamarine.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_aquamarine.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_aquamarine.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_palecyan_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("palecyan    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "palecyan"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_palecyan.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_palecyan.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_palecyan.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_teal_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("teal    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "teal"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_teal.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_teal.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_teal.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_orange_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("orange    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "orange"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_orange.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_orange.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_tv_orange_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_orange    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "tv_orange"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_tv_orange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_tv_orange.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_tv_orange.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_lightorange_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("lightorange    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "lightorange"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_lightorange.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_lightorange.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_lightorange.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_olive_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("olive    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "olive"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_olive.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_olive.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_olive.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_white_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("white    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "white"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_white.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_white.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_white.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_grey_70_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("grey70    ")
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "grey70"
-    #     self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_grey_70.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_grey_70.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_grey_30_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("grey30    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "grey30"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_grey_30.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_grey_30.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_grey_30.icon().actualSize(QtCore.QSize(14, 14)))
-    #
-    # def set_color_name_in_label_black_in_protein_pairs_tab(self):
-    #     self.reset_icon_for_last_color_in_protein_pairs_tab()
-    #     self._view.ui.lbl_protein_pair_current_color.setText("black    ")
-    #     self._view.color_grid_protein_pairs.last_clicked_color = "black"
-    #     self.__slot_change_chain_color_protein_pairs()
-    #     self._view.color_grid_protein_pairs.c_black.setIcon(QtGui.QIcon(":icons/done_round_edges_w200_g200.png"))
-    #     self._view.color_grid_protein_pairs.c_black.setIconSize(
-    #         self._view.color_grid_protein_pairs.c_black.icon().actualSize(QtCore.QSize(14, 14)))
-    # # </editor-fold>
-
-    # # <editor-fold desc="Reset Icon">
-    # def reset_icon_for_by_elements_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("By Element")
-    #
-    # def reset_icon_for_red_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("red")
-    #     self._view.color_grid_protein_pairs.c_red.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_tv_red_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_red")
-    #     self._view.color_grid_protein_pairs.c_tv_red.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_salmon_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("salmon")
-    #     self._view.color_grid_protein_pairs.c_salomon.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_raspberry_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("raspberry")
-    #     self._view.color_grid_protein_pairs.c_raspberry.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_green_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("green")
-    #     self._view.color_grid_protein_pairs.c_green.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_tv_green_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_green")
-    #     self._view.color_grid_protein_pairs.c_tv_green.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_palegreen_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("palegreen")
-    #     self._view.color_grid_protein_pairs.c_palegreen.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_forest_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("forest")
-    #     self._view.color_grid_protein_pairs.c_forest.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_blue_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("blue")
-    #     self._view.color_grid_protein_pairs.c_blue.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_tv_blue_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_blue")
-    #     self._view.color_grid_protein_pairs.c_tv_blue.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_lightblue_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("lightblue")
-    #     self._view.color_grid_protein_pairs.c_lightblue.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_skyblue_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("skyblue")
-    #     self._view.color_grid_protein_pairs.c_skyblue.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_yellow_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("yellow")
-    #     self._view.color_grid_protein_pairs.c_yellow.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_tv_yellow_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_yellow")
-    #     self._view.color_grid_protein_pairs.c_tv_yellow.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_paleyellow_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("paleyellow")
-    #     self._view.color_grid_protein_pairs.c_paleyellow.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_sand_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("sand")
-    #     self._view.color_grid_protein_pairs.c_sand.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_magenta_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("magenta")
-    #     self._view.color_grid_protein_pairs.c_magenta.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_purple_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("purple")
-    #     self._view.color_grid_protein_pairs.c_purple.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_pink_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("pink")
-    #     self._view.color_grid_protein_pairs.c_pink.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_hotpink_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("hotpink")
-    #     self._view.color_grid_protein_pairs.c_hotpink.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_cyan_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("cyan")
-    #     self._view.color_grid_protein_pairs.c_cyan.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_aquamarine_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("aquamarine")
-    #     self._view.color_grid_protein_pairs.c_aquamarine.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_palecyan_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("palecyan")
-    #     self._view.color_grid_protein_pairs.c_palecyan.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_teal_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("teal")
-    #     self._view.color_grid_protein_pairs.c_teal.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_orange_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("orange")
-    #     self._view.color_grid_protein_pairs.c_orange.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_tv_orange_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("tv_orange")
-    #     self._view.color_grid_protein_pairs.c_tv_orange.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_lightorange_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("lightorange")
-    #     self._view.color_grid_protein_pairs.c_lightorange.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_olive_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("olive")
-    #     self._view.color_grid_protein_pairs.c_olive.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_white_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("white")
-    #     self._view.color_grid_protein_pairs.c_white.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_grey_70_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("grey70")
-    #     self._view.color_grid_protein_pairs.c_grey_70.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_grey_30_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("grey30")
-    #     self._view.color_grid_protein_pairs.c_grey_30.setIcon(QtGui.QIcon())
-    #
-    # def reset_icon_for_black_in_protein_pairs_tab(self):
-    #     self._view.ui.lbl_protein_pair_current_color.setText("black")
-    #     self._view.color_grid_protein_pairs.c_black.setIcon(QtGui.QIcon())
-    # # </editor-fold>
-    # </editor-fold>
-
     # <editor-fold desc="Representations">
     def _create_selection_string_for_representations(self):
         tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
@@ -4896,7 +3983,6 @@ class MainViewController:
                                                                                    tmp_protein_pair)
         return f"/{tmp_protein_name}//{tmp_chain.chain_letter}"
 
-    # cartoon
     def __slot_protein_pair_chain_as_cartoon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -4926,7 +4012,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # sticks
     def __slot_protein_pair_chain_as_sticks(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -4957,7 +4042,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # ribbon
     def __slot_protein_pair_chain_as_ribbon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -4987,7 +4071,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # lines
     def __slot_protein_pair_chain_as_lines(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -5018,7 +4101,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # spheres
     def __slot_protein_pair_chain_as_spheres(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -5049,7 +4131,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # dots
     def __slot_protein_pair_chain_as_dots(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -5079,7 +4160,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # mesh
     def __slot_protein_pair_chain_as_mesh(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -5109,7 +4189,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # surface
     def __slot_protein_pair_chain_as_surface(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -5139,7 +4218,6 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    # all
     def __slot_hide_protein_pair_chain_all(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -5187,6 +4265,49 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
+    def _update_protein_pair_scene(self) -> None:
+        """Updates the current selected PyMOL scene."""
+        if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+                a_key="auto", an_action="update"
+            )
+            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
+        else:
+            if not self._interface_manager.check_if_scratch_scene_exists_in_protein_pair_model():
+                self._interface_manager.add_scratch_scene_to_protein_pair_model()
+            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+                a_key="_scratch_", an_action="update"
+            )
+            self._interface_manager.pymol_session_manager.current_scene_name = "_scratch_"
+            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
+                                                    self._view.ui.lbl_pymol_protein_pair_scene)
+            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
+
+    def __slot_delete_protein_pair_from_project(self):
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein pair' button on the 'Protein Pairs Tab' was clicked.")
+            tmp_dialog = custom_message_box.CustomMessageBoxDelete(
+                "Are you sure you want to delete this protein pair?","Delete Protein Pair",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value
+            )
+            tmp_dialog.exec_()
+            response: bool = tmp_dialog.response
+            if response:
+                tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
+                if self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name):
+                    self._interface_manager.pymol_session_manager.reinitialize_session()
+                tmp_database_operation = database_operation.DatabaseOperation(
+                    enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id())
+                )
+                self._database_thread.put_database_operation_into_queue(tmp_database_operation)
+                self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)
+                self._interface_manager.watcher.remove_protein_pair(tmp_protein_pair.name)
+                self._interface_manager.remove_protein_pair_from_protein_pairs_model()
+                self._interface_manager.refresh_main_view()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
     def _check_for_results(self) -> None:
         if self._view.ui.protein_pairs_tree_view.model().data(self._view.ui.protein_pairs_tree_view.currentIndex(), Qt.DisplayRole).find("_vs_") != -1:
             self._view.ui.action_results_summary.setEnabled(True)
@@ -5205,5 +4326,30 @@ class MainViewController:
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __slot_color_protein_pair_by_rmsd(self) -> None:
+        """Colors the residues in 5 colors depending on their distance to the reference."""
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Color protein pair by rmsd' context menu action was clicked.")
+            self._active_task = tasks.Task(
+                target=protein_pair_async.color_protein_pair_by_rmsd_value,
+                args=(
+                    self._interface_manager.get_current_protein_pair_tree_index_object(),
+                    self._interface_manager.pymol_session_manager
+                ),
+                post_func=self.__await_color_protein_pair_by_rmsd,
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._active_task.start()
+            self._interface_manager.start_wait_cursor()
+
+    def __await_color_protein_pair_by_rmsd(self, result: tuple) -> None:
+        if result[0] == "":
+            self._interface_manager.status_bar_manager.show_error_message("Coloring the protein pair failed!")
+        self._interface_manager.stop_wait_cursor()
+        self._interface_manager.refresh_main_view()
 
     # </editor-fold>

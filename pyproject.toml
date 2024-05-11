@@ -15,6 +15,6 @@ exclude = ["__init__.py", "pyssa/experimental", "conf.py"]
 [tool.ruff.pydocstyle]
 convention = "google"
 
-[tool.pyink]
+[tool.black]
 line-length = 120
 target-version = ["py39"]
