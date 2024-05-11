@@ -21,6 +21,7 @@
 #
 """Module for the application process manager class."""
 import os
+import signal
 import subprocess
 import time
 from pyssa.gui.ui.custom_dialogs import custom_message_box
@@ -110,6 +111,7 @@ class ApplicationProcessManager:
         )
         if self.pymol_process.poll() is None:
             print("PyMOL from ApplicationProcessManager class started correctly.")
+            self._is_crashed = False
         else:
             print("PyMOL failed to start.")
             self._is_crashed = True
@@ -146,12 +148,15 @@ class ApplicationProcessManager:
         Returns:
             tuple: A tuple containing two empty strings needed for the task class.
         """
-        self.start_pymol()
+        if self.pymol_process is None:
+            self.start_pymol()
         while self._should_exit is False and self._is_crashed is False:
             if self.pymol_process.poll() is not None:
                 print("PyMOL crashed!")
                 self._is_crashed = True
             else:
                 time.sleep(2)
+
         print("Closing check_process method.")
         return "", ""  # These two empty strings are needed for the task class
+

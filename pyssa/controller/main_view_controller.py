@@ -25,6 +25,8 @@ import os
 import pathlib
 import shutil
 import subprocess
+from typing import Optional
+
 import pygetwindow
 import requests
 from io import BytesIO
@@ -2339,64 +2341,23 @@ class MainViewController:
     def __slot_get_information_about_selected_object_in_protein_branch(self) -> None:
         try:
             tmp_type = self._interface_manager.get_current_protein_tree_index_type()
-
             if tmp_type == "protein":
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                     f"The protein object '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked."
                 )
-
             elif tmp_type == "scene":
-                tmp_scene_name = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
-                tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
-                logger.log(
-                    log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                    f"The scene '{tmp_scene_name}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
-                )
-                if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
-                    tmp_scene_name = self._interface_manager.get_current_active_scene_name()
-                    self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
-                    ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
-                                                            self._view.ui.lbl_pymol_protein_scene)
-                    self._interface_manager.pymol_session_manager.load_scene(tmp_scene_name)
-
+                self._setup_protein_scene()
             elif tmp_type == "chain":
-                tmp_chain_letter = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
-                tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
-                logger.log(
-                    log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                    f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
-                )
-                if self._interface_manager.pymol_session_manager.current_scene_name != "" and self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(self._interface_manager.get_current_active_protein_object().get_molecule_object()):
-                    # Set icon for color grid
-                    self._view.color_grid_proteins.reset_icon_for_selected_color()
-                    tmp_protein = self._interface_manager.get_current_active_protein_object()
-                    tmp_chain = self._interface_manager.get_current_active_chain_object()
-                    tmp_residue_config: "residue_color_config.ResidueColorConfig" = self._interface_manager.pymol_session_manager.get_residue_color_config_of_a_given_selection(
-                        tmp_protein.get_molecule_object(), tmp_chain.chain_letter
-                    )
-                    if tmp_residue_config.atoms_are_colored_by_elements():
-                        self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
-                        self._view.ui.lbl_protein_current_color.setText("By Element    ")
-                    else:
-                        self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
-                        self._view.color_grid_proteins.set_icon_for_selected_color(tmp_residue_config.carbon_color)
-                        self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_config.carbon_color}    ")
-                    # Set representation toggle states for selected chain
-                    self._interface_manager.set_repr_state_in_ui_for_protein_chain(
-                        self._interface_manager.pymol_session_manager
-                    )
-
+                self._setup_protein_pymol_scene_config()
             elif tmp_type == "header":
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                     f"The header '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked."
                 )
-
             else:
                 logger.warning("Unknown object type occurred in Protein tab.")
                 return
-
             self._interface_manager.manage_ui_of_protein_tab(
                 tmp_type,
                 self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
@@ -2408,6 +2369,155 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
+    # <editor-fold desc="Setup protein scene of proteins tree">
+    def _setup_protein_scene(self):
+        try:
+            tmp_scene_name = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
+            tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The scene '{tmp_scene_name}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
+            )
+            if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein_name):
+                #self._interface_manager.get_current_active_protein_object().get_molecule_object()
+                return
+            tmp_scene_name = self._interface_manager.get_current_active_scene_name()
+            self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
+            self._active_task = tasks.Task(
+                target=pymol_session_async.load_scene,
+                args=(self._interface_manager.pymol_session_manager, tmp_scene_name),
+                post_func=self.__await_load_scene_protein
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.status_bar_manager.show_temporary_message("Loading PyMOL scene ...", a_with_timeout_flag=False)
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    def __await_load_scene_protein(self, return_value: tuple[bool]):
+        try:
+            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
+                                                    self._view.ui.lbl_pymol_protein_scene)
+            if return_value[0]:
+                self._interface_manager.status_bar_manager.show_temporary_message("Loading PyMOL scene was successful")
+            else:
+                self._interface_manager.status_bar_manager.show_temporary_message("Loading PyMOL scene failed! Please try again.")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Setup PyMOL scene configuration">
+    def _setup_protein_pymol_scene_config(self):
+        try:
+            tmp_chain_letter = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
+            tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
+            logger.log(
+                log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
+            )
+            if self._interface_manager.pymol_session_manager.current_scene_name == "" or not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein_name):
+                return
+            # Set icon for color grid
+            self._view.color_grid_proteins.reset_icon_for_selected_color()
+            tmp_protein = self._interface_manager.get_current_active_protein_object()
+            tmp_chain = self._interface_manager.get_current_active_chain_object()
+            self._active_task = tasks.Task(
+                target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
+                args=(
+                    tmp_protein.get_molecule_object(),
+                    tmp_chain.chain_letter,
+                    self._interface_manager.pymol_session_manager
+                ),
+                post_func=self.__await_get_residue_color_config_of_a_given_protein_chain_of_a_protein
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    def __await_get_residue_color_config_of_a_given_protein_chain_of_a_protein(
+            self,
+            return_value: tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]
+    ) -> None:
+        try:
+            tmp_success_flag, tmp_residue_color_config = return_value
+            if not tmp_success_flag:
+                logger.error("Retrieving color information failed!")
+                self._interface_manager.status_bar_manager.show_error_message("Retrieving color information failed!")
+                self._interface_manager.stop_wait_cursor()
+                self._interface_manager.refresh_main_view()
+                return
+
+            if tmp_residue_color_config.atoms_are_colored_by_elements():
+                self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
+                self._view.ui.lbl_protein_current_color.setText("By Element    ")
+            else:
+                self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+                self._view.color_grid_proteins.set_icon_for_selected_color(tmp_residue_color_config.carbon_color)
+                self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_color_config.carbon_color}    ")
+            # Set representation toggle states for selected chain
+            tmp_protein = self._interface_manager.get_current_active_protein_object()
+            tmp_chain = self._interface_manager.get_current_active_chain_object()
+            tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
+            self._active_task = tasks.Task(
+                target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
+                args=(
+                    tmp_protein.get_molecule_object(),
+                    tmp_chain.chain_letter,
+                    self._interface_manager.pymol_session_manager
+                ),
+                post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein
+            )
+            # self._interface_manager.set_repr_state_in_ui_for_protein_chain(
+            #     self._interface_manager.pymol_session_manager
+            # )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+        else:
+            self._active_task.start()
+
+    def __await_get_representation_config_of_a_given_protein_chain_of_a_protein(
+            self, return_value: tuple[bool, Optional[dict]]
+    ) -> None:
+        try:
+            tmp_success_flag, tmp_representation_config = return_value
+            if tmp_success_flag:
+                tmp_chain = self._interface_manager.get_current_active_chain_object()
+                if tmp_chain.chain_type == "protein_chain":
+                    self._view.ui.frame_protein_repr.setEnabled(True)
+                    self._interface_manager.manage_toggle_state_of_protein_repr(tmp_representation_config)
+                else:
+                    self._view.ui.frame_protein_repr.setEnabled(False)
+                    self._view.tg_protein_cartoon.toggle_button.setChecked(False)
+                    self._view.tg_protein_ribbon.toggle_button.setChecked(False)
+                    self._view.tg_protein_sticks.toggle_button.setChecked(False)
+                    self._view.tg_protein_lines.toggle_button.setChecked(False)
+                    self._view.tg_protein_spheres.toggle_button.setChecked(False)
+                    self._view.tg_protein_dots.toggle_button.setChecked(False)
+                    self._view.tg_protein_mesh.toggle_button.setChecked(False)
+                    self._view.tg_protein_surface.toggle_button.setChecked(False)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Change chain color of protein">
     def __slot_change_chain_color_proteins(self, a_color: str) -> None:
         """
         Changes the 'Color' attribute of a protein chain on the 'Proteins Tab' and colors the protein in User PyMOL.
@@ -2501,7 +2611,7 @@ class MainViewController:
                 # </editor-fold>
 
                 self._view.ui.lbl_protein_current_color.setText(f"{tmp_chain_color}    ")
-                self._update_protein_scene()
+                self._update_protein_scene_legacy()
                 self._save_protein_pymol_session()
             else:
                 logger.error("The operation failed!")
@@ -2513,6 +2623,9 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
             self._interface_manager.stop_wait_cursor()
 
+    # </editor-fold>
+
+    # <editor-fold desc="Color protein chain atoms by element">
     def __slot_color_protein_atoms_by_element(self):
         """
         Color protein atoms by element.
@@ -2587,7 +2700,7 @@ class MainViewController:
             if return_value[0]:
                 self._view.color_grid_proteins.reset_icon_for_selected_color()
                 self._view.ui.lbl_protein_current_color.setText("By Element    ")
-                self._update_protein_scene()
+                self._update_protein_scene_legacy()
                 self._save_protein_pymol_session()
             else:
                 logger.error("The operation failed!")
@@ -2637,7 +2750,7 @@ class MainViewController:
                 self._view.color_grid_proteins.set_icon_for_selected_color(tmp_chain_color)
                 self._view.ui.lbl_protein_current_color.setText(f"{tmp_chain_color}    ")
 
-                self._update_protein_scene()
+                self._update_protein_scene_legacy()
                 self._save_protein_pymol_session()
             else:
                 logger.error("The operation failed!")
@@ -2648,6 +2761,8 @@ class MainViewController:
         finally:
             self._interface_manager.refresh_main_view()
             self._interface_manager.stop_wait_cursor()
+
+    # </editor-fold>
 
     def __slot_protein_change_background_color(self):
         try:
@@ -2682,7 +2797,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.CARTOON.value, tmp_selection.selection_string
                 )
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2712,7 +2827,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
                 )
             #self.__slot_chain_protein_with_hydrogens()
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2742,7 +2857,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
                 )
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2773,7 +2888,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
                 )
             #self.__slot_chain_protein_with_hydrogens()
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2804,7 +2919,7 @@ class MainViewController:
                     enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
                 )
             #self.__slot_chain_protein_with_hydrogens()
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2834,7 +2949,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
                 )
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2864,7 +2979,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
                 )
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2894,7 +3009,7 @@ class MainViewController:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
                     enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
                 )
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
             self._interface_manager.manage_hydrogen_representation_for_protein_chain()
@@ -2930,7 +3045,7 @@ class MainViewController:
             self.__slot_protein_chain_as_dots()
             self.__slot_protein_chain_as_mesh()
             self.__slot_protein_chain_as_surface()
-            self._update_protein_scene()
+            self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
         except Exception as e:
@@ -3262,6 +3377,31 @@ class MainViewController:
             ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
                                                     self._view.ui.lbl_pymol_protein_scene)
             self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
+
+    def _update_protein_scene_legacy(self) -> None:
+        """Updates the current selected PyMOL scene.
+
+        Notes:
+            This is a legacy method that is used in many other methods!
+            TODO: after discussion of workaround, this can be removed!
+        """
+        return
+        # The code below can be useful if the scene saving feature needs to be implemented
+        # if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
+        #     self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+        #         a_key="auto", an_action="update"
+        #     )
+        #     self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
+        # else:
+        #     if not self._interface_manager.check_if_scratch_scene_exists_in_protein_model():
+        #         self._interface_manager.add_scratch_scene_to_protein_model()
+        #     self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
+        #         a_key="_scratch_", an_action="update"
+        #     )
+        #     self._interface_manager.pymol_session_manager.current_scene_name = "_scratch_"
+        #     ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
+        #                                             self._view.ui.lbl_pymol_protein_scene)
+        #     self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
 
     def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""

@@ -21,8 +21,12 @@
 #
 """Module for all asynchronous functions that are related to the pymol session."""
 import logging
+import time
+from typing import Optional
 
 from pyssa.controller import database_manager, pymol_session_manager
+from pyssa.internal.data_structures import protein
+from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants
 
@@ -32,7 +36,38 @@ logger.addHandler(log_handlers.log_file_handler)
 __docformat__ = "google"
 
 
-def load_protein_pymol_session(a_protein, the_pymol_session_manager, needs_to_be_reinitialized_flag: bool = False) -> tuple:
+def load_protein_pymol_session(
+        a_protein: "protein.Protein",
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+        needs_to_be_reinitialized_flag: bool = False
+) -> tuple[Optional["pymol_session_manager.PymolSessionManager"], bool]:
+    """
+    Loads a protein pymol session.
+
+    Args:
+        a_protein (protein.Protein): The protein object to load into the PyMOL session.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager object.
+        needs_to_be_reinitialized_flag (bool): Flag indicating whether the PyMOL session needs to be reinitialized. Default is False.
+
+    Returns:
+        A tuple containing the updated PyMOL session manager object and a boolean indicating whether the loading of the session was successful.
+
+    Raises:
+        RuntimeError: If loading the session fails with a RuntimeError.
+    """
+    # <editor-fold desc="Checks">
+    if a_protein is None:
+        logger.error("a_protein is None.")
+        return None, False
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return None, False
+    if needs_to_be_reinitialized_flag is None:
+        logger.error("needs_to_be_reinitialized_flag is None.")
+        return None, False
+
+    # </editor-fold>
+
     if needs_to_be_reinitialized_flag:
         logger.info("The current session is not empty. Reinitialize session now ...")
         the_pymol_session_manager.reinitialize_session()
@@ -108,6 +143,37 @@ def save_protein_pair_pymol_session_to_database(
         return 0, True
 
 
+def load_scene(the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", a_scene_name: str) -> tuple[bool]:
+    """
+    Loads a scene in the current PyMOL session.
+
+    Args:
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager instance.
+        a_scene_name (str): The name of the scene to be loaded.
+
+    Returns:
+        A tuple containing a single boolean value indicating the success of the operation.
+    """
+    # <editor-fold desc="Checks">
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return (False,)
+    if a_scene_name is None or a_scene_name == "":
+        logger.error("a_scene_name is either None or an empty string.")
+        return (False,)
+
+    # </editor-fold>
+
+    time.sleep(0.5)  # This should increase the stability because the scene command has more time in between command calls
+    try:
+        the_pymol_session_manager.load_scene(a_scene_name)
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return (False,)
+    else:
+        return (True,)
+
+
 def color_pymol_selection(
         a_color: str,
         a_pymol_selection: str,
@@ -123,7 +189,6 @@ def color_pymol_selection(
 
     Returns:
         A tuple containing a single boolean value indicating the success of the operation and the chain color.
-
     """
     # <editor-fold desc="Checks">
     if a_color is None or a_color == "":
@@ -248,3 +313,89 @@ def color_pymol_selection_atoms_by_element(
         return (False,)
     else:
         return (True,)
+
+
+def get_residue_color_config_of_a_given_protein_chain(
+        a_protein_name: str,
+        a_chain_letter: str,
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]:
+    """
+    Gets the colors of C-, N-, and O-atoms for the first residue of the given selection.
+
+    Args:
+        a_protein_name (str): The name of the protein.
+        a_chain_letter (str): The chain letter of the protein.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager instance.
+
+    Returns:
+        tuple: A tuple with a single boolean value indicating the success of the operation and
+        a ResidueColorConfig instance or None if an error occurred.
+
+    """
+    # <editor-fold desc="Checks">
+    if a_protein_name is None or a_protein_name == "":
+        logger.error("a_protein_name is either None or an empty string.")
+        return False, None
+    if a_chain_letter is None or a_chain_letter == "":
+        logger.error("a_chain_letter is either None or an empty string.")
+        return False, None
+    if a_chain_letter not in constants.chain_dict.values():
+        logger.error("a_chain_letter is not part of the chain_dict.")
+        return False, None
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return False, None
+
+    # </editor-fold>
+
+    try:
+        tmp_residue_config: "residue_color_config.ResidueColorConfig" = the_pymol_session_manager.get_residue_color_config_of_a_given_selection(
+            a_protein_name, a_chain_letter
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return False, None
+    else:
+        return True, tmp_residue_config
+
+
+def get_representation_config_of_a_given_protein_chain(
+        a_selection_string: str,
+        a_chain_letter: str,
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple[bool, Optional[dict]]:
+    """
+    Returns the representation state of a specific chain in PyMOL.
+
+    Args:
+        a_selection_string: A string representing the selection of atoms in the protein chain.
+        a_chain_letter: A string representing the letter identifying the protein chain.
+        the_pymol_session_manager: An instance of the class PymolSessionManager from the pymol_session_manager module.
+
+    Returns:
+        A tuple containing a boolean value indicating the success of the method and an optional dictionary representing the representation state of the protein chain.
+    """
+    # <editor-fold desc="Checks">
+    if a_selection_string is None or a_selection_string == "":
+        logger.error("a_selection_string is either None or an empty string.")
+        return False, None
+    if a_chain_letter is None or a_chain_letter == "":
+        logger.error("a_chain_letter is either None or an empty string.")
+        return False, None
+    if a_chain_letter not in constants.chain_dict.values():
+        logger.error("a_chain_letter is not part of the chain_dict.")
+        return False, None
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return False, None
+
+    # </editor-fold>
+
+    try:
+        tmp_repr_state = the_pymol_session_manager.get_chain_repr_state(a_selection_string,a_chain_letter)
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return False, None
+    else:
+        return True, tmp_repr_state
