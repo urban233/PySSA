@@ -589,7 +589,7 @@ def get_representation_config_of_a_given_protein_chain(
     # </editor-fold>
 
     try:
-        tmp_repr_state = the_pymol_session_manager.get_chain_repr_state(a_selection_string,a_chain_letter)
+        tmp_repr_state = the_pymol_session_manager.get_chain_repr_state(a_selection_string, a_chain_letter)
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
         return False, None
@@ -643,7 +643,7 @@ def hide_specific_representation(
         the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
 ) -> tuple[bool]:
     """
-    Shows a given representation for the given selection string.
+    Hides a given representation for the given selection string.
 
     Args:
         a_representation: An instance of enums.PyMOLRepresentation, specifying the representation to show.
@@ -670,6 +670,52 @@ def hide_specific_representation(
         the_pymol_session_manager.hide_specific_representation(
             a_representation.value, a_selection_string
         )
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return (False,)
+    else:
+        return (True,)
+
+
+def hide_all_representations(
+        a_selection_string: str,
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple[bool]:
+    """
+    Hides all representations for the given selection string.
+
+    Args:
+        a_selection_string: A string representing the selection criteria for the objects.
+        the_pymol_session_manager: An instance of pymol_session_manager.PymolSessionManager used for managing PyMOL sessions.
+
+    Returns:
+        A tuple containing a single boolean value indicating the success or failure of the operation.
+    """
+    # <editor-fold desc="Checks">
+    if a_selection_string is None or a_selection_string == "":
+        logger.error("a_selection_string is either None or an empty string.")
+        return (False,)
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return (False,)
+
+    # </editor-fold>
+
+    try:
+        tmp_all_representations = [
+            enums.PyMOLRepresentation.CARTOON,
+            enums.PyMOLRepresentation.STICKS,
+            enums.PyMOLRepresentation.RIBBON,
+            enums.PyMOLRepresentation.LINES,
+            enums.PyMOLRepresentation.SPHERES,
+            enums.PyMOLRepresentation.DOTS,
+            enums.PyMOLRepresentation.MESH,
+            enums.PyMOLRepresentation.SURFACE,
+        ]
+        for tmp_representation in tmp_all_representations:
+            the_pymol_session_manager.hide_specific_representation(
+                tmp_representation.value, a_selection_string
+            )
     except Exception as e:
         logger.error(f"Unexpected error occurred. Exception: {e}")
         return (False,)

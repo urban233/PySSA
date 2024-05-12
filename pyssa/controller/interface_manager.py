@@ -2294,9 +2294,10 @@ class InterfaceManager:
         # Initialize UI
         self._main_view.initialize_ui()
 
-    def start_wait_cursor(self) -> None:
+    def block_gui(self, with_wait_cursor: bool = False) -> None:
         """Starts the wait cursor."""
-        QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
+        if with_wait_cursor is True:
+            QtWidgets.QApplication.setOverrideCursor(Qt.WaitCursor)
         self._main_view.disable_menu_bar_without_exit_application()
         self._main_view.disable_tab_widget()
         self._main_view.disable_job_panels()
