@@ -2462,6 +2462,7 @@ class MainViewController:
                 self._view.ui.lbl_protein_current_color.setText("By Element    ")
             else:
                 self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+                self._interface_manager.set_current_active_chain_color_of_protein(tmp_residue_color_config.carbon_color)
                 self._view.color_grid_proteins.set_icon_for_selected_color(tmp_residue_color_config.carbon_color)
                 self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_color_config.carbon_color}    ")
             # Set representation toggle states for selected chain
@@ -4247,6 +4248,7 @@ class MainViewController:
                 self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
             else:
                 self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+                self._interface_manager.set_current_active_chain_color_of_protein_pair(tmp_residue_color_config.carbon_color)
                 self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_residue_color_config.carbon_color)
                 self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_residue_color_config.carbon_color}    ")
             # Set representation toggle states for selected chain
