@@ -282,7 +282,7 @@ def update_scene(
     # </editor-fold>
 
     try:
-        if the_pymol_session_manager.is_the_current_pymol_scene_base is False:
+        if the_pymol_session_manager.is_the_current_pymol_scene_base() is False:
             the_pymol_session_manager.user_pymol_connector.scene(
                 a_key="auto", an_action="update"
             )

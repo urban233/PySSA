@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>666</width>
-    <height>1374</height>
+    <width>591</width>
+    <height>945</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -908,8 +908,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>335</width>
-                        <height>502</height>
+                        <width>295</width>
+                        <height>258</height>
                        </rect>
                       </property>
                       <property name="styleSheet">
@@ -1925,8 +1925,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>335</width>
-                        <height>499</height>
+                        <width>295</width>
+                        <height>258</height>
                        </rect>
                       </property>
                       <property name="sizePolicy">
@@ -2485,7 +2485,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>662</width>
+            <width>587</width>
             <height>196</height>
            </rect>
           </property>
@@ -2583,7 +2583,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>662</width>
+            <width>587</width>
             <height>196</height>
            </rect>
           </property>
@@ -2633,7 +2633,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>666</width>
+     <width>591</width>
      <height>21</height>
     </rect>
    </property>
@@ -2690,6 +2690,8 @@
     <addaction name="separator"/>
     <addaction name="action_show_log_in_explorer"/>
     <addaction name="action_clear_logs"/>
+    <addaction name="separator"/>
+    <addaction name="action_restart_pymol"/>
     <addaction name="separator"/>
     <addaction name="action_about"/>
    </widget>
@@ -2855,6 +2857,11 @@
   <action name="action_abort_prediction">
    <property name="text">
     <string>Abort</string>
+   </property>
+  </action>
+  <action name="action_restart_pymol">
+   <property name="text">
+    <string>Restart PyMOL</string>
    </property>
   </action>
  </widget>

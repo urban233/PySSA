@@ -99,6 +99,7 @@ class ProteinTreeContextMenu:
             self._rename_protein_action.setVisible(False)
             self._show_sequence_action.setVisible(False)
             return self._context_menu
+
         # </editor-fold>
 
         # Manage of context menu

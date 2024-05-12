@@ -183,6 +183,7 @@ class MainViewController:
         self._view.ui.action_documentation.triggered.connect(self.__slot_open_help_center)
         self._view.ui.action_tutorials.triggered.connect(self.__slot_open_tutorial)
         self._view.ui.action_get_demo_projects.triggered.connect(self.__slot_get_demo_projects)
+        self._view.ui.action_restart_pymol.triggered.connect(self.__slot_restart_pymol)
         self._view.ui.action_about.triggered.connect(self.__slot_open_about)
         self._view.ui.action_predict_monomer.triggered.connect(self.__slot_predict_monomer)
         self._view.ui.action_predict_multimer.triggered.connect(self.__slot_predict_multimer)
@@ -601,6 +602,13 @@ class MainViewController:
 
     def _update_progress_bar(self, return_value):
         self._interface_manager.status_bar_manager.update_progress_bar(return_value)
+
+    def __slot_restart_pymol(self):
+        logger.warning("Recived user request to restart PyMOL.")
+        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
+        self._interface_manager.status_bar_manager.show_temporary_message(
+            "Restarting PyMOL ...", a_with_timeout_flag=False
+        )
 
     # <editor-fold desc="Util methods">
     def update_status(self, message: str) -> None:
@@ -2262,6 +2270,7 @@ class MainViewController:
             tmp_is_protein_in_session_flag
         )
         tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
+        self.__slot_get_information_about_selected_object_in_protein_branch()  # fixme: This should be done in a better way than this!
 
     # <editor-fold desc="PyMOL session">
     def __slot_open_protein_pymol_session(self):
@@ -4023,6 +4032,7 @@ class MainViewController:
             tmp_is_protein_pair_in_current_session_flag
         )
         tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
+        self.__slot_get_information_about_selected_object_in_protein_pair_branch()  # fixme: This should be done in a better way than this!
 
     def _get_protein_name_of_a_protein_from_a_protein_pair(self, a_protein, a_protein_pair):
         """Helper function to get the correct protein name even if the protein pair consists of two identical protein names."""

@@ -20,16 +20,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for the PyMOL session manager class."""
+import logging
 import os.path
 import pathlib
+from typing import Optional
 
 from application_process import application_process_manager
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.internal.data_structures import protein, protein_pair
 from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.io_pyssa import binary_data, path_util
+from pyssa.logging_pyssa import log_handlers
 from pyssa.util import constants, exception, protein_pair_util
 from pyssa_pymol import user_pymol_connector
+
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
 
 
 class PymolSessionManager:
@@ -55,13 +62,16 @@ class PymolSessionManager:
     def _check_session_integrity(self, a_protein_name) -> bool:
         """Checks if the current session is consistent with the manager."""
         tmp_result = self.user_pymol_connector.get_all_object_names()
+        if tmp_result == {}:
+            logger.warning("get_all_object_names returned an empty dict.")
+            return False
         if tmp_result["success"]:
             if a_protein_name in tmp_result["data"]:
                 return True
             else:
                 return False
         else:
-            print(tmp_result["message"])
+            logger.warning(tmp_result["message"])
             return False
 
     def _load_pymol_session(self, a_pymol_session: str) -> None:
@@ -75,16 +85,18 @@ class PymolSessionManager:
                 f"{constants.CACHE_PYMOL_SESSION_DIR}/temp_session_file.pse",
             )
         binary_data.write_binary_file_from_base64_string(tmp_session_path, a_pymol_session)
-        if self._app_process_manager.pymol_crashed() is True:
-            pass
-        else:
-            tmp_result = self.user_pymol_connector.load_pymol_session(tmp_session_path)
+
+        if self._app_process_manager.pymol_crashed() is False:
+            tmp_result = self.user_pymol_connector.load_pymol_session(str(tmp_session_path))
+            if tmp_result == {}:
+                logger.warning("load_pymol_session returned an empty dict.")
+                return
             if tmp_result["success"]:
                 self.show_sequence_view()
-                print("Session loaded.")
+                logger.info("Session loaded.")
             else:
-                print(tmp_result["message"])
-                print("Session loaded failed!")
+                logger.warning(tmp_result["message"])
+                logger.error("Session loaded failed!")
 
     def _convert_pymol_session_to_base64_string(self, pymol_molecule_object: str) -> str:
         """This function converts a pymol session file into a base64 string.
@@ -93,14 +105,18 @@ class PymolSessionManager:
             pymol_molecule_object (str): PyMOL molecule object to be converted.
         """
         session_filepath = pathlib.Path(f"{constants.SCRATCH_DIR}/{pymol_molecule_object}_session.pse")
-        tmp_result = self.user_pymol_connector.save_pymol_session(session_filepath)
+        tmp_result = self.user_pymol_connector.save_pymol_session(str(session_filepath))
+        if tmp_result == {}:
+            logger.warning("save_pymol_session returned an empty dict.")
+            return ""
         if tmp_result["success"]:
             base64_string = binary_data.create_base64_string_from_file(session_filepath)
             os.remove(session_filepath)
             return base64_string
         else:
-            print(tmp_result["message"])
+            logger.warning(tmp_result["message"])
             return ""
+
     # </editor-fold>
 
     # <editor-fold desc="Public methods">
@@ -178,15 +194,21 @@ class PymolSessionManager:
 
         # </editor-fold>
 
-    def load_scene(self, a_scene_name):
+    def load_scene(self, a_scene_name) -> bool:
         tmp_result = self.user_pymol_connector.load_scene(a_scene_name)
+        if tmp_result == {}:
+            logger.warning("save_pymol_session returned an empty dict.")
+            return False
         return tmp_result["success"]
 
-    def load_current_scene(self):
+    def load_current_scene(self) -> bool:
         tmp_result = self.user_pymol_connector.load_scene(self.current_scene_name)
+        if tmp_result == {}:
+            logger.warning("save_pymol_session returned an empty dict.")
+            return False
         return tmp_result["success"]
 
-    def save_current_pymol_session_as_pse_cache_file(self):
+    def save_current_pymol_session_as_pse_cache_file(self) -> pathlib.Path:
         tmp_session_path = pathlib.Path(
             f"{constants.CACHE_PYMOL_SESSION_DIR}/{self.session_name}.pse",
         )
@@ -194,7 +216,7 @@ class PymolSessionManager:
         binary_data.write_binary_file_from_base64_string(tmp_session_path, tmp_session_base64)
         return tmp_session_path
 
-    def save_current_session_as_base64(self):
+    def save_current_session_as_base64(self) -> str:
         tmp_session_filepath = pathlib.Path(f"{constants.CACHE_PYMOL_SESSION_DIR}/session_of_{self.session_name}.pse")
         tmp_session_base64 = self._convert_pymol_session_to_base64_string(self.session_name)
         binary_data.write_binary_file_from_base64_string(tmp_session_filepath, tmp_session_base64)
@@ -208,9 +230,13 @@ class PymolSessionManager:
         #     print(tmp_result["message"])
         #     return ""
 
-    def get_all_scenes_in_current_session(self):
+    def get_all_scenes_in_current_session(self) -> None:
         self.all_scenes.clear()
         tmp_result = self.user_pymol_connector.get_scene_list()
+        if tmp_result == {}:
+            logger.warning("save_pymol_session returned an empty dict.")
+            self.all_scenes = []
+            return
         if tmp_result["success"]:
             self.all_scenes = tmp_result["data"]
         else:
@@ -255,8 +281,11 @@ class PymolSessionManager:
             return residue_color_config.ResidueColorConfig(tmp_color_config[0], tmp_color_config[1], tmp_color_config[2])
         return residue_color_config.ResidueColorConfig("", "", "")
 
-    def get_chain_repr_state(self, a_selection_string: str, chain_letter: str) -> dict:
+    def get_chain_repr_state(self, a_selection_string: str, chain_letter: str) -> Optional[dict]:
         tmp_result = self.user_pymol_connector.get_chain_repr_state(a_selection_string, chain_letter)
+        if tmp_result == {}:
+            logger.warning("save_pymol_session returned an empty dict.")
+            return None
         if tmp_result["success"]:
             return tmp_result["data"]
         return None

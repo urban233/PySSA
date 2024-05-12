@@ -224,19 +224,28 @@ class InterfaceManager:
         self._app_process_manager_thread.start()
 
     def _recover_user_pymol(self, a_placeholder_1, a_placeholder_2):
-        logger.info("Starting recovery process ...")
-        self.app_process_manager.start_pymol()
-        self.app_process_manager.arrange_windows()
-        time.sleep(10)
-        self.pymol_session_manager.user_pymol_connector.reset_connection()
-        self._reset_pymol_session()
+        try:
+            logger.info("Starting recovery process ...")
+            self.app_process_manager.start_pymol()
+            self.app_process_manager.arrange_windows()
+            time.sleep(10)
+            self.pymol_session_manager.user_pymol_connector.reset_connection()
+            self._reset_pymol_session()
+        except Exception as e:
+            logger.error("The following error occurred during the PyMOL recovery process: (see line below)")
+            logger.error(e)
         return "", ""  # These two empty strings are needed for the task class
 
     def __await_recover_user_pymol(self):
-        logger.info("Finished recovery process.")
-        logger.info("Restarting check process routine of application process manager.")
-        self.start_app_process_manager()
-        self._restart_user_pymol_view.close()
+        try:
+            logger.info("Finished recovery process.")
+            logger.info("Restarting check process routine of application process manager.")
+            self.start_app_process_manager()
+        except Exception as e:
+            logger.error("The following error occurred during the PyMOL startup after recovery: (see line below)")
+            logger.error(e)
+        finally:
+            self._restart_user_pymol_view.close()
 
     def start_pymol(self):
         process = subprocess.Popen([f"{constants.PLUGIN_PATH}\\scripts\\batch\\start_pymol.bat"],  # r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pymol.bat"

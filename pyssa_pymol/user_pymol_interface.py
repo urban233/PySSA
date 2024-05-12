@@ -74,7 +74,7 @@ class UserPyMOLInterface(QtCore.QObject):
         )
         self._task.start()
 
-    def main_loop(self, placeholder_1, placeholder_2) -> None:
+    def main_loop(self, placeholder_1: int, placeholder_2: int) -> tuple[int, int]:
         """
         Main loop method for handling socket communication and executing commands.
 
@@ -286,7 +286,14 @@ class UserPyMOLInterface(QtCore.QObject):
                     )
         except Exception as e:
             main_socket.send_json({"success": False, "message": str(e)})
+        finally:
+            return 0, 0
 
-    def finished_main_loop(self) -> None:
-        """Logs the message "Finished main loop" using the logger."""
+    def finished_main_loop(self, a_placeholder_1: int, a_placeholder_2_: int) -> None:
+        """Logs the message "Finished main loop" using the logger.
+
+        Args:
+            a_placeholder_1: Placeholder argument 1.
+            a_placeholder_2_: Placeholder argument 2.
+        """
         logger.info("Finished main loop")
