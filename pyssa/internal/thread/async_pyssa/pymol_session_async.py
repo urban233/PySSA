@@ -28,12 +28,55 @@ from pyssa.controller import database_manager, pymol_session_manager
 from pyssa.internal.data_structures import protein
 from pyssa.internal.data_structures.data_classes import residue_color_config
 from pyssa.logging_pyssa import log_handlers
-from pyssa.util import constants
+from pyssa.util import constants, enums
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
 
 __docformat__ = "google"
+
+
+# <editor-fold desc="PyMOL session related functions">
+def reinitialize_session(
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+        a_protein_name: str = ""
+) -> tuple[bool]:
+    """
+    Reinitializes the PyMOL session.
+
+    Args:
+        the_pymol_session_manager: The Pymol session manager object.
+        a_protein_name: The name of the protein. Default is empty string.
+
+    Returns:
+        A tuple containing a boolean value indicating the success of the method.
+
+    Notes:
+        This function can also be used if a specific protein needs to be in the current session.
+        For this case the a_protein_name argument needs to be used to define the protein that should be present
+        before reinitializing the session.
+    """
+    # <editor-fold desc="Checks">
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return (False,)
+    if a_protein_name is None:
+        logger.error("a_protein_name is None.")
+        return (False,)
+
+    # </editor-fold>
+
+    try:
+        if a_protein_name == "":
+            the_pymol_session_manager.reinitialize_session()
+        else:
+            if the_pymol_session_manager.is_the_current_protein_in_session(a_protein_name):
+                the_pymol_session_manager.reinitialize_session()
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return (False,)
+    else:
+        return (True,)
 
 
 def load_protein_pymol_session(
@@ -142,6 +185,47 @@ def save_protein_pair_pymol_session_to_database(
     else:
         return 0, True
 
+# </editor-fold>
+
+
+# <editor-fold desc="PyMOL scene related functions">
+def create_new_scene(
+        a_scene_name: str,
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple[bool, str]:
+    """
+    Creates a new scene in the current PyMOL session which gets appended to the current ones.
+
+    Args:
+        a_scene_name (str): The name of the new scene.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager):
+            An instance of PymolSessionManager used to create the new scene.
+
+    Returns:
+        A tuple with two elements:
+        - A boolean value indicating whether the scene update was successful.
+        - A string representing the name of the created scene.
+    """
+    # <editor-fold desc="Checks">
+    if a_scene_name is None or a_scene_name == "":
+        logger.error("a_scene_name is either None or an empty string.")
+        return False, ""
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return False, ""
+
+    # </editor-fold>
+
+    try:
+        the_pymol_session_manager.user_pymol_connector.scene(
+            a_key=a_scene_name, an_action="append"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return False, ""
+    else:
+        return True, a_scene_name
+
 
 def load_scene(the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", a_scene_name: str) -> tuple[bool]:
     """
@@ -174,6 +258,82 @@ def load_scene(the_pymol_session_manager: "pymol_session_manager.PymolSessionMan
         return (True,)
 
 
+def update_scene(
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+        a_placeholder_1
+) -> tuple[bool, str]:
+    """
+    Updates the current pymol scene. Creates a `_scratch_` scene if the current scene is `base`
+
+    Args:
+        the_pymol_session_manager: The PymolSessionManager object responsible for managing the PyMOL session.
+        a_placeholder_1: A placeholder parameter.
+
+    Returns:
+        A tuple with two elements:
+        - A boolean value indicating whether the scene update was successful.
+        - A string representing the name of the current scene.
+    """
+    # <editor-fold desc="Checks">
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return False, ""
+
+    # </editor-fold>
+
+    try:
+        if the_pymol_session_manager.is_the_current_pymol_scene_base is False:
+            the_pymol_session_manager.user_pymol_connector.scene(
+                a_key="auto", an_action="update"
+            )
+        else:
+            the_pymol_session_manager.user_pymol_connector.scene(
+                a_key="_scratch_", an_action="update"
+            )
+            the_pymol_session_manager.current_scene_name = "_scratch_"
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return False, ""
+    else:
+        return True, the_pymol_session_manager.current_scene_name
+
+
+def delete_scene(
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager",
+        a_placeholder_1
+) -> tuple[bool]:
+    """
+    Deletes the current scene in the current PyMOL session.
+
+    Args:
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager instance.
+        a_placeholder_1: A placeholder parameter.
+
+    Returns:
+        A tuple containing a single boolean value indicating the success of the operation.
+    """
+    # <editor-fold desc="Checks">
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return (False,)
+
+    # </editor-fold>
+
+    try:
+        the_pymol_session_manager.user_pymol_connector.scene(
+            a_key=the_pymol_session_manager.current_scene_name, an_action="clear"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return (False,)
+    else:
+        return (True,)
+
+
+# </editor-fold>
+
+
+# <editor-fold desc="Color related functions">
 def color_pymol_selection(
         a_color: str,
         a_pymol_selection: str,
@@ -360,6 +520,42 @@ def get_residue_color_config_of_a_given_protein_chain(
         return True, tmp_residue_config
 
 
+def set_background_color(
+        a_background_color: str,
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple[bool]:
+    """
+    Sets the background color of the PyMOL session.
+
+    Args:
+        a_background_color (str): The desired background color as a valid pymol color.
+        the_pymol_session_manager (pymol_session_manager.PymolSessionManager): The PyMOL session manager object.
+
+    Returns:
+        A tuple containing a boolean value indicating the success of the method.
+    """
+    # <editor-fold desc="Checks">
+    if a_background_color is None or a_background_color == "":
+        logger.error("a_background_color is either None or an empty string.")
+        return (False,)
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return (False,)
+
+    # </editor-fold>
+
+    try:
+        the_pymol_session_manager.user_pymol_connector.set_background_color(a_background_color)
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return (False,)
+    else:
+        return (True,)
+
+# </editor-fold>
+
+
+# <editor-fold desc="Representation related functions">
 def get_representation_config_of_a_given_protein_chain(
         a_selection_string: str,
         a_chain_letter: str,
@@ -399,3 +595,85 @@ def get_representation_config_of_a_given_protein_chain(
         return False, None
     else:
         return True, tmp_repr_state
+
+
+def show_specific_representation(
+        a_representation: enums.PyMOLRepresentation,
+        a_selection_string: str,
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple[bool]:
+    """
+    Shows a given representation for the given selection string.
+
+    Args:
+        a_representation: An instance of enums.PyMOLRepresentation, specifying the representation to show.
+        a_selection_string: A string representing the selection criteria for the objects.
+        the_pymol_session_manager: An instance of pymol_session_manager.PymolSessionManager used for managing PyMOL sessions.
+
+    Returns:
+        A tuple containing a single boolean value indicating the success or failure of the operation.
+    """
+    # <editor-fold desc="Checks">
+    if a_representation is None:
+        logger.error("a_representation is None.")
+        return (False,)
+    if a_selection_string is None or a_selection_string == "":
+        logger.error("a_selection_string is either None or an empty string.")
+        return (False,)
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return (False,)
+
+    # </editor-fold>
+
+    try:
+        the_pymol_session_manager.show_specific_representation(
+            a_representation.value, a_selection_string
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return (False,)
+    else:
+        return (True,)
+
+
+def hide_specific_representation(
+        a_representation: enums.PyMOLRepresentation,
+        a_selection_string: str,
+        the_pymol_session_manager: "pymol_session_manager.PymolSessionManager"
+) -> tuple[bool]:
+    """
+    Shows a given representation for the given selection string.
+
+    Args:
+        a_representation: An instance of enums.PyMOLRepresentation, specifying the representation to show.
+        a_selection_string: A string representing the selection criteria for the objects.
+        the_pymol_session_manager: An instance of pymol_session_manager.PymolSessionManager used for managing PyMOL sessions.
+
+    Returns:
+        A tuple containing a single boolean value indicating the success or failure of the operation.
+    """
+    # <editor-fold desc="Checks">
+    if a_representation is None:
+        logger.error("a_representation is None.")
+        return (False,)
+    if a_selection_string is None or a_selection_string == "":
+        logger.error("a_selection_string is either None or an empty string.")
+        return (False,)
+    if the_pymol_session_manager is None:
+        logger.error("the_pymol_session_manager is None.")
+        return (False,)
+
+    # </editor-fold>
+
+    try:
+        the_pymol_session_manager.hide_specific_representation(
+            a_representation.value, a_selection_string
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error occurred. Exception: {e}")
+        return (False,)
+    else:
+        return (True,)
+
+# </editor-fold>

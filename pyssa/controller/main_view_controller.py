@@ -237,14 +237,14 @@ class MainViewController:
         # self._view.ui.btn_protein_show_ribbon.clicked.connect(self.__slot_show_protein_chain_as_ribbon)
         # self._view.ui.btn_protein_hide_ribbon.clicked.connect(self.__slot_hide_protein_chain_as_ribbon)
         # self._view.ui.cb_protein_atoms.stateChanged.connect(self.__slot_color_protein_chain_atoms_by_element)
-        self._view.ui.cb_protein_cartoon.stateChanged.connect(self.__slot_protein_chain_as_cartoon)
-        self._view.ui.cb_protein_sticks.stateChanged.connect(self.__slot_protein_chain_as_sticks)
-        self._view.ui.cb_protein_ribbon.stateChanged.connect(self.__slot_protein_chain_as_ribbon)
-        self._view.ui.cb_protein_lines.stateChanged.connect(self.__slot_protein_chain_as_lines)
-        self._view.ui.cb_protein_spheres.stateChanged.connect(self.__slot_protein_chain_as_spheres)
-        self._view.ui.cb_protein_dots.stateChanged.connect(self.__slot_protein_chain_as_dots)
-        self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
-        self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
+        # self._view.ui.cb_protein_cartoon.stateChanged.connect(self.__slot_protein_chain_as_cartoon)
+        # self._view.ui.cb_protein_sticks.stateChanged.connect(self.__slot_protein_chain_as_sticks)
+        # self._view.ui.cb_protein_ribbon.stateChanged.connect(self.__slot_protein_chain_as_ribbon)
+        # self._view.ui.cb_protein_lines.stateChanged.connect(self.__slot_protein_chain_as_lines)
+        # self._view.ui.cb_protein_spheres.stateChanged.connect(self.__slot_protein_chain_as_spheres)
+        # self._view.ui.cb_protein_dots.stateChanged.connect(self.__slot_protein_chain_as_dots)
+        # self._view.ui.cb_protein_mesh.stateChanged.connect(self.__slot_protein_chain_as_mesh)
+        # self._view.ui.cb_protein_surface.stateChanged.connect(self.__slot_protein_chain_as_surface)
         # representation
         self._view.tg_protein_color_atoms.toggleChanged.connect(self.__slot_color_protein_atoms_by_element)
         # self._view.tg_protein_hydrogen_atoms.toggleChanged.connect(self.__slot_chain_protein_with_hydrogens)  # this could be useful
@@ -2477,9 +2477,6 @@ class MainViewController:
                 ),
                 post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein
             )
-            # self._interface_manager.set_repr_state_in_ui_for_protein_chain(
-            #     self._interface_manager.pymol_session_manager
-            # )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
@@ -2512,8 +2509,9 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         finally:
-            self._interface_manager.stop_wait_cursor()
             self._interface_manager.refresh_main_view()
+            self._interface_manager.stop_wait_cursor()
+            QtWidgets.QApplication.restoreOverrideCursor()  # Due to unknown reasons this line is needed to reset the cursor
 
     # </editor-fold>
 
@@ -2764,17 +2762,93 @@ class MainViewController:
 
     # </editor-fold>
 
+    # <editor-fold desc="Set background color">
     def __slot_protein_change_background_color(self):
         try:
             if self._view.tg_protein_white_bg.toggle_button.isChecked():
-                self._interface_manager.pymol_session_manager.user_pymol_connector.set_background_color("white")
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.set_background_color,
+                    args=("white", self._interface_manager.pymol_session_manager),
+                    post_func=self.__await_set_background_color_for_protein_session
+                )
             else:
-                self._interface_manager.pymol_session_manager.user_pymol_connector.set_background_color("black")
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.set_background_color,
+                    args=("black", self._interface_manager.pymol_session_manager),
+                    post_func=self.__await_set_background_color_for_protein_session
+                )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
-    # <editor-fold desc="Representations">
+    def __await_set_background_color_for_protein_session(self, return_value: tuple[bool]):
+        try:
+            if return_value[0]:
+                self._interface_manager.status_bar_manager.show_temporary_message("Background color updated.")
+            else:
+                self._interface_manager.status_bar_manager.show_error_message("Updating background color failed!")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+
+    # </editor-fold>
+
+    # <editor-fold desc="Show/Hide representations">
+    def __await_set_representation_for_protein_session(self, return_value: tuple[bool]):
+        try:
+            if return_value[0]:
+                self._update_protein_scene_legacy()
+                self._save_protein_pymol_session()
+                self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+                self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+
+    # def __slot_set_representation_for_protein_chain(self, a_representation: "enums.PyMOLRepresentation"):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #
+    #         if self._view.tg_protein_cartoon.toggle_button.isChecked():
+    #             self._active_task = tasks.Task(
+    #                 target=pymol_session_async.show_specific_representation,
+    #                 args=(
+    #                     a_representation,
+    #                     tmp_selection.selection_string,
+    #                     self._interface_manager.pymol_session_manager
+    #                 ),
+    #                 post_func=self.__await_set_representation_for_protein_session
+    #             )
+    #         else:
+    #             self._active_task = tasks.Task(
+    #                 target=pymol_session_async.hide_specific_representation,
+    #                 args=(
+    #                     a_representation,
+    #                     tmp_selection.selection_string,
+    #                     self._interface_manager.pymol_session_manager
+    #                 ),
+    #                 post_func=self.__await_set_representation_for_protein_session
+    #             )
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #     else:
+    #         self._interface_manager.start_wait_cursor()
+    #         self._active_task.start()
+
     def __slot_protein_chain_as_cartoon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -2782,240 +2856,490 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_cartoon.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.CARTOON.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_cartoon.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.CARTOON.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_cartoon.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.CARTOON,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.CARTOON.value)
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.CARTOON.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.CARTOON,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __slot_protein_chain_as_sticks(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Sticks' toggle on the 'Proteins Tab' was clicked.")
+                       "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_sticks.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_sticks.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_sticks.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.STICKS,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.STICKS,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            #self.__slot_chain_protein_with_hydrogens()
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __slot_protein_chain_as_ribbon(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Ribbon' toggle on the 'Proteins Tab' was clicked.")
+                       "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_ribbon.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_ribbon.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_ribbon.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.RIBBON,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.RIBBON,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __slot_protein_chain_as_lines(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Lines' toggle on the 'Proteins Tab' was clicked.")
+                       "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_lines.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_lines.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_lines.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.LINES,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.LINES,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            #self.__slot_chain_protein_with_hydrogens()
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __slot_protein_chain_as_spheres(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Spheres' toggle on the 'Proteins Tab' was clicked.")
+                       "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_spheres.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_spheres.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_spheres.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.SPHERES,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.SPHERES,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            #self.__slot_chain_protein_with_hydrogens()
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __slot_protein_chain_as_dots(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Dots' toggle on the 'Proteins Tab' was clicked.")
+                       "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_dots.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_dots.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_dots.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.DOTS,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.DOTS,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __slot_protein_chain_as_mesh(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Mesh' toggle on the 'Proteins Tab' was clicked.")
+                       "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_mesh.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_mesh.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_mesh.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.MESH,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.MESH,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
 
     def __slot_protein_chain_as_surface(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                       "'Surface' toggle on the 'Proteins Tab' was clicked.")
+                       "'Cartoon' toggle on the 'Proteins Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            if self._view.ui.cb_protein_surface.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
-                )
-            elif self._view.tg_protein_surface.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
-                #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
-                self._interface_manager.pymol_session_manager.show_specific_representation(
-                    enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
+
+            if self._view.tg_protein_surface.toggle_button.isChecked():
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.show_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.SURFACE,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
-                self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.hide_specific_representation,
+                    args=(
+                        enums.PyMOLRepresentation.SURFACE,
+                        tmp_selection.selection_string,
+                        self._interface_manager.pymol_session_manager
+                    ),
+                    post_func=self.__await_set_representation_for_protein_session
                 )
-            self._update_protein_scene_legacy()
-            self._save_protein_pymol_session()
-            self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
-            self._interface_manager.manage_hydrogen_representation_for_protein_chain()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    # def __slot_protein_chain_as_sticks(self):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Sticks' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #         if self._view.ui.cb_protein_sticks.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
+    #             )
+    #         elif self._view.tg_protein_sticks.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.STICKS.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
+    #             )
+    #         else:
+    #             self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                 enums.PyMOLRepresentation.STICKS.value, tmp_selection.selection_string
+    #             )
+    #         #self.__slot_chain_protein_with_hydrogens()
+    #         self._update_protein_scene_legacy()
+    #         self._save_protein_pymol_session()
+    #         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+    #         self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_protein_chain_as_ribbon(self):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Ribbon' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #         if self._view.ui.cb_protein_ribbon.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
+    #             )
+    #         elif self._view.tg_protein_ribbon.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
+    #             )
+    #         else:
+    #             #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.RIBBON.value)
+    #             self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                 enums.PyMOLRepresentation.RIBBON.value, tmp_selection.selection_string
+    #             )
+    #         self._update_protein_scene_legacy()
+    #         self._save_protein_pymol_session()
+    #         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+    #         self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_protein_chain_as_lines(self):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Lines' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #         if self._view.ui.cb_protein_lines.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
+    #             )
+    #         elif self._view.tg_protein_lines.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
+    #             )
+    #         else:
+    #             #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.LINES.value)
+    #             self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                 enums.PyMOLRepresentation.LINES.value, tmp_selection.selection_string
+    #             )
+    #         #self.__slot_chain_protein_with_hydrogens()
+    #         self._update_protein_scene_legacy()
+    #         self._save_protein_pymol_session()
+    #         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+    #         self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_protein_chain_as_spheres(self):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Spheres' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #         if self._view.ui.cb_protein_spheres.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
+    #             )
+    #         elif self._view.tg_protein_spheres.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
+    #             )
+    #         else:
+    #             #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SPHERES.value)
+    #             self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                 enums.PyMOLRepresentation.SPHERES.value, tmp_selection.selection_string
+    #             )
+    #         #self.__slot_chain_protein_with_hydrogens()
+    #         self._update_protein_scene_legacy()
+    #         self._save_protein_pymol_session()
+    #         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+    #         self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_protein_chain_as_dots(self):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Dots' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #         if self._view.ui.cb_protein_dots.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
+    #             )
+    #         elif self._view.tg_protein_dots.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
+    #             )
+    #         else:
+    #             #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.DOTS.value)
+    #             self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                 enums.PyMOLRepresentation.DOTS.value, tmp_selection.selection_string
+    #             )
+    #         self._update_protein_scene_legacy()
+    #         self._save_protein_pymol_session()
+    #         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+    #         self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_protein_chain_as_mesh(self):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Mesh' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #         if self._view.ui.cb_protein_mesh.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
+    #             )
+    #         elif self._view.tg_protein_mesh.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
+    #             )
+    #         else:
+    #             #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.MESH.value)
+    #             self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                 enums.PyMOLRepresentation.MESH.value, tmp_selection.selection_string
+    #             )
+    #         self._update_protein_scene_legacy()
+    #         self._save_protein_pymol_session()
+    #         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+    #         self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #
+    # def __slot_protein_chain_as_surface(self):
+    #     try:
+    #         logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #                    "'Surface' toggle on the 'Proteins Tab' was clicked.")
+    #         tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
+    #         tmp_selection.set_selection_for_a_single_chain(
+    #             self._interface_manager.get_current_active_chain_object().chain_letter)
+    #         if self._view.ui.cb_protein_surface.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 0:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
+    #             )
+    #         elif self._view.tg_protein_surface.toggle_button.isChecked() and self._interface_manager.get_protein_repr_toggle_flag() == 1:
+    #             #tmp_selection.show_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
+    #             self._interface_manager.pymol_session_manager.show_specific_representation(
+    #                 enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
+    #             )
+    #         else:
+    #             #tmp_selection.hide_selection_in_a_specific_representation(enums.PyMOLRepresentation.SURFACE.value)
+    #             self._interface_manager.pymol_session_manager.hide_specific_representation(
+    #                 enums.PyMOLRepresentation.SURFACE.value, tmp_selection.selection_string
+    #             )
+    #         self._update_protein_scene_legacy()
+    #         self._save_protein_pymol_session()
+    #         self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
+    #         self._interface_manager.manage_hydrogen_representation_for_protein_chain()
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_hide_protein_chain_all(self):
         try:
@@ -3037,14 +3361,26 @@ class MainViewController:
             self._view.tg_protein_dots.toggle_button.setChecked(False)
             self._view.tg_protein_mesh.toggle_button.setChecked(False)
             self._view.tg_protein_surface.toggle_button.setChecked(False)
-            self.__slot_protein_chain_as_cartoon()
-            self.__slot_protein_chain_as_sticks()
-            self.__slot_protein_chain_as_ribbon()
-            self.__slot_protein_chain_as_lines()
-            self.__slot_protein_chain_as_spheres()
-            self.__slot_protein_chain_as_dots()
-            self.__slot_protein_chain_as_mesh()
-            self.__slot_protein_chain_as_surface()
+            tmp_reprs = [
+                enums.PyMOLRepresentation.CARTOON,
+                enums.PyMOLRepresentation.STICKS,
+                enums.PyMOLRepresentation.RIBBON,
+                enums.PyMOLRepresentation.LINES,
+                enums.PyMOLRepresentation.SPHERES,
+                enums.PyMOLRepresentation.DOTS,
+                enums.PyMOLRepresentation.MESH,
+                enums.PyMOLRepresentation.SURFACE,
+            ]
+            for tmp_repr in tmp_reprs:
+                self.__slot_set_representation_for_protein_chain(tmp_repr)
+            # self.__slot_protein_chain_as_cartoon()
+            # self.__slot_protein_chain_as_sticks()
+            # self.__slot_protein_chain_as_ribbon()
+            # self.__slot_protein_chain_as_lines()
+            # self.__slot_protein_chain_as_spheres()
+            # self.__slot_protein_chain_as_dots()
+            # self.__slot_protein_chain_as_mesh()
+            # self.__slot_protein_chain_as_surface()
             self._update_protein_scene_legacy()
             self._save_protein_pymol_session()
             self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -3125,6 +3461,7 @@ class MainViewController:
             self._interface_manager.stop_wait_cursor()
     # </editor-fold>
 
+    # <editor-fold desc="Delete protein">
     def __slot_delete_protein(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein' button on the 'Proteins Tab' was clicked.")
@@ -3134,21 +3471,42 @@ class MainViewController:
             )
             tmp_dialog.exec_()
             response: bool = tmp_dialog.response
-            if response:
+            if not response:
+                return
+
+            tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
+            self._active_task = tasks.Task(
+                target=pymol_session_async.reinitialize_session,
+                args=(self._interface_manager.pymol_session_manager, tmp_protein.get_molecule_object()),
+                post_func=self.__await_reinitialize_session_before_delete_protein
+            )
+        except Exception as e:
+            logger.error(f"An error occurred during the protein deletion process: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("Protein delete failed!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    def __await_reinitialize_session_before_delete_protein(self, return_value: tuple[bool]):
+        try:
+            if return_value[0]:
                 tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
-                if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein.get_molecule_object()):
-                    self._interface_manager.pymol_session_manager.reinitialize_session()
                 tmp_database_operation = database_operation.DatabaseOperation(enums.SQLQueryType.DELETE_EXISTING_PROTEIN,
                                                                               (0, tmp_protein.get_id()))
                 self._database_thread.put_database_operation_into_queue(tmp_database_operation)
                 self._interface_manager.get_current_project().delete_specific_protein(tmp_protein.get_molecule_object())
                 self._interface_manager.watcher.remove_protein(tmp_protein.get_molecule_object())
                 self._interface_manager.remove_protein_from_proteins_model()
-                self._interface_manager.refresh_main_view()
         except Exception as e:
             logger.error(f"An error occurred during the protein deletion process: {e}")
             self._interface_manager.status_bar_manager.show_error_message("Protein delete failed!")
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
+    # </editor-fold>
+
+    # <editor-fold desc="Save/Export protein">
     def __slot_save_selected_protein_structure_as_pdb_file(self) -> None:
         """Saves selected protein as pdb file."""
         try:
@@ -3209,6 +3567,9 @@ class MainViewController:
         finally:
             self._interface_manager.stop_wait_cursor()
 
+    # </editor-fold>
+
+    # <editor-fold desc="Clean protein">
     def __slot_clean_protein_update(self) -> None:
         """Cleans the selected protein structure."""
         try:
@@ -3253,13 +3614,38 @@ class MainViewController:
         # </editor-fold>
 
         try:
-            self.update_status("Cleaning protein finished.")
-            if self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
+            if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
                 self._interface_manager.get_current_active_protein_object().get_molecule_object()
             ):
-                self._interface_manager.pymol_session_manager.load_protein_session(
-                    self._interface_manager.get_current_active_protein_object()
-                )
+                self._interface_manager.stop_wait_cursor()
+                self._interface_manager.refresh_main_view()
+                return
+
+            self._active_task = tasks.Task(
+                target=pymol_session_async.load_protein_pymol_session,
+                args=(
+                    self._interface_manager.get_current_active_protein_object(),
+                    self._interface_manager.pymol_session_manager,
+                    False
+                ),
+                post_func=self.__await_load_protein_pymol_session_after_cleaning
+            )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+        else:
+            self._active_task.start()
+
+    def __await_load_protein_pymol_session_after_cleaning(
+            self, return_value: tuple[Optional["pymol_session_manager.PymolSessionManager"], bool]
+    ):
+        try:
+            if return_value[1]:
+                self._interface_manager.status_bar_manager.show_temporary_message("Cleaning the protein finished.")
+            else:
+                self._interface_manager.status_bar_manager.show_error_message("Cleaning the protein failed!")
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
@@ -3267,6 +3653,10 @@ class MainViewController:
             self._interface_manager.stop_wait_cursor()
             self._interface_manager.refresh_main_view()
 
+    # </editor-fold>
+
+    # <editor-fold desc="Rename (not yet implemented properly!)">
+    # TODO: This needs to be better implemented before used in production
     def __slot_rename_selected_protein_structure(self) -> None:
         """Opens a new view to rename the selected protein."""
         try:
@@ -3325,6 +3715,8 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
+    # </editor-fold>
+
     def __slot_show_protein_chain_sequence(self) -> None:
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Show protein sequence' context menu action was clicked.")
@@ -3350,33 +3742,46 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
+    # <editor-fold desc="Update scene">
     def __slot_update_protein_scene(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
-            self._update_protein_scene()
-            self._save_protein_pymol_session()
-            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
+            self._active_task = tasks.Task(
+                target=pymol_session_async.update_scene,
+                args=(self._interface_manager.pymol_session_manager, 0),
+                post_func=self.__await_update_scene_for_protein_session,
+            )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-
-    def _update_protein_scene(self) -> None:
-        """Updates the current selected PyMOL scene."""
-        if self._interface_manager.pymol_session_manager.is_the_current_pymol_scene_base is False:
-            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
-                a_key="auto", an_action="update"
-            )
-            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
         else:
-            if not self._interface_manager.check_if_scratch_scene_exists_in_protein_model():
-                self._interface_manager.add_scratch_scene_to_protein_model()
-            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
-                a_key="_scratch_", an_action="update"
-            )
-            self._interface_manager.pymol_session_manager.current_scene_name = "_scratch_"
-            ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
-                                                    self._view.ui.lbl_pymol_protein_scene)
-            self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    def __await_update_scene_for_protein_session(self, return_value: tuple[bool, str]):
+        try:
+            tmp_success_flag, tmp_current_scene_name = return_value
+            if tmp_current_scene_name == "_scratch_":
+                if not self._interface_manager.check_if_scratch_scene_exists_in_protein_model():
+                    self._interface_manager.add_scratch_scene_to_protein_model()
+                ui_util.set_pymol_scene_name_into_label(
+                    tmp_current_scene_name,
+                    self._view.ui.lbl_pymol_protein_scene)
+                self._interface_manager.pymol_session_manager.current_scene_name = tmp_current_scene_name
+                self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.",
+                                                                                  a_timeout=1500)
+            else:
+                self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene updated.", a_timeout=1500)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._save_protein_pymol_session()
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+
+    # </editor-fold>
 
     def _update_protein_scene_legacy(self) -> None:
         """Updates the current selected PyMOL scene.
@@ -3403,82 +3808,90 @@ class MainViewController:
         #                                             self._view.ui.lbl_pymol_protein_scene)
         #     self._interface_manager.status_bar_manager.show_temporary_message("PyMOL Scene _scratch_ updated.", a_timeout=1500)
 
+    # <editor-fold desc="Create/Save new scene">
     def __slot_save_scene(self) -> None:
         """Saves the current view as a new PyMOL scene."""
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Create pymol scene' button on the 'Proteins or Protein Pairs Tab' was clicked.")
             self._external_controller = add_scene_view_controller.AddSceneViewController(self._interface_manager)
-            self._external_controller.user_input.connect(self.post_save_scene)
+            self._external_controller.user_input.connect(self._post_save_scene)
             self._external_controller.restore_ui()
             self._interface_manager.get_add_scene_view().show()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
-    def post_save_scene(self, return_value: tuple):
+    def _post_save_scene(self, return_value: tuple):
         try:
             tmp_scene_name, _ = return_value
-            self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
-                a_key=tmp_scene_name, an_action="append"
+            self._active_task = tasks.Task(
+                target=pymol_session_async.create_new_scene,
+                args=(tmp_scene_name, self._interface_manager.pymol_session_manager),
+                post_func=self.__await_create_new_scene_for_protein_session,
             )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    def __await_create_new_scene_for_protein_session(self, return_value: tuple[bool, str]):
+        try:
+            tmp_success_flag, tmp_created_scene_name = return_value
             if self._interface_manager.current_tab_index == 1:
-                try:
-                    self._active_task = tasks.Task(
-                        target=pymol_session_async.save_protein_pymol_session_to_database,
-                        args=(
-                            self._interface_manager,
-                            0
-                        ),
-                        post_func=self.__await_save_scene_protein,
-                    )
-                except Exception as e:
-                    logger.error(f"An error occurred: {e}")
-                    self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-                else:
-                    self._interface_manager.status_bar_manager.show_temporary_message(
-                        "Adding new scene to protein ...", False)
-                    self._interface_manager.add_scene_to_proteins_model(tmp_scene_name)
-                    self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
-                    ui_util.set_pymol_scene_name_into_label(
-                        self._interface_manager.pymol_session_manager.current_scene_name,
-                        self._view.ui.lbl_pymol_protein_scene)
-                    self._interface_manager.start_wait_cursor()
-                    self._active_task.start()
+                # User is on Proteins tab
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.save_protein_pymol_session_to_database,
+                    args=(
+                        self._interface_manager,
+                        0
+                    ),
+                    post_func=self.__await_save_scene_protein,
+                )
+                self._interface_manager.status_bar_manager.show_temporary_message(
+                    "Adding new scene to protein ...", False)
+                self._interface_manager.add_scene_to_proteins_model(tmp_created_scene_name)
+                self._interface_manager.pymol_session_manager.current_scene_name = tmp_created_scene_name
+                ui_util.set_pymol_scene_name_into_label(
+                    self._interface_manager.pymol_session_manager.current_scene_name,
+                    self._view.ui.lbl_pymol_protein_scene)
             elif self._interface_manager.current_tab_index == 2:
+                # User is on Protein Pairs tab
                 # The database thread cannot be used here because the session gets loaded again
                 # before the new data is in the db
-                try:
-                    self._active_task = tasks.Task(
-                        target=pymol_session_async.save_protein_pair_pymol_session_to_database,
-                        args=(
-                            self._interface_manager,
-                            0
-                        ),
-                        post_func=self.__await_save_scene_protein_pair,
-                    )
-                except Exception as e:
-                    logger.error(f"An error occurred: {e}")
-                    self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-                else:
-                    self._active_task.start()
-                    self._interface_manager.status_bar_manager.show_temporary_message(
-                        "Adding new scene to protein pair ...", False)
-                    self._interface_manager.start_wait_cursor()
-                    self._interface_manager.add_scene_to_protein_pairs_model(tmp_scene_name)
-                    self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
-                    ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
-                                                            self._view.ui.lbl_pymol_protein_pair_scene)
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.save_protein_pair_pymol_session_to_database,
+                    args=(
+                        self._interface_manager,
+                        0
+                    ),
+                    post_func=self.__await_save_scene_protein_pair,
+                )
+                self._interface_manager.status_bar_manager.show_temporary_message(
+                    "Adding new scene to protein pair ...", False)
+                self._interface_manager.add_scene_to_protein_pairs_model(tmp_created_scene_name)
+                self._interface_manager.pymol_session_manager.current_scene_name = tmp_created_scene_name
+                ui_util.set_pymol_scene_name_into_label(
+                    self._interface_manager.pymol_session_manager.current_scene_name,
+                    self._view.ui.lbl_pymol_protein_pair_scene)
             else:
                 logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
+                self._interface_manager.stop_wait_cursor()
+                self._interface_manager.refresh_main_view()
+                self._interface_manager.status_bar_manager.show_error_message("Creating scene failed! Tab index invalid!")
                 return
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+        else:
+            self._active_task.start()
 
     def __await_save_scene_protein(self, return_value: tuple):
         try:
             _, exit_flag = return_value
-            self._interface_manager.refresh_main_view()
             if exit_flag:
                 self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein finished.")
             else:
@@ -3488,11 +3901,11 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         finally:
             self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
     def __await_save_scene_protein_pair(self, return_value: tuple):
         try:
             _, exit_flag = return_value
-            self._interface_manager.refresh_main_view()
             if exit_flag:
                 self._interface_manager.status_bar_manager.show_temporary_message("Adding new scene to protein pair finished.")
             else:
@@ -3502,7 +3915,11 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         finally:
             self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
+    # </editor-fold>
+
+    # <editor-fold desc="Delete scene">
     def __slot_delete_current_scene(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
@@ -3512,47 +3929,68 @@ class MainViewController:
                 custom_message_box.CustomMessageBoxIcons.WARNING.value
             )
             tmp_dialog.exec_()
-            response: bool = tmp_dialog.response
-            if response:
-                self._interface_manager.pymol_session_manager.user_pymol_connector.scene(
-                    a_key=self._interface_manager.pymol_session_manager.current_scene_name, an_action="clear"
-                )
-                if self._interface_manager.current_tab_index == 1:
-                    self._save_protein_pymol_session()
-                    self._interface_manager.remove_scene_from_proteins_model(self._interface_manager.get_current_protein_tree_index())
-                    self._view.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Selected")
-                    self.__await_delete_current_scene((0, True))
-                elif self._interface_manager.current_tab_index == 2:
-                    # The database thread cannot be used here because the session gets loaded again
-                    # before the new data is in the db
-                    self._active_task = tasks.Task(
-                        target=pymol_session_async.save_protein_pair_pymol_session_to_database,
-                        args=(
-                            self._interface_manager,
-                            0
-                        ),
-                        post_func=self.__await_delete_current_scene,
-                    )
-                    self._active_task.start()
-                    self._interface_manager.status_bar_manager.show_temporary_message(
-                        "Deleting selected scene ...", False
-                    )
-                    self._interface_manager.start_wait_cursor()
-                    self._interface_manager.remove_scene_from_protein_pairs_model(
-                        self._interface_manager.get_current_protein_pair_tree_index()
-                    )
-                    self._view.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Selected")
-                else:
-                    logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
-                    return
+            if not tmp_dialog.response:
+                return
+
+            self._active_task = tasks.Task(
+                    target=pymol_session_async.delete_scene,
+                    args=(self._interface_manager.pymol_session_manager, 0),
+                    post_func=self.__await_delete_scene_for_protein_session,
+            )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.start_wait_cursor()
+            self._active_task.start()
+
+    def __await_delete_scene_for_protein_session(self, return_value: tuple[bool]):
+        try:
+            if return_value[0] is False:
+                self._interface_manager.stop_wait_cursor()
+                self._interface_manager.refresh_main_view()
+                self._interface_manager.status_bar_manager.show_error_message("Deleting the selected scene failed!")
+                return
+
+            if self._interface_manager.current_tab_index == 1:
+                self._save_protein_pymol_session()
+                self._interface_manager.remove_scene_from_proteins_model(self._interface_manager.get_current_protein_tree_index())
+                self._view.ui.lbl_pymol_protein_scene.setText("PyMOL Scene: No Scene Selected")
+                self.__await_delete_current_scene((0, True))
+            elif self._interface_manager.current_tab_index == 2:
+                # The database thread cannot be used here because the session gets loaded again
+                # before the new data is in the db
+                self._active_task = tasks.Task(
+                    target=pymol_session_async.save_protein_pair_pymol_session_to_database,
+                    args=(
+                        self._interface_manager,
+                        0
+                    ),
+                    post_func=self.__await_delete_current_scene,
+                )
+                self._active_task.start()
+                self._interface_manager.status_bar_manager.show_temporary_message(
+                    "Deleting selected scene ...", False
+                )
+                self._interface_manager.start_wait_cursor()
+                self._interface_manager.remove_scene_from_protein_pairs_model(
+                    self._interface_manager.get_current_protein_pair_tree_index()
+                )
+                self._view.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Selected")
+            else:
+                logger.warning("The current tab index is not for the proteins nor for the protein pairs tab?!")
+                self._interface_manager.stop_wait_cursor()
+                self._interface_manager.refresh_main_view()
+                return
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
     def __await_delete_current_scene(self, return_value: tuple):
         try:
             _, exit_flag = return_value
-            self._interface_manager.refresh_main_view()
             if exit_flag:
                 self._interface_manager.status_bar_manager.show_temporary_message("Deleted the scene successfully.")
             else:
@@ -3562,6 +4000,9 @@ class MainViewController:
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         finally:
             self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
+
+    # </editor-fold>
 
     # </editor-fold>
 
