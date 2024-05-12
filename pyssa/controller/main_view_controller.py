@@ -151,6 +151,7 @@ class MainViewController:
 
     def _connect_all_ui_elements_with_slot_functions(self):
         self._view.dialogClosed.connect(self._close_main_window)
+        self._interface_manager.get_restart_pymol_view().return_value.connect(self._force_close_all)
         self.custom_progress_signal.progress.connect(self._update_progress_bar)
         self.abort_signal.abort.connect(self._abort_task)
         self._interface_manager.refresh_after_job_finished_signal.refresh.connect(self._update_main_view_ui)
@@ -441,6 +442,41 @@ class MainViewController:
         self._interface_manager.app_process_manager.close_manager()
         tmp_event.accept()
 
+    def _force_close_all(self):
+        tmp_number_of_help_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER))
+        tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
+        tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
+        # PySSA should be closed
+        if not self._view.ui.lbl_logo.isVisible():
+            logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
+            self.__slot_close_project()
+        # Help windows
+        if tmp_number_of_help_windows == 1:
+            logger.info("The documentation window is open. It will be closed now.")
+            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
+        elif tmp_number_of_help_windows > 1:
+            for tmp_window_index in range(tmp_number_of_help_windows):
+                pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[tmp_window_index].close()
+
+        self._interface_manager.app_process_manager.close_manager()
+
+        # PyMOL windows
+        if tmp_number_of_pymol_windows == 1:
+            logger.info("PyMOL will be closed now.")
+            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
+        elif tmp_number_of_pymol_windows > 1:
+            for tmp_window_index in range(tmp_number_of_help_windows + 1):
+                pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[tmp_window_index].close()
+
+        # PySSA windows
+        if tmp_number_of_pyssa_windows == 1:
+            logger.info("PySSA will be closed now.")
+            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[0].close()
+        elif tmp_number_of_pyssa_windows > 1:
+            for tmp_window_index in range(tmp_number_of_help_windows + 1):
+                pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+                    tmp_window_index].close()
+
     def __slot_close_all(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Exit Application' clicked.")
@@ -452,9 +488,10 @@ class MainViewController:
             if tmp_dialog.response:
                 tmp_number_of_help_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER))
                 tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
+                tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
                 # PySSA should be closed
                 if not self._view.ui.lbl_logo.isVisible():
-                    logger.info("A project is currently opend. It will now be saved and the application exists afterwards.")
+                    logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
                     self.__slot_close_project()
                 # Help windows
                 if tmp_number_of_help_windows == 1:
@@ -481,10 +518,10 @@ class MainViewController:
                             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[tmp_window_index].close()
 
                 # PySSA windows
-                if tmp_number_of_pymol_windows == 1:
+                if tmp_number_of_pyssa_windows == 1:
                     logger.info("PySSA will be closed now.")
                     pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[0].close()
-                elif tmp_number_of_pymol_windows > 1:
+                elif tmp_number_of_pyssa_windows > 1:
                     tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                         "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
                         "Close PySSA",
@@ -2458,7 +2495,9 @@ class MainViewController:
             return_value: tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]
     ) -> None:
         try:
+            logger.debug("Returned from method 'pymol_session_async.get_residue_color_config_of_a_given_protein_chain'.")
             tmp_success_flag, tmp_residue_color_config = return_value
+            logger.debug(f"The return_value is: {return_value}.")
             if not tmp_success_flag:
                 logger.error("Retrieving color information failed!")
                 self._interface_manager.status_bar_manager.show_error_message("Retrieving color information failed!")
@@ -2466,11 +2505,12 @@ class MainViewController:
                 self._interface_manager.refresh_main_view()
                 return
 
+            logger.debug("Check if chain is colored by element.")
             if tmp_residue_color_config.atoms_are_colored_by_elements():
-                self._view.tg_protein_color_atoms.toggle_button.setChecked(True)
+                ui_util.set_checked_async(self._view.tg_protein_color_atoms.toggle_button, True)
                 self._view.ui.lbl_protein_current_color.setText("By Element    ")
             else:
-                self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+                ui_util.set_checked_async(self._view.tg_protein_color_atoms.toggle_button, False)
                 self._interface_manager.set_current_active_chain_color_of_protein(tmp_residue_color_config.carbon_color)
                 self._view.color_grid_proteins.set_icon_for_selected_color(tmp_residue_color_config.carbon_color)
                 self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_color_config.carbon_color}    ")
@@ -2507,14 +2547,22 @@ class MainViewController:
                     self._interface_manager.manage_toggle_state_of_protein_repr(tmp_representation_config)
                 else:
                     self._view.ui.frame_protein_repr.setEnabled(False)
-                    self._view.tg_protein_cartoon.toggle_button.setChecked(False)
-                    self._view.tg_protein_ribbon.toggle_button.setChecked(False)
-                    self._view.tg_protein_sticks.toggle_button.setChecked(False)
-                    self._view.tg_protein_lines.toggle_button.setChecked(False)
-                    self._view.tg_protein_spheres.toggle_button.setChecked(False)
-                    self._view.tg_protein_dots.toggle_button.setChecked(False)
-                    self._view.tg_protein_mesh.toggle_button.setChecked(False)
-                    self._view.tg_protein_surface.toggle_button.setChecked(False)
+                    ui_util.set_checked_async(self._view.tg_protein_cartoon.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_ribbon.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_sticks.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_lines.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_spheres.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_dots.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_mesh.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_surface.toggle_button, False)
+                    # self._view.tg_protein_cartoon.toggle_button.setChecked(False)
+                    # self._view.tg_protein_ribbon.toggle_button.setChecked(False)
+                    # self._view.tg_protein_sticks.toggle_button.setChecked(False)
+                    # self._view.tg_protein_lines.toggle_button.setChecked(False)
+                    # self._view.tg_protein_spheres.toggle_button.setChecked(False)
+                    # self._view.tg_protein_dots.toggle_button.setChecked(False)
+                    # self._view.tg_protein_mesh.toggle_button.setChecked(False)
+                    # self._view.tg_protein_surface.toggle_button.setChecked(False)
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
@@ -2614,7 +2662,8 @@ class MainViewController:
                     tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
                     self._interface_manager.set_current_active_chain_color_of_protein(tmp_chain_color)
                     self._view.color_grid_proteins.set_icon_for_selected_color(tmp_chain_color)
-                    self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
+                    ui_util.set_checked_async(self._view.tg_protein_color_atoms.toggle_button, False)
+                    #self._view.tg_protein_color_atoms.toggle_button.setChecked(False)
 
                 # </editor-fold>
 
@@ -3376,14 +3425,22 @@ class MainViewController:
     def __await_hide_all_representations_of_protein_chain_of_a_protein(self, return_value: tuple[bool]):
         try:
             if return_value[0]:
-                self._view.tg_protein_cartoon.toggle_button.setChecked(False)
-                self._view.tg_protein_sticks.toggle_button.setChecked(False)
-                self._view.tg_protein_ribbon.toggle_button.setChecked(False)
-                self._view.tg_protein_lines.toggle_button.setChecked(False)
-                self._view.tg_protein_spheres.toggle_button.setChecked(False)
-                self._view.tg_protein_dots.toggle_button.setChecked(False)
-                self._view.tg_protein_mesh.toggle_button.setChecked(False)
-                self._view.tg_protein_surface.toggle_button.setChecked(False)
+                ui_util.set_checked_async(self._view.tg_protein_cartoon.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_ribbon.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_sticks.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_lines.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_spheres.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_dots.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_mesh.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_surface.toggle_button, False)
+                # self._view.tg_protein_cartoon.toggle_button.setChecked(False)
+                # self._view.tg_protein_sticks.toggle_button.setChecked(False)
+                # self._view.tg_protein_ribbon.toggle_button.setChecked(False)
+                # self._view.tg_protein_lines.toggle_button.setChecked(False)
+                # self._view.tg_protein_spheres.toggle_button.setChecked(False)
+                # self._view.tg_protein_dots.toggle_button.setChecked(False)
+                # self._view.tg_protein_mesh.toggle_button.setChecked(False)
+                # self._view.tg_protein_surface.toggle_button.setChecked(False)
                 self._update_protein_scene_legacy()
                 self._save_protein_pymol_session()
                 self._interface_manager.manage_coloring_by_element_option_for_protein_chain()
@@ -3845,9 +3902,11 @@ class MainViewController:
 
     def __await_create_new_scene_for_protein_session(self, return_value: tuple[bool, str]):
         try:
+            logging.debug("Returned from method 'pymol_session_async.create_new_scene'.")
             tmp_success_flag, tmp_created_scene_name = return_value
             if self._interface_manager.current_tab_index == 1:
                 # User is on Proteins tab
+                logging.debug("Setting up new async task 'pymol_session_async.save_protein_pymol_session_to_database'.")
                 self._active_task = tasks.Task(
                     target=pymol_session_async.save_protein_pymol_session_to_database,
                     args=(
@@ -3858,8 +3917,10 @@ class MainViewController:
                 )
                 self._interface_manager.status_bar_manager.show_temporary_message(
                     "Adding new scene to protein ...", False)
+                logger.debug("Adding the new scene to the protein model.")
                 self._interface_manager.add_scene_to_proteins_model(tmp_created_scene_name)
                 self._interface_manager.pymol_session_manager.current_scene_name = tmp_created_scene_name
+                logger.debug("Modifying the GUI for the new scene.")
                 ui_util.set_pymol_scene_name_into_label(
                     self._interface_manager.pymol_session_manager.current_scene_name,
                     self._view.ui.lbl_pymol_protein_scene)
@@ -3894,6 +3955,7 @@ class MainViewController:
             self._interface_manager.stop_wait_cursor()
             self._interface_manager.refresh_main_view()
         else:
+            logger.debug("Start async task 'pymol_session_async.save_protein_pymol_session_to_database'.")
             self._active_task.start()
 
     def __await_save_scene_protein(self, return_value: tuple):
@@ -4254,10 +4316,12 @@ class MainViewController:
                 return
 
             if tmp_residue_color_config.atoms_are_colored_by_elements():
-                self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
+                #self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
+                ui_util.set_checked_async(self._view.tg_protein_pair_color_atoms.toggle_button, True)
                 self._view.ui.lbl_protein_pair_current_color.setText("By Element    ")
             else:
-                self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+                #self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_color_atoms.toggle_button, False)
                 self._interface_manager.set_current_active_chain_color_of_protein_pair(tmp_residue_color_config.carbon_color)
                 self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_residue_color_config.carbon_color)
                 self._view.ui.lbl_protein_pair_current_color.setText(f"{tmp_residue_color_config.carbon_color}    ")
@@ -4294,14 +4358,22 @@ class MainViewController:
                     self._interface_manager.manage_toggle_state_of_protein_pair_repr(tmp_representation_config)
                 else:
                     self._view.ui.frame_protein_pair_repr.setEnabled(False)
-                    self._view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
-                    self._view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
-                    self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
-                    self._view.tg_protein_pair_lines.toggle_button.setChecked(False)
-                    self._view.tg_protein_pair_spheres.toggle_button.setChecked(False)
-                    self._view.tg_protein_pair_dots.toggle_button.setChecked(False)
-                    self._view.tg_protein_pair_mesh.toggle_button.setChecked(False)
-                    self._view.tg_protein_pair_surface.toggle_button.setChecked(False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_cartoon.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_ribbon.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_sticks.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_lines.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_spheres.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_dots.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_mesh.toggle_button, False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_surface.toggle_button, False)
+                    # self._view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
+                    # self._view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
+                    # self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
+                    # self._view.tg_protein_pair_lines.toggle_button.setChecked(False)
+                    # self._view.tg_protein_pair_spheres.toggle_button.setChecked(False)
+                    # self._view.tg_protein_pair_dots.toggle_button.setChecked(False)
+                    # self._view.tg_protein_pair_mesh.toggle_button.setChecked(False)
+                    # self._view.tg_protein_pair_surface.toggle_button.setChecked(False)
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
@@ -4442,7 +4514,8 @@ class MainViewController:
                     tmp_chain.pymol_parameters["chain_color"] = tmp_chain_color
                     self._interface_manager.set_current_active_chain_color_of_protein_pair(tmp_chain_color)
                     self._view.color_grid_protein_pairs.set_icon_for_selected_color(tmp_chain_color)
-                    self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+                    #self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(False)
+                    ui_util.set_checked_async(self._view.tg_protein_pair_color_atoms.toggle_button, False)
 
                 # </editor-fold>
 
@@ -5283,14 +5356,22 @@ class MainViewController:
     def __await_hide_all_representations_of_protein_chain_of_a_protein_pair(self, return_value: tuple[bool]):
         try:
             if return_value[0]:
-                self._view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
-                self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
-                self._view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
-                self._view.tg_protein_pair_lines.toggle_button.setChecked(False)
-                self._view.tg_protein_pair_spheres.toggle_button.setChecked(False)
-                self._view.tg_protein_pair_dots.toggle_button.setChecked(False)
-                self._view.tg_protein_pair_mesh.toggle_button.setChecked(False)
-                self._view.tg_protein_pair_surface.toggle_button.setChecked(False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_cartoon.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_ribbon.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_sticks.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_lines.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_spheres.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_dots.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_mesh.toggle_button, False)
+                ui_util.set_checked_async(self._view.tg_protein_pair_surface.toggle_button, False)
+                # self._view.tg_protein_pair_cartoon.toggle_button.setChecked(False)
+                # self._view.tg_protein_pair_sticks.toggle_button.setChecked(False)
+                # self._view.tg_protein_pair_ribbon.toggle_button.setChecked(False)
+                # self._view.tg_protein_pair_lines.toggle_button.setChecked(False)
+                # self._view.tg_protein_pair_spheres.toggle_button.setChecked(False)
+                # self._view.tg_protein_pair_dots.toggle_button.setChecked(False)
+                # self._view.tg_protein_pair_mesh.toggle_button.setChecked(False)
+                # self._view.tg_protein_pair_surface.toggle_button.setChecked(False)
                 self._update_protein_pair_scene_legacy()
                 self._save_protein_pair_pymol_session()
                 self._interface_manager.manage_coloring_by_element_option_for_protein_pair_chain()

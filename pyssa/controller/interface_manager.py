@@ -53,7 +53,7 @@ from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import locks, custom_signals
 from pyssa.io_pyssa import filesystem_io
 from pyssa.model import proteins_model, protein_pairs_model
-from pyssa.util import enums, constants, main_window_util
+from pyssa.util import enums, constants, main_window_util, ui_util
 from pyssa.util.void import rvoid
 
 
@@ -87,7 +87,6 @@ class InterfaceManager:
 
     project_lock: QtCore.QMutex
     pymol_lock: "locks.PyMOL_LOCK"
-
     # _application_settings: "settings.Settings"
     current_tab_index: int = 0
 
@@ -247,14 +246,6 @@ class InterfaceManager:
         finally:
             self._restart_user_pymol_view.close()
 
-    def start_pymol(self):
-        process = subprocess.Popen([f"{constants.PLUGIN_PATH}\\scripts\\batch\\start_pymol.bat"],  # r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pymol.bat"
-                                   creationflags=subprocess.CREATE_NO_WINDOW)
-        if process.poll() is None:
-            print("PyMOL from interface manager started correctly.")
-        else:
-            print("PyMOL failed to start.")
-
     def _reset_pymol_session(self):
         """Resets the pymol session like it was before the User PyMOL crash.
 
@@ -303,6 +294,9 @@ class InterfaceManager:
     # <editor-fold desc="Getter Methods for view">
     def get_main_view(self) -> "main_view.MainView":
         return self._main_view
+
+    def get_restart_pymol_view(self):
+        return self._restart_user_pymol_view
 
     def get_settings_view(self):
         return self._settings_view
@@ -1578,37 +1572,53 @@ class InterfaceManager:
 
     def manage_toggle_state_of_protein_repr(self, tmp_repr_state):
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:
-            self._main_view.tg_protein_cartoon.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_cartoon.toggle_button, False)
+            #self._main_view.tg_protein_cartoon.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_cartoon.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_cartoon.toggle_button, True)
+            #self._main_view.tg_protein_cartoon.toggle_button.setChecked(True)
         if tmp_repr_state[enums.PyMOLRepresentation.STICKS.value] == 0:
-            self._main_view.tg_protein_sticks.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_sticks.toggle_button, False)
+            #self._main_view.tg_protein_sticks.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_sticks.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_sticks.toggle_button, True)
+            #self._main_view.tg_protein_sticks.toggle_button.setChecked(True)
         if tmp_repr_state[enums.PyMOLRepresentation.RIBBON.value] == 0:
-            self._main_view.tg_protein_ribbon.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_ribbon.toggle_button, False)
+            #self._main_view.tg_protein_ribbon.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_ribbon.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_ribbon.toggle_button, True)
+            #self._main_view.tg_protein_ribbon.toggle_button.setChecked(True)
         if tmp_repr_state[enums.PyMOLRepresentation.LINES.value] == 0:
-            self._main_view.tg_protein_lines.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_lines.toggle_button, False)
+            #self._main_view.tg_protein_lines.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_lines.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_lines.toggle_button, True)
+            #self._main_view.tg_protein_lines.toggle_button.setChecked(True)
         if tmp_repr_state[enums.PyMOLRepresentation.SPHERES.value] == 0:
-            self._main_view.tg_protein_spheres.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_spheres.toggle_button, False)
+            #self._main_view.tg_protein_spheres.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_spheres.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_spheres.toggle_button, True)
+            #self._main_view.tg_protein_spheres.toggle_button.setChecked(True)
         if tmp_repr_state[enums.PyMOLRepresentation.DOTS.value] == 0:
-            self._main_view.tg_protein_dots.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_dots.toggle_button, False)
+            #self._main_view.tg_protein_dots.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_dots.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_dots.toggle_button, True)
+            #self._main_view.tg_protein_dots.toggle_button.setChecked(True)
         if tmp_repr_state[enums.PyMOLRepresentation.MESH.value] == 0:
-            self._main_view.tg_protein_mesh.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_mesh.toggle_button, False)
+            #self._main_view.tg_protein_mesh.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_mesh.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_mesh.toggle_button, True)
+            #self._main_view.tg_protein_mesh.toggle_button.setChecked(True)
         if tmp_repr_state[enums.PyMOLRepresentation.SURFACE.value] == 0:
-            self._main_view.tg_protein_surface.toggle_button.setChecked(False)
+            ui_util.set_checked_async(self._main_view.tg_protein_surface.toggle_button, False)
+            #self._main_view.tg_protein_surface.toggle_button.setChecked(False)
         else:
-            self._main_view.tg_protein_surface.toggle_button.setChecked(True)
+            ui_util.set_checked_async(self._main_view.tg_protein_surface.toggle_button, True)
+            #self._main_view.tg_protein_surface.toggle_button.setChecked(True)
 
     def manage_check_state_of_protein_repr(self, tmp_repr_state):
         if tmp_repr_state[enums.PyMOLRepresentation.CARTOON.value] == 0:

@@ -22,51 +22,54 @@
 """Module contains the handlers used by the loggers."""
 import logging
 import datetime
-import os.path
+import os
 import pathlib
-
-# current_time = datetime.datetime.now()
-# filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"  # noqa: E501
-# SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
-#
-# log_formatter = logging.Formatter("%(asctime)s: %(name)s %(levelname)s - %(message)s")
-# if not os.path.exists(f"{SETTINGS_DIR}\\user_pymol"):
-#     os.mkdir(f"{SETTINGS_DIR}\\user_pymol")
-# if not os.path.exists(f"{SETTINGS_DIR}\\user_pymol\\logs"):
-#     os.mkdir(f"{SETTINGS_DIR}\\user_pymol\\logs")
-# filepath = f"{SETTINGS_DIR}\\user_pymol\\logs\\{filename}"
-# log_file_handler = logging.FileHandler(filepath)
-# log_file_handler.setLevel(logging.DEBUG)
-# log_file_handler.setFormatter(log_formatter)
+from typing import Optional
 
 
-def setup_logger(name, level=logging.DEBUG):
+def setup_logger(a_name: str, level=logging.DEBUG) -> Optional[logging.Logger]:
     """
     Sets up a logger with a FileHandler directing output to the specified file.
 
     Args:
-        name (str): Name for the logger.
-        path (str): Path to the log file.
+        a_name (str): Name for the logger.
         level (int, optional): Logging level (default: logging.INFO).
     """
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
+    # <editor-fold desc="Checks">
+    if a_name is None or a_name == "":
+        return None
+
+    # </editor-fold>
+
+    # <editor-fold desc="Definitions of important paths">
+    USER_DOT_PATH = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
+    USER_PYMOL_PATH = f"{USER_DOT_PATH}\\user_pymol"
+    USER_PYMOL_LOG_PATH = f"{USER_PYMOL_PATH}\\logs"
+    if not os.path.exists(USER_DOT_PATH):
+        return None
+    if not os.path.exists(USER_PYMOL_PATH):
+        os.mkdir(USER_PYMOL_PATH)
+    if not os.path.exists(USER_PYMOL_LOG_PATH):
+        os.mkdir(USER_PYMOL_LOG_PATH)
+
+    # </editor-fold>
+
+    tmp_logger = logging.getLogger(a_name)
+    tmp_logger.setLevel(level)
 
     # File handler for separate log files
-    current_time = datetime.datetime.now()
-    filename = f"{current_time.year}-{current_time.month:02d}-{current_time.day:02d}_{current_time.hour:02d}-{current_time.minute:02d}.log"  # noqa: E501
-    SETTINGS_DIR = str(pathlib.Path(f"{os.path.expanduser('~')}/.pyssa/"))
-    path = f"{SETTINGS_DIR}\\user_pymol\\logs"
-    filepath = f"{path}\\{filename}"
-    handler = logging.FileHandler(filepath)
-    log_formatter = logging.Formatter("%(asctime)s: %(name)s %(levelname)s - %(message)s")
-    handler.setFormatter(log_formatter)
-    logger.addHandler(handler)
+    tmp_current_time = datetime.datetime.now()
+    tmp_filename = f"{tmp_current_time.year}-{tmp_current_time.month:02d}-{tmp_current_time.day:02d}_{tmp_current_time.hour:02d}-{tmp_current_time.minute:02d}.log"  # noqa: E501
+    tmp_filepath = f"{USER_PYMOL_LOG_PATH}\\{tmp_filename}"
+    tmp_handler = logging.FileHandler(tmp_filepath)
+    tmp_log_formatter = logging.Formatter("%(asctime)s: %(name)s %(levelname)s - %(message)s")
+    tmp_handler.setFormatter(tmp_log_formatter)
+    tmp_logger.addHandler(tmp_handler)
 
     # Console handler for logging to console
-    console_handler = logging.StreamHandler()
-    console_formatter = logging.Formatter('%(levelname)s: %(message)s')  # Simpler console format
-    console_handler.setFormatter(console_formatter)
-    logger.addHandler(console_handler)
+    tmp_console_handler = logging.StreamHandler()
+    tmp_console_formatter = logging.Formatter('%(levelname)s: %(message)s')  # Simpler console format
+    tmp_console_handler.setFormatter(tmp_console_formatter)
+    tmp_logger.addHandler(tmp_console_handler)
 
-    return logger
+    return tmp_logger

@@ -132,9 +132,10 @@ class StatusBarManager:
         #self._view.status_bar.showMessage(a_message)
         self._permanent_message.setText(a_message)
 
-    def show_error_message(self, a_message):
+    def show_error_message(self, a_message, overwrite_permanent_message: bool = True):
         self._style_status_bar_for_error_message()
-        if self._permanent_message.text() == "":
+        self._view.status_bar.showMessage("")
+        if overwrite_permanent_message is True:
             self._permanent_message.show()
             self._permanent_message.setText(a_message)
         else:

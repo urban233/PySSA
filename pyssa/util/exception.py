@@ -30,6 +30,14 @@ class IllegalArgumentError(Exception):
         super().__init__(message)
 
 
+class FileIsEmptyError(Exception):
+    """Class for a file is empty exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
+
 class DirectoryNotFoundError(Exception):
     """Class for a directory does not exist exception type."""
 

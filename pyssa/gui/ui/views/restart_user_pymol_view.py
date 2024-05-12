@@ -26,6 +26,7 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
 from PyQt5 import QtWidgets
 from pyssa.gui.ui import icon_resources  # this import is used for the icons! DO NOT DELETE THIS
+from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.gui.ui.forms.auto_generated import auto_restart_user_pymol_view
 from pyssa.gui.ui.styles import styles
 from pyssa.util import constants
@@ -51,7 +52,7 @@ class RestartUserPyMOLView(QtWidgets.QDialog):
         # build ui object
         self.ui = auto_restart_user_pymol_view.Ui_Dialog()
         self.ui.setupUi(self)
-
+        self.ui.btn_close_pyssa.clicked.connect(self._close_pyssa)
         pixmap = QtGui.QPixmap(
             r"C:\ProgramData\pyssa\mambaforge_pyssa\pyssa-mamba-env\Lib\site-packages\pymol\pymol_path\data\startup\PySSA\assets\images\splash_screen_logo_002.png")
         scaled_pixmap = pixmap.scaled(600, 600, aspectRatioMode=Qt.KeepAspectRatio,
@@ -66,3 +67,13 @@ class RestartUserPyMOLView(QtWidgets.QDialog):
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint ^ Qt.WindowCloseButtonHint)
         self.setWindowTitle("User PyMOL Crash")
         self.setModal(True)
+
+    def _close_pyssa(self):
+        tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+            "Do you want to close all windows related to PySSA?",
+            "Close PySSA",
+            custom_message_box.CustomMessageBoxIcons.WARNING.value
+        )
+        tmp_dialog.exec_()
+        if tmp_dialog.response:
+            self.return_value.emit(True, 0)

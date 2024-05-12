@@ -69,8 +69,8 @@ class UserPyMOLInterface(QtCore.QObject):
         self._should_restart_service = False
         self._task = tasks.Task(
             target=self.main_loop,
-            args=(0, 0),
-            post_func=self.finished_main_loop
+            args=(0, 0)
+            #post_func=self.finished_main_loop
         )
         self._task.start()
 
@@ -289,11 +289,11 @@ class UserPyMOLInterface(QtCore.QObject):
         finally:
             return 0, 0
 
-    def finished_main_loop(self, a_placeholder_1: int, a_placeholder_2_: int) -> None:
+    def finished_main_loop(self, a_placeholder_1: int, a_placeholder_2: int) -> None:
         """Logs the message "Finished main loop" using the logger.
 
         Args:
             a_placeholder_1: Placeholder argument 1.
-            a_placeholder_2_: Placeholder argument 2.
+            a_placeholder_2: Placeholder argument 2.
         """
         logger.info("Finished main loop")

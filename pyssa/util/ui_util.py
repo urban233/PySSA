@@ -20,9 +20,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for functions which change the ui in some way."""
+from typing import Union
+
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
+
+from pyssa.gui.ui.custom_widgets import toggle_button
 from pyssa.util import input_validator
 
 
@@ -63,4 +67,26 @@ def set_pymol_scene_name_into_label(a_scene_name: str, a_label: QtWidgets.QLabel
     else:
         a_label.setText(f"PyMOL Scene: {a_scene_name}")
         a_label.setToolTip("")
-    
+
+
+def set_checked_async(a_checkbox_like_widget: Union[QtWidgets.QCheckBox, "toggle_button.ToggleButton"],
+                      a_check_state: bool):
+    """
+    Set the checked state of the given checkbox-like widget which is `async proof`.
+
+    Args:
+        a_checkbox_like_widget (Union[QtWidgets.QCheckBox, "toggle_button.ToggleButton"]):
+            The checkbox-like widget to set the checked state for.
+        a_check_state (bool): The actual check state the checkbox-like widget should take.
+    """
+    # <editor-fold desc="Checks">
+    if a_checkbox_like_widget is None:
+        return
+    if a_check_state is None:
+        return
+
+    # </editor-fold>
+
+    a_checkbox_like_widget.blockSignals(True)
+    a_checkbox_like_widget.setChecked(a_check_state)
+    a_checkbox_like_widget.blockSignals(False)

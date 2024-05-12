@@ -87,7 +87,11 @@ class PymolSessionManager:
         binary_data.write_binary_file_from_base64_string(tmp_session_path, a_pymol_session)
 
         if self._app_process_manager.pymol_crashed() is False:
-            tmp_result = self.user_pymol_connector.load_pymol_session(str(tmp_session_path))
+            try:
+                tmp_result = self.user_pymol_connector.load_pymol_session(str(tmp_session_path))
+            except exception.FileIsEmptyError:
+                logger.warning("load_pymol_session raised an 'exception.FileIsEmptyError'.")
+                return
             if tmp_result == {}:
                 logger.warning("load_pymol_session returned an empty dict.")
                 return

@@ -91,6 +91,7 @@ class UserPyMOLConnector:
         Raises:
             exception.IllegalArgumentError: If a_session_filepath is None or an empty string.
             exception.IllegalArgumentError: If a_session_filepath could not be found.
+            exception.FileIsEmptyError: If a_session_filepath links to an empty file.
         """
         # <editor-fold desc="Checks">
         if a_session_filepath is None or a_session_filepath == "":
@@ -99,6 +100,9 @@ class UserPyMOLConnector:
         if not os.path.exists(a_session_filepath):
             logger.error("a_session_filepath could not be found.")
             raise exception.IllegalArgumentError("a_session_filepath could not be found.")
+        if os.path.getsize(a_session_filepath) == 0:
+            logger.error("a_session_filepath links to an empty file.")
+            raise exception.FileIsEmptyError("a_session_filepath links to an empty file.")
 
         # </editor-fold>
 
