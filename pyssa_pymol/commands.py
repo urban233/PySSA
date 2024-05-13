@@ -82,6 +82,8 @@ def load_pymol_session(a_filepath: str) -> tuple[bool, str]:
     logger.info("Executing command.")
     try:
         cmd.load(a_filepath)
+        # Hide all hydrogens
+        cmd.hide("everything", "h.")
     except CmdException as e:
         logger.error(f"Command failed with error: {e}")
         return False, e.message
@@ -561,6 +563,8 @@ def show_custom_representation(a_representation: str, a_selection_string: str) -
     logger.info("Executing command.")
     try:
         cmd.show(representation=a_representation, selection=a_selection_string)
+        # Hide all hydrogens
+        cmd.hide(a_representation, "h.")
     except CmdException as e:
         logger.error(f"Command failed with error: {e}")
         return False, e.message
