@@ -494,9 +494,9 @@ class MainViewController:
                 # PySSA should be closed
                 if not self._view.ui.lbl_logo.isVisible():
                     self._active_task = tasks.Task(
-                    target=project_async.close_project,
-                    args=(self._database_thread, self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_close_project_for_closing_app,
+                        target=project_async.close_project,
+                        args=(self._database_thread, self._interface_manager.pymol_session_manager),
+                        post_func=self.__await_close_project_for_closing_app,
                     )
                     logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
                     self._active_task.start()
@@ -516,6 +516,8 @@ class MainViewController:
         elif tmp_number_of_help_windows > 1:
             for tmp_window_index in range(tmp_number_of_help_windows):
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[tmp_window_index].close()
+        else:
+            logger.info("No documentation window is open. Nothing to do.")
 
         tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
         self._interface_manager.app_process_manager.close_manager()
@@ -537,9 +539,10 @@ class MainViewController:
         tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
         tmp_number_of_exact_pyssa_match_windows = 0
         for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
+            logger.info(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[tmp_window_index].title)
             if pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[tmp_window_index].title == "PySSA":
                 tmp_number_of_exact_pyssa_match_windows += 1
-
+        logger.info(tmp_number_of_exact_pyssa_match_windows)
         # PySSA windows
         if tmp_number_of_exact_pyssa_match_windows == 1:
             logger.info("PySSA will be closed now.")
@@ -555,6 +558,9 @@ class MainViewController:
                 for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
                     pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
                         tmp_window_index].close()
+        else:
+            logger.error("No PySSA window found.")
+
 
     def _abort_task(self, return_value):
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
