@@ -28,8 +28,8 @@ class ProteinTreeContextMenu:
 
     def __init__(self):
         self._context_menu = QtWidgets.QMenu()
-        self._expand_protein_action = QtWidgets.QAction("Expand protein")
-        self._collapse_protein_action = QtWidgets.QAction("Collapse protein")
+        self._expand_protein_action = QtWidgets.QAction("Expand Protein")
+        self._collapse_protein_action = QtWidgets.QAction("Collapse Protein")
         self._clean_protein_action = QtWidgets.QAction("Clean Selected Protein")
         self._rename_protein_action = QtWidgets.QAction("Rename Selected Protein")
         self._show_sequence_action = QtWidgets.QAction("Show Sequence")
@@ -83,7 +83,8 @@ class ProteinTreeContextMenu:
                          the_selected_indexes,
                          the_type: str,
                          is_protein_in_any_pair_flag: bool,
-                         is_protein_in_session_flag: bool):
+                         is_protein_in_session_flag: bool,
+                         is_protein_expanded: bool):
         # <editor-fold desc="Checks">
         if len(the_selected_indexes) > 0:
             level = 0
@@ -106,6 +107,12 @@ class ProteinTreeContextMenu:
         self._help_action.setVisible(False)
         if level == 0:
             # A protein is selected
+            if is_protein_expanded is True:
+                self._expand_protein_action.setVisible(False)
+                self._collapse_protein_action.setVisible(True)
+            else:
+                self._expand_protein_action.setVisible(True)
+                self._collapse_protein_action.setVisible(False)
             self._clean_protein_action.setVisible(True)
             self._rename_protein_action.setVisible(False)
             self._show_sequence_action.setVisible(False)
@@ -125,21 +132,29 @@ class ProteinTreeContextMenu:
 
         elif level == 1:
             # A header is selected (Scenes or Chains)
+            self._expand_protein_action.setVisible(False)
+            self._collapse_protein_action.setVisible(False)
             self._clean_protein_action.setVisible(False)
             self._rename_protein_action.setVisible(False)
             self._show_sequence_action.setVisible(False)
         elif level == 2:
             # A chain or scene is selected
             if the_type == "chain":
+                self._expand_protein_action.setVisible(False)
+                self._collapse_protein_action.setVisible(False)
                 self._clean_protein_action.setVisible(False)
                 self._rename_protein_action.setVisible(False)
                 self._show_sequence_action.setVisible(True)
             elif the_type == "scene":
                 # the code below could change if other actions are added!
+                self._expand_protein_action.setVisible(False)
+                self._collapse_protein_action.setVisible(False)
                 self._clean_protein_action.setVisible(False)
                 self._rename_protein_action.setVisible(False)
                 self._show_sequence_action.setVisible(False)
             else:
+                self._expand_protein_action.setVisible(False)
+                self._collapse_protein_action.setVisible(False)
                 self._clean_protein_action.setVisible(False)
                 self._rename_protein_action.setVisible(False)
                 self._show_sequence_action.setVisible(False)

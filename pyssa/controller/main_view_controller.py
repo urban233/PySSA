@@ -404,6 +404,8 @@ class MainViewController:
         # </editor-fold>
 
         # <editor-fold desc="Context menu">
+        self._protein_pair_tree_context_menu.connect_expand_protein_pair_action(self.__slot_expand_protein_pair)
+        self._protein_pair_tree_context_menu.connect_collapse_protein_pair_action(self.__slot_collapse_protein_pair)
         self._protein_pair_tree_context_menu.connect_open_results_summary_action(self.__slot_results_summary)
         self._protein_pair_tree_context_menu.connect_color_based_on_rmsd_action(self.__slot_color_protein_pair_by_rmsd)
         self._protein_pair_tree_context_menu.connect_help_action(self._open_protein_pairs_tab_help)
@@ -2334,10 +2336,46 @@ class MainViewController:
 
     # <editor-fold desc="Proteins tab methods">
     def __slot_expand_protein(self):
-        pass
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein of the tree view was expanded.")
+            tmp_type = self._interface_manager.get_current_protein_tree_index().data(enums.ModelEnum.TYPE_ROLE)
+            if tmp_type == "protein":
+                # protein
+                self._view.ui.proteins_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_tree_index(), True
+                )
+                # scenes
+                self._view.ui.proteins_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_tree_index().child(0, 0), True
+                )
+                # chains
+                self._view.ui.proteins_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_tree_index().child(1, 0), True
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_collapse_protein(self):
-        pass
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein of the tree view was collapsed.")
+            tmp_type = self._interface_manager.get_current_protein_tree_index().data(enums.ModelEnum.TYPE_ROLE)
+            if tmp_type == "protein":
+                # protein
+                self._view.ui.proteins_tree_view.collapse(
+                    self._interface_manager.get_current_protein_tree_index()
+                )
+                # scenes
+                self._view.ui.proteins_tree_view.collapse(
+                    self._interface_manager.get_current_protein_tree_index().child(0, 0)
+                )
+                # chains
+                self._view.ui.proteins_tree_view.collapse(
+                    self._interface_manager.get_current_protein_tree_index().child(1, 0)
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_expand_all_proteins(self):
         self._view.ui.proteins_tree_view.expandAll()
@@ -2357,14 +2395,23 @@ class MainViewController:
             )
             tmp_is_protein_in_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
                 self._interface_manager.get_current_active_protein_object().get_molecule_object())
-        tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
-            self._view.ui.proteins_tree_view.selectedIndexes(),
-            self._interface_manager.get_current_protein_tree_index_type(),
-            tmp_is_protein_in_any_pair_flag,
-            tmp_is_protein_in_session_flag
-        )
-        tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
-        self.__slot_get_information_about_selected_object_in_protein_branch()  # fixme: This should be done in a better way than this!
+        tmp_is_protein_expanded_flag: bool = False
+        try:
+            if self._interface_manager.get_current_protein_tree_index().data(enums.ModelEnum.TYPE_ROLE) == "protein":
+                if self._view.ui.proteins_tree_view.isExpanded(self._interface_manager.get_current_protein_tree_index()):
+                    tmp_is_protein_expanded_flag: bool = True
+        except Exception as e:
+            logger.error(e)
+        else:
+            tmp_context_menu = self._protein_tree_context_menu.get_context_menu(
+                self._view.ui.proteins_tree_view.selectedIndexes(),
+                self._interface_manager.get_current_protein_tree_index_type(),
+                tmp_is_protein_in_any_pair_flag,
+                tmp_is_protein_in_session_flag,
+                tmp_is_protein_expanded_flag
+            )
+            tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
+            self.__slot_get_information_about_selected_object_in_protein_branch()  # fixme: This should be done in a better way than this!
 
     # <editor-fold desc="PyMOL session">
     def __slot_open_protein_pymol_session(self):
@@ -4133,6 +4180,72 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs tab methods">
+    def __slot_expand_protein_pair(self):
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein pair of the tree view was expanded.")
+            tmp_type = self._interface_manager.get_current_protein_pair_tree_index().data(enums.ModelEnum.TYPE_ROLE)
+            if tmp_type == "protein_pair":
+                # protein pair
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index(), True
+                )
+                # scenes
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(0, 0), True
+                )
+                # protein 1
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), True
+                )
+                # chains of protein 1
+                self._view.ui.protein_pairs_tree_view.expandRecursively(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), 1
+                )
+                # protein 2
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), True
+                )
+                # chains of protein 2
+                self._view.ui.protein_pairs_tree_view.expandRecursively(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), 1
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __slot_collapse_protein_pair(self):
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein pair of the tree view was collapsed.")
+            tmp_type = self._interface_manager.get_current_protein_pair_tree_index().data(enums.ModelEnum.TYPE_ROLE)
+            if tmp_type == "protein_pair":
+                # protein pair
+                self._view.ui.protein_pairs_tree_view.collapse(
+                    self._interface_manager.get_current_protein_pair_tree_index()
+                )
+                # scenes
+                self._view.ui.protein_pairs_tree_view.collapse(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(0, 0)
+                )
+                # protein 1
+                self._view.ui.protein_pairs_tree_view.collapse(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0)
+                )
+                # chains of protein 1
+                self._view.ui.protein_pairs_tree_view.collapse(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0)
+                )
+                # protein 2
+                self._view.ui.protein_pairs_tree_view.collapse(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0)
+                )
+                # chains of protein 2
+                self._view.ui.protein_pairs_tree_view.collapse(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0)
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
     def __slot_expand_all_protein_pairs(self):
         self._view.ui.protein_pairs_tree_view.expandAll()
 
@@ -4146,12 +4259,22 @@ class MainViewController:
             tmp_is_protein_pair_in_current_session_flag = False
         else:
             tmp_is_protein_pair_in_current_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name)
-        tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
-            self._view.ui.protein_pairs_tree_view.selectedIndexes(),
-            tmp_is_protein_pair_in_current_session_flag
-        )
-        tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
-        self.__slot_get_information_about_selected_object_in_protein_pair_branch()  # fixme: This should be done in a better way than this!
+        tmp_is_protein_pair_expanded_flag: bool = False
+        try:
+            if self._interface_manager.get_current_protein_pair_tree_index().data(enums.ModelEnum.TYPE_ROLE) == "protein_pair":
+                if self._view.ui.protein_pairs_tree_view.isExpanded(
+                        self._interface_manager.get_current_protein_pair_tree_index()):
+                    tmp_is_protein_pair_expanded_flag: bool = True
+        except Exception as e:
+            logger.error(e)
+        else:
+            tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
+                self._view.ui.protein_pairs_tree_view.selectedIndexes(),
+                tmp_is_protein_pair_in_current_session_flag,
+                tmp_is_protein_pair_expanded_flag
+            )
+            tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
+            self.__slot_get_information_about_selected_object_in_protein_pair_branch()  # fixme: This should be done in a better way than this!
 
     def _get_protein_name_of_a_protein_from_a_protein_pair(self, a_protein, a_protein_pair):
         """Helper function to get the correct protein name even if the protein pair consists of two identical protein names."""
