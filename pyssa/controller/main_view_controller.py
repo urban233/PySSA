@@ -1857,6 +1857,8 @@ class MainViewController:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         else:
+            self._interface_manager.status_bar_manager.show_temporary_message("Getting demo projects ...",
+                                                                              a_with_timeout_flag=False)
             self._interface_manager.block_gui()
             self._active_task.start()
 
