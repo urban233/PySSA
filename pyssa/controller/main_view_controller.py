@@ -2643,7 +2643,10 @@ class MainViewController:
             self, return_value: tuple[bool, Optional[dict]]
     ) -> None:
         try:
+            logger.debug(
+                "Returned from method 'pymol_session_async.get_representation_config_of_a_given_protein_chain'.")
             tmp_success_flag, tmp_representation_config = return_value
+            logger.debug(f"The return_value is: {return_value}.")
             if tmp_success_flag:
                 tmp_chain = self._interface_manager.get_current_active_chain_object()
                 if tmp_chain.chain_type == "protein_chain":
@@ -4330,7 +4333,8 @@ class MainViewController:
                 self._view.ui.btn_create_protein_pair_scene.setEnabled(True)
                 self._view.ui.btn_update_protein_pair_scene.setEnabled(True)
                 self._view.ui.lbl_session_name.setText(f"Session Name: {self._interface_manager.pymol_session_manager.session_name}")
-                self._interface_manager.pymol_session_manager.current_scene_name = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).child(1, 0).data(Qt.DisplayRole)
+                #self._interface_manager.pymol_session_manager.current_scene_name = self._view.ui.protein_pairs_tree_view.currentIndex().child(0, 0).child(1, 0).data(Qt.DisplayRole)
+                self._interface_manager.pymol_session_manager.current_scene_name = "base"
                 self._interface_manager.pymol_session_manager.load_current_scene()
                 ui_util.set_pymol_scene_name_into_label(self._interface_manager.pymol_session_manager.current_scene_name,
                                                         self._view.ui.lbl_pymol_protein_pair_scene)
@@ -4455,7 +4459,7 @@ class MainViewController:
             )
             logger.log(
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein}' on the 'Protein Pairs Tab' was clicked."
+                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein.get_molecule_object}' on the 'Protein Pairs Tab' was clicked."
             )
             if self._interface_manager.pymol_session_manager.current_scene_name == "" and not self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
                     self._interface_manager.get_current_active_protein_pair_object().name):
@@ -4486,7 +4490,10 @@ class MainViewController:
             return_value: tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]
     ) -> None:
         try:
+            logger.debug(
+                "Returned from method 'pymol_session_async.get_residue_color_config_of_a_given_protein_chain'.")
             tmp_success_flag, tmp_residue_color_config = return_value
+            logger.debug(f"The return_value is: {return_value}.")
             if not tmp_success_flag:
                 logger.error("Retrieving color information failed!")
                 self._interface_manager.status_bar_manager.show_error_message(
@@ -4495,6 +4502,7 @@ class MainViewController:
                 self._interface_manager.refresh_main_view()
                 return
 
+            logger.debug("Check if chain is colored by element.")
             if tmp_residue_color_config.atoms_are_colored_by_elements():
                 #self._view.tg_protein_pair_color_atoms.toggle_button.setChecked(True)
                 ui_util.set_checked_async(self._view.tg_protein_pair_color_atoms.toggle_button, True)
@@ -4530,7 +4538,10 @@ class MainViewController:
             self, return_value: tuple[bool, Optional[dict]]
     ) -> None:
         try:
+            logger.debug(
+                "Returned from method 'pymol_session_async.get_representation_config_of_a_given_protein_chain'.")
             tmp_success_flag, tmp_representation_config = return_value
+            logger.debug(f"The return_value is: {return_value}.")
             if tmp_success_flag:
                 tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
                 if tmp_chain.chain_type == "protein_chain":
