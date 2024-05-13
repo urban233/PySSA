@@ -4945,7 +4945,7 @@ class MainViewController:
             self._active_task = tasks.Task(
                 target=protein_pair_async.color_protein_pair_by_rmsd_value,
                 args=(
-                    self._interface_manager.get_current_protein_pair_tree_index_object(),
+                    self._interface_manager.get_current_active_protein_pair_object(),
                     self._interface_manager.pymol_session_manager
                 ),
                 post_func=self.__await_color_protein_pair_by_rmsd,
