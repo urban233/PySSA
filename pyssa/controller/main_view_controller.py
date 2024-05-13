@@ -302,7 +302,6 @@ class MainViewController:
 
         # <editor-fold desc="Protein tree context menu">
         self._protein_tree_context_menu.connect_expand_protein_action(self.__slot_expand_protein)
-        self._protein_tree_context_menu.connect_collapse_protein_action(self.__slot_collapse_protein)
         self._protein_tree_context_menu.connect_clean_protein_action(self.__slot_clean_protein_update)
         self._protein_tree_context_menu.connect_rename_protein_action(self.__slot_rename_selected_protein_structure)
         self._protein_tree_context_menu.connect_show_sequence_action(self.__slot_show_protein_chain_sequence)
@@ -399,6 +398,7 @@ class MainViewController:
         # </editor-fold>
 
         # <editor-fold desc="Context menu">
+        self._protein_pair_tree_context_menu.connect_expand_protein_pair_action(self.__slot_expand_protein_pair)
         self._protein_pair_tree_context_menu.connect_open_results_summary_action(self.__slot_results_summary)
         self._protein_pair_tree_context_menu.connect_color_based_on_rmsd_action(self.__slot_color_protein_pair_by_rmsd)
         self._protein_pair_tree_context_menu.connect_help_action(self._open_protein_pairs_tab_help)
@@ -2730,10 +2730,22 @@ class MainViewController:
 
     # <editor-fold desc="Proteins tab methods">
     def __slot_expand_protein(self):
-        pass
-
-    def __slot_collapse_protein(self):
-        pass
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein of the tree view was expanded.")
+            tmp_type = self._interface_manager.get_current_protein_tree_index().data(enums.ModelEnum.TYPE_ROLE)
+            if tmp_type == "protein":
+                self._view.ui.proteins_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_tree_index(), True
+                )
+                self._view.ui.proteins_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_tree_index().child(0, 0), True
+                )
+                self._view.ui.proteins_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_tree_index().child(1, 0), True
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __slot_expand_all_proteins(self):
         self._view.ui.proteins_tree_view.expandAll()
@@ -3786,6 +3798,24 @@ class MainViewController:
     # </editor-fold>
 
     # <editor-fold desc="Protein Pairs tab methods">
+    def __slot_expand_protein_pair(self):
+        try:
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein of the tree view was expanded.")
+            tmp_type = self._interface_manager.get_current_protein_pair_tree_index().data(enums.ModelEnum.TYPE_ROLE)
+            if tmp_type == "protein pair":
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index(), True
+                )
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(0, 0), True
+                )
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), True
+                )
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
     def __slot_expand_all_protein_pairs(self):
         self._view.ui.protein_pairs_tree_view.expandAll()
 

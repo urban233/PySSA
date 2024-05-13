@@ -28,19 +28,27 @@ class ProteinPairTreeContextMenu:
 
     def __init__(self):
         self._context_menu = QtWidgets.QMenu()
+        self._expand_protein_pair_action = QtWidgets.QAction("Expand protein pair")
         self._open_results_summary_action = QtWidgets.QAction("Open Results Summary")
         self._color_based_on_rmsd_action = QtWidgets.QAction("Color Based On RMSD")
         self._help_action = QtWidgets.QAction("Get Help")
-        
+
+        self._context_menu.addAction(self._expand_protein_pair_action)
+        self._context_menu.addSeparator()
         self._context_menu.addAction(self._open_results_summary_action)
         self._context_menu.addAction(self._color_based_on_rmsd_action)
         self._context_menu.addAction(self._help_action)
 
+        self._expand_protein_pair_action.triggered.connect(self._generic_action)
         self._open_results_summary_action.triggered.connect(self._generic_action)
         self._color_based_on_rmsd_action.triggered.connect(self._generic_action)
         self._help_action.triggered.connect(self._generic_action)
 
     # <editor-fold desc="Connect actions from outside">
+    def connect_expand_protein_pair_action(self, the_function_to_connect):
+        self._expand_protein_pair_action.triggered.disconnect()
+        self._expand_protein_pair_action.triggered.connect(the_function_to_connect)
+
     def connect_open_results_summary_action(self, the_function_to_connect):
         self._open_results_summary_action.triggered.disconnect()
         self._open_results_summary_action.triggered.connect(the_function_to_connect)
@@ -80,12 +88,15 @@ class ProteinPairTreeContextMenu:
             # protein pair level
             self._open_results_summary_action.setVisible(True)
             self._color_based_on_rmsd_action.setVisible(True)
+            self._expand_protein_pair_action.setVisible(True)
 
             if is_protein_pair_in_current_session_flag:
                 self._color_based_on_rmsd_action.setEnabled(True)
+                self._expand_protein_pair_action.setVisible(True)
             else:
                 self._color_based_on_rmsd_action.setEnabled(False)
         else:
             self._open_results_summary_action.setVisible(False)
             self._color_based_on_rmsd_action.setVisible(False)
+            self._expand_protein_pair_action.setVisible(False)
         return self._context_menu
