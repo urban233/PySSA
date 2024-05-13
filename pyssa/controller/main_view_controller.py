@@ -2734,12 +2734,15 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein of the tree view was expanded.")
             tmp_type = self._interface_manager.get_current_protein_tree_index().data(enums.ModelEnum.TYPE_ROLE)
             if tmp_type == "protein":
+                # protein
                 self._view.ui.proteins_tree_view.setExpanded(
                     self._interface_manager.get_current_protein_tree_index(), True
                 )
+                # scenes
                 self._view.ui.proteins_tree_view.setExpanded(
                     self._interface_manager.get_current_protein_tree_index().child(0, 0), True
                 )
+                # chains
                 self._view.ui.proteins_tree_view.setExpanded(
                     self._interface_manager.get_current_protein_tree_index().child(1, 0), True
                 )
@@ -3800,17 +3803,32 @@ class MainViewController:
     # <editor-fold desc="Protein Pairs tab methods">
     def __slot_expand_protein_pair(self):
         try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein of the tree view was expanded.")
+            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "A protein pair of the tree view was expanded.")
             tmp_type = self._interface_manager.get_current_protein_pair_tree_index().data(enums.ModelEnum.TYPE_ROLE)
-            if tmp_type == "protein pair":
+            if tmp_type == "protein_pair":
+                # protein pair
                 self._view.ui.protein_pairs_tree_view.setExpanded(
                     self._interface_manager.get_current_protein_pair_tree_index(), True
                 )
+                # scenes
                 self._view.ui.protein_pairs_tree_view.setExpanded(
                     self._interface_manager.get_current_protein_pair_tree_index().child(0, 0), True
                 )
+                # protein 1
                 self._view.ui.protein_pairs_tree_view.setExpanded(
                     self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), True
+                )
+                # chains of protein 1
+                self._view.ui.protein_pairs_tree_view.expandRecursively(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), 1
+                )
+                # protein 2
+                self._view.ui.protein_pairs_tree_view.setExpanded(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), True
+                )
+                # chains of protein 2
+                self._view.ui.protein_pairs_tree_view.expandRecursively(
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), 1
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
