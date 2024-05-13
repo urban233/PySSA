@@ -28,18 +28,21 @@ class ProteinPairTreeContextMenu:
 
     def __init__(self):
         self._context_menu = QtWidgets.QMenu()
-        self._expand_protein_pair_action = QtWidgets.QAction("Expand protein pair")
+        self._expand_protein_pair_action = QtWidgets.QAction("Expand Protein Pair")
+        self._collapse_protein_pair_action = QtWidgets.QAction("Collapse Protein Pair")
         self._open_results_summary_action = QtWidgets.QAction("Open Results Summary")
         self._color_based_on_rmsd_action = QtWidgets.QAction("Color Based On RMSD")
         self._help_action = QtWidgets.QAction("Get Help")
 
         self._context_menu.addAction(self._expand_protein_pair_action)
+        self._context_menu.addAction(self._collapse_protein_pair_action)
         self._context_menu.addSeparator()
         self._context_menu.addAction(self._open_results_summary_action)
         self._context_menu.addAction(self._color_based_on_rmsd_action)
         self._context_menu.addAction(self._help_action)
 
         self._expand_protein_pair_action.triggered.connect(self._generic_action)
+        self._collapse_protein_pair_action.triggered.connect(self._generic_action)
         self._open_results_summary_action.triggered.connect(self._generic_action)
         self._color_based_on_rmsd_action.triggered.connect(self._generic_action)
         self._help_action.triggered.connect(self._generic_action)
@@ -48,6 +51,10 @@ class ProteinPairTreeContextMenu:
     def connect_expand_protein_pair_action(self, the_function_to_connect):
         self._expand_protein_pair_action.triggered.disconnect()
         self._expand_protein_pair_action.triggered.connect(the_function_to_connect)
+
+    def connect_collapse_protein_pair_action(self, the_function_to_connect):
+        self._collapse_protein_pair_action.triggered.disconnect()
+        self._collapse_protein_pair_action.triggered.connect(the_function_to_connect)
 
     def connect_open_results_summary_action(self, the_function_to_connect):
         self._open_results_summary_action.triggered.disconnect()
@@ -67,7 +74,8 @@ class ProteinPairTreeContextMenu:
     
     def get_context_menu(self,
                          the_selected_indexes,
-                         is_protein_pair_in_current_session_flag: bool):
+                         is_protein_pair_in_current_session_flag: bool,
+                         is_protein_pair_expanded: bool):
         # <editor-fold desc="Checks">
         if len(the_selected_indexes) > 0:
             level = 0
@@ -77,6 +85,8 @@ class ProteinPairTreeContextMenu:
                 level += 1
         else:
             # No protein pair is selected
+            self._expand_protein_pair_action.setVisible(False)
+            self._collapse_protein_pair_action.setVisible(False)
             self._help_action.setVisible(True)
             self._open_results_summary_action.setVisible(False)
             self._color_based_on_rmsd_action.setVisible(False)
@@ -90,6 +100,13 @@ class ProteinPairTreeContextMenu:
             self._color_based_on_rmsd_action.setVisible(True)
             self._expand_protein_pair_action.setVisible(True)
 
+            if is_protein_pair_expanded is True:
+                self._expand_protein_pair_action.setVisible(False)
+                self._collapse_protein_pair_action.setVisible(True)
+            else:
+                self._expand_protein_pair_action.setVisible(True)
+                self._collapse_protein_pair_action.setVisible(False)
+
             if is_protein_pair_in_current_session_flag:
                 self._color_based_on_rmsd_action.setEnabled(True)
                 self._expand_protein_pair_action.setVisible(True)
@@ -99,4 +116,5 @@ class ProteinPairTreeContextMenu:
             self._open_results_summary_action.setVisible(False)
             self._color_based_on_rmsd_action.setVisible(False)
             self._expand_protein_pair_action.setVisible(False)
+            self._collapse_protein_pair_action.setVisible(False)
         return self._context_menu
