@@ -445,9 +445,9 @@ class MainViewController:
     def _force_close_all(self):
         tmp_number_of_help_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER))
         # PySSA should be closed
-        if not self._view.ui.lbl_logo.isVisible():
-            logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
-            self.__slot_close_project()
+        # if not self._view.ui.lbl_logo.isVisible():
+        #     logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
+        #     self.__slot_close_project()
         # Help windows
         if tmp_number_of_help_windows == 1:
             logger.info("The documentation window is open. It will be closed now.")
@@ -489,59 +489,70 @@ class MainViewController:
             )
             tmp_dialog.exec_()
             if tmp_dialog.response:
-                tmp_number_of_help_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER))
                 # PySSA should be closed
                 if not self._view.ui.lbl_logo.isVisible():
+                    self._active_task = tasks.Task(
+                    target=project_async.close_project,
+                    args=(self._database_thread, self._interface_manager.pymol_session_manager),
+                    post_func=self.__await_close_project_for_closing_app,
+                    )
                     logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
-                    self.__slot_close_project()
-                # Help windows
-                if tmp_number_of_help_windows == 1:
-                    logger.info("The documentation window is open. It will be closed now.")
-                    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
-                elif tmp_number_of_help_windows > 1:
-                    for tmp_window_index in range(tmp_number_of_help_windows):
-                        pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[tmp_window_index].close()
-
-                tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
-                self._interface_manager.app_process_manager.close_manager()
-                # PyMOL windows
-                if tmp_number_of_pymol_windows == 1:
-                    logger.info("PyMOL will be closed now.")
-                    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
-                elif tmp_number_of_pymol_windows > 1:
-                    tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-                        "There are multiple windows open which contain PyMOL as window title.\nDo you want to close all?", "Close PySSA",
-                        custom_message_box.CustomMessageBoxIcons.WARNING.value
-                    )
-                    tmp_dialog.exec_()
-                    if tmp_dialog.response:
-                        for tmp_window_index in range(tmp_number_of_pymol_windows + 1):
-                            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[tmp_window_index].close()
-
-                tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
-                tmp_number_of_exact_pyssa_match_windows = 0
-                for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
-                    if pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[tmp_window_index].title == "PySSA":
-                        tmp_number_of_exact_pyssa_match_windows += 1
-
-                # PySSA windows
-                if tmp_number_of_exact_pyssa_match_windows == 1:
-                    logger.info("PySSA will be closed now.")
-                    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[0].close()
-                elif tmp_number_of_exact_pyssa_match_windows > 1:
-                    tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
-                        "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
-                        "Close PySSA",
-                        custom_message_box.CustomMessageBoxIcons.WARNING.value
-                    )
-                    tmp_dialog.exec_()
-                    if tmp_dialog.response:
-                        for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
-                            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
-                                tmp_window_index].close()
+                    self._active_task.start()
+                    #self.__slot_close_project()
+                else:
+                    self.__await_close_project_for_closing_app()
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __await_close_project_for_closing_app(self):
+        # Help windows
+        tmp_number_of_help_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER))
+        if tmp_number_of_help_windows == 1:
+            logger.info("The documentation window is open. It will be closed now.")
+            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[0].close()
+        elif tmp_number_of_help_windows > 1:
+            for tmp_window_index in range(tmp_number_of_help_windows):
+                pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[tmp_window_index].close()
+
+        tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
+        self._interface_manager.app_process_manager.close_manager()
+        # PyMOL windows
+        if tmp_number_of_pymol_windows == 1:
+            logger.info("PyMOL will be closed now.")
+            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
+        elif tmp_number_of_pymol_windows > 1:
+            tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                "There are multiple windows open which contain PyMOL as window title.\nDo you want to close all?",
+                "Close PySSA",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value
+            )
+            tmp_dialog.exec_()
+            if tmp_dialog.response:
+                for tmp_window_index in range(tmp_number_of_pymol_windows + 1):
+                    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[tmp_window_index].close()
+
+        tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
+        tmp_number_of_exact_pyssa_match_windows = 0
+        for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
+            if pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[tmp_window_index].title == "PySSA":
+                tmp_number_of_exact_pyssa_match_windows += 1
+
+        # PySSA windows
+        if tmp_number_of_exact_pyssa_match_windows == 1:
+            logger.info("PySSA will be closed now.")
+            pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[0].close()
+        elif tmp_number_of_exact_pyssa_match_windows > 1:
+            tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
+                "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
+                "Close PySSA",
+                custom_message_box.CustomMessageBoxIcons.WARNING.value
+            )
+            tmp_dialog.exec_()
+            if tmp_dialog.response:
+                for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
+                    pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
+                        tmp_window_index].close()
 
     def _abort_task(self, return_value):
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
