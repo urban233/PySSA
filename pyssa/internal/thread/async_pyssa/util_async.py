@@ -22,8 +22,12 @@
 """Module for util functions that are used by async functions."""
 import logging
 import os
+import pathlib
+import shutil
 import subprocess
+from io import BytesIO
 
+import requests
 import zmq
 import pygetwindow
 
@@ -248,3 +252,58 @@ def close_project_automatically(
             return a_project_name, 0
     else:
         return a_project_name, 0
+
+
+def download_demo_projects(the_workspace_path: str, a_placeholder: int) -> tuple[bool]:
+    if the_workspace_path is None or the_workspace_path == "":
+        logger.error("the_workspace_path is either None or an empty string.")
+        return (False,)
+    if not os.path.exists(the_workspace_path):
+        return (False,)
+    try:
+        import zipfile
+        download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
+        if os.path.exists(download_dest):
+            os.remove(download_dest)
+
+        # download demo projects
+        url = f'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
+        try:
+            response = requests.get(url)
+            response.raise_for_status()  # Check for errors
+            zipfile = zipfile.ZipFile(BytesIO(response.content))
+            zipfile.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
+        except requests.exceptions.HTTPError as errh:
+            constants.PYSSA_LOGGER.error(f"HTTP Error: {errh}")
+            return (False,)
+        except requests.exceptions.ConnectionError as errc:
+            constants.PYSSA_LOGGER.error(f"Error Connecting: {errc}")
+            return (False,)
+        except requests.exceptions.Timeout as errt:
+            constants.PYSSA_LOGGER.error(f"Timeout Error: {errt}")
+            return (False,)
+        except requests.exceptions.RequestException as err:
+            constants.PYSSA_LOGGER.error(f"Error: {err}")
+            return (False,)
+        else:
+            constants.PYSSA_LOGGER.info(f"Demo projects downloaded and extracted successfully.")
+        try:
+            path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
+            for tmp_filename in os.listdir(path_of_demo_projects):
+                # Copy db file into new workspace
+                tmp_project_database_filepath = str(
+                    pathlib.Path(
+                        f"{the_workspace_path}/{tmp_filename}"
+                    )
+                )
+                tmp_src_filepath = str(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"))
+                shutil.copyfile(tmp_src_filepath, tmp_project_database_filepath)
+            constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
+        except Exception as e:
+            constants.PYSSA_LOGGER.error(f"Import process of demo projects finished with the error: {e}.")
+            return (False,)
+        else:
+            return (True,)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        return (False,)

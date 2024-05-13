@@ -212,6 +212,9 @@ class InterfaceManager:
         self._app_process_manager_thread.start()
 
     def _closed_app_process_manager(self):
+        if self.app_process_manager.pymol_closed():
+            logger.info("PyMOL did not crash. The user requested to close PySSA.")
+            return
         logger.warning("Check process method of application process manager closed (likely due to a User PyMOL crash).")
         self._restart_user_pymol_view.show()
         self._restart_user_pymol_view.move(30, 300)

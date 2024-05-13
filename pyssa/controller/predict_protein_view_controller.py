@@ -41,7 +41,7 @@ from pyssa.internal.thread import tasks
 from pyssa.internal.thread.async_pyssa import util_async
 from pyssa.io_pyssa import safeguard
 from pyssa.presenter import main_presenter_async
-from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums
+from pyssa.util import gui_utils, tools, constants, exit_codes, prediction_util, enums, exception
 from pyssa.logging_pyssa import log_levels, log_handlers
 
 logger = logging.getLogger(__file__)
@@ -62,7 +62,12 @@ class PredictProteinViewController(QtCore.QObject):
         self._view: "predict_protein_view.PredictProteinView" = the_interface_manager.get_predict_protein_view()
         self.prediction_configuration = prediction_configuration.PredictionConfiguration(True, "pdb70")
         self.temporary_protein_objs = []
-        self.restore_ui_defaults()
+        self.has_internet_connection = True  # flag to determine from the main_view_controller.py if there is a working internet connection
+        try:
+            self.restore_ui_defaults()
+        except exception.NoInternetConnection:
+            logger.warning("No internet connection")
+            self.has_internet_connection = False
         self._fill_protein_to_predict_table_with_sequences(the_selected_indexes, a_prediction_type, the_watcher)
         self._connect_all_ui_elements_to_slot_functions()
 
@@ -127,19 +132,18 @@ class PredictProteinViewController(QtCore.QObject):
         self.prediction_configuration.templates = tmp_config.templates
 
     def restore_ui_defaults(self) -> None:
-        """Displays the multimer prediction + analysis page."""
         self._view.ui.btn_go_to_analysis_setup.setText("Predict")
         self._view.ui.lbl_go_to_analysis_setup.setText("Protein Structure(s)")
         self._view.ui.checkbox_add_analysis.setChecked(False)
         # checks internet connection
         if not tools.check_internet_connectivity():
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                "You do not have a working internet connection but that is necessary for this operation!",
+                "You do not have a working internet connection\nbut that is necessary for this operation!",
                 "Internet Connection",
                 custom_message_box.CustomMessageBoxIcons.ERROR.value
             )
             tmp_dialog.exec_()
-            return
+            raise exception.NoInternetConnection("No working internet connection.")
 
         self._view.ui.list_analysis_overview.clear()
         self._view.ui.btn_analysis_remove.hide()

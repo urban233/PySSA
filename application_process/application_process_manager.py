@@ -127,6 +127,9 @@ class ApplicationProcessManager:
         """
         self._should_exit = True
 
+    def pymol_closed(self):
+        return self._should_exit
+
     def pymol_crashed(self):
         """
         Returns the class attribute _is_crashed if the PyMOL process has crashed.

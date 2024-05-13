@@ -38,6 +38,13 @@ class FileIsEmptyError(Exception):
         super().__init__(message)
 
 
+class NoInternetConnection(Exception):
+    """Class for a no internet exception type."""
+
+    def __init__(self, message: str) -> None:
+        """Constructor."""
+        super().__init__(message)
+
 class DirectoryNotFoundError(Exception):
     """Class for a directory does not exist exception type."""
 

@@ -65,7 +65,7 @@ class RestartUserPyMOLView(QtWidgets.QDialog):
         styles.set_stylesheet(self)
         self.ui.lbl_message.setStyleSheet("font-size: 16px;")
         self.setWindowFlags(self.windowFlags() ^ Qt.WindowContextHelpButtonHint ^ Qt.WindowCloseButtonHint)
-        self.setWindowTitle("User PyMOL Crash")
+        self.setWindowTitle("Crash")
         self.setModal(True)
 
     def _close_pyssa(self):

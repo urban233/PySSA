@@ -444,8 +444,6 @@ class MainViewController:
 
     def _force_close_all(self):
         tmp_number_of_help_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER))
-        tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
-        tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
         # PySSA should be closed
         if not self._view.ui.lbl_logo.isVisible():
             logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
@@ -458,8 +456,8 @@ class MainViewController:
             for tmp_window_index in range(tmp_number_of_help_windows):
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[tmp_window_index].close()
 
+        tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
         self._interface_manager.app_process_manager.close_manager()
-
         # PyMOL windows
         if tmp_number_of_pymol_windows == 1:
             logger.info("PyMOL will be closed now.")
@@ -468,11 +466,16 @@ class MainViewController:
             for tmp_window_index in range(tmp_number_of_help_windows + 1):
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[tmp_window_index].close()
 
+        tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
+        tmp_number_of_exact_pyssa_match_windows = 0
+        for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
+            if pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[tmp_window_index].title == "PySSA":
+                tmp_number_of_exact_pyssa_match_windows += 1
         # PySSA windows
-        if tmp_number_of_pyssa_windows == 1:
+        if tmp_number_of_exact_pyssa_match_windows == 1:
             logger.info("PySSA will be closed now.")
             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[0].close()
-        elif tmp_number_of_pyssa_windows > 1:
+        elif tmp_number_of_exact_pyssa_match_windows > 1:
             for tmp_window_index in range(tmp_number_of_help_windows + 1):
                 pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
                     tmp_window_index].close()
@@ -487,8 +490,6 @@ class MainViewController:
             tmp_dialog.exec_()
             if tmp_dialog.response:
                 tmp_number_of_help_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER))
-                tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
-                tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
                 # PySSA should be closed
                 if not self._view.ui.lbl_logo.isVisible():
                     logger.info("A project is currently opened. It will now be saved and the application exists afterwards.")
@@ -501,8 +502,8 @@ class MainViewController:
                     for tmp_window_index in range(tmp_number_of_help_windows):
                         pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)[tmp_window_index].close()
 
+                tmp_number_of_pymol_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART))
                 self._interface_manager.app_process_manager.close_manager()
-
                 # PyMOL windows
                 if tmp_number_of_pymol_windows == 1:
                     logger.info("PyMOL will be closed now.")
@@ -514,14 +515,20 @@ class MainViewController:
                     )
                     tmp_dialog.exec_()
                     if tmp_dialog.response:
-                        for tmp_window_index in range(tmp_number_of_help_windows + 1):
+                        for tmp_window_index in range(tmp_number_of_pymol_windows + 1):
                             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[tmp_window_index].close()
 
+                tmp_number_of_pyssa_windows = len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA))
+                tmp_number_of_exact_pyssa_match_windows = 0
+                for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
+                    if pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[tmp_window_index].title == "PySSA":
+                        tmp_number_of_exact_pyssa_match_windows += 1
+
                 # PySSA windows
-                if tmp_number_of_pyssa_windows == 1:
+                if tmp_number_of_exact_pyssa_match_windows == 1:
                     logger.info("PySSA will be closed now.")
                     pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[0].close()
-                elif tmp_number_of_pyssa_windows > 1:
+                elif tmp_number_of_exact_pyssa_match_windows > 1:
                     tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                         "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
                         "Close PySSA",
@@ -529,7 +536,7 @@ class MainViewController:
                     )
                     tmp_dialog.exec_()
                     if tmp_dialog.response:
-                        for tmp_window_index in range(tmp_number_of_help_windows + 1):
+                        for tmp_window_index in range(tmp_number_of_pyssa_windows - 1):
                             pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYSSA)[
                                 tmp_window_index].close()
         except Exception as e:
@@ -1429,8 +1436,11 @@ class MainViewController:
 
     # <editor-fold desc="Prediction menu">
     def _connect_sequence_selection_model(self):
-        self._view.ui.seqs_list_view.selectionModel().selectionChanged.connect(
-            self._check_options_for_sequence_selection)
+        try:
+            self._view.ui.seqs_list_view.selectionModel().selectionChanged.connect(
+                self._check_options_for_sequence_selection)
+        except Exception as e:
+            logger.warning(f"The self._view.ui.seqs_list_view.selectionModel() is None. Error message: {e}")
 
     def _disconnect_sequence_selection_model(self):
         try:
@@ -1477,6 +1487,8 @@ class MainViewController:
             self._external_controller = predict_protein_view_controller.PredictProteinViewController(
                 self._interface_manager, self._interface_manager.watcher, tmp_indexes, "monomer"
             )
+            if self._external_controller.has_internet_connection is False:
+                return
             self._external_controller.job_input.connect(self._post_predict_protein)
             self._interface_manager.get_predict_protein_view().show()
         except Exception as e:
@@ -1498,6 +1510,8 @@ class MainViewController:
             self._external_controller = predict_protein_view_controller.PredictProteinViewController(
                 self._interface_manager, self._interface_manager.watcher, tmp_indexes, "multimer"
             )
+            if self._external_controller.has_internet_connection is False:
+                return
             self._external_controller.job_input.connect(self._post_predict_protein)
             self._interface_manager.get_predict_protein_view().show()
         except Exception as e:
@@ -1815,97 +1829,127 @@ class MainViewController:
 
     def __slot_get_demo_projects(self):
         try:
-            logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Get Demo Projects' clicked.")
-            self._interface_manager.status_bar_manager.show_temporary_message(
-                "Getting demo projects ...", False)
-            import zipfile
-            download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
-            if os.path.exists(download_dest):
-                os.remove(download_dest)
-            if not os.path.exists(download_dest):
-                # download demo projects
-                url = f'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
-                tmp_error_flag = False
-                try:
-                    response = requests.get(url)
-                    response.raise_for_status()  # Check for errors
-                    zipfile = zipfile.ZipFile(BytesIO(response.content))
-                    zipfile.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
-                except requests.exceptions.HTTPError as errh:
-                    constants.PYSSA_LOGGER.error(f"HTTP Error: {errh}")
-                    tmp_error_flag = True
-                except requests.exceptions.ConnectionError as errc:
-                    constants.PYSSA_LOGGER.error(f"Error Connecting: {errc}")
-                    tmp_error_flag = True
-                except requests.exceptions.Timeout as errt:
-                    constants.PYSSA_LOGGER.error(f"Timeout Error: {errt}")
-                    tmp_error_flag = True
-                except requests.exceptions.RequestException as err:
-                    constants.PYSSA_LOGGER.error(f"Error: {err}")
-                    tmp_error_flag = True
-                else:
-                    constants.PYSSA_LOGGER.info(f"Demo projects downloaded and extracted successfully.")
-
-                if tmp_error_flag:
-                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                        "The download of the demo projects failed. Please try again later.",
-                        "Get Demo Projects",
-                        custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-                    )
-                    tmp_dialog.exec_()
-                    self._interface_manager.status_bar_manager.show_error_message("The download of the demo projects failed.")
-                    return
-            else:
-                constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")
-                try:
-                    with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), "r") as zip_ref:
-                        zip_ref.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
-                    constants.PYSSA_LOGGER.info(
-                        "Demo projects are downloaded and extracted.\n Import of demo projects started ...",
-                    )
-                except Exception as e:
-                    constants.PYSSA_LOGGER.error(f"Extraction process of demo projects finished with the error: {e}.")
-                    tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                        "Extraction process of demo projects finished with an error. Check the logs to get more information.",
-                        "Get Demo Projects",
-                        custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
-                    )
-                    tmp_dialog.exec_()
-                    self._interface_manager.status_bar_manager.show_error_message("Extraction process of demo projects finished with an error.")
-                    return
-            try:
-                path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
-                for tmp_filename in os.listdir(path_of_demo_projects):
-                    # Copy db file into new workspace
-                    tmp_project_database_filepath = str(
-                        pathlib.Path(
-                            f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_filename}"
-                        )
-                    )
-                    tmp_src_filepath = str(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"))
-                    shutil.copyfile(tmp_src_filepath, tmp_project_database_filepath)
-                constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
-            except Exception as e:
-                constants.PYSSA_LOGGER.error(f"Import process of demo projects finished with the error: {e}.")
+            if not tools.check_internet_connectivity():
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                    "Import process of demo projects finished with an error. Check the logs to get more information.",
-                    "Get Demo Projects",
-                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                    "You do not have a working internet connection\nbut that is necessary for this operation!",
+                    "Internet Connection",
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value
                 )
                 tmp_dialog.exec_()
-                self._interface_manager.status_bar_manager.show_error_message("Import process of demo projects finished with an error.")
-            else:
-                self._interface_manager.refresh_workspace_model()
-                self._interface_manager.refresh_main_view()
-                # tmp_dialog = custom_message_box.CustomMessageBoxOk(
-                #     "Getting demo projects finished successfully.", "Get Demo Projects",
-                #     custom_message_box.CustomMessageBoxIcons.INFORMATION.value
-                # )
-                # tmp_dialog.exec_()
-                self._interface_manager.status_bar_manager.show_temporary_message("Getting demo projects finished successfully.")
+                return
+            self._active_task = tasks.Task(
+                target=util_async.download_demo_projects,
+                args=(self._interface_manager.get_application_settings().workspace_path, 0),
+                post_func=self.__await_download_demo_projects
+            )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        else:
+            self._interface_manager.block_gui()
+            self._active_task.start()
+
+        # try:
+        #     logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Help/Get Demo Projects' clicked.")
+        #     self._interface_manager.status_bar_manager.show_temporary_message(
+        #         "Getting demo projects ...", False)
+        #     import zipfile
+        #     download_dest = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip")
+        #     if os.path.exists(download_dest):
+        #         os.remove(download_dest)
+        #     if not os.path.exists(download_dest):
+        #         # download demo projects
+        #         url = f'https://w-hs.sciebo.de/s/ZHJa6XB9SKWtqGi/download'
+        #         tmp_error_flag = False
+        #         try:
+        #             response = requests.get(url)
+        #             response.raise_for_status()  # Check for errors
+        #             zipfile = zipfile.ZipFile(BytesIO(response.content))
+        #             zipfile.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
+        #         except requests.exceptions.HTTPError as errh:
+        #             constants.PYSSA_LOGGER.error(f"HTTP Error: {errh}")
+        #             tmp_error_flag = True
+        #         except requests.exceptions.ConnectionError as errc:
+        #             constants.PYSSA_LOGGER.error(f"Error Connecting: {errc}")
+        #             tmp_error_flag = True
+        #         except requests.exceptions.Timeout as errt:
+        #             constants.PYSSA_LOGGER.error(f"Timeout Error: {errt}")
+        #             tmp_error_flag = True
+        #         except requests.exceptions.RequestException as err:
+        #             constants.PYSSA_LOGGER.error(f"Error: {err}")
+        #             tmp_error_flag = True
+        #         else:
+        #             constants.PYSSA_LOGGER.info(f"Demo projects downloaded and extracted successfully.")
+        #
+        #         if tmp_error_flag:
+        #             tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        #                 "The download of the demo projects failed. Please try again later.",
+        #                 "Get Demo Projects",
+        #                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+        #             )
+        #             tmp_dialog.exec_()
+        #             self._interface_manager.status_bar_manager.show_error_message("The download of the demo projects failed.")
+        #             return
+        #     else:
+        #         constants.PYSSA_LOGGER.info("Demo projects are getting extracted ...")
+        #         try:
+        #             with zipfile.ZipFile(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects.zip"), "r") as zip_ref:
+        #                 zip_ref.extractall(pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects"))
+        #             constants.PYSSA_LOGGER.info(
+        #                 "Demo projects are downloaded and extracted.\n Import of demo projects started ...",
+        #             )
+        #         except Exception as e:
+        #             constants.PYSSA_LOGGER.error(f"Extraction process of demo projects finished with the error: {e}.")
+        #             tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        #                 "Extraction process of demo projects finished with an error. Check the logs to get more information.",
+        #                 "Get Demo Projects",
+        #                 custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+        #             )
+        #             tmp_dialog.exec_()
+        #             self._interface_manager.status_bar_manager.show_error_message("Extraction process of demo projects finished with an error.")
+        #             return
+        #     try:
+        #         path_of_demo_projects = pathlib.Path(f"{constants.SETTINGS_DIR}/demo-projects")
+        #         for tmp_filename in os.listdir(path_of_demo_projects):
+        #             # Copy db file into new workspace
+        #             tmp_project_database_filepath = str(
+        #                 pathlib.Path(
+        #                     f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_filename}"
+        #                 )
+        #             )
+        #             tmp_src_filepath = str(pathlib.Path(f"{path_of_demo_projects}/{tmp_filename}"))
+        #             shutil.copyfile(tmp_src_filepath, tmp_project_database_filepath)
+        #         constants.PYSSA_LOGGER.info("Import process of demo projects finished.")
+        #     except Exception as e:
+        #         constants.PYSSA_LOGGER.error(f"Import process of demo projects finished with the error: {e}.")
+        #         tmp_dialog = custom_message_box.CustomMessageBoxOk(
+        #             "Import process of demo projects finished with an error. Check the logs to get more information.",
+        #             "Get Demo Projects",
+        #             custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+        #         )
+        #         tmp_dialog.exec_()
+        #         self._interface_manager.status_bar_manager.show_error_message("Import process of demo projects finished with an error.")
+        #     else:
+        #         self._interface_manager.refresh_workspace_model()
+        #         self._interface_manager.refresh_main_view()
+        #         self._interface_manager.status_bar_manager.show_temporary_message("Getting demo projects finished successfully.")
+        # except Exception as e:
+        #     logger.error(f"An error occurred: {e}")
+        #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+
+    def __await_download_demo_projects(self, return_value: tuple[bool]):
+        try:
+            if return_value[0] is True:
+                self._interface_manager.refresh_workspace_model()
+                self._interface_manager.status_bar_manager.show_temporary_message("Getting demo projects finished successfully.")
+            else:
+                self._interface_manager.status_bar_manager.show_error_message("The download of the demo projects failed.")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+        finally:
+            self._interface_manager.stop_wait_cursor()
+            self._interface_manager.refresh_main_view()
 
     # </editor-fold>
 
