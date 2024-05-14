@@ -99,7 +99,7 @@ class AddProteinViewController(QtCore.QObject):
             self._view.ui.txt_add_protein.setText(the_entered_text[:len(the_entered_text)-1])
         # checks if a pdb id was entered
         else:
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=validate_async.validate_add_protein_view_input,
                 args=(
                     the_entered_text, 0

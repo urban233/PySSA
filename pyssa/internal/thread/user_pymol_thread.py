@@ -68,7 +68,7 @@ class UserPyMOLThread(QtCore.QObject):
             self._queue.put(a_database_operation)
         else:
             self._queue.put(a_database_operation)
-            self._thread = tasks.Task(
+            self._thread = tasks.LegacyTask(
                 target=self._execute_queue,
                 args=(0, 0),
                 post_func=self._queue_finished

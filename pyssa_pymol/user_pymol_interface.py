@@ -67,7 +67,7 @@ class UserPyMOLInterface(QtCore.QObject):
             pymol_enums.CommandEnum.PNG: commands.png,
         }
         self._should_restart_service = False
-        self._task = tasks.Task(
+        self._task = tasks.LegacyTask(
             target=self.main_loop,
             args=(0, 0)
             #post_func=self.finished_main_loop

@@ -246,7 +246,7 @@ module. Do **NOT** use the `_Action` class directly only use the `Task` class!
 
 def opens_project(self):
     """Initiates the task to open an existing project."""
-    self._active_task = tasks.Task(self.__async_open_project, post_func=self.__await_open_project)
+    self._active_task = tasks.LegacyTask(self.__async_open_project, post_func=self.__await_open_project)
     self._active_task.start()
 
 

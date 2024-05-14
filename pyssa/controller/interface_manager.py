@@ -204,7 +204,7 @@ class InterfaceManager:
         self._build_workspace_model()
 
     def start_app_process_manager(self):
-        self._app_process_manager_thread = tasks.Task(
+        self._app_process_manager_thread = tasks.LegacyTask(
             target=self.app_process_manager.check_process,
             args=(0, 0),
             post_func=self._closed_app_process_manager
@@ -218,7 +218,7 @@ class InterfaceManager:
         logger.warning("Check process method of application process manager closed (likely due to a User PyMOL crash).")
         self._restart_user_pymol_view.show()
         self._restart_user_pymol_view.move(30, 300)
-        self._app_process_manager_thread = tasks.Task(
+        self._app_process_manager_thread = tasks.LegacyTask(
             target=self._recover_user_pymol,
             args=(0, 0),
             post_func=self.__await_recover_user_pymol

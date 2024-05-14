@@ -116,7 +116,7 @@ class JobManager:
             else:
                 logger.debug("Prediction queue needs to be started.")
                 self._prediction_queue.put(a_job)
-                self._prediction_queue_thread = tasks.Task(
+                self._prediction_queue_thread = tasks.LegacyTask(
                     target=self._execute_prediction_job_queue,
                     args=(0, 0),
                     post_func=self._prediction_queue_finished,
@@ -129,7 +129,7 @@ class JobManager:
             else:
                 logger.debug("Distance analysis queue needs to be started.")
                 self._distance_analysis_queue.put(a_job)
-                self._distance_analysis_queue_thread = tasks.Task(
+                self._distance_analysis_queue_thread = tasks.LegacyTask(
                     target=self._execute_distance_analysis_job_queue,
                     args=(0, 0),
                     post_func=self._distance_analysis_queue_finished,
@@ -155,7 +155,7 @@ class JobManager:
             else:
                 logger.debug("Distance analysis queue needs to be started.")
                 self._prediction_and_distance_analysis_queue.put(a_job)
-                self._prediction_and_distance_analysis_queue_thread = tasks.Task(
+                self._prediction_and_distance_analysis_queue_thread = tasks.LegacyTask(
                     target=self._execute_prediction_and_distance_analysis_job_queue,
                     args=(0, 0),
                     post_func=self._prediction_and_distance_analysis_queue_finished,
@@ -168,7 +168,7 @@ class JobManager:
             else:
                 logger.debug("Ray-tracing queue needs to be started.")
                 self._ray_tracing_queue.put(a_job)
-                self._ray_tracing_queue_thread = tasks.Task(
+                self._ray_tracing_queue_thread = tasks.LegacyTask(
                     target=self._execute_ray_tracing_job_queue,
                     args=(0, 0),
                     post_func=self._ray_tracing_queue_finished,
@@ -212,7 +212,7 @@ class JobManager:
         # Restart queue if it is not empty
         if not self._prediction_queue.empty():
             logger.info("Restating prediction queue.")
-            self._prediction_queue_thread = tasks.Task(
+            self._prediction_queue_thread = tasks.LegacyTask(
                 target=self._execute_prediction_job_queue,
                 args=(0, 0),
                 post_func=self._prediction_queue_finished,
@@ -287,7 +287,7 @@ class JobManager:
         else:
             logger.debug("Prediction queue needs to be started.")
             self._prediction_queue.put(a_prediction_job)
-            self._prediction_queue_thread = tasks.Task(
+            self._prediction_queue_thread = tasks.LegacyTask(
                 target=self._execute_prediction_job_queue,
                 args=(0, 0),
                 post_func=self._prediction_queue_finished,
@@ -401,7 +401,7 @@ class JobManager:
         else:
             logger.debug("Distance analysis queue needs to be started.")
             self._distance_analysis_queue.put(a_distance_analysis_job)
-            self._distance_analysis_queue_thread = tasks.Task(
+            self._distance_analysis_queue_thread = tasks.LegacyTask(
                 target=self._execute_distance_analysis_job_queue,
                 args=(0, 0),
                 post_func=self._distance_analysis_queue_finished,
@@ -542,7 +542,7 @@ class JobManager:
         else:
             logger.debug("Ray-tracing queue needs to be started.")
             self._ray_tracing_queue.put(a_ray_tracing_job)
-            self._ray_tracing_queue_thread = tasks.Task(
+            self._ray_tracing_queue_thread = tasks.LegacyTask(
                 target=self._execute_ray_tracing_job_queue,
                 args=(0, 0),
                 post_func=self._ray_tracing_queue_finished,

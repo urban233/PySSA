@@ -433,7 +433,7 @@ class PlotView(QtWidgets.QDialog):
         Args:
             a_page_name (str): a name of a documentation page to display
         """
-        self._active_task = tasks.Task(
+        self._active_task = tasks.LegacyTask(
             target=util_async.open_documentation_on_certain_page,
             args=(a_page_name, 0),
             post_func=self.__await_open_help,
