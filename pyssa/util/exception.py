@@ -45,6 +45,15 @@ class NoInternetConnection(Exception):
         """Constructor."""
         super().__init__(message)
 
+
+class ActionIsNotRunnableError(Exception):
+    """Class for an action is not runnable type."""
+
+    def __init__(self, message: str = "") -> None:
+        """Constructor."""
+        super().__init__("self.is_runnable is set to False. " + message)
+
+
 class DirectoryNotFoundError(Exception):
     """Class for a directory does not exist exception type."""
 

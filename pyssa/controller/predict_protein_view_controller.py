@@ -82,7 +82,7 @@ class PredictProteinViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
                 self._interface_manager.documentation_window = None
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=util_async.open_documentation_on_certain_page,
                 args=(a_page_name, self._interface_manager.documentation_window),
                 post_func=self.__await_open_help,
@@ -564,7 +564,7 @@ class PredictProteinViewController(QtCore.QObject):
             tmp_proteins_to_predict.append(
                 self._view.ui.table_proteins_to_predict.verticalHeaderItem(i).text(),
             )
-        self._active_task = tasks.Task(
+        self._active_task = tasks.LegacyTask(
             target=main_presenter_async.check_chains_for_subsequent_analysis,
             args=(
                 self._view.ui.box_analysis_protein_struct_1.currentText(),

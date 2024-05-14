@@ -20,11 +20,23 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """Module for all task workers which run in separate threads."""
+import logging
+import queue
+import uuid
+from typing import Optional, Callable
+
 from PyQt5.QtCore import pyqtSignal
 from PyQt5 import QtCore
 
+from pyssa.logging_pyssa import log_handlers
+from pyssa.util import exception, enums
 
-class _Action(QtCore.QObject):
+logger = logging.getLogger(__file__)
+logger.addHandler(log_handlers.log_file_handler)
+__docformat__ = "google"
+
+
+class _LegacyAction(QtCore.QObject):
     """Actual execution unit."""
 
     is_finished: bool
@@ -51,7 +63,7 @@ class _Action(QtCore.QObject):
         self.result.emit(tmp_result)
 
 
-class Task:
+class LegacyTask:
     """Container for running an asynchronous operation."""
 
     def __init__(self, target, args=(), post_func=None) -> None:  # noqa: ANN001
@@ -70,7 +82,7 @@ class Task:
             an unauthorized memory access violation! Do everything related to the UI in the post function if
             necessary.
         """
-        self.action = _Action(target, args)
+        self.action = _LegacyAction(target, args)
         self.thread = QtCore.QThread()
 
         self.action.moveToThread(self.thread)
@@ -97,3 +109,128 @@ class Task:
         if self.action.is_finished:
             return True
         return False
+
+
+class _TaskSignals(QtCore.QObject):
+    """Signals related to the tasks."""
+    finished = pyqtSignal()
+    error = pyqtSignal(tuple)
+    result = pyqtSignal(tuple)
+
+
+class Action(QtCore.QRunnable):
+    """A container for running an asynchronous operation."""
+    def __init__(self, a_target, args: tuple = ()) -> None:
+        """Constructor.
+
+        Args:
+            a_target: The function that should get executed.
+            args (tuple): The arguments for the function.
+
+        Raises:
+             exception.IllegalArgumentError: If an argument is None.
+        """
+        # <editor-fold desc="Checks">
+        if a_target is None:
+            logger.error("a_target is None")
+            raise exception.IllegalArgumentError("a_target is None")
+        if args is None:
+            logger.error("args is None")
+            raise exception.IllegalArgumentError("args is None")
+
+        # </editor-fold>
+
+        super().__init__()
+        self._signals = _TaskSignals()
+        self._target = a_target
+        self._args: tuple = args
+        self.is_runnable = False
+
+    def connect_error_signal(self, a_function: Callable) -> None:
+        self._signals.error.connect(a_function)
+
+    def connect_finished_signal(self, a_function: Callable) -> None:
+        self._signals.finished.connect(a_function)
+
+    def run(self) -> None:
+        """Overwrites the run() method of QRunnable and executes the target function."""
+        try:
+            if self.is_runnable is False:
+                raise exception.ActionIsNotRunnableError()
+            tmp_result = self._target(*self._args)
+        except Exception as e:
+            logger.error(e)
+            self._signals.error.emit((e,))
+        else:
+            self._signals.result.emit((True, tmp_result))
+        finally:
+            self._signals.finished.emit()
+
+
+class Task(QtCore.QObject):
+    """Represents an asynchronous operation."""
+    """
+    An ID for the task instance.
+    """
+    id: uuid.UUID
+
+    """
+    Gets whether this task instance has completed execution due to being canceled. 
+    """
+    is_canceled: bool
+
+    """
+    Gets whether the task ran to completion.    
+    """
+    is_completed: bool
+
+    """
+    Gets the task status of this task.
+    """
+    status: Optional["enums.TaskStatus"]
+
+    """
+    A queue of actions to execute.
+    """
+    actions: queue.Queue
+
+    def __init__(self):
+        """Constructor."""
+        super().__init__()
+        self.id = uuid.uuid4()
+        self.is_canceled = False
+        self.is_completed = False
+        self.status = None
+        self.actions = queue.Queue()
+
+    def _action_completed(self) -> None:
+        if self.actions.empty() and self.status != enums.TaskStatus.FAILED:
+            self.is_completed = True
+            self.status = enums.TaskStatus.RAN_TO_COMPLETION
+        elif self.actions.empty() and self.status == enums.TaskStatus.FAILED:
+            # Case is handled by method _action_ended_with_error
+            return
+        else:
+            self.is_completed = False
+            self.status = enums.TaskStatus.RUNNING
+
+    def _action_ended_with_error(self) -> None:
+        if self.actions.empty():
+            self.is_completed = True
+            self.status = enums.TaskStatus.FAILED
+        else:
+            self.is_completed = False
+            self.status = enums.TaskStatus.RUNNING
+
+    def connect_basic_signals(self, an_action: "Action") -> None:
+        an_action.connect_error_signal(self._action_ended_with_error)
+        an_action.connect_finished_signal(self._action_completed)
+
+    @staticmethod
+    def run_action(an_action: "Action", the_threadpool: QtCore.QThreadPool) -> "Task":
+        tmp_task: "Task" = Task()
+        tmp_task.actions.put(an_action)
+        tmp_action: "Action" = tmp_task.actions.get()
+        tmp_task.connect_basic_signals(tmp_action)
+        the_threadpool.start(tmp_action)
+        return tmp_task

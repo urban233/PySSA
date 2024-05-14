@@ -42,6 +42,15 @@ class ModelTypeEnum(enum.Enum):
     MULTIMER_SEQ = "multimer_seq"
 
 
+class TaskStatus(enum.IntEnum):
+    CANCELED = 6
+    CREATED = 0
+    RAN_TO_COMPLETION = 5
+    RUNNING = 3
+    FAILED = 8
+    WAITING_TO_RUN = 2
+
+
 class DatabaseEnum(enum.Enum):
     """An enum for all database fields."""
     PROJECT_NAME = "name"

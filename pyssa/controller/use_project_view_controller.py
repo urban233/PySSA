@@ -67,7 +67,7 @@ class UseProjectViewController(QtCore.QObject):
             self._interface_manager.status_bar_manager.show_temporary_message("Opening help center ...")
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
                 self._interface_manager.documentation_window = None
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=util_async.open_documentation_on_certain_page,
                 args=(a_page_name, self._interface_manager.documentation_window),
                 post_func=self.__await_open_help,

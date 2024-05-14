@@ -93,12 +93,12 @@ class MainViewController:
     """
     The active task of the application.
     """
-    _active_task: tasks.Task
+    _active_task: tasks.LegacyTask
 
     """
     The active task which controls the help window of the application.
     """
-    _help_task: tasks.Task
+    _help_task: tasks.LegacyTask
 
     """
     A thread for database related processes.
@@ -493,7 +493,7 @@ class MainViewController:
             if tmp_dialog.response:
                 # PySSA should be closed
                 if not self._view.ui.lbl_logo.isVisible():
-                    self._active_task = tasks.Task(
+                    self._active_task = tasks.LegacyTask(
                     target=project_async.close_project,
                     args=(self._database_thread, self._interface_manager.pymol_session_manager),
                     post_func=self.__await_close_project_for_closing_app,
@@ -568,7 +568,7 @@ class MainViewController:
         if tmp_job_is_for_current_project_flag:
             if tmp_job_base_information.job_type == enums.JobType.PREDICTION:
                 # refresh protein model
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=util_async.add_proteins_to_project_and_model,
                     args=(self._interface_manager, tmp_job_base_information.protein_names),
                     post_func=self._post_update_project_and_model,
@@ -576,7 +576,7 @@ class MainViewController:
                 self._active_task.start()
             elif tmp_job_base_information.job_type == enums.JobType.DISTANCE_ANALYSIS:
                 # refresh protein pair model
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=util_async.add_protein_pairs_to_project_and_model,
                     args=(self._interface_manager, tmp_job_base_information.protein_pair_names),
                     post_func=self._post_update_project_and_model,
@@ -584,7 +584,7 @@ class MainViewController:
                 self._active_task.start()
             elif tmp_job_base_information.job_type == enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS:
                 # refresh protein and protein pair model
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=util_async.add_proteins_and_protein_pairs_to_project_and_model,
                     args=(
                         self._interface_manager,
@@ -604,7 +604,7 @@ class MainViewController:
             tmp_a_project_is_open = self._view.ui.lbl_project_name.isVisible()
             if tmp_a_project_is_open:
                 self._disconnect_sequence_selection_model()
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=util_async.close_project_automatically,
                 args=(
                     tmp_a_project_is_open,
@@ -639,7 +639,7 @@ class MainViewController:
             self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
             #self._database_thread.start()
             self._database_manager.set_database_filepath(tmp_project_database_filepath)
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=project_async.open_project,
                 args=(
                     tmp_project_name,
@@ -697,7 +697,7 @@ class MainViewController:
 
     # <editor-fold desc="Help related methods">
     def _start_documentation_server(self):
-        self._help_task = tasks.Task(
+        self._help_task = tasks.LegacyTask(
             target=util_async.start_documentation_server,
             args=(0, 0),
             post_func=self.__await_start_documentation_server,
@@ -724,7 +724,7 @@ class MainViewController:
 
             if len(pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_HELP_CENTER)) != 1:
                 self._interface_manager.documentation_window = None
-            self._help_task = tasks.Task(
+            self._help_task = tasks.LegacyTask(
                 target=util_async.open_documentation_on_certain_page,
                 args=(a_page_name, self._interface_manager.documentation_window),
                 post_func=self.__await_open_help,
@@ -1052,7 +1052,7 @@ class MainViewController:
         """Closes the current project"""
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Close' clicked.")
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=project_async.close_project,
                 args=(self._database_thread, self._interface_manager.pymol_session_manager),
                 post_func=self.__await_close_project,
@@ -1110,7 +1110,7 @@ class MainViewController:
                 db_manager.build_new_database()
             self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
             #self._database_thread.start()
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=project_async.create_new_project,
                 args=(
                     tmp_project_name,
@@ -1177,7 +1177,7 @@ class MainViewController:
             self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
             #self._database_thread.start()
             self._database_manager.set_database_filepath(tmp_project_database_filepath)
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=project_async.open_project,
                 args=(
                     tmp_project_name,
@@ -1239,7 +1239,7 @@ class MainViewController:
             with database_manager.DatabaseManager(tmp_project_database_filepath) as db_manager:
                 db_manager.build_new_database()
 
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=project_async.create_use_project,
                 args=(
                     user_input[0],
@@ -1319,7 +1319,7 @@ class MainViewController:
                     "Enter A Project Name:",
                     text=tmp_import_filepath.name.replace(".db", "")
                 )[0]
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=project_async.import_project,
                     args=(tmp_new_project_name, tmp_import_filepath, self._interface_manager
                     ),
@@ -1850,7 +1850,7 @@ class MainViewController:
                 )
                 tmp_dialog.exec_()
                 return
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=util_async.download_demo_projects,
                 args=(self._interface_manager.get_application_settings().workspace_path, 0),
                 post_func=self.__await_download_demo_projects
@@ -1972,7 +1972,7 @@ class MainViewController:
     def __slot_preview_image(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Image/Preview' clicked.")
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=image_async.preview_image,
                 args=(self._interface_manager.pymol_session_manager, 0),
                 post_func=self.__await_preview_image,
@@ -2041,7 +2041,7 @@ class MainViewController:
                 )
                 return
 
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=image_async.create_drawn_image,
                 args=(full_file_name[0], self._interface_manager.pymol_session_manager),
                 post_func=self.__await_create_drawn_image,
@@ -2209,7 +2209,7 @@ class MainViewController:
                     tmp_seq_record.id = tmp_seq_record.name
                 tmp_seq_record.seq = Seq(tmp_seq_record.seq)
                 # defines the task to save the sequence as .fasta file
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=sequence_async.save_selected_protein_sequence_as_fasta_file,
                     args=(
                         tmp_seq_record,
@@ -2420,7 +2420,7 @@ class MainViewController:
             self._view.tg_protein_white_bg.toggle_button.setCheckState(False)
             tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
             tmp_flag = False
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.load_protein_pymol_session,
                 args=(
                     tmp_protein,
@@ -2533,7 +2533,7 @@ class MainViewController:
                 return
             tmp_scene_name = self._interface_manager.get_current_active_scene_name()
             self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.load_scene,
                 args=(self._interface_manager.pymol_session_manager, tmp_scene_name),
                 post_func=self.__await_load_scene_protein
@@ -2578,7 +2578,7 @@ class MainViewController:
             self._view.color_grid_proteins.reset_icon_for_selected_color()
             tmp_protein = self._interface_manager.get_current_active_protein_object()
             tmp_chain = self._interface_manager.get_current_active_chain_object()
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
                 args=(
                     tmp_protein.get_molecule_object(),
@@ -2622,7 +2622,7 @@ class MainViewController:
             tmp_protein = self._interface_manager.get_current_active_protein_object()
             tmp_chain = self._interface_manager.get_current_active_chain_object()
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
                 args=(
                     tmp_protein.get_molecule_object(),
@@ -2720,7 +2720,7 @@ class MainViewController:
             tmp_chain = self._interface_manager.get_current_active_chain_object()
             tmp_protein.pymol_selection.set_selection_for_a_single_chain(tmp_chain.chain_letter)
             # Color protein in User PyMOL
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.color_pymol_selection,
                 args=(
                     a_color,
@@ -2811,7 +2811,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_color_atoms.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.color_pymol_selection_atoms_by_element,
                     args=(tmp_selection.selection_string, self._interface_manager.pymol_session_manager),
                     post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein
@@ -2824,7 +2824,7 @@ class MainViewController:
 
                 tmp_protein = self._interface_manager.get_current_active_protein_object()
                 tmp_chain = self._interface_manager.get_current_active_chain_object()
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.reset_color_pymol_selection_atoms_by_element,
                     args=(
                         tmp_protein.get_molecule_object(),
@@ -2932,13 +2932,13 @@ class MainViewController:
     def __slot_protein_change_background_color(self):
         try:
             if self._view.tg_protein_white_bg.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("white", self._interface_manager.pymol_session_manager),
                     post_func=self.__await_set_background_color_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("black", self._interface_manager.pymol_session_manager),
                     post_func=self.__await_set_background_color_for_protein_session
@@ -3024,7 +3024,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_cartoon.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
@@ -3034,7 +3034,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
@@ -3059,7 +3059,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_sticks.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.STICKS,
@@ -3069,7 +3069,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.STICKS,
@@ -3094,7 +3094,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_ribbon.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
@@ -3104,7 +3104,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
@@ -3129,7 +3129,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_lines.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.LINES,
@@ -3139,7 +3139,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.LINES,
@@ -3164,7 +3164,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_spheres.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
@@ -3174,7 +3174,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
@@ -3199,7 +3199,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_dots.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.DOTS,
@@ -3209,7 +3209,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.DOTS,
@@ -3234,7 +3234,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_mesh.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.MESH,
@@ -3244,7 +3244,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.MESH,
@@ -3269,7 +3269,7 @@ class MainViewController:
                 self._interface_manager.get_current_active_chain_object().chain_letter)
 
             if self._view.tg_protein_surface.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
@@ -3279,7 +3279,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
@@ -3514,7 +3514,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object().pymol_selection
             tmp_selection.set_selection_for_a_single_chain(
                 self._interface_manager.get_current_active_chain_object().chain_letter)
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.hide_all_representations,
                 args=(
                     tmp_selection.selection_string,
@@ -3577,7 +3577,7 @@ class MainViewController:
         try:
             tmp_protein_name, tmp_name_len = return_value
             if tmp_name_len == 4:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=project_async.add_protein_from_pdb_to_project,
                     args=(
                         tmp_protein_name,
@@ -3586,7 +3586,7 @@ class MainViewController:
                     post_func=self.__await_post_import_protein_structure,
                 )
             elif tmp_name_len > 0:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=project_async.add_protein_from_local_filesystem_to_project,
                     args=(
                         tmp_protein_name,
@@ -3646,7 +3646,7 @@ class MainViewController:
                 return
 
             tmp_protein: "protein.Protein" = self._interface_manager.get_current_active_protein_object()
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.reinitialize_session,
                 args=(self._interface_manager.pymol_session_manager, tmp_protein.get_molecule_object()),
                 post_func=self.__await_reinitialize_session_before_delete_protein
@@ -3693,7 +3693,7 @@ class MainViewController:
             )
             if file_path:
                 tmp_protein: "protein.Protein" = self._interface_manager.get_current_protein_tree_index_object()
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=protein_async.save_selected_protein_structure_as_pdb_file,
                     args=(
                         tmp_protein,
@@ -3752,7 +3752,7 @@ class MainViewController:
             tmp_dialog.exec_()
             if tmp_dialog.response:
                 tmp_main_socket, tmp_general_purpose_socket = self._interface_manager.job_manager.get_general_purpose_socket_pair()
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=protein_async.clean_protein_update,
                     args=(
                         self._interface_manager.get_current_active_protein_object(),
@@ -3792,7 +3792,7 @@ class MainViewController:
                 self._interface_manager.refresh_main_view()
                 return
 
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.load_protein_pymol_session,
                 args=(
                     self._interface_manager.get_current_active_protein_object(),
@@ -3844,7 +3844,7 @@ class MainViewController:
         """Renames a selected protein structure."""
         try:
             if return_value[1] is True:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=protein_async.rename_selected_protein_structure,
                     args=(
                         self._interface_manager.get_current_protein_tree_index_object(),
@@ -3917,7 +3917,7 @@ class MainViewController:
     def __slot_update_protein_scene(self):
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Update protein scene' button on the 'Proteins Tab' was clicked.")
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.update_scene,
                 args=(self._interface_manager.pymol_session_manager, 0),
                 post_func=self.__await_update_scene_for_protein_session,
@@ -3995,7 +3995,7 @@ class MainViewController:
     def _post_save_scene(self, return_value: tuple):
         try:
             tmp_scene_name, _ = return_value
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.create_new_scene,
                 args=(tmp_scene_name, self._interface_manager.pymol_session_manager),
                 post_func=self.__await_create_new_scene_for_protein_session,
@@ -4014,7 +4014,7 @@ class MainViewController:
             if self._interface_manager.current_tab_index == 1:
                 # User is on Proteins tab
                 logging.debug("Setting up new async task 'pymol_session_async.save_protein_pymol_session_to_database'.")
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.save_protein_pymol_session_to_database,
                     args=(
                         self._interface_manager,
@@ -4035,7 +4035,7 @@ class MainViewController:
                 # User is on Protein Pairs tab
                 # The database thread cannot be used here because the session gets loaded again
                 # before the new data is in the db
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.save_protein_pair_pymol_session_to_database,
                     args=(
                         self._interface_manager,
@@ -4108,7 +4108,7 @@ class MainViewController:
             if not tmp_dialog.response:
                 return
 
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.delete_scene,
                     args=(self._interface_manager.pymol_session_manager, 0),
                     post_func=self.__await_delete_scene_for_protein_session,
@@ -4136,7 +4136,7 @@ class MainViewController:
             elif self._interface_manager.current_tab_index == 2:
                 # The database thread cannot be used here because the session gets loaded again
                 # before the new data is in the db
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.save_protein_pair_pymol_session_to_database,
                     args=(
                         self._interface_manager,
@@ -4305,7 +4305,7 @@ class MainViewController:
             self._view.tg_protein_pair_white_bg.toggle_button.setCheckState(False)
             tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
             tmp_flag = False
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.load_protein_pair_pymol_session,
                 args=(
                     tmp_protein_pair,
@@ -4418,7 +4418,7 @@ class MainViewController:
                 return
             tmp_scene_name = self._interface_manager.get_current_active_scene_name_of_protein_pair()
             self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.load_scene,
                 args=(self._interface_manager.pymol_session_manager, tmp_scene_name),
                 post_func=self.__await_load_scene_protein_pair
@@ -4469,7 +4469,7 @@ class MainViewController:
             self._view.color_grid_protein_pairs.reset_icon_for_selected_color()
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
             tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
                 args=(
                     tmp_protein.get_molecule_object(),
@@ -4517,7 +4517,7 @@ class MainViewController:
             tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
             tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter} and {tmp_protein.get_molecule_object()}"
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
                 args=(
                     tmp_protein.pymol_selection.selection_string,
@@ -4619,7 +4619,7 @@ class MainViewController:
                                                                                        tmp_protein_pair)
             tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
             # Color protein in User PyMOL
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.color_pymol_selection,
                 args=(
                     a_color,
@@ -4751,7 +4751,7 @@ class MainViewController:
             tmp_protein.pymol_selection.set_custom_selection(f"/{tmp_protein_name}//{tmp_chain.chain_letter}")
 
             if self._view.tg_protein_pair_color_atoms.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.color_pymol_selection_atoms_by_element,
                     args=(tmp_protein.pymol_selection.selection_string, self._interface_manager.pymol_session_manager),
                     post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein_pair
@@ -4764,7 +4764,7 @@ class MainViewController:
 
                 tmp_protein = self._interface_manager.get_current_active_protein_object_of_protein_pair()
                 tmp_chain = self._interface_manager.get_current_active_chain_object_of_protein_pair()
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.reset_color_pymol_selection_atoms_by_element,
                     args=(
                         tmp_protein.get_molecule_object(),
@@ -4942,7 +4942,7 @@ class MainViewController:
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Color protein pair by rmsd' context menu action was clicked.")
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=protein_pair_async.color_protein_pair_by_rmsd_value,
                 args=(
                     self._interface_manager.get_current_protein_pair_tree_index_object(),
@@ -4969,13 +4969,13 @@ class MainViewController:
     def __slot_protein_pair_change_background_color(self):
         try:
             if self._view.tg_protein_pair_white_bg.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("white", self._interface_manager.pymol_session_manager),
                     post_func=self.__await_set_background_color_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("black", self._interface_manager.pymol_session_manager),
                     post_func=self.__await_set_background_color_for_protein_pair_session
@@ -5032,7 +5032,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_cartoon.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
@@ -5042,7 +5042,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
@@ -5093,7 +5093,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_sticks.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.STICKS,
@@ -5103,7 +5103,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.STICKS,
@@ -5126,7 +5126,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_ribbon.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
@@ -5136,7 +5136,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
@@ -5159,7 +5159,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_lines.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.LINES,
@@ -5169,7 +5169,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.LINES,
@@ -5192,7 +5192,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_spheres.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
@@ -5202,7 +5202,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
@@ -5225,7 +5225,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_dots.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.DOTS,
@@ -5235,7 +5235,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.DOTS,
@@ -5258,7 +5258,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_mesh.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.MESH,
@@ -5268,7 +5268,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.MESH,
@@ -5291,7 +5291,7 @@ class MainViewController:
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
             if self._view.tg_protein_pair_surface.toggle_button.isChecked():
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.show_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
@@ -5301,7 +5301,7 @@ class MainViewController:
                     post_func=self.__await_set_representation_for_protein_pair_session
                 )
             else:
-                self._active_task = tasks.Task(
+                self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.hide_specific_representation,
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
@@ -5529,7 +5529,7 @@ class MainViewController:
                        "'Hide all' representations button on the 'Protein Pairs Tab' was clicked.")
             tmp_selection = self._interface_manager.get_current_active_protein_object_of_protein_pair().pymol_selection
             tmp_selection.set_custom_selection(self._create_selection_string_for_representations())
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.hide_all_representations,
                 args=(
                     tmp_selection.selection_string,
@@ -5581,7 +5581,7 @@ class MainViewController:
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
                        "'Update protein scene' button on the 'Protein Pairs Tab' was clicked.")
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.update_scene,
                 args=(self._interface_manager.pymol_session_manager, 0),
                 post_func=self.__await_update_scene_for_protein_pair_session,
@@ -5660,7 +5660,7 @@ class MainViewController:
             if not self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name):
                 self.__await_reinitialize_session_before_delete_protein_pair((True,))
                 return
-            self._active_task = tasks.Task(
+            self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.reinitialize_session,
                 args=(self._interface_manager.pymol_session_manager,),
                 post_func=self.__await_reinitialize_session_before_delete_protein_pair
