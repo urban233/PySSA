@@ -21,9 +21,10 @@
 #
 """Module for the application process manager class."""
 import os
-import signal
 import subprocess
 import time
+from typing import Callable, Optional
+
 from pyssa.gui.ui.custom_dialogs import custom_message_box
 from pyssa.util import constants, exception
 
@@ -31,24 +32,28 @@ __docformat__ = "google"
 
 
 class ApplicationProcessManager:
-    """
-    Manages the application's processes, including the initiation, checking,
-    and closing of the PyMOL and PySSA processes. Instances of this class
-    provide an interface for managing these processes.
+    """Manages the application's processes, including the initiation, checking, and closing of the PyMOL and PySSA processes.
+    
+    Instances of this class provide an interface for managing these processes.
     """
 
-    def __init__(self, the_reset_pymol_session_func) -> None:
-        """
-        Constructor.
+    _reset_pymol_session_func: Optional[Callable] = None
+    """A function that can reset the pymol session."""
+    pymol_process: Optional[subprocess.Popen] = None
+    """The pymol process object."""
+    _should_exit: bool = False
+    """A boolean flag that determines if the PyMOL process should exit."""
+    _is_crashed: bool = False
+    """A boolean flag that determines if the PyMOL process crashed."""
+    
+    def __init__(self, the_reset_pymol_session_func: Callable) -> None:
+        """Constructor.
 
         Args:
-            the_reset_pymol_session_func: The function used to reset the PyMOL session.
+            the_reset_pymol_session_func (Callable): The function used to reset the PyMOL session.
 
         Raises:
             exception.IllegalArgumentError: If the_reset_pymol_session_func is None.
-
-        Returns:
-            None
         """
         # <editor-fold desc="Checks">
         if the_reset_pymol_session_func is None:
@@ -57,20 +62,16 @@ class ApplicationProcessManager:
         # </editor-fold>
 
         self._reset_pymol_session_func = the_reset_pymol_session_func
-        self.pymol_process = None
-        self._should_exit = False
-        self._is_crashed = False
+        # self.pymol_process = None
+        # self._should_exit = False
+        # self._is_crashed = False
 
-    def arrange_windows(self):
-        """
-        Runs a script to arrange the PySSA and PyMOL window on the screen.
+    def arrange_windows(self) -> None:
+        """Runs a script to arrange the PySSA and PyMOL window on the screen.
 
         If the script for arranging the windows does not exist, a custom message box is displayed
         with an error message. If the script exists, it is executed using subprocess.Popen(), which
         runs the script in a separate process without displaying a console window.
-
-        Returns:
-            None
         """
         if not os.path.exists(constants.ARRANGE_WINDOWS_EXE_FILEPATH):
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
@@ -82,32 +83,10 @@ class ApplicationProcessManager:
         else:
             subprocess.Popen([constants.ARRANGE_WINDOWS_EXE_FILEPATH], creationflags=subprocess.CREATE_NO_WINDOW)
 
-    def start_pyssa(self):
-        """
-        Starts the PySSA process.
-
-        Returns:
-            None
-        """
+    def start_pymol(self) -> None:
+        """Starts PyMOL application."""
         self.pymol_process = subprocess.Popen(
-            [r"C:\Users\martin\github_repos\PySSA\scripts\batch\start_pyssa.bat"],
-            cwd=r"C:\ProgramData\pyssa\win_start\vb_script",
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-        if self.pymol_process.poll() is None:
-            print("PySSA started correctly.")
-        else:
-            print("PySSA failed to start.")
-
-    def start_pymol(self):
-        """
-        Starts PyMOL application.
-
-        Returns:
-            None
-        """
-        self.pymol_process = subprocess.Popen(
-            [f"{constants.PLUGIN_PATH}\\scripts\\batch\\start_pymol.bat"], creationflags=subprocess.CREATE_NO_WINDOW
+            [f"{constants.PLUGIN_PATH}\\scripts\\batch\\start_pymol.bat"], creationflags=subprocess.CREATE_NO_WINDOW,
         )
         if self.pymol_process.poll() is None:
             print("PyMOL from ApplicationProcessManager class started correctly.")
@@ -116,50 +95,48 @@ class ApplicationProcessManager:
             print("PyMOL failed to start.")
             self._is_crashed = True
 
-    def close_manager(self):
-        """
-        Closes the manager.
+    def close_manager(self) -> None:
+        """Closes the manager.
 
         This method sets the internal flag `_should_exit` to `True`, indicating that the manager should exit.
-
-        Returns:
-            None
         """
         self._should_exit = True
 
-    def pymol_closed(self):
-        return self._should_exit
-
-    def pymol_crashed(self):
-        """
-        Returns the class attribute _is_crashed if the PyMOL process has crashed.
+    def pymol_closed(self) -> bool:
+        """Gets the `_should_exit` flag, indicating that the manager should exit.
 
         Returns:
-            bool: True if the PyMOL process has crashed, False otherwise.
+            A boolean that is True if the application should be closed, and False otherwise.
+        """
+        return self._should_exit
+
+    def pymol_crashed(self) -> bool:
+        """Returns the class attribute `_is_crashed`.
+
+        Returns:
+            A boolean that is True if the PyMOL process has crashed, False otherwise.
         """
         return self._is_crashed
 
-    def check_process(self, placeholder_1, placeholder_2) -> tuple[str, str]:
-        """
-        Checks the status of a PyMOL process, looped until the process exists or crashes.
-        The function also initiates the start of the PyMOL.
+    def check_process(self, placeholder_1: int, placeholder_2: int) -> tuple[str, str]:
+        """Checks the status of a PyMOL process, looped until the process exists or crashes.
+        
+        The method also initiates the start of the PyMOL.
 
         Args:
-            placeholder_1 (unknown): Placeholder description for the first parameter.
-            placeholder_2 (unknown): Placeholder description for the second parameter.
+            placeholder_1 (int): The Placeholder that is needed for use with LegacyTask.
+            placeholder_2 (int): The Placeholder that is needed for use with LegacyTask.
 
         Returns:
-            tuple: A tuple containing two empty strings needed for the task class.
+            A tuple containing two empty strings needed for the task class.
         """
         if self.pymol_process is None:
             self.start_pymol()
         while self._should_exit is False and self._is_crashed is False:
             if self.pymol_process.poll() is not None:
-                print("PyMOL crashed!")
+                print("PyMOL crashed!")  # TODO: change to logger message
                 self._is_crashed = True
             else:
                 time.sleep(2)
-
-        print("Closing check_process method.")
+        print("Closing check_process method.")  # TODO: change to logger message
         return "", ""  # These two empty strings are needed for the task class
-

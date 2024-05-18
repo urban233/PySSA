@@ -32,7 +32,7 @@ logger.addHandler(log_handlers.log_file_handler)
 def preview_image(the_pymol_session_manager: "pymol_session_manager.PymolSessionManager", a_placeholder_2: int) -> tuple:
     # TODO: the renderer should be changeable
     try:
-        the_pymol_session_manager.pymol_interface.ray(a_width=2400, a_height=2400, a_renderer=int(0))
+        the_pymol_session_manager.user_pymol_connector.ray(a_width=2400, a_height=2400, a_renderer=int(0))
     except Exception as e:
         logger.error(e)
     return 0, ""
@@ -40,8 +40,8 @@ def preview_image(the_pymol_session_manager: "pymol_session_manager.PymolSession
 
 def create_drawn_image(an_image_filepath: str, the_pymol_session_manager: "pymol_session_manager.PymolSessionManager") -> tuple:
     try:
-        the_pymol_session_manager.pymol_interface.draw(a_width=2400, a_height=2400, an_antialias_value=2)
-        the_pymol_session_manager.pymol_interface.png(an_image_filepath, a_dpi_value=300)
+        the_pymol_session_manager.user_pymol_connector.draw(a_width=2400, a_height=2400, an_antialias_value=2)
+        the_pymol_session_manager.user_pymol_connector.png(an_image_filepath, a_dpi_value=300)
     except Exception as e:
         logger.error(e)
     return 0, ""

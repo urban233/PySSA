@@ -25,7 +25,7 @@ import os
 import pathlib
 import shutil
 import subprocess
-from typing import Optional
+from typing import Optional, Any
 
 import pygetwindow
 import requests
@@ -53,7 +53,7 @@ from pyssa.internal.data_structures.data_classes import main_view_state, residue
 from pyssa.gui.ui.dialogs import dialog_settings_global, dialog_tutorial_videos, dialog_about
 from pyssa.internal.data_structures import project, settings, protein, protein_pair
 from pyssa.internal.data_structures.data_classes import database_operation
-from pyssa.internal.thread import tasks, database_thread
+from pyssa.internal.thread import database_thread
 from pyssa.io_pyssa import safeguard, filesystem_io
 from pyssa.logging_pyssa import log_handlers, log_levels
 from pyssa.util import constants, enums, exit_codes, tools, ui_util
@@ -61,6 +61,7 @@ from pyssa.gui.ui.views import main_view
 from pyssa.controller import interface_manager, distance_analysis_view_controller, \
     delete_project_view_controller, create_project_view_controller, open_project_view_controller, database_manager
 from pyssa.util import globals
+from tea.thread import tasks
 
 logger = logging.getLogger(__file__)
 logger.addHandler(log_handlers.log_file_handler)
@@ -133,7 +134,7 @@ class MainViewController:
             self._view.ui.proteins_tree_view,
             self.__slot_get_information_about_selected_object_in_protein_branch,
             self._view.ui.protein_pairs_tree_view,
-            self.__slot_get_information_about_selected_object_in_protein_pair_branch
+            self.__slot_get_information_about_selected_object_in_protein_pair_branch,
         )
         self.custom_progress_signal = custom_signals.ProgressSignal()
         self.abort_signal = custom_signals.AbortSignal()
@@ -141,6 +142,9 @@ class MainViewController:
         self._sequence_list_context_menu = sequence_list_context_menu.SequenceListContextMenu()
         self._protein_tree_context_menu = protein_tree_context_menu.ProteinTreeContextMenu()
         self._protein_pair_tree_context_menu = protein_pair_tree_context_menu.ProteinPairTreeContextMenu()
+
+        self.thread_pool = QtCore.QThreadPool()
+        self.thread_pool.setMaxThreadCount(os.cpu_count())
 
         self._setup_statusbar()
         self._init_generic_help_context_menus()
@@ -429,7 +433,7 @@ class MainViewController:
             logger.info("Running jobs found!")
             tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                 "There are still jobs running!\n\nAre you sure you want to close PySSA?\nThis could lead to data loss and a damaged project!", "Close PySSA",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             if not tmp_dialog.response:
@@ -487,7 +491,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Project/Exit Application' clicked.")
             tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                 "Are you sure you want to close PySSA?", "Close PySSA",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             if tmp_dialog.response:
@@ -529,7 +533,7 @@ class MainViewController:
             tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                 "There are multiple windows open which contain PyMOL as window title.\nDo you want to close all?",
                 "Close PySSA",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             if tmp_dialog.response:
@@ -551,7 +555,7 @@ class MainViewController:
             tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                 "There are multiple windows open which contain PySSA as window title.\nDo you want to close all?",
                 "Close PySSA",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             if tmp_dialog.response:
@@ -560,7 +564,6 @@ class MainViewController:
                         tmp_window_index].close()
         else:
             logger.error("No PySSA window found.")
-
 
     def _abort_task(self, return_value):
         if return_value[0] is True and return_value[1] == "ColabFold Prediction":
@@ -595,7 +598,7 @@ class MainViewController:
                     args=(
                         self._interface_manager,
                         tmp_job_base_information.protein_names,
-                        tmp_job_base_information.protein_pair_names
+                        tmp_job_base_information.protein_pair_names,
                     ),
                     post_func=self._post_update_project_and_model,
                 )
@@ -616,7 +619,7 @@ class MainViewController:
                     tmp_a_project_is_open,
                     self._database_thread,
                     self._interface_manager.pymol_session_manager,
-                    tmp_job_base_information.project_name
+                    tmp_job_base_information.project_name,
                 ),
                 post_func=self._post_close_project_automatically,
             )
@@ -635,12 +638,12 @@ class MainViewController:
         try:
             tmp_project_name = return_value[0]
             self._interface_manager.status_bar_manager.show_temporary_message(
-                enums.StatusMessages.OPENING_PROJECT.value, False
+                enums.StatusMessages.OPENING_PROJECT.value, False,
             )
             tmp_project_database_filepath = str(
                 pathlib.Path(
-                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"
-                )
+                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db",
+                ),
             )
             self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
             #self._database_thread.start()
@@ -653,7 +656,7 @@ class MainViewController:
                     self._interface_manager,
                     self._interface_manager.pymol_session_manager,
                     self.custom_progress_signal,
-                    self._interface_manager.watcher
+                    self._interface_manager.watcher,
                 ),
                 post_func=self.__await_open_project,
             )
@@ -670,7 +673,7 @@ class MainViewController:
         logger.warning("Recived user request to restart PyMOL.")
         pygetwindow.getWindowsWithTitle(constants.WINDOW_TITLE_OF_PYMOL_PART)[0].close()
         self._interface_manager.status_bar_manager.show_temporary_message(
-            "Restarting PyMOL ...", a_with_timeout_flag=False
+            "Restarting PyMOL ...", a_with_timeout_flag=False,
         )
 
     # <editor-fold desc="Util methods">
@@ -748,7 +751,7 @@ class MainViewController:
             if not os.path.exists(constants.HELP_CENTER_BRING_TO_FRONT_EXE_FILEPATH):
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "The script for bringing the documentation window in front could not be found!", "Documentation",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
                 )
                 tmp_dialog.exec_()
             else:
@@ -783,59 +786,59 @@ class MainViewController:
         self._view.ui.btn_delete_sequence.customContextMenuRequested.connect(self._show_context_menu_for_seq_delete)
         self._view.ui.btn_import_protein.setContextMenuPolicy(3)
         self._view.ui.btn_import_protein.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_import
+            self._show_context_menu_for_protein_import,
         )
         self._view.ui.btn_save_protein.setContextMenuPolicy(3)
         self._view.ui.btn_save_protein.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_save
+            self._show_context_menu_for_protein_save,
         )
         self._view.ui.btn_delete_protein.setContextMenuPolicy(3)
         self._view.ui.btn_delete_protein.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_delete
+            self._show_context_menu_for_protein_delete,
         )
         self._view.ui.btn_open_protein_session.setContextMenuPolicy(3)
         self._view.ui.btn_open_protein_session.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_load_session
+            self._show_context_menu_for_protein_load_session,
         )
         self._view.ui.btn_create_protein_scene.setContextMenuPolicy(3)
         self._view.ui.btn_create_protein_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_add_scene
+            self._show_context_menu_for_protein_add_scene,
         )
         self._view.ui.btn_update_protein_scene.setContextMenuPolicy(3)
         self._view.ui.btn_update_protein_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_update_scene
+            self._show_context_menu_for_protein_update_scene,
         )
         self._view.ui.btn_delete_protein_scene.setContextMenuPolicy(3)
         self._view.ui.btn_delete_protein_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_delete_scene
+            self._show_context_menu_for_protein_delete_scene,
         )
         self._view.ui.frame_protein_pymol_scene.setContextMenuPolicy(3)
         self._view.ui.frame_protein_pymol_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pymol_scene_config
+            self._show_context_menu_for_protein_pymol_scene_config,
         )
         self._view.ui.btn_delete_protein_pair.setContextMenuPolicy(3)
         self._view.ui.btn_delete_protein_pair.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pair_delete
+            self._show_context_menu_for_protein_pair_delete,
         )
         self._view.ui.btn_open_protein_pair_session.setContextMenuPolicy(3)
         self._view.ui.btn_open_protein_pair_session.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pair_load_session
+            self._show_context_menu_for_protein_pair_load_session,
         )
         self._view.ui.btn_create_protein_pair_scene.setContextMenuPolicy(3)
         self._view.ui.btn_create_protein_pair_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pair_add_scene
+            self._show_context_menu_for_protein_pair_add_scene,
         )
         self._view.ui.btn_update_protein_pair_scene.setContextMenuPolicy(3)
         self._view.ui.btn_update_protein_pair_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pair_update_scene
+            self._show_context_menu_for_protein_pair_update_scene,
         )
         self._view.ui.btn_delete_protein_pair_scene.setContextMenuPolicy(3)
         self._view.ui.btn_delete_protein_pair_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pair_delete_scene
+            self._show_context_menu_for_protein_pair_delete_scene,
         )
         self._view.ui.frame_protein_pair_pymol_scene.setContextMenuPolicy(3)
         self._view.ui.frame_protein_pair_pymol_scene.customContextMenuRequested.connect(
-            self._show_context_menu_for_protein_pair_pymol_scene_config
+            self._show_context_menu_for_protein_pair_pymol_scene_config,
         )
 
     # <editor-fold desc="Help pages">
@@ -1122,7 +1125,7 @@ class MainViewController:
                     tmp_project_name,
                     self._interface_manager.get_application_settings().get_workspace_path(),
                     self._interface_manager.watcher,
-                    self._interface_manager
+                    self._interface_manager,
                 ),
                 post_func=self.__await_create_project,
             )
@@ -1171,14 +1174,14 @@ class MainViewController:
 
         try:
             self._interface_manager.status_bar_manager.show_temporary_message(
-                enums.StatusMessages.OPENING_PROJECT.value, False
+                enums.StatusMessages.OPENING_PROJECT.value, False,
             )
             self._interface_manager.block_gui(with_wait_cursor=True)
             tmp_project_name = return_value
             tmp_project_database_filepath = str(
                 pathlib.Path(
-                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db"
-                )
+                    f"{self._interface_manager.get_application_settings().workspace_path}/{tmp_project_name}.db",
+                ),
             )
             self._database_thread = database_thread.DatabaseThread(tmp_project_database_filepath)
             #self._database_thread.start()
@@ -1191,7 +1194,7 @@ class MainViewController:
                     self._interface_manager,
                     self._interface_manager.pymol_session_manager,
                     self.custom_progress_signal,
-                    self._interface_manager.watcher
+                    self._interface_manager.watcher,
                 ),
                 post_func=self.__await_open_project,
             )
@@ -1220,7 +1223,7 @@ class MainViewController:
             self._interface_manager.refresh_main_view()
             self._interface_manager.hide_progress_bar()
             self._interface_manager.status_bar_manager.show_temporary_message(
-                enums.StatusMessages.OPENING_PROJECT_FINISHED.value
+                enums.StatusMessages.OPENING_PROJECT_FINISHED.value,
             )
             self._connect_sequence_selection_model()
         except Exception as e:
@@ -1252,7 +1255,7 @@ class MainViewController:
                     self._interface_manager.get_application_settings().get_workspace_path(),
                     user_input[1],
                     self._interface_manager.watcher,
-                    self._interface_manager
+                    self._interface_manager,
                 ),
                 post_func=self.__await_use_project,
             )
@@ -1323,11 +1326,11 @@ class MainViewController:
                     self._view,
                     "Project Name",
                     "Enter A Project Name:",
-                    text=tmp_import_filepath.name.replace(".db", "")
+                    text=tmp_import_filepath.name.replace(".db", ""),
                 )[0]
                 self._active_task = tasks.LegacyTask(
                     target=project_async.import_project,
-                    args=(tmp_new_project_name, tmp_import_filepath, self._interface_manager
+                    args=(tmp_new_project_name, tmp_import_filepath, self._interface_manager,
                     ),
                     post_func=self._await__slot_import_project,
                 )
@@ -1379,7 +1382,7 @@ class MainViewController:
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Analysis/Distance' clicked.")
             self._external_controller = distance_analysis_view_controller.DistanceAnalysisViewController(
-                self._interface_manager, self._interface_manager.watcher
+                self._interface_manager, self._interface_manager.watcher,
             )
             self._external_controller.job_input.connect(self._post_distance_analysis)
             self._interface_manager.get_distance_analysis_view().show()
@@ -1399,7 +1402,7 @@ class MainViewController:
                 self._interface_manager,
                 tmp_raw_analysis_run_names,
                 self._interface_manager.get_settings_manager().settings.cutoff,
-                self._interface_manager.get_settings_manager().settings.cycles
+                self._interface_manager.get_settings_manager().settings.cycles,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -1434,7 +1437,7 @@ class MainViewController:
     def _add_new_protein_pairs_to_protein_pair_model(self):
         """Adds the new protein pairs to the interface manager's protein pair model."""
         tmp_protein_pairs_to_add = self._main_view_state.get_not_matching_protein_pairs(
-            self._interface_manager.get_current_project().protein_pairs
+            self._interface_manager.get_current_project().protein_pairs,
         )
         for tmp_protein_pair in tmp_protein_pairs_to_add:
             self._interface_manager.add_protein_pair_to_protein_pairs_model(tmp_protein_pair)
@@ -1504,7 +1507,7 @@ class MainViewController:
             else:
                 tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
             self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-                self._interface_manager, self._interface_manager.watcher, tmp_indexes, "monomer"
+                self._interface_manager, self._interface_manager.watcher, tmp_indexes, "monomer",
             )
             if self._external_controller.has_internet_connection is False:
                 return
@@ -1527,7 +1530,7 @@ class MainViewController:
             else:
                 tmp_indexes = self._view.ui.seqs_list_view.selectedIndexes()
             self._external_controller = predict_protein_view_controller.PredictProteinViewController(
-                self._interface_manager, self._interface_manager.watcher, tmp_indexes, "multimer"
+                self._interface_manager, self._interface_manager.watcher, tmp_indexes, "multimer",
             )
             if self._external_controller.has_internet_connection is False:
                 return
@@ -1545,7 +1548,7 @@ class MainViewController:
             tmp_prediction_protein_infos,
             tmp_prediction_configuration,
             self._interface_manager.project_lock,
-            self._interface_manager
+            self._interface_manager,
         )
 
     def _setup_prediction_and_analysis_job(self, result):
@@ -1556,7 +1559,7 @@ class MainViewController:
             tmp_prediction_protein_infos,
             tmp_prediction_configuration,
             self._interface_manager.project_lock,
-            self._interface_manager
+            self._interface_manager,
         )
         tmp_raw_analysis_run_names: list = []
         for row_no in range(self._interface_manager.get_predict_protein_view().ui.list_analysis_overview.count()):
@@ -1570,12 +1573,12 @@ class MainViewController:
             self._interface_manager,
             tmp_raw_analysis_run_names,
             self._interface_manager.get_settings_manager().settings.cutoff,
-            self._interface_manager.get_settings_manager().settings.cycles
+            self._interface_manager.get_settings_manager().settings.cycles,
         )
         tmp_job = self._interface_manager.job_manager.create_prediction_and_distance_analysis_job(
             tmp_prediction_job,
             tmp_distance_analysis_job,
-            self._interface_manager
+            self._interface_manager,
         )
         return tmp_job
 
@@ -1590,7 +1593,7 @@ class MainViewController:
                     tmp_dialog = custom_message_box.CustomMessageBoxOk(
                         "Prediction failed because the WSL2 environment is not installed!",
                         "Structure Prediction",
-                        custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                        custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
                     )
                     tmp_dialog.exec_()
                     return
@@ -1601,7 +1604,7 @@ class MainViewController:
                     tmp_dialog = custom_message_box.CustomMessageBoxOk(
                         "Prediction failed because the ColabFold is not installed!",
                         "Structure Prediction",
-                        custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                        custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
                     )
                     tmp_dialog.exec_()
                     return
@@ -1640,7 +1643,7 @@ class MainViewController:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "The structure prediction was aborted.",
                 "Abort Structure Prediction",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
             )
             tmp_dialog.exec_()
         finally:
@@ -1663,14 +1666,14 @@ class MainViewController:
 
             if self._interface_manager.current_tab_index == 1:
                 self._cut_representation_to_selected_protein_region(
-                    self._interface_manager.get_current_protein_representation_states()
+                    self._interface_manager.get_current_protein_representation_states(),
                 )
             elif self._interface_manager.current_tab_index == 2:
                 self._cut_representation_to_selected_protein_region(
-                    self._interface_manager.get_current_protein_pair_representation_states()
+                    self._interface_manager.get_current_protein_pair_representation_states(),
                 )
             self._interface_manager.pymol_session_manager.user_pymol_connector.set_custom_setting(
-                "valence", 0
+                "valence", 0,
             )
             self._interface_manager.pymol_session_manager.zoom_to_residue_in_protein_position("sele")
         except Exception as e:
@@ -1679,19 +1682,19 @@ class MainViewController:
 
     def _cut_representation_to_selected_protein_region(
             self,
-            all_representation_toggle_states: list[tuple[enums.PyMOLRepresentation, bool]]
+            all_representation_toggle_states: list[tuple[enums.PyMOLRepresentation, bool]],
     ) -> None:
         self._interface_manager.pymol_session_manager.user_pymol_connector.select(
-            "sele", "sele and not hydrogens"
+            "sele", "sele and not hydrogens",
         )
         for tmp_toggle_state in all_representation_toggle_states:
             tmp_representation, tmp_toggle_check_state = tmp_toggle_state
             if tmp_toggle_check_state:
                 self._interface_manager.pymol_session_manager.hide_specific_representation(
-                    tmp_representation.value, "not sele"
+                    tmp_representation.value, "not sele",
                 )
                 self._interface_manager.pymol_session_manager.show_specific_representation(
-                    tmp_representation.value, "sele and not hydrogens"
+                    tmp_representation.value, "sele and not hydrogens",
                 )
 
     # </editor-fold>
@@ -1735,7 +1738,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "Menu entry 'Settings/Restore' clicked.")
             tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                 "Are you sure you want to restore all settings?", "Restore Settings",
-                custom_message_box.CustomMessageBoxIcons.INFORMATION.value
+                custom_message_box.CustomMessageBoxIcons.INFORMATION.value,
             )
             tmp_dialog.exec_()
             if tmp_dialog.response:
@@ -1758,7 +1761,7 @@ class MainViewController:
             if not os.path.exists(constants.ARRANGE_WINDOWS_EXE_FILEPATH):
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "The script for arranging the windows could not be found!", "Arrange Windows",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
                 )
                 tmp_dialog.exec_()
             else:
@@ -1790,7 +1793,7 @@ class MainViewController:
             tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                 "Are you sure you want to delete all log files?",
                 "Clear Log Files",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             if tmp_dialog.response:
@@ -1810,7 +1813,7 @@ class MainViewController:
                     tmp_dialog = custom_message_box.CustomMessageBoxOk(
                         "Not all log files could be deleted.",
                         "Clear Log Files",
-                        custom_message_box.CustomMessageBoxIcons.WARNING.value
+                        custom_message_box.CustomMessageBoxIcons.WARNING.value,
                     )
                     tmp_dialog.exec_()
                     constants.PYSSA_LOGGER.warning("Not all log files were deleted!")
@@ -1852,14 +1855,14 @@ class MainViewController:
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "You do not have a working internet connection\nbut that is necessary for this operation!",
                     "Internet Connection",
-                    custom_message_box.CustomMessageBoxIcons.ERROR.value
+                    custom_message_box.CustomMessageBoxIcons.ERROR.value,
                 )
                 tmp_dialog.exec_()
                 return
             self._active_task = tasks.LegacyTask(
                 target=util_async.download_demo_projects,
                 args=(self._interface_manager.get_application_settings().workspace_path, 0),
-                post_func=self.__await_download_demo_projects
+                post_func=self.__await_download_demo_projects,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2019,7 +2022,7 @@ class MainViewController:
                 self._interface_manager.get_application_settings().image_ray_texture,
                 self._interface_manager.get_application_settings().image_renderer,
                 self._interface_manager,
-                self._interface_manager.get_current_project().get_project_name()
+                self._interface_manager.get_current_project().get_project_name(),
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2110,7 +2113,7 @@ class MainViewController:
             self._view.ui.seqs_list_view.currentIndex().data(enums.ModelEnum.OBJECT_ROLE).name = tmp_new_name
             self._view.ui.seqs_list_view.model().setData(self._view.ui.seqs_list_view.currentIndex(), tmp_new_name, Qt.DisplayRole)
             tmp_database_operation = database_operation.DatabaseOperation(
-                enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq)
+                enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq),
             )
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
 
@@ -2118,7 +2121,7 @@ class MainViewController:
         try:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, f"The sequence '{self._view.ui.seqs_list_view.currentIndex().data(Qt.DisplayRole)}' on the 'Sequence Tab' was clicked.")
             self._interface_manager.show_sequence_parameters(
-                self._view.ui.seqs_list_view.currentIndex()
+                self._view.ui.seqs_list_view.currentIndex(),
             )
             self._view.ui.btn_save_sequence.setEnabled(True)
             self._view.ui.btn_delete_sequence.setEnabled(True)
@@ -2152,7 +2155,7 @@ class MainViewController:
                 self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
                 tmp_database_operation = database_operation.DatabaseOperation(
                     enums.SQLQueryType.INSERT_NEW_SEQUENCE,
-                    (0, tmp_seq_record)
+                    (0, tmp_seq_record),
                 )
                 self._database_thread.put_database_operation_into_queue(tmp_database_operation)
         except Exception as e:
@@ -2184,7 +2187,7 @@ class MainViewController:
             self._interface_manager.get_current_project().sequences.append(tmp_seq_record)
             tmp_database_operation = database_operation.DatabaseOperation(
                 enums.SQLQueryType.INSERT_NEW_SEQUENCE,
-                (0, tmp_seq_record)
+                (0, tmp_seq_record),
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2220,7 +2223,7 @@ class MainViewController:
                     args=(
                         tmp_seq_record,
                         file_path,
-                        self._interface_manager.get_current_project().get_database_filepath()
+                        self._interface_manager.get_current_project().get_database_filepath(),
                     ),
                     post_func=self.__await_save_selected_sequence_as_fasta_file,
                 )
@@ -2240,7 +2243,7 @@ class MainViewController:
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "Saving the sequence as .fasta file failed!",
                     "Save Protein Sequence",
-                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
                 )
                 tmp_dialog.exec_()
             elif result[0] == exit_codes.EXIT_CODE_ZERO[0]:
@@ -2255,7 +2258,7 @@ class MainViewController:
                 tmp_dialog = custom_message_box.CustomMessageBoxOk(
                     "Saving the sequence as .fasta file failed with an unexpected error!",
                     "Save Protein Sequence",
-                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                    custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
                 )
                 tmp_dialog.exec_()
         except Exception as e:
@@ -2272,7 +2275,7 @@ class MainViewController:
         tmp_dialog = custom_message_box.CustomMessageBoxDelete(
             "Are you sure you want to delete this sequence?",
             "Delete Sequence",
-            custom_message_box.CustomMessageBoxIcons.WARNING.value
+            custom_message_box.CustomMessageBoxIcons.WARNING.value,
         )
         tmp_dialog.exec_()
         if tmp_dialog.response:
@@ -2313,7 +2316,7 @@ class MainViewController:
             self._view.ui.seqs_list_view.model().setData(self._view.ui.seqs_list_view.currentIndex(), tmp_new_name,
                                                          Qt.DisplayRole)
             tmp_database_operation = database_operation.DatabaseOperation(
-                enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq)
+                enums.SQLQueryType.UPDATE_SEQUENCE_NAME, (0, tmp_new_name, tmp_old_name, tmp_seq),
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2326,7 +2329,7 @@ class MainViewController:
 
     def open_context_menu_for_sequences(self, position):
         tmp_context_menu = self._sequence_list_context_menu.get_context_menu(
-            self._view.ui.seqs_list_view.selectedIndexes()
+            self._view.ui.seqs_list_view.selectedIndexes(),
         )
         tmp_context_menu.exec_(self._view.ui.seqs_list_view.viewport().mapToGlobal(position))
         # sequence_context_menu = QtWidgets.QMenu()
@@ -2348,15 +2351,15 @@ class MainViewController:
             if tmp_type == "protein":
                 # protein
                 self._view.ui.proteins_tree_view.setExpanded(
-                    self._interface_manager.get_current_protein_tree_index(), True
+                    self._interface_manager.get_current_protein_tree_index(), True,
                 )
                 # scenes
                 self._view.ui.proteins_tree_view.setExpanded(
-                    self._interface_manager.get_current_protein_tree_index().child(0, 0), True
+                    self._interface_manager.get_current_protein_tree_index().child(0, 0), True,
                 )
                 # chains
                 self._view.ui.proteins_tree_view.setExpanded(
-                    self._interface_manager.get_current_protein_tree_index().child(1, 0), True
+                    self._interface_manager.get_current_protein_tree_index().child(1, 0), True,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2369,15 +2372,15 @@ class MainViewController:
             if tmp_type == "protein":
                 # protein
                 self._view.ui.proteins_tree_view.collapse(
-                    self._interface_manager.get_current_protein_tree_index()
+                    self._interface_manager.get_current_protein_tree_index(),
                 )
                 # scenes
                 self._view.ui.proteins_tree_view.collapse(
-                    self._interface_manager.get_current_protein_tree_index().child(0, 0)
+                    self._interface_manager.get_current_protein_tree_index().child(0, 0),
                 )
                 # chains
                 self._view.ui.proteins_tree_view.collapse(
-                    self._interface_manager.get_current_protein_tree_index().child(1, 0)
+                    self._interface_manager.get_current_protein_tree_index().child(1, 0),
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2397,7 +2400,7 @@ class MainViewController:
             tmp_is_protein_in_session_flag = False
         else:
             tmp_is_protein_in_any_pair_flag = self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
-                tmp_protein.get_molecule_object()
+                tmp_protein.get_molecule_object(),
             )
             tmp_is_protein_in_session_flag = self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
                 self._interface_manager.get_current_active_protein_object().get_molecule_object())
@@ -2414,7 +2417,7 @@ class MainViewController:
                 self._interface_manager.get_current_protein_tree_index_type(),
                 tmp_is_protein_in_any_pair_flag,
                 tmp_is_protein_in_session_flag,
-                tmp_is_protein_expanded_flag
+                tmp_is_protein_expanded_flag,
             )
             tmp_context_menu.exec_(self._view.ui.proteins_tree_view.viewport().mapToGlobal(position))
             self.__slot_get_information_about_selected_object_in_protein_branch()  # fixme: This should be done in a better way than this!
@@ -2431,12 +2434,12 @@ class MainViewController:
                 args=(
                     tmp_protein,
                     self._interface_manager.pymol_session_manager,
-                    tmp_flag
+                    tmp_flag,
                 ),
                 post_func=self.__await_open_protein_pymol_session,
             )
             self._interface_manager.status_bar_manager.show_temporary_message(
-                f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...", False
+                f"Loading PyMOL session of {tmp_protein.get_molecule_object()} ...", False,
             )
             self._interface_manager.block_gui(with_wait_cursor=True)
         except Exception as e:
@@ -2485,7 +2488,7 @@ class MainViewController:
             tmp_protein.pymol_session = self._interface_manager.pymol_session_manager.save_current_session_as_base64()
             tmp_database_operation = database_operation.DatabaseOperation(
                 enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
-                (0, self._interface_manager.get_current_active_protein_object())
+                (0, self._interface_manager.get_current_active_protein_object()),
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2500,7 +2503,7 @@ class MainViewController:
             if tmp_type == "protein":
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                    f"The protein object '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked."
+                    f"The protein object '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked.",
                 )
             elif tmp_type == "scene":
                 self._setup_protein_scene()
@@ -2509,7 +2512,7 @@ class MainViewController:
             elif tmp_type == "header":
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                    f"The header '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked."
+                    f"The header '{self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Proteins Tab' was clicked.",
                 )
             else:
                 logger.warning("Unknown object type occurred in Protein tab.")
@@ -2517,9 +2520,9 @@ class MainViewController:
             self._interface_manager.manage_ui_of_protein_tab(
                 tmp_type,
                 self._interface_manager.get_current_project().check_if_protein_is_in_any_protein_pair(
-                    self._interface_manager.get_current_active_protein_object().get_molecule_object()
+                    self._interface_manager.get_current_active_protein_object().get_molecule_object(),
                 ),
-                self._interface_manager.pymol_session_manager
+                self._interface_manager.pymol_session_manager,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2532,25 +2535,35 @@ class MainViewController:
             tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
             logger.log(
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                f"The scene '{tmp_scene_name}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
+                f"The scene '{tmp_scene_name}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked.",
             )
             if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein_name):
                 #self._interface_manager.get_current_active_protein_object().get_molecule_object()
                 return
             tmp_scene_name = self._interface_manager.get_current_active_scene_name()
             self._interface_manager.pymol_session_manager.current_scene_name = tmp_scene_name
-            self._active_task = tasks.LegacyTask(
-                target=pymol_session_async.load_scene,
-                args=(self._interface_manager.pymol_session_manager, tmp_scene_name),
-                post_func=self.__await_load_scene_protein
+
+            self._task_result = tasks.TaskResult.run_action(
+                tasks.Action(
+                    a_target=pymol_session_async.load_scene,
+                    args=(self._interface_manager.pymol_session_manager, tmp_scene_name),
+                ),
+                self.thread_pool,
+                an_await_function=self.__await_load_scene_protein,
             )
+
+            # self._active_task = tasks.LegacyTask(
+            #     target=pymol_session_async.load_scene,
+            #     args=(self._interface_manager.pymol_session_manager, tmp_scene_name),
+            #     post_func=self.__await_load_scene_protein
+            # )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         else:
             self._interface_manager.status_bar_manager.show_temporary_message("Loading PyMOL scene ...", a_with_timeout_flag=False)
             self._interface_manager.block_gui()
-            self._active_task.start()
+            #self._active_task.start()
 
     def __await_load_scene_protein(self, return_value: tuple[bool]):
         try:
@@ -2576,7 +2589,7 @@ class MainViewController:
             tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
             logger.log(
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
+                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked.",
             )
             if self._interface_manager.pymol_session_manager.current_scene_name == "" or not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein_name):
                 return
@@ -2584,30 +2597,42 @@ class MainViewController:
             self._view.color_grid_proteins.reset_icon_for_selected_color()
             tmp_protein = self._interface_manager.get_current_active_protein_object()
             tmp_chain = self._interface_manager.get_current_active_chain_object()
-            self._active_task = tasks.LegacyTask(
-                target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
-                args=(
-                    tmp_protein.get_molecule_object(),
-                    tmp_chain.chain_letter,
-                    self._interface_manager.pymol_session_manager
+            
+            self._task_result = tasks.TaskResult.run_actions(
+                the_actions=(
+                    tasks.Action(
+                        a_target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
+                        args=(
+                            tmp_protein.get_molecule_object(),
+                            tmp_chain.chain_letter,
+                            self._interface_manager.pymol_session_manager,
+                        ),
+                    ),
+                    tasks.Action(
+                        a_target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
+                        args=(
+                            tmp_protein.get_molecule_object(),
+                            tmp_chain.chain_letter,
+                            self._interface_manager.pymol_session_manager,
+                        ),
+                    ),
                 ),
-                post_func=self.__await_get_residue_color_config_of_a_given_protein_chain_of_a_protein
+                the_threadpool=self.thread_pool,
+                an_await_function=self.__await_setup_protein_pymol_scene_config,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         else:
             self._interface_manager.block_gui()
-            self._active_task.start()
-
-    def __await_get_residue_color_config_of_a_given_protein_chain_of_a_protein(
-            self,
-            return_value: tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]
-    ) -> None:
+    
+    def __await_setup_protein_pymol_scene_config(self, a_t_result: list[tuple[bool, Any]]):
         try:
-            logger.debug("Returned from method 'pymol_session_async.get_residue_color_config_of_a_given_protein_chain'.")
-            tmp_success_flag, tmp_residue_color_config = return_value
-            logger.debug(f"The return_value is: {return_value}.")
+            logger.debug("Returned from async method.")
+            logger.debug(a_t_result)
+            tmp_t_result_async_1 = a_t_result[0]
+            tmp_success_flag, tmp_residue_color_config = tmp_t_result_async_1[1]
+            logger.debug(f"The return_value is: {a_t_result[0]}.")
             if not tmp_success_flag:
                 logger.error("Retrieving color information failed!")
                 self._interface_manager.status_bar_manager.show_error_message("Retrieving color information failed!")
@@ -2628,31 +2653,12 @@ class MainViewController:
             tmp_protein = self._interface_manager.get_current_active_protein_object()
             tmp_chain = self._interface_manager.get_current_active_chain_object()
             tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
-            self._active_task = tasks.LegacyTask(
-                target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
-                args=(
-                    tmp_protein.get_molecule_object(),
-                    tmp_chain.chain_letter,
-                    self._interface_manager.pymol_session_manager
-                ),
-                post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein
-            )
-        except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
-            self._interface_manager.stop_wait_cursor()
-            self._interface_manager.refresh_main_view()
-        else:
-            self._active_task.start()
-
-    def __await_get_representation_config_of_a_given_protein_chain_of_a_protein(
-            self, return_value: tuple[bool, Optional[dict]]
-    ) -> None:
-        try:
+            # ----------------------------------------------------------------------------------------
             logger.debug(
                 "Returned from method 'pymol_session_async.get_representation_config_of_a_given_protein_chain'.")
-            tmp_success_flag, tmp_representation_config = return_value
-            logger.debug(f"The return_value is: {return_value}.")
+            tmp_t_result_async_2 = a_t_result[1]
+            tmp_success_flag, tmp_representation_config = tmp_t_result_async_2[1]
+            logger.debug(f"The return_value is: {a_t_result[1]}.")
             if tmp_success_flag:
                 tmp_chain = self._interface_manager.get_current_active_chain_object()
                 if tmp_chain.chain_type == "protein_chain":
@@ -2668,28 +2674,132 @@ class MainViewController:
                     ui_util.set_checked_async(self._view.tg_protein_dots.toggle_button, False)
                     ui_util.set_checked_async(self._view.tg_protein_mesh.toggle_button, False)
                     ui_util.set_checked_async(self._view.tg_protein_surface.toggle_button, False)
-                    # self._view.tg_protein_cartoon.toggle_button.setChecked(False)
-                    # self._view.tg_protein_ribbon.toggle_button.setChecked(False)
-                    # self._view.tg_protein_sticks.toggle_button.setChecked(False)
-                    # self._view.tg_protein_lines.toggle_button.setChecked(False)
-                    # self._view.tg_protein_spheres.toggle_button.setChecked(False)
-                    # self._view.tg_protein_dots.toggle_button.setChecked(False)
-                    # self._view.tg_protein_mesh.toggle_button.setChecked(False)
-                    # self._view.tg_protein_surface.toggle_button.setChecked(False)
         except Exception as e:
             logger.error(f"An error occurred: {e}")
             self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
         finally:
-            self._interface_manager.refresh_main_view()
             self._interface_manager.stop_wait_cursor()
-            QtWidgets.QApplication.restoreOverrideCursor()  # Due to unknown reasons this line is needed to reset the cursor
+            self._interface_manager.refresh_main_view()
+        
+    # def legacy_setup_protein_pymol_scene_config(self):
+    #     try:
+    #         tmp_chain_letter = self._view.ui.proteins_tree_view.currentIndex().data(Qt.DisplayRole)
+    #         tmp_protein_name = self._view.ui.proteins_tree_view.currentIndex().parent().parent().data(Qt.DisplayRole)
+    #         logger.log(
+    #             log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
+    #             f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein_name}' on the 'Proteins Tab' was clicked."
+    #         )
+    #         if self._interface_manager.pymol_session_manager.current_scene_name == "" or not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein_name):
+    #             return
+    #         # Set icon for color grid
+    #         self._view.color_grid_proteins.reset_icon_for_selected_color()
+    #         tmp_protein = self._interface_manager.get_current_active_protein_object()
+    #         tmp_chain = self._interface_manager.get_current_active_chain_object()
+    #         self._active_task = tasks.LegacyTask(
+    #             target=pymol_session_async.get_residue_color_config_of_a_given_protein_chain,
+    #             args=(
+    #                 tmp_protein.get_molecule_object(),
+    #                 tmp_chain.chain_letter,
+    #                 self._interface_manager.pymol_session_manager
+    #             ),
+    #             post_func=self.__await_get_residue_color_config_of_a_given_protein_chain_of_a_protein
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #     else:
+    #         self._interface_manager.block_gui()
+    #         self._active_task.start()
+    # 
+    # def __await_get_residue_color_config_of_a_given_protein_chain_of_a_protein(
+    #         self,
+    #         return_value: tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]
+    # ) -> None:
+    #     try:
+    #         logger.debug("Returned from method 'pymol_session_async.get_residue_color_config_of_a_given_protein_chain'.")
+    #         tmp_success_flag, tmp_residue_color_config = return_value
+    #         logger.debug(f"The return_value is: {return_value}.")
+    #         if not tmp_success_flag:
+    #             logger.error("Retrieving color information failed!")
+    #             self._interface_manager.status_bar_manager.show_error_message("Retrieving color information failed!")
+    #             self._interface_manager.stop_wait_cursor()
+    #             self._interface_manager.refresh_main_view()
+    #             return
+    # 
+    #         logger.debug("Check if chain is colored by element.")
+    #         if tmp_residue_color_config.atoms_are_colored_by_elements():
+    #             ui_util.set_checked_async(self._view.tg_protein_color_atoms.toggle_button, True)
+    #             self._view.ui.lbl_protein_current_color.setText("By Element    ")
+    #         else:
+    #             ui_util.set_checked_async(self._view.tg_protein_color_atoms.toggle_button, False)
+    #             self._interface_manager.set_current_active_chain_color_of_protein(tmp_residue_color_config.carbon_color)
+    #             self._view.color_grid_proteins.set_icon_for_selected_color(tmp_residue_color_config.carbon_color)
+    #             self._view.ui.lbl_protein_current_color.setText(f"{tmp_residue_color_config.carbon_color}    ")
+    #         # Set representation toggle states for selected chain
+    #         tmp_protein = self._interface_manager.get_current_active_protein_object()
+    #         tmp_chain = self._interface_manager.get_current_active_chain_object()
+    #         tmp_protein.pymol_selection.selection_string = f"first chain {tmp_chain.chain_letter}"
+    #         self._active_task = tasks.LegacyTask(
+    #             target=pymol_session_async.get_representation_config_of_a_given_protein_chain,
+    #             args=(
+    #                 tmp_protein.get_molecule_object(),
+    #                 tmp_chain.chain_letter,
+    #                 self._interface_manager.pymol_session_manager
+    #             ),
+    #             post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein
+    #         )
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #         self._interface_manager.stop_wait_cursor()
+    #         self._interface_manager.refresh_main_view()
+    #     else:
+    #         self._active_task.start()
+    # 
+    # def __await_get_representation_config_of_a_given_protein_chain_of_a_protein(
+    #         self, return_value: tuple[bool, Optional[dict]]
+    # ) -> None:
+    #     try:
+    #         logger.debug(
+    #             "Returned from method 'pymol_session_async.get_representation_config_of_a_given_protein_chain'.")
+    #         tmp_success_flag, tmp_representation_config = return_value
+    #         logger.debug(f"The return_value is: {return_value}.")
+    #         if tmp_success_flag:
+    #             tmp_chain = self._interface_manager.get_current_active_chain_object()
+    #             if tmp_chain.chain_type == "protein_chain":
+    #                 self._view.ui.frame_protein_repr.setEnabled(True)
+    #                 self._interface_manager.manage_toggle_state_of_protein_repr(tmp_representation_config)
+    #             else:
+    #                 self._view.ui.frame_protein_repr.setEnabled(False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_cartoon.toggle_button, False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_ribbon.toggle_button, False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_sticks.toggle_button, False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_lines.toggle_button, False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_spheres.toggle_button, False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_dots.toggle_button, False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_mesh.toggle_button, False)
+    #                 ui_util.set_checked_async(self._view.tg_protein_surface.toggle_button, False)
+    #                 # self._view.tg_protein_cartoon.toggle_button.setChecked(False)
+    #                 # self._view.tg_protein_ribbon.toggle_button.setChecked(False)
+    #                 # self._view.tg_protein_sticks.toggle_button.setChecked(False)
+    #                 # self._view.tg_protein_lines.toggle_button.setChecked(False)
+    #                 # self._view.tg_protein_spheres.toggle_button.setChecked(False)
+    #                 # self._view.tg_protein_dots.toggle_button.setChecked(False)
+    #                 # self._view.tg_protein_mesh.toggle_button.setChecked(False)
+    #                 # self._view.tg_protein_surface.toggle_button.setChecked(False)
+    #     except Exception as e:
+    #         logger.error(f"An error occurred: {e}")
+    #         self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
+    #     finally:
+    #         self._interface_manager.refresh_main_view()
+    #         self._interface_manager.stop_wait_cursor()
+    #         QtWidgets.QApplication.restoreOverrideCursor()  # Due to unknown reasons this line is needed to reset the cursor
 
     # </editor-fold>
 
     # <editor-fold desc="Change chain color of protein">
     def __slot_change_chain_color_proteins(self, a_color: str) -> None:
-        """
-        Changes the 'Color' attribute of a protein chain on the 'Proteins Tab' and colors the protein in User PyMOL.
+        """Changes the 'Color' attribute of a protein chain on the 'Proteins Tab' and colors the protein in User PyMOL.
 
         Args:
             a_color (str): The new color for the protein chain.
@@ -2719,7 +2829,7 @@ class MainViewController:
             if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(tmp_protein.get_molecule_object()):
                 logger.warning(f"Protein {tmp_protein.get_molecule_object()} is not in the current session.")
                 self._interface_manager.status_bar_manager.show_error_message(
-                    f"Protein {tmp_protein.get_molecule_object()} is not in the current session."
+                    f"Protein {tmp_protein.get_molecule_object()} is not in the current session.",
                 )
                 return
 
@@ -2731,9 +2841,9 @@ class MainViewController:
                 args=(
                     a_color,
                     tmp_protein.pymol_selection.selection_string,
-                    self._interface_manager.pymol_session_manager
+                    self._interface_manager.pymol_session_manager,
                 ),
-                post_func=self.__await_color_pymol_selection_for_protein
+                post_func=self.__await_color_pymol_selection_for_protein,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2743,8 +2853,7 @@ class MainViewController:
             self._active_task.start()
 
     def __await_color_pymol_selection_for_protein(self, return_value: tuple[bool, str]) -> None:
-        """
-        Updates the color of the protein chain based on the return value provided in the object and data model.
+        """Updates the color of the protein chain based on the return value provided in the object and data model.
 
         Args:
             return_value: A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
@@ -2797,8 +2906,7 @@ class MainViewController:
 
     # <editor-fold desc="Color protein chain atoms by element">
     def __slot_color_protein_atoms_by_element(self):
-        """
-        Color protein atoms by element.
+        """Color protein atoms by element.
 
         Notes:
             This method is used to color the protein atoms based on their element.
@@ -2820,7 +2928,7 @@ class MainViewController:
                 self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.color_pymol_selection_atoms_by_element,
                     args=(tmp_selection.selection_string, self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein
+                    post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein,
                 )
             else:
                 if self._interface_manager.get_current_active_chain_color_of_protein() is None:
@@ -2837,9 +2945,9 @@ class MainViewController:
                         tmp_chain.chain_letter,
                         tmp_current_active_chain_color,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_reset_color_pymol_selection_atoms_by_element_for_protein
+                    post_func=self.__await_reset_color_pymol_selection_atoms_by_element_for_protein,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -2849,8 +2957,7 @@ class MainViewController:
             self._active_task.start()
 
     def __await_color_pymol_selection_atoms_by_element_for_protein(self, return_value: tuple) -> None:
-        """
-        Await method for the coloring of atom by their element.
+        """Await method for the coloring of atom by their element.
 
         Args:
             return_value: A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
@@ -2883,8 +2990,7 @@ class MainViewController:
             self._interface_manager.stop_wait_cursor()
 
     def __await_reset_color_pymol_selection_atoms_by_element_for_protein(self, return_value: tuple):
-        """
-        Await method for the reset coloring of atom by their element.
+        """Await method for the reset coloring of atom by their element.
 
         Args:
             return_value: A tuple containing the result of the operation and the chain color.
@@ -2941,13 +3047,13 @@ class MainViewController:
                 self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("white", self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_set_background_color_for_protein_session
+                    post_func=self.__await_set_background_color_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("black", self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_set_background_color_for_protein_session
+                    post_func=self.__await_set_background_color_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3035,9 +3141,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3045,9 +3151,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3070,9 +3176,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.STICKS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3080,9 +3186,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.STICKS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3105,9 +3211,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3115,9 +3221,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3140,9 +3246,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.LINES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3150,9 +3256,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.LINES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3175,9 +3281,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3185,9 +3291,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3210,9 +3316,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.DOTS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3220,9 +3326,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.DOTS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3245,9 +3351,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.MESH,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3255,9 +3361,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.MESH,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3280,9 +3386,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -3290,9 +3396,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_session
+                    post_func=self.__await_set_representation_for_protein_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3524,9 +3630,9 @@ class MainViewController:
                 target=pymol_session_async.hide_all_representations,
                 args=(
                     tmp_selection.selection_string,
-                    self._interface_manager.pymol_session_manager
+                    self._interface_manager.pymol_session_manager,
                 ),
-                post_func=self.__await_hide_all_representations_of_protein_chain_of_a_protein
+                post_func=self.__await_hide_all_representations_of_protein_chain_of_a_protein,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3587,7 +3693,7 @@ class MainViewController:
                     target=project_async.add_protein_from_pdb_to_project,
                     args=(
                         tmp_protein_name,
-                        self._interface_manager
+                        self._interface_manager,
                     ),
                     post_func=self.__await_post_import_protein_structure,
                 )
@@ -3596,7 +3702,7 @@ class MainViewController:
                     target=project_async.add_protein_from_local_filesystem_to_project,
                     args=(
                         tmp_protein_name,
-                        self._interface_manager
+                        self._interface_manager,
                     ),
                     post_func=self.__await_post_import_protein_structure,
                 )
@@ -3604,7 +3710,7 @@ class MainViewController:
                 logger.warning("No protein object was created.")
                 return
             self._interface_manager.status_bar_manager.show_temporary_message(
-                "Importing protein structure ...", False
+                "Importing protein structure ...", False,
             )
         except Exception as e:
             logger.error(f"An error occurred during the protein import: {e}")
@@ -3644,7 +3750,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Delete protein' button on the 'Proteins Tab' was clicked.")
             tmp_dialog = custom_message_box.CustomMessageBoxDelete(
                 "Are you sure you want to delete this protein?", "Delete Protein",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             response: bool = tmp_dialog.response
@@ -3655,7 +3761,7 @@ class MainViewController:
             self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.reinitialize_session,
                 args=(self._interface_manager.pymol_session_manager, tmp_protein.get_molecule_object()),
-                post_func=self.__await_reinitialize_session_before_delete_protein
+                post_func=self.__await_reinitialize_session_before_delete_protein,
             )
         except Exception as e:
             logger.error(f"An error occurred during the protein deletion process: {e}")
@@ -3704,7 +3810,7 @@ class MainViewController:
                     args=(
                         tmp_protein,
                         file_path,
-                        self._interface_manager.get_current_project().get_database_filepath()
+                        self._interface_manager.get_current_project().get_database_filepath(),
                     ),
                     post_func=self.__await_save_selected_protein_structure_as_pdb_file,
                 )
@@ -3724,7 +3830,7 @@ class MainViewController:
             tmp_dialog = custom_message_box.CustomMessageBoxOk(
                 "Saving the protein as .pdb file failed!",
                 "Save Protein Structure",
-                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value
+                custom_message_box.CustomMessageBoxIcons.DANGEROUS.value,
             )
             tmp_dialog.exec_()
             self._interface_manager.refresh_main_view()
@@ -3753,7 +3859,7 @@ class MainViewController:
             logger.log(log_levels.SLOT_FUNC_LOG_LEVEL_VALUE, "'Clean protein' context menu action was clicked.")
             tmp_dialog = custom_message_box.CustomMessageBoxYesNo(
                 "Are you sure you want to clean this protein?\n" "This will remove all organic and solvent components!", "Clean Protein",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             if tmp_dialog.response:
@@ -3764,7 +3870,7 @@ class MainViewController:
                         self._interface_manager.get_current_active_protein_object(),
                         self._interface_manager.get_current_project().get_database_filepath(),
                         tmp_main_socket,
-                        tmp_general_purpose_socket
+                        tmp_general_purpose_socket,
                     ),
                     post_func=self.__await_clean_protein_update,
                 )
@@ -3792,7 +3898,7 @@ class MainViewController:
 
         try:
             if not self._interface_manager.pymol_session_manager.is_the_current_protein_in_session(
-                self._interface_manager.get_current_active_protein_object().get_molecule_object()
+                self._interface_manager.get_current_active_protein_object().get_molecule_object(),
             ):
                 self._interface_manager.stop_wait_cursor()
                 self._interface_manager.refresh_main_view()
@@ -3803,9 +3909,9 @@ class MainViewController:
                 args=(
                     self._interface_manager.get_current_active_protein_object(),
                     self._interface_manager.pymol_session_manager,
-                    False
+                    False,
                 ),
-                post_func=self.__await_load_protein_pymol_session_after_cleaning
+                post_func=self.__await_load_protein_pymol_session_after_cleaning,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -3816,7 +3922,7 @@ class MainViewController:
             self._active_task.start()
 
     def __await_load_protein_pymol_session_after_cleaning(
-            self, return_value: tuple[Optional["pymol_session_manager.PymolSessionManager"], bool]
+            self, return_value: tuple[Optional["pymol_session_manager.PymolSessionManager"], bool],
     ):
         try:
             if return_value[1]:
@@ -3855,7 +3961,7 @@ class MainViewController:
                     args=(
                         self._interface_manager.get_current_protein_tree_index_object(),
                         return_value[0],
-                        self._interface_manager.get_current_project().get_database_filepath()
+                        self._interface_manager.get_current_project().get_database_filepath(),
                     ),
                     post_func=self.__await_post_rename_selected_protein_structure,
                 )
@@ -3871,7 +3977,7 @@ class MainViewController:
     def __await_post_rename_selected_protein_structure(self, result: tuple) -> None:
         try:
             self._view.ui.proteins_tree_view.model().setData(
-                self._interface_manager.get_current_protein_tree_index(), result[1], enums.ModelEnum.OBJECT_ROLE
+                self._interface_manager.get_current_protein_tree_index(), result[1], enums.ModelEnum.OBJECT_ROLE,
             )
             tmp_database_operation = database_operation.DatabaseOperation(
                 enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN,
@@ -3879,9 +3985,9 @@ class MainViewController:
                     0,
                     self._view.ui.proteins_tree_view.model().data(
                         self._interface_manager.get_current_protein_tree_index(),
-                        enums.ModelEnum.OBJECT_ROLE
-                    )
-                )
+                        enums.ModelEnum.OBJECT_ROLE,
+                    ),
+                ),
             )
             self._database_thread.put_database_operation_into_queue(tmp_database_operation)
             self._interface_manager.refresh_protein_model()
@@ -3902,11 +4008,11 @@ class MainViewController:
                 tmp_chain: "chain.Chain" = self._interface_manager.get_current_protein_tree_index_object()
                 if tmp_chain.chain_sequence.sequence == "":
                     self.tmp_txt_browser.setText(
-                        "This chain is a non-protein chain."
+                        "This chain is a non-protein chain.",
                     )
                 else:
                     self.tmp_txt_browser.setText(
-                        tmp_chain.chain_sequence.sequence
+                        tmp_chain.chain_sequence.sequence,
                     )
             except AttributeError:
                 return
@@ -4024,7 +4130,7 @@ class MainViewController:
                     target=pymol_session_async.save_protein_pymol_session_to_database,
                     args=(
                         self._interface_manager,
-                        0
+                        0,
                     ),
                     post_func=self.__await_save_scene_protein,
                 )
@@ -4045,7 +4151,7 @@ class MainViewController:
                     target=pymol_session_async.save_protein_pair_pymol_session_to_database,
                     args=(
                         self._interface_manager,
-                        0
+                        0,
                     ),
                     post_func=self.__await_save_scene_protein_pair,
                 )
@@ -4108,7 +4214,7 @@ class MainViewController:
                        "'Delete pymol scene' button on the 'Proteins or Protein Pairs Tab' was clicked.")
             tmp_dialog = custom_message_box.CustomMessageBoxDelete(
                 "Are you sure you want to delete this scene?", "Delete PyMOL Scene",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             if not tmp_dialog.response:
@@ -4146,17 +4252,17 @@ class MainViewController:
                     target=pymol_session_async.save_protein_pair_pymol_session_to_database,
                     args=(
                         self._interface_manager,
-                        0
+                        0,
                     ),
                     post_func=self.__await_delete_current_scene,
                 )
                 self._active_task.start()
                 self._interface_manager.status_bar_manager.show_temporary_message(
-                    "Deleting selected scene ...", False
+                    "Deleting selected scene ...", False,
                 )
                 self._interface_manager.block_gui()
                 self._interface_manager.remove_scene_from_protein_pairs_model(
-                    self._interface_manager.get_current_protein_pair_tree_index()
+                    self._interface_manager.get_current_protein_pair_tree_index(),
                 )
                 self._view.ui.lbl_pymol_protein_pair_scene.setText("PyMOL Scene: No Scene Selected")
             else:
@@ -4196,27 +4302,27 @@ class MainViewController:
             if tmp_type == "protein_pair":
                 # protein pair
                 self._view.ui.protein_pairs_tree_view.setExpanded(
-                    self._interface_manager.get_current_protein_pair_tree_index(), True
+                    self._interface_manager.get_current_protein_pair_tree_index(), True,
                 )
                 # scenes
                 self._view.ui.protein_pairs_tree_view.setExpanded(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(0, 0), True
+                    self._interface_manager.get_current_protein_pair_tree_index().child(0, 0), True,
                 )
                 # protein 1
                 self._view.ui.protein_pairs_tree_view.setExpanded(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), True
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), True,
                 )
                 # chains of protein 1
                 self._view.ui.protein_pairs_tree_view.expandRecursively(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), 1
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0), 1,
                 )
                 # protein 2
                 self._view.ui.protein_pairs_tree_view.setExpanded(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), True
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), True,
                 )
                 # chains of protein 2
                 self._view.ui.protein_pairs_tree_view.expandRecursively(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), 1
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0), 1,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4229,27 +4335,27 @@ class MainViewController:
             if tmp_type == "protein_pair":
                 # protein pair
                 self._view.ui.protein_pairs_tree_view.collapse(
-                    self._interface_manager.get_current_protein_pair_tree_index()
+                    self._interface_manager.get_current_protein_pair_tree_index(),
                 )
                 # scenes
                 self._view.ui.protein_pairs_tree_view.collapse(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(0, 0)
+                    self._interface_manager.get_current_protein_pair_tree_index().child(0, 0),
                 )
                 # protein 1
                 self._view.ui.protein_pairs_tree_view.collapse(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0)
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0),
                 )
                 # chains of protein 1
                 self._view.ui.protein_pairs_tree_view.collapse(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0)
+                    self._interface_manager.get_current_protein_pair_tree_index().child(1, 0),
                 )
                 # protein 2
                 self._view.ui.protein_pairs_tree_view.collapse(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0)
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0),
                 )
                 # chains of protein 2
                 self._view.ui.protein_pairs_tree_view.collapse(
-                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0)
+                    self._interface_manager.get_current_protein_pair_tree_index().child(2, 0),
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4280,7 +4386,7 @@ class MainViewController:
             tmp_context_menu = self._protein_pair_tree_context_menu.get_context_menu(
                 self._view.ui.protein_pairs_tree_view.selectedIndexes(),
                 tmp_is_protein_pair_in_current_session_flag,
-                tmp_is_protein_pair_expanded_flag
+                tmp_is_protein_pair_expanded_flag,
             )
             tmp_context_menu.exec_(self._view.ui.protein_pairs_tree_view.viewport().mapToGlobal(position))
             self.__slot_get_information_about_selected_object_in_protein_pair_branch()  # fixme: This should be done in a better way than this!
@@ -4316,7 +4422,7 @@ class MainViewController:
                 args=(
                     tmp_protein_pair,
                     self._interface_manager.pymol_session_manager,
-                    tmp_flag
+                    tmp_flag,
                 ),
                 post_func=self.__await_open_protein_pair_pymol_session,
             )
@@ -4327,7 +4433,7 @@ class MainViewController:
             self._interface_manager.block_gui(with_wait_cursor=True)
             self._active_task.start()
             self._interface_manager.status_bar_manager.show_temporary_message(
-                f"Loading PyMOL session of {tmp_protein_pair.name} ...", False
+                f"Loading PyMOL session of {tmp_protein_pair.name} ...", False,
             )
 
     def __await_open_protein_pair_pymol_session(self, return_value: tuple):
@@ -4366,7 +4472,7 @@ class MainViewController:
             tmp_protein_pair.pymol_session = self._interface_manager.pymol_session_manager.save_current_session_as_base64()
             tmp_database_operation = database_operation.DatabaseOperation(
                 enums.SQLQueryType.UPDATE_PYMOL_SESSION_PROTEIN_PAIR,
-                (0, tmp_protein_pair.get_id(), tmp_protein_pair)
+                (0, tmp_protein_pair.get_id(), tmp_protein_pair),
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4382,12 +4488,12 @@ class MainViewController:
             if tmp_type == "protein_pair":
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                    f"The protein pair object '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked."
+                    f"The protein pair object '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked.",
                 )
             elif tmp_type == "protein":
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                    f"The protein object '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked."
+                    f"The protein object '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked.",
                 )
             elif tmp_type == "scene":
                 self._setup_protein_pair_scene()
@@ -4396,14 +4502,14 @@ class MainViewController:
             elif tmp_type == "header":
                 logger.log(
                     log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                    f"The header '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked."
+                    f"The header '{self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)}' on the 'Protein Pairs Tab' was clicked.",
                 )
             else:
                 logger.warning("Unknown object type occurred in Protein Pairs tab.")
                 return
 
             self._interface_manager.manage_ui_of_protein_pairs_tab(
-                tmp_type, self._interface_manager.pymol_session_manager
+                tmp_type, self._interface_manager.pymol_session_manager,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4417,7 +4523,7 @@ class MainViewController:
                 Qt.DisplayRole)
             logger.log(
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                f"The scene '{tmp_scene_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked."
+                f"The scene '{tmp_scene_name}' of the protein pair '{tmp_protein_pair_name}' on the 'Protein Pairs Tab' was clicked.",
             )
             if not self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(self._interface_manager.get_current_active_protein_pair_object().name):
                 # The selected protein pair is not loaded into the current session, therefore nothing to do.
@@ -4427,7 +4533,7 @@ class MainViewController:
             self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.load_scene,
                 args=(self._interface_manager.pymol_session_manager, tmp_scene_name),
-                post_func=self.__await_load_scene_protein_pair
+                post_func=self.__await_load_scene_protein_pair,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4461,11 +4567,11 @@ class MainViewController:
         try:
             tmp_chain_letter = self._view.ui.protein_pairs_tree_view.currentIndex().data(Qt.DisplayRole)
             tmp_protein = self._view.ui.protein_pairs_tree_view.currentIndex().parent().parent().data(
-                enums.ModelEnum.OBJECT_ROLE
+                enums.ModelEnum.OBJECT_ROLE,
             )
             logger.log(
                 log_levels.SLOT_FUNC_LOG_LEVEL_VALUE,
-                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein.get_molecule_object}' on the 'Protein Pairs Tab' was clicked."
+                f"The chain object '{tmp_chain_letter}' of the protein '{tmp_protein.get_molecule_object}' on the 'Protein Pairs Tab' was clicked.",
             )
             if self._interface_manager.pymol_session_manager.current_scene_name == "" and not self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(
                     self._interface_manager.get_current_active_protein_pair_object().name):
@@ -4480,9 +4586,9 @@ class MainViewController:
                 args=(
                     tmp_protein.get_molecule_object(),
                     tmp_chain.chain_letter,
-                    self._interface_manager.pymol_session_manager
+                    self._interface_manager.pymol_session_manager,
                 ),
-                post_func=self.__await_get_residue_color_config_of_a_given_protein_chain_of_a_protein_pair
+                post_func=self.__await_get_residue_color_config_of_a_given_protein_chain_of_a_protein_pair,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4493,7 +4599,7 @@ class MainViewController:
 
     def __await_get_residue_color_config_of_a_given_protein_chain_of_a_protein_pair(
             self,
-            return_value: tuple[bool, Optional["residue_color_config.ResidueColorConfig"]]
+            return_value: tuple[bool, Optional["residue_color_config.ResidueColorConfig"]],
     ) -> None:
         try:
             logger.debug(
@@ -4528,9 +4634,9 @@ class MainViewController:
                 args=(
                     tmp_protein.pymol_selection.selection_string,
                     tmp_chain.chain_letter,
-                    self._interface_manager.pymol_session_manager
+                    self._interface_manager.pymol_session_manager,
                 ),
-                post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair
+                post_func=self.__await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4541,7 +4647,7 @@ class MainViewController:
             self._active_task.start()
 
     def __await_get_representation_config_of_a_given_protein_chain_of_a_protein_pair(
-            self, return_value: tuple[bool, Optional[dict]]
+            self, return_value: tuple[bool, Optional[dict]],
     ) -> None:
         try:
             logger.debug(
@@ -4583,8 +4689,7 @@ class MainViewController:
 
     # <editor-fold desc="Change chain color of protein">
     def __slot_change_chain_color_protein_pairs(self, a_color) -> None:
-        """
-        Changes the 'Color' attribute of a protein chain on the 'Protein Pairs Tab' and colors the protein in User PyMOL.
+        """Changes the 'Color' attribute of a protein chain on the 'Protein Pairs Tab' and colors the protein in User PyMOL.
 
         Args:
             a_color (str): The new color for the protein chain.
@@ -4615,7 +4720,7 @@ class MainViewController:
             if not self._interface_manager.pymol_session_manager.is_the_current_protein_pair_in_session(tmp_protein_pair.name):
                 logger.warning(f"Protein pair {tmp_protein_pair.name} is not in the current session.")
                 self._interface_manager.status_bar_manager.show_error_message(
-                    f"Protein pair {tmp_protein_pair.name} is not in the current session."
+                    f"Protein pair {tmp_protein_pair.name} is not in the current session.",
                 )
                 return
 
@@ -4630,9 +4735,9 @@ class MainViewController:
                 args=(
                     a_color,
                     tmp_protein.pymol_selection.selection_string,
-                    self._interface_manager.pymol_session_manager
+                    self._interface_manager.pymol_session_manager,
                 ),
-                post_func=self.__await_color_pymol_selection_for_protein_pair
+                post_func=self.__await_color_pymol_selection_for_protein_pair,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4679,8 +4784,7 @@ class MainViewController:
         #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __await_color_pymol_selection_for_protein_pair(self, return_value: tuple[bool, str]) -> None:
-        """
-        Updates the color of the protein chain based on the return value provided in the object and data model.
+        """Updates the color of the protein chain based on the return value provided in the object and data model.
 
         Args:
             return_value: A tuple containing two values, a boolean flag indicating the success of the operation and a string representing the color.
@@ -4733,8 +4837,7 @@ class MainViewController:
 
     # <editor-fold desc="Color protein chain atoms by element">
     def __slot_color_protein_pair_atoms_by_element(self):
-        """
-        Color protein atoms by element.
+        """Color protein atoms by element.
 
         Notes:
             This method is used to color the protein atoms based on their element.
@@ -4760,7 +4863,7 @@ class MainViewController:
                 self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.color_pymol_selection_atoms_by_element,
                     args=(tmp_protein.pymol_selection.selection_string, self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein_pair
+                    post_func=self.__await_color_pymol_selection_atoms_by_element_for_protein_pair,
                 )
             else:
                 if self._interface_manager.get_current_active_chain_color_of_protein_pair() is None:
@@ -4777,9 +4880,9 @@ class MainViewController:
                         tmp_chain.chain_letter,
                         tmp_current_active_chain_color,
                         tmp_protein.pymol_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_reset_color_pymol_selection_atoms_by_element_for_protein_pair
+                    post_func=self.__await_reset_color_pymol_selection_atoms_by_element_for_protein_pair,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -4857,8 +4960,7 @@ class MainViewController:
         #     self._interface_manager.status_bar_manager.show_error_message("An unknown error occurred!")
 
     def __await_color_pymol_selection_atoms_by_element_for_protein_pair(self, return_value: tuple) -> None:
-        """
-        Await method for the coloring of atom by their element.
+        """Await method for the coloring of atom by their element.
 
         Args:
             return_value: A tuple containing the result of the operation. The first element of the tuple determines whether the operation was successful or not.
@@ -4891,8 +4993,7 @@ class MainViewController:
             self._interface_manager.stop_wait_cursor()
 
     def __await_reset_color_pymol_selection_atoms_by_element_for_protein_pair(self, return_value: tuple):
-        """
-        Await method for the reset coloring of atom by their element.
+        """Await method for the reset coloring of atom by their element.
 
         Args:
             return_value: A tuple containing the result of the operation and the chain color.
@@ -4952,7 +5053,7 @@ class MainViewController:
                 target=protein_pair_async.color_protein_pair_by_rmsd_value,
                 args=(
                     self._interface_manager.get_current_active_protein_pair_object(),
-                    self._interface_manager.pymol_session_manager
+                    self._interface_manager.pymol_session_manager,
                 ),
                 post_func=self.__await_color_protein_pair_by_rmsd,
             )
@@ -4978,13 +5079,13 @@ class MainViewController:
                 self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("white", self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_set_background_color_for_protein_pair_session
+                    post_func=self.__await_set_background_color_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
                     target=pymol_session_async.set_background_color,
                     args=("black", self._interface_manager.pymol_session_manager),
-                    post_func=self.__await_set_background_color_for_protein_pair_session
+                    post_func=self.__await_set_background_color_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5043,9 +5144,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5053,9 +5154,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.CARTOON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5104,9 +5205,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.STICKS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5114,9 +5215,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.STICKS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5137,9 +5238,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5147,9 +5248,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.RIBBON,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5170,9 +5271,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.LINES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5180,9 +5281,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.LINES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5203,9 +5304,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5213,9 +5314,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SPHERES,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5236,9 +5337,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.DOTS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5246,9 +5347,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.DOTS,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5269,9 +5370,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.MESH,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5279,9 +5380,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.MESH,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5302,9 +5403,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
             else:
                 self._active_task = tasks.LegacyTask(
@@ -5312,9 +5413,9 @@ class MainViewController:
                     args=(
                         enums.PyMOLRepresentation.SURFACE,
                         tmp_selection.selection_string,
-                        self._interface_manager.pymol_session_manager
+                        self._interface_manager.pymol_session_manager,
                     ),
-                    post_func=self.__await_set_representation_for_protein_pair_session
+                    post_func=self.__await_set_representation_for_protein_pair_session,
                 )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5539,9 +5640,9 @@ class MainViewController:
                 target=pymol_session_async.hide_all_representations,
                 args=(
                     tmp_selection.selection_string,
-                    self._interface_manager.pymol_session_manager
+                    self._interface_manager.pymol_session_manager,
                 ),
-                post_func=self.__await_hide_all_representations_of_protein_chain_of_a_protein_pair
+                post_func=self.__await_hide_all_representations_of_protein_chain_of_a_protein_pair,
             )
         except Exception as e:
             logger.error(f"An error occurred: {e}")
@@ -5655,7 +5756,7 @@ class MainViewController:
                        "'Delete protein' button on the 'Proteins Tab' was clicked.")
             tmp_dialog = custom_message_box.CustomMessageBoxDelete(
                 "Are you sure you want to delete this protein?", "Delete Protein",
-                custom_message_box.CustomMessageBoxIcons.WARNING.value
+                custom_message_box.CustomMessageBoxIcons.WARNING.value,
             )
             tmp_dialog.exec_()
             response: bool = tmp_dialog.response
@@ -5669,7 +5770,7 @@ class MainViewController:
             self._active_task = tasks.LegacyTask(
                 target=pymol_session_async.reinitialize_session,
                 args=(self._interface_manager.pymol_session_manager,),
-                post_func=self.__await_reinitialize_session_before_delete_protein_pair
+                post_func=self.__await_reinitialize_session_before_delete_protein_pair,
             )
         except Exception as e:
             logger.error(f"An error occurred during the protein pair deletion process: {e}")
@@ -5683,7 +5784,7 @@ class MainViewController:
             if return_value[0]:
                 tmp_protein_pair: "protein_pair.ProteinPair" = self._interface_manager.get_current_active_protein_pair_object()
                 tmp_database_operation = database_operation.DatabaseOperation(
-                    enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id())
+                    enums.SQLQueryType.DELETE_EXISTING_PROTEIN_PAIR, (0, tmp_protein_pair.get_id()),
                 )
                 self._database_thread.put_database_operation_into_queue(tmp_database_operation)
                 self._interface_manager.get_current_project().delete_specific_protein_pair(tmp_protein_pair.name)

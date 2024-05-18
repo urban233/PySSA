@@ -24,40 +24,57 @@ import base64
 import os
 import pathlib
 
+__docformat__ = "google"
 
-def create_base64_string_from_file(filepath: str) -> str:
+
+def create_base64_string_from_file(a_filepath: str) -> str:
     """Creates a base64 string from a binary file.
 
     Args:
-        filepath: a filepath to a binary file.
+        a_filepath (str): a filepath to a binary file.
 
     Returns:
-        a base64 encoded string.
-        an empty string if filepath could not be found.
+        A base64 encoded string or an empty string if a_filepath is None or could not be found.
     """
-    if os.path.exists(filepath):
-        with open(filepath, "rb") as binary_file:
-            binary_data = binary_file.read()
-            binary_file.close()
-        # Encode binary data to base64 and decode to utf-8 string
-        return base64.b64encode(binary_data).decode("utf-8")
-    else:
+    # <editor-fold desc="Checks">
+    if a_filepath is None or not os.path.exists(a_filepath):
         return ""
+    
+    # </editor-fold>
+        
+    with open(a_filepath, "rb") as binary_file:
+        binary_data = binary_file.read()
+        binary_file.close()
+    # Encode binary data to base64 and decode to utf-8 string
+    return base64.b64encode(binary_data).decode("utf-8")
 
 
-def write_binary_file_from_base64_string(filepath: pathlib.Path, base64_data) -> None:  # noqa: ANN001
+def write_binary_file_from_base64_string(filepath: pathlib.Path, base64_data: str) -> bool:
     """Writes base64 data to a binary file.
 
     Args:
-        filepath: a filepath to a binary file.
-        base64_data: a base64 string to write.
+        filepath (pathlib.Path): a filepath to a binary file.
+        base64_data (str): a base64 string to write.
+    
+    Returns:
+        A boolean value indicating success or failure.
     """
-    # Decode base64 string to binary data
-    binary_data_export = base64.b64decode(base64_data)
-    # Ensure that the directory exists
-    directory = os.path.dirname(filepath)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    with open(filepath, "wb") as f:
-        f.write(binary_data_export)
+    # <editor-fold desc="Checks">
+    if filepath is None:
+        return False
+    if base64_data is None or base64_data == "":
+        return False
+    
+    # </editor-fold>
+    
+    try:
+        binary_data_export = base64.b64decode(base64_data)
+        directory = os.path.dirname(filepath)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        with open(filepath, "wb") as f:
+            f.write(binary_data_export)
+    except Exception:
+        return False
+    else:
+        return True

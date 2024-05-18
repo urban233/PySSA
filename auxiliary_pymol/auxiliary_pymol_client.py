@@ -23,18 +23,44 @@
 from typing import Union
 from typing import TYPE_CHECKING
 
+import zmq
+
 from pyssa.util import enums
+
+__docformat__ = "google"
 
 if TYPE_CHECKING:
     from pyssa.internal.data_structures import job
 
 
 def send_request_to_auxiliary_pymol(
-        the_main_socket,
-        a_socket,
-        a_job_description: Union["job.PredictionJobDescription", "job.DistanceAnalysisJobDescription", "job.RayTracingJobDescription", "job.GeneralPurposeJobDescription"]
+        the_main_socket: zmq.Socket,
+        a_socket: zmq.Socket,
+        a_job_description: Union["job.PredictionJobDescription", "job.DistanceAnalysisJobDescription", "job.RayTracingJobDescription", "job.GeneralPurposeJobDescription"],
 ) -> dict:
-    """Sends a job request to the auxiliary pymol process."""
+    """Sends a request to the auxiliary PyMOL socket and receives the results.
+
+    Args:
+        the_main_socket (zmq.Socket): The main socket for communication.
+        a_socket (zmq.Socket): The auxiliary socket for communication.
+        a_job_description (Union[job.PredictionJobDescription, job.DistanceAnalysisJobDescription, job.RayTracingJobDescription, job.GeneralPurposeJobDescription]): The job description.
+
+    Returns:
+        A dict of results from the auxiliary socket or an empty dict if an argument is None.
+    """
+    # <editor-fold desc="Checks">
+    if the_main_socket is None:
+        print("the_main_socket is None.")  # TODO: substitute with logger
+        return {}
+    if a_socket is None:
+        print("a_socket is None.")  # TODO: substitute with logger
+        return {}
+    if a_job_description is None:
+        print("a_job_description is None.")  # TODO: substitute with logger
+        return {}
+    
+    # </editor-fold>
+    
     # First check if main socket can receive messages (fixme: There is a better way to test this)
     the_main_socket.send_string("Check availability ...")
     the_main_socket.recv_string()
@@ -46,28 +72,28 @@ def send_request_to_auxiliary_pymol(
             {
                 "job_type": enums.JobType.PREDICTION.value,
                 "job_short_description": enums.JobShortDescription.RUN_STRUCTURE_PREDICTION.value,
-            }
+            },
         )
     elif a_job_description.type == enums.JobType.DISTANCE_ANALYSIS:
         a_socket.send_json(
             {
                 "job_type": enums.JobType.DISTANCE_ANALYSIS.value,
                 "job_short_description": enums.JobShortDescription.RUN_DISTANCE_ANALYSIS.value,
-            }
+            },
         )
     elif a_job_description.type == enums.JobType.RAY_TRACING:
         a_socket.send_json(
             {
                 "job_type": enums.JobType.RAY_TRACING.value,
                 "job_short_description": enums.JobShortDescription.CREATE_RAY_TRACED_IMAGE.value,
-            }
+            },
         )
     elif a_job_description.type == enums.JobType.GENERAL_PURPOSE:
         a_socket.send_json(
             {
                 "job_type": enums.JobType.GENERAL_PURPOSE.value,
                 "job_short_description": "generic",
-            }
+            },
         )
 
     # Receive results

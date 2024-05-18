@@ -26,6 +26,8 @@ import workers
 import zmq
 import local_enums
 
+__docformat__ = "google"
+
 
 if __name__ == "__main__":
     try:
@@ -40,8 +42,8 @@ if __name__ == "__main__":
         prediction_thread = threading.Thread(
             target=workers.handle_request,
             args=(
-                local_enums.JobType.PREDICTION.value, prediction_queue, prediction_socket
-            )
+                local_enums.JobType.PREDICTION.value, prediction_queue, prediction_socket,
+            ),
         )
         prediction_thread.daemon = True
         prediction_thread.start()
@@ -52,8 +54,8 @@ if __name__ == "__main__":
         distance_analysis_thread = threading.Thread(
             target=workers.handle_request,
             args=(
-                local_enums.JobType.DISTANCE_ANALYSIS.value, distance_analysis_queue, distance_analysis_socket
-            )
+                local_enums.JobType.DISTANCE_ANALYSIS.value, distance_analysis_queue, distance_analysis_socket,
+            ),
         )
         distance_analysis_thread.daemon = True
         distance_analysis_thread.start()
@@ -66,8 +68,8 @@ if __name__ == "__main__":
             args=(
                 local_enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS.value,
                 prediction_and_distance_analysis_queue,
-                prediction_and_distance_analysis_socket
-            )
+                prediction_and_distance_analysis_socket,
+            ),
         )
         prediction_and_distance_analysis_thread.daemon = True
         prediction_and_distance_analysis_thread.start()
@@ -78,8 +80,8 @@ if __name__ == "__main__":
         ray_tracing_thread = threading.Thread(
             target=workers.handle_request,
             args=(
-                local_enums.JobType.RAY_TRACING.value, ray_tracing_queue, ray_tracing_socket
-            )
+                local_enums.JobType.RAY_TRACING.value, ray_tracing_queue, ray_tracing_socket,
+            ),
         )
         ray_tracing_thread.daemon = True
         ray_tracing_thread.start()
@@ -90,8 +92,8 @@ if __name__ == "__main__":
         general_purpose_thread = threading.Thread(
             target=workers.handle_request,
             args=(
-                local_enums.JobType.GENERAL_PURPOSE.value, general_purpose_queue, general_purpose_socket
-            )
+                local_enums.JobType.GENERAL_PURPOSE.value, general_purpose_queue, general_purpose_socket,
+            ),
         )
         general_purpose_thread.daemon = True
         general_purpose_thread.start()
@@ -102,7 +104,7 @@ if __name__ == "__main__":
             local_enums.JobType.DISTANCE_ANALYSIS.value: distance_analysis_queue,
             local_enums.JobType.PREDICTION_AND_DISTANCE_ANALYSIS.value: prediction_and_distance_analysis_queue,
             local_enums.JobType.RAY_TRACING.value: ray_tracing_queue,
-            local_enums.JobType.GENERAL_PURPOSE.value: general_purpose_queue
+            local_enums.JobType.GENERAL_PURPOSE.value: general_purpose_queue,
         }
         sockets = [prediction_socket, distance_analysis_socket, prediction_and_distance_analysis_socket, ray_tracing_socket, general_purpose_socket]
         threads = [prediction_thread, distance_analysis_thread, prediction_and_distance_analysis_thread, ray_tracing_thread, general_purpose_thread]
