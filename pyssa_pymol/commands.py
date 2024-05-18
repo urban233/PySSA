@@ -21,7 +21,6 @@
 #
 """Module with commands for PyMOL."""
 import os
-import time
 from typing import Optional, Union
 
 import pymol
@@ -36,8 +35,7 @@ __docformat__ = "google"
 
 
 def reinitialize_session() -> tuple[bool, str]:
-    """
-    Reinitializes PyMOL session.
+    """Reinitializes PyMOL session.
 
     Returns:
         A tuple with two elements:
@@ -57,8 +55,7 @@ def reinitialize_session() -> tuple[bool, str]:
 
 
 def load_pymol_session(a_filepath: str) -> tuple[bool, str]:
-    """
-    Loads a PyMOL session from a given filepath.
+    """Loads a PyMOL session from a given filepath.
 
     Args:
         a_filepath (str): The filepath of the PyMOL session to load.
@@ -92,9 +89,8 @@ def load_pymol_session(a_filepath: str) -> tuple[bool, str]:
         return True, ""
 
 
-def save_pymol_session(a_filepath) -> tuple[bool, str]:
-    """
-    Saves the current PyMOL session to the specified file.
+def save_pymol_session(a_filepath: str) -> tuple[bool, str]:
+    """Saves the current PyMOL session to the specified file.
 
     Args:
         a_filepath (str): The file path to save the PyMOL session to.
@@ -124,8 +120,7 @@ def save_pymol_session(a_filepath) -> tuple[bool, str]:
 
 
 def get_all_object_names() -> tuple[bool, str, Optional[list]]:
-    """
-    Retrieves all object names in the current loaded PyMOL session.
+    """Retrieves all object names in the current loaded PyMOL session.
 
     Returns:
         A tuple with three elements:
@@ -144,9 +139,8 @@ def get_all_object_names() -> tuple[bool, str, Optional[list]]:
         return True, "", tmp_names
 
 
-def get_model(a_selection_string) -> tuple[bool, str, Optional[int]]:
-    """
-    Gets a PyMOL model from the given selection string.
+def get_model(a_selection_string: str) -> tuple[bool, str, Optional[int]]:
+    """Gets a PyMOL model from the given selection string.
 
     Args:
         a_selection_string (str): A PyMOL conform selection string.
@@ -177,9 +171,8 @@ def get_model(a_selection_string) -> tuple[bool, str, Optional[int]]:
         return True, "", 0
 
 
-def select(a_name, a_selection_string) -> tuple[bool, str]:
-    """
-    Wrapper for the select command of PyMOL.
+def select(a_name: str, a_selection_string: str) -> tuple[bool, str]:
+    """Wrapper for the select command of PyMOL.
 
     Args:
         a_name (str): The name of the selection to be created or modified.
@@ -212,8 +205,7 @@ def select(a_name, a_selection_string) -> tuple[bool, str]:
 
 
 def scene(a_key: str, an_action: str) -> tuple[bool, str]:
-    """
-    Wrapper for the scene command of PyMOL.
+    """Wrapper for the scene command of PyMOL.
 
     Args:
         a_key (str): The key/name of the scene.
@@ -252,9 +244,8 @@ def scene(a_key: str, an_action: str) -> tuple[bool, str]:
         return True, ""
 
 
-def load_scene(a_scene_name) -> tuple[bool, str]:
-    """
-    Loads a scene by name.
+def load_scene(a_scene_name: str) -> tuple[bool, str]:
+    """Loads a scene by name.
 
     Args:
         a_scene_name (str): The name of the scene to be loaded.
@@ -290,8 +281,7 @@ def load_scene(a_scene_name) -> tuple[bool, str]:
 
 
 def get_scene_list() -> tuple[bool, str, Optional[list]]:
-    """
-    Retrieves a list of scene names of the current PyMOL session.
+    """Retrieves a list of scene names of the current PyMOL session.
 
     Returns:
         A tuple with three elements:
@@ -310,9 +300,8 @@ def get_scene_list() -> tuple[bool, str, Optional[list]]:
         return True, "", tmp_scene_names
 
 
-def set_custom_setting(a_setting_name: str, a_value: Union[int, float, str]):
-    """
-    Sets a custom setting with the given name and value.
+def set_custom_setting(a_setting_name: str, a_value: Union[int, float, str]) -> tuple[bool, str]:
+    """Sets a custom setting with the given name and value.
 
     Args:
         a_setting_name (str): The name of the custom setting.
@@ -338,15 +327,14 @@ def set_custom_setting(a_setting_name: str, a_value: Union[int, float, str]):
         cmd.set(a_setting_name, a_value)
     except CmdException as e:
         logger.error(f"Command failed with error: {e}")
-        return False, e
+        return False, e.message
     else:
         logger.info("Command executed successfully.")
         return True, ""
 
 
 def get_residue_colors(a_selection_string: str) -> tuple[bool, str, Optional[dict]]:
-    """
-    Gets a dict of colors of the given selection.
+    """Gets a dict of colors of the given selection.
 
     Args:
         a_selection_string (str): A PyMOL conform selection string.
@@ -381,8 +369,7 @@ def get_residue_colors(a_selection_string: str) -> tuple[bool, str, Optional[dic
 
 
 def get_chain_color(a_selection_string: str, a_chain_letter: str) -> tuple[bool, str, Optional[tuple]]:
-    """
-    Gets a tuple of colors of the given selection.
+    """Gets a tuple of colors of the given selection.
 
     Args:
         a_selection_string (str): A PyMOL conform selection string.
@@ -435,12 +422,11 @@ def get_chain_color(a_selection_string: str, a_chain_letter: str) -> tuple[bool,
 
 
 def get_residue_color_config(a_protein_name: str, a_chain_letter: str) -> tuple[bool, str, Optional[list]]:
-    """
-    Gets the colors of C-, N-, and O-atoms for the first residue of the given selection.
+    """Gets the colors of C-, N-, and O-atoms for the first residue of the given selection.
 
     Args:
-        a_protein_name: The name of the protein.
-        a_chain_letter: The letter representing the chain of the protein.
+        a_protein_name (str): The name of the protein.
+        a_chain_letter (str): The letter representing the chain of the protein.
 
     Returns:
         A tuple containing:
@@ -488,8 +474,7 @@ def get_residue_color_config(a_protein_name: str, a_chain_letter: str) -> tuple[
 
 
 def get_chain_repr_state(a_selection_string: str, a_chain_letter: str) -> tuple[bool, str, Optional[dict]]:
-    """
-    Returns the representation state of a specific chain in PyMOL.
+    """Returns the representation state of a specific chain in PyMOL.
 
     Args:
         a_selection_string (str): A PyMOL conform selection string.
@@ -535,8 +520,7 @@ def get_chain_repr_state(a_selection_string: str, a_chain_letter: str) -> tuple[
 
 
 def show_custom_representation(a_representation: str, a_selection_string: str) -> tuple[bool, str]:
-    """
-    Wrapper for the show command with the options `representation` and `selection`.
+    """Wrapper for the show command with the options `representation` and `selection`.
 
     Args:
         a_representation (str): The custom representation to show.
@@ -574,8 +558,7 @@ def show_custom_representation(a_representation: str, a_selection_string: str) -
 
 
 def hide_custom_representation(a_representation: str, a_selection_string: str) -> tuple[bool, str]:
-    """
-    Wrapper for the hide command with the options `representation` and `selection`.
+    """Wrapper for the hide command with the options `representation` and `selection`.
 
     Args:
         a_representation (str): The custom representation to show.
@@ -614,8 +597,7 @@ def zoom_with_custom_parameters(a_selection_string: str,
                                 a_buffer_size: float = 8.0,
                                 a_state: int = 0,
                                 a_complete_flag: int = 0) -> tuple[bool, str]:
-    """
-    Zooms with custom parameters.
+    """Zooms with custom parameters.
 
     Args:
         a_selection_string (str): A PyMOL conform selection string.
@@ -655,8 +637,7 @@ def zoom_with_custom_parameters(a_selection_string: str,
 
 
 def color_selection(a_pymol_color: str, a_selection_string: str) -> tuple[bool, str]:
-    """
-    Color the specified PyMOL selection.
+    """Color the specified PyMOL selection.
 
     Args:
         a_pymol_color (str): The color to apply to the selection. Must be a valid PyMOL color.
@@ -692,8 +673,7 @@ def color_selection(a_pymol_color: str, a_selection_string: str) -> tuple[bool, 
 
 
 def set_background_color(a_pymol_color: str) -> tuple[bool, str]:
-    """
-    Sets the background color in PyMOL.
+    """Sets the background color in PyMOL.
 
     Args:
         a_pymol_color (str): The color to set as the background. Must be a valid PyMOL color.
@@ -725,8 +705,7 @@ def set_background_color(a_pymol_color: str) -> tuple[bool, str]:
 
 
 def set_default_graphics_settings() -> tuple[bool, str]:
-    """
-    Sets the default graphics settings for PyMOL.
+    """Sets the default graphics settings for PyMOL.
 
     Returns:
         A tuple with two elements:
@@ -759,8 +738,7 @@ def set_default_graphics_settings() -> tuple[bool, str]:
 
 
 def ray(a_width: int, a_height: int, a_renderer: int) -> tuple[bool, str]:
-    """
-    Wrapper for the ray command with the options `width`, `height` and `renderer`.
+    """Wrapper for the ray command with the options `width`, `height` and `renderer`.
 
     Args:
         a_width (int): The width parameter.
@@ -797,8 +775,7 @@ def ray(a_width: int, a_height: int, a_renderer: int) -> tuple[bool, str]:
 
 
 def draw(a_width: int, a_height: int, an_antialias_value: int) -> tuple[bool, str]:
-    """
-    Wrapper for the draw command with the options `width`, `height` and `antialias`.
+    """Wrapper for the draw command with the options `width`, `height` and `antialias`.
 
     Args:
         a_width (int): The width of the drawing.
@@ -835,8 +812,7 @@ def draw(a_width: int, a_height: int, an_antialias_value: int) -> tuple[bool, st
 
 
 def png(an_image_filepath: str, a_dpi_value: int) -> tuple[bool, str]:
-    """
-    Wrapper for the png command with the options `filename` and `dpi`.
+    """Wrapper for the png command with the options `filename` and `dpi`.
 
     Args:
         an_image_filepath (str): The filepath of the image file.

@@ -22,8 +22,11 @@
 """Module contains an enumeration for pymol commands."""
 import enum
 
+__docformat__ = "google"
+
 
 class CommandEnum(enum.Enum):
+    """Contains enumeration for pymol commands."""
     CLOSE_USER_PYMOL = "close_user_pymol"
 
     REINITIALIZE_SESSION = "reinitialize_session"

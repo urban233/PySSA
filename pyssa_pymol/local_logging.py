@@ -26,14 +26,18 @@ import os
 import pathlib
 from typing import Optional
 
+__docformat__ = "google"
 
-def setup_logger(a_name: str, level=logging.DEBUG) -> Optional[logging.Logger]:
-    """
-    Sets up a logger with a FileHandler directing output to the specified file.
+
+def setup_logger(a_name: str, level: int = logging.DEBUG) -> Optional[logging.Logger]:
+    """Sets up a logger with a FileHandler directing output to the specified file.
 
     Args:
         a_name (str): Name for the logger.
         level (int, optional): Logging level (default: logging.INFO).
+    
+    Returns:
+        A logger object or None if a_name is None or an empty string.
     """
     # <editor-fold desc="Checks">
     if a_name is None or a_name == "":

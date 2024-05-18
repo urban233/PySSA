@@ -19,15 +19,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Module that runs the colabfold micro service."""
+"""Module that runs the colabfold microservice."""
 import os.path
 import shutil
 import zmq
 import colabfold_run
 import subprocess
 
+__docformat__ = "google"
 
-def change_ownership_recursive(directory_path):
+
+def change_ownership_recursive(directory_path: str) -> None:
+    """Changes the ownership of a directory and its contents recursively.
+
+    Args:
+        directory_path (str): The path of the directory to change ownership.
+    """
     try:
         # Run the chown command recursively on the specified directory
         subprocess.run(["sudo", "chown", "-R", "rhel_user", directory_path], check=True)
@@ -41,6 +48,9 @@ def delete_scratch_directory_in_wsl2() -> bool:
 
     Raises:
         SubprocessExecutionError: If return code of subprocess is non-zero
+    
+    Returns:
+        A boolean value indicating if the scratch directory was deleted.
     """
     tmp_scratch_path: str = "/home/rhel_user/scratch"
     try:
@@ -80,7 +90,10 @@ def create_pdb_directory_in_wsl2() -> None:
 
 def copy_fasta_files_from_windows_to_wsl2(the_fasta_path: str) -> None:
     """Copies fasta files from Windows host to WSL2.
-
+    
+    Args:
+        the_fasta_path (str): The path of the fasta file.
+    
     Raises:
         IllegalArgumentError: If an argument is None.
         SubprocessExecutionError: If return code of subprocess is non-zero
@@ -91,13 +104,25 @@ def copy_fasta_files_from_windows_to_wsl2(the_fasta_path: str) -> None:
         raise OSError(f"Fasta files from Windows host could not be copied to WSL2! {e}")
 
 
-def disable_cuda_device_usage():
+def disable_cuda_device_usage() -> None:
+    """Disable the usage of CUDA devices.
+
+    This method sets the 'CUDA_VISIBLE_DEVICES' environment variable to an empty string,
+    effectively disabling the usage of any CUDA devices by the current process.
+    """
     import os
     os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 
 def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str) -> None:
-    """Prepares the environment needed for the computation inside the WSL2."""
+    """Prepares the environment needed for the computation inside the WSL2.
+
+    Args:
+        the_scratch_fasta_dir_of_windows_host (str): The path to the scratch directory on the Windows host.
+
+    Raises:
+        EnvironmentError: If an error occurs during the preparation process.
+    """
     str_conversion_1 = the_scratch_fasta_dir_of_windows_host.replace("\\", "/")
     str_conversion_2 = str_conversion_1.replace(":", "")
     str_conversion_3 = str_conversion_2.replace("C", "c")
@@ -113,7 +138,12 @@ def prepare_computation_environment(the_scratch_fasta_dir_of_windows_host: str) 
         raise EnvironmentError(e)
 
 
-def read_log_file():
+def read_log_file() -> str:
+    """Reads the content of a log file and returns it as a string.
+
+    Returns:
+        A string of the content of the log file.
+    """
     log_filepath = "/home/rhel_user/scratch/local_predictions/pdb/log.txt"
     if os.path.exists(log_filepath):
         log_file = open(log_filepath)
@@ -125,10 +155,15 @@ def read_log_file():
 
 def start_computation(fasta_dir: str, pdb_dir: str, use_amber: bool, use_templates: bool) -> dict:
     """Start structure prediction process based on custom arguments.
-
+    
     Args:
-        use_amber:  true if protein should be relaxed through amber
-        use_templates: true if pdb70 templates should be used for prediction
+        fasta_dir (str): The directory path where the FASTA files are stored.
+        pdb_dir (str): The directory path where the PDB files will be stored.
+        use_amber (bool): A boolean value indicating whether to use the AMBER force field.
+        use_templates (bool): A boolean value indicating whether to use templates for prediction.
+
+    Returns:
+        A dictionary containing the result of the computation.
     """
     try:
         prepare_computation_environment(fasta_dir)
@@ -150,8 +185,9 @@ if __name__ == "__main__":
     tmp_port = 7016
     socket.bind(f"tcp://127.0.0.1:{str(tmp_port)}")
     print("Server is ready to receive messages.")
-
-    while True:
+    
+    tmp_checking_for_prediction = True
+    while tmp_checking_for_prediction is True:
         # Wait for a message from the client
         message = socket.recv_json()
 
@@ -160,37 +196,3 @@ if __name__ == "__main__":
             message["fasta_dir"], message["pdb_dir"], message["use_amber"], message["use_templates"],
         )
         socket.send_json(result)
-
-
-# def delete_original_batch_py_file() -> None:
-#     """Deletes the original batch.py file of colabfold.
-#
-#     Raises:
-#         SubprocessExecutionError: If return code of subprocess is non-zero
-#     """
-#     # Remove original batch.py of Colabfold
-#     tmp_batch_py_filepath: str = (
-#         "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
-#     )
-#     try:
-#         if os.path.exists(tmp_batch_py_filepath):
-#             os.remove(tmp_batch_py_filepath)
-#     except Exception as e:
-#         raise OSError(f"Original batch.py file could not be deleted! {e}")
-#
-#
-# def copy_modified_batch_py_file() -> None:
-#     """Copies the modified batch.py file to the WSL2.
-#
-#     Raises:
-#         SubprocessExecutionError: If return code of subprocess is non-zero
-#     """
-#     plugin_path = "/mnt/c/ProgramData/pyssa/mambaforge_pyssa/pyssa-mamba-env/Lib/site-packages/pymol/pymol_path/data/startup/PySSA"
-#     tmp_batch_py_filepath_wsl: str = (
-#         "/home/rhel_user/localcolabfold/colabfold-conda/lib/python3.10/site-packages/colabfold/batch.py"
-#     )
-#     tmp_batch_py_filepath_windows: str = f"{plugin_path}/pyssa_colabfold/colabfold_sub/batch.py"
-#     try:
-#         subprocess.run(["cp", tmp_batch_py_filepath_windows, tmp_batch_py_filepath_wsl])
-#     except Exception as e:
-#         raise OSError(f"Modified batch.py file could not be copied! {e}")
